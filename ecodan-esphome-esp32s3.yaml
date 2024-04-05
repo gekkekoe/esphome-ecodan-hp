@@ -1,0 +1,203 @@
+substitutions:
+  name: ecodan-heatpump
+  friendlyName: Ecodan Heatpump
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendlyName}
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+ota:
+  password: !secret heatpump_ota_password
+
+api:
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+#    version: latest
+
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [ ecodan ]
+
+#external_components:
+#  - source: https://github.com/gekkekoe/esphome-ecodan@main
+#    components: [ ecodan ]
+
+logger:
+  baud_rate: 115200
+
+# Enable Web server.
+web_server:
+  port: 80
+
+ecodan:
+  id: ecodan_instance
+  rx_pin: GPIO2
+  tx_pin: GPIO1
+# light:
+#   - platform: esp32_rmt_led_strip
+#     name: Led
+#     id: led
+#     internal: true
+#     rgb_order: GRB
+#     pin: 35
+#     num_leds: 4
+#     rmt_channel: 1
+#     chipset: ws2812
+#     restore_mode: ALWAYS_OFF
+
+
+####################
+# heatpump commands
+
+number:
+  - platform: template
+    name: "set Z1 target temperature"
+    optimistic: true
+    min_value: 8
+    max_value: 28
+    step: 0.5
+    set_action:
+      then:
+        - lambda: |- 
+            id(ecodan_instance).set_z1_target_temperature(x);
+  - platform: template
+    name: "set flow target temperature"
+    optimistic: true
+    min_value: 5
+    max_value: 60
+    step: 0.5
+    set_action:
+      then:
+        - lambda: |- 
+            id(ecodan_instance).set_z1_flow_target_temperature(x);
+  - platform: template
+    name: "set dhw target temperature"
+    optimistic: true
+    min_value: 40
+    max_value: 60
+    step: 0.5
+    set_action:
+      then:
+        - lambda: |- 
+            id(ecodan_instance).set_dhw_target_temperature(x);
+switch:
+  - platform: template
+    name: "Force dhw"
+    optimistic: true
+    id: heatpump_switch_force_dhw
+    on_turn_on:
+      then:
+        - lambda: |- 
+            id(ecodan_instance).set_dhw_force(true);
+    on_turn_off:
+      then:
+        - lambda: |- 
+            id(ecodan_instance).set_dhw_force(false);
+
+  - platform: template
+    name: "Turn off"
+    optimistic: true
+    id: heatpump_switch_power_mode
+    on_turn_on:
+      then:
+        - lambda: |- 
+            id(ecodan_instance).set_power_mode(true);
+    on_turn_off:
+      then:
+        - lambda: |- 
+            id(ecodan_instance).set_power_mode(false);
+
+select:
+  - platform: template
+    name: "Heatpump operating mode"
+    id: heatpump_select_operating_mode
+    optimistic: true
+    options:
+      - "Heat Target temperature"
+      - "Heat Flow temperature"
+      - "Heat Compensation curve"
+      - "Cool Target temperature"
+      - "Cool Flow temperature"
+    set_action:
+      - lambda: |- 
+          if (x == "Heat Target temperature") {
+            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP));
+          }
+          else if (x == "Heat Flow temperature") {
+            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP));
+          }
+          else if (x == "Heat Compensation curve") {
+            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE));
+          }
+          else if (x == "Cool Target temperature") {
+            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP));
+          }
+          else if (x == "Cool Flow temperature") {
+            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP));
+          }
+  - platform: template
+    name: "set dhw mode"
+    id: heatpump_select_dhw_mode
+    optimistic: true
+    options:
+      - "off"
+      - "performance"
+      - "eco"
+    set_action:
+      - lambda: |- 
+          id(ecodan_instance).set_dhw_mode(x);
+
+# diagnostics
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: ${name} IP
+    ssid:
+      name: ${name} SSID
+  - platform: version
+    name: ${name} Version
+    hide_timestamp: true
+    disabled_by_default: false
+    icon: mdi:new-box
+    entity_category: diagnostic
+
+sensor:
+  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
+    name: "${name} Signaal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_db
+    name: "${name} Signaal %"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: " %"
+    entity_category: "diagnostic"
+    device_class: ""
+
+  - platform: uptime
+    name: ${name} Uptime
+    disabled_by_default: false
+    force_update: false
+    unit_of_measurement: s
+    icon: mdi:timer-outline
+    accuracy_decimals: 0
+    device_class: duration
+    state_class: total_increasing
+    entity_category: diagnostic
+    update_interval: 60s
+
+#  - platform: internal_temperature
+#    name: "Internal Temperature"
+#    entity_category: diagnostic
