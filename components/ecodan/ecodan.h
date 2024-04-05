@@ -19,8 +19,7 @@ namespace ecodan
 {    
     class EcodanHeatpump : public PollingComponent, public esphome::api::CustomAPIDevice {
     public:        
-        EcodanHeatpump() : PollingComponent(10000) {}
-
+        EcodanHeatpump() : PollingComponent(1000) {}
         void set_rx(int rx);
         void set_tx(int tx);
         void setup() override;
@@ -67,7 +66,7 @@ namespace ecodan
 
         bool initialize();
         void handle_loop();
-        bool is_connected();
+        bool is_connected();        
     
     private:
         HardwareSerial& port = Serial1;
@@ -91,6 +90,7 @@ namespace ecodan
         void clear_command_queue();
         bool begin_get_status();
         
+        void handle_response();
         void handle_get_response(Message& res);
         void handle_set_response(Message& res);
         void handle_connect_response(Message& res);
