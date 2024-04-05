@@ -11,50 +11,10 @@
 #include <queue>
 #include <thread>
 
-#if ARDUINO_ARCH_ESP32
-#include <esp_task_wdt.h>
-#endif
-
 namespace esphome {
 namespace ecodan 
 {
     static constexpr const char *TAG = "ecodan.component";    
-
-#pragma region ESP32Hardware
-    TaskHandle_t serialRxTaskHandle = nullptr;
-
-    void IRAM_ATTR serial_rx_isr()
-    {
-        BaseType_t higherPriorityTaskWoken = pdFALSE;
-        vTaskNotifyGiveIndexedFromISR(serialRxTaskHandle, 0, &higherPriorityTaskWoken);
-#if CONFIG_IDF_TARGET_ESP32C3
-        portEND_SWITCHING_ISR(higherPriorityTaskWoken);
-#else
-        portYIELD_FROM_ISR(higherPriorityTaskWoken);
-#endif
-    }
-
-    void init_watchdog()
-    {
-#if ARDUINO_ARCH_ESP32
-        esp_task_wdt_init(30, true); // Reset the board if the watchdog timer isn't reset every 30s.        
-#endif
-    }
-
-    void add_thread_to_watchdog()
-    {
-#if ARDUINO_ARCH_ESP32
-        esp_task_wdt_add(nullptr);
-#endif
-    }
-
-    void ping_watchdog()
-    {
-#if ARDUINO_ARCH_ESP32
-        esp_task_wdt_reset();
-#endif
-    }
-#pragma endregion ESP32Hardware
 
     void EcodanHeatpump::setup() {
         // This will be called by App.setup()  
@@ -67,12 +27,7 @@ namespace ecodan
         register_service(&EcodanHeatpump::set_power_mode, "set_power_mode", {"on"});
         register_service(&EcodanHeatpump::set_hp_mode, "set_hp_mode", {"mode"});        
 
-        ESP_LOGI(TAG, "init threads"); 
-        heatpumpInitialized = initialize();
-        
-        init_watchdog();
-        add_thread_to_watchdog();
-        ESP_LOGI(TAG, "Watchdog initialized.");        
+        heatpumpInitialized = initialize();        
     }
 
 
@@ -99,7 +54,6 @@ namespace ecodan
     }
 
     void EcodanHeatpump::update() {
-        ping_watchdog();
         if (heatpumpInitialized)
             handle_loop();
     }
@@ -139,7 +93,7 @@ namespace ecodan
         port.write(msg.buffer(), msg.size());
         port.flush();
 
-        ESP_LOGV(TAG, msg.debug_dump_packet().c_str());
+        //ESP_LOGV(TAG, msg.debug_dump_packet().c_str());
 
         return true;
     }
@@ -224,12 +178,8 @@ namespace ecodan
             resync_rx();
             return false;
         }
-        else 
-        {
-            ESP_LOGI(TAG, "Serial message rx checksum failed");
-        }
 
-        ESP_LOGV(TAG, msg.debug_dump_packet().c_str());
+        //ESP_LOGV(TAG, msg.debug_dump_packet().c_str());
 
         return true;
     }
@@ -296,7 +246,7 @@ namespace ecodan
                 
                 publish_state("z1_room_temp", status.Zone1RoomTemperature);
                 publish_state("z2_room_temp", status.Zone2RoomTemperature);
-                publish_state("output_power", status.OutsideTemperature);
+                publish_state("outside_temp", status.OutsideTemperature);                
                 break;
             case GetType::DHW_TEMPERATURE_STATE_A:
                 status.DhwFeedTemperature = res.get_float16(1);
@@ -334,7 +284,7 @@ namespace ecodan
                 publish_state("mode_dhw", status.dhw_mode_as_string());
                 publish_state("mode_heating", status.hp_mode_as_string());
 
-                publish_state("dhw_flow_temp", status.DhwFlowTemperatureSetPoint);
+                publish_state("dhw_flow_temp_target", status.DhwFlowTemperatureSetPoint);
                 publish_state("sh_flow_temp_target", status.RadiatorFlowTemperatureSetPoint);
                 break;
             case GetType::MODE_FLAGS_B:
@@ -358,6 +308,10 @@ namespace ecodan
                 publish_state("heating_delivered", status.EnergyDeliveredHeating);
                 publish_state("cool_delivered", status.EnergyDeliveredCooling);
                 publish_state("dhw_delivered", status.EnergyDeliveredDhw);
+                
+                publish_state("heating_cop", status.EnergyConsumedHeating > 0.0f ? status.EnergyDeliveredHeating / status.EnergyConsumedHeating : 0.0f);
+                publish_state("cool_cop", status.EnergyConsumedCooling > 0.0f ? status.EnergyDeliveredCooling / status.EnergyConsumedCooling : 0.0f);
+                publish_state("dhw_cop", status.EnergyConsumedDhw > 0.0f ? status.EnergyDeliveredDhw / status.EnergyConsumedDhw : 0.0f);
 
                 break;
             default:
@@ -384,46 +338,32 @@ namespace ecodan
         ESP_LOGI(TAG, "Unexpected extended connection response!");
     }
 
-    void EcodanHeatpump::serial_rx_thread()
-    {
-        add_thread_to_watchdog();
-        // Wake the serial RX thread when the serial RX GPIO pin changes (this may occur during or after packet receipt)
-        serialRxTaskHandle = xTaskGetCurrentTaskHandle();
-
+    void EcodanHeatpump::handle_response() {
+        
+        Message res;
+        if (!port.available() || !serial_rx(res))
         {
-            attachInterrupt(digitalPinToInterrupt(serialRxPort), serial_rx_isr, FALLING);
+            return;
         }
 
-        while (true)
+        switch (res.type())
         {
-            ping_watchdog();
-
-            Message res;
-            if (!serial_rx(res))
-            {
-                //delay(1000);
-                continue;
-            }
-
-            switch (res.type())
-            {
-            case MsgType::SET_RES:
-                handle_set_response(res);
-                break;
-            case MsgType::GET_RES:
-                handle_get_response(res);
-                break;
-            case MsgType::CONNECT_RES:
-                handle_connect_response(res);
-                break;
-            case MsgType::EXT_CONNECT_RES:
-                handle_ext_connect_response(res);
-                break;
-            default:
-                ESP_LOGI(TAG, "Unknown serial message type received: %#x", static_cast<uint8_t>(res.type()));
-                break;
-            }            
-        }
+        case MsgType::SET_RES:
+            handle_set_response(res);
+            break;
+        case MsgType::GET_RES:
+            handle_get_response(res);
+            break;
+        case MsgType::CONNECT_RES:
+            handle_connect_response(res);
+            break;
+        case MsgType::EXT_CONNECT_RES:
+            handle_ext_connect_response(res);
+            break;
+        default:
+            ESP_LOGI(TAG, "Unknown serial message type received: %#x", static_cast<uint8_t>(res.type()));
+            break;
+        }     
     }
 
 #pragma endregion Serial
@@ -439,21 +379,16 @@ namespace ecodan
 
         delay(25); // There seems to be a window after setting the pin modes where trying to use the UART can be flaky, so introduce a short delay
 
-        port.begin(2400, SERIAL_8E1, serialRxPort, serialTxPort);        
-
-        if (!begin_connect())
-        {
-            ESP_LOGI(TAG, "Failed to start heatpump connection proceedure...");
-        }
-
-        serialRxThread = std::thread{&EcodanHeatpump::serial_rx_thread, this};
+        port.begin(2400, SERIAL_8E1, serialRxPort, serialTxPort);
+        if (!is_connected())
+            begin_connect();
 
         return true;
     }
 
     void EcodanHeatpump::handle_loop()
-    {
-        if (!is_connected() && !port.available())
+    {         
+        if (!is_connected())
         {
             static auto last_attempt = std::chrono::steady_clock::now();
             auto now = std::chrono::steady_clock::now();
@@ -464,8 +399,8 @@ namespace ecodan
                 {
                     ESP_LOGI(TAG, "Failed to start heatpump connection proceedure...");
                 }
-            }
-
+                handle_response();
+            }            
             return;
         }
         else if (is_connected())
@@ -479,8 +414,9 @@ namespace ecodan
                 if (!begin_get_status())
                 {
                     ESP_LOGI(TAG, "Failed to begin heatpump status update!");
-                }
+                }         
             }
+            handle_response();
         }
     }
 
@@ -594,7 +530,6 @@ namespace ecodan
 
     void EcodanHeatpump::set_dhw_force(bool on)
     {   
-        ESP_LOGI(TAG, "set force dhw %d", on);     
         Message cmd{MsgType::SET_CMD, SetType::DHW_SETTING};
         cmd[1] = SET_SETTINGS_FLAG_MODE_TOGGLE;
         cmd[3] = on ? 1 : 0; // bit[3] of payload is DHW force, bit[2] is Holiday mode.
@@ -615,7 +550,6 @@ namespace ecodan
 
     void EcodanHeatpump::set_power_mode(bool on)
     {
-        ESP_LOGI(TAG, "set power mode %d", on);
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
         cmd[1] = SET_SETTINGS_FLAG_MODE_TOGGLE;
         cmd[3] = on ? 1 : 0;
@@ -635,7 +569,6 @@ namespace ecodan
 
     void EcodanHeatpump::set_hp_mode(int mode)
     {
-        ESP_LOGI(TAG, "set hp mode %d", mode);
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
         cmd[1] = SET_SETTINGS_FLAG_HP_MODE;
         cmd[6] = mode;

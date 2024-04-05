@@ -34,7 +34,7 @@ sensors = {
     "heating_consumed":             { "unit": "kWh", "accuracy": 2, "icon": "mdi:lightning-bolt"},
     "heating_delivered":            { "unit": "kWh", "accuracy": 2, "icon": "mdi:lightning-bolt"},
 
-    "dhw_flow_temp":                { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
+    #"dhw_flow_temp":                { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
     "dhw_flow_temp_target":         { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
     "dhw_flow_temp_drop":           { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
     "dhw_temp":                     { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},

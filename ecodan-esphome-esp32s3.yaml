@@ -19,7 +19,7 @@ esp32:
   board: esp32-s3-devkitc-1
   framework:
     type: arduino
-#    version: latest
+    version: latest
 
 external_components:
   - source:
@@ -32,7 +32,7 @@ external_components:
 #    components: [ ecodan ]
 
 logger:
-  baud_rate: 115200
+  baud_rate: 0
 
 # Enable Web server.
 web_server:
@@ -198,6 +198,6 @@ sensor:
     entity_category: diagnostic
     update_interval: 60s
 
-#  - platform: internal_temperature
-#    name: "Internal Temperature"
-#    entity_category: diagnostic
+  - platform: internal_temperature
+    name: "Internal Temperature"
+    entity_category: diagnostic
