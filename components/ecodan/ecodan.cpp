@@ -55,7 +55,7 @@ namespace ecodan
 
     void EcodanHeatpump::update() {
         if (heatpumpInitialized)
-            handle_loop();
+            handle_loop();            
     }
 
     void EcodanHeatpump::dump_config() {
@@ -339,7 +339,6 @@ namespace ecodan
     }
 
     void EcodanHeatpump::handle_response() {
-        
         Message res;
         if (!port.available() || !serial_rx(res))
         {
@@ -363,7 +362,7 @@ namespace ecodan
         default:
             ESP_LOGI(TAG, "Unknown serial message type received: %#x", static_cast<uint8_t>(res.type()));
             break;
-        }     
+        }
     }
 
 #pragma endregion Serial
