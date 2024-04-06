@@ -110,10 +110,14 @@ binary_sensor:
 number:
   - platform: template
     name: "set Z1 target temperature"
+    mode: slider
+    entity_category: config
     optimistic: true
     min_value: 8
     max_value: 28
     step: 0.5
+    initial_value: 20
+    restore_value: yes
     unit_of_measurement: °C
     set_action:
       then:
@@ -122,10 +126,14 @@ number:
 
   - platform: template
     name: "set flow target temperature"
+    mode: slider
+    entity_category: config
     optimistic: true
     min_value: 5
     max_value: 60
     step: 0.5
+    initial_value: 30
+    restore_value: yes
     unit_of_measurement: °C
     set_action:
       then:
@@ -134,10 +142,14 @@ number:
 
   - platform: template
     name: "set dhw target temperature"
+    mode: slider
+    entity_category: config
     optimistic: true
     min_value: 40
     max_value: 60
     step: 0.5
+    initial_value: 54
+    restore_value: yes
     unit_of_measurement: °C
     set_action:
       then:
@@ -149,12 +161,12 @@ number:
     id: led_brightness
     name: Led brightness #${led_brightness}
     icon: mdi:toggle-switch-variant
-    optimistic: true
     mode: slider
-    step: 10
     entity_category: config
+    optimistic: true
     min_value: 0
     max_value: 100
+    step: 10
     initial_value: 70
     restore_value: yes
     unit_of_measurement: "%"
@@ -200,7 +212,7 @@ switch:
   - platform: template
     id: ecodan_switch
     name: Led switch #${led_switch}
-    optimistic: True
+    optimistic: true
     restore_mode: RESTORE_DEFAULT_ON 
     lambda: return id(ecodan_switch).state;
     turn_on_action:
@@ -218,6 +230,7 @@ select:
     name: Heatpump operating mode
     id: heatpump_select_operating_mode
     optimistic: true
+    restore_value: true
     options:
       - "Heat Target temperature"
       - "Heat Flow temperature"
@@ -246,6 +259,7 @@ select:
     name: set dhw mode
     id: heatpump_select_dhw_mode
     optimistic: true
+    restore_value: true
     options:
       - "off"
       - "performance"
@@ -298,5 +312,5 @@ sensor:
     update_interval: 60s
 
   - platform: internal_temperature
-    name: Internal esp temperature
+    name: Internal Esp temperature
     entity_category: diagnostic
