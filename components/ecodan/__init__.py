@@ -20,41 +20,41 @@ empty_sensor_hub_ns = cg.esphome_ns.namespace(CONF_HUB_ID)
 Ecodan = empty_sensor_hub_ns.class_('EcodanHeatpump', cg.Component)
 
 sensors = {
-    "boiler_flow_temp":             { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
-    "boiler_return_temp":           { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "boiler_flow_temp":             { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "boiler_return_temp":           { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
     "compressor_frequency":         { "unit": "Hz", "icon": "mdi:fan"},
 
-    "cool_cop":                     { "unit": "COP", "accuracy": 2, "icon": "mdi:heat-pump-outline"},
+    "cool_cop":                     { "unit": " ", "accuracy": 2, "icon": "mdi:heat-pump-outline"},
     "cool_consumed":                { "unit": "kWh", "accuracy": 2, "icon": "mdi:lightning-bolt"},
     "cool_delivered":               { "unit": "kWh", "accuracy": 2, "icon": "mdi:lightning-bolt"},
-    "dhw_cop":                      { "unit": "COP", "accuracy": 2, "icon": "mdi:heat-pump-outline"},
+    "dhw_cop":                      { "unit": " ", "accuracy": 2, "icon": "mdi:heat-pump-outline"},
     "dhw_consumed":                 { "unit": "kWh", "accuracy": 2, "icon": "mdi:lightning-bolt"},
     "dhw_delivered":                { "unit": "kWh", "accuracy": 2, "icon": "mdi:lightning-bolt"},
-    "heating_cop":                  { "unit": "COP", "accuracy": 2, "icon": "mdi:heat-pump-outline"},
+    "heating_cop":                  { "unit": " ", "accuracy": 2, "icon": "mdi:heat-pump-outline"},
     "heating_consumed":             { "unit": "kWh", "accuracy": 2, "icon": "mdi:lightning-bolt"},
     "heating_delivered":            { "unit": "kWh", "accuracy": 2, "icon": "mdi:lightning-bolt"},
 
     #"dhw_flow_temp":                { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
-    "dhw_flow_temp_target":         { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
-    "dhw_flow_temp_drop":           { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
-    "dhw_temp":                     { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "dhw_flow_temp_target":         { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "dhw_flow_temp_drop":           { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "dhw_temp":                     { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
 
     "flow_rate":                    { "unit": "L/min", "icon": "mdi:pump"},
-    "hp_feed_temp":                 { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
-    "hp_return_temp":               { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
-    "legionella_prevention_temp":   { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "hp_feed_temp":                 { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "hp_return_temp":               { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "legionella_prevention_temp":   { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
 
     "output_power":                 { "unit": "kWh", "accuracy": 2, "icon": "mdi:lightning-bolt"},
-    "outside_temp":                 { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "outside_temp":                 { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
 
-    "sh_flow_temp_target":          { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
-    "z1_flow_temp_target":          { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
-    "z1_room_temp":                 { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
-    "z1_room_temp_target":          { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "sh_flow_temp_target":          { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "z1_flow_temp_target":          { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "z1_room_temp":                 { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "z1_room_temp_target":          { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
 
-    "z2_flow_temp_target":          { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
-    "z2_room_temp":                 { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
-    "z2_room_temp_target":          { "unit": "C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "z2_flow_temp_target":          { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "z2_room_temp":                 { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
+    "z2_room_temp_target":          { "unit": "°C", "accuracy": 1, "icon": "mdi:thermometer"},
 
 }
 

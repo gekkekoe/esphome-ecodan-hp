@@ -9,11 +9,24 @@ esphome:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  fast_connect: true
+  ap:
+    ssid: "${name}"
+    password: "configesp"
+    ap_timeout: 15s
+
+captive_portal:
+
+esp32_improv:
+  authorizer: None
 
 ota:
-  password: !secret heatpump_ota_password
+#  password: !secret heatpump_ota_password
 
 api:
+  reboot_timeout: 0s
+#  encryption:
+#    key: !secret heatpump_encryption_key
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -31,8 +44,23 @@ external_components:
 #  - source: https://github.com/gekkekoe/esphome-ecodan@main
 #    components: [ ecodan ]
 
+## change language labels to -en for English or -nl for Dutch
+#packages:
+#  substitutions: !include .ecodan-labels-nl.yaml
+#  substitutions: !include .ecodan-labels-en.yaml
+
+# enable logger
 logger:
   baud_rate: 0
+  logs:
+    esp32.preferences: DEBUG
+    sensor: DEBUG
+    text_sensor: DEBUG
+    switch: DEBUG
+    button: DEBUG
+    number: DEBUG
+    climate: DEBUG
+    component: ERROR
 
 # Enable Web server.
 web_server:
@@ -42,22 +70,43 @@ ecodan:
   id: ecodan_instance
   rx_pin: GPIO2
   tx_pin: GPIO1
-# light:
-#   - platform: esp32_rmt_led_strip
-#     name: Led
-#     id: led
-#     internal: true
-#     rgb_order: GRB
-#     pin: 35
-#     num_leds: 4
-#     rmt_channel: 1
-#     chipset: ws2812
-#     restore_mode: ALWAYS_OFF
+
+light:
+#G35=RGB WS2812C-2020
+  - platform: esp32_rmt_led_strip
+    name: Led
+    id: led
+    internal: true
+    rgb_order: GRB
+    pin: 35
+    num_leds: 4
+    # RMT 0 channels will be occupied by IR
+    rmt_channel: 1
+    chipset: ws2812
+    restore_mode: ALWAYS_ON  #OFF?
+
+#G41=Button
+binary_sensor:
+  - platform: gpio
+    name: Buttonw
+    id: g41button
+    pin:
+      number: GPIO41
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    internal: true
+    filters:
+      - delayed_off: 10ms
+    # Toggle the switch when the pushbutton is pressed
+    on_press:
+      then:
+        - switch.toggle: ecodan_switch
 
 
 ####################
 # heatpump commands
-
 number:
   - platform: template
     name: "set Z1 target temperature"
@@ -65,60 +114,108 @@ number:
     min_value: 8
     max_value: 28
     step: 0.5
+    unit_of_measurement: °C
     set_action:
       then:
-        - lambda: |- 
+        - lambda: |-
             id(ecodan_instance).set_z1_target_temperature(x);
+
   - platform: template
     name: "set flow target temperature"
     optimistic: true
     min_value: 5
     max_value: 60
     step: 0.5
+    unit_of_measurement: °C
     set_action:
       then:
-        - lambda: |- 
+        - lambda: |-
             id(ecodan_instance).set_z1_flow_target_temperature(x);
+
   - platform: template
     name: "set dhw target temperature"
     optimistic: true
     min_value: 40
     max_value: 60
     step: 0.5
+    unit_of_measurement: °C
     set_action:
       then:
-        - lambda: |- 
+        - lambda: |-
             id(ecodan_instance).set_dhw_target_temperature(x);
+
+    ## Set led brightness
+  - platform: template
+    id: led_brightness
+    name: Led brightness #${led_brightness}
+    icon: mdi:toggle-switch-variant
+    optimistic: true
+    mode: slider
+    step: 10
+    entity_category: config
+    min_value: 0
+    max_value: 100
+    initial_value: 70
+    restore_value: yes
+    unit_of_measurement: "%"
+    on_value:
+      then:
+        - if:
+            condition:
+              - light.is_on: led
+            then:
+            - light.turn_on:
+                id: led
+                brightness: !lambda |-
+                  // output value must be in range 0 - 1.0
+                  return id(led_brightness).state / 100.0;
+
 switch:
   - platform: template
-    name: "Force dhw"
+    name: Force dhw
     optimistic: true
     id: heatpump_switch_force_dhw
     on_turn_on:
       then:
-        - lambda: |- 
+        - lambda: |-
             id(ecodan_instance).set_dhw_force(true);
     on_turn_off:
       then:
-        - lambda: |- 
+        - lambda: |-
             id(ecodan_instance).set_dhw_force(false);
 
   - platform: template
-    name: "Turn off"
+    name: Turn off
     optimistic: true
     id: heatpump_switch_power_mode
     on_turn_on:
       then:
-        - lambda: |- 
+        - lambda: |-
             id(ecodan_instance).set_power_mode(true);
     on_turn_off:
       then:
-        - lambda: |- 
+        - lambda: |-
             id(ecodan_instance).set_power_mode(false);
+
+  - platform: template
+    id: ecodan_switch
+    name: Led switch #${led_switch}
+    optimistic: True
+    restore_mode: RESTORE_DEFAULT_ON 
+    lambda: return id(ecodan_switch).state;
+    turn_on_action:
+      - light.turn_on:
+          id: led
+          brightness: !lambda |-
+            // output value must be in range 0 - 1.0
+            return id(led_brightness).state / 100.0;
+    turn_off_action:
+      - light.turn_off:
+          id: led
 
 select:
   - platform: template
-    name: "Heatpump operating mode"
+    name: Heatpump operating mode
     id: heatpump_select_operating_mode
     optimistic: true
     options:
@@ -128,7 +225,7 @@ select:
       - "Cool Target temperature"
       - "Cool Flow temperature"
     set_action:
-      - lambda: |- 
+      - lambda: |-
           if (x == "Heat Target temperature") {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP));
           }
@@ -144,8 +241,9 @@ select:
           else if (x == "Cool Flow temperature") {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP));
           }
+
   - platform: template
-    name: "set dhw mode"
+    name: set dhw mode
     id: heatpump_select_dhw_mode
     optimistic: true
     options:
@@ -153,18 +251,19 @@ select:
       - "performance"
       - "eco"
     set_action:
-      - lambda: |- 
+      - lambda: |-
           id(ecodan_instance).set_dhw_mode(x);
 
 # diagnostics
 text_sensor:
   - platform: wifi_info
     ip_address:
-      name: ${name} IP
+      name: IP
     ssid:
-      name: ${name} SSID
+      name: SSID
+
   - platform: version
-    name: ${name} Version
+    name: Version
     hide_timestamp: true
     disabled_by_default: false
     icon: mdi:new-box
@@ -172,22 +271,22 @@ text_sensor:
 
 sensor:
   - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
-    name: "${name} Signaal dB"
+    name: Signaal dB
     id: wifi_signal_db
     update_interval: 60s
-    entity_category: "diagnostic"
+    entity_category: diagnostic
 
   - platform: copy # Reports the WiFi signal strength in %
     source_id: wifi_signal_db
-    name: "${name} Signaal %"
+    name: Signaal %
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: " %"
-    entity_category: "diagnostic"
+    entity_category: diagnostic
     device_class: ""
 
   - platform: uptime
-    name: ${name} Uptime
+    name: "Uptime"
     disabled_by_default: false
     force_update: false
     unit_of_measurement: s
@@ -199,5 +298,5 @@ sensor:
     update_interval: 60s
 
   - platform: internal_temperature
-    name: "Internal Temperature"
+    name: Internal esp temperature
     entity_category: diagnostic
