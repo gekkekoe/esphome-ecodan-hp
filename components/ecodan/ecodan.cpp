@@ -17,7 +17,6 @@ namespace ecodan
     static constexpr const char *TAG = "ecodan.component";    
 
     void EcodanHeatpump::setup() {
-        // This will be called by App.setup()  
         ESP_LOGI(TAG, "register services"); 
         register_service(&EcodanHeatpump::set_z1_target_temperature, "set_z1_target_temperature", {"newTemp"});
         register_service(&EcodanHeatpump::set_z1_flow_target_temperature, "set_z1_flow_target_temperature", {"newTemp"});
