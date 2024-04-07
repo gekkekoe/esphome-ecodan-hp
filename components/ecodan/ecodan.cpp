@@ -11,10 +11,49 @@
 #include <queue>
 #include <thread>
 
+#if ARDUINO_ARCH_ESP32
+#include <esp_task_wdt.h>
+#endif
+
 namespace esphome {
 namespace ecodan 
 {
     static constexpr const char *TAG = "ecodan.component";    
+#pragma region ESP32Hardware
+    TaskHandle_t serialRxTaskHandle = nullptr;
+
+    void IRAM_ATTR serial_rx_isr()
+    {
+        BaseType_t higherPriorityTaskWoken = pdFALSE;
+        vTaskNotifyGiveIndexedFromISR(serialRxTaskHandle, 0, &higherPriorityTaskWoken);
+#if CONFIG_IDF_TARGET_ESP32C3
+        portEND_SWITCHING_ISR(higherPriorityTaskWoken);
+#else
+        portYIELD_FROM_ISR(higherPriorityTaskWoken);
+#endif
+    }
+
+    void init_watchdog()
+    {
+#if ARDUINO_ARCH_ESP32
+        esp_task_wdt_init(30, true); // Reset the board if the watchdog timer isn't reset every 30s.        
+#endif
+    }
+
+    void add_thread_to_watchdog()
+    {
+#if ARDUINO_ARCH_ESP32
+        esp_task_wdt_add(nullptr);
+#endif
+    }
+
+    void ping_watchdog()
+    {
+#if ARDUINO_ARCH_ESP32
+        esp_task_wdt_reset();
+#endif
+    }
+#pragma endregion ESP32Hardware    
 
     void EcodanHeatpump::setup() {
         ESP_LOGI(TAG, "register services"); 
@@ -26,7 +65,14 @@ namespace ecodan
         register_service(&EcodanHeatpump::set_power_mode, "set_power_mode", {"on"});
         register_service(&EcodanHeatpump::set_hp_mode, "set_hp_mode", {"mode"});        
 
-        heatpumpInitialized = initialize();        
+        heatpumpInitialized = initialize();
+        xTaskCreate(
+            [](void* o){ static_cast<EcodanHeatpump*>(o)->serial_rx_thread(); },
+            "serial_rx_task",
+            8*1024,
+            this,
+            5,
+            NULL);        
     }
 
 
@@ -52,7 +98,8 @@ namespace ecodan
         }
     }
 
-    void EcodanHeatpump::update() {
+    void EcodanHeatpump::update() {        
+        //ESP_LOGI(TAG, "Update() on core %d", xPortGetCoreID());
         if (heatpumpInitialized)
             handle_loop();            
     }
@@ -337,13 +384,30 @@ namespace ecodan
         ESP_LOGI(TAG, "Unexpected extended connection response!");
     }
 
+    void EcodanHeatpump::serial_rx_thread()
+    {        
+        add_thread_to_watchdog();
+        // Wake the serial RX thread when the serial RX GPIO pin changes (this may occur during or after packet receipt)
+        serialRxTaskHandle = xTaskGetCurrentTaskHandle();
+
+        {
+            attachInterrupt(digitalPinToInterrupt(serialRxPort), serial_rx_isr, FALLING);
+        }        
+        
+        while (true)
+        {   
+            //ESP_LOGI(TAG, "handle response on core %d", xPortGetCoreID());
+            ping_watchdog();            
+            handle_response();            
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
+
     void EcodanHeatpump::handle_response() {
         Message res;
-        if (!port.available() || !serial_rx(res))
-        {
+        if (!serial_rx(res))
             return;
-        }
-
+        
         switch (res.type())
         {
         case MsgType::SET_RES:
@@ -361,7 +425,7 @@ namespace ecodan
         default:
             ESP_LOGI(TAG, "Unknown serial message type received: %#x", static_cast<uint8_t>(res.type()));
             break;
-        }
+        }             
     }
 
 #pragma endregion Serial
@@ -380,13 +444,13 @@ namespace ecodan
         port.begin(2400, SERIAL_8E1, serialRxPort, serialTxPort);
         if (!is_connected())
             begin_connect();
-
+        init_watchdog();        
         return true;
     }
 
     void EcodanHeatpump::handle_loop()
     {         
-        if (!is_connected())
+        if (!is_connected() && !port.available())
         {
             static auto last_attempt = std::chrono::steady_clock::now();
             auto now = std::chrono::steady_clock::now();
@@ -397,7 +461,6 @@ namespace ecodan
                 {
                     ESP_LOGI(TAG, "Failed to start heatpump connection proceedure...");
                 }
-                handle_response();
             }            
             return;
         }
@@ -414,7 +477,6 @@ namespace ecodan
                     ESP_LOGI(TAG, "Failed to begin heatpump status update!");
                 }         
             }
-            handle_response();
         }
     }
 
