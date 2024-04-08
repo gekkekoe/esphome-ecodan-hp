@@ -1,5 +1,5 @@
 # ESPHome version of Ecodan ha local
-It is highly inspired by https://github.com/rbroker/ecodan-ha-local and https://github.com/vekexasia/comfoair-esp32
+It is highly inspired by https://github.com/rbroker/ecodan-ha-local, https://github.com/tobias-93/esphome-ecodan-heatpump and https://github.com/vekexasia/comfoair-esp32
 
 # ecodan-esp32 example configurations
 ESP32(S3) configuration files ecodan-ha-local and esphome

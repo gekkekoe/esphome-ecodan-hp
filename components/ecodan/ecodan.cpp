@@ -18,7 +18,7 @@
 namespace esphome {
 namespace ecodan 
 {
-    static constexpr const char *TAG = "ecodan.component";    
+    static constexpr const char *TAG = "ecodan";    
 #pragma region ESP32Hardware
     TaskHandle_t serialRxTaskHandle = nullptr;
 
@@ -311,10 +311,12 @@ namespace ecodan
                 publish_state("boiler_return_temp", status.BoilerReturnTemperature);
                 break;
             case GetType::ACTIVE_TIME:
+                // status.Runtime = res.get_float24(3);
+                // publish_state("runtime", status.Runtime);
+                // ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;
             case GetType::FLOW_RATE:
                 status.FlowRate = res[12];
-
                 publish_state("flow_rate", status.FlowRate);
                 break;
             case GetType::MODE_FLAGS_A:
@@ -399,13 +401,13 @@ namespace ecodan
             //ESP_LOGI(TAG, "handle response on core %d", xPortGetCoreID());
             ping_watchdog();            
             handle_response();            
-            vTaskDelay(pdMS_TO_TICKS(1000));
+            vTaskDelay(pdMS_TO_TICKS(100));
         }
     }
 
     void EcodanHeatpump::handle_response() {
         Message res;
-        if (!serial_rx(res))
+        if (!port.available() || !serial_rx(res))
             return;
         
         switch (res.type())

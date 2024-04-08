@@ -35,6 +35,8 @@ namespace ecodan
         float DhwFlowTemperatureSetPoint;
         float RadiatorFlowTemperatureSetPoint;
 
+        float Runtime;
+
         enum class PowerMode : uint8_t
         {
             STANDBY = 0,

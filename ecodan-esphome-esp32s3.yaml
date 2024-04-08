@@ -17,9 +17,6 @@ wifi:
 
 captive_portal:
 
-esp32_improv:
-  authorizer: None
-
 ota:
 #  password: !secret heatpump_ota_password
 
@@ -41,7 +38,7 @@ external_components:
     components: [ ecodan ]
 
 #external_components:
-#  - source: https://github.com/gekkekoe/esphome-ecodan@main
+#  - source: github://gekkekoe/esphome-ecodan-hp
 #    components: [ ecodan ]
 
 ## change language labels to -en for English or -nl for Dutch
@@ -283,7 +280,80 @@ text_sensor:
     icon: mdi:new-box
     entity_category: diagnostic
 
+  - platform: ecodan
+    mode_defrost:
+      name: mode_defrost
+    mode_dhw:
+      name: mode_dhw
+    mode_dhw_forced:
+      name: mode_dhw_forced
+    mode_heating:
+      name: mode_heating
+    mode_power:
+      name: mode_power
+    mode_operation:
+      name: mode_operation                        
 sensor:
+  - platform: ecodan
+#    runtime:
+#      name: runtime      
+    compressor_frequency:
+      name: compressor_frequency
+    output_power:
+      name: output_power
+    outside_temp:
+      name: outside_temp
+    hp_feed_temp:
+      name: hp_feed_temp
+    hp_return_temp:
+      name: hp_return_temp
+    boiler_flow_temp:
+      name: boiler_flow_temp
+    boiler_return_temp:
+      name: boiler_return_temp      
+    dhw_temp:
+      name: dhw_temp      
+    dhw_flow_temp_target:
+      name: dhw_flow_temp_target      
+    dhw_flow_temp_drop:
+      name: dhw_flow_temp_drop      
+    legionella_prevention_temp:
+      name: legionella_prevention_temp      
+    flow_rate:
+      name: flow_rate      
+    cool_cop:
+      name: cool_cop         
+    cool_consumed:
+      name: cool_consumed      
+    cool_delivered:
+      name: cool_delivered      
+    heating_cop:
+      name: heating_cop      
+    heating_consumed:
+      name: heating_consumed      
+    heating_delivered:
+      name: heating_delivered      
+    dhw_cop:
+      name: dhw_cop      
+    dhw_consumed:
+      name: dhw_consumed      
+    dhw_delivered:
+      name: dhw_delivered      
+    sh_flow_temp_target:
+      name: sh_flow_temp_target      
+    z1_flow_temp_target:
+      name: z1_flow_temp_target      
+    z1_room_temp:
+      name: z1_room_temp      
+    z1_room_temp_target:
+      name: z1_room_temp_target      
+    z2_flow_temp_target:
+      name: z2_flow_temp_target      
+    z2_room_temp:
+      name: z2_room_temp      
+    z2_room_temp_target:
+      name: z2_room_temp_target      
+
   - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
     name: Signaal dB
     id: wifi_signal_db
