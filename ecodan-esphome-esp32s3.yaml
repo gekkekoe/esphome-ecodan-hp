@@ -31,15 +31,15 @@ esp32:
     type: arduino
     version: latest
 
-external_components:
-  - source:
-      type: local
-      path: components
-    components: [ ecodan ]
-
-#external_components:
-#  - source: github://gekkekoe/esphome-ecodan-hp
+# external_components:
+#  - source:
+#      type: local
+#      path: components
 #    components: [ ecodan ]
+
+external_components:
+  - source: github://gekkekoe/esphome-ecodan-hp@@main
+    components: [ ecodan ]
 
 ## change language labels to -en for English or -nl for Dutch
 #packages:

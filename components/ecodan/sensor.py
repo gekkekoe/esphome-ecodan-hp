@@ -230,8 +230,4 @@ async def to_code(config):
         if id and id.type == sensor.Sensor:
             sens = await sensor.new_sensor(conf)
             cg.add(hp.register_sensor(sens, key))
-
-#    for key, conf in config.items():
-#        sens = await sensor.new_sensor(conf)
-#        cg.add(hp.register_sensor(sens, key))
         
