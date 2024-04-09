@@ -338,6 +338,8 @@ namespace ecodan
             case GetType::MODE_FLAGS_B:
                 status.HolidayMode = res[4] > 0;
                 status.DhwTimerMode = res[5] > 0;
+                publish_state("mode_holiday", status.HolidayMode ? "On" : "Off");
+                publish_state("mode_dhw_timer", status.DhwTimerMode ? "On" : "Off");
                 break;
             case GetType::ENERGY_USAGE:
                 status.EnergyConsumedHeating = res.get_float24(4);

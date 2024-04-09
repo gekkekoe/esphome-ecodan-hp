@@ -40,6 +40,7 @@ esp32:
 external_components:
   - source: github://gekkekoe/esphome-ecodan-hp@@main
     components: [ ecodan ]
+    refresh: always
 
 ## change language labels to -en for English or -nl for Dutch
 #packages:
@@ -292,7 +293,12 @@ text_sensor:
     mode_power:
       name: mode_power
     mode_operation:
-      name: mode_operation                        
+      name: mode_operation
+    mode_holiday:
+      name: mode_holiday
+    mode_dhw_timer:
+      name: mode_dhw_timer
+
 sensor:
   - platform: ecodan
     runtime:

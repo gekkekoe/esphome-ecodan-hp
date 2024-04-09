@@ -38,6 +38,14 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:alert",            
             entity_category=ENTITY_CATEGORY_NONE,
         ),        
+        cv.Optional("mode_holiday"): text_sensor.text_sensor_schema(
+            icon="mdi:alert",            
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),        
+        cv.Optional("mode_dhw_timer"): text_sensor.text_sensor_schema(
+            icon="mdi:alert",            
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),        
 
     }).extend(cv.COMPONENT_SCHEMA)
 
