@@ -18,7 +18,7 @@
 namespace esphome {
 namespace ecodan 
 {
-    static constexpr const char *TAG = "ecodan";    
+    static constexpr const char *TAG = "ecodan.component";    
 #pragma region ESP32Hardware
     TaskHandle_t serialRxTaskHandle = nullptr;
 
@@ -511,7 +511,7 @@ namespace ecodan
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
         cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
         cmd[2] = static_cast<uint8_t>(SetZone::ZONE_1);
-        cmd[6] = static_cast<uint8_t>(SetHpMode::FLOW_CONTROL_MODE);
+        cmd[6] = static_cast<uint8_t>(status.HeatingCoolingMode);
         cmd.set_float16(newTemp, 10);
 
         {
