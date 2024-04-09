@@ -311,8 +311,7 @@ namespace ecodan
                 publish_state("boiler_return_temp", status.BoilerReturnTemperature);
                 break;
             case GetType::ACTIVE_TIME:
-                // value is x 10
-                status.Runtime = res.get_float24_v2(3) * 10;
+                status.Runtime = res.get_float24_v2(3);
                 publish_state("runtime", status.Runtime);
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;

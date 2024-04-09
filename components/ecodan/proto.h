@@ -255,7 +255,7 @@ namespace ecodan
         {
             float value = uint16_t(payload()[index + 1] << 8) | payload()[index + 2];
             float remainder = payload()[index];
-            return value * 10 + pow(2, (remainder / 100.0f));
+            return value * 100 + remainder;
         }
 
         float get_float16(size_t index)
