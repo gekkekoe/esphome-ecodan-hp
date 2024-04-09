@@ -296,10 +296,18 @@ text_sensor:
       name: mode_operation
     mode_holiday:
       name: mode_holiday
-    mode_dhw_timer:
-      name: mode_dhw_timer
     mode_booster:
       name: mode_booster
+    mode_prohibit_dhw:
+      name: mode_prohibit_dhw
+    mode_prohibit_heating_z1:
+      name: mode_prohibit_heating_z1
+    mode_prohibit_cool_z1:
+      name: mode_prohibit_cool_z1
+    mode_prohibit_heating_z2:
+      name: mode_prohibit_heating_z2
+    mode_prohibit_cool_z2:
+      name: mode_prohibit_cool_z2
 
 sensor:
   - platform: ecodan

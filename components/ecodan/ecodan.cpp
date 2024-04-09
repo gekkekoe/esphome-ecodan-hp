@@ -339,9 +339,19 @@ namespace ecodan
                 break;
             case GetType::MODE_FLAGS_B:
                 status.HolidayMode = res[4] > 0;
-                status.DhwTimerMode = res[5] > 0;
+
+                status.ProhibitDhw = res[5] != 0;
+                status.ProhibitHeatingZ1 = res[6] != 0;
+                status.ProhibitCoolingZ1 = res[7] != 0;
+                status.ProhibitHeatingZ2 = res[8] != 0;
+                status.ProhibitCoolingZ2 = res[9] != 0;
+                
                 publish_state("mode_holiday", status.HolidayMode ? "On" : "Off");
-                publish_state("mode_dhw_timer", status.DhwTimerMode ? "On" : "Off");
+                publish_state("mode_prohibit_dhw", status.ProhibitDhw ? "On" : "Off");
+                publish_state("mode_prohibit_heating_z1", status.ProhibitHeatingZ1 ? "On" : "Off");
+                publish_state("mode_prohibit_cool_z1", status.ProhibitCoolingZ1 ? "On" : "Off");
+                publish_state("mode_prohibit_heating_z2", status.ProhibitHeatingZ2 ? "On" : "Off");
+                publish_state("mode_prohibit_cool_z2", status.ProhibitCoolingZ2 ? "On" : "Off");
                 break;
             case GetType::ENERGY_USAGE:
                 status.EnergyConsumedHeating = res.get_float24(4);

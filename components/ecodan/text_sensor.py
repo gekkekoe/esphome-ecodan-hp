@@ -42,11 +42,27 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:alert",            
             entity_category=ENTITY_CATEGORY_NONE,
         ),        
-        cv.Optional("mode_dhw_timer"): text_sensor.text_sensor_schema(
+        cv.Optional("mode_booster"): text_sensor.text_sensor_schema(
             icon="mdi:alert",            
             entity_category=ENTITY_CATEGORY_NONE,
         ),        
-        cv.Optional("mode_booster"): text_sensor.text_sensor_schema(
+        cv.Optional("mode_prohibit_dhw"): text_sensor.text_sensor_schema(
+            icon="mdi:alert",            
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),        
+        cv.Optional("mode_prohibit_heating_z1"): text_sensor.text_sensor_schema(
+            icon="mdi:alert",            
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),        
+        cv.Optional("mode_prohibit_cool_z1"): text_sensor.text_sensor_schema(
+            icon="mdi:alert",            
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),        
+        cv.Optional("mode_prohibit_heating_z2"): text_sensor.text_sensor_schema(
+            icon="mdi:alert",            
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),        
+        cv.Optional("mode_prohibit_cool_z2"): text_sensor.text_sensor_schema(
             icon="mdi:alert",            
             entity_category=ENTITY_CATEGORY_NONE,
         ),        

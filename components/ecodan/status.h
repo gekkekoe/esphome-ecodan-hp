@@ -73,9 +73,15 @@ namespace ecodan
         PowerMode Power;
         OperationMode Operation;
         bool HolidayMode;
-        bool DhwTimerMode;
         DhwMode HotWaterMode;
         HpMode HeatingCoolingMode;
+
+        // prohibit flags
+        bool ProhibitDhw;
+        bool ProhibitHeatingZ1;
+        bool ProhibitCoolingZ1;
+        bool ProhibitHeatingZ2;
+        bool ProhibitCoolingZ2;
 
         // Efficiency
         uint8_t CompressorFrequency;
