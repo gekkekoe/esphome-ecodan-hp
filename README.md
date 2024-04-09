@@ -73,3 +73,5 @@ esphome upload --device=ip_address ecodan-esphome-esp32s3.yaml
 Here's how it's connected inside my heatpump:
 
 ![image](https://github.com/gekkekoe/ecodan-esp32/blob/main/img/m5stack_installed.jpg?raw=true)
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/gekkekoe)
