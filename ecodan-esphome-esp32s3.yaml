@@ -295,8 +295,8 @@ text_sensor:
       name: mode_operation                        
 sensor:
   - platform: ecodan
-#    runtime:
-#      name: runtime      
+    runtime:
+      name: runtime      
     compressor_frequency:
       name: compressor_frequency
     output_power:

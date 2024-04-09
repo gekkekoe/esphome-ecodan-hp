@@ -311,9 +311,10 @@ namespace ecodan
                 publish_state("boiler_return_temp", status.BoilerReturnTemperature);
                 break;
             case GetType::ACTIVE_TIME:
-                // status.Runtime = res.get_float24(3);
-                // publish_state("runtime", status.Runtime);
-                // ESP_LOGI(TAG, res.debug_dump_packet().c_str());
+                // value is x 10
+                status.Runtime = res.get_float24_v2(3) * 10;
+                publish_state("runtime", status.Runtime);
+                //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;
             case GetType::FLOW_RATE:
                 status.FlowRate = res[12];
@@ -729,7 +730,7 @@ namespace ecodan
             cmdQueue.emplace(MsgType::GET_CMD, GetType::SH_TEMPERATURE_STATE);
             cmdQueue.emplace(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_A);
             cmdQueue.emplace(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_B);
-            // cmdQueue.emplace(MsgType::GET_CMD, GetType::ACTIVE_TIME);
+            cmdQueue.emplace(MsgType::GET_CMD, GetType::ACTIVE_TIME);
             cmdQueue.emplace(MsgType::GET_CMD, GetType::FLOW_RATE);
             cmdQueue.emplace(MsgType::GET_CMD, GetType::MODE_FLAGS_A);
             cmdQueue.emplace(MsgType::GET_CMD, GetType::MODE_FLAGS_B);

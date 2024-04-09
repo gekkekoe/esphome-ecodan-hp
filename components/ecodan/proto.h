@@ -250,6 +250,14 @@ namespace ecodan
             return value + (remainder / 100.0f);
         }
 
+        // runtime
+        float get_float24_v2(size_t index)
+        {
+            float value = uint16_t(payload()[index + 1] << 8) | payload()[index + 2];
+            float remainder = payload()[index];
+            return value * 10 + pow(2, (remainder / 100.0f));
+        }
+
         float get_float16(size_t index)
         {
             float value = uint16_t(payload()[index] << 8) | payload()[index + 1];

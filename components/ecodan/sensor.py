@@ -212,11 +212,11 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-#        cv.Optional("runtime"): sensor.sensor_schema(
-#            unit_of_measurement=UNIT_HOUR,
-#            icon="mdi:clock",
-#            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-#        ),
+        cv.Optional("runtime"): sensor.sensor_schema(
+            unit_of_measurement=UNIT_HOUR,
+            icon="mdi:clock",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
