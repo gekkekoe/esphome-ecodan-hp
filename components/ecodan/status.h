@@ -13,6 +13,7 @@ namespace ecodan
 
         bool DefrostActive;
         bool DhwForcedActive;
+        bool BoosterActive;
         uint8_t OutputPower;
 
         float Zone1SetTemperature;

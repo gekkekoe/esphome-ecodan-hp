@@ -298,6 +298,8 @@ text_sensor:
       name: mode_holiday
     mode_dhw_timer:
       name: mode_dhw_timer
+    mode_booster:
+      name: mode_booster
 
 sensor:
   - platform: ecodan

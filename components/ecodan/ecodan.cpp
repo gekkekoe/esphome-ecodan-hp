@@ -259,7 +259,9 @@ namespace ecodan
                 break;
             case GetType::HEATING_POWER:
                 status.OutputPower = res[6];
+                status.BoosterActive = res[4] == 2;
                 publish_state("output_power", status.OutputPower);
+                publish_state("mode_booster", status.BoosterActive ? "On" : "Off");
                 break;
             case GetType::TEMPERATURE_CONFIG:
                 status.Zone1SetTemperature = res.get_float16(1);
