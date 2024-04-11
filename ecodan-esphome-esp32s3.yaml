@@ -102,7 +102,6 @@ binary_sensor:
       then:
         - switch.toggle: ecodan_switch
 
-
 ####################
 # heatpump commands
 number:
@@ -183,29 +182,27 @@ number:
 switch:
   - platform: template
     name: Force dhw
-    optimistic: true
     id: heatpump_switch_force_dhw
-    on_turn_on:
-      then:
-        - lambda: |-
-            id(ecodan_instance).set_dhw_force(true);
-    on_turn_off:
-      then:
-        - lambda: |-
-            id(ecodan_instance).set_dhw_force(false);
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+         id(ecodan_instance).set_dhw_force(true);
+    turn_off_action:
+      - lambda: |-
+         id(ecodan_instance).set_dhw_force(false);
 
   - platform: template
-    name: Turn off
-    optimistic: true
+    name: On/Off status
     id: heatpump_switch_power_mode
-    on_turn_on:
-      then:
-        - lambda: |-
-            id(ecodan_instance).set_power_mode(true);
-    on_turn_off:
-      then:
-        - lambda: |-
-            id(ecodan_instance).set_power_mode(false);
+    restore_mode: RESTORE_DEFAULT_ON
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+         id(ecodan_instance).set_power_mode(true);
+    turn_off_action:
+      - lambda: |-
+         id(ecodan_instance).set_power_mode(false);
 
   - platform: template
     id: ecodan_switch
@@ -230,26 +227,26 @@ select:
     optimistic: true
     restore_value: true
     options:
-      - "Heat Target temperature"
-      - "Heat Flow temperature"
-      - "Heat Compensation curve"
-      - "Cool Target temperature"
-      - "Cool Flow temperature"
+      - "Heat Target Temperature"
+      - "Heat Flow Temperature"
+      - "Heat Compensation Curve"
+      - "Cool Target Temperature"
+      - "Cool Flow Temperature"
     set_action:
       - lambda: |-
-          if (x == "Heat Target temperature") {
+          if (x == "Heat Target Temperature") {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP));
           }
-          else if (x == "Heat Flow temperature") {
+          else if (x == "Heat Flow Temperature") {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP));
           }
-          else if (x == "Heat Compensation curve") {
+          else if (x == "Heat Compensation Curve") {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE));
           }
-          else if (x == "Cool Target temperature") {
+          else if (x == "Cool Target Temperature") {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP));
           }
-          else if (x == "Cool Flow temperature") {
+          else if (x == "Cool Flow Temperature") {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP));
           }
 
@@ -259,9 +256,9 @@ select:
     optimistic: true
     restore_value: true
     options:
-      - "off"
-      - "performance"
-      - "eco"
+      - "Off"
+      - "Normal"
+      - "Eco"
     set_action:
       - lambda: |-
           id(ecodan_instance).set_dhw_mode(x);
@@ -285,13 +282,82 @@ text_sensor:
     mode_defrost:
       name: mode_defrost
     mode_dhw:
-      name: mode_dhw
+      id: mode_dhw      
+      internal: true
+      on_value:
+        if:
+          condition:
+            - lambda: |-
+                return id(heatpump_select_dhw_mode).state != id(mode_dhw).state && id(mode_dhw).state != "Unknown";
+          then:
+            - select.set:
+                id: heatpump_select_dhw_mode
+                option: !lambda "return id(mode_dhw).state;"
+      
     mode_dhw_forced:
-      name: mode_dhw_forced
-    mode_heating:
-      name: mode_heating
+      internal: true
+      id: mode_dhw_forced
+      on_value:
+        if:
+          condition:
+            and:
+              - text_sensor.state:
+                  id: mode_dhw_forced
+                  state: 'On'
+              - switch.is_off: heatpump_switch_force_dhw
+          then:
+            - switch.turn_on:
+                id: heatpump_switch_force_dhw
+          else:
+            if:
+              condition:
+                and:
+                  - text_sensor.state:
+                      id: mode_dhw_forced
+                      state: 'Off'
+                  - switch.is_on: heatpump_switch_force_dhw
+              then:
+                - switch.turn_off:
+                    id: heatpump_switch_force_dhw
+
+    mode_heating_cooling:
+      id: mode_heating_cooling
+      name: mode_heating_cooling
+      on_value:
+        if:
+          condition:
+            - lambda: |-
+                return id(heatpump_select_operating_mode).state != id(mode_heating_cooling).state && id(mode_heating_cooling).state != "Unknown";
+          then:
+            - select.set:
+                id: heatpump_select_operating_mode
+                option: !lambda "return id(mode_heating_cooling).state;"
+
     mode_power:
-      name: mode_power
+      internal: true
+      id: mode_power
+      on_value:
+        if:
+          condition:
+            and:
+              - text_sensor.state:
+                  id: mode_power
+                  state: 'On'
+              - switch.is_off: heatpump_switch_power_mode
+          then:
+            - switch.turn_on:
+                id: heatpump_switch_power_mode
+          else:
+            if:
+              condition:
+                and:
+                  - text_sensor.state:
+                      id: mode_power
+                      state: 'Off'
+                  - switch.is_on: heatpump_switch_power_mode
+              then:
+                - switch.turn_off:
+                    id: heatpump_switch_power_mode        
     mode_operation:
       name: mode_operation
     mode_holiday:

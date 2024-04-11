@@ -332,7 +332,7 @@ namespace ecodan
                 publish_state("mode_power", status.power_as_string());
                 publish_state("mode_operation", status.operation_as_string());
                 publish_state("mode_dhw", status.dhw_mode_as_string());
-                publish_state("mode_heating", status.hp_mode_as_string());
+                publish_state("mode_heating_cooling", status.hp_mode_as_string());
 
                 publish_state("dhw_flow_temp_target", status.DhwFlowTemperatureSetPoint);
                 publish_state("sh_flow_temp_target", status.RadiatorFlowTemperatureSetPoint);
@@ -482,10 +482,10 @@ namespace ecodan
         }
         else if (is_connected())
         {
-            // Update status the first time we enter this condition, then every 60s thereafter.
+            // Update status the first time we enter this condition, then every 30s thereafter.
             auto now = std::chrono::steady_clock::now();
-            static auto last_update = now - std::chrono::seconds(120);
-            if (now - last_update > std::chrono::seconds(60))
+            static auto last_update = now - std::chrono::seconds(60);
+            if (now - last_update > std::chrono::seconds(30))
             {
                 last_update = now;
                 if (!begin_get_status())
@@ -577,11 +577,11 @@ namespace ecodan
     {
         Status::DhwMode dhwMode = Status::DhwMode::NORMAL;
 
-        if (mode == "off")
+        if (mode == "Off")
             return set_dhw_force(false);
-        else if (mode == "performance")
+        else if (mode == "Normal")
             dhwMode = Status::DhwMode::NORMAL;
-        else if (mode == "eco")
+        else if (mode == "Eco")
             dhwMode = Status::DhwMode::ECO;
         else
             return;

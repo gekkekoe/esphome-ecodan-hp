@@ -26,7 +26,7 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:radiobox-blank",            
             entity_category=ENTITY_CATEGORY_NONE,
         ),        
-        cv.Optional("mode_heating"): text_sensor.text_sensor_schema(
+        cv.Optional("mode_heating_cooling"): text_sensor.text_sensor_schema(
             icon="mdi:alert",            
             entity_category=ENTITY_CATEGORY_NONE,
         ),        
