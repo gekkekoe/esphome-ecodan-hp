@@ -56,14 +56,14 @@ namespace ecodan
 #pragma endregion ESP32Hardware    
 
     void EcodanHeatpump::setup() {
-        ESP_LOGI(TAG, "register services"); 
-        register_service(&EcodanHeatpump::set_z1_target_temperature, "set_z1_target_temperature", {"newTemp"});
-        register_service(&EcodanHeatpump::set_z1_flow_target_temperature, "set_z1_flow_target_temperature", {"newTemp"});
-        register_service(&EcodanHeatpump::set_dhw_target_temperature, "set_dhw_target_temperature", {"newTemp"});
-        register_service(&EcodanHeatpump::set_dhw_mode, "set_dhw_mode", {"mode"});
-        register_service(&EcodanHeatpump::set_dhw_force, "set_dhw_force", {"on"});
-        register_service(&EcodanHeatpump::set_power_mode, "set_power_mode", {"on"});
-        register_service(&EcodanHeatpump::set_hp_mode, "set_hp_mode", {"mode"});        
+        // ESP_LOGI(TAG, "register services"); 
+        // register_service(&EcodanHeatpump::set_target_temperature, "set_target_temperature", {"newTemp", "zone"});
+        // register_service(&EcodanHeatpump::set_flow_target_temperature, "set_flow_target_temperature", {"newTemp", "zone"});
+        // register_service(&EcodanHeatpump::set_dhw_target_temperature, "set_dhw_target_temperature", {"newTemp"});
+        // register_service(&EcodanHeatpump::set_dhw_mode, "set_dhw_mode", {"mode"});
+        // register_service(&EcodanHeatpump::set_dhw_force, "set_dhw_force", {"on"});
+        // register_service(&EcodanHeatpump::set_power_mode, "set_power_mode", {"on"});
+        // register_service(&EcodanHeatpump::set_hp_mode, "set_hp_mode", {"mode"});        
 
         heatpumpInitialized = initialize();
         xTaskCreate(
@@ -484,8 +484,8 @@ namespace ecodan
         {
             // Update status the first time we enter this condition, then every 30s thereafter.
             auto now = std::chrono::steady_clock::now();
-            static auto last_update = now - std::chrono::seconds(60);
-            if (now - last_update > std::chrono::seconds(30))
+            static auto last_update = now - std::chrono::seconds(40);
+            if (now - last_update > std::chrono::seconds(20))
             {
                 last_update = now;
                 if (!begin_get_status())
@@ -506,7 +506,7 @@ namespace ecodan
 
 #pragma region Commands
 
-    void EcodanHeatpump::set_z1_target_temperature(float newTemp)
+    void EcodanHeatpump::set_target_temperature(float newTemp, esphome::ecodan::SetZone zone)
     {
         if (newTemp > get_max_thermostat_temperature())
         {
@@ -522,8 +522,17 @@ namespace ecodan
 
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
         cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
-        cmd[2] = static_cast<uint8_t>(SetZone::ZONE_1);
-        cmd.set_float16(newTemp, 10);
+        cmd[2] = static_cast<uint8_t>(zone);
+
+        if (zone == SetZone::BOTH || zone == SetZone::ZONE_1) {
+            cmd[6] = static_cast<uint8_t>(Status::HpMode::HEAT_ROOM_TEMP);
+            cmd.set_float16(newTemp, 10);
+        }
+            
+        if (zone == SetZone::BOTH || zone == SetZone::ZONE_2) {
+            cmd[7] = static_cast<uint8_t>(Status::HpMode::HEAT_ROOM_TEMP);
+            cmd.set_float16(newTemp, 12);
+        }
 
         {
             std::lock_guard<std::mutex> lock{cmdQueueMutex};
@@ -532,33 +541,44 @@ namespace ecodan
 
         if (!dispatch_next_cmd())
         {
-            ESP_LOGI(TAG, "command dispatch failed for z1 temperature setting!");
+            ESP_LOGI(TAG, "command dispatch failed for temperature setting!");
             return;
         }
 
         return;
     }
 
-    void EcodanHeatpump::set_z1_flow_target_temperature(float newTemp)
+    void EcodanHeatpump::set_flow_target_temperature(float newTemp, esphome::ecodan::SetZone zone)
     {
         if (newTemp > get_max_flow_target_temperature(status.hp_mode_as_string()))
         {
-            ESP_LOGI(TAG, "Z1 flow temperature setting exceeds maximum allowed (%f)!", get_max_flow_target_temperature(status.hp_mode_as_string()));
+            ESP_LOGI(TAG, "Flow temperature setting exceeds maximum allowed (%f)!", get_max_flow_target_temperature(status.hp_mode_as_string()));
             return;
         }
 
         if (newTemp < get_min_flow_target_temperature(status.hp_mode_as_string()))
         {
-            ESP_LOGI(TAG, "Z1 flow temperature setting is lower than minimum allowed (%f)!", get_min_flow_target_temperature(status.hp_mode_as_string()));
+            ESP_LOGI(TAG, "Flow temperature setting is lower than minimum allowed (%f)!", get_min_flow_target_temperature(status.hp_mode_as_string()));
             return;
         }
 
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
         cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
-        cmd[2] = static_cast<uint8_t>(SetZone::ZONE_1);
-        cmd[6] = static_cast<uint8_t>(status.HeatingCoolingMode);
-        cmd.set_float16(newTemp, 10);
+        cmd[2] = static_cast<uint8_t>(zone);
+        
+        auto flag = status.HeatingCoolingMode == Status::HpMode::COOL_FLOW_TEMP
+            ? static_cast<uint8_t>(Status::HpMode::COOL_FLOW_TEMP) : static_cast<uint8_t>(Status::HpMode::HEAT_FLOW_TEMP);
 
+        if (zone == SetZone::BOTH || zone == SetZone::ZONE_1) {
+            cmd[6] = flag;
+            cmd.set_float16(newTemp, 10);
+        }
+            
+        if (zone == SetZone::BOTH || zone == SetZone::ZONE_2) {
+            cmd[7] = flag;
+            cmd.set_float16(newTemp, 12);
+        }
+            
         {
             std::lock_guard<std::mutex> lock{cmdQueueMutex};
             cmdQueue.emplace(std::move(cmd));
@@ -566,7 +586,7 @@ namespace ecodan
 
         if (!dispatch_next_cmd())
         {
-            ESP_LOGI(TAG, "command dispatch failed for Z1 flow target temperature setting!");
+            ESP_LOGI(TAG, "command dispatch failed for flow target temperature setting!");
             return;
         }
 
