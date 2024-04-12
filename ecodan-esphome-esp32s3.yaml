@@ -38,7 +38,7 @@ esp32:
 #    components: [ ecodan ]
 
 external_components:
-  - source: github://gekkekoe/esphome-ecodan-hp@@main
+  - source: github://gekkekoe/esphome-ecodan-hp@main
     components: [ ecodan ]
     refresh: always
 
