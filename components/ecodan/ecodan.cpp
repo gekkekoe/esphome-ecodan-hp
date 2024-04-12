@@ -506,17 +506,50 @@ namespace ecodan
 
 #pragma region Commands
 
+    void EcodanHeatpump::set_z1_target_temperature(float newTemp)
+    {
+        if (newTemp > get_max_thermostat_temperature())
+        {
+            ESP_LOGI(TAG, "Thermostat setting exceeds maximum allowed!");
+            return;
+        }
+
+        if (newTemp < get_min_thermostat_temperature())
+        {
+            ESP_LOGI(TAG, "Thermostat setting is lower than minimum allowed!");
+            return;
+        }
+
+        Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
+        cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
+        cmd[2] = static_cast<uint8_t>(SetZone::ZONE_1);
+        cmd.set_float16(newTemp, 10);
+
+        {
+            std::lock_guard<std::mutex> lock{cmdQueueMutex};
+            cmdQueue.emplace(std::move(cmd));
+        }
+
+        if (!dispatch_next_cmd())
+        {
+            ESP_LOGI(TAG, "command dispatch failed for z1 temperature setting!");
+            return;
+        }
+
+        return;
+    }
+
     void EcodanHeatpump::set_z1_flow_target_temperature(float newTemp)
     {
         if (newTemp > get_max_flow_target_temperature(status.hp_mode_as_string()))
         {
-            ESP_LOGI(TAG, "Z1 flow temperature setting exceeds maximum allowed (%s)!", get_max_flow_target_temperature(status.hp_mode_as_string()));
+            ESP_LOGI(TAG, "Z1 flow temperature setting exceeds maximum allowed (%f)!", get_max_flow_target_temperature(status.hp_mode_as_string()));
             return;
         }
 
         if (newTemp < get_min_flow_target_temperature(status.hp_mode_as_string()))
         {
-            ESP_LOGI(TAG, "Z1 flow temperature setting is lower than minimum allowed (%s)!", get_min_flow_target_temperature(status.hp_mode_as_string()));
+            ESP_LOGI(TAG, "Z1 flow temperature setting is lower than minimum allowed (%f)!", get_min_flow_target_temperature(status.hp_mode_as_string()));
             return;
         }
 
@@ -775,39 +808,6 @@ namespace ecodan
     float EcodanHeatpump::get_max_thermostat_temperature()
     {
         return 28.0f;
-    }
-
-    void EcodanHeatpump::set_z1_target_temperature(float newTemp)
-    {
-        if (newTemp > get_max_thermostat_temperature())
-        {
-            ESP_LOGI(TAG, "Thermostat setting exceeds maximum allowed!");
-            return;
-        }
-
-        if (newTemp < get_min_thermostat_temperature())
-        {
-            ESP_LOGI(TAG, "Thermostat setting is lower than minimum allowed!");
-            return;
-        }
-
-        Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
-        cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
-        cmd[2] = static_cast<uint8_t>(SetZone::ZONE_1);
-        cmd.set_float16(newTemp, 10);
-
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-            cmdQueue.emplace(std::move(cmd));
-        }
-
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "command dispatch failed for z1 temperature setting!");
-            return;
-        }
-
-        return;
     }
 
     // From FTC6 installation manual ("DHW max. temp.")
