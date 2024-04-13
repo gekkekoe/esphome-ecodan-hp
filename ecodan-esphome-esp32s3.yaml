@@ -48,8 +48,12 @@ external_components:
     components: [ ecodan ]
     refresh: always
 
+packages:
+  zone1: !include zone1.yaml
+## enable if you want to use zone 2
+#  zone2: !include zone2.yaml
+
 ## change language labels to -en for English or -nl for Dutch
-#packages:
 #  substitutions: !include .ecodan-labels-nl.yaml
 #  substitutions: !include .ecodan-labels-en.yaml
 
@@ -117,40 +121,6 @@ button:
 ####################
 # heatpump commands
 number:
-  - platform: template
-    name: "target temperature"
-    id: heatpump_number_set_target_temperature
-    mode: slider
-    entity_category: config
-    optimistic: true
-    min_value: 8
-    max_value: 28
-    step: 0.5
-    initial_value: 20
-    restore_value: yes
-    unit_of_measurement: °C
-    set_action:
-      then:
-        - lambda: |-
-            id(ecodan_instance).set_target_temperature(x, esphome::ecodan::SetZone::BOTH);
-
-  - platform: template
-    name: "flow target temperature"
-    id: heatpump_number_set_flow_temperature
-    mode: slider
-    entity_category: config
-    optimistic: true
-    min_value: 5
-    max_value: 60
-    step: 0.5
-    initial_value: 30
-    restore_value: yes
-    unit_of_measurement: °C
-    set_action:
-      then:
-        - lambda: |-
-            id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::SetZone::BOTH);
-
   - platform: template
     name: "dhw target temperature"
     id: heatpump_number_set_dhw_temperature
@@ -448,38 +418,6 @@ sensor:
       name: dhw_delivered      
     sh_flow_temp_target:
       name: sh_flow_temp_target      
-    z1_flow_temp_target:
-      id: z1_flow_temp_target
-      name: z1_flow_temp_target
-      on_value:
-        if:
-          condition:
-            - lambda: |-
-                return id(heatpump_number_set_flow_temperature).state != id(z1_flow_temp_target).state;
-          then:
-            - number.set:
-                id: heatpump_number_set_flow_temperature
-                value: !lambda "return id(z1_flow_temp_target).state;"
-    z1_room_temp:
-      name: z1_room_temp      
-    z1_room_temp_target:
-      id: z1_room_temp_target
-      name: z1_room_temp_target
-      on_value:
-        if:
-          condition:
-            - lambda: |-
-                return id(heatpump_number_set_target_temperature).state != id(z1_room_temp_target).state;
-          then:
-            - number.set:
-                id: heatpump_number_set_target_temperature
-                value: !lambda "return id(z1_room_temp_target).state;"
-    z2_flow_temp_target:
-      name: z2_flow_temp_target      
-    z2_room_temp:
-      name: z2_room_temp      
-    z2_room_temp_target:
-      name: z2_room_temp_target      
 
   - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
     name: Signaal dB
@@ -511,3 +449,6 @@ sensor:
   - platform: internal_temperature
     name: Internal Esp temperature
     entity_category: diagnostic
+
+
+#zone2: !include zone2.yaml

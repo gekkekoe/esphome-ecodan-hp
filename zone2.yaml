@@ -1,0 +1,63 @@
+number:
+  - platform: template
+    name: "Z2 room temperature"
+    id: heatpump_number_z2_set_target_temperature
+    mode: slider
+    entity_category: config
+    optimistic: true
+    min_value: 8
+    max_value: 28
+    step: 0.5
+    initial_value: 20
+    restore_value: yes
+    unit_of_measurement: °C
+    set_action:
+      then:
+        - lambda: |-
+            id(ecodan_instance).set_target_temperature(x, esphome::ecodan::SetZone::ZONE_2);
+
+  - platform: template
+    name: "Z2 flow target temperature"
+    id: heatpump_number_z2_set_flow_temperature
+    mode: slider
+    entity_category: config
+    optimistic: true
+    min_value: 5
+    max_value: 60
+    step: 0.5
+    initial_value: 30
+    restore_value: yes
+    unit_of_measurement: °C
+    set_action:
+      then:
+        - lambda: |-
+            id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::SetZone::ZONE_2);
+
+sensor:
+  - platform: ecodan
+    z2_flow_temp_target:
+      id: z2_flow_temp_target
+      name: z2_flow_temp_target
+      on_value:
+        if:
+          condition:
+            - lambda: |-
+                return id(heatpump_number_z2_set_flow_temperature).state != id(z2_flow_temp_target).state;
+          then:
+            - number.set:
+                id: heatpump_number_z2_set_flow_temperature
+                value: !lambda "return id(z2_flow_temp_target).state;"
+    z2_room_temp:
+      name: z2_room_temp      
+    z2_room_temp_target:
+      id: z2_room_temp_target
+      name: z2_room_temp_target
+      on_value:
+        if:
+          condition:
+            - lambda: |-
+                return id(heatpump_number_z2_set_target_temperature).state != id(z2_room_temp_target).state;
+          then:
+            - number.set:
+                id: heatpump_number_z2_set_target_temperature
+                value: !lambda "return id(z2_room_temp_target).state;"

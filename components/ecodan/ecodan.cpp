@@ -83,7 +83,7 @@ namespace ecodan
         } 
         else 
         {
-            ESP_LOGW(TAG, "Could not publish state of sensor '%s' with value: '%f'", sensorKey, sensorValue);
+            ESP_LOGI(TAG, "Could not publish state of sensor '%s' with value: '%f'", sensorKey.c_str(), sensorValue);
         }
     }
 
@@ -94,7 +94,7 @@ namespace ecodan
         }
         else 
         {
-            ESP_LOGW(TAG, "Could not publish state of sensor '%s' with value: '%s'", sensorKey, sensorValue);
+            ESP_LOGI(TAG, "Could not publish state of sensor '%s' with value: '%s'", sensorKey.c_str(), sensorValue.c_str());
         }
     }
 
@@ -524,13 +524,16 @@ namespace ecodan
         cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
         cmd[2] = static_cast<uint8_t>(zone);
 
+        auto flag = status.HeatingCoolingMode == Status::HpMode::COOL_ROOM_TEMP
+            ? static_cast<uint8_t>(Status::HpMode::COOL_ROOM_TEMP) : static_cast<uint8_t>(Status::HpMode::HEAT_ROOM_TEMP);
+
         if (zone == SetZone::BOTH || zone == SetZone::ZONE_1) {
-            cmd[6] = static_cast<uint8_t>(Status::HpMode::HEAT_ROOM_TEMP);
+            cmd[6] = flag;
             cmd.set_float16(newTemp, 10);
         }
             
         if (zone == SetZone::BOTH || zone == SetZone::ZONE_2) {
-            cmd[7] = static_cast<uint8_t>(Status::HpMode::HEAT_ROOM_TEMP);
+            cmd[7] = flag;
             cmd.set_float16(newTemp, 12);
         }
 
