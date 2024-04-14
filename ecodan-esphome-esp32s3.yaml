@@ -50,8 +50,8 @@ external_components:
 
 packages:
   zone1: !include zone1.yaml
-## enable if you want to use zone 2
-#  zone2: !include zone2.yaml
+## disable if you don't want to use zone 2
+  zone2: !include zone2.yaml
 
 ## change language labels to -en for English or -nl for Dutch
 #  substitutions: !include .ecodan-labels-nl.yaml
@@ -280,7 +280,7 @@ text_sensor:
                 option: !lambda "return id(mode_dhw).state;"
       
     mode_dhw_forced:
-      internal: true
+      name: mode_dhw_forced
       id: mode_dhw_forced
       on_value:
         if:
@@ -288,22 +288,22 @@ text_sensor:
             and:
               - text_sensor.state:
                   id: mode_dhw_forced
-                  state: 'On'
-              - switch.is_off: heatpump_switch_force_dhw
+                  state: 'Off'
+              - switch.is_on: heatpump_switch_force_dhw
           then:
-            - switch.turn_on:
+            - switch.turn_off:
                 id: heatpump_switch_force_dhw
-          else:
-            if:
-              condition:
-                and:
-                  - text_sensor.state:
-                      id: mode_dhw_forced
-                      state: 'Off'
-                  - switch.is_on: heatpump_switch_force_dhw
-              then:
-                - switch.turn_off:
-                    id: heatpump_switch_force_dhw
+          # else:
+          #   if:
+          #     condition:
+          #       and:
+          #         - text_sensor.state:
+          #             id: mode_dhw_forced
+          #             state: 'On'
+          #         - switch.is_off: heatpump_switch_force_dhw
+          #     then:
+          #       - switch.turn_on:
+          #           id: heatpump_switch_force_dhw
 
     mode_heating_cooling:
       id: mode_heating_cooling
@@ -351,14 +351,6 @@ text_sensor:
       name: mode_booster
     mode_prohibit_dhw:
       name: mode_prohibit_dhw
-    mode_prohibit_heating_z1:
-      name: mode_prohibit_heating_z1
-    mode_prohibit_cool_z1:
-      name: mode_prohibit_cool_z1
-    mode_prohibit_heating_z2:
-      name: mode_prohibit_heating_z2
-    mode_prohibit_cool_z2:
-      name: mode_prohibit_cool_z2
 
 sensor:
   - platform: ecodan

@@ -1,3 +1,10 @@
+text_sensor:
+  - platform: ecodan
+    mode_prohibit_heating_z1:
+      name: mode_prohibit_heating_z1
+    mode_prohibit_cool_z1:
+      name: mode_prohibit_cool_z1
+
 number:
   - platform: template
     name: "z1 room temperature"
