@@ -508,17 +508,17 @@ namespace ecodan
 
     void EcodanHeatpump::set_target_temperature(float newTemp, esphome::ecodan::SetZone zone)
     {
-        if (newTemp > get_max_thermostat_temperature())
-        {
-            ESP_LOGI(TAG, "Thermostat setting exceeds maximum allowed!");
-            return;
-        }
+        // if (newTemp > get_max_thermostat_temperature())
+        // {
+        //     ESP_LOGI(TAG, "Thermostat setting exceeds maximum allowed!");
+        //     return;
+        // }
 
-        if (newTemp < get_min_thermostat_temperature())
-        {
-            ESP_LOGI(TAG, "Thermostat setting is lower than minimum allowed!");
-            return;
-        }
+        // if (newTemp < get_min_thermostat_temperature())
+        // {
+        //     ESP_LOGI(TAG, "Thermostat setting is lower than minimum allowed!");
+        //     return;
+        // }
 
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
         cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
@@ -553,17 +553,17 @@ namespace ecodan
 
     void EcodanHeatpump::set_flow_target_temperature(float newTemp, esphome::ecodan::SetZone zone)
     {
-        if (newTemp > get_max_flow_target_temperature(status.hp_mode_as_string()))
-        {
-            ESP_LOGI(TAG, "Flow temperature setting exceeds maximum allowed (%f)!", get_max_flow_target_temperature(status.hp_mode_as_string()));
-            return;
-        }
+        // if (newTemp > get_max_flow_target_temperature(status.hp_mode_as_string()))
+        // {
+        //     ESP_LOGI(TAG, "Flow temperature setting exceeds maximum allowed (%f)!", get_max_flow_target_temperature(status.hp_mode_as_string()));
+        //     return;
+        // }
 
-        if (newTemp < get_min_flow_target_temperature(status.hp_mode_as_string()))
-        {
-            ESP_LOGI(TAG, "Flow temperature setting is lower than minimum allowed (%f)!", get_min_flow_target_temperature(status.hp_mode_as_string()));
-            return;
-        }
+        // if (newTemp < get_min_flow_target_temperature(status.hp_mode_as_string()))
+        // {
+        //     ESP_LOGI(TAG, "Flow temperature setting is lower than minimum allowed (%f)!", get_min_flow_target_temperature(status.hp_mode_as_string()));
+        //     return;
+        // }
 
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
         cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;

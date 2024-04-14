@@ -7,7 +7,7 @@ text_sensor:
 
 number:
   - platform: template
-    name: "Z2 room temperature"
+    name: "z2 room temperature"
     id: heatpump_number_z2_set_target_temperature
     mode: slider
     entity_category: config
@@ -21,10 +21,10 @@ number:
     set_action:
       then:
         - lambda: |-
-            id(ecodan_instance).set_target_temperature(x, esphome::ecodan::SetZone::ZONE_2);
+            id(ecodan_instance).set_target_temperature(x, esphome::ecodan::SetZone::BOTH);
 
   - platform: template
-    name: "Z2 flow target temperature"
+    name: "z2 flow target temperature"
     id: heatpump_number_z2_set_flow_temperature
     mode: slider
     entity_category: config
@@ -38,7 +38,7 @@ number:
     set_action:
       then:
         - lambda: |-
-            id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::SetZone::ZONE_2);
+            id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::SetZone::BOTH);
 
 sensor:
   - platform: ecodan
