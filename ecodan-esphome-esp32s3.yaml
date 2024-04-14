@@ -178,18 +178,6 @@ switch:
          id(ecodan_instance).set_dhw_force(false);
 
   - platform: template
-    name: Holiday mode
-    id: heatpump_switch_holiday
-    restore_mode: RESTORE_DEFAULT_OFF
-    optimistic: true
-    turn_on_action:
-      - lambda: |-
-         id(ecodan_instance).set_holiday(true);
-    turn_off_action:
-      - lambda: |-
-         id(ecodan_instance).set_holiday(false);
-
-  - platform: template
     name: On/Off status
     id: heatpump_switch_power_mode
     restore_mode: RESTORE_DEFAULT_ON
@@ -358,30 +346,7 @@ text_sensor:
     mode_operation:
       name: mode_operation
     mode_holiday:
-      id: mode_holiday
       name: mode_holiday
-      on_value:
-        if:
-          condition:
-            and:
-              - text_sensor.state:
-                  id: mode_holiday
-                  state: 'Off'
-              - switch.is_on: heatpump_switch_holiday
-          then:
-            - switch.turn_off:
-                id: heatpump_switch_holiday
-          else:
-            if:
-              condition:
-                and:
-                  - text_sensor.state:
-                      id: mode_holiday
-                      state: 'On'
-                  - switch.is_off: heatpump_switch_holiday
-              then:
-                - switch.turn_on:
-                    id: heatpump_switch_holiday      
     mode_booster:
       name: mode_booster
     mode_prohibit_dhw:

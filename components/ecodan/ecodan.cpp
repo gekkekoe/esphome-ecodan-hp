@@ -680,26 +680,6 @@ namespace ecodan
         return;
     }
 
-    void EcodanHeatpump::set_holiday(bool on)
-    {   
-        Message cmd{MsgType::SET_CMD, SetType::DHW_SETTING};
-        cmd[1] = SET_SETTINGS_FLAG_MODE_TOGGLE;
-        cmd[2] = on ? 1 : 0;
-
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-            cmdQueue.emplace(std::move(cmd));
-        }
-
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "command dispatch failed for DHW force setting!");
-            return;
-        }
-
-        return;
-    }
-
     void EcodanHeatpump::set_power_mode(bool on)
     {
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
