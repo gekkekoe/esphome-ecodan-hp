@@ -25,23 +25,34 @@ api:
 #  encryption:
 #    key: !secret heatpump_encryption_key
 
-external_components:
- - source:
-     type: local
-     path: components
-   components: [ ecodan ]
+#external_components:
+# - source:
+#     type: local
+#     path: components
+#   components: [ ecodan ]
 
-# external_components:
-#   - source: github://gekkekoe/esphome-ecodan-hp@main
-#     components: [ ecodan ]
-#     refresh: always
-
-packages:
-  esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
-  zone1: !include confs/zone1.yaml
+#packages:
+#  esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
+#  zone1: !include confs/zone1.yaml
 ## disable if you don't want to use zone 2
 #  zone2: !include confs/zone2.yaml
 
+external_components:
+  - source: github://gekkekoe/esphome-ecodan-hp@main
+    components: [ ecodan ]
+    refresh: always
+
+packages:
+  remote_package:
+    url: https://github.com/gekkekoe/esphome-ecodan-hp/
+    ref: main
+    refresh: always
+    files: [ 
+            confs/esp32s3.yaml, # confs/esp32.yaml, for regular board
+            confs/zone1.yaml,
+            ## enable if you want to use zone 2
+            #confs/zone2.yaml, 
+           ]
 ## change language labels to -en for English or -nl for Dutch
 #  substitutions: !include .ecodan-labels-nl.yaml
 #  substitutions: !include .ecodan-labels-en.yaml
@@ -350,6 +361,3 @@ sensor:
   - platform: internal_temperature
     name: Internal Esp temperature
     entity_category: diagnostic
-
-
-#zone2: !include zone2.yaml
