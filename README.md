@@ -1,9 +1,6 @@
 # ESPHome version of Ecodan ha local
 It is highly inspired by https://github.com/rbroker/ecodan-ha-local, https://github.com/tobias-93/esphome-ecodan-heatpump and https://github.com/vekexasia/comfoair-esp32
 
-# ecodan-esp32 example configurations
-ESP32(S3) configuration files ecodan-ha-local and esphome
-
 # required hardware
 If you don't want to solder, use one of the boards that supports 5v on the GPIO ports. It also should work for airco units with cn105 connectors.
 
@@ -42,19 +39,30 @@ One of the following:
     pip3 install wheel
     pip3 install esphome
     ```
-* Fill in `secrets.yaml` and copy the `ecodan-esphome-esp32s3.yaml` to your esphome folder and edit the values (*check GPO pins (uart: section), you might need to swap the pins in the config*)
+* Fill in `secrets.yaml` and copy the `ecodan-esphome.yaml` to your esphome folder and edit the values (*check GPO pins (uart: section), you might need to swap the pins in the config*)
+
+* Edit the following section in `ecodan-esphome.yaml` to match your configuration (esp board, zone1/zone2)
+
+```
+packages:
+  esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
+  zone1: !include confs/zone1.yaml
+## disable if you don't want to use zone 2
+  zone2: !include confs/zone2.yaml
+```
+
 * Build
 ```console
-esphome compile ecodan-esphome-esp32s3.yaml
+esphome compile ecodan-esphome.yaml
 ```
 * To find the tty* where the esp32 is connected at, use `sudo dmesg | grep tty`. On my machine it was `ttyACM0` for usb-c, and `ttyUSB0` for usb-a.
 * Connect your esp32 via usb and flash
 ```console 
-esphome upload --device=/dev/ttyACM0 ecodan-esphome-esp32s3.yaml
+esphome upload --device=/dev/ttyACM0 ecodan-esphome.yaml
 ```
 * You can update the firmware via de web interface of the esp after the initial flash, or use the following command to flash over the network
 ```console 
-esphome upload --device=ip_address ecodan-esphome-esp32s3.yaml
+esphome upload --device=ip_address ecodan-esphome.yaml
 ```
 
 # 2) build ecodan-ha-local firmware

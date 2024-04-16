@@ -25,16 +25,16 @@ api:
 #  encryption:
 #    key: !secret heatpump_encryption_key
 
-# external_components:
-#  - source:
-#      type: local
-#      path: components
-#    components: [ ecodan ]
-
 external_components:
-  - source: github://gekkekoe/esphome-ecodan-hp@main
-    components: [ ecodan ]
-    refresh: always
+ - source:
+     type: local
+     path: components
+   components: [ ecodan ]
+
+# external_components:
+#   - source: github://gekkekoe/esphome-ecodan-hp@main
+#     components: [ ecodan ]
+#     refresh: always
 
 packages:
   esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
