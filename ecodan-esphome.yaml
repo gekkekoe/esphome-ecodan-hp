@@ -5,12 +5,6 @@ substitutions:
 esphome:
   name: ${name}
   friendly_name: ${friendlyName}
-  on_boot:
-    priority: 200
-    then:
-      - delay: 30s
-      - switch.turn_off:
-          id: ecodan_led_switch
 
 wifi:
   ssid: !secret wifi_ssid
@@ -31,12 +25,6 @@ api:
 #  encryption:
 #    key: !secret heatpump_encryption_key
 
-esp32:
-  board: esp32-s3-devkitc-1
-  framework:
-    type: arduino
-    version: latest
-
 # external_components:
 #  - source:
 #      type: local
@@ -49,9 +37,10 @@ external_components:
     refresh: always
 
 packages:
-  zone1: !include zone1.yaml
+  esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
+  zone1: !include confs/zone1.yaml
 ## disable if you don't want to use zone 2
-  zone2: !include zone2.yaml
+#  zone2: !include confs/zone2.yaml
 
 ## change language labels to -en for English or -nl for Dutch
 #  substitutions: !include .ecodan-labels-nl.yaml
@@ -79,45 +68,6 @@ ecodan:
   rx_pin: GPIO2
   tx_pin: GPIO1
 
-light:
-#G35=RGB WS2812C-2020
-  - platform: esp32_rmt_led_strip
-    name: Led
-    id: led
-    internal: true
-    rgb_order: GRB
-    pin: 35
-    num_leds: 4
-    # RMT 0 channels will be occupied by IR
-    rmt_channel: 1
-    chipset: ws2812
-    restore_mode: ALWAYS_ON  #OFF?
-
-#G41=Button
-binary_sensor:
-  - platform: gpio
-    name: Buttonw
-    id: g41button
-    pin:
-      number: GPIO41
-      inverted: true
-      mode:
-        input: true
-        pullup: true
-    internal: true
-    filters:
-      - delayed_off: 10ms
-    # Toggle the switch when the pushbutton is pressed
-    on_press:
-      then:
-        - switch.toggle: ecodan_led_switch
-
-###  ESP restart button
-button:
-  - platform: restart
-    id: restart_button
-    name: Esp restart
-
 ####################
 # heatpump commands
 number:
@@ -138,31 +88,6 @@ number:
         - lambda: |-
             id(ecodan_instance).set_dhw_target_temperature(x);
 
-    ## Set led brightness
-  - platform: template
-    id: led_brightness
-    name: Led brightness #${led_brightness}
-    icon: mdi:toggle-switch-variant
-    mode: slider
-    entity_category: config
-    optimistic: true
-    min_value: 0
-    max_value: 100
-    step: 10
-    initial_value: 70
-    restore_value: yes
-    unit_of_measurement: "%"
-    on_value:
-      then:
-        - if:
-            condition:
-              - light.is_on: led
-            then:
-            - light.turn_on:
-                id: led
-                brightness: !lambda |-
-                  // output value must be in range 0 - 1.0
-                  return id(led_brightness).state / 100.0;
 
 switch:
   - platform: template
@@ -188,22 +113,6 @@ switch:
     turn_off_action:
       - lambda: |-
          id(ecodan_instance).set_power_mode(false);
-
-  - platform: template
-    id: ecodan_led_switch
-    name: Led switch #${led_switch}
-    optimistic: true
-    restore_mode: RESTORE_DEFAULT_ON 
-    lambda: return id(ecodan_led_switch).state;
-    turn_on_action:
-      - light.turn_on:
-          id: led
-          brightness: !lambda |-
-            // output value must be in range 0 - 1.0
-            return id(led_brightness).state / 100.0;
-    turn_off_action:
-      - light.turn_off:
-          id: led
 
 select:
   - platform: template
