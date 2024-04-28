@@ -14,14 +14,14 @@ namespace ecodan
         CONNECT_CMD = 0x5A,
         CONNECT_RES = 0x7A,
         EXT_CONNECT_CMD = 0x5B,
-        EXT_CONNECT_RES = 0x7B,
-        ACK_RES = 0xFF
+        EXT_CONNECT_RES = 0x7B
     };
 
     enum class SetType : uint8_t
     {
         BASIC_SETTINGS = 0x32,
-        DHW_SETTING = 0x34
+        DHW_SETTING = 0x34,
+        ROOM_SETTINGS = 0x35
     };
 
 #define SET_SETTINGS_FLAG_ZONE_TEMPERATURE 0x80
@@ -47,37 +47,19 @@ namespace ecodan
 
     enum class GetType : uint8_t
     {
-        UNKNOWN_0x01 = 0x01,
         DEFROST_STATE = 0x02,
-        UNKNOWN_0x03 = 0x03,
         COMPRESSOR_FREQUENCY = 0x04,
         FORCED_DHW_STATE = 0x05,
-        UNKNOWN_0x06 = 0x06,
         HEATING_POWER = 0x07,
         TEMPERATURE_CONFIG = 0x09,
         SH_TEMPERATURE_STATE = 0x0B,
         DHW_TEMPERATURE_STATE_A = 0x0C,
         DHW_TEMPERATURE_STATE_B = 0x0D,
-        UNKNOWN_0x0E = 0x0E,
-        UNKNOWN_0x0F = 0x0F,
-        UNKNOWN_0x10 = 0x10,
-        UNKNOWN_0x11 = 0x11,
         ACTIVE_TIME = 0x13,
         FLOW_RATE = 0x14,
         PUMP_STATUS = 0x15,
-        UNKNOWN_0x16 = 0x16,
-        UNKNOWN_0x17 = 0x17,
-        UNKNOWN_0x18 = 0x18,
-        UNKNOWN_0x19 = 0x19,
-        MODE_FLAGS_A = 0x1A,
-        MODE_FLAGS_B = 0x1B,
-        UNKNOWN_0x1C = 0x1C,
-        UNKNOWN_0x1D = 0x1D,
-        UNKNOWN_0x1E = 0x1F,
-        UNKNOWN_0x20 = 0x20,
-        UNKNOWN_0x26 = 0x26,
-        UNKNOWN_0x27 = 0x27,
-        UNKNOWN_0x28 = 0x28,
+        MODE_FLAGS_A = 0x26,
+        MODE_FLAGS_B = 0x28,
         ENERGY_USAGE = 0xA1,
         ENERGY_DELIVERY = 0xA2
     };
@@ -99,20 +81,6 @@ namespace ecodan
         Message()
             : cmd_{false}
         {
-        }
-
-        Message(MsgType msgType, bool isCmd)
-            : cmd_{true}, buffer_{HEADER_MAGIC_A, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE)
-        {
-            if (isCmd) {
-                // All SET_CMD messages have 15-bytes of zero payload.
-                char payload[PAYLOAD_SIZE] = {};
-                write_payload(payload, sizeof(payload));                
-            }
-            else {
-                char connect[2] = {0x00, 0x09};
-                write_payload(connect, sizeof(connect) - 1);        
-            }
         }
 
         Message(MsgType msgType)
@@ -165,7 +133,7 @@ namespace ecodan
             
             char result[1024];
 
-            snprintf(result, 1024, "%s { .Hdr { %02X, %02X, %02X, %02X, %02X } .Payload { %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X } .Chk { %02X } }",
+            snprintf(result, 1024, "%s { .Hdr { %x, %x, %x, %x, %x } .Payload { %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x } .Chk { %x } }",
                     cmd_ ? "CMD" : "RES",
                     buffer_[0], buffer_[1], buffer_[2], buffer_[3], buffer_[4],
                     buffer_[5], buffer_[6], buffer_[7], buffer_[8], buffer_[9],

@@ -45,19 +45,19 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("mode_booster"): text_sensor.text_sensor_schema(
             icon="mdi:alert",            
             entity_category=ENTITY_CATEGORY_NONE,
-        ),        
+        ), 
+        cv.Optional("mode_water_pump"): text_sensor.text_sensor_schema(
+            icon="mdi:radiobox-blank",            
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),
+        cv.Optional("mode_three_way_valve"): text_sensor.text_sensor_schema(
+            icon="mdi:radiobox-blank",            
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),                   
         cv.Optional("mode_prohibit_dhw"): text_sensor.text_sensor_schema(
             icon="mdi:alert",            
             entity_category=ENTITY_CATEGORY_NONE,
         ),
-        cv.Optional("mode_pump_dhw"): text_sensor.text_sensor_schema(
-            icon="mdi:radiobox-blank",            
-            entity_category=ENTITY_CATEGORY_NONE,
-        ),
-        cv.Optional("mode_pump_z1"): text_sensor.text_sensor_schema(
-            icon="mdi:radiobox-blank",            
-            entity_category=ENTITY_CATEGORY_NONE,
-        ), 
         cv.Optional("mode_prohibit_heating_z1"): text_sensor.text_sensor_schema(
             icon="mdi:alert",            
             entity_category=ENTITY_CATEGORY_NONE,
@@ -74,10 +74,7 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:alert",            
             entity_category=ENTITY_CATEGORY_NONE,
         ),        
-        cv.Optional("mode_pump_z2"): text_sensor.text_sensor_schema(
-            icon="mdi:radiobox-blank",            
-            entity_category=ENTITY_CATEGORY_NONE,
-        ), 
+        
     }).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):

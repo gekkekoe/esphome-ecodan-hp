@@ -33,18 +33,6 @@ namespace ecodan
 #endif
     }
 
-    TaskHandle_t serialSlaveRxTaskHandle = nullptr;
-    void IRAM_ATTR serial_slave_rx_isr()
-    {
-        BaseType_t higherPriorityTaskWoken = pdFALSE;
-        vTaskNotifyGiveIndexedFromISR(serialSlaveRxTaskHandle, 0, &higherPriorityTaskWoken);
-#if CONFIG_IDF_TARGET_ESP32C3
-        portEND_SWITCHING_ISR(higherPriorityTaskWoken);
-#else
-        portYIELD_FROM_ISR(higherPriorityTaskWoken);
-#endif
-    }
-
     void init_watchdog()
     {
 #if ARDUINO_ARCH_ESP32
@@ -69,7 +57,7 @@ namespace ecodan
 
     void EcodanHeatpump::setup() {
         // ESP_LOGI(TAG, "register services"); 
-        // register_service(&EcodanHeatpump::set_target_temperature, "set_target_temperature", {"newTemp", "zone"});
+        // register_service(&EcodanHeatpump::set_room_temperature, "set_room_temperature", {"newTemp", "zone"});
         // register_service(&EcodanHeatpump::set_flow_target_temperature, "set_flow_target_temperature", {"newTemp", "zone"});
         // register_service(&EcodanHeatpump::set_dhw_target_temperature, "set_dhw_target_temperature", {"newTemp"});
         // register_service(&EcodanHeatpump::set_dhw_mode, "set_dhw_mode", {"mode"});
@@ -84,17 +72,7 @@ namespace ecodan
             8*1024,
             this,
             5,
-            NULL);
-
-            if (slaveActive) {
-                xTaskCreate(
-                    [](void* o){ static_cast<EcodanHeatpump*>(o)->serial_slave_rx_thread(); },
-                    "serial_slave_rx_task",
-                    8*1024,
-                    this,
-                    5,
-                    NULL);     
-            }
+            NULL);        
     }
 
 
@@ -139,15 +117,343 @@ namespace ecodan
     void EcodanHeatpump::set_tx(int tx) { 
         serialTxPort = tx; 
     }
+
+#pragma endregion Configuration
+
+#pragma region Serial
+    bool EcodanHeatpump::serial_tx(Message& msg)
+    {
+        if (!port)
+        {
+            ESP_LOGE(TAG, "Serial connection unavailable for tx");
+            return false;
+        }
+
+        if (port.availableForWrite() < msg.size())
+        {
+            ESP_LOGI(TAG, "Serial tx buffer size: %u", port.availableForWrite());
+            return false;
+        }
+
+        msg.set_checksum();
+        port.write(msg.buffer(), msg.size());
+        port.flush(true);
+
+        //ESP_LOGV(TAG, msg.debug_dump_packet().c_str());
+
+        return true;
+    }
     
-    void EcodanHeatpump::set_slave_rx(int rx) { 
-        slaveRxPort = rx; 
+    void EcodanHeatpump::resync_rx()
+    {
+        while (port.available() > 0 && port.peek() != HEADER_MAGIC_A)
+            port.read();
+
+        clear_command_queue();
     }
 
-    void EcodanHeatpump::set_slave_tx(int tx) { 
-        slaveTxPort = tx; 
+    bool EcodanHeatpump::serial_rx(Message& msg)
+    {
+        if (!port)
+        {
+            ESP_LOGE(TAG, "Serial connection unavailable for rx");
+            return false;
+        }
+
+        if (port.available() < HEADER_SIZE)
+        {
+            const TickType_t maxBlockingTime = pdMS_TO_TICKS(1000);
+            ulTaskNotifyTakeIndexed(0, pdTRUE, maxBlockingTime);
+
+            // We were woken by an interrupt, but there's not enough data available
+            // yet on the serial port for us to start processing it as a packet.
+            if (port.available() < HEADER_SIZE)
+                return false;
+        }
+
+        // Scan for the start of an Ecodan packet.
+        if (port.peek() != HEADER_MAGIC_A)
+        {
+            ESP_LOGE(TAG, "Dropping serial data, header magic mismatch");
+            resync_rx();
+            return false;
+        }
+
+        if (port.readBytes(msg.buffer(), HEADER_SIZE) < HEADER_SIZE)
+        {
+            ESP_LOGI(TAG, "Serial port header read failure!");
+            resync_rx();
+            return false;
+        }
+
+        msg.increment_write_offset(HEADER_SIZE);
+
+        if (!msg.verify_header())
+        {
+            ESP_LOGI(TAG, "Serial port message appears invalid, skipping payload wait...");
+            resync_rx();
+            return false;
+        }
+
+        // It shouldn't take long to receive the rest of the payload after we get the header.
+        size_t remainingBytes = msg.payload_size() + CHECKSUM_SIZE;
+        auto startTime = std::chrono::steady_clock::now();
+        while (port.available() < remainingBytes)
+        {
+            delay(1);
+
+            if (std::chrono::steady_clock::now() - startTime > std::chrono::seconds(30))
+            {
+                ESP_LOGI(TAG, "Serial port message could not be received within 30s (got %u / %u bytes)", port.available(), remainingBytes);
+                resync_rx();
+                return false;
+            }
+        }
+
+        if (port.readBytes(msg.payload(), remainingBytes) < remainingBytes)
+        {
+            ESP_LOGI(TAG, "Serial port payload read failure!");
+            resync_rx();
+            return false;
+        }
+
+        msg.increment_write_offset(msg.payload_size()); // Don't count checksum byte.
+
+        if (!msg.verify_checksum())
+        {
+            resync_rx();
+            return false;
+        }
+
+        //ESP_LOGV(TAG, msg.debug_dump_packet().c_str());
+
+        return true;
     }
-#pragma endregion Configuration
+
+    void EcodanHeatpump::handle_set_response(Message& res)
+    {
+        if (res.type() != MsgType::SET_RES)
+        {
+            ESP_LOGI(TAG, "Unexpected set response type: %#x", static_cast<uint8_t>(res.type()));
+        }
+    }
+
+    void EcodanHeatpump::handle_get_response(Message& res)
+    {
+        {
+            std::lock_guard<Status> lock{status};
+
+            switch (res.payload_type<GetType>())
+            {
+            case GetType::DEFROST_STATE:
+                status.DefrostActive = res[3] != 0;
+                publish_state("mode_defrost", status.DefrostActive ? "On" : "Off");
+                break;
+            case GetType::COMPRESSOR_FREQUENCY:
+                status.CompressorFrequency = res[1];
+                publish_state("compressor_frequency", status.CompressorFrequency);
+                break;
+            case GetType::FORCED_DHW_STATE:
+                status.DhwForcedActive = res[7] != 0 && res[5] == 0; // bit 5 -> 7 is normal dhw, 0 - forced dhw
+                publish_state("mode_dhw_forced", status.DhwForcedActive ? "On" : "Off");
+                break;
+            case GetType::HEATING_POWER:
+                status.OutputPower = res[6];
+                status.BoosterActive = res[4] == 2;
+                publish_state("output_power", status.OutputPower);
+                publish_state("mode_booster", status.BoosterActive ? "On" : "Off");
+                break;
+            case GetType::TEMPERATURE_CONFIG:
+                status.Zone1SetTemperature = res.get_float16(1);
+                status.Zone2SetTemperature = res.get_float16(3);
+                status.Zone1FlowTemperatureSetPoint = res.get_float16(5);
+                status.Zone2FlowTemperatureSetPoint = res.get_float16(7);
+                status.LegionellaPreventionSetPoint = res.get_float16(9);
+                status.DhwTemperatureDrop = res.get_float8_v2(11);
+                status.MaximumFlowTemperature = res.get_float8_v3(12);
+                status.MinimumFlowTemperature = res.get_float8_v3(13);
+
+                publish_state("z1_room_temp_target", status.Zone1SetTemperature);
+                publish_state("z2_room_temp_target", status.Zone2SetTemperature);
+                publish_state("z1_flow_temp_target", status.Zone1FlowTemperatureSetPoint);
+                publish_state("z2_flow_temp_target", status.Zone2FlowTemperatureSetPoint);
+
+                publish_state("legionella_prevention_temp", status.LegionellaPreventionSetPoint);
+                publish_state("dhw_flow_temp_drop", status.DhwTemperatureDrop);
+                //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
+                // min/max flow
+
+                break;
+            case GetType::SH_TEMPERATURE_STATE:
+                status.Zone1RoomTemperature = res.get_float16(1);
+                if (res.get_u16(3) != 0xF0C4) // 0xF0C4 seems to be a sentinel value for "not reported in the current system"
+                    status.Zone2RoomTemperature = res.get_float16(3);
+                else
+                    status.Zone2RoomTemperature = 0.0f;
+                status.OutsideTemperature = res.get_float8(11);
+                
+                publish_state("z1_room_temp", status.Zone1RoomTemperature);
+                publish_state("z2_room_temp", status.Zone2RoomTemperature);
+                publish_state("outside_temp", status.OutsideTemperature);                
+                break;
+            case GetType::DHW_TEMPERATURE_STATE_A:
+                status.HpFeedTemperature = res.get_float16(1);
+                status.HpReturnTemperature = res.get_float16(4);
+                status.DhwTemperature = res.get_float16(7);
+                status.HpRefrigerantLiquidTemperature = res.get_float16(8);
+
+                publish_state("hp_feed_temp", status.HpFeedTemperature);
+                publish_state("hp_return_temp", status.HpReturnTemperature);
+                publish_state("hp_refrigerant_temp", status.HpRefrigerantLiquidTemperature);
+                publish_state("dhw_temp", status.DhwTemperature);
+                break;
+            case GetType::DHW_TEMPERATURE_STATE_B:
+                status.BoilerFlowTemperature = res.get_float16(1);
+                status.BoilerReturnTemperature = res.get_float16(4);
+
+                publish_state("boiler_flow_temp", status.BoilerFlowTemperature);
+                publish_state("boiler_return_temp", status.BoilerReturnTemperature);
+                break;
+            case GetType::ACTIVE_TIME:
+                status.Runtime = res.get_float24_v2(3);
+                publish_state("runtime", status.Runtime);
+                //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
+                break;
+            case GetType::PUMP_STATUS:
+                status.WaterPumpActive = res[1] != 0;
+                status.ThreeWayValveActive = res[6] != 0;
+                publish_state("mode_water_pump", status.WaterPumpActive ? "On" : "Off");
+                publish_state("mode_three_way_valve", status.ThreeWayValveActive ? "On" : "Off");
+                //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
+                break;                
+            case GetType::FLOW_RATE:
+                status.FlowRate = res[12];
+                publish_state("flow_rate", status.FlowRate);
+                break;
+            case GetType::MODE_FLAGS_A:
+                status.set_power_mode(res[3]);
+                status.set_operation_mode(res[4]);
+                status.set_dhw_mode(res[5]);
+                status.set_heating_cooling_mode(res[6]);
+                status.DhwFlowTemperatureSetPoint = res.get_float16(8);
+                status.RadiatorFlowTemperatureSetPoint = res.get_float16(12);
+
+                publish_state("mode_power", status.power_as_string());
+                publish_state("mode_operation", status.operation_as_string());
+                publish_state("mode_dhw", status.dhw_mode_as_string());
+                publish_state("mode_heating_cooling", status.hp_mode_as_string());
+
+                publish_state("dhw_flow_temp_target", status.DhwFlowTemperatureSetPoint);
+                publish_state("sh_flow_temp_target", status.RadiatorFlowTemperatureSetPoint);
+                break;
+            case GetType::MODE_FLAGS_B:
+                status.HolidayMode = res[4] > 0;
+
+                status.ProhibitDhw = res[5] != 0;
+                status.ProhibitHeatingZ1 = res[6] != 0;
+                status.ProhibitCoolingZ1 = res[7] != 0;
+                status.ProhibitHeatingZ2 = res[8] != 0;
+                status.ProhibitCoolingZ2 = res[9] != 0;
+                
+                publish_state("mode_holiday", status.HolidayMode ? "On" : "Off");
+                publish_state("mode_prohibit_dhw", status.ProhibitDhw ? "On" : "Off");
+                publish_state("mode_prohibit_heating_z1", status.ProhibitHeatingZ1 ? "On" : "Off");
+                publish_state("mode_prohibit_cool_z1", status.ProhibitCoolingZ1 ? "On" : "Off");
+                publish_state("mode_prohibit_heating_z2", status.ProhibitHeatingZ2 ? "On" : "Off");
+                publish_state("mode_prohibit_cool_z2", status.ProhibitCoolingZ2 ? "On" : "Off");
+                break;
+            case GetType::ENERGY_USAGE:
+                status.EnergyConsumedHeating = res.get_float24(4);
+                status.EnergyConsumedCooling = res.get_float24(7);
+                status.EnergyConsumedDhw = res.get_float24(10);
+
+                publish_state("heating_consumed", status.EnergyConsumedHeating);
+                publish_state("cool_consumed", status.EnergyConsumedCooling);
+                publish_state("dhw_consumed", status.EnergyConsumedDhw);
+                break;
+            case GetType::ENERGY_DELIVERY:
+                status.EnergyDeliveredHeating = res.get_float24(4);
+                status.EnergyDeliveredCooling = res.get_float24(7);
+                status.EnergyDeliveredDhw = res.get_float24(10);
+
+                publish_state("heating_delivered", status.EnergyDeliveredHeating);
+                publish_state("cool_delivered", status.EnergyDeliveredCooling);
+                publish_state("dhw_delivered", status.EnergyDeliveredDhw);
+                
+                publish_state("heating_cop", status.EnergyConsumedHeating > 0.0f ? status.EnergyDeliveredHeating / status.EnergyConsumedHeating : 0.0f);
+                publish_state("cool_cop", status.EnergyConsumedCooling > 0.0f ? status.EnergyDeliveredCooling / status.EnergyConsumedCooling : 0.0f);
+                publish_state("dhw_cop", status.EnergyConsumedDhw > 0.0f ? status.EnergyDeliveredDhw / status.EnergyConsumedDhw : 0.0f);
+
+                break;
+            default:
+                ESP_LOGI(TAG, "Unknown response type received on serial port: %u", static_cast<uint8_t>(res.payload_type<GetType>()));
+                break;
+            }
+        }
+
+        if (!dispatch_next_cmd())
+        {
+            ESP_LOGI(TAG, "Failed to dispatch status update command!");
+        }
+    }
+
+    void EcodanHeatpump::handle_connect_response(Message& res)
+    {
+        ESP_LOGI(TAG, "connection reply received from heat pump");
+
+        connected = true;
+    }
+
+    void EcodanHeatpump::handle_ext_connect_response(Message& res)
+    {
+        ESP_LOGI(TAG, "Unexpected extended connection response!");
+    }
+
+    void EcodanHeatpump::serial_rx_thread()
+    {        
+        add_thread_to_watchdog();
+        // Wake the serial RX thread when the serial RX GPIO pin changes (this may occur during or after packet receipt)
+        serialRxTaskHandle = xTaskGetCurrentTaskHandle();
+
+        {
+            attachInterrupt(digitalPinToInterrupt(serialRxPort), serial_rx_isr, FALLING);
+        }        
+        
+        while (true)
+        {   
+            //ESP_LOGI(TAG, "handle response on core %d", xPortGetCoreID());
+            ping_watchdog();            
+            handle_response();            
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+    }
+
+    void EcodanHeatpump::handle_response() {
+        Message res;
+        if (!port.available() || !serial_rx(res))
+            return;
+        
+        switch (res.type())
+        {
+        case MsgType::SET_RES:
+            handle_set_response(res);
+            break;
+        case MsgType::GET_RES:
+            handle_get_response(res);
+            break;
+        case MsgType::CONNECT_RES:
+            handle_connect_response(res);
+            break;
+        case MsgType::EXT_CONNECT_RES:
+            handle_ext_connect_response(res);
+            break;
+        default:
+            ESP_LOGI(TAG, "Unknown serial message type received: %#x", static_cast<uint8_t>(res.type()));
+            break;
+        }             
+    }
+
+#pragma endregion Serial
 
 #pragma region Init
 
@@ -158,18 +464,9 @@ namespace ecodan
         pinMode(serialRxPort, INPUT_PULLUP);
         pinMode(serialTxPort, OUTPUT);
 
-        if (slaveRxPort > 0 && slaveTxPort > 0) {
-            pinMode(slaveRxPort, INPUT_PULLUP);
-            pinMode(slaveTxPort, OUTPUT);
-            slaveActive = true;
-        }
-
         delay(25); // There seems to be a window after setting the pin modes where trying to use the UART can be flaky, so introduce a short delay
 
-        master.begin(2400, SERIAL_8E1, serialRxPort, serialTxPort);
-        if (slaveActive) 
-            slave.begin(2400, SERIAL_8E1, slaveRxPort, slaveTxPort);
-    
+        port.begin(2400, SERIAL_8E1, serialRxPort, serialTxPort);
         if (!is_connected())
             begin_connect();
         init_watchdog();        
@@ -178,7 +475,7 @@ namespace ecodan
 
     void EcodanHeatpump::handle_loop()
     {         
-        if (!is_connected() && !master.available())
+        if (!is_connected() && !port.available())
         {
             static auto last_attempt = std::chrono::steady_clock::now();
             auto now = std::chrono::steady_clock::now();
@@ -220,34 +517,33 @@ namespace ecodan
 
     void EcodanHeatpump::set_room_temperature(float newTemp, esphome::ecodan::SetZone zone)
     {
-        // if (newTemp > get_max_thermostat_temperature())
-        // {
-        //     ESP_LOGI(TAG, "Thermostat setting exceeds maximum allowed!");
-        //     return;
-        // }
+        Message cmd{MsgType::SET_CMD, SetType::ROOM_SETTINGS};
 
-        // if (newTemp < get_min_thermostat_temperature())
-        // {
-        //     ESP_LOGI(TAG, "Thermostat setting is lower than minimum allowed!");
-        //     return;
-        // }
-
-        Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
-        cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
-        cmd[2] = static_cast<uint8_t>(zone);
-
-        auto flag = status.HeatingCoolingMode == Status::HpMode::COOL_ROOM_TEMP
-            ? static_cast<uint8_t>(Status::HpMode::COOL_ROOM_TEMP) : static_cast<uint8_t>(Status::HpMode::HEAT_ROOM_TEMP);
-
-        if (zone == SetZone::BOTH || zone == SetZone::ZONE_1) {
-            cmd[6] = flag;
-            cmd.set_float16(newTemp, 10);
+        if (zone == SetZone::ZONE_1) {
+            cmd[1] = 0x02;
+            cmd.set_float16(newTemp, 4);
         }
+        else if (zone == SetZone::ZONE_2) {
+            cmd[1] = 0x08;
+            cmd.set_float16(newTemp, 6);
+        }
+
+        // cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
+        // cmd[2] = static_cast<uint8_t>(zone);
+
+        // auto flag = status.HeatingCoolingMode == Status::HpMode::COOL_ROOM_TEMP
+        //     ? static_cast<uint8_t>(Status::HpMode::COOL_ROOM_TEMP) : static_cast<uint8_t>(Status::HpMode::HEAT_ROOM_TEMP);
+
+        // if (zone == SetZone::BOTH || zone == SetZone::ZONE_1) {
+        //     cmd[6] = flag;
+        //     cmd.set_float16(newTemp, 10);
+        // }
             
-        if (zone == SetZone::BOTH || zone == SetZone::ZONE_2) {
-            cmd[7] = flag;
-            cmd.set_float16(newTemp, 12);
-        }
+        // if (zone == SetZone::BOTH || zone == SetZone::ZONE_2) {
+        //     cmd[7] = flag;
+        //     cmd.set_float16(newTemp, 12);
+        // }
+        //ESP_LOGE(TAG, cmd.debug_dump_packet().c_str());
 
         {
             std::lock_guard<std::mutex> lock{cmdQueueMutex};
@@ -265,35 +561,34 @@ namespace ecodan
 
     void EcodanHeatpump::set_flow_target_temperature(float newTemp, esphome::ecodan::SetZone zone)
     {
-        // if (newTemp > get_max_flow_target_temperature(status.hp_mode_as_string()))
-        // {
-        //     ESP_LOGI(TAG, "Flow temperature setting exceeds maximum allowed (%f)!", get_max_flow_target_temperature(status.hp_mode_as_string()));
-        //     return;
-        // }
-
-        // if (newTemp < get_min_flow_target_temperature(status.hp_mode_as_string()))
-        // {
-        //     ESP_LOGI(TAG, "Flow temperature setting is lower than minimum allowed (%f)!", get_min_flow_target_temperature(status.hp_mode_as_string()));
-        //     return;
-        // }
 
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
-        cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
-        cmd[2] = static_cast<uint8_t>(zone);
         
-        auto flag = status.HeatingCoolingMode == Status::HpMode::COOL_FLOW_TEMP
-            ? static_cast<uint8_t>(Status::HpMode::COOL_FLOW_TEMP) : static_cast<uint8_t>(Status::HpMode::HEAT_FLOW_TEMP);
-
-        if (zone == SetZone::BOTH || zone == SetZone::ZONE_1) {
-            cmd[6] = flag;
+        if (zone == SetZone::ZONE_1) {
+            cmd[1] = 0x80;
             cmd.set_float16(newTemp, 10);
         }
-            
-        if (zone == SetZone::BOTH || zone == SetZone::ZONE_2) {
-            cmd[7] = flag;
+        else if (zone == SetZone::ZONE_2) {
+            cmd[2] = 0x02;
             cmd.set_float16(newTemp, 12);
         }
+
+        // cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
+        // cmd[2] = static_cast<uint8_t>(zone);
+        
+        // auto flag = status.HeatingCoolingMode == Status::HpMode::COOL_FLOW_TEMP
+        //     ? static_cast<uint8_t>(Status::HpMode::COOL_FLOW_TEMP) : static_cast<uint8_t>(Status::HpMode::HEAT_FLOW_TEMP);
+
+        // if (zone == SetZone::BOTH || zone == SetZone::ZONE_1) {
+        //     cmd[6] = flag;
+        //     cmd.set_float16(newTemp, 10);
+        // }
             
+        // if (zone == SetZone::BOTH || zone == SetZone::ZONE_2) {
+        //     cmd[7] = flag;
+        //     cmd.set_float16(newTemp, 12);
+        // }
+        // ESP_LOGE(TAG, cmd.debug_dump_packet().c_str());
         {
             std::lock_guard<std::mutex> lock{cmdQueueMutex};
             cmdQueue.emplace(std::move(cmd));
@@ -475,7 +770,7 @@ namespace ecodan
             cmdQueue.pop();
         }
 
-        if (!serial_tx(master, msg))
+        if (!serial_tx(msg))
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
 
@@ -491,11 +786,11 @@ namespace ecodan
     bool EcodanHeatpump::begin_connect()
     {
         Message cmd{MsgType::CONNECT_CMD};
-        char payload[2] = {0xCA, 0x01};
+        char payload[3] = {0xCA, 0x01, 0x5d};
         cmd.write_payload(payload, sizeof(payload));
 
-        //ESP_LOGI(TAG, "Attempt to tx CONNECT_CMD!");
-        if (!serial_tx(master, cmd))
+        ESP_LOGI(TAG, "Attempt to tx CONNECT_CMD!");
+        if (!serial_tx(cmd))
         {
             ESP_LOGI(TAG, "Failed to tx CONNECT_CMD!");
             return false;
@@ -532,6 +827,7 @@ namespace ecodan
             cmdQueue.emplace(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_A);
             cmdQueue.emplace(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_B);
             cmdQueue.emplace(MsgType::GET_CMD, GetType::ACTIVE_TIME);
+            cmdQueue.emplace(MsgType::GET_CMD, GetType::PUMP_STATUS);
             cmdQueue.emplace(MsgType::GET_CMD, GetType::FLOW_RATE);
             cmdQueue.emplace(MsgType::GET_CMD, GetType::MODE_FLAGS_A);
             cmdQueue.emplace(MsgType::GET_CMD, GetType::MODE_FLAGS_B);
@@ -590,438 +886,6 @@ namespace ecodan
     }
 
 #pragma endregion Misc
-
-
-#pragma region Serial
-    bool EcodanHeatpump::serial_tx(HardwareSerial& serial, Message& msg)
-    {
-        if (!serial)
-        {
-            ESP_LOGE(TAG, "Serial connection unavailable for tx");
-            return false;
-        }
-
-        if (serial.availableForWrite() < msg.size())
-        {
-            ESP_LOGI(TAG, "Serial tx buffer size: %u", serial.availableForWrite());
-            return false;
-        }
-
-        msg.set_checksum();
-        serial.write(msg.buffer(), msg.size());
-        //serial.flush(true);
-        //ESP_LOGI(TAG, "written:  %d", res);
-        //ESP_LOGV(TAG, msg.debug_dump_packet().c_str());
-
-        return true;
-    }
-    
-    void EcodanHeatpump::resync_rx(HardwareSerial& serial)
-    {
-        // while (serial.available() > 0)
-        //     serial.read();
-
-        static char buffer[1024];
-        int i = 0;
-
-        while (serial.available() > 0 && serial.peek() != HEADER_MAGIC_A) {
-            buffer[i++] = serial.read();
-        }
-
-        if (i > 0) {
-            Message cmd{MsgType::ACK_RES};
-            cmd.write_payload(buffer, i);
-            ESP_LOGW(TAG, cmd.debug_dump_packet().c_str());
-        }
-
-        clear_command_queue();
-    }
-
-    bool EcodanHeatpump::serial_rx(HardwareSerial& serial, Message& msg)
-    {
-        if (!serial)
-        {
-            ESP_LOGE(TAG, "Serial connection unavailable for rx");
-            return false;
-        }
-
-        if (serial.available() < HEADER_SIZE)
-        {
-            const TickType_t maxBlockingTime = pdMS_TO_TICKS(1000);
-            ulTaskNotifyTakeIndexed(0, pdTRUE, maxBlockingTime);
-
-            // We were woken by an interrupt, but there's not enough data available
-            // yet on the serial port for us to start processing it as a packet.
-            if (serial.available() < HEADER_SIZE)
-                return false;
-        }
-            
-        // Scan for the start of an Ecodan packet.
-        if (serial.peek() != HEADER_MAGIC_A)
-        {
-            ESP_LOGE(TAG, "Dropping serial data, header magic mismatch");
-            resync_rx(serial);
-            return false;
-        }
-
-        if (serial.readBytes(msg.buffer(), HEADER_SIZE) < HEADER_SIZE)
-        {
-            ESP_LOGI(TAG, "Serial port header read failure!");
-            resync_rx(serial);
-            return false;
-        }
-
-        msg.increment_write_offset(HEADER_SIZE);
-
-        if (!msg.verify_header())
-        {
-            ESP_LOGI(TAG, "Serial port message appears invalid, skipping payload wait...");
-            resync_rx(serial);
-            return false;
-        }
-
-        // It shouldn't take long to receive the rest of the payload after we get the header.
-        size_t remainingBytes = msg.payload_size() + CHECKSUM_SIZE;
-        auto startTime = std::chrono::steady_clock::now();
-        while (serial.available() < remainingBytes)
-        {
-            delay(1);
-
-            if (std::chrono::steady_clock::now() - startTime > std::chrono::seconds(30))
-            {
-                ESP_LOGI(TAG, "Serial port message could not be received within 30s (got %u / %u bytes)", serial.available(), remainingBytes);
-                resync_rx(serial);
-                return false;
-            }
-        }
-
-        if (serial.readBytes(msg.payload(), remainingBytes) < remainingBytes)
-        {
-            ESP_LOGI(TAG, "Serial port payload read failure!");
-            resync_rx(serial);
-            return false;
-        }
-
-        msg.increment_write_offset(msg.payload_size()); // Don't count checksum byte.
-
-        if (!msg.verify_checksum())
-        {
-            resync_rx(serial);
-            return false;
-        }
-
-        //ESP_LOGV(TAG, msg.debug_dump_packet().c_str());
-
-        return true;
-    }
-
-    void EcodanHeatpump::handle_set_response(Message& res)
-    {
-        if (res.type() != MsgType::SET_RES)
-        {
-            ESP_LOGI(TAG, "Unexpected set response type: %#x", static_cast<uint8_t>(res.type()));
-        }
-    }
-
-    void EcodanHeatpump::handle_get_response(Message& res)
-    {
-        {
-            std::lock_guard<Status> lock{status};
-
-            switch (res.payload_type<GetType>())
-            {
-            case GetType::DEFROST_STATE:
-                status.DefrostActive = res[3] != 0;
-                publish_state("mode_defrost", status.DefrostActive ? "On" : "Off");
-                break;
-            case GetType::COMPRESSOR_FREQUENCY:
-                status.CompressorFrequency = res[1];
-                publish_state("compressor_frequency", status.CompressorFrequency);
-                break;
-            case GetType::FORCED_DHW_STATE:
-                status.DhwForcedActive = res[7] != 0 && res[5] == 0; // bit 5 -> 7 is normal dhw, 0 - forced dhw
-                publish_state("mode_dhw_forced", status.DhwForcedActive ? "On" : "Off");
-                break;
-            case GetType::HEATING_POWER:
-                status.OutputPower = res[6];
-                status.BoosterActive = res[4] == 2;
-                publish_state("output_power", status.OutputPower);
-                publish_state("mode_booster", status.BoosterActive ? "On" : "Off");
-                break;
-            case GetType::TEMPERATURE_CONFIG:
-                status.Zone1SetTemperature = res.get_float16(1);
-                status.Zone2SetTemperature = res.get_float16(3);
-                status.Zone1FlowTemperatureSetPoint = res.get_float16(5);
-                status.Zone2FlowTemperatureSetPoint = res.get_float16(7);
-                status.LegionellaPreventionSetPoint = res.get_float16(9);
-                status.DhwTemperatureDrop = res.get_float8_v2(11);
-                status.MaximumFlowTemperature = res.get_float8_v3(12);
-                status.MinimumFlowTemperature = res.get_float8_v3(13);
-
-                publish_state("z1_room_temp_target", status.Zone1SetTemperature);
-                publish_state("z2_room_temp_target", status.Zone2SetTemperature);
-                publish_state("z1_flow_temp_target", status.Zone1FlowTemperatureSetPoint);
-                publish_state("z2_flow_temp_target", status.Zone2FlowTemperatureSetPoint);
-
-                publish_state("legionella_prevention_temp", status.LegionellaPreventionSetPoint);
-                publish_state("dhw_flow_temp_drop", status.DhwTemperatureDrop);
-                
-                // min/max flow
-
-                break;
-            case GetType::SH_TEMPERATURE_STATE:
-                status.Zone1RoomTemperature = res.get_float16(1);
-                if (res.get_u16(3) != 0xF0C4) // 0xF0C4 seems to be a sentinel value for "not reported in the current system"
-                    status.Zone2RoomTemperature = res.get_float16(3);
-                else
-                    status.Zone2RoomTemperature = 0.0f;
-                status.OutsideTemperature = res.get_float8(11);
-                
-                publish_state("z1_room_temp", status.Zone1RoomTemperature);
-                publish_state("z2_room_temp", status.Zone2RoomTemperature);
-                publish_state("outside_temp", status.OutsideTemperature);                
-                break;
-            case GetType::DHW_TEMPERATURE_STATE_A:
-                status.DhwFeedTemperature = res.get_float16(1);
-                status.DhwReturnTemperature = res.get_float16(4);
-                status.DhwTemperature = res.get_float16(7);
-
-                publish_state("hp_feed_temp", status.DhwFeedTemperature);
-                publish_state("hp_return_temp", status.DhwReturnTemperature);
-                publish_state("dhw_temp", status.DhwTemperature);
-                break;
-            case GetType::DHW_TEMPERATURE_STATE_B:
-                status.BoilerFlowTemperature = res.get_float16(1);
-                status.BoilerReturnTemperature = res.get_float16(4);
-
-                publish_state("boiler_flow_temp", status.BoilerFlowTemperature);
-                publish_state("boiler_return_temp", status.BoilerReturnTemperature);
-                break;
-            case GetType::ACTIVE_TIME:
-                status.Runtime = res.get_float24_v2(3);
-                publish_state("runtime", status.Runtime);
-                //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
-                break;
-            case GetType::FLOW_RATE:
-                status.FlowRate = res[12];
-                publish_state("flow_rate", status.FlowRate);
-                break;
-            case GetType::MODE_FLAGS_A:
-                status.set_power_mode(res[3]);
-                status.set_operation_mode(res[4]);
-                status.set_dhw_mode(res[5]);
-                status.set_heating_cooling_mode(res[6]);
-                status.DhwFlowTemperatureSetPoint = res.get_float16(8);
-                status.RadiatorFlowTemperatureSetPoint = res.get_float16(12);
-
-                publish_state("mode_power", status.power_as_string());
-                publish_state("mode_operation", status.operation_as_string());
-                publish_state("mode_dhw", status.dhw_mode_as_string());
-                publish_state("mode_heating_cooling", status.hp_mode_as_string());
-
-                publish_state("dhw_flow_temp_target", status.DhwFlowTemperatureSetPoint);
-                publish_state("sh_flow_temp_target", status.RadiatorFlowTemperatureSetPoint);
-                break;
-            case GetType::MODE_FLAGS_B:
-                status.HolidayMode = res[4] > 0;
-
-                status.ProhibitDhw = res[5] != 0;
-                status.ProhibitHeatingZ1 = res[6] != 0;
-                status.ProhibitCoolingZ1 = res[7] != 0;
-                status.ProhibitHeatingZ2 = res[8] != 0;
-                status.ProhibitCoolingZ2 = res[9] != 0;
-                
-                publish_state("mode_holiday", status.HolidayMode ? "On" : "Off");
-                publish_state("mode_prohibit_dhw", status.ProhibitDhw ? "On" : "Off");
-                publish_state("mode_prohibit_heating_z1", status.ProhibitHeatingZ1 ? "On" : "Off");
-                publish_state("mode_prohibit_cool_z1", status.ProhibitCoolingZ1 ? "On" : "Off");
-                publish_state("mode_prohibit_heating_z2", status.ProhibitHeatingZ2 ? "On" : "Off");
-                publish_state("mode_prohibit_cool_z2", status.ProhibitCoolingZ2 ? "On" : "Off");
-                break;
-            case GetType::ENERGY_USAGE:
-                status.EnergyConsumedHeating = res.get_float24(4);
-                status.EnergyConsumedCooling = res.get_float24(7);
-                status.EnergyConsumedDhw = res.get_float24(10);
-
-                publish_state("heating_consumed", status.EnergyConsumedHeating);
-                publish_state("cool_consumed", status.EnergyConsumedCooling);
-                publish_state("dhw_consumed", status.EnergyConsumedDhw);
-                break;
-            case GetType::ENERGY_DELIVERY:
-                status.EnergyDeliveredHeating = res.get_float24(4);
-                status.EnergyDeliveredCooling = res.get_float24(7);
-                status.EnergyDeliveredDhw = res.get_float24(10);
-
-                publish_state("heating_delivered", status.EnergyDeliveredHeating);
-                publish_state("cool_delivered", status.EnergyDeliveredCooling);
-                publish_state("dhw_delivered", status.EnergyDeliveredDhw);
-                
-                publish_state("heating_cop", status.EnergyConsumedHeating > 0.0f ? status.EnergyDeliveredHeating / status.EnergyConsumedHeating : 0.0f);
-                publish_state("cool_cop", status.EnergyConsumedCooling > 0.0f ? status.EnergyDeliveredCooling / status.EnergyConsumedCooling : 0.0f);
-                publish_state("dhw_cop", status.EnergyConsumedDhw > 0.0f ? status.EnergyDeliveredDhw / status.EnergyConsumedDhw : 0.0f);
-
-                break;
-            default:
-                ESP_LOGI(TAG, "Unknown response type received on serial port: %u", static_cast<uint8_t>(res.payload_type<GetType>()));
-                break;
-            }
-        }
-
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "Failed to dispatch status update command!");
-        }
-    }
-
-    void EcodanHeatpump::handle_connect_response(Message& res)
-    {
-        ESP_LOGI(TAG, "connection reply received from heat pump");
-
-        connected = true;
-    }
-
-    void EcodanHeatpump::handle_ext_connect_response(Message& res)
-    {
-        ESP_LOGI(TAG, "Unexpected extended connection response!");
-    }
-
-    void EcodanHeatpump::serial_rx_thread()
-    {        
-        add_thread_to_watchdog();
-        // Wake the serial RX thread when the serial RX GPIO pin changes (this may occur during or after packet receipt)
-        serialRxTaskHandle = xTaskGetCurrentTaskHandle();
-
-        {
-            attachInterrupt(digitalPinToInterrupt(serialRxPort), serial_rx_isr, FALLING);
-        }        
-        
-        while (true)
-        {   
-            //ESP_LOGI(TAG, "handle response on core %d", xPortGetCoreID());
-            ping_watchdog();            
-            handle_response();            
-            vTaskDelay(pdMS_TO_TICKS(100));
-        }
-    }
-
-    void EcodanHeatpump::serial_slave_rx_thread()
-    {        
-        add_thread_to_watchdog();
-        // Wake the serial RX thread when the serial RX GPIO pin changes (this may occur during or after packet receipt)
-        serialSlaveRxTaskHandle = xTaskGetCurrentTaskHandle();
-
-        {
-            attachInterrupt(digitalPinToInterrupt(slaveRxPort), serial_slave_rx_isr, FALLING);
-        }        
-        
-        while (true)
-        {   
-            //ESP_LOGI(TAG, "handle response on core %d", xPortGetCoreID());
-            ping_watchdog();            
-            handle_slave_response();            
-            vTaskDelay(pdMS_TO_TICKS(500));
-        }
-    }
-
-    void EcodanHeatpump::handle_response() {
-        Message res;
-        if (!master.available() || !serial_rx(master, res))
-            return;
-        
-        switch (res.type())
-        {
-            case MsgType::SET_RES:
-                handle_set_response(res);
-                break;
-            case MsgType::GET_RES:
-                handle_get_response(res);
-                break;
-            case MsgType::CONNECT_RES:
-                handle_connect_response(res);
-                break;
-            case MsgType::EXT_CONNECT_RES:
-                handle_ext_connect_response(res);
-                break;
-            default:
-                ESP_LOGI(TAG, "Unknown serial message type received: %#x", static_cast<uint8_t>(res.type()));
-                break;
-        }
-
-        if (slaveActive) {
-            // mirror response to slave
-            //ESP_LOGI(TAG, "Heatpump -> Master -> Slave (response proxy)");
-            ESP_LOGI(TAG, res.debug_dump_packet().c_str());
-            serial_tx(slave, res);
-        }
-    }
-
-    void EcodanHeatpump::handle_slave_response() {
-        Message res;
-        if (!slave.available() || !serial_rx(slave, res))
-            return;
-
-        if (slaveActive) {
-            // mirror commands to master
-            //ESP_LOGI(TAG, "Slave -> Master -> Heatpump (request proxy)");
-            if (res.type() == MsgType::SET_CMD) {
-                ESP_LOGW(TAG, res.debug_dump_packet().c_str());
-            }
-            else {
-                ESP_LOGI(TAG, res.debug_dump_packet().c_str());
-            }
-            
-            serial_tx(master, res);
-
-            if (res.type() == MsgType::CONNECT_CMD) {
-                //{ .Hdr { fc, 7a, 2, 7a, 1 } .Payload { 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } .Chk { 0 } }
-                Message cmd{MsgType::CONNECT_RES, false};
-                // char payload[2] = {0x00, 0x09};
-                // cmd.write_payload(payload, sizeof(payload));
-                ESP_LOGW(TAG, cmd.debug_dump_packet().c_str());
-                serial_tx(slave, cmd);
-            }
-            else if (res.type() == MsgType::GET_CMD && res[0] ==  0x15) {
-                // bit 1 = pump running on/off
-                // bit 6 = 3 way vale on/off
-                Message cmd{MsgType::GET_RES, true};
-                char payload[0x10] = { 0x15, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00 };
-                cmd.write_payload(payload, sizeof(payload));
-                ESP_LOGW(TAG, cmd.debug_dump_packet().c_str());
-                serial_tx(slave, cmd);
-            }
-            else if (res.type() == MsgType::GET_CMD && res[0] ==  0x13) {
-                // runtime
-                Message cmd{MsgType::GET_RES, true};
-                char payload[0x10] = { 0x13, 0x00, 0x00, 0x0F, 0x00, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-                cmd.write_payload(payload, sizeof(payload) );
-                ESP_LOGW(TAG, cmd.debug_dump_packet().c_str());
-                serial_tx(slave, cmd);
-            }
-            else if (res.type() == MsgType::GET_CMD && res[0] ==  0x0B) {
-                // 11 = oudside temp = 14
-                // 3 = zone 2 temp 0xF0, 0xC4 == not in system
-                // 1 = zone 1 temp = 21
-                // 8 = Refrigerant liquid temperature = 21
-                Message cmd{MsgType::GET_RES, true};
-                char payload[0x10] = { 0x0B, 0x08, 0x34, 0xF0, 0xC4, 0xF0, 0xC4, 0x0B, 0x09, 0x34, 0x74, 0x6C, 0x00, 0x00, 0x00, 0x00 };
-                cmd.write_payload(payload, sizeof(payload) );
-                ESP_LOGW(TAG, cmd.debug_dump_packet().c_str());
-                serial_tx(slave, cmd);
-            }
-            else if (res.type() == MsgType::GET_CMD && res[0] ==  0x05) {
-                // mitsubishi Heat source status
-                // 4 = 2 == booster heater
-                // 6 = output power
-                Message cmd{MsgType::GET_RES, true};
-                char payload[0x10] = { 0x05, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03 };
-                cmd.write_payload(payload, sizeof(payload) );
-                ESP_LOGW(TAG, cmd.debug_dump_packet().c_str());
-                serial_tx(slave, cmd);
-            }                        
-        }
-    }
-
-#pragma endregion Serial
 
 } // namespace ecodan
 } // namespace esphome

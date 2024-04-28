@@ -2,18 +2,14 @@ text_sensor:
   - platform: ecodan
     mode_prohibit_heating_z2:
       name: mode_prohibit_heating_z2
-      id: mode_prohibit_heating_z2
     mode_prohibit_cool_z2:
       name: mode_prohibit_cool_z2
       id: mode_prohibit_cool_z2
-    mode_pump_z2:
-      name: mode_pump_z2 
-      id: mode_pump_z2
 
 number:
   - platform: template
     name: "z2 room temperature"
-    id: heatpump_number_z2_set_target_temperature
+    id: heatpump_number_z2_set_room_temperature
     mode: slider
     entity_category: config
     optimistic: true
@@ -26,14 +22,14 @@ number:
     set_action:
       then:
         - lambda: |-
-            id(ecodan_instance).set_target_temperature(x, esphome::ecodan::SetZone::BOTH);
+            id(ecodan_instance).set_room_temperature(x, esphome::ecodan::SetZone::ZONE_2);
 
   - platform: template
     name: "z2 flow target temperature"
     id: heatpump_number_z2_set_flow_temperature
     mode: slider
     entity_category: config
-    optimistic: true
+    optimistic: true    
     min_value: 5
     max_value: 60
     step: 0.5
@@ -43,33 +39,33 @@ number:
     set_action:
       then:
         - lambda: |-
-            id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::SetZone::BOTH);
+            id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::SetZone::ZONE_2);
 
 sensor:
   - platform: ecodan
     z2_flow_temp_target:
       id: z2_flow_temp_target
       name: z2_flow_temp_target
-      on_value:
-        if:
-          condition:
-            - lambda: |-
-                return id(heatpump_number_z2_set_flow_temperature).state != id(z2_flow_temp_target).state;
-          then:
-            - number.set:
-                id: heatpump_number_z2_set_flow_temperature
-                value: !lambda "return id(z2_flow_temp_target).state;"
+      # on_value:
+      #   if:
+      #     condition:
+      #       - lambda: |-
+      #           return id(heatpump_number_z2_set_flow_temperature).state != id(z2_flow_temp_target).state;
+      #     then:
+      #       - number.set:
+      #           id: heatpump_number_z2_set_flow_temperature
+      #           value: !lambda "return id(z2_flow_temp_target).state;"
     z2_room_temp:
       name: z2_room_temp      
     z2_room_temp_target:
       id: z2_room_temp_target
       name: z2_room_temp_target
-      on_value:
-        if:
-          condition:
-            - lambda: |-
-                return id(heatpump_number_z2_set_target_temperature).state != id(z2_room_temp_target).state;
-          then:
-            - number.set:
-                id: heatpump_number_z2_set_target_temperature
-                value: !lambda "return id(z2_room_temp_target).state;"
+      # on_value:
+      #   if:
+      #     condition:
+      #       - lambda: |-
+      #           return id(heatpump_number_z2_set_room_temperature).state != id(z2_room_temp_target).state;
+      #     then:
+      #       - number.set:
+      #           id: heatpump_number_z2_set_room_temperature
+      #           value: !lambda "return id(z2_room_temp_target).state;"

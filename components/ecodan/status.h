@@ -27,8 +27,9 @@ namespace ecodan
         uint8_t MaximumFlowTemperature;
         uint8_t MinimumFlowTemperature;
         float OutsideTemperature;
-        float DhwFeedTemperature;
-        float DhwReturnTemperature;
+        float HpFeedTemperature;
+        float HpReturnTemperature;
+        float HpRefrigerantLiquidTemperature;
         float DhwTemperature;
         float BoilerFlowTemperature;
         float BoilerReturnTemperature;
@@ -37,9 +38,8 @@ namespace ecodan
         float RadiatorFlowTemperatureSetPoint;
 
         float Runtime;
-        bool DHWPumpActive;
-        bool Z1PumpActive;         
-        bool Z2PumpActive;
+        bool WaterPumpActive;
+        bool ThreeWayValveActive;
 
         enum class PowerMode : uint8_t
         {

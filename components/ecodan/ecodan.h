@@ -21,9 +21,6 @@ namespace ecodan
         EcodanHeatpump() : PollingComponent(10000) {}
         void set_rx(int rx);
         void set_tx(int tx);
-        void set_slave_rx(int rx);
-        void set_slave_tx(int tx);
-
         void setup() override;
         void update() override;
         void dump_config() override;    
@@ -72,15 +69,10 @@ namespace ecodan
         bool is_connected();        
     
     private:
-        HardwareSerial& master = Serial1;
+        HardwareSerial& port = Serial1;
         uint8_t serialRxPort{2};
         uint8_t serialTxPort{1};        
         
-        HardwareSerial& slave = Serial2;
-        uint8_t slaveRxPort{0};
-        uint8_t slaveTxPort{0};
-        bool slaveActive = false;
-
         std::thread serialRxThread;
         std::queue<Message> cmdQueue;
         std::mutex cmdQueueMutex;
@@ -90,23 +82,21 @@ namespace ecodan
         bool connected = false;
         bool heatpumpInitialized = false;
        
-        void resync_rx(HardwareSerial& serial);
-        bool serial_rx(HardwareSerial& serial, Message& msg);
-        bool serial_tx(HardwareSerial& serial, Message& msg);
+        void resync_rx();
+        bool serial_rx(Message& msg);
+        bool serial_tx(Message& msg);
 
         bool dispatch_next_cmd();
         void clear_command_queue();
         bool begin_get_status();
         
         void handle_response();
-        void handle_slave_response();
         void handle_get_response(Message& res);
         void handle_set_response(Message& res);
         void handle_connect_response(Message& res);
         void handle_ext_connect_response(Message& res);
 
         void serial_rx_thread();
-        void serial_slave_rx_thread();
     };
 
 } // namespace ecodan
