@@ -291,20 +291,21 @@ namespace ecodan
                 else
                     status.Zone2RoomTemperature = 0.0f;
                 status.OutsideTemperature = res.get_float8(11);
-                
+                status.HpRefrigerantLiquidTemperature = res.get_float16(8);
+
                 publish_state("z1_room_temp", status.Zone1RoomTemperature);
                 publish_state("z2_room_temp", status.Zone2RoomTemperature);
-                publish_state("outside_temp", status.OutsideTemperature);                
+                publish_state("outside_temp", status.OutsideTemperature);
+                publish_state("hp_refrigerant_temp", status.HpRefrigerantLiquidTemperature);                
                 break;
             case GetType::DHW_TEMPERATURE_STATE_A:
                 status.HpFeedTemperature = res.get_float16(1);
                 status.HpReturnTemperature = res.get_float16(4);
                 status.DhwTemperature = res.get_float16(7);
-                status.HpRefrigerantLiquidTemperature = res.get_float16(8);
+                
 
                 publish_state("hp_feed_temp", status.HpFeedTemperature);
                 publish_state("hp_return_temp", status.HpReturnTemperature);
-                publish_state("hp_refrigerant_temp", status.HpRefrigerantLiquidTemperature);
                 publish_state("dhw_temp", status.DhwTemperature);
                 break;
             case GetType::DHW_TEMPERATURE_STATE_B:
