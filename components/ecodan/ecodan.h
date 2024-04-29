@@ -74,7 +74,7 @@ namespace ecodan
         uint8_t serialTxPort{1};        
         
         std::thread serialRxThread;
-        std::queue<Message> cmdQueue;
+        std::deque<Message> cmdQueue;
         std::mutex cmdQueueMutex;
 
         Status status;
@@ -89,12 +89,12 @@ namespace ecodan
         bool dispatch_next_cmd();
         void clear_command_queue();
         bool begin_get_status();
+        bool schedule_cmd(Message& cmd);
         
         void handle_response();
         void handle_get_response(Message& res);
         void handle_set_response(Message& res);
         void handle_connect_response(Message& res);
-        void handle_ext_connect_response(Message& res);
 
         void serial_rx_thread();
     };

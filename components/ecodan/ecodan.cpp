@@ -225,7 +225,7 @@ namespace ecodan
             return false;
         }
 
-        //ESP_LOGV(TAG, msg.debug_dump_packet().c_str());
+        //ESP_LOGW(TAG, msg.debug_dump_packet().c_str());
 
         return true;
     }
@@ -236,6 +236,11 @@ namespace ecodan
         {
             ESP_LOGI(TAG, "Unexpected set response type: %#x", static_cast<uint8_t>(res.type()));
         }
+
+        if (!dispatch_next_cmd())
+        {
+            ESP_LOGI(TAG, "Failed to dispatch ack set command!");
+        }            
     }
 
     void EcodanHeatpump::handle_get_response(Message& res)
@@ -247,21 +252,30 @@ namespace ecodan
             {
             case GetType::DEFROST_STATE:
                 status.DefrostActive = res[3] != 0;
-                publish_state("mode_defrost", status.DefrostActive ? "On" : "Off");
+                publish_state("status_defrost", status.DefrostActive ? "On" : "Off");
+                break;
+            case GetType::ERROR_STATE:
+                // 1 = refrigerant error code
+                // 2+3 = fault code, [2]*100+[3]
+                // 4+5 = fault code: letter 2, 0x00 0x03 = A3
                 break;
             case GetType::COMPRESSOR_FREQUENCY:
                 status.CompressorFrequency = res[1];
                 publish_state("compressor_frequency", status.CompressorFrequency);
                 break;
             case GetType::FORCED_DHW_STATE:
-                status.DhwForcedActive = res[7] != 0 && res[5] == 0; // bit 5 -> 7 is normal dhw, 0 - forced dhw
-                publish_state("mode_dhw_forced", status.DhwForcedActive ? "On" : "Off");
+                // 6 = heat source , 0x0 = heatpump, 0x1 = screw in heater, 0x2 = electric heater..
+                status.HeatSource = res[6];
+                //status.DhwForcedActive = res[7] != 0 && res[5] == 0; // bit 5 -> 7 is normal dhw, 0 - forced dhw
+                //publish_state("status_dhw_forced", status.DhwForcedActive ? "On" : "Off");
+
+                publish_state("heat_source", status.HeatSource);
                 break;
             case GetType::HEATING_POWER:
                 status.OutputPower = res[6];
-                status.BoosterActive = res[4] == 2;
+                //status.BoosterActive = res[4] == 2;
                 publish_state("output_power", status.OutputPower);
-                publish_state("mode_booster", status.BoosterActive ? "On" : "Off");
+                //publish_state("status_booster", status.BoosterActive ? "On" : "Off");
                 break;
             case GetType::TEMPERATURE_CONFIG:
                 status.Zone1SetTemperature = res.get_float16(1);
@@ -315,6 +329,11 @@ namespace ecodan
                 publish_state("boiler_flow_temp", status.BoilerFlowTemperature);
                 publish_state("boiler_return_temp", status.BoilerReturnTemperature);
                 break;
+            case GetType::EXTERNAL_STATE:
+                // 1 = IN1 Thermostat heat/cool request
+                status.In1ThermostatRequest = res[1] != 0;
+                publish_state("status_in1_request", status.In1ThermostatRequest ? "On" : "Off");
+                break;
             case GetType::ACTIVE_TIME:
                 status.Runtime = res.get_float24_v2(3);
                 publish_state("runtime", status.Runtime);
@@ -323,13 +342,19 @@ namespace ecodan
             case GetType::PUMP_STATUS:
                 status.WaterPumpActive = res[1] != 0;
                 status.ThreeWayValveActive = res[6] != 0;
-                publish_state("mode_water_pump", status.WaterPumpActive ? "On" : "Off");
-                publish_state("mode_three_way_valve", status.ThreeWayValveActive ? "On" : "Off");
+                publish_state("status_water_pump", status.WaterPumpActive ? "On" : "Off");
+                publish_state("status_three_way_valve", status.ThreeWayValveActive ? "On" : "Off");
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;                
             case GetType::FLOW_RATE:
+                // booster = 2, 
+                // emmersion = 5
+                status.BoosterActive = res[2] != 0;
+                status.ImmersionActive = res[5] != 0;
                 status.FlowRate = res[12];
                 publish_state("flow_rate", status.FlowRate);
+                publish_state("status_booster", status.BoosterActive ? "On" : "Off");
+                publish_state("status_immersion", status.ImmersionActive ? "On" : "Off");
                 break;
             case GetType::MODE_FLAGS_A:
                 status.set_power_mode(res[3]);
@@ -339,29 +364,30 @@ namespace ecodan
                 status.DhwFlowTemperatureSetPoint = res.get_float16(8);
                 status.RadiatorFlowTemperatureSetPoint = res.get_float16(12);
 
-                publish_state("mode_power", status.power_as_string());
-                publish_state("mode_operation", status.operation_as_string());
-                publish_state("mode_dhw", status.dhw_mode_as_string());
-                publish_state("mode_heating_cooling", status.hp_mode_as_string());
+                publish_state("status_power", status.power_as_string());
+                publish_state("status_operation", status.operation_as_string());
+                publish_state("status_dhw", status.dhw_status_as_string());
+                publish_state("status_heating_cooling", status.hp_status_as_string());
 
                 publish_state("dhw_flow_temp_target", status.DhwFlowTemperatureSetPoint);
                 publish_state("sh_flow_temp_target", status.RadiatorFlowTemperatureSetPoint);
                 break;
             case GetType::MODE_FLAGS_B:
-                status.HolidayMode = res[4] > 0;
-
+                status.DhwForcedActive = res[3] != 0;
                 status.ProhibitDhw = res[5] != 0;
+                status.HolidayMode = res[4] != 0;
                 status.ProhibitHeatingZ1 = res[6] != 0;
                 status.ProhibitCoolingZ1 = res[7] != 0;
                 status.ProhibitHeatingZ2 = res[8] != 0;
                 status.ProhibitCoolingZ2 = res[9] != 0;
-                
-                publish_state("mode_holiday", status.HolidayMode ? "On" : "Off");
-                publish_state("mode_prohibit_dhw", status.ProhibitDhw ? "On" : "Off");
-                publish_state("mode_prohibit_heating_z1", status.ProhibitHeatingZ1 ? "On" : "Off");
-                publish_state("mode_prohibit_cool_z1", status.ProhibitCoolingZ1 ? "On" : "Off");
-                publish_state("mode_prohibit_heating_z2", status.ProhibitHeatingZ2 ? "On" : "Off");
-                publish_state("mode_prohibit_cool_z2", status.ProhibitCoolingZ2 ? "On" : "Off");
+
+                publish_state("status_dhw_forced", status.DhwForcedActive ? "On" : "Off");
+                publish_state("status_holiday", status.HolidayMode ? "On" : "Off");
+                publish_state("status_prohibit_dhw", status.ProhibitDhw ? "On" : "Off");
+                publish_state("status_prohibit_heating_z1", status.ProhibitHeatingZ1 ? "On" : "Off");
+                publish_state("status_prohibit_cool_z1", status.ProhibitCoolingZ1 ? "On" : "Off");
+                publish_state("status_prohibit_heating_z2", status.ProhibitHeatingZ2 ? "On" : "Off");
+                publish_state("status_prohibit_cool_z2", status.ProhibitCoolingZ2 ? "On" : "Off");
                 break;
             case GetType::ENERGY_USAGE:
                 status.EnergyConsumedHeating = res.get_float24(4);
@@ -386,6 +412,11 @@ namespace ecodan
                 publish_state("dhw_cop", status.EnergyConsumedDhw > 0.0f ? status.EnergyDeliveredDhw / status.EnergyConsumedDhw : 0.0f);
 
                 break;
+            case GetType::HARDWARE_CONFIGURATION:
+                // bit 6 = ftc, ft2b , ftc4, ftc5, ftc6
+                status.Controller = res[6];
+                publish_state("controller_version", status.Controller);
+                break;
             default:
                 ESP_LOGI(TAG, "Unknown response type received on serial port: %u", static_cast<uint8_t>(res.payload_type<GetType>()));
                 break;
@@ -403,11 +434,6 @@ namespace ecodan
         ESP_LOGI(TAG, "connection reply received from heat pump");
 
         connected = true;
-    }
-
-    void EcodanHeatpump::handle_ext_connect_response(Message& res)
-    {
-        ESP_LOGI(TAG, "Unexpected extended connection response!");
     }
 
     void EcodanHeatpump::serial_rx_thread()
@@ -434,24 +460,24 @@ namespace ecodan
         if (!port.available() || !serial_rx(res))
             return;
         
+        //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
+
         switch (res.type())
         {
         case MsgType::SET_RES:
             handle_set_response(res);
             break;
         case MsgType::GET_RES:
+        case MsgType::RES_CONFIGURATION:
             handle_get_response(res);
             break;
         case MsgType::CONNECT_RES:
             handle_connect_response(res);
             break;
-        case MsgType::EXT_CONNECT_RES:
-            handle_ext_connect_response(res);
-            break;
         default:
             ESP_LOGI(TAG, "Unknown serial message type received: %#x", static_cast<uint8_t>(res.type()));
             break;
-        }             
+        }
     }
 
 #pragma endregion Serial
@@ -478,31 +504,17 @@ namespace ecodan
     {         
         if (!is_connected() && !port.available())
         {
-            static auto last_attempt = std::chrono::steady_clock::now();
-            auto now = std::chrono::steady_clock::now();
-            if (now - last_attempt > std::chrono::seconds(10))
+            if (!begin_connect())
             {
-                last_attempt = now;
-                if (!begin_connect())
-                {
-                    ESP_LOGI(TAG, "Failed to start heatpump connection proceedure...");
-                }
-            }            
-            return;
+                ESP_LOGI(TAG, "Failed to start heatpump connection proceedure...");
+            }    
         }
         else if (is_connected())
         {
-            // Update status the first time we enter this condition, then every 30s thereafter.
-            auto now = std::chrono::steady_clock::now();
-            static auto last_update = now - std::chrono::seconds(40);
-            if (now - last_update > std::chrono::seconds(20))
+            if (!begin_get_status())
             {
-                last_update = now;
-                if (!begin_get_status())
-                {
-                    ESP_LOGI(TAG, "Failed to begin heatpump status update!");
-                }         
-            }
+                ESP_LOGI(TAG, "Failed to begin heatpump status update!");
+            }         
         }
     }
 
@@ -529,8 +541,11 @@ namespace ecodan
             cmd.set_float16(newTemp, 6);
         }
 
+        cmd[3]= status.HeatingCoolingMode == Status::HpMode::COOL_ROOM_TEMP || status.HeatingCoolingMode == Status::HpMode::COOL_FLOW_TEMP 
+            ? 1 : 0;
+
         // cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
-        // cmd[2] = static_cast<uint8_t>(zone);
+
 
         // auto flag = status.HeatingCoolingMode == Status::HpMode::COOL_ROOM_TEMP
         //     ? static_cast<uint8_t>(Status::HpMode::COOL_ROOM_TEMP) : static_cast<uint8_t>(Status::HpMode::HEAT_ROOM_TEMP);
@@ -546,18 +561,7 @@ namespace ecodan
         // }
         //ESP_LOGE(TAG, cmd.debug_dump_packet().c_str());
 
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-            cmdQueue.emplace(std::move(cmd));
-        }
-
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "command dispatch failed for temperature setting!");
-            return;
-        }
-
-        return;
+        schedule_cmd(cmd);
     }
 
     void EcodanHeatpump::set_flow_target_temperature(float newTemp, esphome::ecodan::SetZone zone)
@@ -572,6 +576,23 @@ namespace ecodan
         else if (zone == SetZone::ZONE_2) {
             cmd[2] = 0x02;
             cmd.set_float16(newTemp, 12);
+        }
+        
+        switch (status.HeatingCoolingMode)
+        {
+        case Status::HpMode::HEAT_FLOW_TEMP:
+        case Status::HpMode::HEAT_ROOM_TEMP:
+            cmd[6] = 1;
+            break;
+        case Status::HpMode::COOL_ROOM_TEMP:
+            cmd[6] = 3;
+            break;
+        case Status::HpMode::COOL_FLOW_TEMP:
+            cmd[6] = 4;
+            break;
+        default:
+            cmd[6] = 0;
+            break;
         }
 
         // cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
@@ -590,18 +611,7 @@ namespace ecodan
         //     cmd.set_float16(newTemp, 12);
         // }
         // ESP_LOGE(TAG, cmd.debug_dump_packet().c_str());
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-            cmdQueue.emplace(std::move(cmd));
-        }
-
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "command dispatch failed for flow target temperature setting!");
-            return;
-        }
-
-        return;
+        schedule_cmd(cmd);
     }
 
     void EcodanHeatpump::set_dhw_target_temperature(float newTemp)
@@ -623,18 +633,7 @@ namespace ecodan
         cmd[1] = SET_SETTINGS_FLAG_DHW_TEMPERATURE;
         cmd.set_float16(newTemp, 8);
 
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-            cmdQueue.emplace(std::move(cmd));
-        }
-
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "command dispatch failed for DHW temperature setting!");
-            return;
-        }
-
-        return;
+        schedule_cmd(cmd);
     }
 
     void EcodanHeatpump::set_dhw_mode(std::string mode)
@@ -654,18 +653,7 @@ namespace ecodan
         cmd[1] = SET_SETTINGS_FLAG_DHW_MODE;
         cmd[5] = static_cast<uint8_t>(dhwMode);
 
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-            cmdQueue.emplace(std::move(cmd));
-        }
-
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "command dispatch failed for DHW temperature setting!");
-            return;
-        }
-
-        return;
+        schedule_cmd(cmd);
     }
 
     void EcodanHeatpump::set_dhw_force(bool on)
@@ -674,18 +662,7 @@ namespace ecodan
         cmd[1] = SET_SETTINGS_FLAG_MODE_TOGGLE;
         cmd[3] = on ? 1 : 0; // bit[3] of payload is DHW force, bit[2] is Holiday mode.
 
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-            cmdQueue.emplace(std::move(cmd));
-        }
-
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "command dispatch failed for DHW force setting!");
-            return;
-        }
-
-        return;
+        schedule_cmd(cmd);
     }
 
     void EcodanHeatpump::set_holiday(bool on)
@@ -694,18 +671,7 @@ namespace ecodan
         cmd[1] = SET_SETTINGS_FLAG_HOLIDAY_MODE_TOGGLE;
         cmd[4] = on ? 1 : 0;
 
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-            cmdQueue.emplace(std::move(cmd));
-        }
-
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "command dispatch failed for holiday mode setting!");
-            return;
-        }
-
-        return;
+        schedule_cmd(cmd);
     }
 
     void EcodanHeatpump::set_power_mode(bool on)
@@ -713,18 +679,8 @@ namespace ecodan
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
         cmd[1] = SET_SETTINGS_FLAG_MODE_TOGGLE;
         cmd[3] = on ? 1 : 0;
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-            cmdQueue.emplace(std::move(cmd));
-        }
 
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "command dispatch failed for DHW force setting!");
-            return;
-        }
-
-        return;
+        schedule_cmd(cmd);
     }
 
     void EcodanHeatpump::set_hp_mode(int mode)
@@ -733,27 +689,35 @@ namespace ecodan
         cmd[1] = SET_SETTINGS_FLAG_HP_MODE;
         cmd[6] = mode;
 
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-            cmdQueue.emplace(std::move(cmd));
-        }
-
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "command dispatch failed for heat pump mode setting!");
-            return;
-        }
-
-        return;
+        schedule_cmd(cmd);
     }
 
+    bool EcodanHeatpump::schedule_cmd(Message& cmd)
+    {
+        bool emplaced = false;
+        {
+            std::lock_guard<std::mutex> lock{cmdQueueMutex};
+            if (!cmdQueue.empty()) {
+                cmdQueue.emplace_back(std::move(cmd));
+                emplaced = true;
+            }
+        }
+        
+        if (!emplaced && !serial_tx(cmd)) {
+            ESP_LOGI(TAG, "Unable enqueue cmd, flushing queued requests...");
+            connected = false;
+            return false;
+        }
+
+        return true;
+    }
 
     void EcodanHeatpump::clear_command_queue()
     {
         std::lock_guard<std::mutex> lock{cmdQueueMutex};
 
         while (!cmdQueue.empty())
-            cmdQueue.pop();
+            cmdQueue.pop_back();
     }
 
     bool EcodanHeatpump::dispatch_next_cmd()
@@ -768,8 +732,10 @@ namespace ecodan
             }
 
             msg = std::move(cmdQueue.front());
-            cmdQueue.pop();
+            cmdQueue.pop_front();
         }
+        
+        //ESP_LOGI(TAG, msg.debug_dump_packet().c_str());
 
         if (!serial_tx(msg))
         {
@@ -787,7 +753,7 @@ namespace ecodan
     bool EcodanHeatpump::begin_connect()
     {
         Message cmd{MsgType::CONNECT_CMD};
-        char payload[3] = {0xCA, 0x01, 0x5d};
+        char payload[3] = {0xCA, 0x01};
         cmd.write_payload(payload, sizeof(payload));
 
         ESP_LOGI(TAG, "Attempt to tx CONNECT_CMD!");
@@ -815,25 +781,28 @@ namespace ecodan
             {
                 ESP_LOGI(TAG, "command queue was not empty when queueing status query: %u", cmdQueue.size());
 
-                while (!cmdQueue.empty())
-                    cmdQueue.pop();
+                // while (!cmdQueue.empty())
+                //     cmdQueue.pop();
             }
 
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::DEFROST_STATE);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::FORCED_DHW_STATE);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::HEATING_POWER);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::TEMPERATURE_CONFIG);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::SH_TEMPERATURE_STATE);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_A);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_B);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::ACTIVE_TIME);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::PUMP_STATUS);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::FLOW_RATE);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::MODE_FLAGS_A);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::MODE_FLAGS_B);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::ENERGY_USAGE);
-            cmdQueue.emplace(MsgType::GET_CMD, GetType::ENERGY_DELIVERY);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::DEFROST_STATE);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::ERROR_STATE);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::FORCED_DHW_STATE);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::HEATING_POWER);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::TEMPERATURE_CONFIG);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::SH_TEMPERATURE_STATE);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_A);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_B);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::EXTERNAL_STATE);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::ACTIVE_TIME);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::PUMP_STATUS);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::FLOW_RATE);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::MODE_FLAGS_A);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::MODE_FLAGS_B);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::ENERGY_USAGE);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::ENERGY_DELIVERY);
+            cmdQueue.emplace_front(MsgType::GET_CONFIGURATION, GetType::HARDWARE_CONFIGURATION);
         }
 
         return dispatch_next_cmd();

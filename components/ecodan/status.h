@@ -12,9 +12,13 @@ namespace ecodan
         bool Initialized = false;
 
         bool DefrostActive;
-        bool DhwForcedActive;
+        bool DhwForcedActive;        
         bool BoosterActive;
+        bool ImmersionActive;
+        uint8_t HeatSource;
+        bool In1ThermostatRequest;
         uint8_t OutputPower;
+        uint8_t Controller;
 
         float Zone1SetTemperature;
         float Zone1FlowTemperatureSetPoint;
@@ -97,7 +101,7 @@ namespace ecodan
 
         // HomeAssistant is a bit restrictive about what is let's us specify
         // as the mode/action of a climate integration.
-        std::string ha_mode_as_string()
+        std::string ha_status_as_string()
         {
             switch (Power)
             {
@@ -174,7 +178,7 @@ namespace ecodan
             }
         }
 
-        std::string dhw_mode_as_string()
+        std::string dhw_status_as_string()
         {
             switch (Operation)
             {
@@ -196,7 +200,7 @@ namespace ecodan
             }
         }
 
-        std::string hp_mode_as_string()
+        std::string hp_status_as_string()
         {
             switch (HeatingCoolingMode)
             {

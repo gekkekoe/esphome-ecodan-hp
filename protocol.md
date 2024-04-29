@@ -1,7 +1,19 @@
 # Mitsubishi-CN105-Protocol-Decode
 For Ecodan ASHP Units
 Copy from: https://github.com/F1p/Mitsubishi-CN105-Protocol-Decode/blob/master/README.md
-With my own findings using a procon as proxy
+With my own findings using a procon as proxy.
+
+# New findings
+- 0x03 : error codes
+- 0x05 : heat source
+- 0x0B : refrigerant liquid temperature
+- 0x10 : In1 thermostat H/C status
+- 0x14 : booster / immersion heater states
+- 0x15 : pump status
+- 0x28 : forced dhw status 
+- 0x35 : room temp setpoint (signed) with flags
+- 0xC9 : configuration command. It reports back controller version and much more, need more investigation.
+
 
 # Physical
 Serial, 2400, 8, E, 1
@@ -24,8 +36,8 @@ Serial, 2400, 8, E, 1
 |  0x62 | Get Response     | From Heat Pump |
 |  0x5A | Connect Request  | To Heat Pump   |
 |  0x7A | Connect Response | From Heat Pump |
-|  0x5B | Extended Connect Request  | To Heat Pump   |
-|  0x7B | Extended Connect Responce | To Heat Pump   |
+|  0x5B | Configuration Request  | To Heat Pump   |
+|  0x7B | Configuration Response | From Heat Pump   |
 ### Length
 Payload Size (Bytes)
 ## Payload
@@ -81,10 +93,11 @@ Active commands so far identified.
 Identified so far, this must do far more that this!
 |   0   |   1  | 2 | 3 |   4  |  5   | 6    |  7   |   8   |   9   |  10  |  11  |  12  |  13  | 14 | 15 | 16 |
 |-------|------|---|---|------|------|------|------|-------|-------|------|------|------|------|----|----|----|
-| 0x35  | flag |   |   | Z1SP | Z1SP | Z2SP | Z2SP |       |       |      |      |      |      |    |    |    |  
+| 0x35  | flag |   | CH| Z1SP | Z1SP | Z2SP | Z2SP |       |       |      |      |      |      |    |    |    |  
 * flag : zone 1 / zone 2 flag
   * 0x02 : Zone 1
   * 0x08 : Zone 2
+* CH: Cool/Heat flag, 1 when setting room temp in cool mode, 0 in heating mode
 * Z1SP : Zone 1 Setpoint (* 100)
 * Z2SP : Zone 2 Setpoint (* 100)
 # Get Request - Packet Type 0x42
@@ -94,9 +107,9 @@ Active commands so far identified, 0x00 to 0xff. Commands not listed appear to g
 | ------- | ----------- |
 | 0x01 | Time & Date |
 | 0x02 | Defrost |
-| 0x03 | Unknown Running Parameter |
+| 0x03 | Error codes |
 | 0x04 | Compressor Frequency |
-| 0x05 | Hot Water Boot Flag |
+| 0x05 | Hot Water Flag |
 | 0x06 | Unknown - Empty Response |
 | 0x07 | Output Power |
 | 0x08 | Unknown |
@@ -105,12 +118,12 @@ Active commands so far identified, 0x00 to 0xff. Commands not listed appear to g
 | 0x0c | Water Flow Temperatures |
 | 0x0d | Boiler Flow Temperatures |
 | 0x0e | Unknown |
-| 0x10 | Unknown |
+| 0x10 | External In1 thermostat |
 | 0x11 | Unknown |
 | 0x13 | Run Hours |
-| 0x14 | Primary Flow Rate |
-| 0x15 | Unknown Flags |
-| 0x16 | Running Pumps |
+| 0x14 | Primary Flow Rate & Booster/Immersion |
+| 0x15 | Pump status |
+| 0x16 | Unknown |
 | 0x17 | Unknown - Empty Response |
 | 0x18 | Unknown - Empty Response |
 | 0x19 | Unknown - Empty Response |
@@ -127,6 +140,7 @@ Active commands so far identified, 0x00 to 0xff. Commands not listed appear to g
 | 0xa1 | Unknown |
 | 0xa2 | Unknown |
 | 0xa3 | Unknown - Empty Response |
+| 0xc9 | Hardware configuration |
 ### Payload - All Commands
 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |---|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
@@ -137,7 +151,7 @@ Active commands so far identified.
 | Command | Brief Description |
 | ------- | ----------- |
 | 0x00 |  OK |
-### 0x00 - OK , Command OK, or Just Format?
+### 0x00 - Set command ACK
 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |---|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
 | Command | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0  | 0  |  0 |  0 |  0 |  0 |  0 |
@@ -170,10 +184,14 @@ Responses so far identified.
 |-------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
 | 0x02  |   |   | D |   |   |   |   |   |   |    |    |    |    |    |    |    |  
 * D: Defrost
-### 0x03 - Unknown
+### 0x03 - Error codes
 |   0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 |  8  | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|---|---|---|---|---|---|---|-----|---|----|----|----|----|----|----|----|
-| 0x03  |   |   |   |   |   |   |   |  M  | S |    |    |    |    |    |    |    |  
+| 0x03  | RE|FC1|FC2|FT1|FT2|   |   |  M  | S |    |    |    |    |    |    |    |  
+* RE: refrigerant error code
+* FC1+FC2: Error code FC1 * 100 + FC2
+* FT1: fault code letter (first)
+* FT2: fault code letter (second)
 * M: Multi Zone Running Parameter (3 = Z2/2 = Z1/1 = Both Active)
 * S: Single Zone Running Parameter (TBC)?
 ### 0x04 - Various Flags
@@ -184,8 +202,14 @@ Responses so far identified.
 ### 0x05 - Various Flags
 |   0  | 1 | 2 | 3 | 4 |  5 | 6 |  7  | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |------|---|---|---|---|----|---|-----|---|---|----|----|----|----|----|----|----|
-| 0x05 |   |   |   |   | DE |   | HWB |   |   |    |    |    |    |    |    |    |  
+| 0x05 |   |   |   |   | DE | HS| HWB |   |   |    |    |    |    |    |    |    |  
 * DE : Value of 7 when in Hot Water on Temp Drop Mode
+* HS : Heat source
+  * 0 : heatpump
+  * 1 : screw in heater
+  * 2 : electric heater
+  * 3 : screw in heater +  electric heater
+  * 4 : DHW boiler
 * HWB : Hot Water Boost
 ### 0x07 
 |   0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
@@ -228,6 +252,11 @@ Responses so far identified.
 |------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
 | 0x0e |   |   |   |   |   |   |   |   |   |    |    |    |    |    |    |    |
 Several Unknown Temperatures
+### 0x10 - External sources
+|   0   | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+|-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
+| 0x13  | T  |   |   |   |   |   |   |   |   |    |    |    |    |    |    |    |  
+* T : In1 thermostat H/C request status (on/off)
 ### 0x13 - Run Hours
 |   0   | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
@@ -237,8 +266,10 @@ Several Unknown Temperatures
 ### 0x14 - Primary Cct Flow Rate
 |   0   | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x14  |    |   |   |   |   |   |   |   |   |    | PF |    |    |    |    |    |  
+| 0x14  |    | B |   |   | I |   |   |   |   |    | PF |    |    |    |    |    |  
 * PF : Primary Flow Rate (l/min)
+* B : Booster heater active
+* I : Immersion heater active
 ### 0x15 - Pump status
 |   0   | 1  |  2 |  3 |  4 | 5 |  6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|----|----|----|---|----|---|---|---|----|----|----|----|----|----|----|
@@ -282,10 +313,10 @@ Several Unknown Temperatures
 ### 0x28 - Various Flags
 |   0   | 1 | 2 | 3 | 4  | 5  |  6 | 7  |  8 |  9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|---|---|---|----|----|----|----|----|----|----|----|----|----|----|----|----|
-| 0x28  |   |   |U1 | HM | HT |PHZ1|PCZ1|PHZ2|PCZ2|    |    |    |    |    |    |  
-* U1 : Unknown DHW Flag? Pump Running?
+| 0x28  |   |   |FD | HM | HT |PHZ1|PCZ1|PHZ2|PCZ2|    |    |    |    |    |    |  
+* FD : Forced DHW active
 * HM : Holiday Mode
-* HT : Hot Water Timer
+* HT : Prohibit DHW
 * PHZ1 : Prohibit Heating Zone1
 * PCZ1 : Prohibit Cooling Zone1
 * PHZ2 : Prohibit Heating Zone2
@@ -310,7 +341,24 @@ Several Unknown Temperatures
 * Y: Year
 * M: Month
 * D: Day
-
+### 0xC9 - Hardware configuration
+|   0   | 1 | 2 | 3 |  4   |  5  |  6  |  7   | 8 | 9 | 10  | 11 | 12 | 13 | 14 | 15 | 16 |
+|-------|---|---|---|------|-----|-----|------|---|---|-----|----|----|----|----|----|----|
+| 0xC9  |   |   |   |      |     |  C  |      |   |   |     |    |    |    |    |    |    |  
+* C: Controller version
+  * 0: FTC2B
+  * 1: FTC4
+  * 2: FTC5
+  * 3: FTC6
+  * 128: CAHV1A
+  * 129: CAHV1B
+  * 130: CRHV1A 
+  * 131: CRHV1B
+  * 132: EAHV1A
+  * 133: EAHV1B
+  * 134: QAHV1A
+  * 135: QAHV1B
+  * 144: PWFY1
 ### Experimental prohibit commands
 The procon send these commands when setting prohibit to true, but it does not seem to affect the heatpump.
 

@@ -8,6 +8,7 @@ from esphome.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_WATER,
+    ENTITY_CATEGORY_NONE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
@@ -222,6 +223,12 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("runtime"): sensor.sensor_schema(
             unit_of_measurement=UNIT_HOUR,
             icon="mdi:clock",
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),
+        cv.Optional("controller_version"): sensor.sensor_schema(
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional("heat_source"): sensor.sensor_schema(
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     }

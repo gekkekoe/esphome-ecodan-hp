@@ -57,7 +57,7 @@ number:
     ## Set led brightness
   - platform: template
     id: led_brightness
-    name: Led brightness #${led_brightness}
+    name: Set Led brightness #${led_brightness}
     icon: mdi:toggle-switch-variant
     mode: slider
     entity_category: config
@@ -83,7 +83,7 @@ number:
 switch:
   - platform: template
     id: ecodan_led_switch
-    name: Led switch #${led_switch}
+    name: Set Led switch #${led_switch}
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON 
     lambda: return id(ecodan_led_switch).state;

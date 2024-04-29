@@ -1,13 +1,15 @@
 text_sensor:
   - platform: ecodan
-    mode_prohibit_heating_z1:
-      name: mode_prohibit_heating_z1
-    mode_prohibit_cool_z1:
-      name: mode_prohibit_cool_z1
+    status_prohibit_heating_z1:
+      id: status_prohibit_heating_z1
+      name: Zone 1 prohibit heating status
+    status_prohibit_cool_z1:
+      id: status_prohibit_cool_z1
+      name: Zone 1 prohibit cooling status
 
 number:
   - platform: template
-    name: "z1 room temperature"
+    name: Zone 1 room setpoint
     id: heatpump_number_z1_set_room_temperature
     mode: slider
     entity_category: config
@@ -24,7 +26,7 @@ number:
             id(ecodan_instance).set_room_temperature(x, esphome::ecodan::SetZone::ZONE_1);
 
   - platform: template
-    name: "z1 flow target temperature"
+    name: Zone 1 H/C setpoint
     id: heatpump_number_z1_set_flow_temperature
     mode: slider
     entity_category: config
@@ -44,7 +46,7 @@ sensor:
   - platform: ecodan
     z1_flow_temp_target:
       id: z1_flow_temp_target
-      name: z1_flow_temp_target
+      name: Zone 1 H/C setpoint value
       # on_value:
       #   if:
       #     condition:
@@ -55,10 +57,11 @@ sensor:
       #           id: heatpump_number_z1_set_flow_temperature
       #           value: !lambda "return id(z1_flow_temp_target).state;"
     z1_room_temp:
-      name: z1_room_temp      
+      id: z1_room_temp
+      name: Zone 1 room temp      
     z1_room_temp_target:
       id: z1_room_temp_target
-      name: z1_room_temp_target
+      name: Zone 1 room setpoint value
       # on_value:
       #   if:
       #     condition:
