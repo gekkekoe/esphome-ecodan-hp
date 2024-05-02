@@ -1,5 +1,14 @@
-# ESPHome version of Ecodan ha local
-It is highly inspired by https://github.com/rbroker/ecodan-ha-local, https://github.com/tobias-93/esphome-ecodan-heatpump and https://github.com/vekexasia/comfoair-esp32
+# ESPHome Ecodan heatpump
+It was based on https://github.com/rbroker/ecodan-ha-local. I've also managed to reverse engineer quite some additional properties and controls.
+- 0x03 : error codes
+- 0x05 : heat source
+- 0x0B : refrigerant liquid temperature
+- 0x10 : In1 thermostat H/C status
+- 0x14 : booster / immersion heater states
+- 0x15 : pump status
+- 0x28 : forced dhw status 
+- 0x35 : room temp setpoint (signed) with flags
+- 0xC9 : configuration command. It reports back controller version and much more, need more investigation.
 
 # required hardware
 If you don't want to solder, use one of the boards that supports 5v on the GPIO ports (basically all m5stack boards with a grove connector (HY2.0-4P)). It also should work for airco units with cn105 connectors.
