@@ -353,15 +353,9 @@ text_sensor:
     status_water_pump:
       id: status_water_pump
       name: water pump status
-    status_water_pump_2:
-      id: status_water_pump_2
-      name: water pump 2 status
     status_three_way_valve:
       id: status_three_way_valve
       name: 3-way valve status
-    status_three_way_valve_2:
-      id: status_three_way_valve_2
-      name: 3-way valve 2 status
     status_in1_request:
       id: status_in1_request
       name: In1 thermostat status

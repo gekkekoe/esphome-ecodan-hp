@@ -6,6 +6,12 @@ text_sensor:
     status_prohibit_cool_z2:
       id: status_prohibit_cool_z2
       name: Zone 2 prohibit cooling status
+    status_three_way_valve_2:
+      id: status_three_way_valve_2
+      name: 3-way valve 2 status
+    status_water_pump_2:
+      id: status_water_pump_2
+      name: water pump 2 status
 
 number:
   - platform: template

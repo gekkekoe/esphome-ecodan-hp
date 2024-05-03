@@ -16,6 +16,8 @@
 namespace esphome {
 namespace ecodan 
 {    
+    static constexpr const char *TAG = "ecodan.component";   
+
     class EcodanHeatpump : public PollingComponent, public esphome::api::CustomAPIDevice {
     public:        
         EcodanHeatpump() : PollingComponent(10000) {}
@@ -65,6 +67,7 @@ namespace ecodan
         bool begin_update_status();
 
         bool initialize();
+        void init_hw_watchdog();
         void handle_loop();
         bool is_connected();        
     
