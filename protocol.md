@@ -118,7 +118,7 @@ Active commands so far identified, 0x00 to 0xff. Commands not listed appear to g
 | 0x0c | Water Flow Temperatures |
 | 0x0d | Boiler Flow Temperatures |
 | 0x0e | Unknown |
-| 0x10 | External In1 thermostat |
+| 0x10 | Thermostats |
 | 0x11 | Unknown |
 | 0x13 | Run Hours |
 | 0x14 | Primary Flow Rate & Booster/Immersion |
@@ -255,8 +255,10 @@ Several Unknown Temperatures
 ### 0x10 - External sources
 |   0   | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x13  | T  |   |   |   |   |   |   |   |   |    |    |    |    |    |    |    |  
-* T : In1 thermostat H/C request status (on/off)
+| 0x13  | T1 | T2| T3|   |   |   |   |   |   |    |    |    |    |    |    |    |  
+* T1 : In1 room thermostat 1 H/C request status (on/off)
+* T2 : In6 room thermostat 2 H/C request status (on/off)
+* T3 : In5 outdoor thermostat (on/off)
 ### 0x13 - Run Hours
 |   0   | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
@@ -273,11 +275,17 @@ Several Unknown Temperatures
 ### 0x15 - Pump status
 |   0   | 1  |  2 |  3 |  4 | 5 |  6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|----|----|----|---|----|---|---|---|----|----|----|----|----|----|----|
-| 0x15  | WS |    |    |    |   | VS |   |   |   |    |    |    |    |    |    |    |  
-* WS : Water pump status
+| 0x15  | P1 |    |    | P2 |   | V1 | V2|   |   |    |    |    |    |    |    |    |  
+* P1 : Water pump 1 status
   * 0 : Off
   * 1 : On
-* VS : 3 way value status
+* P2 : Water pump 2 status
+  * 0 : Off
+  * 1 : On
+* V1 : 3 way valve 1 status
+  * 0 : Off
+  * 1 : On
+* V2 : 3 way valve 2 status
   * 0 : Off
   * 1 : On
 ### 0x16 - Unkown

@@ -266,7 +266,7 @@ namespace ecodan
             case GetType::FORCED_DHW_STATE:
                 // 6 = heat source , 0x0 = heatpump, 0x1 = screw in heater, 0x2 = electric heater..
                 status.HeatSource = res[6];
-                //status.DhwForcedActive = res[7] != 0 && res[5] == 0; // bit 5 -> 7 is normal dhw, 0 - forced dhw
+                //status.DhwForcedActive = res[7] != 0 && res[5] == 0; // byte 5 -> 7 is normal dhw, 0 - forced dhw
                 //publish_state("status_dhw_forced", status.DhwForcedActive ? "On" : "Off");
 
                 publish_state("heat_source", status.HeatSource);
@@ -331,8 +331,12 @@ namespace ecodan
                 break;
             case GetType::EXTERNAL_STATE:
                 // 1 = IN1 Thermostat heat/cool request
+                // 2 = IN6 Thermostat 2
+                // 3 = IN5 outdoor thermostat
                 status.In1ThermostatRequest = res[1] != 0;
+                status.In6ThermostatRequest = res[2] != 0;
                 publish_state("status_in1_request", status.In1ThermostatRequest ? "On" : "Off");
+                publish_state("status_in6_request", status.In1ThermostatRequest ? "On" : "Off");
                 break;
             case GetType::ACTIVE_TIME:
                 status.Runtime = res.get_float24_v2(3);
@@ -340,10 +344,18 @@ namespace ecodan
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;
             case GetType::PUMP_STATUS:
+                // byte 1 = pump running on/off
+                // byte 4 = pump 2
+                // byte 6 = 3 way valve on/off
+                // byte 7 - 3 way valve 2            
                 status.WaterPumpActive = res[1] != 0;
                 status.ThreeWayValveActive = res[6] != 0;
+                status.WaterPump2Active = res[4] != 0;
+                status.ThreeWayValve2Active = res[7] != 0;                
                 publish_state("status_water_pump", status.WaterPumpActive ? "On" : "Off");
                 publish_state("status_three_way_valve", status.ThreeWayValveActive ? "On" : "Off");
+                publish_state("status_water_pump_2", status.WaterPumpActive ? "On" : "Off");
+                publish_state("status_three_way_valve_2", status.ThreeWayValveActive ? "On" : "Off");                
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;                
             case GetType::FLOW_RATE:
@@ -413,7 +425,7 @@ namespace ecodan
 
                 break;
             case GetType::HARDWARE_CONFIGURATION:
-                // bit 6 = ftc, ft2b , ftc4, ftc5, ftc6
+                // byte 6 = ftc, ft2b , ftc4, ftc5, ftc6
                 status.Controller = res[6];
                 publish_state("controller_version", status.Controller);
                 break;

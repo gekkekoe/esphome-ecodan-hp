@@ -3,7 +3,7 @@ It was based on https://github.com/rbroker/ecodan-ha-local. I've also managed to
 - 0x03 : error codes
 - 0x05 : heat source
 - 0x0B : refrigerant liquid temperature
-- 0x10 : In1 thermostat H/C status
+- 0x10 : In1, In5, In6 thermostat status
 - 0x14 : booster / immersion heater states
 - 0x15 : pump status
 - 0x28 : forced dhw status 
@@ -49,10 +49,16 @@ Pin mapping (from left to right)
 
 ```
 packages:
-  esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
-  zone1: !include confs/zone1.yaml
-## disable if you don't want to use zone 2
-  zone2: !include confs/zone2.yaml
+  remote_package:
+    url: https://github.com/gekkekoe/esphome-ecodan-hp/
+    ref: main
+    refresh: always
+    files: [ 
+            confs/esp32s3.yaml, # confs/esp32.yaml, for regular board
+            confs/zone1.yaml,
+            ## enable if you want to use zone 2
+            #confs/zone2.yaml, 
+           ]
 ```
 
 * Build
@@ -66,7 +72,7 @@ esphome upload --device=/dev/ttyACM0 ecodan-esphome.yaml
 ```
 * You can update the firmware via de web interface of the esp after the initial flash, or use the following command to flash over the network
 ```console 
-esphome upload --device=ip_address ecodan-esphome.yaml
+esphome upload --device ip_address ecodan-esphome.yaml
 ```
 
 Here's how it's connected inside my heatpump:

@@ -61,7 +61,11 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("status_in1_request"): text_sensor.text_sensor_schema(
             icon="mdi:alert",            
             entity_category=ENTITY_CATEGORY_NONE,
-        ),                 
+        ), 
+        cv.Optional("status_in6_request"): text_sensor.text_sensor_schema(
+            icon="mdi:alert",            
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),                         
         cv.Optional("status_water_pump"): text_sensor.text_sensor_schema(
             icon="mdi:radiobox-blank",            
             entity_category=ENTITY_CATEGORY_NONE,
@@ -69,7 +73,15 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("status_three_way_valve"): text_sensor.text_sensor_schema(
             icon="mdi:radiobox-blank",            
             entity_category=ENTITY_CATEGORY_NONE,
-        ),                   
+        ),  
+        cv.Optional("status_water_pump_2"): text_sensor.text_sensor_schema(
+            icon="mdi:radiobox-blank",            
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),
+        cv.Optional("status_three_way_valve_2"): text_sensor.text_sensor_schema(
+            icon="mdi:radiobox-blank",            
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),                           
         cv.Optional("status_prohibit_dhw"): text_sensor.text_sensor_schema(
             icon="mdi:alert",            
             entity_category=ENTITY_CATEGORY_NONE,

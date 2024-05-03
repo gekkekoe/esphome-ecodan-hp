@@ -17,6 +17,7 @@ namespace ecodan
         bool ImmersionActive;
         uint8_t HeatSource;
         bool In1ThermostatRequest;
+        bool In6ThermostatRequest;
         uint8_t OutputPower;
         uint8_t Controller;
 
@@ -43,7 +44,9 @@ namespace ecodan
 
         float Runtime;
         bool WaterPumpActive;
+        bool WaterPump2Active;
         bool ThreeWayValveActive;
+        bool ThreeWayValve2Active;
 
         enum class PowerMode : uint8_t
         {
