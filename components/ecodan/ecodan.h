@@ -36,7 +36,6 @@ namespace ecodan
         }
 
         // exposed as external component commands
-        void set_remote_thermostat_temperature(float value, esphome::ecodan::SetZone zone);
         void set_room_temperature(float value, esphome::ecodan::SetZone zone);
         void set_flow_target_temperature(float value, esphome::ecodan::SetZone zone);
         void set_dhw_target_temperature(float value);
