@@ -107,7 +107,7 @@ namespace ecodan
                 status.In1ThermostatRequest = res[1] != 0;
                 status.In6ThermostatRequest = res[2] != 0;
                 publish_state("status_in1_request", status.In1ThermostatRequest ? "On" : "Off");
-                publish_state("status_in6_request", status.In1ThermostatRequest ? "On" : "Off");
+                publish_state("status_in6_request", status.In6ThermostatRequest ? "On" : "Off");
                 break;
             case GetType::ACTIVE_TIME:
                 status.Runtime = res.get_float24_v2(3);
@@ -232,7 +232,7 @@ namespace ecodan
             handle_set_response(res);
             break;
         case MsgType::GET_RES:
-        case MsgType::RES_CONFIGURATION:
+        case MsgType::CONFIGURATION_RES:
             handle_get_response(res);
             break;
         case MsgType::CONNECT_RES:

@@ -16,6 +16,33 @@ namespace ecodan
 {
 
 #pragma region Commands
+    void EcodanHeatpump::set_remote_thermostat_temperature(float newTemp, esphome::ecodan::SetZone zone)
+    {
+        // *Experimental*
+        Message cmd{MsgType::SET_CMD, SetType::REMOTE_ROOM_SETTINGS};
+        //char custom_header[5] = {0xfc, 0x41, 0x01, 0x30, 0x10};
+        //cmd.write_header(custom_header, sizeof(custom_header));
+        cmd[1] = 0x01;
+
+        if (newTemp > 0) {          
+            auto setting = newTemp * 2;
+            setting = round(setting);
+            setting = setting / 2;
+            float temp1 = 3 + ((setting - 10) * 2);
+            float temp2 = (setting * 2) + 128;
+
+            cmd[2] = (int) temp1;
+            cmd[3] = (int) temp2;
+        }
+        else 
+        {
+            cmd[6] = 0;
+            cmd[8] = 0x80;
+        }
+
+        ESP_LOGW(TAG, cmd.debug_dump_packet().c_str());
+        schedule_cmd(cmd);
+    }
 
     void EcodanHeatpump::set_room_temperature(float newTemp, esphome::ecodan::SetZone zone)
     {

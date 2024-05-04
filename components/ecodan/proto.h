@@ -14,14 +14,15 @@ namespace ecodan
         CONNECT_CMD = 0x5A,
         CONNECT_RES = 0x7A,
         GET_CONFIGURATION = 0x5B,
-        RES_CONFIGURATION = 0x7B
+        CONFIGURATION_RES = 0x7B
     };
 
     enum class SetType : uint8_t
     {
         BASIC_SETTINGS = 0x32,
         DHW_SETTING = 0x34,
-        ROOM_SETTINGS = 0x35
+        ROOM_SETTINGS = 0x35,
+        REMOTE_ROOM_SETTINGS = 0x07
     };
 
 #define SET_SETTINGS_FLAG_ZONE_TEMPERATURE 0x80
