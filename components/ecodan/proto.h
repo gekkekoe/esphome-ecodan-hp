@@ -52,7 +52,7 @@ namespace ecodan
         DEFROST_STATE = 0x02,
         ERROR_STATE = 0x03,
         COMPRESSOR_FREQUENCY = 0x04,
-        FORCED_DHW_STATE = 0x05,
+        DHW_STATE = 0x05,
         UNKNOWN_0x06 = 0x06,
         HEATING_POWER = 0x07,
         TEMPERATURE_CONFIG = 0x09,

@@ -276,7 +276,7 @@ namespace ecodan
             cmdQueue.emplace_front(MsgType::GET_CMD, GetType::DEFROST_STATE);
             cmdQueue.emplace_front(MsgType::GET_CMD, GetType::ERROR_STATE);
             cmdQueue.emplace_front(MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY);
-            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::FORCED_DHW_STATE);
+            cmdQueue.emplace_front(MsgType::GET_CMD, GetType::DHW_STATE);
             cmdQueue.emplace_front(MsgType::GET_CMD, GetType::HEATING_POWER);
             cmdQueue.emplace_front(MsgType::GET_CMD, GetType::TEMPERATURE_CONFIG);
             cmdQueue.emplace_front(MsgType::GET_CMD, GetType::SH_TEMPERATURE_STATE);

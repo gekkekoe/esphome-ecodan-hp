@@ -205,15 +205,6 @@ text_sensor:
         case 1: return std::string("FTC4");
         case 2: return std::string("FTC5");
         case 3: return std::string("FTC6");
-        case 128: return std::string("CAHV1A");
-        case 129: return std::string("CAHV1B");
-        case 130: return std::string("CRHV1A");
-        case 131: return std::string("CRHV1B");
-        case 132: return std::string("EAHV1A");
-        case 133: return std::string("EAHV1B");
-        case 134: return std::string("QAHV1A");
-        case 135: return std::string("QAHV1B");
-        case 144: return std::string("PWFY1");
         default: return std::to_string(value);
       }
   - platform: template
@@ -224,10 +215,10 @@ text_sensor:
       switch (value) {
         case INT_MAX: return std::string("NA");
         case 0: return std::string("heatpump");
-        case 1: return std::string("screw_in_heater");
-        case 2: return std::string("electric_heater");
-        case 3: return std::string("screw_in_heater_and_electric_heater");
-        case 4: return std::string("dhw_boiler}");
+        case 1: return std::string("immersion heater");
+        case 2: return std::string("booster heater");
+        case 3: return std::string("immersion and booster heater");
+        case 4: return std::string("boiler}");
         default: return std::to_string(value);
       }  
 

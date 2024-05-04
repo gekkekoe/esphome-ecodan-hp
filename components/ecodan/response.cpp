@@ -34,7 +34,7 @@ namespace ecodan
                 status.CompressorFrequency = res[1];
                 publish_state("compressor_frequency", status.CompressorFrequency);
                 break;
-            case GetType::FORCED_DHW_STATE:
+            case GetType::DHW_STATE:
                 // 6 = heat source , 0x0 = heatpump, 0x1 = screw in heater, 0x2 = electric heater..
                 status.HeatSource = res[6];
                 //status.DhwForcedActive = res[7] != 0 && res[5] == 0; // byte 5 -> 7 is normal dhw, 0 - forced dhw
