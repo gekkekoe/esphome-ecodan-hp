@@ -206,10 +206,10 @@ Responses so far identified.
 * DE : Value of 7 when in Hot Water on Temp Drop Mode
 * HS : Heat source
   * 0 : heatpump
-  * 1 : screw in heater
-  * 2 : electric heater
-  * 3 : screw in heater +  electric heater
-  * 4 : DHW boiler
+  * 1 : immersion heater
+  * 2 : booster heater
+  * 3 : booster heater + immersion heater
+  * 4 : boiler
 * HWB : Hot Water Boost
 ### 0x07 
 |   0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |

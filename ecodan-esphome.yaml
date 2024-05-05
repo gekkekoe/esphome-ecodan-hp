@@ -36,6 +36,9 @@ api:
 #  zone1: !include confs/zone1.yaml
 # # disable if you don't want to use zone 2
 # # zone2: !include confs/zone2.yaml
+# # change language labels to -en for English or -nl for Dutch
+#  substitutions: !include confs/ecodan-labels-nl.yaml
+#  substitutions: !include confs/ecodan-labels-en.yaml
 
 external_components:
   - source: github://gekkekoe/esphome-ecodan-hp@main
@@ -51,11 +54,11 @@ packages:
             confs/esp32s3.yaml, # confs/esp32.yaml, for regular board
             confs/zone1.yaml,
             ## enable if you want to use zone 2
-            #confs/zone2.yaml, 
+            #confs/zone2.yaml,
+            ## enable label language file
+            confs/ecodan-labels-en.yaml,
+            #confs/ecodan-labels-nl.yaml,
            ]
-## change language labels to -en for English or -nl for Dutch
-#  substitutions: !include .ecodan-labels-nl.yaml
-#  substitutions: !include .ecodan-labels-en.yaml
 
 # enable logger
 logger:
@@ -83,7 +86,7 @@ ecodan:
 # heatpump commands
 number:
   - platform: template
-    name: DHW setpoint
+    name: ${heatpump_number_set_dhw_temperature}
     id: heatpump_number_set_dhw_temperature
     mode: slider
     entity_category: config
@@ -101,7 +104,7 @@ number:
 
 switch:
   - platform: template
-    name: Set force dhw
+    name: ${heatpump_switch_force_dhw}
     id: heatpump_switch_force_dhw
     restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
@@ -113,7 +116,7 @@ switch:
          id(ecodan_instance).set_dhw_force(false);
 
   - platform: template
-    name: Set holiday mode
+    name: ${heatpump_switch_holiday}
     id: heatpump_switch_holiday
     restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
@@ -125,7 +128,7 @@ switch:
          id(ecodan_instance).set_holiday(false);
 
   - platform: template
-    name: Set heatpump On/Off
+    name: ${heatpump_switch_power_mode}
     id: heatpump_switch_power_mode
     restore_mode: RESTORE_DEFAULT_ON
     optimistic: true
@@ -138,43 +141,43 @@ switch:
 
 select:
   - platform: template
-    name: operating mode
+    name: ${heatpump_select_operating_mode}
     id: heatpump_select_operating_mode
     optimistic: true
     restore_value: true
     options:
-      - "Heat Target Temperature"
-      - "Heat Flow Temperature"
-      - "Heat Compensation Curve"
-      - "Cool Target Temperature"
-      - "Cool Flow Temperature"
+      - ${heat_target_temperature}
+      - ${heat_flow_temperature}
+      - ${heat_compensation_curve}
+      - ${cool_target_temperature}
+      - ${cool_flow_temperature}
     set_action:
       - lambda: |-
-          if (x == "Heat Target Temperature") {
+          if (x == "${heat_target_temperature}") {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP));
           }
-          else if (x == "Heat Flow Temperature") {
+          else if (x == "${heat_flow_temperature}") {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP));
           }
-          else if (x == "Heat Compensation Curve") {
+          else if (x == "${heat_compensation_curve}") {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE));
           }
-          else if (x == "Cool Target Temperature") {
+          else if (x == "${cool_target_temperature}") {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP));
           }
-          else if (x == "Cool Flow Temperature") {
+          else if (x == "${cool_flow_temperature}") {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP));
           }
 
   - platform: template
-    name: Set DHW mode
+    name: ${heatpump_select_dhw_mode}
     id: heatpump_select_dhw_mode
     optimistic: true
     restore_value: true
     options:
-      - "Off"
-      - "Normal"
-      - "Eco"
+      - ${of}
+      - ${normal}
+      - ${eco}
     set_action:
       - lambda: |-
           id(ecodan_instance).set_dhw_mode(x);
@@ -183,12 +186,12 @@ select:
 text_sensor:
   - platform: wifi_info
     ip_address:
-      name: Esp IP
+      name: ${esp_ip}
     ssid:
-      name: Esp SSID
+      name: ${esp_sidd}
 
   - platform: version
-    name: Esp Version
+    name: ${esp_version}
     hide_timestamp: true
     disabled_by_default: false
     icon: mdi:new-box
@@ -196,7 +199,7 @@ text_sensor:
 
   - platform: template
     id: controller_version_text
-    name: controller version
+    name: ${controller_version_text}
     lambda: |-
       int value = id(controller_version).state;
       switch (value) {
@@ -207,28 +210,29 @@ text_sensor:
         case 3: return std::string("FTC6");
         default: return std::to_string(value);
       }
+
   - platform: template
     id: heat_source_text
-    name: heat source 
+    name: ${heat_source_text}
     lambda: |-
       int value = id(heat_source).state;
       switch (value) {
         case INT_MAX: return std::string("NA");
-        case 0: return std::string("heatpump");
-        case 1: return std::string("screw_in_heater");
-        case 2: return std::string("electric_heater");
-        case 3: return std::string("screw_in_heater_and_electric_heater");
-        case 4: return std::string("dhw_boiler}");
+        case 0: return std::string("${heatpump}");
+        case 1: return std::string("${immersion_heater}");
+        case 2: return std::string("${booster_heater}");
+        case 3: return std::string("${immersion_and_booster_heater}");
+        case 4: return std::string("${boiler}");
         default: return std::to_string(value);
       }  
 
   - platform: ecodan
     status_defrost:
       id: status_defrost
-      name: defrost state
+      name: ${status_defrost}
     status_dhw:
       id: status_dhw 
-      name: DHW status value
+      name: ${status_dhw}
       # on_value:
       #   if:
       #     condition:
@@ -240,7 +244,7 @@ text_sensor:
       #           option: !lambda "return id(status_dhw).state;"
 
     status_dhw_forced:
-      name: DHW forced status
+      name: ${status_dhw_forced}
       id: status_dhw_forced
       on_value:
         if:
@@ -306,10 +310,10 @@ text_sensor:
                     id: heatpump_switch_power_mode        
     status_operation:
       id: status_operation
-      name: operation status
+      name: ${status_operation}
     status_holiday:
       id: status_holiday
-      name: holiday status
+      name: ${status_holiday}
       on_value:
         if:
           condition:
@@ -334,25 +338,26 @@ text_sensor:
                     id: heatpump_switch_holiday      
     status_booster:
       id: status_booster
-      name: booster heater status
+      name: ${status_booster}
     status_immersion:
       id: status_immersion
-      name: immersion heater status
+      name: ${status_immersion}
     status_prohibit_dhw:
       id: status_prohibit_dhw
-      name: DHW prohibit status
+      name: ${status_prohibit_dhw}
     status_water_pump:
       id: status_water_pump
-      name: water pump status
+      name: ${status_water_pump}
     status_three_way_valve:
       id: status_three_way_valve
-      name: 3-way valve status
+      name: ${status_three_way_valve}
     status_in1_request:
       id: status_in1_request
-      name: In1 thermostat status
+      name: ${status_in1_request}
     status_in6_request:
       id: status_in6_request
-      name: In6 thermostat 2 status
+      name: ${status_in6_request}
+
 sensor:
   - platform: ecodan
     controller_version:
@@ -362,36 +367,36 @@ sensor:
       id: heat_source
       internal: true          
     runtime:
-      name: operating runtime      
+      name: ${runtime}
     compressor_frequency:
       id: compressor_frequency
-      name: compressor frequency
+      name: ${compressor_frequency}
     output_power:
       id: output_power
-      name: output power      
+      name: ${output_power}      
     outside_temp:
       id: outside_temp
-      name: outside temp
+      name: ${outside_temp}
     hp_feed_temp:
       id: hp_feed_temp
-      name: feed temp
+      name: ${hp_feed_temp}
     hp_return_temp:
       id: hp_return_temp
-      name: return temp
+      name: ${hp_return_temp}
     hp_refrigerant_temp:
       id: hp_refrigerant_temp
-      name: refrigerant temp
+      name: ${hp_refrigerant_temp}
     boiler_flow_temp:
       id: boiler_flow_temp
-      name: boiler flow temp
+      name: ${boiler_flow_temp}
     boiler_return_temp:
       id: boiler_return_temp
-      name: boiler return temp      
+      name: ${boiler_return_temp}      
     dhw_temp:
       id: dhw_temp
-      name: DHW current temp
+      name: ${dhw_temp}
     dhw_flow_temp_target:
-      name: DHW setpoint value
+      name: ${dhw_flow_temp_target}
       id: dhw_flow_temp_target
       # on_value:
       #   if:
@@ -404,43 +409,44 @@ sensor:
       #           value: !lambda "return id(dhw_flow_temp_target).state;"
     dhw_flow_temp_drop:
       id: dhw_flow_temp_drop
-      name: DHW max temp drop      
+      name: ${dhw_flow_temp_drop}      
     legionella_prevention_temp:
       id: legionella_prevention_temp
-      name: legionella prevention temp      
+      name: ${legionella_prevention_temp}      
     flow_rate:
       id: flow_rate 
-      name: flow rate      
+      name: ${flow_rate}      
     cool_cop:
-      name: cool_cop         
+      name: ${cool_cop}
     cool_consumed:
-      name: cool_consumed      
+      name: ${cool_consumed}
     cool_delivered:
-      name: cool_delivered      
+      name: ${cool_delivered}
     heating_cop:
-      name: heating_cop      
+      name: ${heating_cop}
     heating_consumed:
-      name: heating_consumed      
+      name: ${heating_consumed}
     heating_delivered:
-      name: heating_delivered      
+      name: ${heating_delivered}
     dhw_cop:
-      name: dhw_cop      
+      name: ${dhw_cop}
     dhw_consumed:
-      name: dhw_consumed      
+      name: ${dhw_consumed}
     dhw_delivered:
-      name: dhw_delivered      
+      name: ${dhw_delivered}    
     sh_flow_temp_target:
-      name: sh_flow_temp_target      
+      name: ${sh_flow_temp_target}   
 
   - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
-    name: WiFi Signal dB
+    name: ${wifi_signal_db}
     id: wifi_signal_db
     update_interval: 60s
     entity_category: diagnostic
 
   - platform: copy # Reports the WiFi signal strength in %
     source_id: wifi_signal_db
-    name: WiFi Signal %
+    name: ${wifi_signal_proc}
+    id: wifi_signal_proc
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: " %"
@@ -448,7 +454,7 @@ sensor:
     device_class: ""
 
   - platform: uptime
-    name: Esp Uptime
+    name: ${uptime}
     disabled_by_default: false
     force_update: false
     unit_of_measurement: s
@@ -460,5 +466,5 @@ sensor:
     update_interval: 60s
 
   - platform: internal_temperature
-    name: Esp Internal temperature
+    name: ${internal_esp_temperature}
     entity_category: diagnostic
