@@ -64,8 +64,8 @@ substitutions:
   heat_target_temperature: Heat Target Temperature
   heat_flow_temperature: Heat Flow Temperature
   heat_compensation_curve: Heat Compensation Curve
-  cool_target_temperature: Cooling Target Temperature
-  cool_flow_temperature: Cooling Flow Temperature
+  cool_target_temperature: Cool Target Temperature
+  cool_flow_temperature: Cool Flow Temperature
   runtime: operating runtime
   status_operation: operation status
   output_power: output power
@@ -74,8 +74,3 @@ substitutions:
   hp_return_temp: return temp
   sh_flow_temp_target: sh_flow_temp_target
   status_water_pump: water pump status
-
-
-
-
- 
