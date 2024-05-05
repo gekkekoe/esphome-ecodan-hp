@@ -217,11 +217,11 @@ text_sensor:
       int value = id(heat_source).state;
       switch (value) {
         case INT_MAX: return std::string("NA");
-        case 0: return std::string(${heatpump});
-        case 1: return std::string(${immersion_heater});
-        case 2: return std::string(${booster_heater});
-        case 3: return std::string(${immersion_and_booster_heater});
-        case 4: return std::string(${boiler});
+        case 0: return std::string("${heatpump}");
+        case 1: return std::string("${immersion_heater}");
+        case 2: return std::string("${booster_heater}");
+        case 3: return std::string("${immersion_and_booster_heater}");
+        case 4: return std::string("${boiler}");
         default: return std::to_string(value);
       }  
 
