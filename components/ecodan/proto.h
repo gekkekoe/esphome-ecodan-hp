@@ -20,9 +20,10 @@ namespace ecodan
     enum class SetType : uint8_t
     {
         BASIC_SETTINGS = 0x32,
-        DHW_SETTING = 0x34,
+        CONTROLLER_SETTING = 0x34,
         ROOM_SETTINGS = 0x35,
-        REMOTE_ROOM_SETTINGS = 0x07
+        REMOTE_ROOM_SETTINGS = 0x07,
+        SERVER_CONTROL_SETTINGS = 0x80
     };
 
 #define SET_SETTINGS_FLAG_ZONE_TEMPERATURE 0x80

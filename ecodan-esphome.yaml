@@ -37,7 +37,7 @@ api:
 # # disable if you don't want to use zone 2
 # # zone2: !include confs/zone2.yaml
 # # change language labels to -en for English or -nl for Dutch
-#  substitutions: !include confs/ecodan-labels-nl.yaml
+# # substitutions: !include confs/ecodan-labels-nl.yaml
 #  substitutions: !include confs/ecodan-labels-en.yaml
 
 external_components:
@@ -138,6 +138,18 @@ switch:
     turn_off_action:
       - lambda: |-
          id(ecodan_instance).set_power_mode(false);
+
+  # - platform: template
+  #   name: experimental - server control mode
+  #   id: heatpump_switch_server_control_mode
+  #   restore_mode: RESTORE_DEFAULT_OFF
+  #   optimistic: true
+  #   turn_on_action:
+  #     - lambda: |-
+  #        id(ecodan_instance).set_server_control_mode(true);
+  #   turn_off_action:
+  #     - lambda: |-
+  #        id(ecodan_instance).set_server_control_mode(false);
 
 select:
   - platform: template

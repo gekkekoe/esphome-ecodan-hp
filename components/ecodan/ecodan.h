@@ -43,7 +43,8 @@ namespace ecodan
         void set_dhw_force(bool on);
         void set_holiday(bool on);
         void set_power_mode(bool on);
-        void set_hp_mode(int mode);        
+        void set_hp_mode(int mode);
+        void set_server_control_mode(bool on);
 
     protected:
         std::map<std::string, sensor::Sensor*> sensors;

@@ -146,7 +146,7 @@ namespace ecodan
 
     void EcodanHeatpump::set_dhw_force(bool on)
     {   
-        Message cmd{MsgType::SET_CMD, SetType::DHW_SETTING};
+        Message cmd{MsgType::SET_CMD, SetType::CONTROLLER_SETTING};
         cmd[1] = SET_SETTINGS_FLAG_MODE_TOGGLE;
         cmd[3] = on ? 1 : 0; // bit[3] of payload is DHW force, bit[2] is Holiday mode.
 
@@ -155,7 +155,7 @@ namespace ecodan
 
     void EcodanHeatpump::set_holiday(bool on)
     {   
-        Message cmd{MsgType::SET_CMD, SetType::DHW_SETTING};
+        Message cmd{MsgType::SET_CMD, SetType::CONTROLLER_SETTING};
         cmd[1] = SET_SETTINGS_FLAG_HOLIDAY_MODE_TOGGLE;
         cmd[4] = on ? 1 : 0;
 
@@ -177,6 +177,17 @@ namespace ecodan
         cmd[1] = SET_SETTINGS_FLAG_HP_MODE;
         cmd[6] = mode;
 
+        schedule_cmd(cmd);
+    }
+
+    void EcodanHeatpump::set_server_control_mode(bool on)
+    {
+        //80, 00, 01, 00, 00, 00, 00, 00, 00, 01, 00, 00, 00, 00, 00, 7d
+        Message cmd{MsgType::SET_CMD, SetType::CONTROLLER_SETTING};
+        cmd[1] = 0x80;
+        cmd[3] = 1;
+        cmd[10] = on ? 1 : 0;
+        ESP_LOGW(TAG, cmd.debug_dump_packet().c_str());
         schedule_cmd(cmd);
     }
 

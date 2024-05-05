@@ -202,7 +202,7 @@ Responses so far identified.
 ### 0x05 - Various Flags
 |   0  | 1 | 2 | 3 | 4 |  5 | 6 |  7  | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |------|---|---|---|---|----|---|-----|---|---|----|----|----|----|----|----|----|
-| 0x05 |   |   |   |   | DE | HS| HWB |   |   |    |    |    |    |    |    |    |  
+| 0x05 |   |   |   |   | DE | HS| HSP |   |   |    |    |    |    |    |    |    |  
 * DE : Value of 7 when in Hot Water on Temp Drop Mode
 * HS : Heat source
   * 0 : heatpump
@@ -210,7 +210,7 @@ Responses so far identified.
   * 2 : booster heater
   * 3 : booster heater + immersion heater
   * 4 : boiler
-* HWB : Hot Water Boost
+* HSP : Heat Source Phase – DHW, 0 = Normal, 1 = H/P Phase, 2 = Heater Phase
 ### 0x07 
 |   0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
