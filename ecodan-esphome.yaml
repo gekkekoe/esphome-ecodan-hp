@@ -55,9 +55,9 @@ packages:
             confs/zone1.yaml,
             ## enable if you want to use zone 2
             #confs/zone2.yaml,
-            ## eneable label language file
+            ## enable label language file
             confs/ecodan-labels-en.yaml,
-            #confs/ecodan-labels-nl.yaml
+            #confs/ecodan-labels-nl.yaml,
            ]
 
 # enable logger
