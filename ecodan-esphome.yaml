@@ -41,15 +41,13 @@ api:
 #  substitutions: !include confs/ecodan-labels-en.yaml
 
 external_components:
-#  - source: github://gekkekoe/esphome-ecodan-hp@main
-  - source: github://fonske/esphome-ecodan-hp@main
+  - source: github://gekkekoe/esphome-ecodan-hp@main
     components: [ ecodan ]
     refresh: always
 
 packages:
   remote_package:
-#    url: https://github.com/gekkekoe/esphome-ecodan-hp/
-    url: https://github.com/fonske/esphome-ecodan-hp/
+    url: https://github.com/gekkekoe/esphome-ecodan-hp/
     ref: main
     refresh: always
     files: [ 
