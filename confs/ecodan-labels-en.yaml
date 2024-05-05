@@ -63,7 +63,7 @@ substitutions:
   immersion_and_booster_heater: immersion and booster heater
   boiler: boiler
   heating_consumed: heating consumed
-  heating_cop: heating_cop
+  heating_cop: heating cop
   heating_delivered: heating delivered
   status_holiday: holiday status
   status_immersion: immersion heater status
