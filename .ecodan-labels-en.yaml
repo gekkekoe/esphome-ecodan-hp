@@ -23,7 +23,7 @@ substitutions:
 #  Set Led brightness
 #  Set Led switch
   heatpump_switch_force_dhw: Set force dhw
-  heatpump_switch_power_mode`: Set heatpump On/Off
+  heatpump_switch_power_mode: Set heatpump On/Off
   heatpump_switch_holiday: Set holiday mode
   wifi_signal_proc: WiFi Signal %
   wifi_signal_db: WiFi Signal dB
