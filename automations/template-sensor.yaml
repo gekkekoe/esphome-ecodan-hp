@@ -1,0 +1,21 @@
+# estimated heatpump output
+sensor:
+  - name: "heatpump_computed_power_output"
+    unique_id: "heatpump_computed_power_output"
+    unit_of_measurement: "kW"
+    state: >-
+      {% set feed_temp = states('sensor.ecodan_heatpump_feed_temp') | default(0) | float %}
+      {% set return_temp = states('sensor.ecodan_heatpump_return_temp') | default(0) | float %}
+      {% set flow = states('sensor.ecodan_heatpump_flow_rate') | default(0) | float %}
+      {% set freq = states('sensor.ecodan_heatpump_compressor_frequency') | default(0) | float %}
+      {{ 0 if freq == 0 else (flow/60.0 * (feed_temp - return_temp) * 4.18) | float | round(2) }}
+
+# if you have a kWh meter
+  - name: "realtime_heatpump_cop"
+    unique_id: "realtime_heatpump_cop"
+    unit_of_measurement: ""
+    state: >-
+      {% set pout = states('sensor.heatpump_computed_power_output') | default(0) | float %}
+      {% set pin = states('sensor.kwh_meter_3_phase_active_power') | default(0) | float %}
+      {% set freq = states('sensor.ecodan_heatpump_compressor_frequency') | default(0) | float %}
+      {{ 0 if (pin == 0 or freq == 0) else ((1000*pout) / pin) | float | round(2) }}
