@@ -1,5 +1,6 @@
 substitutions:
   status_three_way_valve: 3-way valve status
+  status_three_way_valve_2: 3-way valve 2 status
   dhw_temp: DHW current temp
   status_dhw_forced: DHW forced status
   dhw_flow_temp_drop: DHW max temp drop
@@ -12,7 +13,7 @@ substitutions:
   esp_sidd: Esp SSID
   uptime: Esp Uptime
   esp_version: Esp Version
-  restart: Esp restart
+  restart_button: Esp restart
   status_in1_request: In1 thermostat status
   status_in6_request: In6 thermostat 2 status
   heatpump_select_dhw_mode: Set DHW mode
@@ -20,20 +21,27 @@ substitutions:
   normal: Normal
   eco: Eco
   version: ESP version
-#  Set Led brightness
-#  Set Led switch
+  led_brightness: Set Led brightness
+  led_switch: Set Led switch
   heatpump_switch_force_dhw: Set force dhw
   heatpump_switch_power_mode: Set heatpump On/Off
   heatpump_switch_holiday: Set holiday mode
   wifi_signal_proc: WiFi Signal %
   wifi_signal_db: WiFi Signal dB
-#  Zone 1 H/C setpoint
-#  Zone 1 H/C setpoint value
-#  Zone 1 prohibit cooling status
-#  Zone 1 prohibit heating status
-#  Zone 1 room setpoint
-#  Zone 1 room setpoint value
-#  Zone 1 room temp
+  heatpump_number_z1_set_flow_temperature: Zone 1 H/C setpoint
+  z1_flow_temp_target: Zone 1 H/C setpoint value
+  status_prohibit_cooling_z1: Zone 1 prohibit cooling status
+  status_prohibit_heating_z1: Zone 1 prohibit heating status
+  heatpump_number_z1_set_room_temperature: Zone 1 room setpoint
+  z1_room_temp_target: Zone 1 room setpoint value
+  z1_room_temp: Zone 1 room temp
+  heatpump_number_z2_set_flow_temperature: Zone 2 H/C setpoint
+  z2_flow_temp_target: Zone 2 H/C setpoint value
+  status_prohibit_cooling_z2: Zone 2 prohibit cooling status
+  status_prohibit_heating_z2: Zone 2 prohibit heating status
+  heatpump_number_z2_set_room_temperature: Zone 2 room setpoint
+  z2_room_temp_target: Zone 2 room setpoint value
+  z2_room_temp: Zone 2 room temp
   boiler_flow_temp: boiler flow temp
   boiler_return_temp: boiler return temp
   status_booster: booster heater status
@@ -74,3 +82,4 @@ substitutions:
   hp_return_temp: return temp
   sh_flow_temp_target: sh_flow_temp_target
   status_water_pump: water pump status
+  status_water_pump_2: water pump 2 status
