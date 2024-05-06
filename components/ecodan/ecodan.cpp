@@ -123,52 +123,5 @@ namespace ecodan
 
 #pragma endregion Init
 
-#pragma region Misc
-    std::string EcodanHeatpump::get_device_model()
-    {
-        return std::string("Ecodan Air Source Heat Pump");
-    }
-
-    float EcodanHeatpump::get_temperature_step()
-    {
-        return temperatureStep;
-    }
-
-    float EcodanHeatpump::get_min_thermostat_temperature()
-    {
-        return 8.0f;
-    }
-
-    float EcodanHeatpump::get_max_thermostat_temperature()
-    {
-        return 28.0f;
-    }
-
-    // From FTC6 installation manual ("DHW max. temp.")
-    float EcodanHeatpump::get_min_dhw_temperature()
-    {
-        return 40.0f;
-    }
-
-    float EcodanHeatpump::get_max_dhw_temperature()
-    {
-        return 60.0f;
-    }
-
-    // From FTC6 installation manual ("Zone heating/cooling min. temp.")
-    float EcodanHeatpump::get_min_flow_target_temperature(std::string mode)
-    {
-        std::string coolMode = "Cool Flow Temperature";
-        return (coolMode == mode) ? 5.0f : 20.0f;
-    }
-
-    float EcodanHeatpump::get_max_flow_target_temperature(std::string mode)
-    {
-        std::string coolMode = "Cool Flow Temperature";
-        return (coolMode == mode) ? 25.0f : 60.0f;
-    }
-
-#pragma endregion Misc
-
 } // namespace ecodan
 } // namespace esphome

@@ -54,16 +54,6 @@ namespace ecodan
         void publish_state(const std::string& sensorKey, float sensorValue);
         void publish_state(const std::string& sensorKey, const std::string& sensorValue);
 
-        std::string get_device_model();
-
-        float get_temperature_step();
-        float get_min_thermostat_temperature();
-        float get_max_thermostat_temperature();
-        float get_min_dhw_temperature();
-        float get_max_dhw_temperature();
-        float get_min_flow_target_temperature(std::string mode);
-        float get_max_flow_target_temperature(std::string mode);
-
         bool begin_connect();
         bool begin_update_status();
 

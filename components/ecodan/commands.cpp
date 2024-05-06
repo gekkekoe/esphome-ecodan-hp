@@ -104,19 +104,6 @@ namespace ecodan
 
     void EcodanHeatpump::set_dhw_target_temperature(float newTemp)
     {
-
-        if (newTemp > get_max_dhw_temperature())
-        {
-            ESP_LOGI(TAG, "DHW setting exceeds maximum allowed (%s)!", get_max_dhw_temperature());
-            return;
-        }
-
-        if (newTemp < get_min_dhw_temperature())
-        {
-            ESP_LOGI(TAG, "DHW setting is lower than minimum allowed (%s)!", get_min_dhw_temperature());
-            return;
-        }
-
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
         cmd[1] = SET_SETTINGS_FLAG_DHW_TEMPERATURE;
         cmd.set_float16(newTemp, 8);
