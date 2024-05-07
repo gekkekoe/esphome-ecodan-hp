@@ -22,8 +22,19 @@ namespace ecodan
         BASIC_SETTINGS = 0x32,
         CONTROLLER_SETTING = 0x34,
         ROOM_SETTINGS = 0x35,
-        REMOTE_ROOM_SETTINGS = 0x07,
-        SERVER_CONTROL_SETTINGS = 0x80
+        REMOTE_ROOM_SETTINGS = 0x07
+    };
+
+    enum class CONTROLLER_FLAG : uint8_t
+    {
+        FORCED_DHW = 0x01,
+        HOLIDAY_MODE = 0x02,
+        PROHIBIT_DHW = 0x04,
+        PROHIBIT_Z1_HEATING = 0x08,
+        PROHIBIT_Z1_COOLING = 0x10,
+        PROHIBIT_Z2_HEATING = 0x20,
+        PROHIBIT_Z2_COOLING = 0x40,
+        SERVER_CONTROL = 0x80
     };
 
 #define SET_SETTINGS_FLAG_ZONE_TEMPERATURE 0x80
@@ -32,6 +43,7 @@ namespace ecodan
 #define SET_SETTINGS_FLAG_DHW_MODE 0x04
 #define SET_SETTINGS_FLAG_MODE_TOGGLE 0x1
 #define SET_SETTINGS_FLAG_HOLIDAY_MODE_TOGGLE 0x2
+
 
     enum class SetZone
     {
@@ -87,6 +99,18 @@ namespace ecodan
         ENERGY_DELIVERY = 0xA2,
         HARDWARE_CONFIGURATION = 0xC9
     };
+
+    template <class T>
+    inline T operator &(const T& lhs, const T& rhs)
+    {
+        return static_cast<T>(static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs));
+    }
+
+    template <class T>
+    inline T operator |(const T& lhs, const T& rhs)
+    {
+        return static_cast<T>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
+    }
 
     const uint8_t HEADER_SIZE = 5;
     const uint8_t PAYLOAD_SIZE = 16;

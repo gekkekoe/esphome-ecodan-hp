@@ -20,7 +20,7 @@ namespace ecodan
 
     class EcodanHeatpump : public PollingComponent, public esphome::api::CustomAPIDevice {
     public:        
-        EcodanHeatpump() : PollingComponent(10000) {}
+        EcodanHeatpump() : PollingComponent(15000) {}
         void set_rx(int rx);
         void set_tx(int tx);
         void setup() override;
@@ -44,7 +44,7 @@ namespace ecodan
         void set_holiday(bool on);
         void set_power_mode(bool on);
         void set_hp_mode(int mode);
-        void set_server_control_mode(bool on);
+        void set_controller_mode(CONTROLLER_FLAG flag, bool on);
 
     protected:
         std::map<std::string, sensor::Sensor*> sensors;

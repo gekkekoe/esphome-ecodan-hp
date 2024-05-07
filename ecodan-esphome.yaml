@@ -39,6 +39,7 @@ api:
 # # change language labels to -en for English or -nl for Dutch
 # # substitutions: !include confs/ecodan-labels-nl.yaml
 #  substitutions: !include confs/ecodan-labels-en.yaml
+# # dbg: !include confs/debug.yaml
 
 external_components:
   - source: github://gekkekoe/esphome-ecodan-hp@main
@@ -139,17 +140,17 @@ switch:
       - lambda: |-
          id(ecodan_instance).set_power_mode(false);
 
-  # - platform: template
-  #   name: experimental - server control mode
-  #   id: heatpump_switch_server_control_mode
-  #   restore_mode: RESTORE_DEFAULT_OFF
-  #   optimistic: true
-  #   turn_on_action:
-  #     - lambda: |-
-  #        id(ecodan_instance).set_server_control_mode(true);
-  #   turn_off_action:
-  #     - lambda: |-
-  #        id(ecodan_instance).set_server_control_mode(false);
+  - platform: template
+    name: experimental - server control mode | prohibit dhw
+    id: heatpump_switch_server_control_mode
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL | esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW, true);
+    turn_off_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL | esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW, false);
 
 select:
   - platform: template

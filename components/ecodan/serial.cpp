@@ -137,7 +137,7 @@ namespace ecodan
         {
             delay(1);
 
-            if (std::chrono::steady_clock::now() - startTime > std::chrono::seconds(30))
+            if (std::chrono::steady_clock::now() - startTime > std::chrono::seconds(10))
             {
                 ESP_LOGI(TAG, "Serial port message could not be received within 30s (got %u / %u bytes)", port.available(), remainingBytes);
                 resync_rx();

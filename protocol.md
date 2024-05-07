@@ -14,6 +14,23 @@ With my own findings using a procon as proxy.
 - 0x35 : room temp setpoint (signed) with flags
 - 0xC9 : configuration command. It reports back controller version and much more, need more investigation.
 
+### Experimental prohibit commands
+The procon send these commands when setting prohibit to true, but it does not seem to affect the heatpump. It turns out that these command works in server control mode.
+
+prohibit cool zone 1
+{ .Hdr { FC, 41, 02, 7A, 10 } .Payload { 34, 10, 00, 00, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 00 } .Chk { EE } }
+
+prohibit cool zone 2
+{ .Hdr { FC, 41, 02, 7A, 10 } .Payload { 34, 40, 00, 00, 00, 00, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00 } .Chk { BE } }
+
+prohibit heating zone 1
+{ .Hdr { FC, 41, 02, 7A, 10 } .Payload { 34, 08, 00, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 00, 00 } .Chk { F6 } }
+
+prohibit heating zone 2
+{ .Hdr { FC, 41, 02, 7A, 10 } .Payload { 34, 20, 00, 00, 00, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00 } .Chk { DE } }
+
+prohibit dhw
+{ .Hdr { FC, 41, 02, 7A, 10 } .Payload { 34, 04, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 } .Chk { FA } }
 
 # Physical
 Serial, 2400, 8, E, 1
@@ -52,7 +69,7 @@ Active commands so far identified.
 | Command | Brief Description |
 | ------- | ----------- |
 | 0x32 |  Update Settings |
-| 0x34 | Hot Water |
+| 0x34 | Controller Settings |
 | 0x35 | Room Settings |
 ### 0x32 - Set Options
 |   0   |   1   | 2 | 3 | 4 |  5  |  6  |  7  |   8   |   9   |  10  |  11  |  12  |  13  | 14 | 15 | 16 |
@@ -89,6 +106,23 @@ Active commands so far identified.
 * DHWSP : Hot Water Setpoint (Temperature * 100)
 * Z1SP : Zone 1 Setpoint (* 100)
 * Z2SP : Zone 1 Setpoint (* 100)
+### 0x34 - Hot Water and Holiday Mode
+|   0   |  1  | 2 | 3 |   4  |  5   |   6  |  7  |   8   |   9   |  10  |  11  |  12  |  13  | 14 | 15 | 16 |
+|-------|-----|---|---|------|------|------|-----|-------|-------|------|------|------|------|----|----|----|
+| 0x34  |Flags|   |DHW|  HOL | IDHW | Z1HI | Z1CI| Z2HI  | CZ2I  | SCM  |      |      |      |    |    |    |  
+* Flags : Flags to Indicate which fields are active
+  * 0x01 : Hot Water Force (Boost)
+  * 0x02 : Holiday Mode
+  * 0x04 : DHW Inhibit   -- Suspected
+  * 0x08 : Heating Z1 Inhibit  -- Suspected
+  * 0x10 : Cooling Z1 Inhibit  -- Suspected
+  * 0x20 : Heating Z2 Inhibit  -- Suspected
+  * 0x40 : Cooling Z2 Inhibit  -- Suspected
+  * 0x80 : Server Control Mode
+* DHW : On (1) / Off (0)
+* HOL : On (1) / Off (0)
+* SCM : Server Control Mode On (1) / Off (0)
+* IDHW : Inhibit DHW On (1) / Off (0)  -- Suspected
 ### 0x35 - Set Zone Setpoint (signed)
 Identified so far, this must do far more that this!
 |   0   |   1  | 2 | 3 |   4  |  5   | 6    |  7   |   8   |   9   |  10  |  11  |  12  |  13  | 14 | 15 | 16 |
@@ -367,20 +401,3 @@ Several Unknown Temperatures
   * 134: QAHV1A
   * 135: QAHV1B
   * 144: PWFY1
-### Experimental prohibit commands
-The procon send these commands when setting prohibit to true, but it does not seem to affect the heatpump.
-
-prohibit cool zone 1
-{ .Hdr { FC, 41, 02, 7A, 10 } .Payload { 34, 10, 00, 00, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 00 } .Chk { EE } }
-
-prohibit cool zone 2
-{ .Hdr { FC, 41, 02, 7A, 10 } .Payload { 34, 40, 00, 00, 00, 00, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00 } .Chk { BE } }
-
-prohibit heating zone 1
-{ .Hdr { FC, 41, 02, 7A, 10 } .Payload { 34, 08, 00, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 00, 00 } .Chk { F6 } }
-
-prohibit heating zone 2
-{ .Hdr { FC, 41, 02, 7A, 10 } .Payload { 34, 20, 00, 00, 00, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00 } .Chk { DE } }
-
-prohibit dhw
-{ .Hdr { FC, 41, 02, 7A, 10 } .Payload { 34, 04, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 } .Chk { FA } }

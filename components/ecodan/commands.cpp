@@ -167,14 +167,36 @@ namespace ecodan
         schedule_cmd(cmd);
     }
 
-    void EcodanHeatpump::set_server_control_mode(bool on)
+    void EcodanHeatpump::set_controller_mode(CONTROLLER_FLAG flag, bool on)
     {
-        //80, 00, 01, 00, 00, 00, 00, 00, 00, 01, 00, 00, 00, 00, 00, 7d
         Message cmd{MsgType::SET_CMD, SetType::CONTROLLER_SETTING};
-        cmd[1] = 0x80;
-        cmd[3] = 1;
-        cmd[10] = on ? 1 : 0;
-        ESP_LOGW(TAG, cmd.debug_dump_packet().c_str());
+        cmd[1] = static_cast<uint8_t>(flag);
+        
+        if ((flag & CONTROLLER_FLAG::FORCED_DHW) == CONTROLLER_FLAG::FORCED_DHW)
+            cmd[3] = on ? 1 : 0;
+
+        if ((flag & CONTROLLER_FLAG::HOLIDAY_MODE) == CONTROLLER_FLAG::HOLIDAY_MODE)
+            cmd[4] = on ? 1 : 0;
+
+        if ((flag & CONTROLLER_FLAG::PROHIBIT_DHW) == CONTROLLER_FLAG::PROHIBIT_DHW)
+            cmd[5] = on ? 1 : 0;
+
+        if ((flag & CONTROLLER_FLAG::PROHIBIT_Z1_HEATING) == CONTROLLER_FLAG::PROHIBIT_Z1_HEATING)
+            cmd[6] = on ? 1 : 0;
+
+        if ((flag & CONTROLLER_FLAG::PROHIBIT_Z1_COOLING) == CONTROLLER_FLAG::PROHIBIT_Z1_COOLING)
+            cmd[7] = on ? 1 : 0;
+
+        if ((flag & CONTROLLER_FLAG::PROHIBIT_Z2_HEATING) == CONTROLLER_FLAG::PROHIBIT_Z2_HEATING)
+            cmd[8] = on ? 1 : 0;
+
+        if ((flag & CONTROLLER_FLAG::PROHIBIT_Z2_COOLING) == CONTROLLER_FLAG::PROHIBIT_Z2_COOLING)
+            cmd[9] = on ? 1 : 0;
+
+        if ((flag & CONTROLLER_FLAG::SERVER_CONTROL) == CONTROLLER_FLAG::SERVER_CONTROL)
+            cmd[10] = on ? 1 : 0;
+
+        //ESP_LOGW(TAG, cmd.debug_dump_packet().c_str());
         schedule_cmd(cmd);
     }
 
