@@ -30,7 +30,7 @@ substitutions:
   wifi_signal_db: WiFi Signaal dB
   heatpump_number_z1_set_flow_temperature: Zone 1 V/K setpoint
   z1_flow_temp_target: Zone 1 V/K setpoint waarde
-  status_prohibit_cool_z1: Status Zone 1 verboden koelen
+  status_prohibit_cool_z1: Status zone 1 verboden koelen
   status_prohibit_heating_z1: Status zone 1 verboden verwarmen
   heatpump_number_z1_set_room_temperature: Zone 1 ruimte setpoint
   z1_room_temp_target: Zone 1 ruimte setpoint waarde
@@ -45,15 +45,15 @@ substitutions:
   boiler_flow_temp: Boiler aanvoer temp
   boiler_return_temp: Boiler retour temp
   status_booster: Status booster heater
-  compressor_frequency: kompressor frequentie
-  controller_version_text: controller versie
+  compressor_frequency: Kompressor frequentie
+  controller_version_text: Controller versie
   cool_consumed: Koelen verbruikt
   cool_cop: Koelen cop
   cool_delivered: Koelen geleverd
   status_defrost: Status ontdooi
-  dhw_consumed: Sww verbruikt
-  dhw_cop: Sww cop
-  dhw_delivered: Sww geleverd
+  dhw_consumed: SWW verbruikt
+  dhw_cop: SWW cop
+  dhw_delivered: SwWW geleverd
   hp_feed_temp: Aanvoer temp
   flow_rate: Flow waarde
   heat_source_text: Verwarmings bron
@@ -67,7 +67,7 @@ substitutions:
   heating_delivered: Verwarmen geleverd
   status_holiday: Status vakantie
   status_immersion: Status externe heater
-  legionella_prevention_temp: legionella preventie temp
+  legionella_prevention_temp: Legionella preventie temp
   heatpump_select_operating_mode: Werking mode
   heat_target_temperature: Verwarmen Doel
   heat_flow_temperature: Verwarmen Flow
