@@ -28,15 +28,15 @@ substitutions:
   heatpump_switch_holiday: Set vakantie modus
   wifi_signal_proc: WiFi Signaal %
   wifi_signal_db: WiFi Signaal dB
-  heatpump_number_z1_set_flow_temperature: Zone 1 V/K setpoint
-  z1_flow_temp_target: Zone 1 V/K setpoint waarde
+  heatpump_number_z1_set_flow_temperature: Zone 1 flow setpoint
+  z1_flow_temp_target: Zone 1 flow setpoint waarde
   status_prohibit_cool_z1: Status zone 1 verboden koelen
   status_prohibit_heating_z1: Status zone 1 verboden verwarmen
   heatpump_number_z1_set_room_temperature: Zone 1 ruimte setpoint
   z1_room_temp_target: Zone 1 ruimte setpoint waarde
   z1_room_temp: Zone 1 ruimte temp
-  heatpump_number_z2_set_flow_temperature: Zone 2 V/K setpoint
-  z2_flow_temp_target: Zone 2 V/K setpoint waarde
+  heatpump_number_z2_set_flow_temperature: Zone 2 flow setpoint
+  z2_flow_temp_target: Zone 2 flow setpoint waarde
   status_prohibit_cool_z2: Status zone 2 verboden koelen
   status_prohibit_heating_z2: Status zone 2 verboden verwarmen
   heatpump_number_z2_set_room_temperature: Zone 2 ruimte setpoint
@@ -50,7 +50,7 @@ substitutions:
   cool_consumed: Koelen verbruikt
   cool_cop: Koelen cop
   cool_delivered: Koelen geleverd
-  status_defrost: Status ontdooi
+  status_defrost: Status defrost
   dhw_consumed: SWW verbruikt
   dhw_cop: SWW cop
   dhw_delivered: SWW geleverd
@@ -69,10 +69,10 @@ substitutions:
   status_immersion: Status externe heater
   legionella_prevention_temp: Legionella preventie temp
   heatpump_select_operating_mode: Werking mode
-  heat_target_temperature: Verwarmen Doel
+  heat_target_temperature: Verwarmen Ruimte
   heat_flow_temperature: Verwarmen Flow
   heat_compensation_curve: Verwarmen Curve
-  cool_target_temperature: Koelen Doel
+  cool_target_temperature: Koelen Ruimte
   cool_flow_temperature: Koelen Flow
   runtime: Bedrijfsuren
   status_operation: Status Bedrijf
