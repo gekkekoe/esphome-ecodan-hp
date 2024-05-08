@@ -11,7 +11,7 @@ It was based on https://github.com/rbroker/ecodan-ha-local. I've also managed to
 - 0xC9 : configuration command. It reports back controller version and much more, need more investigation.
 
 # experimental server control + prohibit dhw
-In sever control mode, the prohibit flags can be set. Added experimental option to toggle the prohibit dhw flag. You can experiment with other combinations in the yaml file.
+In sever control mode, the prohibit flags can be set. You can enable it by uncommenting the `sever-control.yaml` entry in the `ecodan-esphome.yaml`.
 
 
 # required hardware

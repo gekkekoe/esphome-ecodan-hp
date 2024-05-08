@@ -39,7 +39,8 @@ api:
 # # change language labels to -en for English or -nl for Dutch
 # # substitutions: !include confs/ecodan-labels-nl.yaml
 #  substitutions: !include confs/ecodan-labels-en.yaml
-# # dbg: !include confs/debug.yaml
+#  svc: !include confs/server-control.yaml
+#  dbg: !include confs/debug.yaml
 
 external_components:
   - source: github://gekkekoe/esphome-ecodan-hp@main
@@ -59,6 +60,8 @@ packages:
             ## enable label language file
             confs/ecodan-labels-en.yaml,
             #confs/ecodan-labels-nl.yaml,
+            #confs/server-control.yaml,
+            #confs/debug.yaml,
            ]
 
 # enable logger
@@ -139,18 +142,6 @@ switch:
     turn_off_action:
       - lambda: |-
          id(ecodan_instance).set_power_mode(false);
-
-  - platform: template
-    name: experimental - server control mode | prohibit dhw
-    id: heatpump_switch_server_control_mode
-    restore_mode: RESTORE_DEFAULT_OFF
-    optimistic: true
-    turn_on_action:
-      - lambda: |-
-         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL | esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW, true);
-    turn_off_action:
-      - lambda: |-
-         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL | esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW, false);
 
 select:
   - platform: template

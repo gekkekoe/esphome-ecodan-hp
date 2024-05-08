@@ -1,0 +1,74 @@
+  switch:
+  - platform: template
+    name: server control - enable/disable
+    id: heatpump_switch_server_control_mode
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, true);
+    turn_off_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
+
+  - platform: template
+    name: server control - prohibit DHW
+    id: heatpump_switch_server_control_prohibit_dhw
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW, true);
+    turn_off_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW, false);
+
+  - platform: template
+    name: server control - zone 1 prohibit heating
+    id: heatpump_switch_server_control_prohibit_z1_heating
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_HEATING, true);
+    turn_off_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_HEATING, false);
+
+
+  - platform: template
+    name: server control - zone 1 prohibit cooling
+    id: heatpump_switch_server_control_prohibit_z1_cooling
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_COOLING, true);
+    turn_off_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_COOLING, false);
+
+  - platform: template
+    name: server control - zone 2 prohibit heating
+    id: heatpump_switch_server_control_prohibit_z2_heating
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_HEATING, true);
+    turn_off_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_HEATING, false);
+
+
+  - platform: template
+    name: server control - zone 2 prohibit cooling
+    id: heatpump_switch_server_control_prohibit_z2_cooling
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_COOLING, true);
+    turn_off_action:
+      - lambda: |-
+         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_COOLING, false);
