@@ -53,7 +53,7 @@ substitutions:
   status_defrost: Status ontdooi
   dhw_consumed: SWW verbruikt
   dhw_cop: SWW cop
-  dhw_delivered: SwWW geleverd
+  dhw_delivered: SWW geleverd
   hp_feed_temp: Aanvoer temp
   flow_rate: Flow waarde
   heat_source_text: Verwarmings bron
