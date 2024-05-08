@@ -7,7 +7,7 @@ substitutions:
   status_prohibit_dhw: Status SWW verboden
   heatpump_number_set_dhw_temperature: SWW setpoint
   dhw_flow_temp_target: SWW setpoint waarde
-  status_dhw: Status SWW value
+  status_dhw: Status SWW waarde
   esp_ip: Esp IP
   internal_esp_temperature: Esp Interne temperatuur
   esp_sidd: Esp SSID
