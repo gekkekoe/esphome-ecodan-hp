@@ -13,8 +13,7 @@ It was based on https://github.com/rbroker/ecodan-ha-local. I've also managed to
 # experimental server control + prohibit dhw
 In sever control mode, the prohibit flags can be set. You can enable it by uncommenting the `sever-control.yaml` entry in the `ecodan-esphome.yaml`.
 
-
-# required hardware
+# recommended hardware
 If you don't want to solder, use one of the boards that supports 5v on the GPIO ports (basically all m5stack boards with a grove connector (HY2.0-4P)). It also should work for airco units with cn105 connectors.
 
 Tested boards
@@ -37,6 +36,17 @@ Pin mapping (from left to right)
 |pin 4 - yellow (GPIO 1) | pin 1 - yellow (Rx) |
 
 *Note: pin 5 (12v) on the cn105 is not used.*
+
+# where to buy
+atom s3 lite
+https://www.digikey.nl/en/products/detail/m5stack-technology-co-ltd/C124/18070571
+
+grove cable (multiple options/lengths available)
+https://www.digikey.nl/en/products/detail/seeed-technology-co-ltd/110990036/5482563
+
+JST PAP-05V-S connector
+https://www.digikey.nl/en/products/detail/jst-sales-america-inc/PAP-05V-S/759977
+
 
 # build esphome-ecodan-hp firmware
 ### Build via cmd line:
