@@ -1,85 +1,85 @@
 substitutions:
-  status_three_way_valve: 3-way valve status
-  status_three_way_valve_2: 3-way valve 2 status
-  dhw_temp: DHW current temp
-  status_dhw_forced: DHW forced status
-  dhw_flow_temp_drop: DHW max temp drop
-  status_prohibit_dhw: DHW prohibit status
-  heatpump_number_set_dhw_temperature: DHW setpoint
-  dhw_flow_temp_target: DHW setpoint value
-  status_dhw: DHW status value
+  status_three_way_valve: Status 3-weg klep
+  status_three_way_valve_2: Status 3-weg klep 2
+  dhw_temp: SWW huidige temp
+  status_dhw_forced: Status SWW geforceerd
+  dhw_flow_temp_drop: SWW max temp hysterese
+  status_prohibit_dhw: Status SWW verboden
+  heatpump_number_set_dhw_temperature: SWW setpoint
+  dhw_flow_temp_target: SWW setpoint waarde
+  status_dhw: Status SWW waarde
   esp_ip: Esp IP
-  internal_esp_temperature: Esp Internal temperature
+  internal_esp_temperature: Esp Interne temperatuur
   esp_sidd: Esp SSID
   uptime: Esp Uptime
-  esp_version: Esp Version
-  restart_button: Esp restart
-  status_in1_request: In1 thermostat status
-  status_in6_request: In6 thermostat 2 status
-  heatpump_select_dhw_mode: Set DHW mode
-  of: "Off"
-  normal: Normal
+  esp_version: Esp Versie
+  restart_button: Esp herstart
+  status_in1_request: Status In1 thermostaat
+  status_in6_request: Status In6 thermostaat 2
+  heatpump_select_dhw_mode: Set SWW modus
+  of: "Uit"
+  normal: Normaal
   eco: Eco
-  version: ESP version
-  led_brightness: Set Led brightness
-  led_switch: Set Led switch
-  heatpump_switch_force_dhw: Set force dhw
-  heatpump_switch_power_mode: Set heatpump On/Off
-  heatpump_switch_holiday: Set holiday mode
-  wifi_signal_proc: WiFi Signal %
-  wifi_signal_db: WiFi Signal dB
-  heatpump_number_z1_set_flow_temperature: Zone 1 H/C setpoint
-  z1_flow_temp_target: Zone 1 H/C setpoint value
-  status_prohibit_cool_z1: Zone 1 prohibit cooling status
-  status_prohibit_heating_z1: Zone 1 prohibit heating status
-  heatpump_number_z1_set_room_temperature: Zone 1 room setpoint
-  z1_room_temp_target: Zone 1 room setpoint value
-  z1_room_temp: Zone 1 room temp
-  heatpump_number_z2_set_flow_temperature: Zone 2 H/C setpoint
-  z2_flow_temp_target: Zone 2 H/C setpoint value
-  status_prohibit_cool_z2: Zone 2 prohibit cooling status
-  status_prohibit_heating_z2: Zone 2 prohibit heating status
-  heatpump_number_z2_set_room_temperature: Zone 2 room setpoint
-  z2_room_temp_target: Zone 2 room setpoint value
-  z2_room_temp: Zone 2 room temp
-  boiler_flow_temp: boiler flow temp
-  boiler_return_temp: boiler return temp
-  status_booster: booster heater status
-  compressor_frequency: compressor frequency
-  controller_version_text: controller version
-  cool_consumed: cool consumed
-  cool_cop: cool cop
-  cool_delivered: cool delivered
-  status_defrost: defrost state
-  dhw_consumed: dhw consumed
-  dhw_cop: dhw cop
-  dhw_delivered: dhw delivered
-  hp_feed_temp: feed temp
-  flow_rate: flow rate
-  heat_source_text: heat source
-  heatpump: heatpump
+  version: ESP versie
+  led_brightness: Set Led helderheid
+  led_switch: Set Led schakelaar
+  heatpump_switch_force_dhw: Set forceer sww
+  heatpump_switch_power_mode: Set warmtepomp Aan/uit
+  heatpump_switch_holiday: Set vakantie modus
+  wifi_signal_proc: WiFi Signaal %
+  wifi_signal_db: WiFi Signaal dB
+  heatpump_number_z1_set_flow_temperature: Zone 1 V/K setpoint
+  z1_flow_temp_target: Zone 1 V/K setpoint waarde
+  status_prohibit_cool_z1: Status zone 1 verboden koelen
+  status_prohibit_heating_z1: Status zone 1 verboden verwarmen
+  heatpump_number_z1_set_room_temperature: Zone 1 ruimte setpoint
+  z1_room_temp_target: Zone 1 ruimte setpoint waarde
+  z1_room_temp: Zone 1 ruimte temp
+  heatpump_number_z2_set_flow_temperature: Zone 2 V/K setpoint
+  z2_flow_temp_target: Zone 2 V/K setpoint waarde
+  status_prohibit_cool_z2: Status zone 2 verboden koelen
+  status_prohibit_heating_z2: Status zone 2 verboden verwarmen
+  heatpump_number_z2_set_room_temperature: Zone 2 ruimte setpoint
+  z2_room_temp_target: Zone 2 ruimte setpoint waarde
+  z2_room_temp: Zone 2 ruimte temp
+  boiler_flow_temp: Boiler aanvoer temp
+  boiler_return_temp: Boiler retour temp
+  status_booster: Status booster heater
+  compressor_frequency: Kompressor frequentie
+  controller_version_text: Controller versie
+  cool_consumed: Koelen verbruikt
+  cool_cop: Koelen cop
+  cool_delivered: Koelen geleverd
+  status_defrost: Status ontdooi
+  dhw_consumed: SWW verbruikt
+  dhw_cop: SWW cop
+  dhw_delivered: SWW geleverd
+  hp_feed_temp: Aanvoer temp
+  flow_rate: Flow waarde
+  heat_source_text: Verwarmings bron
+  heatpump: warmtepomp
   immersion_heater: immersion heater
   booster_heater: booster heater
   immersion_and_booster_heater: immersion and booster heater
   boiler: boiler
-  heating_consumed: heating consumed
-  heating_cop: heating cop
-  heating_delivered: heating delivered
-  status_holiday: holiday status
-  status_immersion: immersion heater status
-  legionella_prevention_temp: legionella prevention temp
-  heatpump_select_operating_mode: Operating mode
-  heat_target_temperature: Heat Target Temperature
-  heat_flow_temperature: Heat Flow Temperature
-  heat_compensation_curve: Heat Compensation Curve
-  cool_target_temperature: Cool Target Temperature
-  cool_flow_temperature: Cool Flow Temperature
-  runtime: operating runtime
-  status_operation: operation status
-  output_power: output power
-  outside_temp: outside temp
-  hp_refrigerant_temp: refrigerant temp
-  hp_return_temp: return temp
-  sh_flow_temp_target: sh_flow_temp_target
-  status_water_pump: water pump status
-  status_water_pump_2: water pump 2 status
+  heating_consumed: Verwarmen verbruikt
+  heating_cop: Verwarmen cop
+  heating_delivered: Verwarmen geleverd
+  status_holiday: Status vakantie
+  status_immersion: Status externe heater
+  legionella_prevention_temp: Legionella preventie temp
+  heatpump_select_operating_mode: Werking mode
+  heat_target_temperature: Verwarmen Doel
+  heat_flow_temperature: Verwarmen Flow
+  heat_compensation_curve: Verwarmen Curve
+  cool_target_temperature: Koelen Doel
+  cool_flow_temperature: Koelen Flow
+  runtime: Bedrijfsuren
+  status_operation: Status Bedrijf
+  output_power: Afgegeven vermogen
+  outside_temp: Buiten temp
+  hp_refrigerant_temp: Koelmiddel temp
+  hp_return_temp: Retour temp
+  sh_flow_temp_target: sh_flow_temp_doel
+  status_water_pump: Status water pomp
+  status_water_pump_2: Status water pomp 2
