@@ -135,11 +135,11 @@ namespace ecodan
         auto startTime = std::chrono::steady_clock::now();
         while (port.available() < remainingBytes)
         {
-            delay(1);
+            vTaskDelay(pdMS_TO_TICKS(50));
 
             if (std::chrono::steady_clock::now() - startTime > std::chrono::seconds(10))
             {
-                ESP_LOGI(TAG, "Serial port message could not be received within 30s (got %u / %u bytes)", port.available(), remainingBytes);
+                ESP_LOGI(TAG, "Serial port message could not be received within 10s (got %u / %u bytes)", port.available(), remainingBytes);
                 resync_rx();
                 return false;
             }
