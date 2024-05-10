@@ -33,6 +33,7 @@ namespace ecodan
             case GetType::COMPRESSOR_FREQUENCY:
                 status.CompressorFrequency = res[1];
                 publish_state("compressor_frequency", status.CompressorFrequency);
+                status.update_output_power_estimation();
                 break;
             case GetType::DHW_STATE:
                 // 6 = heat source , 0x0 = heatpump, 0x1 = screw in heater, 0x2 = electric heater..
@@ -46,6 +47,7 @@ namespace ecodan
                 status.OutputPower = res[6];
                 //status.BoosterActive = res[4] == 2;
                 publish_state("output_power", status.OutputPower);
+                publish_state("computed_output_power", status.ComputedOutputPower);
                 //publish_state("status_booster", status.BoosterActive ? "On" : "Off");
                 break;
             case GetType::TEMPERATURE_CONFIG:
@@ -92,6 +94,7 @@ namespace ecodan
                 publish_state("hp_feed_temp", status.HpFeedTemperature);
                 publish_state("hp_return_temp", status.HpReturnTemperature);
                 publish_state("dhw_temp", status.DhwTemperature);
+                status.update_output_power_estimation();
                 break;
             case GetType::DHW_TEMPERATURE_STATE_B:
                 status.BoilerFlowTemperature = res.get_float16(1);
@@ -138,6 +141,7 @@ namespace ecodan
                 publish_state("flow_rate", status.FlowRate);
                 publish_state("status_booster", status.BoosterActive ? "On" : "Off");
                 publish_state("status_immersion", status.ImmersionActive ? "On" : "Off");
+                status.update_output_power_estimation();
                 break;
             case GetType::MODE_FLAGS_A:
                 status.set_power_mode(res[3]);

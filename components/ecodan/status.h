@@ -19,6 +19,7 @@ namespace ecodan
         bool In1ThermostatRequest;
         bool In6ThermostatRequest;
         uint8_t OutputPower;
+        float ComputedOutputPower;
         uint8_t Controller;
 
         float Zone1SetTemperature;
@@ -101,6 +102,15 @@ namespace ecodan
         float EnergyDeliveredCooling;
         float EnergyConsumedDhw;
         float EnergyDeliveredDhw;
+
+        void update_output_power_estimation() {
+            if (CompressorFrequency > 0 && FlowRate > 0)  {
+                ComputedOutputPower = FlowRate/60.0 * abs(HpFeedTemperature - HpReturnTemperature) * 4.18f;
+            }
+            else {
+                ComputedOutputPower = 0.0f;
+            }
+        }
 
         // HomeAssistant is a bit restrictive about what is let's us specify
         // as the mode/action of a climate integration.

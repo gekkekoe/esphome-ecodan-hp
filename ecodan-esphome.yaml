@@ -377,7 +377,10 @@ sensor:
       name: ${compressor_frequency}
     output_power:
       id: output_power
-      name: ${output_power}      
+      name: ${output_power} 
+    computed_output_power:
+      id: computed_output_power
+      name: ${computed_output_power}      
     outside_temp:
       id: outside_temp
       name: ${outside_temp}

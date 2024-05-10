@@ -59,7 +59,7 @@ https://www.digikey.nl/en/products/detail/jst-sales-america-inc/PAP-05V-S/759977
     ```
 * Fill in `secrets.yaml` and copy the `ecodan-esphome.yaml` to your esphome folder and edit the values (*check GPO pins (uart: section), you might need to swap the pins in the config*)
 
-* Edit the following section in `ecodan-esphome.yaml` to match your configuration (esp board, zone1/zone2)
+* Edit the following section in `ecodan-esphome.yaml` to match your configuration (esp board, zone1/zone2, language, server control, enable debug)
 
 ```
 packages:
@@ -71,7 +71,12 @@ packages:
             confs/esp32s3.yaml, # confs/esp32.yaml, for regular board
             confs/zone1.yaml,
             ## enable if you want to use zone 2
-            #confs/zone2.yaml, 
+            #confs/zone2.yaml,
+            ## enable label language file
+            confs/ecodan-labels-en.yaml,
+            #confs/ecodan-labels-nl.yaml,
+            #confs/server-control.yaml,
+            #confs/debug.yaml,
            ]
 ```
 
