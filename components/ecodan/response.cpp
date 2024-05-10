@@ -225,7 +225,7 @@ namespace ecodan
 
     void EcodanHeatpump::handle_response() {
         Message res;
-        if (!port.available() || !serial_rx(res))
+        if (!serial_rx(res))
             return;
         
         //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
