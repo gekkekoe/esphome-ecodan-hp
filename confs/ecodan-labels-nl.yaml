@@ -77,7 +77,7 @@ substitutions:
   runtime: Bedrijfsuren
   status_operation: Status Bedrijf
   output_power: Afgegeven vermogen
-  comuted_output_power: Geschatte afgegeven vermogen
+  computed_output_power: Geschatte afgegeven vermogen
   outside_temp: Buiten temp
   hp_refrigerant_temp: Koelmiddel temp
   hp_return_temp: Retour temp
