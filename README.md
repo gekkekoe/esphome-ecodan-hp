@@ -58,8 +58,12 @@ https://www.digikey.nl/en/products/detail/jst-sales-america-inc/PAP-05V-S/759977
     pip3 install esphome
     ```
 * Fill in `secrets.yaml` and copy the `ecodan-esphome.yaml` to your esphome folder and edit the values (*check GPO pins (uart: section), you might need to swap the pins in the config*)
-
-* Edit the following section in `ecodan-esphome.yaml` to match your configuration (esp board, zone1/zone2, language, server control, enable debug)
+The secrets.yaml should at least contain the following entries:
+```
+wifi_ssid: "wifi network id"
+wifi_password: "wifi password"
+```
+* Edit the following section in `ecodan-esphome.yaml` to match your configuration (esp board, zone1/zone2, language, server control, enable debug). Default is an esp32-s3 board, 1 zone and english language.
 
 ```
 packages:
