@@ -14,7 +14,7 @@ It was based on https://github.com/rbroker/ecodan-ha-local. I've also managed to
 In sever control mode, the prohibit flags can be set. You can enable it by uncommenting the `sever-control.yaml` entry in the `ecodan-esphome.yaml`.
 
 # recommended hardware
-If you don't want to solder, use one of the boards that supports 5v on the GPIO ports (basically all m5stack boards with a grove connector (HY2.0-4P)). It also should work for airco units with cn105 connectors.
+If you don't want to solder, use one of the boards that supports 5v on the GPIO ports (basically all m5stack boards with a grove connector (HY2.0-4P) that accepts 5v as input). It also should work for airco units with cn105 connectors.
 
 Tested boards
 
