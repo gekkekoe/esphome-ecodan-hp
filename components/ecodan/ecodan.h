@@ -84,6 +84,7 @@ namespace ecodan
         void clear_command_queue();
         bool begin_get_status();
         bool schedule_cmd(Message& cmd);
+        void queue_status_cmd();
         
         void handle_response();
         void handle_get_response(Message& res);

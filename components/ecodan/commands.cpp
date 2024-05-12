@@ -289,41 +289,55 @@ namespace ecodan
             {
                 ESP_LOGI(TAG, "command queue was not empty when queueing status query: %u", cmdQueue.size());
 
-                while (!cmdQueue.empty() ) {
-                    auto msgType = cmdQueue.front().type(); 
-                    if (msgType == MsgType::GET_CMD || msgType == MsgType::GET_CONFIGURATION)
-                    {
-                        ESP_LOGW(TAG, "discarding pending cmd: %u", static_cast<uint8_t>(msgType));
-                        cmdQueue.pop_front();
+                static auto last_attempt = std::chrono::steady_clock::now();
+                auto now = std::chrono::steady_clock::now();
+                if (now - last_attempt > std::chrono::seconds(60))
+                {
+                    last_attempt = now;
+                    // only drop cmd after 60s
+                    while (!cmdQueue.empty()) {
+                        auto msgType = cmdQueue.front().type(); 
+                        if (msgType == MsgType::GET_CMD || msgType == MsgType::GET_CONFIGURATION)
+                        {
+                            ESP_LOGW(TAG, "discarding pending cmd: %02X", static_cast<uint8_t>(msgType));
+                            cmdQueue.pop_front();
+                        }
+                        else {
+                            break;
+                        }
                     }
-                    else {
-                        break;
-                    }
+                    queue_status_cmd();
                 }
             }
-
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::DEFROST_STATE);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::ERROR_STATE);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::DHW_STATE);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::HEATING_POWER);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::TEMPERATURE_CONFIG);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::SH_TEMPERATURE_STATE);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_A);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_B);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::EXTERNAL_STATE);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::ACTIVE_TIME);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::PUMP_STATUS);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::FLOW_RATE);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::MODE_FLAGS_A);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::MODE_FLAGS_B);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::ENERGY_USAGE);
-            cmdQueue.emplace_back(MsgType::GET_CMD, GetType::ENERGY_DELIVERY);
-            cmdQueue.emplace_back(MsgType::GET_CONFIGURATION, GetType::HARDWARE_CONFIGURATION);
+            else {
+                queue_status_cmd();
+            }
         }
 
         return dispatch_next_cmd();
     }
+
+    void EcodanHeatpump::queue_status_cmd() {
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::DEFROST_STATE);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::ERROR_STATE);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::DHW_STATE);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::HEATING_POWER);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::TEMPERATURE_CONFIG);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::SH_TEMPERATURE_STATE);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_A);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_B);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::EXTERNAL_STATE);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::ACTIVE_TIME);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::PUMP_STATUS);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::FLOW_RATE);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::MODE_FLAGS_A);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::MODE_FLAGS_B);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::ENERGY_USAGE);
+        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::ENERGY_DELIVERY);
+        cmdQueue.emplace_back(MsgType::GET_CONFIGURATION, GetType::HARDWARE_CONFIGURATION);
+    }
+
 
 #pragma endregion Commands
 
