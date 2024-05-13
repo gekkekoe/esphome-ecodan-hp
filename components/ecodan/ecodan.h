@@ -74,12 +74,16 @@ namespace ecodan
         float temperatureStep = 0.5f;
         bool connected = false;
         bool heatpumpInitialized = false;
-       
+        
+        std::queue<Message> cmdQueue;
+        std::mutex cmdQueueMutex;
+
         void resync_rx();
         bool serial_rx(Message& msg);
         bool serial_tx(Message& msg);
 
         bool dispatch_next_status_cmd();
+        bool dispatch_next_set_cmd();
         bool schedule_cmd(Message& cmd);
         
         void handle_response();

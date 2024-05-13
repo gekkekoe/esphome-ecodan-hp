@@ -25,44 +25,44 @@ api:
 #  encryption:
 #    key: !secret heatpump_encryption_key
 
-external_components:
-- source:
-    type: local
-    path: components
-  components: [ ecodan ]
-
-packages:
- esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
- zone1: !include confs/zone1.yaml
-# disable if you don't want to use zone 2
-# zone2: !include confs/zone2.yaml
-# change language labels to -en for English or -nl for Dutch
-# substitutions: !include confs/ecodan-labels-nl.yaml
- substitutions: !include confs/ecodan-labels-en.yaml
- svc: !include confs/server-control.yaml
- dbg: !include confs/debug.yaml
-
 # external_components:
-#   - source: github://gekkekoe/esphome-ecodan-hp@main
-#     components: [ ecodan ]
-#     refresh: always
+# - source:
+#     type: local
+#     path: components
+#   components: [ ecodan ]
 
 # packages:
-#   remote_package:
-#     url: https://github.com/gekkekoe/esphome-ecodan-hp/
-#     ref: main
-#     refresh: always
-#     files: [ 
-#             confs/esp32s3.yaml, # confs/esp32.yaml, for regular board
-#             confs/zone1.yaml,
-#             ## enable if you want to use zone 2
-#             #confs/zone2.yaml,
-#             ## enable label language file
-#             confs/ecodan-labels-en.yaml,
-#             #confs/ecodan-labels-nl.yaml,
-#             #confs/server-control.yaml,
-#             #confs/debug.yaml,
-#            ]
+#  esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
+#  zone1: !include confs/zone1.yaml
+# # disable if you don't want to use zone 2
+# # zone2: !include confs/zone2.yaml
+# # change language labels to -en for English or -nl for Dutch
+# # substitutions: !include confs/ecodan-labels-nl.yaml
+#  substitutions: !include confs/ecodan-labels-en.yaml
+#  svc: !include confs/server-control.yaml
+#  dbg: !include confs/debug.yaml
+
+external_components:
+  - source: github://gekkekoe/esphome-ecodan-hp@main
+    components: [ ecodan ]
+    refresh: always
+
+packages:
+  remote_package:
+    url: https://github.com/gekkekoe/esphome-ecodan-hp/
+    ref: main
+    refresh: always
+    files: [ 
+            confs/esp32s3.yaml, # confs/esp32.yaml, for regular board
+            confs/zone1.yaml,
+            ## enable if you want to use zone 2
+            #confs/zone2.yaml,
+            ## enable label language file
+            confs/ecodan-labels-en.yaml,
+            #confs/ecodan-labels-nl.yaml,
+            #confs/server-control.yaml,
+            #confs/debug.yaml,
+           ]
 
 # enable logger
 logger:

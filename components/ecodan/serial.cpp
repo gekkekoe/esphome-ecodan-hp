@@ -58,7 +58,6 @@ namespace ecodan
 #pragma region Serial
     bool EcodanHeatpump::serial_tx(Message& msg)
     {
-        std::lock_guard<std::mutex> lock{portWriteMutex};
         if (!port)
         {
             ESP_LOGE(TAG, "Serial connection unavailable for tx");
@@ -72,7 +71,10 @@ namespace ecodan
         }
 
         msg.set_checksum();
-        port.write(msg.buffer(), msg.size());
+        {
+            std::lock_guard<std::mutex> lock{portWriteMutex};
+            port.write(msg.buffer(), msg.size());
+        }
         //port.flush(true);
 
         //ESP_LOGV(TAG, msg.debug_dump_packet().c_str());

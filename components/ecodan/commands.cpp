@@ -201,18 +201,17 @@ namespace ecodan
     }
 
     bool EcodanHeatpump::schedule_cmd(Message& cmd)
-    {        
-        if (!serial_tx(cmd)) {
-            ESP_LOGI(TAG, "Unable enqueue cmd, flushing queued requests...");
-            connected = false;
-            return false;
+    {   
+        {
+            std::lock_guard<std::mutex> lock{cmdQueueMutex};
+            cmdQueue.emplace(std::move(cmd));
         }
 
-        return true;
+       return dispatch_next_set_cmd();
     }
 
     #define MAX_STATUS_CMD_SIZE 18
-    Message cmdQueue[MAX_STATUS_CMD_SIZE] = {
+    Message statusCmdQueue[MAX_STATUS_CMD_SIZE] = {
         Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
         Message{MsgType::GET_CMD, GetType::ERROR_STATE},
         Message{MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY},
@@ -236,13 +235,34 @@ namespace ecodan
     bool EcodanHeatpump::dispatch_next_status_cmd()
     {
         auto static cmdIndex = 0;
-        Message& cmd = cmdQueue[cmdIndex];
+        Message& cmd = statusCmdQueue[cmdIndex];
         cmdIndex = (cmdIndex + 1) % MAX_STATUS_CMD_SIZE;
 
         if (!serial_tx(cmd))
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
             cmdIndex = 0;
+            connected = false;
+            return false;
+        }
+
+        return true;
+    }
+
+    bool EcodanHeatpump::dispatch_next_set_cmd()
+    {
+        std::lock_guard<std::mutex> lock{cmdQueueMutex};
+
+        if (cmdQueue.empty())
+        {
+            return true;
+        }
+        
+        //ESP_LOGI(TAG, msg.debug_dump_packet().c_str());
+
+        if (!serial_tx(cmdQueue.front()))
+        {
+            ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
             connected = false;
             return false;
         }

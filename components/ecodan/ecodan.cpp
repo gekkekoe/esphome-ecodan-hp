@@ -108,10 +108,12 @@ namespace ecodan
         }
         else if (is_connected())
         {
+            dispatch_next_set_cmd();
+
             if (!dispatch_next_status_cmd())
             {
                 ESP_LOGI(TAG, "Failed to begin heatpump status update!");
-            }         
+            }
         }
     }
 

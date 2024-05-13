@@ -242,6 +242,13 @@ namespace ecodan
 
     void EcodanHeatpump::handle_set_response(Message& res)
     {
+        {
+            //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
+            std::lock_guard<std::mutex> lock{cmdQueueMutex};
+            if (!cmdQueue.empty())
+                cmdQueue.pop();
+        }
+
         if (res.type() != MsgType::SET_RES)
         {
             ESP_LOGI(TAG, "Unexpected set response type: %#x", static_cast<uint8_t>(res.type()));
