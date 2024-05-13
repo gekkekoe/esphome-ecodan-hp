@@ -7,7 +7,6 @@
 #include <freertos/task.h>
 #include <functional>
 
-#include <mutex>
 #include <queue>
 #include <thread>
 
@@ -17,8 +16,6 @@ namespace ecodan
     void EcodanHeatpump::handle_get_response(Message& res)
     {
         {
-            std::lock_guard<Status> lock{status};
-
             switch (res.payload_type<GetType>())
             {
             case GetType::DEFROST_STATE:
@@ -209,11 +206,6 @@ namespace ecodan
                 break;
             }
         }
-
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "Failed to dispatch status update command!");
-        }
     }
 
     void EcodanHeatpump::handle_connect_response(Message& res)
@@ -253,12 +245,7 @@ namespace ecodan
         if (res.type() != MsgType::SET_RES)
         {
             ESP_LOGI(TAG, "Unexpected set response type: %#x", static_cast<uint8_t>(res.type()));
-        }
-
-        if (!dispatch_next_cmd())
-        {
-            ESP_LOGI(TAG, "Failed to dispatch ack set command!");
-        }            
+        }          
     }
 }
 }

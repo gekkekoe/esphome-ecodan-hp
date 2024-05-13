@@ -14,7 +14,6 @@
 namespace esphome {
 namespace ecodan 
 {
-
 #pragma region Commands
     void EcodanHeatpump::set_room_temperature(float newTemp, esphome::ecodan::SetZone zone)
     {
@@ -202,17 +201,8 @@ namespace ecodan
     }
 
     bool EcodanHeatpump::schedule_cmd(Message& cmd)
-    {
-        bool emplaced = false;
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-            if (!cmdQueue.empty()) {
-                cmdQueue.emplace_back(std::move(cmd));
-                emplaced = true;
-            }
-        }
-        
-        if (!emplaced && !serial_tx(cmd)) {
+    {        
+        if (!serial_tx(cmd)) {
             ESP_LOGI(TAG, "Unable enqueue cmd, flushing queued requests...");
             connected = false;
             return false;
@@ -221,37 +211,38 @@ namespace ecodan
         return true;
     }
 
-    void EcodanHeatpump::clear_command_queue()
+    #define MAX_STATUS_CMD_SIZE 18
+    Message cmdQueue[MAX_STATUS_CMD_SIZE] = {
+        Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
+        Message{MsgType::GET_CMD, GetType::ERROR_STATE},
+        Message{MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY},
+        Message{MsgType::GET_CMD, GetType::DHW_STATE},
+        Message{MsgType::GET_CMD, GetType::HEATING_POWER},
+        Message{MsgType::GET_CMD, GetType::TEMPERATURE_CONFIG},
+        Message{MsgType::GET_CMD, GetType::SH_TEMPERATURE_STATE},
+        Message{MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_A},
+        Message{MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_B},
+        Message{MsgType::GET_CMD, GetType::EXTERNAL_STATE},
+        Message{MsgType::GET_CMD, GetType::ACTIVE_TIME},
+        Message{MsgType::GET_CMD, GetType::PUMP_STATUS},
+        Message{MsgType::GET_CMD, GetType::FLOW_RATE},
+        Message{MsgType::GET_CMD, GetType::MODE_FLAGS_A},
+        Message{MsgType::GET_CMD, GetType::MODE_FLAGS_B},
+        Message{MsgType::GET_CMD, GetType::ENERGY_USAGE},
+        Message{MsgType::GET_CMD, GetType::ENERGY_DELIVERY},
+        Message{MsgType::GET_CONFIGURATION, GetType::HARDWARE_CONFIGURATION}
+    };
+
+    bool EcodanHeatpump::dispatch_next_status_cmd()
     {
-        std::lock_guard<std::mutex> lock{cmdQueueMutex};
+        auto static cmdIndex = 0;
+        Message& cmd = cmdQueue[cmdIndex];
+        cmdIndex = (cmdIndex + 1) % MAX_STATUS_CMD_SIZE;
 
-        while (!cmdQueue.empty())
-            cmdQueue.pop_back();
-    }
-
-    bool EcodanHeatpump::dispatch_next_cmd()
-    {
-        Message msg;
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-
-            if (cmdQueue.empty())
-            {
-                return true;
-            }
-
-            msg = std::move(cmdQueue.front());
-            cmdQueue.pop_front();
-        }
-        
-        //ESP_LOGI(TAG, msg.debug_dump_packet().c_str());
-
-        if (!serial_tx(msg))
+        if (!serial_tx(cmd))
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
-
-            clear_command_queue();
-
+            cmdIndex = 0;
             connected = false;
             return false;
         }
@@ -275,71 +266,6 @@ namespace ecodan
         return true;
     }
 
-    bool EcodanHeatpump::begin_get_status()
-    {
-        {
-            std::unique_lock<std::mutex> lock{cmdQueueMutex, std::try_to_lock};
-
-            if (!lock)
-            {
-                ESP_LOGI(TAG, "Unable to acquire lock for status query, owned by another thread!");
-            }
-
-            if (!cmdQueue.empty())
-            {
-                ESP_LOGI(TAG, "command queue was not empty when queueing status query: %u", cmdQueue.size());
-
-                static auto last_attempt = std::chrono::steady_clock::now();
-                auto now = std::chrono::steady_clock::now();
-                if (now - last_attempt > std::chrono::seconds(60))
-                {
-                    last_attempt = now;
-                    // only drop cmd after 60s
-                    while (!cmdQueue.empty()) {
-                        auto msgType = cmdQueue.front().type(); 
-                        if (msgType == MsgType::GET_CMD || msgType == MsgType::GET_CONFIGURATION)
-                        {
-                            ESP_LOGW(TAG, "discarding pending cmd: %02X", static_cast<uint8_t>(msgType));
-                            cmdQueue.pop_front();
-                        }
-                        else {
-                            break;
-                        }
-                    }
-                    queue_status_cmd();
-                }
-            }
-            else {
-                queue_status_cmd();
-            }
-        }
-
-        return dispatch_next_cmd();
-    }
-
-    void EcodanHeatpump::queue_status_cmd() {
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::DEFROST_STATE);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::ERROR_STATE);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::DHW_STATE);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::HEATING_POWER);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::TEMPERATURE_CONFIG);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::SH_TEMPERATURE_STATE);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_A);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::DHW_TEMPERATURE_STATE_B);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::EXTERNAL_STATE);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::ACTIVE_TIME);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::PUMP_STATUS);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::FLOW_RATE);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::MODE_FLAGS_A);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::MODE_FLAGS_B);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::ENERGY_USAGE);
-        cmdQueue.emplace_back(MsgType::GET_CMD, GetType::ENERGY_DELIVERY);
-        cmdQueue.emplace_back(MsgType::GET_CONFIGURATION, GetType::HARDWARE_CONFIGURATION);
-    }
-
-
 #pragma endregion Commands
-
 
 }}

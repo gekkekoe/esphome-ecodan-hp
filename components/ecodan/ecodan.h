@@ -20,7 +20,7 @@ namespace ecodan
 
     class EcodanHeatpump : public PollingComponent, public esphome::api::CustomAPIDevice {
     public:        
-        EcodanHeatpump() : PollingComponent(15000) {}
+        EcodanHeatpump() : PollingComponent(1000) {}
         void set_rx(int rx);
         void set_tx(int tx);
         void setup() override;
@@ -64,12 +64,11 @@ namespace ecodan
     
     private:
         HardwareSerial& port = Serial1;
+        std::mutex portWriteMutex;
         uint8_t serialRxPort{2};
         uint8_t serialTxPort{1};        
         
         std::thread serialRxThread;
-        std::deque<Message> cmdQueue;
-        std::mutex cmdQueueMutex;
 
         Status status;
         float temperatureStep = 0.5f;
@@ -80,11 +79,8 @@ namespace ecodan
         bool serial_rx(Message& msg);
         bool serial_tx(Message& msg);
 
-        bool dispatch_next_cmd();
-        void clear_command_queue();
-        bool begin_get_status();
+        bool dispatch_next_status_cmd();
         bool schedule_cmd(Message& cmd);
-        void queue_status_cmd();
         
         void handle_response();
         void handle_get_response(Message& res);

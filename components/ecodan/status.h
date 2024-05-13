@@ -250,19 +250,6 @@ namespace ecodan
         {
             HeatingCoolingMode = static_cast<HpMode>(mode);
         }
-
-        void lock()
-        {
-            lock_.lock();
-        }
-
-        void unlock()
-        {
-            lock_.unlock();
-        }
-
-      private:
-        std::mutex lock_;
     };
 
 } // namespace ecodan
