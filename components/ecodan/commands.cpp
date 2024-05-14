@@ -3,7 +3,6 @@
 #include "esphome.h"
 
 #include <HardwareSerial.h>
-#include <freertos/task.h>
 #include <functional>
 
 #include <mutex>

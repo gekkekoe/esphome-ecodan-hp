@@ -2,7 +2,6 @@
 
 #include <functional>
 #include <mutex>
-#include <thread>
 #include <string>
 
 #include "esphome.h"
@@ -66,9 +65,7 @@ namespace ecodan
         HardwareSerial& port = Serial1;
         std::mutex portWriteMutex;
         uint8_t serialRxPort{2};
-        uint8_t serialTxPort{1};        
-        
-        std::thread serialRxThread;
+        uint8_t serialTxPort{1};
 
         Status status;
         float temperatureStep = 0.5f;

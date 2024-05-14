@@ -1,14 +1,5 @@
 #include "ecodan.h"
 
-#include "esphome.h"
-
-#include <HardwareSerial.h>
-#include <freertos/task.h>
-#include <functional>
-
-#include <queue>
-#include <thread>
-
 namespace esphome {
 namespace ecodan 
 {

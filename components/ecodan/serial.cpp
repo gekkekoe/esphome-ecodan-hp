@@ -1,15 +1,5 @@
 #include "ecodan.h"
 
-#include "esphome.h"
-
-#include <HardwareSerial.h>
-#include <freertos/task.h>
-#include <functional>
-
-#include <mutex>
-#include <queue>
-#include <thread>
-
 #if ARDUINO_ARCH_ESP32
 #include <esp_task_wdt.h>
 #endif
@@ -135,7 +125,7 @@ namespace ecodan
         auto startTime = std::chrono::steady_clock::now();
         while (port.available() < remainingBytes)
         {
-            vTaskDelay(pdMS_TO_TICKS(100));
+            delay(1);
             if (std::chrono::steady_clock::now() - startTime > std::chrono::seconds(10))
             {
                 ESP_LOGI(TAG, "Serial port message could not be received within 10s (got %u / %u bytes)", port.available(), remainingBytes);
@@ -178,8 +168,7 @@ namespace ecodan
         {   
             //ESP_LOGI(TAG, "handle response on core %d", xPortGetCoreID());
             ping_watchdog();            
-            handle_response();            
-            //vTaskDelay(pdMS_TO_TICKS(100));
+            handle_response();
         }
     }
 
