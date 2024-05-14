@@ -74,6 +74,13 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
+        cv.Optional("hp_refrigerant_condensing_temp"): sensor.sensor_schema(
+            unit_of_measurement=UNIT_CELSIUS,
+            icon="mdi:coolant-temperature",
+            accuracy_decimals=1,
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
         cv.Optional("boiler_flow_temp"): sensor.sensor_schema(
             unit_of_measurement=UNIT_CELSIUS,
             icon="mdi:coolant-temperature",

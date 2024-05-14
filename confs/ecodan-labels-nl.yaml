@@ -81,6 +81,7 @@ substitutions:
   computed_output_power: Geschatte afgegeven vermogen
   outside_temp: Buiten temp
   hp_refrigerant_temp: Koelmiddel temp
+  hp_refrigerant_condensing_temp: Koelmiddel condensatie temp
   hp_return_temp: Retour temp
   sh_flow_temp_target: sh_flow_temp_doel
   status_water_pump: Status water pomp

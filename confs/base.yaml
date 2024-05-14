@@ -305,6 +305,9 @@ sensor:
     hp_refrigerant_temp:
       id: hp_refrigerant_temp
       name: ${hp_refrigerant_temp}
+    hp_refrigerant_condensing_temp:
+      id: hp_refrigerant_condensing_temp
+      name: ${hp_refrigerant_condensing_temp}
     boiler_flow_temp:
       id: boiler_flow_temp
       name: ${boiler_flow_temp}

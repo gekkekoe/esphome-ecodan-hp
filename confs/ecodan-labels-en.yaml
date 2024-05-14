@@ -80,7 +80,8 @@ substitutions:
   output_power: output power
   computed_output_power: estimated output power
   outside_temp: outside temp
-  hp_refrigerant_temp: refrigerant temp
+  hp_refrigerant_temp: refrigerant liquid temp
+  hp_refrigerant_condensing_temp: refrigerant condensing temp
   hp_return_temp: return temp
   sh_flow_temp_target: sh_flow_temp_target
   status_water_pump: water pump status

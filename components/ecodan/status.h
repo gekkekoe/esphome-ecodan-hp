@@ -35,6 +35,7 @@ namespace ecodan
         float HpFeedTemperature;
         float HpReturnTemperature;
         float HpRefrigerantLiquidTemperature;
+        float HpRefrigerantCondensingTemperature;
         float DhwTemperature;
         float DhwSecondaryTemperature;
         float BoilerFlowTemperature;
