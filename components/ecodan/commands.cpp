@@ -1,6 +1,5 @@
 #include "ecodan.h"
 
-#include "esp_log.h"
 #include "esphome.h"
 
 #include <HardwareSerial.h>
