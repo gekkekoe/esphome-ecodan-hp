@@ -99,8 +99,10 @@ namespace ecodan
                 // 3 = IN5 outdoor thermostat
                 status.In1ThermostatRequest = res[1] != 0;
                 status.In6ThermostatRequest = res[2] != 0;
+                status.In5ThermostatRequest = res[3] != 0;
                 publish_state("status_in1_request", status.In1ThermostatRequest ? "On" : "Off");
                 publish_state("status_in6_request", status.In6ThermostatRequest ? "On" : "Off");
+                publish_state("status_in5_request", status.In5ThermostatRequest ? "On" : "Off");
                 break;
             case GetType::ACTIVE_TIME:
                 status.Runtime = res.get_float24_v2(3);
@@ -139,7 +141,7 @@ namespace ecodan
                 status.set_dhw_mode(res[5]);
                 status.set_heating_cooling_mode(res[6]);
                 status.DhwFlowTemperatureSetPoint = res.get_float16(8);
-                status.RadiatorFlowTemperatureSetPoint = res.get_float16(12);
+                //status.RadiatorFlowTemperatureSetPoint = res.get_float16(12);
 
                 publish_state("status_power", status.power_as_string());
                 publish_state("status_operation", status.operation_as_string());
@@ -147,7 +149,7 @@ namespace ecodan
                 publish_state("status_heating_cooling", status.hp_status_as_string());
 
                 publish_state("dhw_flow_temp_target", status.DhwFlowTemperatureSetPoint);
-                publish_state("sh_flow_temp_target", status.RadiatorFlowTemperatureSetPoint);
+                //publish_state("sh_flow_temp_target", status.RadiatorFlowTemperatureSetPoint);
                 break;
             case GetType::MODE_FLAGS_B:
                 status.DhwForcedActive = res[3] != 0;

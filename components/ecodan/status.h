@@ -16,6 +16,7 @@ namespace ecodan
         bool ImmersionActive;
         uint8_t HeatSource;
         bool In1ThermostatRequest;
+        bool In5ThermostatRequest;
         bool In6ThermostatRequest;
         uint8_t OutputPower;
         float ComputedOutputPower;

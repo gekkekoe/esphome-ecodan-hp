@@ -273,7 +273,9 @@ text_sensor:
     status_in6_request:
       id: status_in6_request
       name: ${status_in6_request}
-
+    status_in5_request:
+      id: status_in5_request
+      name: ${status_in5_request}
 sensor:
   - platform: ecodan
     controller_version:
@@ -359,8 +361,6 @@ sensor:
       name: ${dhw_consumed}
     dhw_delivered:
       name: ${dhw_delivered}    
-    sh_flow_temp_target:
-      name: ${sh_flow_temp_target}   
 
   - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
     name: ${wifi_signal_db}

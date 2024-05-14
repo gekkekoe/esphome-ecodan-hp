@@ -65,7 +65,11 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("status_in6_request"): text_sensor.text_sensor_schema(
             icon="mdi:alert",            
             entity_category=ENTITY_CATEGORY_NONE,
-        ),                         
+        ),
+        cv.Optional("status_in5_request"): text_sensor.text_sensor_schema(
+            icon="mdi:alert",            
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),              
         cv.Optional("status_water_pump"): text_sensor.text_sensor_schema(
             icon="mdi:radiobox-blank",            
             entity_category=ENTITY_CATEGORY_NONE,

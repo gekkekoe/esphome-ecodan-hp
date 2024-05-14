@@ -17,6 +17,7 @@ substitutions:
   restart_button: Esp restart
   status_in1_request: In1 thermostat status
   status_in6_request: In6 thermostat 2 status
+  status_in5_request: In5 outdoor thermostat status
   heatpump_select_dhw_mode: Set DHW mode
   of: "Off"
   normal: Normal
@@ -83,6 +84,5 @@ substitutions:
   hp_refrigerant_temp: refrigerant liquid temp
   hp_refrigerant_condensing_temp: refrigerant condensing temp
   hp_return_temp: return temp
-  sh_flow_temp_target: sh_flow_temp_target
   status_water_pump: water pump status
   status_water_pump_2: water pump 2 status

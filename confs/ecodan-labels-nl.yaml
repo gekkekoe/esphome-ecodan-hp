@@ -17,6 +17,7 @@ substitutions:
   restart_button: Esp herstart
   status_in1_request: Status In1 thermostaat
   status_in6_request: Status In6 thermostaat 2
+  status_in5_request: Status In5 buiten thermostaat
   heatpump_select_dhw_mode: Set SWW modus
   of: "Uit"
   normal: Normaal
@@ -83,6 +84,5 @@ substitutions:
   hp_refrigerant_temp: Koelmiddel temp
   hp_refrigerant_condensing_temp: Koelmiddel condensatie temp
   hp_return_temp: Retour temp
-  sh_flow_temp_target: sh_flow_temp_doel
   status_water_pump: Status water pomp
   status_water_pump_2: Status water pomp 2
