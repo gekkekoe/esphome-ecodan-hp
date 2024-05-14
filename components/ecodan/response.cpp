@@ -85,11 +85,12 @@ namespace ecodan
                 status.HpFeedTemperature = res.get_float16(1);
                 status.HpReturnTemperature = res.get_float16(4);
                 status.DhwTemperature = res.get_float16(7);
-                
+                status.DhwSecondaryTemperature = res.get_float16(10); 
 
                 publish_state("hp_feed_temp", status.HpFeedTemperature);
                 publish_state("hp_return_temp", status.HpReturnTemperature);
                 publish_state("dhw_temp", status.DhwTemperature);
+                publish_state("dhw_secondary_temp", status.DhwSecondaryTemperature);
                 status.update_output_power_estimation();
                 break;
             case GetType::DHW_TEMPERATURE_STATE_B:

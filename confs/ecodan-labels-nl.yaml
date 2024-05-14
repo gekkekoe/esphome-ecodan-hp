@@ -2,6 +2,7 @@ substitutions:
   status_three_way_valve: Status 3-weg klep
   status_three_way_valve_2: Status 3-weg klep 2
   dhw_temp: SWW huidige temp
+  dhw_secondary_temp: SWW 2e temp sensor
   status_dhw_forced: Status SWW geforceerd
   dhw_flow_temp_drop: SWW max temp hysterese
   status_prohibit_dhw: Status SWW verboden

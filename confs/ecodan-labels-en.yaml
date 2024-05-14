@@ -2,6 +2,7 @@ substitutions:
   status_three_way_valve: 3-way valve status
   status_three_way_valve_2: 3-way valve 2 status
   dhw_temp: DHW current temp
+  dhw_secondary_temp: DHW secondary temp
   status_dhw_forced: DHW forced status
   dhw_flow_temp_drop: DHW max temp drop
   status_prohibit_dhw: DHW prohibit status
