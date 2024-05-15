@@ -103,8 +103,10 @@ text_sensor:
   - platform: wifi_info
     ip_address:
       name: ${esp_ip}
+      icon: mdi:ip
     ssid:
       name: ${esp_sidd}
+      icon: mdi:wifi
 
   - platform: version
     name: ${esp_version}
@@ -116,6 +118,8 @@ text_sensor:
   - platform: template
     id: controller_version_text
     name: ${controller_version_text}
+    icon: mdi:new-box
+    entity_category: diagnostic
     lambda: |-
       int value = id(controller_version).state;
       switch (value) {
@@ -281,6 +285,7 @@ sensor:
     controller_version:
       id: controller_version
       internal: true
+      entity_category: diagnostic
     heat_source:
       id: heat_source
       internal: true          
@@ -377,6 +382,7 @@ sensor:
     unit_of_measurement: " %"
     entity_category: diagnostic
     device_class: ""
+    icon: mdi:wifi
 
   - platform: uptime
     name: ${uptime}
