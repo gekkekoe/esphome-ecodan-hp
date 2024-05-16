@@ -90,9 +90,15 @@ namespace ecodan
     {         
         if (!is_connected() && !port.available())
         {
-            if (!begin_connect())
+            static auto last_attempt = std::chrono::steady_clock::now();
+            auto now = std::chrono::steady_clock::now();
+            if (now - last_attempt > std::chrono::seconds(5))
             {
-                ESP_LOGI(TAG, "Failed to start heatpump connection proceedure...");
+                last_attempt = now;
+                if (!begin_connect())
+                {
+                    ESP_LOGI(TAG, "Failed to start heatpump connection proceedure...");
+                }
             }    
         }
         else if (is_connected())
