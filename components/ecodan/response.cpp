@@ -10,7 +10,7 @@ namespace ecodan
             {
             case GetType::DEFROST_STATE:
                 status.DefrostActive = res[3] != 0;
-                publish_state("status_defrost", status.DefrostActive ? "On" : "Off");
+                publish_state("status_defrost", status.DefrostActive);
                 break;
             case GetType::ERROR_STATE:
                 // 1 = refrigerant error code
@@ -100,9 +100,9 @@ namespace ecodan
                 status.In1ThermostatRequest = res[1] != 0;
                 status.In6ThermostatRequest = res[2] != 0;
                 status.In5ThermostatRequest = res[3] != 0;
-                publish_state("status_in1_request", status.In1ThermostatRequest ? "On" : "Off");
-                publish_state("status_in6_request", status.In6ThermostatRequest ? "On" : "Off");
-                publish_state("status_in5_request", status.In5ThermostatRequest ? "On" : "Off");
+                publish_state("status_in1_request", status.In1ThermostatRequest);
+                publish_state("status_in6_request", status.In6ThermostatRequest);
+                publish_state("status_in5_request", status.In5ThermostatRequest);
                 break;
             case GetType::ACTIVE_TIME:
                 status.Runtime = res.get_float24_v2(3);
@@ -118,10 +118,10 @@ namespace ecodan
                 status.ThreeWayValveActive = res[6] != 0;
                 status.WaterPump2Active = res[4] != 0;
                 status.ThreeWayValve2Active = res[7] != 0;                
-                publish_state("status_water_pump", status.WaterPumpActive ? "On" : "Off");
-                publish_state("status_three_way_valve", status.ThreeWayValveActive ? "On" : "Off");
-                publish_state("status_water_pump_2", status.WaterPump2Active ? "On" : "Off");
-                publish_state("status_three_way_valve_2", status.ThreeWayValve2Active ? "On" : "Off");                
+                publish_state("status_water_pump", status.WaterPumpActive);
+                publish_state("status_three_way_valve", status.ThreeWayValveActive);
+                publish_state("status_water_pump_2", status.WaterPump2Active);
+                publish_state("status_three_way_valve_2", status.ThreeWayValve2Active);                
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;                
             case GetType::FLOW_RATE:
@@ -131,8 +131,8 @@ namespace ecodan
                 status.ImmersionActive = res[5] != 0;
                 status.FlowRate = res[12];
                 publish_state("flow_rate", status.FlowRate);
-                publish_state("status_booster", status.BoosterActive ? "On" : "Off");
-                publish_state("status_immersion", status.ImmersionActive ? "On" : "Off");
+                publish_state("status_booster", status.BoosterActive);
+                publish_state("status_immersion", status.ImmersionActive);
                 status.update_output_power_estimation();
                 break;
             case GetType::MODE_FLAGS_A:
@@ -160,13 +160,13 @@ namespace ecodan
                 status.ProhibitHeatingZ2 = res[8] != 0;
                 status.ProhibitCoolingZ2 = res[9] != 0;
 
-                publish_state("status_dhw_forced", status.DhwForcedActive ? "On" : "Off");
-                publish_state("status_holiday", status.HolidayMode ? "On" : "Off");
-                publish_state("status_prohibit_dhw", status.ProhibitDhw ? "On" : "Off");
-                publish_state("status_prohibit_heating_z1", status.ProhibitHeatingZ1 ? "On" : "Off");
-                publish_state("status_prohibit_cool_z1", status.ProhibitCoolingZ1 ? "On" : "Off");
-                publish_state("status_prohibit_heating_z2", status.ProhibitHeatingZ2 ? "On" : "Off");
-                publish_state("status_prohibit_cool_z2", status.ProhibitCoolingZ2 ? "On" : "Off");
+                publish_state("status_dhw_forced", status.DhwForcedActive);
+                publish_state("status_holiday", status.HolidayMode);
+                publish_state("status_prohibit_dhw", status.ProhibitDhw);
+                publish_state("status_prohibit_heating_z1", status.ProhibitHeatingZ1);
+                publish_state("status_prohibit_cool_z1", status.ProhibitCoolingZ1);
+                publish_state("status_prohibit_heating_z2", status.ProhibitHeatingZ2);
+                publish_state("status_prohibit_cool_z2", status.ProhibitCoolingZ2);
                 break;
             case GetType::ENERGY_USAGE:
                 status.EnergyConsumedHeating = res.get_float24(4);
