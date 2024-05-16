@@ -388,7 +388,7 @@ sensor:
     device_class: duration
     state_class: total_increasing
     entity_category: diagnostic
-    update_interval: 60s
+    update_interval: 5s
 
   - platform: internal_temperature
     name: ${internal_esp_temperature}

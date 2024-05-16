@@ -17,7 +17,7 @@ namespace ecodan
 {    
     static constexpr const char *TAG = "ecodan.component";   
 
-    class EcodanHeatpump : public PollingComponent, public esphome::api::CustomAPIDevice {
+    class EcodanHeatpump : public PollingComponent {
     public:        
         EcodanHeatpump() : PollingComponent(1000) {}
         void set_rx(int rx);
