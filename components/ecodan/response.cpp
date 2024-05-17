@@ -19,7 +19,7 @@ namespace ecodan
                 break;
             case GetType::COMPRESSOR_FREQUENCY:
                 status.CompressorFrequency = res[1];
-                publish_state("compressor_frequency", status.CompressorFrequency);
+                publish_state("compressor_frequency", static_cast<float>(status.CompressorFrequency));
                 status.update_output_power_estimation();
                 break;
             case GetType::DHW_STATE:
@@ -28,12 +28,12 @@ namespace ecodan
                 //status.DhwForcedActive = res[7] != 0 && res[5] == 0; // byte 5 -> 7 is normal dhw, 0 - forced dhw
                 //publish_state("status_dhw_forced", status.DhwForcedActive ? "On" : "Off");
 
-                publish_state("heat_source", status.HeatSource);
+                publish_state("heat_source", static_cast<float>(status.HeatSource));
                 break;
             case GetType::HEATING_POWER:
                 status.OutputPower = res[6];
                 //status.BoosterActive = res[4] == 2;
-                publish_state("output_power", status.OutputPower);
+                publish_state("output_power", static_cast<float>(status.OutputPower));
                 publish_state("computed_output_power", status.ComputedOutputPower);
                 //publish_state("status_booster", status.BoosterActive ? "On" : "Off");
                 break;
@@ -130,7 +130,7 @@ namespace ecodan
                 status.BoosterActive = res[2] != 0;
                 status.ImmersionActive = res[5] != 0;
                 status.FlowRate = res[12];
-                publish_state("flow_rate", status.FlowRate);
+                publish_state("flow_rate", static_cast<float>(status.FlowRate));
                 publish_state("status_booster", status.BoosterActive);
                 publish_state("status_immersion", status.ImmersionActive);
                 status.update_output_power_estimation();
@@ -194,7 +194,7 @@ namespace ecodan
             case GetType::HARDWARE_CONFIGURATION:
                 // byte 6 = ftc, ft2b , ftc4, ftc5, ftc6
                 status.Controller = res[6];
-                publish_state("controller_version", status.Controller);
+                publish_state("controller_version", static_cast<float>(status.Controller));
                 break;
             default:
                 ESP_LOGI(TAG, "Unknown response type received on serial port: %u", static_cast<uint8_t>(res.payload_type<GetType>()));
