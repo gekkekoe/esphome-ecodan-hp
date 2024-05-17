@@ -7,6 +7,7 @@ from esphome.const import (
     DEVICE_CLASS_FREQUENCY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLUME_FLOW_RATE,
     DEVICE_CLASS_WATER,
     ENTITY_CATEGORY_NONE,
     ENTITY_CATEGORY_DIAGNOSTIC,
@@ -131,8 +132,9 @@ CONFIG_SCHEMA = cv.Schema(
             state_class=STATE_CLASS_MEASUREMENT,
         ),        
         cv.Optional("flow_rate"): sensor.sensor_schema(
-            unit_of_measurement="l/m",
+            unit_of_measurement="L/m",
             icon="mdi:waves-arrow-right",
+            device_class=DEVICE_CLASS_VOLUME_FLOW_RATE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         cv.Optional("cool_cop"): sensor.sensor_schema(
