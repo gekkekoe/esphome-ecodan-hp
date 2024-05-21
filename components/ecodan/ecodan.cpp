@@ -46,6 +46,17 @@ namespace ecodan
         }
     }
 
+    void EcodanHeatpump::publish_state(const std::string& sensorKey, bool sensorValue) {
+        auto binarySensor_it = binarySensors.find(sensorKey);
+        if (binarySensor_it != binarySensors.end()) {
+            binarySensor_it->second->publish_state(sensorValue);
+        }
+        else 
+        {
+            ESP_LOGI(TAG, "Could not publish state of sensor '%s' with value: '%d'", sensorKey.c_str(), sensorValue);
+        }
+    }
+
     void EcodanHeatpump::update() {        
         //ESP_LOGI(TAG, "Update() on core %d", xPortGetCoreID());
         if (heatpumpInitialized)

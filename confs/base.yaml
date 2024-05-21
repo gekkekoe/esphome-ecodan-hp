@@ -103,8 +103,10 @@ text_sensor:
   - platform: wifi_info
     ip_address:
       name: ${esp_ip}
+      icon: mdi:ip
     ssid:
       name: ${esp_sidd}
+      icon: mdi:wifi
 
   - platform: version
     name: ${esp_version}
@@ -116,6 +118,8 @@ text_sensor:
   - platform: template
     id: controller_version_text
     name: ${controller_version_text}
+    icon: mdi:new-box
+    entity_category: diagnostic
     lambda: |-
       int value = id(controller_version).state;
       switch (value) {
@@ -143,9 +147,6 @@ text_sensor:
       }  
 
   - platform: ecodan
-    status_defrost:
-      id: status_defrost
-      name: ${status_defrost}
     status_dhw:
       id: status_dhw 
       name: ${status_dhw}
@@ -159,31 +160,6 @@ text_sensor:
       #           id: heatpump_select_dhw_mode
       #           option: !lambda "return id(status_dhw).state;"
 
-    status_dhw_forced:
-      name: ${status_dhw_forced}
-      id: status_dhw_forced
-      on_value:
-        if:
-          condition:
-            and:
-              - text_sensor.state:
-                  id: status_dhw_forced
-                  state: 'Off'
-              - switch.is_on: heatpump_switch_force_dhw
-          then:
-            - switch.turn_off:
-                id: heatpump_switch_force_dhw
-          else:
-            if:
-              condition:
-                and:
-                  - text_sensor.state:
-                      id: status_dhw_forced
-                      state: 'On'
-                  - switch.is_off: heatpump_switch_force_dhw
-              then:
-                - switch.turn_on:
-                    id: heatpump_switch_force_dhw
 
     status_heating_cooling:
       id: status_heating_cooling
@@ -227,60 +203,12 @@ text_sensor:
     status_operation:
       id: status_operation
       name: ${status_operation}
-    status_holiday:
-      id: status_holiday
-      name: ${status_holiday}
-      on_value:
-        if:
-          condition:
-            and:
-              - text_sensor.state:
-                  id: status_holiday
-                  state: 'Off'
-              - switch.is_on: heatpump_switch_holiday
-          then:
-            - switch.turn_off:
-                id: heatpump_switch_holiday
-          else:
-            if:
-              condition:
-                and:
-                  - text_sensor.state:
-                      id: status_holiday
-                      state: 'On'
-                  - switch.is_off: heatpump_switch_holiday
-              then:
-                - switch.turn_on:
-                    id: heatpump_switch_holiday      
-    status_booster:
-      id: status_booster
-      name: ${status_booster}
-    status_immersion:
-      id: status_immersion
-      name: ${status_immersion}
-    status_prohibit_dhw:
-      id: status_prohibit_dhw
-      name: ${status_prohibit_dhw}
-    status_water_pump:
-      id: status_water_pump
-      name: ${status_water_pump}
-    status_three_way_valve:
-      id: status_three_way_valve
-      name: ${status_three_way_valve}
-    status_in1_request:
-      id: status_in1_request
-      name: ${status_in1_request}
-    status_in6_request:
-      id: status_in6_request
-      name: ${status_in6_request}
-    status_in5_request:
-      id: status_in5_request
-      name: ${status_in5_request}
 sensor:
   - platform: ecodan
     controller_version:
       id: controller_version
       internal: true
+      entity_category: diagnostic
     heat_source:
       id: heat_source
       internal: true          
@@ -377,6 +305,7 @@ sensor:
     unit_of_measurement: " %"
     entity_category: diagnostic
     device_class: ""
+    icon: mdi:wifi
 
   - platform: uptime
     name: ${uptime}
@@ -393,3 +322,75 @@ sensor:
   - platform: internal_temperature
     name: ${internal_esp_temperature}
     entity_category: diagnostic
+
+binary_sensor:
+  - platform: ecodan
+    status_holiday:
+      id: status_holiday
+      name: ${status_holiday}
+      on_state:
+        if:
+          condition:
+            and:
+              - binary_sensor.is_off: status_holiday
+              - switch.is_on: heatpump_switch_holiday
+          then:
+            - switch.turn_off:
+                id: heatpump_switch_holiday
+          else:
+            if:
+              condition:
+                and:
+                  - binary_sensor.is_on: status_holiday
+                  - switch.is_off: heatpump_switch_holiday
+              then:
+                - switch.turn_on:
+                    id: heatpump_switch_holiday      
+    status_dhw_forced:
+      name: ${status_dhw_forced}
+      id: status_dhw_forced
+      on_state:
+        if:
+          condition:
+            and:
+              - binary_sensor.is_off: status_dhw_forced
+              - switch.is_on: heatpump_switch_force_dhw
+          then:
+            - switch.turn_off:
+                id: heatpump_switch_force_dhw
+          else:
+            if:
+              condition:
+                and:
+                  - binary_sensor.is_on: status_dhw_forced
+                  - switch.is_off: heatpump_switch_force_dhw
+              then:
+                - switch.turn_on:
+                    id: heatpump_switch_force_dhw
+    status_defrost:
+      id: status_defrost
+      name: ${status_defrost}
+    status_booster:
+      id: status_booster
+      name: ${status_booster}
+    status_immersion:
+      id: status_immersion
+      name: ${status_immersion}
+    status_prohibit_dhw:
+      id: status_prohibit_dhw
+      name: ${status_prohibit_dhw}
+    status_water_pump:
+      id: status_water_pump
+      name: ${status_water_pump}
+    status_three_way_valve:
+      id: status_three_way_valve
+      name: ${status_three_way_valve}
+    status_in1_request:
+      id: status_in1_request
+      name: ${status_in1_request}
+    status_in6_request:
+      id: status_in6_request
+      name: ${status_in6_request}
+    status_in5_request:
+      id: status_in5_request
+      name: ${status_in5_request}

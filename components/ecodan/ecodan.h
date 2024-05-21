@@ -8,6 +8,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
+#include "esphome/components/binary_sensor/binary_sensor.h"
 
 #include "proto.h"
 #include "status.h"
@@ -34,6 +35,10 @@ namespace ecodan
             textSensors[key] = obj;
         }
 
+        void register_binarySensor(binary_sensor::BinarySensor *obj, const std::string& key) {
+            binarySensors[key] = obj;
+        }
+
         // exposed as external component commands
         void set_room_temperature(float value, esphome::ecodan::SetZone zone);
         void set_flow_target_temperature(float value, esphome::ecodan::SetZone zone);
@@ -48,10 +53,12 @@ namespace ecodan
     protected:
         std::map<std::string, sensor::Sensor*> sensors;
         std::map<std::string, text_sensor::TextSensor*> textSensors;
+        std::map<std::string, binary_sensor::BinarySensor*> binarySensors;
 
         // publish func
         void publish_state(const std::string& sensorKey, float sensorValue);
         void publish_state(const std::string& sensorKey, const std::string& sensorValue);
+        void publish_state(const std::string& sensorKey, bool sensorValue);
 
         bool begin_connect();
         bool begin_update_status();

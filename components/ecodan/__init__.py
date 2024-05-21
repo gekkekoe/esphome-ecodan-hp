@@ -5,7 +5,7 @@ from esphome.const import CONF_ID, CONF_RX_PIN, CONF_TX_PIN
 
 CODEOWNERS = ["@gekkekoe"]
 
-AUTO_LOAD = ["sensor", "text_sensor"]
+AUTO_LOAD = ["binary_sensor", "sensor", "text_sensor"]
 
 CONF_ECODAN_ID = "ecodan_id"
 

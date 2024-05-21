@@ -1,88 +1,88 @@
 substitutions:
-  status_three_way_valve: 3-way valve status
-  status_three_way_valve_2: 3-way valve 2 status
-  dhw_temp: DHW current temp
-  dhw_secondary_temp: DHW secondary temp
-  status_dhw_forced: DHW forced status
-  dhw_flow_temp_drop: DHW max temp drop
-  status_prohibit_dhw: DHW prohibit status
-  heatpump_number_set_dhw_temperature: DHW setpoint
-  dhw_flow_temp_target: DHW setpoint value
-  status_dhw: DHW status value
-  esp_ip: Esp IP
-  internal_esp_temperature: Esp Internal temperature
-  esp_sidd: Esp SSID
-  uptime: Esp Uptime
-  esp_version: Esp Version
-  restart_button: Esp restart
-  status_in1_request: In1 thermostat status
-  status_in6_request: In6 thermostat 2 status
-  status_in5_request: In5 outdoor thermostat status
-  heatpump_select_dhw_mode: Set DHW mode
+  status_three_way_valve: 3-way Valve
+  status_three_way_valve_2: 3-way Valve 2
+  dhw_temp: DHW Current Temp
+  dhw_secondary_temp: DHW Secondary Temp
+  status_dhw_forced: DHW Forced
+  dhw_flow_temp_drop: DHW Max Temp Drop
+  status_prohibit_dhw: DHW Prohibit
+  heatpump_number_set_dhw_temperature: DHW Setpoint
+  dhw_flow_temp_target: DHW Setpoint Value
+  status_dhw: DHW
+  esp_ip: ESP IP
+  internal_esp_temperature: ESP Internal Temperature
+  esp_sidd: ESP SSID
+  uptime: ESP Uptime
+  esp_version: ESP Version
+  restart_button: ESP Restart
+  status_in1_request: In1 Thermostat
+  status_in6_request: In6 Thermostat 2
+  status_in5_request: In5 Outdoor Thermostat
+  heatpump_select_dhw_mode: DHW Mode
   of: "Off"
   normal: Normal
   eco: Eco
-  version: ESP version
-  led_brightness: Set Led brightness
-  led_switch: Set Led switch
-  heatpump_switch_force_dhw: Set force dhw
-  heatpump_switch_power_mode: Set heatpump On/Off
-  heatpump_switch_holiday: Set holiday mode
+  version: ESP Version
+  led_brightness: LED Brightness
+  led_switch: LED
+  heatpump_switch_force_dhw: Force DHW
+  heatpump_switch_power_mode: Heatpump
+  heatpump_switch_holiday: Holiday Mode
   wifi_signal_proc: WiFi Signal %
   wifi_signal_db: WiFi Signal dB
-  heatpump_number_z1_set_flow_temperature: Zone 1 H/C setpoint
-  z1_flow_temp_target: Zone 1 H/C setpoint value
-  status_prohibit_cool_z1: Zone 1 prohibit cooling status
-  status_prohibit_heating_z1: Zone 1 prohibit heating status
-  heatpump_number_z1_set_room_temperature: Zone 1 room setpoint
-  z1_room_temp_target: Zone 1 room setpoint value
-  z1_room_temp: Zone 1 room temp
+  heatpump_number_z1_set_flow_temperature: Zone 1 H/C Setpoint
+  z1_flow_temp_target: Zone 1 H/C Setpoint Value
+  status_prohibit_cool_z1: Zone 1 Prohibit Cooling Status
+  status_prohibit_heating_z1: Zone 1 Prohibit Heating
+  heatpump_number_z1_set_room_temperature: Zone 1 Room Setpoint
+  z1_room_temp_target: Zone 1 Room Setpoint Value
+  z1_room_temp: Zone 1 Room Temp
   heatpump_number_z2_set_flow_temperature: Zone 2 H/C setpoint
-  z2_flow_temp_target: Zone 2 H/C setpoint value
-  status_prohibit_cool_z2: Zone 2 prohibit cooling status
-  status_prohibit_heating_z2: Zone 2 prohibit heating status
-  heatpump_number_z2_set_room_temperature: Zone 2 room setpoint
-  z2_room_temp_target: Zone 2 room setpoint value
-  z2_room_temp: Zone 2 room temp
-  boiler_flow_temp: boiler flow temp
-  boiler_return_temp: boiler return temp
-  status_booster: booster heater status
-  compressor_frequency: compressor frequency
-  controller_version_text: controller version
-  cool_consumed: cool consumed
-  cool_cop: cool cop
-  cool_delivered: cool delivered
-  status_defrost: defrost state
-  dhw_consumed: dhw consumed
-  dhw_cop: dhw cop
-  dhw_delivered: dhw delivered
-  hp_feed_temp: feed temp
-  flow_rate: flow rate
-  heat_source_text: heat source
-  heatpump: heatpump
-  immersion_heater: immersion heater
-  booster_heater: booster heater
-  immersion_and_booster_heater: immersion and booster heater
-  boiler: boiler
-  heating_consumed: heating consumed
-  heating_cop: heating cop
-  heating_delivered: heating delivered
-  status_holiday: holiday status
-  status_immersion: immersion heater status
-  legionella_prevention_temp: legionella prevention temp
+  z2_flow_temp_target: Zone 2 H/C Setpoint Value
+  status_prohibit_cool_z2: Zone 2 Prohibit Cooling
+  status_prohibit_heating_z2: Zone 2 Prohibit Heating
+  heatpump_number_z2_set_room_temperature: Zone 2 Room Setpoint
+  z2_room_temp_target: Zone 2 Room Setpoint Value
+  z2_room_temp: Zone 2 Room Temp
+  boiler_flow_temp: Boiler Flow Temp
+  boiler_return_temp: Boiler Return Temp
+  status_booster: Booster Heater
+  compressor_frequency: Compressor Frequency
+  controller_version_text: Controller Version
+  cool_consumed: Cool Consumed
+  cool_cop: Cool COP
+  cool_delivered: Cool Delivered
+  status_defrost: Defrost
+  dhw_consumed: DHW Consumed
+  dhw_cop: DHW COP
+  dhw_delivered: DHW Delivered
+  hp_feed_temp: Feed Temp
+  flow_rate: Flow Rate
+  heat_source_text: Heat Source
+  heatpump: Heatpump
+  immersion_heater: Immersion Heater
+  booster_heater: Booster Heater
+  immersion_and_booster_heater: Immersion and Booster Heater
+  boiler: Boiler
+  heating_consumed: Heating Consumed
+  heating_cop: Heating COP
+  heating_delivered: Heating Delivered
+  status_holiday: Holiday Mode
+  status_immersion: Immersion Heater
+  legionella_prevention_temp: Legionella Prevention Temp
   heatpump_select_operating_mode: Operating mode
   heat_target_temperature: Heat Target Temperature
   heat_flow_temperature: Heat Flow Temperature
   heat_compensation_curve: Heat Compensation Curve
   cool_target_temperature: Cool Target Temperature
   cool_flow_temperature: Cool Flow Temperature
-  runtime: operating runtime
-  status_operation: operation status
-  output_power: output power
-  computed_output_power: estimated output power
-  outside_temp: outside temp
-  hp_refrigerant_temp: refrigerant liquid temp
-  hp_refrigerant_condensing_temp: refrigerant condensing temp
-  hp_return_temp: return temp
-  status_water_pump: water pump status
-  status_water_pump_2: water pump 2 status
+  runtime: Operating Runtime
+  status_operation: Operation Mode
+  output_power: Output Power
+  computed_output_power: Estimated Output Power
+  outside_temp: Outside Temp
+  hp_refrigerant_temp: Refrigerant Liquid Temp
+  hp_refrigerant_condensing_temp: Refrigerant Condensing Temp
+  hp_return_temp: Return Temp
+  status_water_pump: Water Pump Status
+  status_water_pump_2: Water Pump 2 Status

@@ -10,7 +10,7 @@ namespace ecodan
             {
             case GetType::DEFROST_STATE:
                 status.DefrostActive = res[3] != 0;
-                publish_state("status_defrost", status.DefrostActive ? "On" : "Off");
+                publish_state("status_defrost", status.DefrostActive);
                 break;
             case GetType::ERROR_STATE:
                 // 1 = refrigerant error code
@@ -19,7 +19,7 @@ namespace ecodan
                 break;
             case GetType::COMPRESSOR_FREQUENCY:
                 status.CompressorFrequency = res[1];
-                publish_state("compressor_frequency", status.CompressorFrequency);
+                publish_state("compressor_frequency", static_cast<float>(status.CompressorFrequency));
                 status.update_output_power_estimation();
                 break;
             case GetType::DHW_STATE:
@@ -28,12 +28,12 @@ namespace ecodan
                 //status.DhwForcedActive = res[7] != 0 && res[5] == 0; // byte 5 -> 7 is normal dhw, 0 - forced dhw
                 //publish_state("status_dhw_forced", status.DhwForcedActive ? "On" : "Off");
 
-                publish_state("heat_source", status.HeatSource);
+                publish_state("heat_source", static_cast<float>(status.HeatSource));
                 break;
             case GetType::HEATING_POWER:
                 status.OutputPower = res[6];
                 //status.BoosterActive = res[4] == 2;
-                publish_state("output_power", status.OutputPower);
+                publish_state("output_power", static_cast<float>(status.OutputPower));
                 publish_state("computed_output_power", status.ComputedOutputPower);
                 //publish_state("status_booster", status.BoosterActive ? "On" : "Off");
                 break;
@@ -100,9 +100,9 @@ namespace ecodan
                 status.In1ThermostatRequest = res[1] != 0;
                 status.In6ThermostatRequest = res[2] != 0;
                 status.In5ThermostatRequest = res[3] != 0;
-                publish_state("status_in1_request", status.In1ThermostatRequest ? "On" : "Off");
-                publish_state("status_in6_request", status.In6ThermostatRequest ? "On" : "Off");
-                publish_state("status_in5_request", status.In5ThermostatRequest ? "On" : "Off");
+                publish_state("status_in1_request", status.In1ThermostatRequest);
+                publish_state("status_in6_request", status.In6ThermostatRequest);
+                publish_state("status_in5_request", status.In5ThermostatRequest);
                 break;
             case GetType::ACTIVE_TIME:
                 status.Runtime = res.get_float24_v2(3);
@@ -118,10 +118,10 @@ namespace ecodan
                 status.ThreeWayValveActive = res[6] != 0;
                 status.WaterPump2Active = res[4] != 0;
                 status.ThreeWayValve2Active = res[7] != 0;                
-                publish_state("status_water_pump", status.WaterPumpActive ? "On" : "Off");
-                publish_state("status_three_way_valve", status.ThreeWayValveActive ? "On" : "Off");
-                publish_state("status_water_pump_2", status.WaterPump2Active ? "On" : "Off");
-                publish_state("status_three_way_valve_2", status.ThreeWayValve2Active ? "On" : "Off");                
+                publish_state("status_water_pump", status.WaterPumpActive);
+                publish_state("status_three_way_valve", status.ThreeWayValveActive);
+                publish_state("status_water_pump_2", status.WaterPump2Active);
+                publish_state("status_three_way_valve_2", status.ThreeWayValve2Active);                
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;                
             case GetType::FLOW_RATE:
@@ -130,9 +130,9 @@ namespace ecodan
                 status.BoosterActive = res[2] != 0;
                 status.ImmersionActive = res[5] != 0;
                 status.FlowRate = res[12];
-                publish_state("flow_rate", status.FlowRate);
-                publish_state("status_booster", status.BoosterActive ? "On" : "Off");
-                publish_state("status_immersion", status.ImmersionActive ? "On" : "Off");
+                publish_state("flow_rate", static_cast<float>(status.FlowRate));
+                publish_state("status_booster", status.BoosterActive);
+                publish_state("status_immersion", status.ImmersionActive);
                 status.update_output_power_estimation();
                 break;
             case GetType::MODE_FLAGS_A:
@@ -160,13 +160,13 @@ namespace ecodan
                 status.ProhibitHeatingZ2 = res[8] != 0;
                 status.ProhibitCoolingZ2 = res[9] != 0;
 
-                publish_state("status_dhw_forced", status.DhwForcedActive ? "On" : "Off");
-                publish_state("status_holiday", status.HolidayMode ? "On" : "Off");
-                publish_state("status_prohibit_dhw", status.ProhibitDhw ? "On" : "Off");
-                publish_state("status_prohibit_heating_z1", status.ProhibitHeatingZ1 ? "On" : "Off");
-                publish_state("status_prohibit_cool_z1", status.ProhibitCoolingZ1 ? "On" : "Off");
-                publish_state("status_prohibit_heating_z2", status.ProhibitHeatingZ2 ? "On" : "Off");
-                publish_state("status_prohibit_cool_z2", status.ProhibitCoolingZ2 ? "On" : "Off");
+                publish_state("status_dhw_forced", status.DhwForcedActive);
+                publish_state("status_holiday", status.HolidayMode);
+                publish_state("status_prohibit_dhw", status.ProhibitDhw);
+                publish_state("status_prohibit_heating_z1", status.ProhibitHeatingZ1);
+                publish_state("status_prohibit_cool_z1", status.ProhibitCoolingZ1);
+                publish_state("status_prohibit_heating_z2", status.ProhibitHeatingZ2);
+                publish_state("status_prohibit_cool_z2", status.ProhibitCoolingZ2);
                 break;
             case GetType::ENERGY_USAGE:
                 status.EnergyConsumedHeating = res.get_float24(4);
@@ -194,7 +194,7 @@ namespace ecodan
             case GetType::HARDWARE_CONFIGURATION:
                 // byte 6 = ftc, ft2b , ftc4, ftc5, ftc6
                 status.Controller = res[6];
-                publish_state("controller_version", status.Controller);
+                publish_state("controller_version", static_cast<float>(status.Controller));
                 break;
             default:
                 ESP_LOGI(TAG, "Unknown response type received on serial port: %u", static_cast<uint8_t>(res.payload_type<GetType>()));
