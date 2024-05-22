@@ -79,6 +79,7 @@ logger:
     number: DEBUG
     climate: DEBUG
     component: ERROR
+    ecodan.component: ERROR
 
 # Enable Web server.
 web_server:
