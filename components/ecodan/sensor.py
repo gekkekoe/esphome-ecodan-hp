@@ -132,7 +132,7 @@ CONFIG_SCHEMA = cv.Schema(
             state_class=STATE_CLASS_MEASUREMENT,
         ),        
         cv.Optional("flow_rate"): sensor.sensor_schema(
-            unit_of_measurement="L/m",
+            unit_of_measurement="L/min",
             icon="mdi:waves-arrow-right",
             device_class=DEVICE_CLASS_VOLUME_FLOW_RATE,
             state_class=STATE_CLASS_MEASUREMENT,
