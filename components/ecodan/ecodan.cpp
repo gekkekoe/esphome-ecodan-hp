@@ -27,8 +27,7 @@ namespace ecodan
     void EcodanHeatpump::publish_state(const std::string& sensorKey, float sensorValue) {
         auto sensor_it = sensors.find(sensorKey);
         if (sensor_it != sensors.end()) {
-            if (sensor_it->second->state != sensorValue)
-                sensor_it->second->publish_state(sensorValue);
+            sensor_it->second->publish_state(sensorValue);
         } 
         else 
         {
@@ -39,8 +38,7 @@ namespace ecodan
     void EcodanHeatpump::publish_state(const std::string& sensorKey, const std::string& sensorValue) {        
         auto textSensor_it = textSensors.find(sensorKey);
         if (textSensor_it != textSensors.end()) {
-            if (textSensor_it->second->state != sensorValue)
-                textSensor_it->second->publish_state(sensorValue);
+            textSensor_it->second->publish_state(sensorValue);
         }
         else 
         {
@@ -51,8 +49,7 @@ namespace ecodan
     void EcodanHeatpump::publish_state(const std::string& sensorKey, bool sensorValue) {
         auto binarySensor_it = binarySensors.find(sensorKey);
         if (binarySensor_it != binarySensors.end()) {
-            if (binarySensor_it->second->state != sensorValue)
-                binarySensor_it->second->publish_state(sensorValue);
+            binarySensor_it->second->publish_state(sensorValue);
         }
         else 
         {
