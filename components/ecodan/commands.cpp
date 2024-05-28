@@ -54,48 +54,36 @@ namespace ecodan
 
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
         
-        if (zone == SetZone::ZONE_1) {
-            cmd[1] = 0x80;
-            cmd.set_float16(newTemp, 10);
-        }
-        else if (zone == SetZone::ZONE_2) {
-            cmd[2] = 0x02;
-            cmd.set_float16(newTemp, 12);
-        }
-        
+        uint8_t flag = 0;
         switch (status.HeatingCoolingMode)
         {
         case Status::HpMode::HEAT_FLOW_TEMP:
         case Status::HpMode::HEAT_ROOM_TEMP:
-            cmd[6] = 1;
+            flag = 1;
             break;
         case Status::HpMode::COOL_ROOM_TEMP:
-            cmd[6] = 3;
+            flag = 3;
             break;
         case Status::HpMode::COOL_FLOW_TEMP:
-            cmd[6] = 4;
+            flag = 4;
             break;
         default:
-            cmd[6] = 0;
+            flag = 0;
             break;
         }
 
-        // cmd[1] = SET_SETTINGS_FLAG_ZONE_TEMPERATURE;
-        // cmd[2] = static_cast<uint8_t>(zone);
+        if (zone == SetZone::ZONE_1) {
+            cmd[1] = 0x80;
+            cmd[6] = flag;
+            cmd.set_float16(newTemp, 10);
+        }
+        else if (zone == SetZone::ZONE_2) {
+            cmd[2] = 0x02;
+            cmd[7] = flag;
+            cmd.set_float16(newTemp, 12);
+        }
         
-        // auto flag = status.HeatingCoolingMode == Status::HpMode::COOL_FLOW_TEMP
-        //     ? static_cast<uint8_t>(Status::HpMode::COOL_FLOW_TEMP) : static_cast<uint8_t>(Status::HpMode::HEAT_FLOW_TEMP);
-
-        // if (zone == SetZone::BOTH || zone == SetZone::ZONE_1) {
-        //     cmd[6] = flag;
-        //     cmd.set_float16(newTemp, 10);
-        // }
-            
-        // if (zone == SetZone::BOTH || zone == SetZone::ZONE_2) {
-        //     cmd[7] = flag;
-        //     cmd.set_float16(newTemp, 12);
-        // }
-        // ESP_LOGE(TAG, cmd.debug_dump_packet().c_str());
+        // ESP_LOGW(TAG, cmd.debug_dump_packet().c_str());
         schedule_cmd(cmd);
     }
 
