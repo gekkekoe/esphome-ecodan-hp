@@ -13,6 +13,26 @@ binary_sensor:
       id: status_water_pump_2
       name: ${status_water_pump_2}
 
+climate:
+  - platform: thermostat
+    name: ${heatpump_climate_z2_room_climate}
+    id: heatpump_climate_z2_room_climate
+    visual:
+      min_temperature: 8.0
+      max_temperature: 28.0
+      temperature_step: 0.5
+    sensor: z2_flow_temp_target
+    min_heating_off_time: 60s
+    min_heating_run_time: 60s
+    min_idle_time: 30s
+    heat_action:
+      - logger.log: "heat"
+    idle_action:
+      - logger.log: "idle"
+    on_state:
+      - lambda: |-
+          id(ecodan_instance).set_room_temperature(x.target_temperature, esphome::ecodan::SetZone::ZONE_2);  
+
 number:
   - platform: template
     name: ${heatpump_number_z2_set_room_temperature}

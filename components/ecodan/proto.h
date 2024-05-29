@@ -90,7 +90,6 @@ namespace ecodan
         UNKNOWN_0x1E = 0x1E,
         UNKNOWN_0x1F = 0x1F,
         UNKNOWN_0x20 = 0x20,
-        UNKNOWN_0x26 = 0x26,
         MODE_FLAGS_A = 0x26,
         UNKNOWN_0x27 = 0x27, // dhw eco mode setting        
         MODE_FLAGS_B = 0x28,        
