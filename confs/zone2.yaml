@@ -31,7 +31,8 @@ climate:
       - logger.log: "idle"
     on_state:
       - lambda: |-
-          id(ecodan_instance).set_room_temperature(x.target_temperature, esphome::ecodan::SetZone::ZONE_2);
+          if (id(z2_room_temp_target).state != x.target_temperature)
+            id(ecodan_instance).set_room_temperature(x.target_temperature, esphome::ecodan::SetZone::ZONE_2);  
   - platform: thermostat
     name: ${heatpump_climate_z2_flow_temperature}
     id: heatpump_climate_z2_flow_temperature
@@ -49,7 +50,8 @@ climate:
       - logger.log: "idle"
     on_state:
       - lambda: |-
-          id(ecodan_instance).set_flow_target_temperature(x.target_temperature, esphome::ecodan::SetZone::ZONE_2);   
+          if (id(z2_flow_temp_target).state != x.target_temperature)
+            id(ecodan_instance).set_flow_target_temperature(x.target_temperature, esphome::ecodan::SetZone::ZONE_2);        
 
 number:
   - platform: template

@@ -19,7 +19,8 @@ climate:
       - logger.log: "idle"
     on_state:
       - lambda: |-
-          id(ecodan_instance).set_dhw_target_temperature(x.target_temperature);  
+          if (id(dhw_flow_temp_target).state != x.target_temperature)      
+            id(ecodan_instance).set_dhw_target_temperature(x.target_temperature);  
 
 number:
   - platform: template
