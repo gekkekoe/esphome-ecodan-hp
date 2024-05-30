@@ -21,6 +21,24 @@ climate:
       min_temperature: 8.0
       max_temperature: 28.0
       temperature_step: 0.5
+    sensor: z2_room_temp
+    min_heating_off_time: 60s
+    min_heating_run_time: 60s
+    min_idle_time: 30s
+    heat_action:
+      - logger.log: "heat"
+    idle_action:
+      - logger.log: "idle"
+    on_state:
+      - lambda: |-
+          id(ecodan_instance).set_room_temperature(x.target_temperature, esphome::ecodan::SetZone::ZONE_2);
+  - platform: thermostat
+    name: ${heatpump_climate_z2_flow_temperature}
+    id: heatpump_climate_z2_flow_temperature
+    visual:
+      min_temperature: 5.0
+      max_temperature: 60.0
+      temperature_step: 0.5
     sensor: z2_flow_temp_target
     min_heating_off_time: 60s
     min_heating_run_time: 60s
@@ -31,7 +49,7 @@ climate:
       - logger.log: "idle"
     on_state:
       - lambda: |-
-          id(ecodan_instance).set_room_temperature(x.target_temperature, esphome::ecodan::SetZone::ZONE_2);  
+          id(ecodan_instance).set_flow_target_temperature(x.target_temperature, esphome::ecodan::SetZone::ZONE_2);   
 
 number:
   - platform: template
