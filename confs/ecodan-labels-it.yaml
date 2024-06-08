@@ -23,37 +23,37 @@ substitutions:
   of: "Spento"
   normal: Normale
   eco: Eco
-  version: ESP Version
-  led_brightness: LED Brightness
+  version: ESP Versione
+  led_brightness: LED Luminosità
   led_switch: LED
-  heatpump_switch_force_dhw: Force ACS
-  heatpump_switch_power_mode: Heatpump
-  heatpump_switch_holiday: Holiday Mode
-  wifi_signal_proc: WiFi Signal %
-  wifi_signal_db: WiFi Signal dB
-  heatpump_number_z1_set_flow_temperature: Zone 1 H/C Setpoint
-  z1_flow_temp_target: Zone 1 H/C Setpoint Value
-  status_prohibit_cool_z1: Zone 1 Prohibit Cooling Status
-  status_prohibit_heating_z1: Zone 1 Prohibit Heating
-  heatpump_number_z1_set_room_temperature: Zone 1 Room Setpoint
-  heatpump_climate_z1_room_climate: Zone 1 Climate
-  heatpump_climate_z1_flow_temperature: Zone 1 flow Climate
-  z1_room_temp_target: Zone 1 Room Setpoint Value
-  z1_room_temp: Zone 1 Room Temp
-  heatpump_number_z2_set_flow_temperature: Zone 2 H/C setpoint
-  z2_flow_temp_target: Zone 2 H/C Setpoint Value
-  status_prohibit_cool_z2: Zone 2 Prohibit Cooling
-  status_prohibit_heating_z2: Zone 2 Prohibit Heating
-  heatpump_number_z2_set_room_temperature: Zone 2 Room Setpoint
-  heatpump_climate_z2_room_climate: Zone 2 Climate
-  heatpump_climate_z2_flow_temperature: Zone 2 flow Climate
-  z2_room_temp_target: Zone 2 Room Setpoint Value
-  z2_room_temp: Zone 2 Room Temp
-  boiler_flow_temp: Boiler Flow Temp
-  boiler_return_temp: Boiler Return Temp
-  status_booster: Booster Heater
-  compressor_frequency: Compressor Frequency
-  controller_version_text: Controller Version
+  heatpump_switch_force_dhw: Forza ACS
+  heatpump_switch_power_mode: PDC
+  heatpump_switch_holiday: Modalità Vacanza
+  wifi_signal_proc: WiFi Segnale %
+  wifi_signal_db: WiFi Segnale dB
+  heatpump_number_z1_set_flow_temperature: Zona 1 C/F Setpoint
+  z1_flow_temp_target: Zona 1 C/F T. Mandata
+  status_prohibit_cool_z1: Zona 1 Raffreddamento Proibito
+  status_prohibit_heating_z1: Zona 1 Riscaldamento Proibito
+  heatpump_number_z1_set_room_temperature: Zona 1 T. Ambiente
+  heatpump_climate_z1_room_climate: Zona 1 Climate
+  heatpump_climate_z1_flow_temperature: Zona 1 Mandata Climate
+  z1_room_temp_target: Zona 1 T. Ambiente Desiderata
+  z1_room_temp: Zona 1 T. Ambiente
+  heatpump_number_z2_set_flow_temperature: Zona 2 C/F setpoint
+  z2_flow_temp_target: Zona 2 C/F T. Mandata
+  status_prohibit_cool_z2: Zona 2 Raffreddamento Proibito
+  status_prohibit_heating_z2: Zona 2 Riscaldamento Proibito
+  heatpump_number_z2_set_room_temperature: Zona 2 T. Ambiente
+  heatpump_climate_z2_room_climate: Zona 2 Climate
+  heatpump_climate_z2_flow_temperature: Zona 2 flow Climate
+  z2_room_temp_target: Zona 2 T. Ambiente Desiderata
+  z2_room_temp: Zona 2 Ambiente Temp
+  boiler_flow_temp: Caldaia T. Mandata
+  boiler_return_temp: Caldaia T. Ritorno
+  status_booster: Riscaldatore Booster
+  compressor_frequency: Frequenza Compressore
+  controller_version_text: Versione Controller
   cool_consumed: Cool Consumed
   cool_cop: Cool COP
   cool_delivered: Cool Delivered
@@ -68,7 +68,7 @@ substitutions:
   immersion_heater: Immersion Heater
   booster_heater: Booster Heater
   immersion_and_booster_heater: Immersion and Booster Heater
-  boiler: Boiler
+  boiler: Caldaia
   heating_consumed: Heating Consumed
   heating_cop: Heating COP
   heating_delivered: Heating Delivered
