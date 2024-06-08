@@ -1,32 +1,32 @@
 substitutions:
-  status_three_way_valve: 3-way Valve
-  status_three_way_valve_2: 3-way Valve 2
-  heatpump_climate_dhw: DHW Climate
-  dhw_temp: DHW Current Temp
-  dhw_secondary_temp: DHW Secondary Temp
-  status_dhw_forced: DHW Forced
-  dhw_flow_temp_drop: DHW Max Temp Drop
-  status_prohibit_dhw: DHW Prohibit
-  heatpump_number_set_dhw_temperature: DHW Setpoint
-  dhw_flow_temp_target: DHW Setpoint Value
-  status_dhw: DHW
+  status_three_way_valve: Valvola 3 Vie
+  status_three_way_valve_2: Valvola 3 Vie 2
+  heatpump_climate_dhw: ACS T. Attuale
+  dhw_temp: ACS T. Superiore
+  dhw_secondary_temp: ACS T. Inferiore
+  status_dhw_forced: ACS Forzata
+  dhw_flow_temp_drop: ACS Isteresi
+  status_prohibit_dhw: ACS Proibita
+  heatpump_number_set_dhw_temperature: ACS T. Desiderata
+  dhw_flow_temp_target: ACS T. Mandata
+  status_dhw: ACS
   esp_ip: ESP IP
-  internal_esp_temperature: ESP Internal Temperature
+  internal_esp_temperature: ESP T. Interna
   esp_sidd: ESP SSID
   uptime: ESP Uptime
-  esp_version: ESP Version
-  restart_button: ESP Restart
-  status_in1_request: In1 Thermostat
-  status_in6_request: In6 Thermostat 2
-  status_in5_request: In5 Outdoor Thermostat
-  heatpump_select_dhw_mode: DHW Mode
-  of: "Off"
-  normal: Normal
+  esp_version: ESP Versione
+  restart_button: ESP Riavvio
+  status_in1_request: Termost. Zona 1 (IN1)
+  status_in6_request: Termost. Zona 2 (IN6)
+  status_in5_request: Termost.Esterno (IN5)
+  heatpump_select_dhw_mode: ACS Modo
+  of: "Spento"
+  normal: Normale
   eco: Eco
   version: ESP Version
   led_brightness: LED Brightness
   led_switch: LED
-  heatpump_switch_force_dhw: Force DHW
+  heatpump_switch_force_dhw: Force ACS
   heatpump_switch_power_mode: Heatpump
   heatpump_switch_holiday: Holiday Mode
   wifi_signal_proc: WiFi Signal %
@@ -58,9 +58,9 @@ substitutions:
   cool_cop: Cool COP
   cool_delivered: Cool Delivered
   status_defrost: Defrost
-  dhw_consumed: DHW Consumed
-  dhw_cop: DHW COP
-  dhw_delivered: DHW Delivered
+  dhw_consumed: ACS Consumed
+  dhw_cop: ACS COP
+  dhw_delivered: ACS Delivered
   hp_feed_temp: Feed Temp
   flow_rate: Flow Rate
   heat_source_text: Heat Source
