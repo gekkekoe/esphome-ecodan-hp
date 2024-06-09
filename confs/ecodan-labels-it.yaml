@@ -18,8 +18,8 @@ substitutions:
   restart_button: ESP Riavvio
   status_in1_request: Termost. Zona 1 (IN1)
   status_in6_request: Termost. Zona 2 (IN6)
-  status_in5_request: Termost.Esterno (IN5)
-  heatpump_select_dhw_mode: ACS Modo
+  status_in5_request: Termost. Esterno (IN5)
+  heatpump_select_dhw_mode: Modalità ACS
   of: "Spento"
   normal: Normale
   eco: Eco
@@ -37,7 +37,7 @@ substitutions:
   status_prohibit_heating_z1: Zona 1 Riscaldamento Proibito
   heatpump_number_z1_set_room_temperature: Zona 1 T. Ambiente
   heatpump_climate_z1_room_climate: Zona 1 Climate
-  heatpump_climate_z1_flow_temperature: Zona 1 Mandata Climate
+  heatpump_climate_z1_flow_temperature: Zona 1 T. Mandata
   z1_room_temp_target: Zona 1 T. Ambiente Desiderata
   z1_room_temp: Zona 1 T. Ambiente
   heatpump_number_z2_set_flow_temperature: Zona 2 C/F setpoint
@@ -46,48 +46,48 @@ substitutions:
   status_prohibit_heating_z2: Zona 2 Riscaldamento Proibito
   heatpump_number_z2_set_room_temperature: Zona 2 T. Ambiente
   heatpump_climate_z2_room_climate: Zona 2 Climate
-  heatpump_climate_z2_flow_temperature: Zona 2 flow Climate
+  heatpump_climate_z2_flow_temperature: Zona 2 T. Mandata
   z2_room_temp_target: Zona 2 T. Ambiente Desiderata
-  z2_room_temp: Zona 2 Ambiente Temp
+  z2_room_temp: Zona 2 T. Ambiente
   boiler_flow_temp: Caldaia T. Mandata
   boiler_return_temp: Caldaia T. Ritorno
   status_booster: Riscaldatore Booster
   compressor_frequency: Frequenza Compressore
   controller_version_text: Versione Controller
-  cool_consumed: Cool Consumed
-  cool_cop: Cool COP
-  cool_delivered: Cool Delivered
-  status_defrost: Defrost
-  dhw_consumed: ACS Consumed
-  dhw_cop: ACS COP
-  dhw_delivered: ACS Delivered
-  hp_feed_temp: Feed Temp
-  flow_rate: Flow Rate
-  heat_source_text: Heat Source
-  heatpump: Heatpump
-  immersion_heater: Immersion Heater
-  booster_heater: Booster Heater
-  immersion_and_booster_heater: Immersion and Booster Heater
+  cool_consumed: Energia Raffreddamento Utilizzata
+  cool_cop: COP Raffreddamento
+  cool_delivered: Energia Raffreddamento Prodotta
+  status_defrost: Sbrinamento
+  dhw_consumed: Energia ACS Utilizzata
+  dhw_cop: COP ACS
+  dhw_delivered: Energia ACS Prodotta
+  hp_feed_temp: T. Mandata PDC
+  flow_rate: Portata
+  heat_source_text: Sorgente Riscaldamento
+  heatpump: PDC
+  immersion_heater: Riscaldatore Immersione
+  booster_heater: Riscaldatore Booster
+  immersion_and_booster_heater: Riscaldatore Immersione e Booster
   boiler: Caldaia
-  heating_consumed: Heating Consumed
-  heating_cop: Heating COP
-  heating_delivered: Heating Delivered
-  status_holiday: Holiday Mode
-  status_immersion: Immersion Heater
-  legionella_prevention_temp: Legionella Prevention Temp
-  heatpump_select_operating_mode: Operating mode
-  heat_target_temperature: Heat Target Temperature
-  heat_flow_temperature: Heat Flow Temperature
-  heat_compensation_curve: Heat Compensation Curve
-  cool_target_temperature: Cool Target Temperature
-  cool_flow_temperature: Cool Flow Temperature
-  runtime: Operating Runtime
-  status_operation: Operation Mode
-  output_power: Output Power
-  computed_output_power: Estimated Output Power
-  outside_temp: Outside Temp
-  hp_refrigerant_temp: Refrigerant Liquid Temp
-  hp_refrigerant_condensing_temp: Refrigerant Condensing Temp
-  hp_return_temp: Return Temp
-  status_water_pump: Water Pump Status
-  status_water_pump_2: Water Pump 2 Status
+  heating_consumed: Energia Riscaldamento Utilizzata
+  heating_cop: COP Riscaldamento
+  heating_delivered: Energia Riscaldamento Prodotta
+  status_holiday: Modalità Vacanza
+  status_immersion: Riscaldatore Immersione
+  legionella_prevention_temp: T. Prevenzione Legionella
+  heatpump_select_operating_mode: Modalità PDC
+  heat_target_temperature: Riscaldamento T. Desiderata
+  heat_flow_temperature: Riscaldamento T. Mandata Fissa
+  heat_compensation_curve: Riscaldamento Curva Compensazione
+  cool_target_temperature: Raffreddamento T. Desiderata
+  cool_flow_temperature: Raffreddamento T. Mandata Fissa
+  runtime: Durata Funzionamento
+  status_operation: Modalità Funzionamento
+  output_power: Energia Prodotta
+  computed_output_power: Stima Energia Prodotta
+  outside_temp: T. Esterna
+  hp_refrigerant_temp: T. Mandata Liquido Refrigerante
+  hp_refrigerant_condensing_temp: T. Condensazione Liquido Refrigerante
+  hp_return_temp: T. Ritorno Liquido Refrigerante
+  status_water_pump: Pompa Circolazione
+  status_water_pump_2: Pompa Circolazione 2
