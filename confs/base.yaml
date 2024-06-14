@@ -1,26 +1,19 @@
 ####################
 # heatpump commands
 
-climate:
-  - platform: thermostat
-    name: ${heatpump_climate_dhw}
-    id: heatpump_climate_dhw
-    visual:
-      min_temperature: 40
-      max_temperature: 60.0
-      temperature_step: 0.5
-    sensor: dhw_temp
-    min_heating_off_time: 60s
-    min_heating_run_time: 60s
-    min_idle_time: 30s
-    heat_action:
-      - logger.log: "heat"
-    idle_action:
-      - logger.log: "idle"
-    on_state:
-      - lambda: |-
-          if (id(dhw_flow_temp_target).state != x.target_temperature)      
-            id(ecodan_instance).set_dhw_target_temperature(x.target_temperature);  
+# climate:
+#   - platform: ecodan
+#     heatpump_climate_dhw:
+#       name: ${heatpump_climate_dhw}
+#       id: heatpump_climate_dhw
+#       get_status_func: |-
+#         return id(ecodan_instance).get_status();
+#       target_temp_func: |-
+#         id(ecodan_instance).set_dhw_target_temperature(x);
+#       heating_switch_func: |-
+#         ;
+#       current_temp_func: |-
+#         return id(ecodan_instance).get_status().DhwTemperature;
 
 number:
   - platform: template

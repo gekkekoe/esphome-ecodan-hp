@@ -8,44 +8,44 @@ binary_sensor:
       name: ${status_prohibit_cool_z1}
 
 climate:
-  - platform: thermostat
-    name: ${heatpump_climate_z1_room_climate}
-    id: heatpump_climate_z1_room_climate
-    visual:
-      min_temperature: 8.0
-      max_temperature: 28.0
-      temperature_step: 0.5
-    sensor: z1_room_temp
-    min_heating_off_time: 60s
-    min_heating_run_time: 60s
-    min_idle_time: 30s
-    heat_action:
-      - logger.log: "heat"
-    idle_action:
-      - logger.log: "idle"
-    on_state:
-      - lambda: |-
-          if (id(z1_room_temp_target).state != x.target_temperature)
-            id(ecodan_instance).set_room_temperature(x.target_temperature, esphome::ecodan::SetZone::ZONE_1);  
-  - platform: thermostat
-    name: ${heatpump_climate_z1_flow_temperature}
-    id: heatpump_climate_z1_flow_temperature
-    visual:
-      min_temperature: 5.0
-      max_temperature: 60.0
-      temperature_step: 0.5
-    sensor: z1_flow_temp_target
-    min_heating_off_time: 60s
-    min_heating_run_time: 60s
-    min_idle_time: 30s
-    heat_action:
-      - logger.log: "heat"
-    idle_action:
-      - logger.log: "idle"
-    on_state:
-      - lambda: |-
-          if (id(z1_flow_temp_target).state != x.target_temperature)
-            id(ecodan_instance).set_flow_target_temperature(x.target_temperature, esphome::ecodan::SetZone::ZONE_1);            
+  - platform: ecodan
+    heatpump_climate_z1:
+      name: ${heatpump_climate_z1}
+      id: heatpump_climate_z1
+      get_status_func: |-
+        return id(ecodan_instance).get_status();
+      target_temp_func: |-
+        auto& status = id(ecodan_instance).get_status();
+        auto mode = status.HeatingCoolingMode;
+        switch (mode) {
+            case esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP:
+            case esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP:
+              id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::SetZone::ZONE_1);
+            break;
+            case esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP:
+            case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
+              id(ecodan_instance).set_room_temperature(x, esphome::ecodan::SetZone::ZONE_1);
+            break;                    
+        }
+      heating_switch_func: |-
+        id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE));
+      cooling_switch_func: |-
+        id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP));
+      current_temp_func: |-
+        auto& status = id(ecodan_instance).get_status();
+        auto mode = status.HeatingCoolingMode;
+        switch (mode) {
+            case esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP:
+            case esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP:
+              return status.Zone1FlowTemperatureSetPoint;
+            break;
+            case esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP:
+            case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
+              return status.Zone1RoomTemperature;
+            break;
+            default:
+              return 0;                    
+        }
 
 number:
   - platform: template

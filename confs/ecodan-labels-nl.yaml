@@ -36,8 +36,7 @@ substitutions:
   status_prohibit_cool_z1: Status zone 1 verboden koelen
   status_prohibit_heating_z1: Status zone 1 verboden verwarmen
   heatpump_number_z1_set_room_temperature: Zone 1 ruimte setpoint
-  heatpump_climate_z1_room_climate: Zone 1 Thermostaat
-  heatpump_climate_z1_flow_temperature: Zone 1 flow Thermostaat
+  heatpump_climate_z1: Zone 1 Thermostaat
   z1_room_temp_target: Zone 1 ruimte setpoint waarde
   z1_room_temp: Zone 1 ruimte temp
   heatpump_number_z2_set_flow_temperature: Zone 2 flow setpoint
@@ -45,8 +44,7 @@ substitutions:
   status_prohibit_cool_z2: Status zone 2 verboden koelen
   status_prohibit_heating_z2: Status zone 2 verboden verwarmen
   heatpump_number_z2_set_room_temperature: Zone 2 ruimte setpoint
-  heatpump_climate_z2_room_climate: Zone 2 Thermostaat
-  heatpump_climate_z2_flow_temperature: Zone 2 flow Thermostaat
+  heatpump_climate_z2: Zone 2 Thermostaat
   z2_room_temp_target: Zone 2 ruimte setpoint waarde
   z2_room_temp: Zone 2 ruimte temp
   boiler_flow_temp: Boiler aanvoer temp

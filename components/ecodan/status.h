@@ -75,6 +75,7 @@ namespace ecodan
 
         enum class HpMode : uint8_t
         {
+            OFF = 255,
             HEAT_ROOM_TEMP = 0,
             HEAT_FLOW_TEMP = 1,
             HEAT_COMPENSATION_CURVE = 2,
@@ -87,7 +88,7 @@ namespace ecodan
         OperationMode Operation;
         bool HolidayMode;
         DhwMode HotWaterMode;
-        HpMode HeatingCoolingMode;
+        HpMode HeatingCoolingMode = HpMode::OFF;
 
         // prohibit flags
         bool ProhibitDhw;

@@ -1,5 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
+from esphome.components import climate
 from esphome import pins
 from esphome.const import CONF_ID, CONF_RX_PIN, CONF_TX_PIN
 
@@ -9,9 +10,10 @@ AUTO_LOAD = ["binary_sensor", "sensor", "text_sensor"]
 
 CONF_ECODAN_ID = "ecodan_id"
 
-empty_sensor_hub_ns = cg.esphome_ns.namespace('ecodan')
+hub_ns = cg.esphome_ns.namespace('ecodan')
 
-ECODAN = empty_sensor_hub_ns.class_('EcodanHeatpump', cg.PollingComponent)
+ECODAN = hub_ns.class_('EcodanHeatpump', cg.PollingComponent)
+ECODAN_CLIMATE = hub_ns.class_('EcodanClimate', climate.Climate, cg.Component)
 
 CONFIG_SCHEMA = cv.Schema(
     {
