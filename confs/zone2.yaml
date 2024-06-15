@@ -21,6 +21,21 @@ climate:
       cooling_available: true
       get_status_func: |-
         return id(ecodan_instance).get_status();
+      get_target_temp_func: |-
+        auto& status = id(ecodan_instance).get_status();
+        auto mode = status.HeatingCoolingMode;
+        switch (mode) {
+            case esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP:
+            case esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP:
+              return status.Zone2FlowTemperatureSetPoint;
+            break;
+            case esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP:
+            case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
+              return status.Zone2SetTemperature;
+            break;
+            default:
+              return NAN;
+        }      
       target_temp_func: |-
         auto& status = id(ecodan_instance).get_status();
         auto mode = status.HeatingCoolingMode;
@@ -51,7 +66,7 @@ climate:
               return status.Zone2RoomTemperature;
             break;
             default:
-              return 0;                    
+              return NAN;                    
         } 
 
 number:

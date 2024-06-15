@@ -8,6 +8,8 @@ climate:
       id: heatpump_climate_dhw
       get_status_func: |-
         return id(ecodan_instance).get_status();
+      get_target_temp_func: |-
+        return id(ecodan_instance).get_status().DhwFlowTemperatureSetPoint; 
       target_temp_func: |-
         id(ecodan_instance).set_dhw_target_temperature(x);
       current_temp_func: |-

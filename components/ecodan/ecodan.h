@@ -111,7 +111,8 @@ namespace ecodan
 
         // set fuctions for thermostat
         void set_target_temp_func(std::function<void(float)> target_temp_func) { set_target_temp = target_temp_func; };
-        void get_current_temp_func(std::function<float(void)> current_temp_func) { get_current_temp = current_temp_func; };
+        void set_get_current_temp_func(std::function<float(void)> current_temp_func) { get_current_temp = current_temp_func; };
+        void set_get_target_temp_func(std::function<float(void)> target_temp_func) { get_target_temp = target_temp_func; };
         void set_cooling_func(std::function<void(void)> switch_cooling_func) { set_cooling_mode = switch_cooling_func; };
         void set_heating_func(std::function<void(void)> switch_heating_func) { set_heating_mode = switch_heating_func; };
         void set_status(std::function<const ecodan::Status& (void)> get_status_func) { get_status = get_status_func; };
@@ -119,6 +120,7 @@ namespace ecodan
     private:
         std::function<void(float)> set_target_temp = nullptr;
         std::function<float(void)> get_current_temp = nullptr;
+        std::function<float(void)> get_target_temp = nullptr;
         std::function<void(void)> set_cooling_mode = nullptr;
         std::function<void(void)> set_heating_mode = nullptr;
         std::function<const ecodan::Status& (void)> get_status = nullptr;

@@ -22,7 +22,16 @@ namespace ecodan
                 should_publish = true;
             }
         }
-        
+
+        // handle update from other sources than this component
+        if (this->get_target_temp != nullptr) {
+            float target_temp = this->get_target_temp();
+            if (this->target_temperature != target_temp && !std::isnan(target_temp)) {
+                this->target_temperature = target_temp;
+                should_publish = true;
+            }
+        }
+
         if (this->cooling_available) {
             auto& status = this->get_status();
             auto mode = status.HeatingCoolingMode;
