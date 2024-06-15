@@ -7,7 +7,6 @@ substitutions:
   status_dhw_forced: DHW Forced
   dhw_flow_temp_drop: DHW Max Temp Drop
   status_prohibit_dhw: DHW Prohibit
-  heatpump_number_set_dhw_temperature: DHW Setpoint
   dhw_flow_temp_target: DHW Setpoint Value
   status_dhw: DHW
   esp_ip: ESP IP
@@ -31,11 +30,9 @@ substitutions:
   heatpump_switch_holiday: Holiday Mode
   wifi_signal_proc: WiFi Signal %
   wifi_signal_db: WiFi Signal dB
-  heatpump_number_z1_set_flow_temperature: Zone 1 H/C Setpoint
   z1_flow_temp_target: Zone 1 H/C Setpoint Value
   status_prohibit_cool_z1: Zone 1 Prohibit Cooling Status
   status_prohibit_heating_z1: Zone 1 Prohibit Heating
-  heatpump_number_z1_set_room_temperature: Zone 1 Room Setpoint
   heatpump_climate_z1: Zone 1 Climate
   z1_room_temp_target: Zone 1 Room Setpoint Value
   z1_room_temp: Zone 1 Room Temp

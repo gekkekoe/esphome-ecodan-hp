@@ -33,7 +33,13 @@ namespace ecodan
         }
 
         auto& status = this->get_status();
-        if (this->cooling_available) {
+        if (this->dhw_climate_mode) {
+            if (this->mode != climate::ClimateMode::CLIMATE_MODE_HEAT) {
+                this->mode = climate::ClimateMode::CLIMATE_MODE_HEAT;
+                should_publish = true;
+            }            
+        }
+        else {
             auto mode = status.HeatingCoolingMode;
             if (mode != ecodan::Status::HpMode::OFF) {
                 
@@ -66,29 +72,26 @@ namespace ecodan
                 }
             }
         }
-        else {
-            if (this->mode != climate::ClimateMode::CLIMATE_MODE_HEAT) {
-                this->mode = climate::ClimateMode::CLIMATE_MODE_HEAT;
-                should_publish = true;
+
+        auto new_action = climate::CLIMATE_ACTION_IDLE;
+        if (this->dhw_climate_mode) {
+            if (status.Operation == Status::OperationMode::DHW_ON)
+                new_action = climate::CLIMATE_ACTION_HEATING;
+        }
+        else 
+        {
+            switch (status.Operation)
+            {
+                case Status::OperationMode::HEAT_ON:
+                case Status::OperationMode::FROST_PROTECT:
+                        new_action = climate::CLIMATE_ACTION_HEATING;
+                    break;
+                case ecodan::Status::OperationMode::COOL_ON:
+                        new_action = climate::CLIMATE_ACTION_COOLING;
+                    break;
             }
         }
 
-        auto new_action = climate::CLIMATE_ACTION_IDLE;
-        switch (status.Operation)
-        {
-            case Status::OperationMode::HEAT_ON:
-            case Status::OperationMode::FROST_PROTECT:
-                new_action = climate::CLIMATE_ACTION_HEATING;
-                break;
-            case ecodan::Status::OperationMode::COOL_ON:
-                if (this->cooling_available)
-                    new_action = climate::CLIMATE_ACTION_COOLING;
-                break;
-            case Status::OperationMode::DHW_ON:
-                if (!this->cooling_available)
-                    new_action = climate::CLIMATE_ACTION_HEATING;
-            break;
-        }
 
         if (this->action != new_action) {
             this->action = new_action;
@@ -154,9 +157,9 @@ namespace ecodan
         auto traits = climate::ClimateTraits();
         traits.set_supports_current_temperature(get_current_temp != nullptr);
         traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT});
-        if (this->cooling_available) {
+        if (!this->dhw_climate_mode) 
             traits.add_supported_mode(climate::CLIMATE_MODE_COOL);
-        }
+
         traits.set_supports_action(true);
         traits.set_visual_min_temperature(5);
         traits.set_visual_max_temperature(60);

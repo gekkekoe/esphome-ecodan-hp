@@ -21,7 +21,6 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Optional("heating_switch_func"): cv.string,
                 cv.Optional("cooling_switch_func"): cv.string,
                 cv.Optional("current_temp_func"): cv.string,
-                cv.Optional("cooling_available"): cv.boolean,
             }).extend(cv.polling_component_schema('100ms')),
         cv.Optional("heatpump_climate_z2"): climate.CLIMATE_SCHEMA.extend(
             {
@@ -32,7 +31,6 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Optional("heating_switch_func"): cv.string,
                 cv.Optional("cooling_switch_func"): cv.string,
                 cv.Optional("current_temp_func"): cv.string,
-                cv.Optional("cooling_available"): cv.boolean,
             }).extend(cv.polling_component_schema('100ms')),
         cv.Optional("heatpump_climate_dhw"): climate.CLIMATE_SCHEMA.extend(
             {
@@ -41,6 +39,7 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Required("target_temp_func"): cv.string,
                 cv.Required("get_target_temp_func"): cv.string,
                 cv.Optional("current_temp_func"): cv.string,
+                cv.Optional("dhw_climate_mode"): cv.boolean,
             }).extend(cv.polling_component_schema('100ms')),                               
     })
 
@@ -64,8 +63,8 @@ async def to_code(config):
                 cg.add(inst.set_cooling_func(cg.RawExpression(f'[=](void){{ {conf["cooling_switch_func"]} }}')))
             if "current_temp_func" in conf:
                 cg.add(inst.set_get_current_temp_func(cg.RawExpression(f'[=](void) -> float {{ {conf["current_temp_func"]} }}')))
-            if "cooling_available" in conf:
-                cg.add(inst.set_cooling_available(True))
+            if "dhw_climate_mode" in conf:
+                cg.add(inst.set_dhw_climate_mode(True))
             
             await cg.register_component(inst, conf)
             await climate.register_climate(inst, conf)

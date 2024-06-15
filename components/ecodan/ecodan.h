@@ -116,7 +116,7 @@ namespace ecodan
         void set_cooling_func(std::function<void(void)> switch_cooling_func) { set_cooling_mode = switch_cooling_func; };
         void set_heating_func(std::function<void(void)> switch_heating_func) { set_heating_mode = switch_heating_func; };
         void set_status(std::function<const ecodan::Status& (void)> get_status_func) { get_status = get_status_func; };
-        void set_cooling_available(bool cooling_available) { this->cooling_available = cooling_available; }
+        void set_dhw_climate_mode(bool mode) { this->dhw_climate_mode = mode; }
     private:
         std::function<void(float)> set_target_temp = nullptr;
         std::function<float(void)> get_current_temp = nullptr;
@@ -124,7 +124,7 @@ namespace ecodan
         std::function<void(void)> set_cooling_mode = nullptr;
         std::function<void(void)> set_heating_mode = nullptr;
         std::function<const ecodan::Status& (void)> get_status = nullptr;
-        bool cooling_available = false;
+        bool dhw_climate_mode = false;
 
         void refresh();
     };    

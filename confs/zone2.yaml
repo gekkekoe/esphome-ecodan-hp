@@ -18,7 +18,6 @@ climate:
     heatpump_climate_z2:
       name: ${heatpump_climate_z2}
       id: heatpump_climate_z2
-      cooling_available: true
       get_status_func: |-
         return id(ecodan_instance).get_status();
       get_target_temp_func: |-
@@ -68,41 +67,6 @@ climate:
             default:
               return NAN;                    
         } 
-
-number:
-  - platform: template
-    name: ${heatpump_number_z2_set_room_temperature}
-    id: heatpump_number_z2_set_room_temperature
-    mode: slider
-    entity_category: config
-    optimistic: true
-    min_value: 8
-    max_value: 28
-    step: 0.5
-    initial_value: 20
-    restore_value: yes
-    unit_of_measurement: °C
-    set_action:
-      then:
-        - lambda: |-
-            id(ecodan_instance).set_room_temperature(x, esphome::ecodan::SetZone::ZONE_2);
-
-  - platform: template
-    name: ${heatpump_number_z2_set_flow_temperature}
-    id: heatpump_number_z2_set_flow_temperature
-    mode: slider
-    entity_category: config
-    optimistic: true
-    min_value: 5
-    max_value: 60
-    step: 0.5
-    initial_value: 30
-    restore_value: yes
-    unit_of_measurement: °C
-    set_action:
-      then:
-        - lambda: |-
-            id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::SetZone::ZONE_2);
 
 sensor:
   - platform: ecodan
