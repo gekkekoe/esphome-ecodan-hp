@@ -61,7 +61,7 @@ namespace ecodan
         {
             OFF = 0,
             DHW_ON = 1,
-            SH_ON = 2, // Heating
+            HEAT_ON = 2, // Heating
             COOL_ON = 3, // Cooling
             FROST_PROTECT = 5,
             LEGIONELLA_PREVENTION = 6
@@ -145,7 +145,7 @@ namespace ecodan
         {
             switch (Operation)
             {
-                case OperationMode::SH_ON:
+                case OperationMode::HEAT_ON:
                     [[fallthrough]]
                 case OperationMode::FROST_PROTECT:
                     return std::string("heating");
@@ -181,7 +181,7 @@ namespace ecodan
                     return std::string("Off");
                 case OperationMode::DHW_ON:
                     return std::string("Heating Water");
-                case OperationMode::SH_ON:
+                case OperationMode::HEAT_ON:
                     return std::string("Space Heating");
                 case OperationMode::COOL_ON:
                     return std::string("Space Cooling");

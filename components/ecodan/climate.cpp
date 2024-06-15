@@ -32,8 +32,8 @@ namespace ecodan
             }
         }
 
+        auto& status = this->get_status();
         if (this->cooling_available) {
-            auto& status = this->get_status();
             auto mode = status.HeatingCoolingMode;
             if (mode != ecodan::Status::HpMode::OFF) {
                 
@@ -71,6 +71,28 @@ namespace ecodan
                 this->mode = climate::ClimateMode::CLIMATE_MODE_HEAT;
                 should_publish = true;
             }
+        }
+
+        auto new_action = climate::CLIMATE_ACTION_IDLE;
+        switch (status.Operation)
+        {
+            case Status::OperationMode::HEAT_ON:
+            case Status::OperationMode::FROST_PROTECT:
+                new_action = climate::CLIMATE_ACTION_HEATING;
+                break;
+            case ecodan::Status::OperationMode::COOL_ON:
+                if (this->cooling_available)
+                    new_action = climate::CLIMATE_ACTION_COOLING;
+                break;
+            case Status::OperationMode::DHW_ON:
+                if (!this->cooling_available)
+                    new_action = climate::CLIMATE_ACTION_HEATING;
+            break;
+        }
+
+        if (this->action != new_action) {
+            this->action = new_action;
+            should_publish = true;
         }
 
         if (should_publish)
@@ -135,7 +157,7 @@ namespace ecodan
         if (this->cooling_available) {
             traits.add_supported_mode(climate::CLIMATE_MODE_COOL);
         }
-            
+        traits.set_supports_action(true);
         traits.set_visual_min_temperature(5);
         traits.set_visual_max_temperature(60);
         traits.set_visual_target_temperature_step(0.5); 
