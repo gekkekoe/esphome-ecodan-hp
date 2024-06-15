@@ -17,19 +17,28 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.GenerateID(CONF_ID): cv.declare_id(ECODAN_CLIMATE),
                 cv.Required("get_status_func"): cv.string,
                 cv.Required("target_temp_func"): cv.string,
-                cv.Required("heating_switch_func"): cv.string,
+                cv.Optional("heating_switch_func"): cv.string,
                 cv.Optional("cooling_switch_func"): cv.string,
                 cv.Optional("current_temp_func"): cv.string,
-            }).extend(cv.COMPONENT_SCHEMA),
+                cv.Optional("cooling_available"): cv.boolean,
+            }).extend(cv.polling_component_schema('100ms')),
         cv.Optional("heatpump_climate_z2"): climate.CLIMATE_SCHEMA.extend(
             {
                 cv.GenerateID(CONF_ID): cv.declare_id(ECODAN_CLIMATE),
                 cv.Required("get_status_func"): cv.string,
                 cv.Required("target_temp_func"): cv.string,
-                cv.Required("heating_switch_func"): cv.string,
+                cv.Optional("heating_switch_func"): cv.string,
                 cv.Optional("cooling_switch_func"): cv.string,
                 cv.Optional("current_temp_func"): cv.string,
-            }).extend(cv.COMPONENT_SCHEMA)                          
+                cv.Optional("cooling_available"): cv.boolean,
+            }).extend(cv.polling_component_schema('100ms')),
+        cv.Optional("heatpump_climate_dhw"): climate.CLIMATE_SCHEMA.extend(
+            {
+                cv.GenerateID(CONF_ID): cv.declare_id(ECODAN_CLIMATE),
+                cv.Required("get_status_func"): cv.string,
+                cv.Required("target_temp_func"): cv.string,
+                cv.Optional("current_temp_func"): cv.string,
+            }).extend(cv.polling_component_schema('100ms')),                               
     })
 
 
@@ -44,11 +53,15 @@ async def to_code(config):
             inst = cg.new_Pvariable(conf[CONF_ID])
             cg.add(inst.set_status(cg.RawExpression(f'[=](void) -> const ecodan::Status& {{ {conf["get_status_func"]} }}')))
             cg.add(inst.set_target_temp_func(cg.RawExpression(f'[=](float x){{ {conf["target_temp_func"]} }}')))
-            cg.add(inst.set_heating_func(cg.RawExpression(f'[=](void){{ {conf["heating_switch_func"]} }}')))
+            
+            if "heating_switch_func" in conf:
+                cg.add(inst.set_heating_func(cg.RawExpression(f'[=](void){{ {conf["heating_switch_func"]} }}')))
             if "cooling_switch_func" in conf:
                 cg.add(inst.set_cooling_func(cg.RawExpression(f'[=](void){{ {conf["cooling_switch_func"]} }}')))
             if "current_temp_func" in conf:
                 cg.add(inst.get_current_temp_func(cg.RawExpression(f'[=](void) -> float {{ {conf["current_temp_func"]} }}')))
+            if "cooling_available" in conf:
+                cg.add(inst.set_cooling_available(True))
             
             await cg.register_component(inst, conf)
             await climate.register_climate(inst, conf)

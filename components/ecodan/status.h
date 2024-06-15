@@ -22,12 +22,12 @@ namespace ecodan
         float ComputedOutputPower;
         uint8_t Controller;
 
-        float Zone1SetTemperature;
-        float Zone1FlowTemperatureSetPoint;
-        float Zone1RoomTemperature;
-        float Zone2SetTemperature;
-        float Zone2FlowTemperatureSetPoint;
-        float Zone2RoomTemperature;
+        float Zone1SetTemperature{NAN};
+        float Zone1FlowTemperatureSetPoint{NAN};
+        float Zone1RoomTemperature{NAN};
+        float Zone2SetTemperature{NAN};
+        float Zone2FlowTemperatureSetPoint{NAN};
+        float Zone2RoomTemperature{NAN};
         float LegionellaPreventionSetPoint;
         float DhwTemperatureDrop;
         uint8_t MaximumFlowTemperature;
@@ -37,12 +37,12 @@ namespace ecodan
         float HpReturnTemperature;
         float HpRefrigerantLiquidTemperature;
         float HpRefrigerantCondensingTemperature;
-        float DhwTemperature;
+        float DhwTemperature{NAN};
         float DhwSecondaryTemperature;
         float BoilerFlowTemperature;
         float BoilerReturnTemperature;
         uint8_t FlowRate;
-        float DhwFlowTemperatureSetPoint;
+        float DhwFlowTemperatureSetPoint{NAN};
         float RadiatorFlowTemperatureSetPoint;
 
         float Runtime;

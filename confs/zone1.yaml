@@ -12,6 +12,7 @@ climate:
     heatpump_climate_z1:
       name: ${heatpump_climate_z1}
       id: heatpump_climate_z1
+      cooling_available: true
       get_status_func: |-
         return id(ecodan_instance).get_status();
       target_temp_func: |-

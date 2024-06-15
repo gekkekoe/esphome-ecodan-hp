@@ -13,7 +13,7 @@ CONF_ECODAN_ID = "ecodan_id"
 hub_ns = cg.esphome_ns.namespace('ecodan')
 
 ECODAN = hub_ns.class_('EcodanHeatpump', cg.PollingComponent)
-ECODAN_CLIMATE = hub_ns.class_('EcodanClimate', climate.Climate, cg.Component)
+ECODAN_CLIMATE = hub_ns.class_('EcodanClimate', climate.Climate, cg.PollingComponent)
 
 CONFIG_SCHEMA = cv.Schema(
     {
