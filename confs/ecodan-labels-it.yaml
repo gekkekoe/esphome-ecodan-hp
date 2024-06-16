@@ -2,12 +2,12 @@ substitutions:
   status_three_way_valve: Valvola 3 Vie
   status_three_way_valve_2: Valvola 3 Vie 2
   heatpump_climate_dhw: ACS Termostato
-  dhw_temp: T. Serbatoio Sup.
-  dhw_secondary_temp: T. Serbatoio Inf.
+  dhw_temp: T. Serbatoio Inf.
+  dhw_secondary_temp: T. Serbatoio Sup.
   status_dhw_forced: ACS Forzata
   dhw_flow_temp_drop: ACS Isteresi
   status_prohibit_dhw: ACS Proibita
-  dhw_flow_temp_target: ACS T. Mandata
+  dhw_flow_temp_target: ACS T. Richiesta
   status_dhw: ACS
   esp_ip: ESP IP
   internal_esp_temperature: ESP T. Interna
