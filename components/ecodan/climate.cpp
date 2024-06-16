@@ -25,8 +25,8 @@ namespace ecodan
 
         // handle update from other sources than this component 
         // (after 60s to allow HP to process the value before reading back)
-        auto now = std::chrono::steady_clock::now();
-        if (this->get_target_temp != nullptr && now - this->last_update > std::chrono::seconds(60)) {
+        auto allow_refresh = std::chrono::steady_clock::now() - this->last_update > std::chrono::seconds(60);
+        if (this->get_target_temp != nullptr && allow_refresh) {
             float target_temp = this->get_target_temp();
             if (this->target_temperature != target_temp && !std::isnan(target_temp)) {
                 this->target_temperature = target_temp;
@@ -36,7 +36,7 @@ namespace ecodan
 
         auto& status = this->get_status();
         if (this->dhw_climate_mode) {
-            if (this->mode != climate::ClimateMode::CLIMATE_MODE_HEAT) {
+            if (this->mode != climate::ClimateMode::CLIMATE_MODE_HEAT && allow_refresh) {
                 this->mode = climate::ClimateMode::CLIMATE_MODE_HEAT;
                 should_publish = true;
             }            
@@ -49,7 +49,7 @@ namespace ecodan
                     case ecodan::Status::HpMode::HEAT_ROOM_TEMP:
                     case ecodan::Status::HpMode::HEAT_FLOW_TEMP:
                     case ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE:
-                        if (this->mode != climate::ClimateMode::CLIMATE_MODE_HEAT) {
+                        if (this->mode != climate::ClimateMode::CLIMATE_MODE_HEAT && allow_refresh) {
                             if (this->set_heating_mode != nullptr)
                                 this->set_heating_mode();
                             this->mode = climate::ClimateMode::CLIMATE_MODE_HEAT;
@@ -58,7 +58,7 @@ namespace ecodan
                     break;
                     case ecodan::Status::HpMode::COOL_ROOM_TEMP:
                     case ecodan::Status::HpMode::COOL_FLOW_TEMP:
-                        if (this->mode != climate::ClimateMode::CLIMATE_MODE_COOL) {
+                        if (this->mode != climate::ClimateMode::CLIMATE_MODE_COOL && allow_refresh) {
                             if (this->set_cooling_mode != nullptr)
                                 this->set_cooling_mode();
                             this->mode = climate::ClimateMode::CLIMATE_MODE_COOL;
@@ -125,12 +125,16 @@ namespace ecodan
             if (this->mode != mode) {
                 switch (mode) {
                     case climate::ClimateMode::CLIMATE_MODE_HEAT:
-                        if (this->set_heating_mode != nullptr)
+                        if (this->set_heating_mode != nullptr) {
+                            this->last_update = std::chrono::steady_clock::now();
                             this->set_heating_mode();
+                        }
                     break;
                     case climate::ClimateMode::CLIMATE_MODE_COOL:
-                        if (this->set_cooling_mode != nullptr) 
+                        if (this->set_cooling_mode != nullptr) {
+                            this->last_update = std::chrono::steady_clock::now();
                             this->set_cooling_mode();
+                        }
                     break;                    
                 }
                 // Publish updated state
