@@ -22,12 +22,12 @@ namespace ecodan
         float ComputedOutputPower;
         uint8_t Controller;
 
-        float Zone1SetTemperature;
-        float Zone1FlowTemperatureSetPoint;
-        float Zone1RoomTemperature;
-        float Zone2SetTemperature;
-        float Zone2FlowTemperatureSetPoint;
-        float Zone2RoomTemperature;
+        float Zone1SetTemperature{NAN};
+        float Zone1FlowTemperatureSetPoint{NAN};
+        float Zone1RoomTemperature{NAN};
+        float Zone2SetTemperature{NAN};
+        float Zone2FlowTemperatureSetPoint{NAN};
+        float Zone2RoomTemperature{NAN};
         float LegionellaPreventionSetPoint;
         float DhwTemperatureDrop;
         uint8_t MaximumFlowTemperature;
@@ -37,12 +37,12 @@ namespace ecodan
         float HpReturnTemperature;
         float HpRefrigerantLiquidTemperature;
         float HpRefrigerantCondensingTemperature;
-        float DhwTemperature;
+        float DhwTemperature{NAN};
         float DhwSecondaryTemperature;
         float BoilerFlowTemperature;
         float BoilerReturnTemperature;
         uint8_t FlowRate;
-        float DhwFlowTemperatureSetPoint;
+        float DhwFlowTemperatureSetPoint{NAN};
         float RadiatorFlowTemperatureSetPoint;
 
         float Runtime;
@@ -61,7 +61,7 @@ namespace ecodan
         {
             OFF = 0,
             DHW_ON = 1,
-            SH_ON = 2, // Heating
+            HEAT_ON = 2, // Heating
             COOL_ON = 3, // Cooling
             FROST_PROTECT = 5,
             LEGIONELLA_PREVENTION = 6
@@ -75,6 +75,7 @@ namespace ecodan
 
         enum class HpMode : uint8_t
         {
+            OFF = 255,
             HEAT_ROOM_TEMP = 0,
             HEAT_FLOW_TEMP = 1,
             HEAT_COMPENSATION_CURVE = 2,
@@ -87,7 +88,7 @@ namespace ecodan
         OperationMode Operation;
         bool HolidayMode;
         DhwMode HotWaterMode;
-        HpMode HeatingCoolingMode;
+        HpMode HeatingCoolingMode = HpMode::OFF;
 
         // prohibit flags
         bool ProhibitDhw;
@@ -144,7 +145,7 @@ namespace ecodan
         {
             switch (Operation)
             {
-                case OperationMode::SH_ON:
+                case OperationMode::HEAT_ON:
                     [[fallthrough]]
                 case OperationMode::FROST_PROTECT:
                     return std::string("heating");
@@ -180,7 +181,7 @@ namespace ecodan
                     return std::string("Off");
                 case OperationMode::DHW_ON:
                     return std::string("Heating Water");
-                case OperationMode::SH_ON:
+                case OperationMode::HEAT_ON:
                     return std::string("Space Heating");
                 case OperationMode::COOL_ON:
                     return std::string("Space Cooling");

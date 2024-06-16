@@ -2,43 +2,19 @@
 # heatpump commands
 
 climate:
-  - platform: thermostat
-    name: ${heatpump_climate_dhw}
-    id: heatpump_climate_dhw
-    visual:
-      min_temperature: 40
-      max_temperature: 60.0
-      temperature_step: 0.5
-    sensor: dhw_temp
-    min_heating_off_time: 60s
-    min_heating_run_time: 60s
-    min_idle_time: 30s
-    heat_action:
-      - logger.log: "heat"
-    idle_action:
-      - logger.log: "idle"
-    on_state:
-      - lambda: |-
-          if (id(dhw_flow_temp_target).state != x.target_temperature)      
-            id(ecodan_instance).set_dhw_target_temperature(x.target_temperature);  
-
-number:
-  - platform: template
-    name: ${heatpump_number_set_dhw_temperature}
-    id: heatpump_number_set_dhw_temperature
-    mode: slider
-    entity_category: config
-    optimistic: true
-    min_value: 40
-    max_value: 60
-    step: 0.5
-    initial_value: 54
-    restore_value: yes
-    unit_of_measurement: °C
-    set_action:
-      then:
-        - lambda: |-
-            id(ecodan_instance).set_dhw_target_temperature(x);
+  - platform: ecodan
+    heatpump_climate_dhw:
+      name: ${heatpump_climate_dhw}
+      id: heatpump_climate_dhw
+      dhw_climate_mode: true
+      get_status_func: |-
+        return id(ecodan_instance).get_status();
+      get_target_temp_func: |-
+        return id(ecodan_instance).get_status().DhwFlowTemperatureSetPoint; 
+      target_temp_func: |-
+        id(ecodan_instance).set_dhw_target_temperature(x);
+      current_temp_func: |-
+        return id(ecodan_instance).get_status().DhwTemperature;
 
 switch:
   - platform: template
@@ -275,15 +251,6 @@ sensor:
     dhw_flow_temp_target:
       name: ${dhw_flow_temp_target}
       id: dhw_flow_temp_target
-      # on_value:
-      #   if:
-      #     condition:
-      #       - lambda: |-
-      #           return id(heatpump_number_set_dhw_temperature).state != id(dhw_flow_temp_target).state;
-      #     then:
-      #       - number.set:
-      #           id: heatpump_number_set_dhw_temperature
-      #           value: !lambda "return id(dhw_flow_temp_target).state;"
     dhw_flow_temp_drop:
       id: dhw_flow_temp_drop
       name: ${dhw_flow_temp_drop}      
