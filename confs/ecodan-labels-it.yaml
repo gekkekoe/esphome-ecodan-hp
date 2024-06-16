@@ -26,24 +26,22 @@ substitutions:
   led_brightness: LED Luminosità
   led_switch: LED
   heatpump_switch_force_dhw: Forza ACS
-  heatpump_switch_power_mode: PDC
+  heatpump_switch_power_mode: Ecodan
   heatpump_switch_holiday: Modalità Vacanza
   wifi_signal_proc: WiFi Segnale %
   wifi_signal_db: WiFi Segnale dB
   z1_flow_temp_target: Z1 C/F T. Mandata
   status_prohibit_cool_z1: Z1 Raffreddamento Proibito
   status_prohibit_heating_z1: Z1 Risc. Proibito
-  heatpump_climate_z1_room_climate: Z1 Climate
-  heatpump_climate_z1_flow_temperature: Z1 T. Mandata
+  heatpump_climate_z1: Z1 Termostato
   z1_room_temp_target: Z1 T. Ambiente Desiderata
   z1_room_temp: Z1 T. Ambiente
-  heatpump_number_z2_set_flow_temperature: Z2 C/F setpoint
+  heatpump_number_z2_set_flow_temperature: Z2 C/F Mandata
   z2_flow_temp_target: Z2 C/F T. Mandata
   status_prohibit_cool_z2: Z2 Raffreddamento Proibito
   status_prohibit_heating_z2: Z2 Risc. Proibito
   heatpump_number_z2_set_room_temperature: Z2 T. Ambiente
-  heatpump_climate_z2_room_climate: Z2 Climate
-  heatpump_climate_z2_flow_temperature: Z2 T. Mandata
+  heatpump_climate_z2: Z2 Termostato
   z2_room_temp_target: Z2 T. Ambiente Desiderata
   z2_room_temp: Z2 T. Ambiente
   boiler_flow_temp: Caldaia T. Mandata
