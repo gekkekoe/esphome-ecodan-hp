@@ -70,7 +70,7 @@ substitutions:
   status_holiday: Status vakantie
   status_immersion: Status externe heater
   legionella_prevention_temp: Legionella preventie temp
-  heatpump_select_operating_mode: Werking mode
+  heatpump_select_operating_mode: Gekozen werking mode
   heat_target_temperature: Verwarmen Ruimte
   heat_flow_temperature: Verwarmen Flow
   heat_compensation_curve: Verwarmen Curve

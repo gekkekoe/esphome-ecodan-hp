@@ -70,7 +70,7 @@ substitutions:
   status_holiday: Holiday Mode
   status_immersion: Immersion Heater
   legionella_prevention_temp: Legionella Prevention Temp
-  heatpump_select_operating_mode: Operating mode
+  heatpump_select_operating_mode: Selected operating mode
   heat_target_temperature: Heat Target Temperature
   heat_flow_temperature: Heat Flow Temperature
   heat_compensation_curve: Heat Compensation Curve
