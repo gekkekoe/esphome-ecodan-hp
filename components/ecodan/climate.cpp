@@ -24,13 +24,13 @@ namespace ecodan
         }
 
         // handle update from other sources than this component
-        if (this->get_target_temp != nullptr) {
-            float target_temp = this->get_target_temp();
-            if (this->target_temperature != target_temp && !std::isnan(target_temp)) {
-                this->target_temperature = target_temp;
-                should_publish = true;
-            }
-        }
+        // if (this->get_target_temp != nullptr) {
+        //     float target_temp = this->get_target_temp();
+        //     if (this->target_temperature != target_temp && !std::isnan(target_temp)) {
+        //         this->target_temperature = target_temp;
+        //         should_publish = true;
+        //     }
+        // }
 
         auto& status = this->get_status();
         if (this->dhw_climate_mode) {
