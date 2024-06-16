@@ -7,7 +7,6 @@ substitutions:
   status_dhw_forced: ACS Forzata
   dhw_flow_temp_drop: ACS Isteresi
   status_prohibit_dhw: ACS Proibita
-  heatpump_number_set_dhw_temperature: ACS T. Desiderata
   dhw_flow_temp_target: ACS T. Mandata
   status_dhw: ACS
   esp_ip: ESP IP
@@ -16,8 +15,8 @@ substitutions:
   uptime: ESP Uptime
   esp_version: ESP Versione
   restart_button: ESP Riavvio
-  status_in1_request: Termost. Zona 1 (IN1)
-  status_in6_request: Termost. Zona 2 (IN6)
+  status_in1_request: Termost. Z1 (IN1)
+  status_in6_request: Termost. Z2 (IN6)
   status_in5_request: Termost. Esterno (IN5)
   heatpump_select_dhw_mode: Modalità ACS
   of: "Spento"
@@ -31,60 +30,58 @@ substitutions:
   heatpump_switch_holiday: Modalità Vacanza
   wifi_signal_proc: WiFi Segnale %
   wifi_signal_db: WiFi Segnale dB
-  heatpump_number_z1_set_flow_temperature: Zona 1 C/F Setpoint
-  z1_flow_temp_target: Zona 1 C/F T. Mandata
-  status_prohibit_cool_z1: Zona 1 Raffreddamento Proibito
-  status_prohibit_heating_z1: Zona 1 Riscaldamento Proibito
-  heatpump_number_z1_set_room_temperature: Zona 1 T. Ambiente
-  heatpump_climate_z1_room_climate: Zona 1 Climate
-  heatpump_climate_z1_flow_temperature: Zona 1 T. Mandata
-  z1_room_temp_target: Zona 1 T. Ambiente Desiderata
-  z1_room_temp: Zona 1 T. Ambiente
-  heatpump_number_z2_set_flow_temperature: Zona 2 C/F setpoint
-  z2_flow_temp_target: Zona 2 C/F T. Mandata
-  status_prohibit_cool_z2: Zona 2 Raffreddamento Proibito
-  status_prohibit_heating_z2: Zona 2 Riscaldamento Proibito
-  heatpump_number_z2_set_room_temperature: Zona 2 T. Ambiente
-  heatpump_climate_z2_room_climate: Zona 2 Climate
-  heatpump_climate_z2_flow_temperature: Zona 2 T. Mandata
-  z2_room_temp_target: Zona 2 T. Ambiente Desiderata
-  z2_room_temp: Zona 2 T. Ambiente
+  z1_flow_temp_target: Z1 C/F T. Mandata
+  status_prohibit_cool_z1: Z1 Raffreddamento Proibito
+  status_prohibit_heating_z1: Z1 Risc. Proibito
+  heatpump_climate_z1_room_climate: Z1 Climate
+  heatpump_climate_z1_flow_temperature: Z1 T. Mandata
+  z1_room_temp_target: Z1 T. Ambiente Desiderata
+  z1_room_temp: Z1 T. Ambiente
+  heatpump_number_z2_set_flow_temperature: Z2 C/F setpoint
+  z2_flow_temp_target: Z2 C/F T. Mandata
+  status_prohibit_cool_z2: Z2 Raffreddamento Proibito
+  status_prohibit_heating_z2: Z2 Risc. Proibito
+  heatpump_number_z2_set_room_temperature: Z2 T. Ambiente
+  heatpump_climate_z2_room_climate: Z2 Climate
+  heatpump_climate_z2_flow_temperature: Z2 T. Mandata
+  z2_room_temp_target: Z2 T. Ambiente Desiderata
+  z2_room_temp: Z2 T. Ambiente
   boiler_flow_temp: Caldaia T. Mandata
   boiler_return_temp: Caldaia T. Ritorno
   status_booster: Riscaldatore Booster
   compressor_frequency: Frequenza Compressore
   controller_version_text: Versione Controller
-  cool_consumed: Energia Raffreddamento Utilizzata
+  cool_consumed: En. Raffreddamento Utilizzata
   cool_cop: COP Raffreddamento
-  cool_delivered: Energia Raffreddamento Prodotta
+  cool_delivered: En. Raffreddamento Prod.
   status_defrost: Sbrinamento
-  dhw_consumed: Energia ACS Utilizzata
+  dhw_consumed: En. ACS Utilizzata
   dhw_cop: COP ACS
-  dhw_delivered: Energia ACS Prodotta
+  dhw_delivered: En. ACS Prod.
   hp_feed_temp: T. Mandata PDC
   flow_rate: Portata
-  heat_source_text: Sorgente Riscaldamento
+  heat_source_text: Sorgente Risc.
   heatpump: PDC
   immersion_heater: Riscaldatore Immersione
   booster_heater: Riscaldatore Booster
   immersion_and_booster_heater: Riscaldatore Immersione e Booster
   boiler: Caldaia
-  heating_consumed: Energia Riscaldamento Utilizzata
-  heating_cop: COP Riscaldamento
-  heating_delivered: Energia Riscaldamento Prodotta
+  heating_consumed: En. Risc. Utilizzata
+  heating_cop: COP Risc.
+  heating_delivered: En. Risc. Prod.
   status_holiday: Modalità Vacanza
   status_immersion: Riscaldatore Immersione
   legionella_prevention_temp: T. Prevenzione Legionella
   heatpump_select_operating_mode: Modalità PDC
-  heat_target_temperature: Riscaldamento T. Desiderata
-  heat_flow_temperature: Riscaldamento T. Mandata Fissa
-  heat_compensation_curve: Riscaldamento Curva Compensazione
+  heat_target_temperature: Risc. T. Desiderata
+  heat_flow_temperature: Risc. T. Mandata Fissa
+  heat_compensation_curve: Risc. Curva Compensazione
   cool_target_temperature: Raffreddamento T. Desiderata
   cool_flow_temperature: Raffreddamento T. Mandata Fissa
   runtime: Durata Funzionamento
   status_operation: Modalità Funzionamento
-  output_power: Energia Prodotta
-  computed_output_power: Stima Energia Prodotta
+  output_power: En. Prod.
+  computed_output_power: Stima En. Prod.
   outside_temp: T. Esterna
   hp_refrigerant_temp: T. Mandata Liquido Refrigerante
   hp_refrigerant_condensing_temp: T. Condensazione Liquido Refrigerante
