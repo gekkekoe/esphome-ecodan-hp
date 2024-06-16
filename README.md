@@ -85,6 +85,15 @@ packages:
            ]
 ```
 
+* Optional: configure cooling/heating action in `zone1.yaml` and `zone2.yaml` to match your preference. Default thermostat heating switch is mapped to compensation curve and cooling to cool flow. Avaliable modes: `esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP`, `esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP`, `esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE`, `esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP`, `esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP`
+
+```
+      heating_switch_func: |-
+        id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE));
+      cooling_switch_func: |-
+        id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP));
+```
+
 * Build
 ```console
 esphome compile ecodan-esphome.yaml
