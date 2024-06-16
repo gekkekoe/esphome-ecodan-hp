@@ -23,14 +23,16 @@ namespace ecodan
             }
         }
 
-        // handle update from other sources than this component
-        // if (this->get_target_temp != nullptr) {
-        //     float target_temp = this->get_target_temp();
-        //     if (this->target_temperature != target_temp && !std::isnan(target_temp)) {
-        //         this->target_temperature = target_temp;
-        //         should_publish = true;
-        //     }
-        // }
+        // handle update from other sources than this component 
+        // (after 60s to allow HP to process the value before reading back)
+        auto now = std::chrono::steady_clock::now();
+        if (this->get_target_temp != nullptr && now - this->last_update > std::chrono::seconds(60)) {
+            float target_temp = this->get_target_temp();
+            if (this->target_temperature != target_temp && !std::isnan(target_temp)) {
+                this->target_temperature = target_temp;
+                should_publish = true;
+            }
+        }
 
         auto& status = this->get_status();
         if (this->dhw_climate_mode) {
@@ -142,8 +144,10 @@ namespace ecodan
             // User requested target temperature change
             float temp = *call.get_target_temperature();
             // Send target temp to climate
-            if (this->set_target_temp != nullptr && temp != this->target_temperature) 
+            if (this->set_target_temp != nullptr && temp != this->target_temperature) {
+                this->last_update = std::chrono::steady_clock::now();
                 this->set_target_temp(temp);
+            }
 
             this->target_temperature = temp;
             should_publish = true;
