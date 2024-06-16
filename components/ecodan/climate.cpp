@@ -75,7 +75,8 @@ namespace ecodan
 
         auto new_action = climate::CLIMATE_ACTION_IDLE;
         if (this->dhw_climate_mode) {
-            if (status.Operation == Status::OperationMode::DHW_ON)
+            if (status.Operation == Status::OperationMode::DHW_ON 
+                || status.Operation == Status::OperationMode::LEGIONELLA_PREVENTION)
                 new_action = climate::CLIMATE_ACTION_HEATING;
         }
         else 
