@@ -1,13 +1,13 @@
 substitutions:
   status_three_way_valve: Valvola 3 Vie
   status_three_way_valve_2: Valvola 3 Vie 2
-  heatpump_climate_dhw: ACS T. Attuale
-  dhw_temp: ACS T. Superiore
-  dhw_secondary_temp: ACS T. Inferiore
+  heatpump_climate_dhw: ACS Termostato
+  dhw_temp: T. Serbatoio Inf.
+  dhw_secondary_temp: T. Serbatoio Sup.
   status_dhw_forced: ACS Forzata
   dhw_flow_temp_drop: ACS Isteresi
   status_prohibit_dhw: ACS Proibita
-  dhw_flow_temp_target: ACS T. Mandata
+  dhw_flow_temp_target: ACS T. Richiesta
   status_dhw: ACS
   esp_ip: ESP IP
   internal_esp_temperature: ESP T. Interna
@@ -31,14 +31,14 @@ substitutions:
   wifi_signal_proc: WiFi Segnale %
   wifi_signal_db: WiFi Segnale dB
   z1_flow_temp_target: Z1 C/F T. Mandata
-  status_prohibit_cool_z1: Z1 Raffreddamento Proibito
+  status_prohibit_cool_z1: Z1 Raff. Proibito
   status_prohibit_heating_z1: Z1 Risc. Proibito
   heatpump_climate_z1: Z1 Termostato
   z1_room_temp_target: Z1 T. Ambiente Desiderata
   z1_room_temp: Z1 T. Ambiente
   heatpump_number_z2_set_flow_temperature: Z2 C/F Mandata
   z2_flow_temp_target: Z2 C/F T. Mandata
-  status_prohibit_cool_z2: Z2 Raffreddamento Proibito
+  status_prohibit_cool_z2: Z2 Raff. Proibito
   status_prohibit_heating_z2: Z2 Risc. Proibito
   heatpump_number_z2_set_room_temperature: Z2 T. Ambiente
   heatpump_climate_z2: Z2 Termostato
@@ -47,11 +47,11 @@ substitutions:
   boiler_flow_temp: Caldaia T. Mandata
   boiler_return_temp: Caldaia T. Ritorno
   status_booster: Riscaldatore Booster
-  compressor_frequency: Frequenza Compressore
-  controller_version_text: Versione Controller
-  cool_consumed: En. Raffreddamento Utilizzata
-  cool_cop: COP Raffreddamento
-  cool_delivered: En. Raffreddamento Prod.
+  compressor_frequency: Freq. Compressore
+  controller_version_text: Controller
+  cool_consumed: En. Raff. Utilizzata
+  cool_cop: COP Raff.
+  cool_delivered: En. Raff. Prod.
   status_defrost: Sbrinamento
   dhw_consumed: En. ACS Utilizzata
   dhw_cop: COP ACS
@@ -60,29 +60,29 @@ substitutions:
   flow_rate: Portata
   heat_source_text: Sorgente Risc.
   heatpump: PDC
-  immersion_heater: Riscaldatore Immersione
-  booster_heater: Riscaldatore Booster
-  immersion_and_booster_heater: Riscaldatore Immersione e Booster
+  immersion_heater: Risc. Immersione
+  booster_heater: Risc. Booster
+  immersion_and_booster_heater: Risc. Immersione e Booster
   boiler: Caldaia
   heating_consumed: En. Risc. Utilizzata
   heating_cop: COP Risc.
   heating_delivered: En. Risc. Prod.
   status_holiday: Modalità Vacanza
-  status_immersion: Riscaldatore Immersione
-  legionella_prevention_temp: T. Prevenzione Legionella
-  heatpump_select_operating_mode: Modalità PDC
-  heat_target_temperature: Risc. T. Desiderata
+  status_immersion: Risc. Immersione
+  legionella_prevention_temp: T. Prev. Legionella
+  heatpump_select_operating_mode: Modalità Funzionamento
+  heat_target_temperature: Risc. T. Termost.
   heat_flow_temperature: Risc. T. Mandata Fissa
   heat_compensation_curve: Risc. Curva Compensazione
-  cool_target_temperature: Raffreddamento T. Desiderata
-  cool_flow_temperature: Raffreddamento T. Mandata Fissa
+  cool_target_temperature: Raff. T. Termost.
+  cool_flow_temperature: Raff. T. Mandata Fissa
   runtime: Durata Funzionamento
   status_operation: Modalità Funzionamento
   output_power: En. Prod.
   computed_output_power: Stima En. Prod.
   outside_temp: T. Esterna
-  hp_refrigerant_temp: T. Mandata Liquido Refrigerante
-  hp_refrigerant_condensing_temp: T. Condensazione Liquido Refrigerante
-  hp_return_temp: T. Ritorno Liquido Refrigerante
+  hp_refrigerant_temp: T. Mandata Liq. Refr.
+  hp_refrigerant_condensing_temp: T. Cond. Liq. Refr.
+  hp_return_temp: T. Ritorno Liq. Refr.
   status_water_pump: Pompa Circolazione
   status_water_pump_2: Pompa Circolazione 2
