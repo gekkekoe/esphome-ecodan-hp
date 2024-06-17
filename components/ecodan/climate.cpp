@@ -42,36 +42,30 @@ namespace ecodan
             }            
         }
         else {
-            auto mode = status.HeatingCoolingMode;
-            if (mode != ecodan::Status::HpMode::OFF) {
-                
-                switch (mode) {
-                    case ecodan::Status::HpMode::HEAT_ROOM_TEMP:
-                    case ecodan::Status::HpMode::HEAT_FLOW_TEMP:
-                    case ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE:
-                        if (this->mode != climate::ClimateMode::CLIMATE_MODE_HEAT && allow_refresh) {
-                            if (this->set_heating_mode != nullptr)
-                                this->set_heating_mode();
-                            this->mode = climate::ClimateMode::CLIMATE_MODE_HEAT;
-                            should_publish = true;
+            switch (status.HeatingCoolingMode) {
+                case ecodan::Status::HpMode::HEAT_ROOM_TEMP:
+                case ecodan::Status::HpMode::HEAT_FLOW_TEMP:
+                case ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE:
+                    if (this->mode != climate::ClimateMode::CLIMATE_MODE_HEAT && allow_refresh) {
+                        if (this->set_heating_mode != nullptr) {
+                            this->last_update = std::chrono::steady_clock::now();
+                            this->set_heating_mode();
                         }
-                    break;
-                    case ecodan::Status::HpMode::COOL_ROOM_TEMP:
-                    case ecodan::Status::HpMode::COOL_FLOW_TEMP:
-                        if (this->mode != climate::ClimateMode::CLIMATE_MODE_COOL && allow_refresh) {
-                            if (this->set_cooling_mode != nullptr)
-                                this->set_cooling_mode();
-                            this->mode = climate::ClimateMode::CLIMATE_MODE_COOL;
-                            should_publish = true;
-                        } 
-                    break;                    
-                }
-            }
-            else {
-                if (this->mode != climate::ClimateMode::CLIMATE_MODE_OFF) {
-                    this->mode = climate::ClimateMode::CLIMATE_MODE_OFF;
-                    should_publish = true;
-                }
+                        this->mode = climate::ClimateMode::CLIMATE_MODE_HEAT;
+                        should_publish = true;
+                    }
+                break;
+                case ecodan::Status::HpMode::COOL_ROOM_TEMP:
+                case ecodan::Status::HpMode::COOL_FLOW_TEMP:
+                    if (this->mode != climate::ClimateMode::CLIMATE_MODE_COOL && allow_refresh) {
+                        if (this->set_cooling_mode != nullptr) {
+                            this->last_update = std::chrono::steady_clock::now();
+                            this->set_cooling_mode();
+                        }
+                        this->mode = climate::ClimateMode::CLIMATE_MODE_COOL;
+                        should_publish = true;
+                    } 
+                break;                    
             }
         }
 
@@ -125,16 +119,12 @@ namespace ecodan
             if (this->mode != mode) {
                 switch (mode) {
                     case climate::ClimateMode::CLIMATE_MODE_HEAT:
-                        if (this->set_heating_mode != nullptr) {
-                            this->last_update = std::chrono::steady_clock::now();
+                        if (this->set_heating_mode != nullptr)
                             this->set_heating_mode();
-                        }
                     break;
                     case climate::ClimateMode::CLIMATE_MODE_COOL:
-                        if (this->set_cooling_mode != nullptr) {
-                            this->last_update = std::chrono::steady_clock::now();
+                        if (this->set_cooling_mode != nullptr)
                             this->set_cooling_mode();
-                        }
                     break;                    
                 }
                 // Publish updated state
@@ -148,17 +138,17 @@ namespace ecodan
             // User requested target temperature change
             float temp = *call.get_target_temperature();
             // Send target temp to climate
-            if (this->set_target_temp != nullptr && temp != this->target_temperature) {
-                this->last_update = std::chrono::steady_clock::now();
+            if (this->set_target_temp != nullptr && temp != this->target_temperature)
                 this->set_target_temp(temp);
-            }
 
             this->target_temperature = temp;
             should_publish = true;
         }
 
-        if (should_publish)
+        if (should_publish) {
+            this->last_update = std::chrono::steady_clock::now();
             this->publish_state();
+        }
     }
 
     climate::ClimateTraits EcodanClimate::traits() {
