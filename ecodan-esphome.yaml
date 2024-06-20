@@ -22,6 +22,7 @@ wifi:
 captive_portal:
 
 ota:
+  platform: esphome
 #  password: !secret heatpump_ota_password
 
 api:
