@@ -23,11 +23,12 @@ climate:
             case esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE:
               return status.Zone1FlowTemperatureSetPoint;
             break;
-            default:
             case esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP:
             case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
               return status.Zone1SetTemperature;
             break;
+            default:
+              return NAN;
         }        
       target_temp_func: |-
         auto& status = id(ecodan_instance).get_status();
@@ -55,11 +56,12 @@ climate:
             case esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE:
               return status.Zone1FlowTemperatureSetPoint;
             break;
-            default:
             case esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP:
             case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
               return status.Zone1RoomTemperature;
             break;
+            default:
+              return NAN;
         }
 
 number:
