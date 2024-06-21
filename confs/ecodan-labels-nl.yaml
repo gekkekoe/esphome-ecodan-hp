@@ -7,7 +7,6 @@ substitutions:
   status_dhw_forced: Status SWW geforceerd
   dhw_flow_temp_drop: SWW max temp hysterese
   status_prohibit_dhw: Status SWW verboden
-  heatpump_number_set_dhw_temperature: SWW setpoint
   dhw_flow_temp_target: SWW setpoint waarde
   status_dhw: Status SWW waarde
   esp_ip: Esp IP
@@ -31,11 +30,9 @@ substitutions:
   heatpump_switch_holiday: Set vakantie modus
   wifi_signal_proc: WiFi Signaal %
   wifi_signal_db: WiFi Signaal dB
-  heatpump_number_z1_set_flow_temperature: Zone 1 flow setpoint
   z1_flow_temp_target: Zone 1 flow setpoint waarde
   status_prohibit_cool_z1: Status zone 1 verboden koelen
   status_prohibit_heating_z1: Status zone 1 verboden verwarmen
-  heatpump_number_z1_set_room_temperature: Zone 1 ruimte setpoint
   heatpump_climate_z1: Zone 1 Thermostaat
   z1_room_temp_target: Zone 1 ruimte setpoint waarde
   z1_room_temp: Zone 1 ruimte temp
