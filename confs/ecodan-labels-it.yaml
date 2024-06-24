@@ -51,11 +51,11 @@ substitutions:
   controller_version_text: Controller
   cool_consumed: En. Raff. Utilizzata
   cool_cop: COP Raff.
-  cool_delivered: En. Raff. Prod.
+  cool_delivered: En. Raff. Prod. Ieri
   status_defrost: Sbrinamento
   dhw_consumed: En. ACS Utilizzata
   dhw_cop: COP ACS
-  dhw_delivered: En. ACS Prod.
+  dhw_delivered: En. ACS Prod. Ieri
   hp_feed_temp: T. Mandata PDC
   flow_rate: Portata
   heat_source_text: Sorgente Risc.
@@ -66,7 +66,7 @@ substitutions:
   boiler: Caldaia
   heating_consumed: En. Risc. Utilizzata
   heating_cop: COP Risc.
-  heating_delivered: En. Risc. Prod.
+  heating_delivered: En. Risc. Prod. Ieri
   status_holiday: Modalità Vacanza
   status_immersion: Risc. Immersione
   legionella_prevention_temp: T. Prev. Legionella
