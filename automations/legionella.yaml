@@ -1,32 +1,31 @@
+# Heatpump automations
 - id: HeatpumpLegionellaStartBoilerSetpoint
   alias: Set boiler setpoint to 56 when starting legionella run
   trigger:
     - platform: state
       entity_id:
-        - sensor.ecodan_heatpump_operation_status
+        - sensor.ecodan_heatpump_operation_mode
   condition:
     - condition: template
       value_template: >
-        {{ ((states('sensor.ecodan_heatpump_dhw_setpoint_value') | default(0) | float) < 56) and states('sensor.ecodan_heatpump_operation_status') == 'Legionella Prevention'}}
+        {{ ((states('sensor.ecodan_heatpump_dhw_setpoint_value') | default(0) | float) < 56) and states('sensor.ecodan_heatpump_operation_mode') == 'Legionella Prevention'}}
   action:
-    - service: number.set_value
-      target:
-        entity_id: number.ecodan_heatpump_dhw_setpoint
+    - service: climate.set_temperature
       data:
-        value: 56.0
+        entity_id: climate.ecodan_heatpump_dhw_climate
+        temperature: 56
 - id: HeatpumpLegionellaFinishBoilerSetpoint
   alias: Set boiler setpoint to 47 when legionella run is completed
   trigger:
     - platform: state
       entity_id:
-        - sensor.ecodan_heatpump_operation_status
+        - sensor.ecodan_heatpump_operation_mode
   condition:
     - condition: template
       value_template: >
-        {{ ((states('sensor.ecodan_heatpump_dhw_setpoint_value') | default(0) | float) > 50) and states('sensor.ecodan_heatpump_operation_status') != 'Legionella Prevention'}}
+        {{ ((states('sensor.ecodan_heatpump_dhw_setpoint_value') | default(0) | float) > 50) and states('sensor.ecodan_heatpump_operation_mode') != 'Legionella Prevention'}}
   action:
-    - service: number.set_value
-      target:
-        entity_id: number.ecodan_heatpump_dhw_setpoint
+    - service: climate.set_temperature
       data:
-        value: 47.0
+        entity_id: climate.ecodan_heatpump_dhw_climate
+        temperature: 47

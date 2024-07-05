@@ -19,3 +19,13 @@ sensor:
       {% set pin = states('sensor.kwh_meter_3_phase_active_power') | default(0) | float %}
       {% set freq = states('sensor.ecodan_heatpump_compressor_frequency') | default(0) | float %}
       {{ 0 if (pin == 0 or freq == 0) else ((1000*pout) / pin) | float | round(2) }}
+
+# compute condensation temp  
+  - name: "thermostat_condensation_room"
+    unique_id: "thermostat_condensation_room"
+    unit_of_measurement: "°C"
+    state: >-
+      {% set t = state_attr('climate.room' , 'current_temperature')| default(0) | float %}
+      {% set rh = state_attr('climate.room' , 'current_humidity') | default(0) | float %}
+      {% set a = log(rh / 100) + (17.62 * t / (243.12 + t)) | default(0) | float %}
+      {{ (243.12 * a / (17.62 - a)) | float | round(1) }}
