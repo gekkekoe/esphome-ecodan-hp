@@ -21,22 +21,21 @@ climate:
             case esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP:
             case esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP:
             case esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE:
-              return status.Zone1FlowTemperatureSetPoint;
-            break;
             case esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP:
             case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
               return status.Zone1SetTemperature;
             break;
             default:
               return NAN;
-        }        
+        }
       target_temp_func: |-
         auto& status = id(ecodan_instance).get_status();
         auto mode = status.HeatingCoolingMode;
         switch (mode) {
             case esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP:
             case esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP:
-              id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::SetZone::ZONE_1);
+              id(ecodan_instance).set_flow_target_temperature(18, esphome::ecodan::SetZone::ZONE_1);
+              id(ecodan_instance).set_room_temperature(x, esphome::ecodan::SetZone::ZONE_1);
             break;
             case esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP:
             case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
@@ -54,8 +53,6 @@ climate:
             case esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP:
             case esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP:
             case esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE:
-              return status.Zone1FlowTemperatureSetPoint;
-            break;
             case esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP:
             case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
               return status.Zone1RoomTemperature;
@@ -71,7 +68,7 @@ sensor:
       name: ${z1_flow_temp_target}
     z1_room_temp:
       id: z1_room_temp
-      name: ${z1_room_temp}      
+      name: ${z1_room_temp}
     z1_room_temp_target:
       id: z1_room_temp_target
       name: ${z1_room_temp_target}
