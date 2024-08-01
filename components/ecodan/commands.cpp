@@ -96,19 +96,8 @@ namespace ecodan
         schedule_cmd(cmd);
     }
 
-    void EcodanHeatpump::set_dhw_mode(std::string mode)
+    void EcodanHeatpump::set_dhw_mode(Status::DhwMode dhwMode)
     {
-        Status::DhwMode dhwMode = Status::DhwMode::NORMAL;
-
-        if (mode == "Off")
-            return set_dhw_force(false);
-        else if (mode == "Normal")
-            dhwMode = Status::DhwMode::NORMAL;
-        else if (mode == "Eco")
-            dhwMode = Status::DhwMode::ECO;
-        else
-            return;
-
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
         cmd[1] = SET_SETTINGS_FLAG_DHW_MODE;
         cmd[5] = static_cast<uint8_t>(dhwMode);

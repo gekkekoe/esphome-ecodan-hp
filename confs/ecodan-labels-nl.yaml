@@ -8,7 +8,7 @@ substitutions:
   dhw_flow_temp_drop: SWW max temp hysterese
   status_prohibit_dhw: Status SWW verboden
   dhw_flow_temp_target: SWW setpoint waarde
-  status_dhw: Status SWW waarde
+  status_dhw_eco: SWW Eco
   esp_ip: Esp IP
   internal_esp_temperature: Esp Interne temperatuur
   esp_sidd: Esp SSID
@@ -19,7 +19,6 @@ substitutions:
   status_in6_request: Status In6 thermostaat 2
   status_in5_request: Status In5 buiten thermostaat
   heatpump_select_dhw_mode: Set SWW modus
-  of: "Uit"
   normal: Normaal
   eco: Eco
   version: ESP versie
@@ -76,6 +75,12 @@ substitutions:
   heat_compensation_curve: Verwarmen Curve
   cool_target_temperature: Koelen Ruimte
   cool_flow_temperature: Koelen Flow
+  operation_off: "Uit"
+  hotwater: SWW
+  heating: Verwarmen
+  cooling: Koelen
+  frost_protection: Vorstbescherming
+  legionella_prevention: Legionellapreventie
   runtime: Bedrijfsuren
   status_operation: Status Bedrijf
   output_power: Afgegeven vermogen

@@ -44,7 +44,7 @@ namespace ecodan
         void set_room_temperature(float value, esphome::ecodan::SetZone zone);
         void set_flow_target_temperature(float value, esphome::ecodan::SetZone zone);
         void set_dhw_target_temperature(float value);
-        void set_dhw_mode(std::string mode);
+        void set_dhw_mode(Status::DhwMode dhwMode);
         void set_dhw_force(bool on);
         void set_holiday(bool on);
         void set_power_mode(bool on);

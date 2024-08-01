@@ -8,7 +8,7 @@ substitutions:
   dhw_flow_temp_drop: ACS Isteresi
   status_prohibit_dhw: ACS Proibita
   dhw_flow_temp_target: ACS T. Richiesta
-  status_dhw: ACS
+  status_dhw_eco: ACS Eco
   esp_ip: ESP IP
   internal_esp_temperature: ESP T. Interna
   esp_sidd: ESP SSID
@@ -19,7 +19,6 @@ substitutions:
   status_in6_request: Termost. Z2 (IN6)
   status_in5_request: Termost. Esterno (IN5)
   heatpump_select_dhw_mode: Modalità ACS
-  of: "Spento"
   normal: Normale
   eco: Eco
   version: ESP Versione
@@ -76,6 +75,12 @@ substitutions:
   heat_compensation_curve: Risc. Curva Compensazione
   cool_target_temperature: Raff. T. Termost.
   cool_flow_temperature: Raff. T. Mandata Fissa
+  operation_off: "Spento"
+  hotwater: Acqua Calda
+  heating: Riscaldamento
+  cooling: Raffreddamento
+  frost_protection: protezione dal gelo
+  legionella_prevention: Prevenzione della Legionella
   runtime: Durata Funzionamento
   status_operation: Modalità Funzionamento
   output_power: En. Prod.

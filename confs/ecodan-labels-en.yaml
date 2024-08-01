@@ -8,7 +8,7 @@ substitutions:
   dhw_flow_temp_drop: DHW Max Temp Drop
   status_prohibit_dhw: DHW Prohibit
   dhw_flow_temp_target: DHW Setpoint Value
-  status_dhw: DHW
+  status_dhw_eco: DHW Eco
   esp_ip: ESP IP
   internal_esp_temperature: ESP Internal Temperature
   esp_sidd: ESP SSID
@@ -19,7 +19,6 @@ substitutions:
   status_in6_request: In6 Thermostat 2
   status_in5_request: In5 Outdoor Thermostat
   heatpump_select_dhw_mode: DHW Mode
-  of: "Off"
   normal: Normal
   eco: Eco
   version: ESP Version
@@ -76,6 +75,12 @@ substitutions:
   heat_compensation_curve: Heat Compensation Curve
   cool_target_temperature: Cool Target Temperature
   cool_flow_temperature: Cool Flow Temperature
+  operation_off: "Off"
+  hotwater: Heating Water
+  heating: Space Heating
+  cooling: Space Cooling
+  frost_protection: Frost Protection
+  legionella_prevention: Legionella Prevention
   runtime: Operating Runtime
   status_operation: Operation Mode
   output_power: Output Power

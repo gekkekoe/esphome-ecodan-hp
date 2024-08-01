@@ -10,8 +10,8 @@ It was based on https://github.com/rbroker/ecodan-ha-local. I've also managed to
 - 0x35 : room temp setpoint (signed) with flags
 - 0xC9 : configuration command. It reports back controller version and much more, need more investigation.
 
-# experimental server control + prohibit dhw
-In sever control mode, the prohibit flags can be set. You can enable it by uncommenting the `sever-control.yaml` entry in the `ecodan-esphome.yaml`.
+# server control + prohibit dhw/heating/cooling enabled by default
+In sever control mode, the prohibit flags can be set. You can disable it by commenting the `sever-control.yaml` entry in the `ecodan-esphome.yaml`.
 
 # recommended hardware
 If you don't want to solder, use one of the boards that supports 5v on the GPIO ports (basically all m5stack boards with a grove connector (HY2.0-4P) that accepts 5v as input). It also should work for airco units with cn105 connectors.
@@ -80,7 +80,7 @@ packages:
             confs/ecodan-labels-en.yaml,
             #confs/ecodan-labels-nl.yaml,
             #confs/ecodan-labels-it.yaml,
-            #confs/server-control.yaml,
+            confs/server-control.yaml,
             #confs/debug.yaml,
            ]
 ```

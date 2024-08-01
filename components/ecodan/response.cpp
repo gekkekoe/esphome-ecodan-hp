@@ -143,10 +143,10 @@ namespace ecodan
                 status.DhwFlowTemperatureSetPoint = res.get_float16(8);
                 //status.RadiatorFlowTemperatureSetPoint = res.get_float16(12);
 
-                publish_state("status_power", status.power_as_string());
-                publish_state("status_operation", status.operation_as_string());
-                publish_state("status_dhw", status.dhw_status_as_string());
-                publish_state("status_heating_cooling", status.hp_status_as_string());
+                publish_state("status_power", status.Power == Status::PowerMode::ON);
+                publish_state("status_dhw_eco", status.HotWaterMode == Status::DhwMode::ECO);
+                //publish_state("status_operation", static_cast<float>(status.Operation));
+                publish_state("status_heating_cooling", static_cast<float>(status.HeatingCoolingMode));
 
                 publish_state("dhw_flow_temp_target", status.DhwFlowTemperatureSetPoint);
                 //publish_state("sh_flow_temp_target", status.RadiatorFlowTemperatureSetPoint);

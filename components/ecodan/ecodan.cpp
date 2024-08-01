@@ -4,15 +4,6 @@ namespace esphome {
 namespace ecodan 
 { 
     void EcodanHeatpump::setup() {
-        // ESP_LOGI(TAG, "register services"); 
-        // register_service(&EcodanHeatpump::set_room_temperature, "set_room_temperature", {"newTemp", "zone"});
-        // register_service(&EcodanHeatpump::set_flow_target_temperature, "set_flow_target_temperature", {"newTemp", "zone"});
-        // register_service(&EcodanHeatpump::set_dhw_target_temperature, "set_dhw_target_temperature", {"newTemp"});
-        // register_service(&EcodanHeatpump::set_dhw_mode, "set_dhw_mode", {"mode"});
-        // register_service(&EcodanHeatpump::set_dhw_force, "set_dhw_force", {"on"});
-        // register_service(&EcodanHeatpump::set_power_mode, "set_power_mode", {"on"});
-        // register_service(&EcodanHeatpump::set_hp_mode, "set_hp_mode", {"mode"});        
-
         heatpumpInitialized = initialize();
         xTaskCreate(
             [](void* o){ static_cast<EcodanHeatpump*>(o)->serial_rx_thread(); },

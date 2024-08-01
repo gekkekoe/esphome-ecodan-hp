@@ -247,6 +247,10 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("heat_source"): sensor.sensor_schema(
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
+        cv.Optional("status_heating_cooling"): sensor.sensor_schema(
+            entity_category=ENTITY_CATEGORY_NONE,
+            icon="mdi:thermostat",
+        ),
     }
 ).extend(cv.COMPONENT_SCHEMA)
 

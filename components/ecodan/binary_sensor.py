@@ -90,7 +90,14 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:hvac-off",
             entity_category=ENTITY_CATEGORY_NONE,
         ),
-
+        cv.Optional("status_dhw_eco"): binary_sensor.binary_sensor_schema(
+            entity_category=ENTITY_CATEGORY_NONE,
+            icon="mdi:water-boiler-off",
+        ),
+        cv.Optional("status_power"): binary_sensor.binary_sensor_schema(
+            entity_category=ENTITY_CATEGORY_NONE,
+            icon="mdi:power-off",
+        ),
     }).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):

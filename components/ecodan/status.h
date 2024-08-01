@@ -115,51 +115,6 @@ namespace ecodan
             }
         }
 
-        // HomeAssistant is a bit restrictive about what is let's us specify
-        // as the mode/action of a climate integration.
-        std::string ha_status_as_string()
-        {
-            switch (Power)
-            {
-                case PowerMode::ON:
-                    switch (HeatingCoolingMode)
-                    {
-                      case HpMode::HEAT_ROOM_TEMP:
-                          [[fallthrough]]
-                      case HpMode::HEAT_FLOW_TEMP:
-                          [[fallthrough]]
-                      case HpMode::HEAT_COMPENSATION_CURVE:
-                          return std::string("heat");
-                      case HpMode::COOL_ROOM_TEMP:
-                          [[fallthrough]]
-                      case HpMode::COOL_FLOW_TEMP:
-                          return std::string("cool");
-                    }
-                    [[fallthrough]]
-                default:
-                    return std::string("off");
-            }
-        }
-
-        std::string ha_action_as_string()
-        {
-            switch (Operation)
-            {
-                case OperationMode::HEAT_ON:
-                    [[fallthrough]]
-                case OperationMode::FROST_PROTECT:
-                    return std::string("heating");
-                case OperationMode::COOL_ON:
-                    return std::string("cooling");
-                case OperationMode::OFF:
-                    [[fallthrough]]
-                case OperationMode::DHW_ON:
-                    [[fallthrough]]
-                default:
-                    return std::string("idle");
-            }
-        }
-
         std::string power_as_string()
         {
             switch (Power)

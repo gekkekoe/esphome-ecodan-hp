@@ -22,22 +22,6 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:fire",
             entity_category=ENTITY_CATEGORY_NONE,
         ),
-        cv.Optional("status_dhw"): text_sensor.text_sensor_schema(
-            icon="mdi:water-boiler",
-            entity_category=ENTITY_CATEGORY_NONE,
-        ),
-        cv.Optional("status_heating_cooling"): text_sensor.text_sensor_schema(
-            icon="mdi:thermostat",
-            entity_category=ENTITY_CATEGORY_NONE,
-        ),
-        cv.Optional("status_power"): text_sensor.text_sensor_schema(
-            icon="mdi:power",
-            entity_category=ENTITY_CATEGORY_NONE,
-        ),
-        cv.Optional("status_operation"): text_sensor.text_sensor_schema(
-            icon="mdi:power",
-            entity_category=ENTITY_CATEGORY_NONE,
-        ),
 
     }).extend(cv.COMPONENT_SCHEMA)
 
