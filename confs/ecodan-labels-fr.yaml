@@ -1,0 +1,88 @@
+substitutions:
+  status_three_way_valve: Valve 3-voies
+  status_three_way_valve_2: Valve 3-voies no 2
+  heatpump_climate_dhw: Thermostat ECS
+  dhw_temp: Temp actuelle ECS
+  dhw_secondary_temp: Temp ECS secondaire
+  status_dhw_forced: ECS Forcé
+  dhw_flow_temp_drop: Baisse temp max ECS
+  status_prohibit_dhw: ECS interdit
+  dhw_flow_temp_target: Temp cible ECS
+  status_dhw: ECS
+  esp_ip: ESP IP
+  internal_esp_temperature: Temp interne ESP
+  esp_sidd: ESP SSID
+  uptime: ESP Uptime
+  esp_version: ESP Version
+  restart_button: ESP Restart
+  status_in1_request: Thermostat Z1 (IN1)
+  status_in6_request: Thermostat Z2 (IN6)
+  status_in5_request: Thermostat Ext (IN5)
+  heatpump_select_dhw_mode: Mode ECS
+  of: "Off"
+  normal: Normal
+  eco: Eco
+  version: ESP Version
+  led_brightness: Luminosité LED
+  led_switch: LED
+  heatpump_switch_force_dhw: Forcer ECS
+  heatpump_switch_power_mode: Pompe à chaleur
+  heatpump_switch_holiday: Mode vacances
+  wifi_signal_proc: Signal Wifi %
+  wifi_signal_db: Signal Wifi dB
+  z1_flow_temp_target: Temp cible Zone 1 C/F
+  status_prohibit_cool_z1: Zone 1 Clim Interdite
+  status_prohibit_heating_z1: Zone 1 Chauffage Interdit
+  heatpump_climate_z1: Thermostat Zone 1
+  z1_room_temp_target: Z1 Temp cible pièce
+  z1_room_temp: Z1 Temp pièce
+  heatpump_number_z2_set_flow_temperature: Temp cible Zone 2 C/F
+  z2_flow_temp_target: Temp cible Zone 2 C/F
+  status_prohibit_cool_z2: Zone 2 Clim Interdite
+  status_prohibit_heating_z2: Zone 2 Chauffage Interdit
+  heatpump_number_z2_set_room_temperature: Z2 Temp cible pièce
+  heatpump_climate_z2: Thermostat Zone 2
+  z2_room_temp_target: Z2 Temp cible pièce
+  z2_room_temp: Z2 Temp pièce
+  boiler_flow_temp: Temp départ ballon
+  boiler_return_temp: Temp retour ballon
+  status_booster: Statut réchauffeur élec
+  compressor_frequency: Freq Compresseur
+  controller_version_text: Version Controleur
+  cool_consumed: Conso Clim
+  cool_cop: COP Clim
+  cool_delivered: Energ Délivrée Clim
+  status_defrost: Dégivrage
+  dhw_consumed: Conso ECS
+  dhw_cop: COP ECS
+  dhw_delivered: Energ Délivrée ECS
+  hp_feed_temp: Temp départ
+  flow_rate: Débit
+  heat_source_text: Source de chaleur
+  heatpump: Pompe à chaleur
+  immersion_heater: Thermoplongeur
+  booster_heater: Réchauffeur électrique
+  immersion_and_booster_heater: Thermoplongeur et Réchauffeur électrique
+  boiler: Ballon
+  heating_consumed: Conso chauffage
+  heating_cop: COP Chauffage
+  heating_delivered: Energ Délivrée Chauffage
+  status_holiday: Mode Vacances
+  status_immersion: Thermoplongeur
+  legionella_prevention_temp: Temp Prévention Légionelle
+  heatpump_select_operating_mode: Mode sélectionné
+  heat_target_temperature: Temp cible Chauffage
+  heat_flow_temperature: Temp eau départ chauffage
+  heat_compensation_curve: Courbe de compensation
+  cool_target_temperature: Temp cible Clim
+  cool_flow_temperature: Temp eau départ clim
+  runtime: Durée de fonctionnement
+  status_operation: Mode de fonctionnement
+  output_power: Puissance de sortie
+  computed_output_power: Puissance de sortie estimée
+  outside_temp: Temp Ext
+  hp_refrigerant_temp: Temp Liquide Réfrigérant
+  hp_refrigerant_condensing_temp: Temp Condensation Liquide Réfrigérant
+  hp_return_temp: Temp retour
+  status_water_pump: Statut pompe à eau
+  status_water_pump_2: Statut pompe à eau no2
