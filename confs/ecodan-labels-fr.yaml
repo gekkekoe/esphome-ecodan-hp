@@ -8,7 +8,7 @@ substitutions:
   dhw_flow_temp_drop: Baisse temp max ECS
   status_prohibit_dhw: ECS interdit
   dhw_flow_temp_target: Temp cible ECS
-  status_dhw: ECS
+  status_dhw_eco: ECS Eco
   esp_ip: ESP IP
   internal_esp_temperature: Temp interne ESP
   esp_sidd: ESP SSID
@@ -19,7 +19,6 @@ substitutions:
   status_in6_request: Thermostat Z2 (IN6)
   status_in5_request: Thermostat Ext (IN5)
   heatpump_select_dhw_mode: Mode ECS
-  of: "Off"
   normal: Normal
   eco: Eco
   version: ESP Version
@@ -76,6 +75,12 @@ substitutions:
   heat_compensation_curve: Courbe de compensation
   cool_target_temperature: Temp cible Clim
   cool_flow_temperature: Temp eau départ clim
+  operation_off: "Off"
+  hotwater: Eau chaude
+  heating: Chauffage
+  cooling: Refroidissement
+  frost_protection: Protection contre le gel
+  legionella_prevention: Prévention Légionelle
   runtime: Durée de fonctionnement
   status_operation: Mode de fonctionnement
   output_power: Puissance de sortie

@@ -80,6 +80,7 @@ packages:
             confs/ecodan-labels-en.yaml,
             #confs/ecodan-labels-nl.yaml,
             #confs/ecodan-labels-it.yaml,
+            #confs/ecodan-labels-fr.yaml,
             confs/server-control.yaml,
             #confs/debug.yaml,
            ]
