@@ -11,7 +11,8 @@ It was based on https://github.com/rbroker/ecodan-ha-local. I've also managed to
 - 0xC9 : configuration command. It reports back controller version and much more, need more investigation.
 
 # available languages
-English (default), Dutch, Italian, French. Select the language in `ecodan-esphome.yaml` file. Translation contributions are welcome: copy the file `ecodan-labels-en.yaml` to `ecodan-labels-xx.yaml`, fill in all the labels and submit a pull request.
+English (default), Dutch, Italian, French. Select the language in `ecodan-esphome.yaml` file. 
+If you want to contribute with a translation: copy the file `ecodan-labels-en.yaml` to `ecodan-labels-xx.yaml`, fill in all the labels and submit a pull request.
 
 # server control + prohibit dhw/heating/cooling enabled by default
 In sever control mode, the prohibit flags can be set. You can disable it by commenting the `sever-control.yaml` entry in the `ecodan-esphome.yaml`.
