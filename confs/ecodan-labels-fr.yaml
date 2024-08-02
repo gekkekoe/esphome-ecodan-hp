@@ -78,8 +78,8 @@ substitutions:
   operation_off: "Off"
   hotwater: Eau chaude
   heating: Chauffage
-  cooling: Refroidissement
-  frost_protection: Protection contre le gel
+  cooling: Climatisation
+  frost_protection: Protection contre le givre
   legionella_prevention: Prévention Légionelle
   runtime: Durée de fonctionnement
   status_operation: Mode de fonctionnement
