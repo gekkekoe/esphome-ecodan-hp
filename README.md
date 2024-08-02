@@ -10,6 +10,9 @@ It was based on https://github.com/rbroker/ecodan-ha-local. I've also managed to
 - 0x35 : room temp setpoint (signed) with flags
 - 0xC9 : configuration command. It reports back controller version and much more, need more investigation.
 
+# available languages
+English (default), Dutch, Italian, French. Select the language in `ecodan-esphome.yaml` file. Translations are welcome, copy the file `ecodan-labels-en.yaml` to `ecodan-labels-xx.yaml` and fill in all the labels.
+
 # server control + prohibit dhw/heating/cooling enabled by default
 In sever control mode, the prohibit flags can be set. You can disable it by commenting the `sever-control.yaml` entry in the `ecodan-esphome.yaml`.
 
