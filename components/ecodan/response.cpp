@@ -65,7 +65,7 @@ namespace ecodan
                 else
                     status.Zone2RoomTemperature = 0.0f;
                 status.OutsideTemperature = res.get_float8(11);
-                status.HpRefrigerantLiquidTemperature = res.get_float16(8);
+                status.HpRefrigerantLiquidTemperature = res.get_float16_signed(8);
                 status.HpRefrigerantCondensingTemperature = res.get_float8(10);
 
                 publish_state("z1_room_temp", status.Zone1RoomTemperature);

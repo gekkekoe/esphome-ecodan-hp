@@ -314,6 +314,12 @@ namespace ecodan
             return value /= 100.0f;
         }
 
+        float get_float16_signed(size_t index)
+        {
+            float value = int16_t(payload()[index] << 8) | payload()[index + 1];
+            return value /= 100.0f;
+        }
+
         // Used for most single-byte floating point values
         float get_float8(size_t index)
         {
