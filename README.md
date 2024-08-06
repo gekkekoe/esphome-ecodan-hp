@@ -18,14 +18,14 @@ If you want to contribute with a translation: copy the file `ecodan-labels-en.ya
 In sever control mode, the prohibit flags can be set. You can disable it by commenting the `sever-control.yaml` entry in the `ecodan-esphome.yaml`.
 
 # recommended hardware
-If you don't want to solder, use one of the boards that supports 5v on the GPIO ports (basically all m5stack boards with a grove connector (HY2.0-4P) that accepts 5v as input). It also should work for airco units with cn105 connectors.
+If you don't want to solder, use one of the tested boards. [More boards that should be working](https://github.com/SwiCago/HeatPump/issues/13#issuecomment-457897457). It also should work for airco units with cn105 connectors. 
 
 Tested boards
 
 | Board | Link | Notes |
 |:---|:----:|:---|
-| m5stack Atom (ESP32 variants) | https://docs.m5stack.com/en/core/ATOM%20Lite | Grove ports on the m5stack boards have built in level shifters |
-| m5stack AtomS3 (ESP32-S3 variants) | https://docs.m5stack.com/en/core/AtomS3%20Lite | Grove ports on the m5stack boards have built in level shifters |
+| m5stack Atom (ESP32 variants) | https://docs.m5stack.com/en/core/ATOM%20Lite | Grove ports used |
+| m5stack AtomS3 (ESP32-S3 variants) | https://docs.m5stack.com/en/core/AtomS3%20Lite | Grove ports used |
 
 Cable
 * Get one of the grove female cable and a ST PAP-05V-S connector. Remove one end of the grove connector and replace it with a ST PAP-05V-S connector. Here's an example:
