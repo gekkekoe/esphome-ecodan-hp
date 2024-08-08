@@ -125,7 +125,7 @@ namespace ecodan
     struct Message
     {
         Message()
-            : cmd_{false}
+            : cmd_{false}, buffer_{}
         {
         }
 
