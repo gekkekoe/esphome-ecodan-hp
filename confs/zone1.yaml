@@ -42,6 +42,8 @@ climate:
             case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
               id(ecodan_instance).set_room_temperature(x, esphome::ecodan::SetZone::ZONE_1);
             break;                    
+            default:
+              break;
         }
       heating_switch_func: |-
         id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::${default_heating_switch_mode}));
