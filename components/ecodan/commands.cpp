@@ -11,7 +11,6 @@
 namespace esphome {
 namespace ecodan 
 {
-#pragma region Commands
     void EcodanHeatpump::set_room_temperature(float newTemp, esphome::ecodan::SetZone zone)
     {
         Message cmd{MsgType::SET_CMD, SetType::ROOM_SETTINGS};
@@ -259,7 +258,5 @@ namespace ecodan
 
         return true;
     }
-
-#pragma endregion Commands
 
 }}

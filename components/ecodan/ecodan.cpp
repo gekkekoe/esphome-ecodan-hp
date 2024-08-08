@@ -51,8 +51,6 @@ namespace ecodan
         ESP_LOGI(TAG, "config"); 
     }
 
-#pragma region Init
-
     bool EcodanHeatpump::initialize()
     {
         if (!uart_) {
@@ -118,8 +116,6 @@ namespace ecodan
         return connected;
     }
 
-
-#pragma endregion Init
 
 } // namespace ecodan
 } // namespace esphome

@@ -7,7 +7,6 @@
 namespace esphome {
 namespace ecodan 
 {
-#pragma region Serial
     bool EcodanHeatpump::serial_tx(uart::UARTComponent *uart, Message& msg)
     {
         if (!uart)
@@ -80,8 +79,6 @@ namespace ecodan
 
         return false;
     }
-
-#pragma endregion Serial
 
 }
 }
