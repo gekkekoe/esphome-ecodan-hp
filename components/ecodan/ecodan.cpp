@@ -77,7 +77,7 @@ namespace ecodan
 
     void EcodanHeatpump::loop()
     {
-        if (uart_ && uart_->available() >= HEADER_SIZE)
+        if (uart_ && uart_->available())
         {
             handle_response();
         }

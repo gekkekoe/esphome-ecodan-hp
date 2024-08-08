@@ -73,6 +73,7 @@ namespace ecodan
     private:
         uart::UARTComponent *uart_ = nullptr;
         std::mutex portWriteMutex;
+        Message res_buffer_;
 
         Status status;
         float temperatureStep = 0.5f;

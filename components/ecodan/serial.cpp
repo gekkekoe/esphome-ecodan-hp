@@ -33,83 +33,52 @@ namespace ecodan
 
         return true;
     }
-    
-    void EcodanHeatpump::resync_rx()
-    {
-        uint8_t byte;
-
-        while (uart_->available() > 0)
-            uart_->read_byte(&byte);
-    }
 
     bool EcodanHeatpump::serial_rx(Message& msg)
     {
-        if (uart_->available() < HEADER_SIZE)
-        {
-            const TickType_t maxBlockingTime = pdMS_TO_TICKS(1000);
-            ulTaskNotifyTakeIndexed(0, pdTRUE, maxBlockingTime);
+        uint8_t data;
+        bool skipping = false;
 
-            // We were woken by an interrupt, but there's not enough data available
-            // yet on the serial port for us to start processing it as a packet.
-            if (uart_->available() < HEADER_SIZE)
-                return false;
-        }
-
-        // Scan for the start of an Ecodan packet.
-        if (!uart_->read_array(msg.buffer(), HEADER_SIZE))
-        {
-            ESP_LOGI(TAG, "Serial port header read failure!");
-            resync_rx();
-            return false;
-        }
-        if (msg.buffer()[0] != HEADER_MAGIC_A)
-        {
-            ESP_LOGE(TAG, "Dropping serial data, header magic mismatch");
-            resync_rx();
-            return false;
-        }
-
-        msg.increment_write_offset(HEADER_SIZE);
-
-        if (!msg.verify_header())
-        {
-            ESP_LOGI(TAG, "Serial port message appears invalid, skipping payload wait...");
-            resync_rx();
-            return false;
-        }
-
-        // It shouldn't take long to receive the rest of the payload after we get the header.
-        size_t remainingBytes = msg.payload_size() + CHECKSUM_SIZE;
-        auto startTime = std::chrono::steady_clock::now();
-        while (uart_->available() < remainingBytes)
-        {
-            delay(1);
-            if (std::chrono::steady_clock::now() - startTime > std::chrono::seconds(10))
-            {
-                ESP_LOGI(TAG, "Serial port message could not be received within 10s (got %u / %u bytes)", uart_->available(), remainingBytes);
-                resync_rx();
-                return false;
+        while (uart_->available() && uart_->read_byte(&data)) {
+            // Discard bytes until we see one that might reasonably be
+            // the first byte of a packet, complaining only once.
+            if (msg.get_write_offset() == 0 && data != HEADER_MAGIC_A) {
+                if (!skipping) {
+                    ESP_LOGE(TAG, "Dropping serial data; header magic mismatch");
+                    skipping = true;
+                }
+                continue;
             }
+            skipping = false;
+
+            // Add the byte to the packet.
+            msg.append_byte(data);
+
+            // If the header is now complete, check it for sanity.
+            if (msg.get_write_offset() == HEADER_SIZE && !msg.verify_header()) {
+                ESP_LOGI(TAG, "Serial port message appears invalid, skipping payload...");
+                msg = Message();
+                continue;
+            }
+
+            // If we don't yet have the full header, or if we do have the
+            // header but not yet the full payload, keep going.
+            if (msg.get_write_offset() <= HEADER_SIZE ||
+                msg.get_write_offset() < msg.size()) {
+                continue;
+            }
+
+            // Got full packet. Verify its checksum.
+            if (!msg.verify_checksum()) {
+                ESP_LOGI(TAG, "Serial port message checksum invalid");
+                msg = Message();
+                continue;
+            }
+
+            return true;
         }
 
-        if (!uart_->read_array(msg.payload(), remainingBytes))
-        {
-            ESP_LOGI(TAG, "Serial port payload read failure!");
-            resync_rx();
-            return false;
-        }
-
-        msg.increment_write_offset(msg.payload_size()); // Don't count checksum byte.
-
-        if (!msg.verify_checksum())
-        {
-            resync_rx();
-            return false;
-        }
-
-        //ESP_LOGW(TAG, msg.debug_dump_packet().c_str());
-
-        return true;
+        return false;
     }
 
 #pragma endregion Serial

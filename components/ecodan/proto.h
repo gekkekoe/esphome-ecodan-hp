@@ -115,7 +115,6 @@ namespace ecodan
     const uint8_t PAYLOAD_SIZE = 16;
     const uint8_t CHECKSUM_SIZE = sizeof(uint8_t);
     const uint8_t TOTAL_MSG_SIZE = HEADER_SIZE + PAYLOAD_SIZE + sizeof(uint8_t);
-
     const uint8_t MSG_TYPE_OFFSET = 1;
     const uint8_t PAYLOAD_SIZE_OFFSET = 4;
 
@@ -273,21 +272,31 @@ namespace ecodan
             return true;
         }
 
+        void append_byte(const char data)
+        {
+            if (writeOffset_ < TOTAL_MSG_SIZE) {
+                buffer_[writeOffset_] = data;
+                writeOffset_++;
+                valid_ = true;
+            }
+        }
+
         void set_checksum()
         {
             buffer_[writeOffset_] = calculate_checksum();
         }
 
-        void increment_write_offset(size_t n)
+        uint8_t get_write_offset()
         {
-            valid_ = true;
-            writeOffset_ += n;
+            return writeOffset_;
         }
 
         bool verify_checksum()
         {
             uint8_t v = calculate_checksum();
-            if (v == buffer_[writeOffset_])
+            if (writeOffset_ < size())
+                return false;
+            if (v == buffer_[size() - 1])
                 return true;
             
             return false;
@@ -363,8 +372,9 @@ namespace ecodan
         uint8_t calculate_checksum()
         {
             uint8_t checkSum = 0;
-
-            for (size_t i = 0; i < writeOffset_; ++i)
+            if (writeOffset_ < size() - 1)
+                return 0;
+            for (size_t i = 0; i < size() - 1; ++i)
                 checkSum += buffer_[i];
 
             checkSum = 0xFC - checkSum;
