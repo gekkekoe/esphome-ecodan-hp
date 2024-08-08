@@ -66,6 +66,8 @@ namespace ecodan
                         should_publish = true;
                     } 
                 break;                    
+            case ecodan::Status::HpMode::OFF:
+                break;
             }
         }
 
@@ -85,6 +87,10 @@ namespace ecodan
                     break;
                 case ecodan::Status::OperationMode::COOL_ON:
                         new_action = climate::CLIMATE_ACTION_COOLING;
+                    break;
+                case ecodan::Status::OperationMode::OFF:
+                case ecodan::Status::OperationMode::DHW_ON:
+                case ecodan::Status::OperationMode::LEGIONELLA_PREVENTION:
                     break;
             }
         }
@@ -126,6 +132,12 @@ namespace ecodan
                         if (this->set_cooling_mode != nullptr)
                             this->set_cooling_mode();
                     break;                    
+                    case climate::ClimateMode::CLIMATE_MODE_HEAT_COOL:
+                    case climate::ClimateMode::CLIMATE_MODE_FAN_ONLY:
+                    case climate::ClimateMode::CLIMATE_MODE_OFF:
+                    case climate::ClimateMode::CLIMATE_MODE_DRY:
+                    case climate::ClimateMode::CLIMATE_MODE_AUTO:
+                    break;
                 }
                 // Publish updated state
                 this->mode = mode;
