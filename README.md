@@ -29,7 +29,7 @@ Tested boards
 
 Cable
 * Get one of the grove female cable and a ST PAP-05V-S connector. Remove one end of the grove connector and replace it with a ST PAP-05V-S connector. Here's an example:
-![image](https://github.com/gekkekoe/ecodan-esp32/blob/main/img/m5stack_cn105.jpg?raw=true)
+![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/m5stack_cn105.jpg?raw=true)
 
 Pin mapping (from left to right)
 | grove | cn105 |
