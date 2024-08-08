@@ -2,7 +2,6 @@
 
 #include "esphome.h"
 
-#include <HardwareSerial.h>
 #include <functional>
 
 #include <mutex>

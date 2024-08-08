@@ -350,8 +350,8 @@ namespace ecodan
         {
             uint16_t u16 = uint16_t(value * 100.0f);
 
-            payload()[index] = highByte(u16);
-            payload()[index + 1] = lowByte(u16);
+            payload()[index] = u16 >> 8;
+            payload()[index + 1] = u16 & 0xff;
         }
 
         uint8_t& operator[](size_t index)

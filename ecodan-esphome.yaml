@@ -95,5 +95,4 @@ web_server:
 
 ecodan:
   id: ecodan_instance
-  rx_pin: GPIO2
-  tx_pin: GPIO1
+  uart_id: uart_ecodan
