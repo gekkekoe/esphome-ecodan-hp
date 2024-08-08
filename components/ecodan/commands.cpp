@@ -212,7 +212,7 @@ namespace ecodan
         Message& cmd = statusCmdQueue[cmdIndex];
         cmdIndex = (cmdIndex + 1) % MAX_STATUS_CMD_SIZE;
 
-        if (!serial_tx(cmd))
+        if (!serial_tx(uart_, cmd))
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
             cmdIndex = 0;
@@ -234,7 +234,7 @@ namespace ecodan
         
         //ESP_LOGI(TAG, msg.debug_dump_packet().c_str());
 
-        if (!serial_tx(cmdQueue.front()))
+        if (!serial_tx(uart_, cmdQueue.front()))
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
             connected = false;
@@ -251,7 +251,7 @@ namespace ecodan
         cmd.write_payload(payload, sizeof(payload));
 
         ESP_LOGI(TAG, "Attempt to tx CONNECT_CMD!");
-        if (!serial_tx(cmd))
+        if (!serial_tx(uart_, cmd))
         {
             ESP_LOGI(TAG, "Failed to tx CONNECT_CMD!");
             return false;

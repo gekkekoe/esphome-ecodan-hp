@@ -51,6 +51,7 @@ namespace ecodan
         void set_hp_mode(int mode);
         void set_controller_mode(CONTROLLER_FLAG flag, bool on);
         void set_uart_parent(uart::UARTComponent *uart) { this->uart_ = uart; }
+        void set_proxy_uart(uart::UARTComponent *uart) { this->proxy_uart_ = uart; }
         const Status& get_status() const { return status; }
 
     protected:
@@ -72,8 +73,10 @@ namespace ecodan
     
     private:
         uart::UARTComponent *uart_ = nullptr;
+        uart::UARTComponent *proxy_uart_ = nullptr;
         std::mutex portWriteMutex;
         Message res_buffer_;
+        Message proxy_buffer_;
 
         Status status;
         float temperatureStep = 0.5f;
@@ -84,8 +87,8 @@ namespace ecodan
         std::mutex cmdQueueMutex;
 
         void resync_rx();
-        bool serial_rx(Message& msg);
-        bool serial_tx(Message& msg);
+        bool serial_rx(uart::UARTComponent *uart, Message& msg);
+        bool serial_tx(uart::UARTComponent *uart, Message& msg);
 
         bool dispatch_next_status_cmd();
         bool dispatch_next_set_cmd();
@@ -95,6 +98,7 @@ namespace ecodan
         void handle_get_response(Message& res);
         void handle_set_response(Message& res);
         void handle_connect_response(Message& res);
+        void handle_proxy();
     };
 
     class EcodanClimate : public climate::Climate, public PollingComponent  {

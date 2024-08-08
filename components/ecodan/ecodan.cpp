@@ -60,8 +60,8 @@ namespace ecodan
             return false;
         }
 
-        ESP_LOGI(TAG, "Initializing HeatPump");
-
+        ESP_LOGI(TAG, "Initializing HeatPump using UART %p, proxy %p", uart_, proxy_uart_);
+ 
         if (uart_->get_baud_rate() != 2400 ||
             uart_->get_stop_bits() != 1 ||
             uart_->get_data_bits() != 8 ||
@@ -80,6 +80,10 @@ namespace ecodan
         if (uart_ && uart_->available())
         {
             handle_response();
+        }
+        if (proxy_uart_ && proxy_uart_->available())
+        {
+            handle_proxy();
         }
     }
 

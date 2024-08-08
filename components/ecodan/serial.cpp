@@ -8,9 +8,9 @@ namespace esphome {
 namespace ecodan 
 {
 #pragma region Serial
-    bool EcodanHeatpump::serial_tx(Message& msg)
+    bool EcodanHeatpump::serial_tx(uart::UARTComponent *uart, Message& msg)
     {
-        if (!uart_)
+        if (!uart)
         {
             ESP_LOGE(TAG, "Serial connection unavailable for tx");
             return false;
@@ -25,7 +25,7 @@ namespace ecodan
         msg.set_checksum();
         {
             std::lock_guard<std::mutex> lock{portWriteMutex};
-            uart_->write_array(msg.buffer(), msg.size());
+            uart->write_array(msg.buffer(), msg.size());
         }
         //port.flush(true);
 
@@ -34,12 +34,12 @@ namespace ecodan
         return true;
     }
 
-    bool EcodanHeatpump::serial_rx(Message& msg)
+    bool EcodanHeatpump::serial_rx(uart::UARTComponent *uart, Message& msg)
     {
         uint8_t data;
         bool skipping = false;
 
-        while (uart_->available() && uart_->read_byte(&data)) {
+        while (uart->available() && uart->read_byte(&data)) {
             // Discard bytes until we see one that might reasonably be
             // the first byte of a packet, complaining only once.
             if (msg.get_write_offset() == 0 && data != HEADER_MAGIC_A) {
