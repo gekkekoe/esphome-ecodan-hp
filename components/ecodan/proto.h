@@ -251,7 +251,7 @@ namespace ecodan
             return true;
         }
 
-        bool write_payload(const char* data, uint8_t length)
+        bool write_payload(const uint8_t *data, uint8_t length)
         {
             if (length > PAYLOAD_SIZE)
                 return false;
@@ -270,6 +270,10 @@ namespace ecodan
             writeOffset_ = HEADER_SIZE + length;
             valid_ = true;
             return true;
+        }
+        bool write_payload(const char *data, uint8_t length)
+        {
+            return write_payload((const uint8_t *)data, length);
         }
 
         void append_byte(const char data)
