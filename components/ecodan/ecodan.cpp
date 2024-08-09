@@ -5,13 +5,6 @@ namespace ecodan
 { 
     void EcodanHeatpump::setup() {
         heatpumpInitialized = initialize();
-        xTaskCreate(
-            [](void* o){ static_cast<EcodanHeatpump*>(o)->serial_rx_thread(); },
-            "serial_rx_task",
-            8*1024,
-            this,
-            5,
-            NULL);        
     }
 
 
@@ -58,39 +51,43 @@ namespace ecodan
         ESP_LOGI(TAG, "config"); 
     }
 
-#pragma region Configuration
-
-    void EcodanHeatpump::set_rx(int rx) { 
-        serialRxPort = rx; 
-    }
-
-    void EcodanHeatpump::set_tx(int tx) { 
-        serialTxPort = tx; 
-    }
-
-#pragma endregion Configuration
-
-#pragma region Init
-
     bool EcodanHeatpump::initialize()
     {
-        ESP_LOGI(TAG, "Initializing HeatPump with serial rx: %d, tx: %d", (int8_t)serialRxPort, (int8_t)serialTxPort);
+        if (!uart_) {
+            ESP_LOGE(TAG, "No UART configured");
+            return false;
+        }
 
-        pinMode(serialRxPort, INPUT_PULLUP);
-        pinMode(serialTxPort, OUTPUT);
+        ESP_LOGI(TAG, "Initializing HeatPump using UART %p, proxy %p", uart_, proxy_uart_);
+ 
+        if (uart_->get_baud_rate() != 2400 ||
+            uart_->get_stop_bits() != 1 ||
+            uart_->get_data_bits() != 8 ||
+            uart_->get_parity() != uart::UART_CONFIG_PARITY_EVEN) {
+            ESP_LOGI(TAG, "UART not configured for 2400 8E1. This may not work...");
+        }
 
-        delay(25); // There seems to be a window after setting the pin modes where trying to use the UART can be flaky, so introduce a short delay
-
-        port.begin(2400, SERIAL_8E1, serialRxPort, serialTxPort);
         if (!is_connected())
             begin_connect();
-        init_hw_watchdog();        
+
         return true;
     }
 
+    void EcodanHeatpump::loop()
+    {
+        if (uart_ && uart_->available())
+        {
+            handle_response();
+        }
+        if (proxy_uart_ && proxy_uart_->available())
+        {
+            handle_proxy();
+        }
+    }
+
     void EcodanHeatpump::handle_loop()
-    {         
-        if (!is_connected() && !port.available())
+    {
+        if (!is_connected() && uart_ && !uart_->available())
         {
             static auto last_attempt = std::chrono::steady_clock::now();
             auto now = std::chrono::steady_clock::now();
@@ -119,8 +116,6 @@ namespace ecodan
         return connected;
     }
 
-
-#pragma endregion Init
 
 } // namespace ecodan
 } // namespace esphome

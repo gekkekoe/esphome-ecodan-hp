@@ -7,62 +7,24 @@
 namespace esphome {
 namespace ecodan 
 {
-#pragma region ESP32Hardware
-    TaskHandle_t serialRxTaskHandle = nullptr;
-
-    void IRAM_ATTR serial_rx_isr()
+    bool EcodanHeatpump::serial_tx(uart::UARTComponent *uart, Message& msg)
     {
-        BaseType_t higherPriorityTaskWoken = pdFALSE;
-        vTaskNotifyGiveIndexedFromISR(serialRxTaskHandle, 0, &higherPriorityTaskWoken);
-#if CONFIG_IDF_TARGET_ESP32C3
-        portEND_SWITCHING_ISR(higherPriorityTaskWoken);
-#else
-        portYIELD_FROM_ISR(higherPriorityTaskWoken);
-#endif
-    }
-
-    void init_watchdog()
-    {
-#if ARDUINO_ARCH_ESP32
-        esp_task_wdt_init(15, true); // Reset the board if the watchdog timer isn't reset every 15s.        
-#endif
-    }
-
-    void add_thread_to_watchdog()
-    {
-#if ARDUINO_ARCH_ESP32
-        esp_task_wdt_add(nullptr);
-#endif
-    }
-
-    void ping_watchdog()
-    {
-#if ARDUINO_ARCH_ESP32
-        esp_task_wdt_reset();
-#endif
-    }
-#pragma endregion ESP32Hardware    
-
-
-#pragma region Serial
-    bool EcodanHeatpump::serial_tx(Message& msg)
-    {
-        if (!port)
+        if (!uart)
         {
             ESP_LOGE(TAG, "Serial connection unavailable for tx");
             return false;
         }
-
+#if 0
         if (port.availableForWrite() < msg.size())
         {
             ESP_LOGI(TAG, "Serial tx buffer size: %u", port.availableForWrite());
             return false;
         }
-
+#endif
         msg.set_checksum();
         {
             std::lock_guard<std::mutex> lock{portWriteMutex};
-            port.write(msg.buffer(), msg.size());
+            uart->write_array(msg.buffer(), msg.size());
         }
         //port.flush(true);
 
@@ -70,114 +32,53 @@ namespace ecodan
 
         return true;
     }
-    
-    void EcodanHeatpump::resync_rx()
+
+    bool EcodanHeatpump::serial_rx(uart::UARTComponent *uart, Message& msg)
     {
-        while (port.available() > 0)
-            port.read();
-    }
+        uint8_t data;
+        bool skipping = false;
 
-    bool EcodanHeatpump::serial_rx(Message& msg)
-    {
-        if (!port)
-        {
-            ESP_LOGE(TAG, "Serial connection unavailable for rx");
-            return false;
-        }
-
-        if (port.available() < HEADER_SIZE)
-        {
-            const TickType_t maxBlockingTime = pdMS_TO_TICKS(1000);
-            ulTaskNotifyTakeIndexed(0, pdTRUE, maxBlockingTime);
-
-            // We were woken by an interrupt, but there's not enough data available
-            // yet on the serial port for us to start processing it as a packet.
-            if (port.available() < HEADER_SIZE)
-                return false;
-        }
-
-        // Scan for the start of an Ecodan packet.
-        if (port.peek() != HEADER_MAGIC_A)
-        {
-            ESP_LOGE(TAG, "Dropping serial data, header magic mismatch");
-            resync_rx();
-            return false;
-        }
-
-        if (port.readBytes(msg.buffer(), HEADER_SIZE) < HEADER_SIZE)
-        {
-            ESP_LOGI(TAG, "Serial port header read failure!");
-            resync_rx();
-            return false;
-        }
-
-        msg.increment_write_offset(HEADER_SIZE);
-
-        if (!msg.verify_header())
-        {
-            ESP_LOGI(TAG, "Serial port message appears invalid, skipping payload wait...");
-            resync_rx();
-            return false;
-        }
-
-        // It shouldn't take long to receive the rest of the payload after we get the header.
-        size_t remainingBytes = msg.payload_size() + CHECKSUM_SIZE;
-        auto startTime = std::chrono::steady_clock::now();
-        while (port.available() < remainingBytes)
-        {
-            delay(1);
-            if (std::chrono::steady_clock::now() - startTime > std::chrono::seconds(10))
-            {
-                ESP_LOGI(TAG, "Serial port message could not be received within 10s (got %u / %u bytes)", port.available(), remainingBytes);
-                resync_rx();
-                return false;
+        while (uart->available() && uart->read_byte(&data)) {
+            // Discard bytes until we see one that might reasonably be
+            // the first byte of a packet, complaining only once.
+            if (msg.get_write_offset() == 0 && data != HEADER_MAGIC_A) {
+                if (!skipping) {
+                    ESP_LOGE(TAG, "Dropping serial data; header magic mismatch");
+                    skipping = true;
+                }
+                continue;
             }
+            skipping = false;
+
+            // Add the byte to the packet.
+            msg.append_byte(data);
+
+            // If the header is now complete, check it for sanity.
+            if (msg.get_write_offset() == HEADER_SIZE && !msg.verify_header()) {
+                ESP_LOGI(TAG, "Serial port message appears invalid, skipping payload...");
+                msg = Message();
+                continue;
+            }
+
+            // If we don't yet have the full header, or if we do have the
+            // header but not yet the full payload, keep going.
+            if (msg.get_write_offset() <= HEADER_SIZE ||
+                msg.get_write_offset() < msg.size()) {
+                continue;
+            }
+
+            // Got full packet. Verify its checksum.
+            if (!msg.verify_checksum()) {
+                ESP_LOGI(TAG, "Serial port message checksum invalid");
+                msg = Message();
+                continue;
+            }
+
+            return true;
         }
 
-        if (port.readBytes(msg.payload(), remainingBytes) < remainingBytes)
-        {
-            ESP_LOGI(TAG, "Serial port payload read failure!");
-            resync_rx();
-            return false;
-        }
-
-        msg.increment_write_offset(msg.payload_size()); // Don't count checksum byte.
-
-        if (!msg.verify_checksum())
-        {
-            resync_rx();
-            return false;
-        }
-
-        //ESP_LOGW(TAG, msg.debug_dump_packet().c_str());
-
-        return true;
+        return false;
     }
-
-    void EcodanHeatpump::serial_rx_thread()
-    {        
-        add_thread_to_watchdog();
-        // Wake the serial RX thread when the serial RX GPIO pin changes (this may occur during or after packet receipt)
-        serialRxTaskHandle = xTaskGetCurrentTaskHandle();
-
-        {
-            attachInterrupt(digitalPinToInterrupt(serialRxPort), serial_rx_isr, FALLING);
-        }        
-        
-        while (true)
-        {   
-            //ESP_LOGI(TAG, "handle response on core %d", xPortGetCoreID());
-            ping_watchdog();            
-            handle_response();
-        }
-    }
-
-    void EcodanHeatpump::init_hw_watchdog() 
-    {
-        init_watchdog();
-    }
-
-#pragma endregion Serial
 
 }
 }

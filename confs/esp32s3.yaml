@@ -10,9 +10,38 @@ esphome:
 
 esp32:
   board: esp32-s3-devkitc-1
+  variant: esp32s3
   framework:
-    type: arduino
-    version: latest
+    type: esp-idf
+    version: recommended
+    # Custom sdkconfig options
+    sdkconfig_options:
+      COMPILER_OPTIMIZATION_SIZE: y
+    # Advanced tweaking options
+    advanced:
+      ignore_efuse_mac_crc: false  
+
+uart:
+  id: uart_ecodan
+  rx_pin:
+    number: GPIO2
+    mode:
+      input: true
+      pullup: true
+  tx_pin:
+    number: GPIO1
+    mode:
+      output: true
+  baud_rate: 2400
+  parity: EVEN
+  stop_bits: 1
+  # debug:
+  #   direction: BOTH
+  #   dummy_receiver: false
+  #   after:
+  #     delimiter: "\n"
+  #   sequence:
+  #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
 
 light:
 #G35=RGB WS2812C-2020

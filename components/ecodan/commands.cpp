@@ -2,7 +2,6 @@
 
 #include "esphome.h"
 
-#include <HardwareSerial.h>
 #include <functional>
 
 #include <mutex>
@@ -12,7 +11,6 @@
 namespace esphome {
 namespace ecodan 
 {
-#pragma region Commands
     void EcodanHeatpump::set_room_temperature(float newTemp, esphome::ecodan::SetZone zone)
     {
         Message cmd{MsgType::SET_CMD, SetType::ROOM_SETTINGS};
@@ -213,7 +211,7 @@ namespace ecodan
         Message& cmd = statusCmdQueue[cmdIndex];
         cmdIndex = (cmdIndex + 1) % MAX_STATUS_CMD_SIZE;
 
-        if (!serial_tx(cmd))
+        if (!serial_tx(uart_, cmd))
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
             cmdIndex = 0;
@@ -235,7 +233,7 @@ namespace ecodan
         
         //ESP_LOGI(TAG, msg.debug_dump_packet().c_str());
 
-        if (!serial_tx(cmdQueue.front()))
+        if (!serial_tx(uart_, cmdQueue.front()))
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
             connected = false;
@@ -248,11 +246,11 @@ namespace ecodan
     bool EcodanHeatpump::begin_connect()
     {
         Message cmd{MsgType::CONNECT_CMD};
-        char payload[3] = {0xCA, 0x01};
+        uint8_t payload[3] = {0xCA, 0x01};
         cmd.write_payload(payload, sizeof(payload));
 
         ESP_LOGI(TAG, "Attempt to tx CONNECT_CMD!");
-        if (!serial_tx(cmd))
+        if (!serial_tx(uart_, cmd))
         {
             ESP_LOGI(TAG, "Failed to tx CONNECT_CMD!");
             return false;
@@ -260,7 +258,5 @@ namespace ecodan
 
         return true;
     }
-
-#pragma endregion Commands
 
 }}
