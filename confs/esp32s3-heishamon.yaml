@@ -1,0 +1,49 @@
+esphome:
+  name: ${name}
+  friendly_name: ${friendlyName}
+
+# esp32:
+#   board: esp32-s3-devkitc-1
+#   variant: esp32s3
+#   framework:
+#     type: esp-idf
+#     version: recommended
+#     # Custom sdkconfig options
+#     sdkconfig_options:
+#       COMPILER_OPTIMIZATION_SIZE: y
+#     # Advanced tweaking options
+#     advanced:
+#       ignore_efuse_mac_crc: false  
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+    version: 5.0.2
+    platform_version: 6.3.2
+
+uart:
+  id: uart_ecodan
+  rx_pin:
+    number: GPIO18
+    mode:
+      input: true
+      pullup: true
+  tx_pin:
+    number: GPIO17
+    mode:
+      output: true
+  baud_rate: 2400
+  parity: EVEN
+  stop_bits: 1
+  # debug:
+  #   direction: BOTH
+  #   dummy_receiver: false
+  #   after:
+  #     delimiter: "\n"
+  #   sequence:
+  #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+#define HEATPUMPRX 18
+#define HEATPUMPTX 17
+#define PROXYRX 9
+#define PROXYTX 8
