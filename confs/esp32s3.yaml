@@ -1,6 +1,8 @@
 esphome:
   name: ${name}
   friendly_name: ${friendlyName}
+  platformio_options:
+    board_build.flash_mode: dio
   on_boot:
     priority: 200
     then:
@@ -10,11 +12,15 @@ esphome:
 
 esp32:
   board: esp32-s3-devkitc-1
-  variant: esp32s3
   framework:
     type: esp-idf
-    version: 5.0.2
-    platform_version: 6.3.2
+    version: recommended
+    # Custom sdkconfig options
+    sdkconfig_options:
+      COMPILER_OPTIMIZATION_SIZE: y
+    # Advanced tweaking options
+    advanced:
+      ignore_efuse_mac_crc: false
 
 uart:
   id: uart_ecodan
