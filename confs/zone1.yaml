@@ -77,3 +77,9 @@ sensor:
     z1_room_temp_target:
       id: z1_room_temp_target
       name: ${z1_room_temp_target}
+    z1_feed_temp:
+      id: z1_feed_temp
+      name: ${z1_feed_temp}
+    z1_return_temp:
+      id: z1_return_temp
+      name: ${z1_return_temp}

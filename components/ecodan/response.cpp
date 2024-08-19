@@ -90,8 +90,20 @@ namespace ecodan
                 status.BoilerFlowTemperature = res.get_float16(1);
                 status.BoilerReturnTemperature = res.get_float16(4);
 
+                // when zone kit is installed, z1 info is stored at the same location as the boiler temps
+                // could also be that Boiler feed/return temp are not correct
+                status.Z1FeedTemperature = res.get_float16(1);
+                status.Z1ReturnTemperature = res.get_float16(4);
+
+                status.Z2FeedTemperature = res.get_float16(7);
+                status.Z2ReturnTemperature = res.get_float16(10);
+
                 publish_state("boiler_flow_temp", status.BoilerFlowTemperature);
                 publish_state("boiler_return_temp", status.BoilerReturnTemperature);
+                publish_state("z1_feed_temp", status.Z1FeedTemperature);
+                publish_state("z1_return_temp", status.Z1ReturnTemperature);
+                publish_state("z2_feed_temp", status.Z2FeedTemperature);
+                publish_state("z2_return_temp", status.Z2ReturnTemperature);                                  
                 break;
             case GetType::EXTERNAL_STATE:
                 // 1 = IN1 Thermostat heat/cool request

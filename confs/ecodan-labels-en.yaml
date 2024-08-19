@@ -56,6 +56,8 @@ substitutions:
   dhw_cop: DHW COP
   dhw_delivered: DHW Delivered
   hp_feed_temp: Feed Temp
+  z1_feed_temp: Z1 Feed Temp
+  z2_feed_temp: Z2 Feed Temp
   flow_rate: Flow Rate
   heat_source_text: Heat Source
   heatpump: Heatpump
@@ -89,5 +91,7 @@ substitutions:
   hp_refrigerant_temp: Refrigerant Liquid Temp
   hp_refrigerant_condensing_temp: Refrigerant Condensing Temp
   hp_return_temp: Return Temp
+  z1_return_temp: Z1 Return Temp
+  z2_return_temp: Z2 Return Temp 
   status_water_pump: Water Pump Status
   status_water_pump_2: Water Pump 2 Status

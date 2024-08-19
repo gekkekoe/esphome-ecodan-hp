@@ -56,6 +56,8 @@ substitutions:
   dhw_cop: SWW cop
   dhw_delivered: SWW geleverd
   hp_feed_temp: Aanvoer temp
+  z1_feed_temp: Z1 Aanvoer temp
+  z2_feed_temp: Z2 Aanvoer temp
   flow_rate: Flow waarde
   heat_source_text: Verwarmings bron
   heatpump: warmtepomp
@@ -89,5 +91,7 @@ substitutions:
   hp_refrigerant_temp: Koelmiddel temp
   hp_refrigerant_condensing_temp: Koelmiddel condensatie temp
   hp_return_temp: Retour temp
+  z1_return_temp: Z1 Retour temp
+  z2_return_temp: Z2 Retour temp
   status_water_pump: Status water pomp
   status_water_pump_2: Status water pomp 2

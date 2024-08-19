@@ -56,6 +56,8 @@ substitutions:
   dhw_cop: COP ACS
   dhw_delivered: En. ACS Prod. Ieri
   hp_feed_temp: T. Mandata PDC
+  z1_feed_temp: Z1 T. Mandata PDC
+  z2_feed_temp: Z2 T. Mandata PDC
   flow_rate: Portata
   heat_source_text: Sorgente Risc.
   heatpump: PDC
@@ -89,5 +91,7 @@ substitutions:
   hp_refrigerant_temp: T. Mandata Liq. Refr.
   hp_refrigerant_condensing_temp: T. Cond. Liq. Refr.
   hp_return_temp: T. Ritorno Liq. Refr.
+  z1_return_temp: Z1 T. Ritorno Liq. Refr.
+  z2_return_temp: Z2 T. Ritorno Liq. Refr.
   status_water_pump: Pompa Circolazione
   status_water_pump_2: Pompa Circolazione 2

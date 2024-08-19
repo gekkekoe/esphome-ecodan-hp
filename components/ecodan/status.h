@@ -35,6 +35,10 @@ namespace ecodan
         float OutsideTemperature;
         float HpFeedTemperature;
         float HpReturnTemperature;
+        float Z1FeedTemperature;
+        float Z1ReturnTemperature;
+        float Z2FeedTemperature;
+        float Z2ReturnTemperature;                
         float HpRefrigerantLiquidTemperature;
         float HpRefrigerantCondensingTemperature;
         float DhwTemperature{NAN};
