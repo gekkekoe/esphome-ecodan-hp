@@ -141,3 +141,8 @@ switch:
     turn_off_action:
       - light.turn_off:
           id: led
+
+sensor:
+  - platform: internal_temperature
+    name: ${internal_esp_temperature}
+    entity_category: diagnostic

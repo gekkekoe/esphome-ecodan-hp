@@ -287,10 +287,6 @@ sensor:
     entity_category: diagnostic
     update_interval: 5s
 
-  - platform: internal_temperature
-    name: ${internal_esp_temperature}
-    entity_category: diagnostic
-
 binary_sensor:
   - platform: ecodan
     status_holiday:

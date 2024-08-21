@@ -55,3 +55,9 @@ uart:
 #define HEATPUMPTX 17
 #define PROXYRX 9
 #define PROXYTX 8
+
+
+sensor:
+  - platform: internal_temperature
+    name: ${internal_esp_temperature}
+    entity_category: diagnostic
