@@ -1,0 +1,27 @@
+esp8266:
+  board: esp07s
+
+  framework:
+    version: dev
+
+uart:
+  id: uart_ecodan
+  rx_pin:
+    number: GPIO14
+    mode:
+      input: true
+      pullup: true
+  tx_pin:
+    number: GPIO16
+    mode:
+      output: true
+  baud_rate: 2400
+  parity: EVEN
+  stop_bits: 1
+  debug:
+     direction: BOTH
+     dummy_receiver: false
+     after:
+       delimiter: "\n"
+     sequence:
+       - lambda: UARTDebug::log_hex(direction, bytes, ' ');
