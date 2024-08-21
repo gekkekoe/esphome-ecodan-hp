@@ -1,0 +1,48 @@
+esphome:
+  platformio_options:
+    board_build.f_cpu: 160000000L
+
+
+esp8266:
+  board: esp07s
+
+  framework:
+    version: dev
+
+uart:
+  id: uart_ecodan
+  rx_pin:
+    number: GPIO14
+    mode:
+      input: true
+      pullup: true
+  tx_pin:
+    number: GPIO16
+    mode:
+      output: true
+  baud_rate: 2400
+  parity: EVEN
+  stop_bits: 1
+  debug:
+     direction: BOTH
+     dummy_receiver: false
+     after:
+       delimiter: "\n"
+     sequence:
+       - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+
+binary_sensor:
+  - platform: gpio
+    pin: GPIO4
+    name: "Button"
+
+switch:
+  - platform: gpio
+    pin: GPIO15
+    id: led_red
+  - platform: gpio
+    pin: GPIO12
+    id: led_green
+  - platform: gpio
+    pin: GPIO13
+    id: led_blue
