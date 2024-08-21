@@ -3,10 +3,7 @@
 #include "esphome.h"
 
 #include <functional>
-
-#include <mutex>
 #include <queue>
-#include <thread>
 
 namespace esphome {
 namespace ecodan 
@@ -175,12 +172,8 @@ namespace ecodan
 
     bool EcodanHeatpump::schedule_cmd(Message& cmd)
     {   
-        {
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
-            cmdQueue.emplace(std::move(cmd));
-        }
-
-       return dispatch_next_set_cmd();
+        cmdQueue.emplace(std::move(cmd));
+        return dispatch_next_set_cmd();
     }
 
     #define MAX_STATUS_CMD_SIZE 19
@@ -225,8 +218,6 @@ namespace ecodan
 
     bool EcodanHeatpump::dispatch_next_set_cmd()
     {
-        std::lock_guard<std::mutex> lock{cmdQueueMutex};
-
         if (cmdQueue.empty())
         {
             return true;

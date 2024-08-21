@@ -252,7 +252,6 @@ namespace ecodan
     {
         {
             //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
-            std::lock_guard<std::mutex> lock{cmdQueueMutex};
             if (!cmdQueue.empty())
                 cmdQueue.pop();
         }

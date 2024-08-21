@@ -1,8 +1,8 @@
 #pragma once
 
 #include <functional>
-#include <mutex>
 #include <string>
+#include <chrono>
 
 #include "esphome.h"
 #include "esphome/core/component.h"
@@ -74,7 +74,6 @@ namespace ecodan
     private:
         uart::UARTComponent *uart_ = nullptr;
         uart::UARTComponent *proxy_uart_ = nullptr;
-        std::mutex portWriteMutex;
         Message res_buffer_;
         Message proxy_buffer_;
 
@@ -84,7 +83,6 @@ namespace ecodan
         bool heatpumpInitialized = false;
         
         std::queue<Message> cmdQueue;
-        std::mutex cmdQueueMutex;
 
         void resync_rx();
         bool serial_rx(uart::UARTComponent *uart, Message& msg);

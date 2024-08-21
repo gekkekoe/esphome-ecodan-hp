@@ -22,10 +22,7 @@ namespace ecodan
         }
 #endif
         msg.set_checksum();
-        {
-            std::lock_guard<std::mutex> lock{portWriteMutex};
-            uart->write_array(msg.buffer(), msg.size());
-        }
+        uart->write_array(msg.buffer(), msg.size());
         //port.flush(true);
 
         //ESP_LOGV(TAG, msg.debug_dump_packet().c_str());
