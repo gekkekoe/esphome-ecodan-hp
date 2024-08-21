@@ -95,3 +95,4 @@ substitutions:
   z2_return_temp: Z2 T. Ritorno Liq. Refr.
   status_water_pump: Pompa Circolazione
   status_water_pump_2: Pompa Circolazione 2
+  cycling_detected: Cycling detected

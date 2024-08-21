@@ -95,3 +95,4 @@ substitutions:
   z2_return_temp: Z2 Retour temp
   status_water_pump: Status water pomp
   status_water_pump_2: Status water pomp 2
+  cycling_detected: Pendelen
