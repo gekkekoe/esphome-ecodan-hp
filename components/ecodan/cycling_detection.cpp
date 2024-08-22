@@ -10,7 +10,7 @@ namespace ecodan
         if (!cycleDetectionList.empty()) {
             auto it = cycleDetectionList.begin();
             while (it != cycleDetectionList.end()) {
-                if ((timeStamp - *it) >= std::chrono::minutes(5))
+                if ((timeStamp - *it) >= std::chrono::minutes(10))
                     break;
                 it++;
             }
