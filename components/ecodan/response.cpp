@@ -31,7 +31,7 @@ namespace ecodan
                 status.update_output_power_estimation();
 
                 clear_obsoleted_cycle_detection_entries();
-                publish_state("cycling_detected", cycleDetectionList.size() > 2);
+                publish_state("cycling_detected", cycleDetectionList.size() >= 2);
                 break;
             case GetType::DHW_STATE:
                 // 6 = heat source , 0x0 = heatpump, 0x1 = screw in heater, 0x2 = electric heater..
