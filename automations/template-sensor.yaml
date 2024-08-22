@@ -30,7 +30,47 @@ sensor:
       {% set a = log(rh / 100) + (17.62 * t / (243.12 + t)) | default(0) | float %}
       {{ (243.12 * a / (17.62 - a)) | float | round(1) }}
 
-# monthly cop
+# monthly cop & total increasing counters
+sensor:
+  - name: Heatpump total heating consumed
+    unique_id: heatpump_total_heating_consumed
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    state: "{{ states('sensor.ecodan_heatpump_heating_consumed')|float }}"
+  - name: Heatpump total heating produced
+    unique_id: heatpump_total_heating_produced
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    state: "{{ states('sensor.ecodan_heatpump_heating_delivered')|float }}"
+
+  - name: Heatpump total cool consumed
+    unique_id: heatpump_total_cool_consumed
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    state: "{{ states('sensor.ecodan_heatpump_cool_consumed')|float }}"
+  - name: Heatpump total cool produced
+    unique_id: heatpump_total_cool_produced
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    state: "{{ states('sensor.ecodan_heatpump_cool_delivered')|float }}"
+
+  - name: Heatpump total dhw consumed
+    unique_id: heatpump_total_dhw_consumed
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    state: "{{ states('sensor.ecodan_heatpump_dhw_consumed')|float }}"
+  - name: Heatpump total dhw produced
+    unique_id: heatpump_total_dhw_produced
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    state: "{{ states('sensor.ecodan_heatpump_dhw_delivered')|float }}"
+
   - unique_id: heatpump_monthly_heating_cop
     unit_of_measurement: ""
     state: >-
@@ -49,3 +89,4 @@ sensor:
       {% set consumed = states('sensor.monthly_dhw_consumed') | default(0) | float %}
       {% set produced = states('sensor.monthly_dhw_produced') | default(0) | float %}
       {{ 0 if (consumed == 0 or produced == 0) else (produced / consumed) | float | round(2) }}
+
