@@ -18,17 +18,8 @@ namespace ecodan
                 // 4+5 = fault code: letter 2, 0x00 0x03 = A3
                 break;
             case GetType::COMPRESSOR_FREQUENCY:
-                if (res[1] == 0 && res[1] != status.CompressorFrequency) {
-                    // add new item
-                    cycleDetectionList.emplace_front(std::chrono::steady_clock::now());
-                }
-                    
                 status.CompressorFrequency = res[1];
                 publish_state("compressor_frequency", static_cast<float>(status.CompressorFrequency));
-                status.update_output_power_estimation();
-
-                clear_obsoleted_cycle_detection_entries();
-                publish_state("cycling_detected", cycleDetectionList.size() >= 2);
                 break;
             case GetType::DHW_STATE:
                 // 6 = heat source , 0x0 = heatpump, 0x1 = screw in heater, 0x2 = electric heater..

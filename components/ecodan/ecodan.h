@@ -3,7 +3,6 @@
 #include <functional>
 #include <string>
 #include <chrono>
-#include <list>
 
 #include "esphome.h"
 #include "esphome/core/component.h"
@@ -85,8 +84,6 @@ namespace ecodan
         
         std::queue<Message> cmdQueue;
 
-        std::list<std::chrono::time_point<std::chrono::steady_clock>> cycleDetectionList;
-
         void resync_rx();
         bool serial_rx(uart::UARTComponent *uart, Message& msg);
         bool serial_tx(uart::UARTComponent *uart, Message& msg);
@@ -100,7 +97,6 @@ namespace ecodan
         void handle_set_response(Message& res);
         void handle_connect_response(Message& res);
         void handle_proxy();
-        void clear_obsoleted_cycle_detection_entries();
     };
 
     class EcodanClimate : public climate::Climate, public PollingComponent  {

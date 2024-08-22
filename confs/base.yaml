@@ -355,6 +355,7 @@ binary_sensor:
     status_dhw_eco:
       id: status_dhw_eco 
       name: ${status_dhw_eco}
+
     status_defrost:
       id: status_defrost
       name: ${status_defrost}
@@ -382,6 +383,3 @@ binary_sensor:
     status_in5_request:
       id: status_in5_request
       name: ${status_in5_request}
-    cycling_detected:
-      id: cycling_detected 
-      name: ${cycling_detected}
