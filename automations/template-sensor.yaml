@@ -29,3 +29,23 @@ sensor:
       {% set rh = state_attr('climate.room' , 'current_humidity') | default(0) | float %}
       {% set a = log(rh / 100) + (17.62 * t / (243.12 + t)) | default(0) | float %}
       {{ (243.12 * a / (17.62 - a)) | float | round(1) }}
+
+# monthly cop
+  - unique_id: heatpump_monthly_heating_cop
+    unit_of_measurement: ""
+    state: >-
+      {% set consumed = states('sensor.monthly_heating_consumed') | default(0) | float %}
+      {% set produced = states('sensor.monthly_heating_produced') | default(0) | float %}
+      {{ 0 if (consumed == 0 or produced == 0) else (produced / consumed) | float | round(2) }}
+  - unique_id: heatpump_monthly_cool_cop
+    unit_of_measurement: ""
+    state: >-
+      {% set consumed = states('sensor.monthly_cool_consumed') | default(0) | float %}
+      {% set produced = states('sensor.monthly_cool_produced') | default(0) | float %}
+      {{ 0 if (consumed == 0 or produced == 0) else (produced / consumed) | float | round(2) }}
+  - unique_id: heatpump_monthly_dhw_cop
+    unit_of_measurement: ""
+    state: >-
+      {% set consumed = states('sensor.monthly_dhw_consumed') | default(0) | float %}
+      {% set produced = states('sensor.monthly_dhw_produced') | default(0) | float %}
+      {{ 0 if (consumed == 0 or produced == 0) else (produced / consumed) | float | round(2) }}
