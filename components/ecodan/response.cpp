@@ -18,10 +18,7 @@ namespace ecodan
                 // 4+5 = fault code: letter 2, 0x00 0x03 = A3
                 break;
             case GetType::COMPRESSOR_FREQUENCY:
-                if ((status.Operation == Status::OperationMode::HEAT_ON || status.Operation == Status::OperationMode::COOL_ON)
-                    && res[1] == 0 
-                    && res[1] != status.CompressorFrequency) {
-
+                if (res[1] == 0 && res[1] != status.CompressorFrequency) {
                     // add new item
                     cycleDetectionList.emplace_front(std::chrono::steady_clock::now());
                 }
