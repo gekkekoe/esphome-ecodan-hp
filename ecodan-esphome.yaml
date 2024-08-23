@@ -23,7 +23,7 @@ wifi:
 captive_portal:
 
 ota:
-  platform: esphome
+  - platform: esphome
 #  password: !secret heatpump_ota_password
 
 api:
@@ -92,6 +92,7 @@ logger:
 # Enable Web server.
 web_server:
   port: 80
+  #ota: true
 
 ecodan:
   id: ecodan_instance
