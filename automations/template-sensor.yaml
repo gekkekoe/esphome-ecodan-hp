@@ -31,45 +31,44 @@ sensor:
       {{ (243.12 * a / (17.62 - a)) | float | round(1) }}
 
 # monthly cop & total increasing counters
-sensor:
   - name: Heatpump total heating consumed
     unique_id: heatpump_total_heating_consumed
     unit_of_measurement: "kWh"
     device_class: energy
-    state_class: total_increasing
     state: "{{ states('sensor.ecodan_heatpump_heating_consumed')|float }}"
+    availability: "{{ states('sensor.ecodan_heatpump_heating_consumed') not in ['unknown', 'unavailable', 'none'] }}"
   - name: Heatpump total heating produced
     unique_id: heatpump_total_heating_produced
     unit_of_measurement: "kWh"
     device_class: energy
-    state_class: total_increasing
     state: "{{ states('sensor.ecodan_heatpump_heating_delivered')|float }}"
+    availability: "{{ states('sensor.ecodan_heatpump_heating_delivered') not in ['unknown', 'unavailable', 'none'] }}"
 
   - name: Heatpump total cool consumed
     unique_id: heatpump_total_cool_consumed
     unit_of_measurement: "kWh"
     device_class: energy
-    state_class: total_increasing
     state: "{{ states('sensor.ecodan_heatpump_cool_consumed')|float }}"
+    availability: "{{ states('sensor.ecodan_heatpump_cool_consumed') not in ['unknown', 'unavailable', 'none'] }}"
   - name: Heatpump total cool produced
     unique_id: heatpump_total_cool_produced
     unit_of_measurement: "kWh"
     device_class: energy
-    state_class: total_increasing
     state: "{{ states('sensor.ecodan_heatpump_cool_delivered')|float }}"
+    availability: "{{ states('sensor.ecodan_heatpump_cool_delivered') not in ['unknown', 'unavailable', 'none'] }}"
 
   - name: Heatpump total dhw consumed
     unique_id: heatpump_total_dhw_consumed
     unit_of_measurement: "kWh"
     device_class: energy
-    state_class: total_increasing
     state: "{{ states('sensor.ecodan_heatpump_dhw_consumed')|float }}"
+    availability: "{{ states('sensor.ecodan_heatpump_dhw_consumed') not in ['unknown', 'unavailable', 'none'] }}"
   - name: Heatpump total dhw produced
     unique_id: heatpump_total_dhw_produced
     unit_of_measurement: "kWh"
     device_class: energy
-    state_class: total_increasing
     state: "{{ states('sensor.ecodan_heatpump_dhw_delivered')|float }}"
+    availability: "{{ states('sensor.ecodan_heatpump_dhw_delivered') not in ['unknown', 'unavailable', 'none'] }}"
 
   - unique_id: heatpump_monthly_heating_cop
     unit_of_measurement: ""
