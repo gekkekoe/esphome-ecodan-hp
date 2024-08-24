@@ -125,6 +125,7 @@ namespace ecodan
         bool dhw_climate_mode = false;
 
         void refresh();
+        void validate_target_temperature();
         std::chrono::time_point<std::chrono::steady_clock> last_update;
     };    
 

@@ -30,6 +30,7 @@ namespace ecodan
             float target_temp = this->get_target_temp();
             if (this->target_temperature != target_temp && !std::isnan(target_temp)) {
                 this->target_temperature = target_temp;
+                validate_target_temperature();
                 should_publish = true;
             }
         }
@@ -101,8 +102,10 @@ namespace ecodan
             should_publish = true;
         }
 
-        if (should_publish)
-            this->publish_state();        
+        if (should_publish) {
+            //ESP_LOGE(TAG, "publish: %d", should_publish);
+            this->publish_state();
+        }        
     }
 
     void EcodanClimate::update() {
@@ -121,8 +124,9 @@ namespace ecodan
         if (call.get_mode().has_value()) {
             // User requested mode change
             climate::ClimateMode mode = *call.get_mode();
-
+            
             if (this->mode != mode) {
+                this->mode = mode;
                 switch (mode) {
                     case climate::ClimateMode::CLIMATE_MODE_HEAT:
                         if (this->set_heating_mode != nullptr)
@@ -140,7 +144,6 @@ namespace ecodan
                     break;
                 }
                 // Publish updated state
-                this->mode = mode;
                 should_publish = true;
             }
         }
@@ -154,6 +157,7 @@ namespace ecodan
                 this->set_target_temp(temp);
 
             this->target_temperature = temp;
+            validate_target_temperature();
             should_publish = true;
         }
 
@@ -164,19 +168,50 @@ namespace ecodan
     }
 
     climate::ClimateTraits EcodanClimate::traits() {
-        // The capabilities of the climate device
         auto traits = climate::ClimateTraits();
+        // The capabilities of the climate device
+        traits.set_supports_two_point_target_temperature(false);
         traits.set_supports_current_temperature(get_current_temp != nullptr);
-        traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT});
-        if (!this->dhw_climate_mode) 
-            traits.add_supported_mode(climate::CLIMATE_MODE_COOL);
-
         traits.set_supports_action(true);
-        traits.set_visual_min_temperature(5);
-        traits.set_visual_max_temperature(60);
-        traits.set_visual_target_temperature_step(0.5); 
+        
+        if (this->dhw_climate_mode)  {
+
+            traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT});
+            traits.set_visual_min_temperature(40);
+            traits.set_visual_max_temperature(60);
+        }
+        else 
+        {
+            traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT, climate::CLIMATE_MODE_COOL});
+            
+            // dynamic adjustment in esphome works, but does not seem to progagate to HA
+            // auto is_cooling = this->mode == climate::ClimateMode::CLIMATE_MODE_COOL;
+            // traits.set_visual_min_temperature(is_cooling ? 5 : 25);
+            // traits.set_visual_max_temperature(is_cooling ? 20 : 60);
+            traits.set_visual_min_temperature(5);
+            traits.set_visual_max_temperature(60);           
+            //ESP_LOGE(TAG, "min: %f, max: %f", traits.get_visual_min_temperature(), traits.get_visual_max_temperature());
+        }
+        
+        traits.set_visual_target_temperature_step(0.5);
         traits.set_visual_current_temperature_step(0.5);
+
         return traits;
+    }
+
+    void EcodanClimate::validate_target_temperature() {
+        if (std::isnan(this->target_temperature)) {
+            this->target_temperature =
+                ((this->get_traits().get_visual_max_temperature() - this->get_traits().get_visual_min_temperature()) / 2) +
+                this->get_traits().get_visual_min_temperature();
+        } else {
+            // target_temperature must be between the visual minimum and the visual maximum
+            if (this->target_temperature < this->get_traits().get_visual_min_temperature())
+                this->target_temperature = this->get_traits().get_visual_min_temperature();
+
+            if (this->target_temperature > this->get_traits().get_visual_max_temperature())
+                this->target_temperature = this->get_traits().get_visual_max_temperature();
+        }
     }
 
 } // namespace ecodan
