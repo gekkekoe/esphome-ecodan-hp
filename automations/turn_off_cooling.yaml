@@ -1,0 +1,28 @@
+alias: Koelen uitzetten
+description: ""
+trigger:
+  - platform: state
+    entity_id:
+      - select.ecodan_heatpump_selected_operating_mode
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    from: Cool Flow Temperature
+    to: null
+condition: []
+action:
+  - action: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.ecodan_heatpump_server_control_zone_1_prohibit_cooling
+  - action: switch.turn_off
+    data: {}
+    target:
+      entity_id: switch.ecodan_heatpump_server_control_zone_1_prohibit_heating
+  - action: climate.set_temperature
+    target:
+      entity_id: climate.ecodan_heatpump_zone_1_climate
+    data:
+      temperature: 20
+mode: single
