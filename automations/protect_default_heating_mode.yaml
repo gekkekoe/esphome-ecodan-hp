@@ -1,0 +1,31 @@
+alias: Verwarmingsmodus corrigeren
+description: ""
+trigger:
+  - platform: state
+    entity_id:
+      - select.ecodan_heatpump_selected_operating_mode
+    from: null
+    to: Heat Compensation Curve
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  - platform: state
+    entity_id:
+      - select.ecodan_heatpump_selected_operating_mode
+    from: null
+    to: Heat Flow Temperature
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+condition: []
+action:
+  - action: climate.set_temperature
+    metadata: {}
+    data:
+      hvac_mode: heat
+      temperature: 20
+    target:å
+      entity_id: climate.ecodan_heatpump_zone_1_climate
+mode: single
