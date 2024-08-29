@@ -3,8 +3,8 @@ substitutions:
   friendlyName: Ecodan heatpump
 # heatpump heating/cooling switch
 # available modes: HEAT_ROOM_TEMP, HEAT_FLOW_TEMP, HEAT_COMPENSATION_CURVE, COOL_ROOM_TEMP, COOL_FLOW_TEMP
-  default_heating_switch_mode: HEAT_ROOM_TEMP
-  default_cooling_switch_mode: COOL_ROOM_TEMP
+  default_heating_switch_mode: HEAT_COMPENSATION_CURVE
+  default_cooling_switch_mode: COOL_FLOW_TEMP
 
 esphome:
   name: ${name}
@@ -61,8 +61,7 @@ packages:
     refresh: always
     files: [ 
             confs/base.yaml,        # required
-            #confs/esp32s3.yaml,     
-            confs/esp32.yaml, #for regular board
+            confs/esp32s3.yaml,     # confs/esp32.yaml, for regular board
             confs/zone1.yaml,
             ## enable if you want to use zone 2
             #confs/zone2.yaml,
@@ -73,7 +72,7 @@ packages:
             #confs/ecodan-labels-fr.yaml,
             confs/server-control.yaml,
             #confs/debug.yaml,
-            ## enable this to monitor wifi status with ESP in-built LED
+            ## enable this to monitor WiFi status with ESP in-built LED
             #confs/status_led.yaml,
            ]
 
