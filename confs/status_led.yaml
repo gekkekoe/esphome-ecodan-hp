@@ -1,0 +1,21 @@
+##########################
+# ESP Status LED
+output:
+
+  - platform: gpio
+    pin: 2
+    id: Led_connected_wifi
+# Test WIFI connecté et allumage voyant led 
+interval:
+  - interval: 15s
+    then:
+      if:
+        condition:
+          wifi.connected:
+        then:
+          - output.turn_on: Led_connected_wifi
+          - logger.log: WiFi is connected!
+
+        else:
+          - output.turn_off: Led_connected_wifi
+          - logger.log: WiFi is disconnected!
