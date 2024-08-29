@@ -72,6 +72,8 @@ packages:
             #confs/ecodan-labels-fr.yaml,
             confs/server-control.yaml,
             #confs/debug.yaml,
+            ## enable this to monitor WiFi status with ESP in-built LED
+            #confs/status_led.yaml,
            ]
 
 # enable logger
