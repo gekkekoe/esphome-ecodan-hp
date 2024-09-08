@@ -127,11 +127,12 @@ namespace ecodan
         schedule_cmd(cmd);
     }
 
-    void EcodanHeatpump::set_hp_mode(int mode)
+    void EcodanHeatpump::set_hp_mode(uint8_t mode)
     {
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
-        cmd[1] = SET_SETTINGS_FLAG_HP_MODE;
+        cmd[1] = SET_SETTINGS_FLAG_HP_MODE_ZONE1 | SET_SETTINGS_FLAG_HP_MODE_ZONE2;
         cmd[6] = mode;
+        cmd[7] = mode;
 
         schedule_cmd(cmd);
     }
