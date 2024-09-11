@@ -54,6 +54,11 @@ namespace ecodan
         bool ThreeWayValveActive;
         bool ThreeWayValve2Active;
 
+        // error codes
+        uint8_t RefrigerantErrorCode;
+        uint16_t FaultCodeLetters;
+        uint16_t FaultCodeNumeric;
+
         enum class PowerMode : uint8_t
         {
             STANDBY = 0,

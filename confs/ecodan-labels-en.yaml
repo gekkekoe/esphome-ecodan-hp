@@ -95,3 +95,5 @@ substitutions:
   z2_return_temp: Z2 Return Temp 
   status_water_pump: Water Pump Status
   status_water_pump_2: Water Pump 2 Status
+  fault_code_text: Fault code
+  refrigerant_error_code_text: Refrigerant error code

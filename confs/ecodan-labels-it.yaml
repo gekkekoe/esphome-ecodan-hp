@@ -95,3 +95,5 @@ substitutions:
   z2_return_temp: Z2 T. Ritorno Liq. Refr.
   status_water_pump: Pompa Circolazione
   status_water_pump_2: Pompa Circolazione 2
+  fault_code_text: Codice di errore
+  refrigerant_error_code_text: Liq. Refr. codice di errore

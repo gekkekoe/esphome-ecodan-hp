@@ -164,6 +164,27 @@ text_sensor:
           case esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION: return std::string("${legionella_prevention}");
           default: return std::string("Unknown");
       }
+  - platform: template
+    id: refrigerant_error_code_text
+    name: ${refrigerant_error_code_text}
+    entity_category: diagnostic
+    icon: mdi:alert
+    lambda: |-
+      auto value = static_cast<uint8_t>(id(refrigerant_error_code).state);
+      switch (value)
+      {
+          case 0: return std::string("Normal");
+          case 1: return std::string("Error (System)");
+          case 2: return std::string("Error (Startup)");
+          case 3: return std::string("Maintenance Error");
+          default: return std::string("Unknown");
+      }
+  - platform: ecodan
+    fault_code_text:
+      id: fault_code_text 
+      name: ${fault_code_text}
+      icon: mdi:alert
+      entity_category: diagnostic
 
 sensor:
   - platform: ecodan
@@ -241,7 +262,11 @@ sensor:
     dhw_consumed:
       name: ${dhw_consumed}
     dhw_delivered:
-      name: ${dhw_delivered}    
+      name: ${dhw_delivered}
+
+    refrigerant_error_code:
+      internal: true
+      id: refrigerant_error_code 
 
     status_heating_cooling:
       id: status_heating_cooling

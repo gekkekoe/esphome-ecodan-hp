@@ -1,8 +1,37 @@
 #include "ecodan.h"
+#include <string>
 
 namespace esphome {
 namespace ecodan 
 {
+
+    #define MAX_FIRST_LETTER_SIZE 8
+    char FaultCodeFirstChar[MAX_FIRST_LETTER_SIZE] = {
+        'A', 'b', 'E', 'F', 'J', 'L', 'P', 'U'
+    };
+
+    #define MAX_SECOND_LETTER_SIZE 21
+    char FaultCodeSecondChar[MAX_SECOND_LETTER_SIZE] = {
+        '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        'A', 'B', 'C', 'D', 'E', 'F', 'O', 'H', 'J', 'L', 'P', 'U'
+    };
+
+    std::string decode_error(uint8_t first, uint8_t second, uint16_t code) {
+        std::string fault_code = std::string("No error");
+        if (code != 0x8000) {
+        
+            auto translated_code = (code >> 8) * 100 + (code & 0xff);
+            char result[256];
+            snprintf(result, 256, "%c%c-%d", 
+                    FaultCodeFirstChar[first & (MAX_FIRST_LETTER_SIZE-1)], 
+                    FaultCodeSecondChar[(second & MAX_SECOND_LETTER_SIZE) - 1], 
+                    translated_code);
+            fault_code = std::string(result);
+        }
+
+        return fault_code;
+    }
+
     void EcodanHeatpump::handle_get_response(Message& res)
     {
         {
@@ -16,6 +45,12 @@ namespace ecodan
                 // 1 = refrigerant error code
                 // 2+3 = fault code, [2]*100+[3]
                 // 4+5 = fault code: letter 2, 0x00 0x03 = A3
+                status.RefrigerantErrorCode = res[1];
+                status.FaultCodeNumeric = res.get_u16(2);
+                status.FaultCodeLetters = res.get_u16(4);
+
+                publish_state("refrigerant_error_code", static_cast<float>(status.RefrigerantErrorCode));
+                publish_state("fault_code_text", decode_error(res[4], res[5], status.FaultCodeNumeric));
                 break;
             case GetType::COMPRESSOR_FREQUENCY:
                 status.CompressorFrequency = res[1];

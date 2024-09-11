@@ -3,7 +3,7 @@ import esphome.config_validation as cv
 from esphome.components import text_sensor
 from esphome.const import CONF_ID
 from esphome.const import (
-    ENTITY_CATEGORY_NONE
+    ENTITY_CATEGORY_NONE, ENTITY_CATEGORY_DIAGNOSTIC
 )
 
 from . import ECODAN, CONF_ECODAN_ID
@@ -22,7 +22,14 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:fire",
             entity_category=ENTITY_CATEGORY_NONE,
         ),
-
+        cv.Optional("fault_code_text"): text_sensor.text_sensor_schema(
+            icon="mdi:fire",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional("refrigerant_error_code_text"): text_sensor.text_sensor_schema(
+            icon="mdi:fire",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
     }).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):
