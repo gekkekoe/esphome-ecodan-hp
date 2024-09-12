@@ -1,5 +1,6 @@
 #include "ecodan.h"
 #include <string>
+#include <algorithm>
 
 namespace esphome {
 namespace ecodan 
@@ -18,13 +19,14 @@ namespace ecodan
 
     std::string decode_error(uint8_t first, uint8_t second, uint16_t code) {
         std::string fault_code = std::string("No error");
-        if (code != 0x8000) {
-        
-            auto translated_code = (code >> 8) * 100 + (code & 0xff);
+        if (code == 0x6999) {
+            fault_code = std::string("Bad communication with unit");
+        } else if (code != 0x8000) {
+            uint16_t translated_code = (code >> 8) * 100 + (code & 0xff);
             char result[256];
-            snprintf(result, 256, "%c%c-%d", 
-                    FaultCodeFirstChar[first & (MAX_FIRST_LETTER_SIZE-1)], 
-                    FaultCodeSecondChar[(second & MAX_SECOND_LETTER_SIZE) - 1], 
+            snprintf(result, 256, "%c%c %u", 
+                    FaultCodeFirstChar[std::max<u_int8_t>(0, first & (MAX_FIRST_LETTER_SIZE-1))], 
+                    FaultCodeSecondChar[std::max<u_int8_t>(0, second - 1) & (MAX_SECOND_LETTER_SIZE-1)], 
                     translated_code);
             fault_code = std::string(result);
         }
