@@ -115,6 +115,7 @@ namespace ecodan
         void set_heating_func(std::function<void(void)> switch_heating_func) { set_heating_mode = switch_heating_func; };
         void set_status(std::function<const ecodan::Status& (void)> get_status_func) { get_status = get_status_func; };
         void set_dhw_climate_mode(bool mode) { this->dhw_climate_mode = mode; }
+        void set_thermostat_climate_mode(bool mode) { this->thermostat_climate_mode = mode; }
     private:
         std::function<void(float)> set_target_temp = nullptr;
         std::function<float(void)> get_current_temp = nullptr;
@@ -123,6 +124,7 @@ namespace ecodan
         std::function<void(void)> set_heating_mode = nullptr;
         std::function<const ecodan::Status& (void)> get_status = nullptr;
         bool dhw_climate_mode = false;
+        bool thermostat_climate_mode = false;
 
         void refresh();
         void validate_target_temperature();
