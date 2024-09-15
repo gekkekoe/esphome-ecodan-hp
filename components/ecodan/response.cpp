@@ -78,8 +78,8 @@ namespace ecodan
                 status.Zone2FlowTemperatureSetPoint = res.get_float16(7);
                 status.LegionellaPreventionSetPoint = res.get_float16(9);
                 status.DhwTemperatureDrop = res.get_float8_v2(11);
-                status.MaximumFlowTemperature = res.get_float8_v3(12);
-                status.MinimumFlowTemperature = res.get_float8_v3(13);
+                status.MaximumFlowTemperature = res.get_float8_v2(12);
+                status.MinimumFlowTemperature = res.get_float8_v2(13);
 
                 publish_state("z1_room_temp_target", status.Zone1SetTemperature);
                 publish_state("z2_room_temp_target", status.Zone2SetTemperature);
