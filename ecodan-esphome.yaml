@@ -1,10 +1,6 @@
 substitutions:
   name: ecodan-heatpump
   friendlyName: Ecodan heatpump
-# heatpump heating/cooling switch
-# available modes: HEAT_ROOM_TEMP, HEAT_FLOW_TEMP, HEAT_COMPENSATION_CURVE, COOL_ROOM_TEMP, COOL_FLOW_TEMP
-  default_heating_switch_mode: HEAT_COMPENSATION_CURVE
-  default_cooling_switch_mode: COOL_FLOW_TEMP
 
 esphome:
   name: ${name}

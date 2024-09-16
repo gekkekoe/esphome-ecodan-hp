@@ -48,10 +48,6 @@ namespace ecodan
                 case ecodan::Status::HpMode::HEAT_FLOW_TEMP:
                 case ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE:
                     if (this->mode != climate::ClimateMode::CLIMATE_MODE_HEAT && allow_refresh) {
-                        if (this->set_heating_mode != nullptr) {
-                            this->last_update = std::chrono::steady_clock::now();
-                            this->set_heating_mode();
-                        }
                         this->mode = climate::ClimateMode::CLIMATE_MODE_HEAT;
                         should_publish = true;
                     }
@@ -59,10 +55,6 @@ namespace ecodan
                 case ecodan::Status::HpMode::COOL_ROOM_TEMP:
                 case ecodan::Status::HpMode::COOL_FLOW_TEMP:
                     if (this->mode != climate::ClimateMode::CLIMATE_MODE_COOL && allow_refresh) {
-                        if (this->set_cooling_mode != nullptr) {
-                            this->last_update = std::chrono::steady_clock::now();
-                            this->set_cooling_mode();
-                        }
                         this->mode = climate::ClimateMode::CLIMATE_MODE_COOL;
                         should_publish = true;
                     } 
@@ -129,12 +121,8 @@ namespace ecodan
                 this->mode = mode;
                 switch (mode) {
                     case climate::ClimateMode::CLIMATE_MODE_HEAT:
-                        if (this->set_heating_mode != nullptr)
-                            this->set_heating_mode();
                     break;
                     case climate::ClimateMode::CLIMATE_MODE_COOL:
-                        if (this->set_cooling_mode != nullptr)
-                            this->set_cooling_mode();
                     break;                    
                     case climate::ClimateMode::CLIMATE_MODE_HEAT_COOL:
                     case climate::ClimateMode::CLIMATE_MODE_FAN_ONLY:

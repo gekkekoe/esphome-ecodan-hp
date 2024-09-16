@@ -90,17 +90,6 @@ packages:
            ]
 ```
 
-* Optional: configure cooling/heating action in `ecodan-esphome.yaml`
-
-```
-####################
-# heatpump heating/cooling switch
-# available modes: HEAT_ROOM_TEMP, HEAT_FLOW_TEMP, HEAT_COMPENSATION_CURVE, COOL_ROOM_TEMP, COOL_FLOW_TEMP
-substitutions:
-  default_heating_switch_mode: HEAT_COMPENSATION_CURVE
-  default_cooling_switch_mode: COOL_FLOW_TEMP
-```
-
 * Build
 ```console
 esphome compile ecodan-esphome.yaml
