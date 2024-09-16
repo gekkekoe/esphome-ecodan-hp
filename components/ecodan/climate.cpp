@@ -118,20 +118,20 @@ namespace ecodan
             climate::ClimateMode mode = *call.get_mode();
             
             if (this->mode != mode) {
-                this->mode = mode;
-                switch (mode) {
-                    case climate::ClimateMode::CLIMATE_MODE_HEAT:
-                    break;
-                    case climate::ClimateMode::CLIMATE_MODE_COOL:
-                    break;                    
-                    case climate::ClimateMode::CLIMATE_MODE_HEAT_COOL:
-                    case climate::ClimateMode::CLIMATE_MODE_FAN_ONLY:
-                    case climate::ClimateMode::CLIMATE_MODE_OFF:
-                    case climate::ClimateMode::CLIMATE_MODE_DRY:
-                    case climate::ClimateMode::CLIMATE_MODE_AUTO:
-                    break;
-                }
-                // Publish updated state
+                // this->mode = mode;
+                // switch (mode) {
+                //     case climate::ClimateMode::CLIMATE_MODE_HEAT:
+                //     break;
+                //     case climate::ClimateMode::CLIMATE_MODE_COOL:
+                //     break;                    
+                //     case climate::ClimateMode::CLIMATE_MODE_HEAT_COOL:
+                //     case climate::ClimateMode::CLIMATE_MODE_FAN_ONLY:
+                //     case climate::ClimateMode::CLIMATE_MODE_OFF:
+                //     case climate::ClimateMode::CLIMATE_MODE_DRY:
+                //     case climate::ClimateMode::CLIMATE_MODE_AUTO:
+                //     break;
+                // }
+                // // Publish updated state
                 should_publish = true;
             }
         }
@@ -164,18 +164,18 @@ namespace ecodan
         
         if (this->dhw_climate_mode)  {
 
-            traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT});
+            //traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT});
             traits.set_visual_min_temperature(40);
             traits.set_visual_max_temperature(60);
         }
         else if(this->thermostat_climate_mode) {
-            traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT, climate::CLIMATE_MODE_COOL});
+            //traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT, climate::CLIMATE_MODE_COOL});
             traits.set_visual_min_temperature(8);
             traits.set_visual_max_temperature(28);
         }
         else 
         {
-            traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT, climate::CLIMATE_MODE_COOL});
+            //traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT, climate::CLIMATE_MODE_COOL});
             
             // dynamic adjustment in esphome works, but does not seem to progagate to HA
             // auto is_cooling = this->mode == climate::ClimateMode::CLIMATE_MODE_COOL;
