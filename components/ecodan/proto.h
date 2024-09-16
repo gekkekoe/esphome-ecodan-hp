@@ -341,18 +341,11 @@ namespace ecodan
             return (value / 2) - 40.0f;
         }
 
-        // Used for DHW temperature drop threshold
+        // Used for DHW temperature dropand  min/max SH flow temperature threshold
         float get_float8_v2(size_t index)
         {
             float value = payload()[index];
             return (value - 40.0f) / 2;
-        }
-
-        // Used for min/max SH flow temperature
-        float get_float8_v3(size_t index)
-        {
-            float value = payload()[index];
-            return (value - 80.0f);
         }
 
         uint16_t get_u16(size_t index)

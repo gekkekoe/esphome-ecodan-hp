@@ -107,31 +107,33 @@ Active commands so far identified.
 * Z1SP : Zone 1 Setpoint (* 100)
 * Z2SP : Zone 1 Setpoint (* 100)
 ### 0x34 - Hot Water and Holiday Mode
-|   0   |  1  | 2 | 3 |   4  |  5   |   6  |  7  |   8   |   9   |  10  |  11  |  12  |  13  | 14 | 15 | 16 |
-|-------|-----|---|---|------|------|------|-----|-------|-------|------|------|------|------|----|----|----|
-| 0x34  |Flags|   |DHW|  HOL | IDHW | Z1HI | Z1CI| Z2HI  | CZ2I  | SCM  |      |      |      |    |    |    |  
-* Flags : Flags to Indicate which fields are active
-  * 0x01 : Hot Water Force (Boost)
-  * 0x02 : Holiday Mode
-  * 0x04 : DHW Inhibit   -- Suspected
-  * 0x08 : Heating Z1 Inhibit  -- Suspected
-  * 0x10 : Cooling Z1 Inhibit  -- Suspected
-  * 0x20 : Heating Z2 Inhibit  -- Suspected
-  * 0x40 : Cooling Z2 Inhibit  -- Suspected
-  * 0x80 : Server Control Mode
+|   0   |  1  |  2  | 3 |   4  |  5   |   6  |  7  |   8   |   9   |  10  |  11  |  12  |  13  | 14 | 15 | 16 |
+|-------|-----|-----|---|------|------|------|-----|-------|-------|------|------|------|------|----|----|----|
+| 0x34  |Flags|Flags|DHW|  HOL | IDHW | Z1HI | Z1CI| Z2HI  | CZ2I  | SCM  |       |     |      |    |    |CHK |  
+
+* Flags (2 Bytes) : Flags to Indicate which fields are active
+  * 0x01 0x00 : Hot Water Force (Boost)
+  * 0x02 0x00 : Holiday Mode
+  * 0x04 0x00 : DHW Inhibit (Only When in "Server Control Mode")
+  * 0x08 0x00 : Heating Z1 Inhibit (Only When in "Server Control Mode")
+  * 0x10 0x00 : Cooling Z1 Inhibit (Only When in "Server Control Mode")
+  * 0x20 0x00 : Heating Z2 Inhibit (Only When in "Server Control Mode")
+  * 0x40 0x00 : Cooling Z2 Inhibit (Only When in "Server Control Mode")
+  * 0x80 0x00 : Server Control Mode
 * DHW : On (1) / Off (0)
 * HOL : On (1) / Off (0)
 * SCM : Server Control Mode On (1) / Off (0)
-* IDHW : Inhibit DHW On (1) / Off (0)  -- Suspected
-### 0x35 - Set Zone Setpoint (signed)
-Identified so far, this must do far more that this!
-|   0   |   1  | 2 | 3 |   4  |  5   | 6    |  7   |   8   |   9   |  10  |  11  |  12  |  13  | 14 | 15 | 16 |
-|-------|------|---|---|------|------|------|------|-------|-------|------|------|------|------|----|----|----|
-| 0x35  | flag |   | CH| Z1SP | Z1SP | Z2SP | Z2SP |       |       |      |      |      |      |    |    |    |  
-* flag : zone 1 / zone 2 flag
-  * 0x02 : Zone 1
-  * 0x08 : Zone 2
-* CH: Cool/Heat flag, 1 when setting room temp in cool mode, 0 in heating mode
+* IDHW : Inhibit DHW On (1) / Off (0)
+### 0x35 - Set Thermostat Setpoints 
+|   0   |  1  |  2  | 3  |   4  |  5   |   6  |   7  |   8   |   9   |  10  |  11  |  12  |  13  | 14 | 15 | 16 |
+|-------|-----|-----|----|------|------|------|------|-------|-------|------|------|------|------|----|----|----|
+| 0x35  |Flags|Flags| CH | Z1SP | Z1SP | Z2SP | Z2SP |       |       |      |      |      |      |    |    |CHK |  
+
+* Flags (2 Bytes) : Flags to Indicate which fields are active
+  * 0x01 0x00 : Cooling/Heating
+  * 0x02 0x00 : Zone 1 Setpoint
+  * 0x08 0x00 : Zone 2 Setpoint
+* CH : Cooling (1) / Heating (0)
 * Z1SP : Zone 1 Setpoint (* 100)
 * Z2SP : Zone 2 Setpoint (* 100)
 # Get Request - Packet Type 0x42
@@ -253,41 +255,47 @@ Responses so far identified.
 ### 0x09 - Zone 1 & 2 Temperatures and Setpoints, Hot Water Setpoint
 | 0    |   1  |   2  | 3    | 4    | 5    | 6    | 7    | 8    |  9  |  10 |  11 | 12 | 13 | 14 | 15 | 16 |
 |------|------|------|------|------|------|------|------|------|-----|-----|-----|----|----|----|----|----|
-| 0x09 | Z1T  | Z1T  | Z2T  | Z2T  | Z1ST | Z1SP | Z2SP | Z2SP | LSP | LSP | HWD |  ? | ?  |    |    |    |
+| 0x09 | Z1T  | Z1T  | Z2T  | Z2T  | Z1ST | Z1SP | Z2SP | Z2SP | LSP | LSP | HWD | FMx | FMn |    |    |    |
 * Z1T  : Zone1 Target Temperature * 100
 * Z2T  : Zone2 Target Temperature * 100;
 * Z1SP : Zone 1 Flow SetFlow Setpoint * 100
-* Z2SP : Zone 3 Flow SetFlow Setpoint * 100
-* LSP  : Legionella Setpoint * 100;
-* HWD  : DHW Max Temp Drop;
+* Z2SP : Zone 2 Flow SetFlow Setpoint * 100
+* LSP  : Legionella Setpoint * 100
+* HWD  : DHW Max Temp Drop -40 / 2
+* FMx  : Flow Maximum Temperature -40 / 2
+* FMn  : Flow Minimum Temperature -40 / 2 
 ### 0x0b - Zone 1 & 2 and Outside Temperature
-|   0  |  1  |  2  |  3  | 4 | 5 | 6 | 7 |  8  | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
-|------|-----|-----|-----|---|---|---|---|-----|---|----|----|----|----|----|----|----|
-| 0x0b | Z1T |     | Z2T |   |   |   |   |  RT |   |    | O  |    |    |    |    |    |
+|   0  |  1  |  2  |  3  | 4 | 5 | 6 | 7 |  8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+|------|-----|-----|-----|---|---|---|---|----|---|----|----|----|----|----|----|----|
+| 0x0b | Z1T | Z1T | Z2T |Z2T| ? | ? |   | RT | RT | CT | O  |    |    |    |    |    |
 * Z1T : Zone1 Temperature * 100
 * Z2T : Zone2 Temperature * 100
-* RT : Refrigerant liquid temperature * 100
-* O : Outside Temp  +40 x 2 
+* RT : Refrigerant Temperature * 100 (Where TH2 is installed)
+* CT : Condensing Temperature /2 - 40
+* O : Outside Temp  /2 - 40
 ### 0x0c - Heater Flow Temps
-|  0   | 1  | 2  | 3 | 4  | 5  | 6 | 7  |  8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
-|------|----|----|---|----|----|---|----|----|---|----|----|----|----|----|----|----|
-| 0x0c | OF | OF |   | RF | RF |   | HW | HW |   |    |    |    |    |    |    |    |
+|  0   | 1  | 2  | 3 | 4  | 5  | 6 | 7  |  8 | 9 |  10 |  11 | 12 | 13 | 14 | 15 | 16 |
+|------|----|----|---|----|----|---|----|----|---|-----|-----|----|----|----|----|----|
+| 0x0c | OF | OF |   | RF | RF |   | HW | HW |   | HW2 | HW2 |    |    |    |    |    |
 * OF : Heater Water Out Flow  * 100
 * RF : Heater Return Flow Temperature * 100
-* HW : Hot Water Temperature * 100
-### 0x0d - Boiler Temps
+* HW : Hot Water Temperature * 100 (THW5 or THW5B)
+* HW2 : Hot Water Temperature * 100 (THW5A if installed)
+### 0x0d - Thermistors 1
 |  0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x0d | F1| F1|   | R1| R1|   | F2| F2|   |  R2|  R2|    |    |    |    |    |
-* F1 : Boiler? / Z1 Flow Temperature * 100;
-* R1 : Boiler? / Z1 Return Temperature * 100;
-* F2 : Z2 Flow Temperature * 100;
-* R2 : Z2 Return Temperature * 100;
-### 0x0e - Unknown Temps
+| 0x0d | F1 | F1 |   | R1 | R1 |   | F2 | F2 |   |  R2 |  R2  |    |    |    |    |    |
+* F1 : Zone 1 Flow Temperature * 100 (Where THW6 installed)
+* R1 : Zone 1 Return Temperature * 100  (Where THW7 is installed)
+* F1 : Zone 2 Flow Temperature * 100 (Where THW8 installed)
+* R1 : Zone 2 Return Temperature * 100  (Where THW9 is installed)
+### 0x0e - Thermistors 2
 |  0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x0e |   |   |   |   |   |   |   |   |   |    |    |    |    |    |    |    |
-Several Unknown Temperatures
+| 0x0e | F | F |   | R | R |   | X | X |   |    |    |    |    |    |    |    |
+* F : Boiler Flow Temperature * 100    Suspected (Where THWB1 installed)
+* R : Boiler Return Temperature * 100     Suspected (Where THWB2 is installed)
+* X : Mixing Tank Temperature * 100        Suspected (Where THW10 is installed)  
 ### 0x10 - External sources
 |   0   | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
@@ -324,13 +332,13 @@ Several Unknown Temperatures
 * V2 : 3 way valve 2 status
   * 0 : Off
   * 1 : On
-### 0x16 - Unkown
+### 0x16 - Pumps Running
 |   0   | 1  |  2 |  3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|----|----|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x16  | DHW| U1 | U2 |   |   |   |   |   |   |    |    |    |    |    |    |    |  
-* DHW : DHW Pump Running Flag? 3 Way Valve?
-* U1 : Heating Flag?
-* U2 : Heating Flag?
+| 0x16  | O4 | O3 | O13|   |   |   |   |   |   |    |    |    |    |    |    |    |  
+* O4 : Pump 4 (CPN4)
+* O13 : Pump Output (Out13)
+* O3 : Pump Output (Out3)
 ### 0x26
 | 0 | 1 | 2 |  3  | 4  | 5  | 6  |  7 |   8  |  9   |  10 |  11 | 12 | 13 | 14 |
 |---|---|---|-----|----|----|----|----|------|------|-----|-----|----|----|----|
@@ -357,7 +365,7 @@ Several Unknown Temperatures
 ### 0x28 - Various Flags
 |   0   | 1 | 2 | 3 | 4  | 5  |  6 | 7  |  8 |  9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|---|---|---|----|----|----|----|----|----|----|----|----|----|----|----|----|
-| 0x28  |   |   |FD | HM | HT |PHZ1|PCZ1|PHZ2|PCZ2|    |    |    |    |    |    |  
+| 0x28  |   |   |FD | HM | HT |PHZ1|PCZ1|PHZ2|PCZ2| SC |    |    |    |    |    |  
 * FD : Forced DHW active
 * HM : Holiday Mode
 * HT : Prohibit DHW
@@ -365,10 +373,12 @@ Several Unknown Temperatures
 * PCZ1 : Prohibit Cooling Zone1
 * PHZ2 : Prohibit Heating Zone2
 * PCZ2 : Prohibit Cooling Zone2
+* SC : Server Control Mode Active
 ### 0x29 - 
 |   0   | 1 | 2 | 3 |  4  |  5  |  6  |  7  | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|---|---|---|-----|-----|-----|-----|---|---|----|----|----|----|----|----|----|
-| 0x29  |   |   |   | Z1T | Z1T | Z2T | Z2T |   |   |    |    |    |    |    |    |    |  
+| 0x29  |   |   | HC | Z1T | Z1T | Z2T | Z2T |   |   |    |    |    |    |    |    |    |  
+* HC: Heating (0) / Cooling (0)
 * Z1T : Zone1 Temperature * 100
 * Z2T : Zone2 Temperature * 100
 ### 0xA1 - Consumed Energy
@@ -394,6 +404,7 @@ Several Unknown Temperatures
   * 1: FTC4
   * 2: FTC5
   * 3: FTC6
+  * 4: FTC7
   * 128: CAHV1A
   * 129: CAHV1B
   * 130: CRHV1A 
