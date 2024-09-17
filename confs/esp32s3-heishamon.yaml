@@ -31,26 +31,48 @@ esp32:
 
 
 uart:
-  id: uart_ecodan
-  rx_pin:
-    number: GPIO18
-    mode:
-      input: true
-      pullup: true
-  tx_pin:
-    number: GPIO17
-    mode:
-      output: true
-  baud_rate: 2400
-  parity: EVEN
-  stop_bits: 1
-  # debug:
-  #   direction: BOTH
-  #   dummy_receiver: false
-  #   after:
-  #     delimiter: "\n"
-  #   sequence:
-  #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+  - id: uart_ecodan
+    rx_pin:
+      number: GPIO18
+      mode:
+        input: true
+        pullup: true
+    tx_pin:
+      number: GPIO17
+      mode:
+        output: true
+    baud_rate: 2400
+    parity: EVEN
+    stop_bits: 1
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   after:
+    #     delimiter: "\n"
+    #   sequence:
+    #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+
+  - id: proxy_uart_id
+    rx_pin:
+      number: GPIO9
+      mode:
+        input: true
+        pullup: true
+    tx_pin:
+      number: GPIO8
+      mode:
+        output: true
+    baud_rate: 2400
+    parity: EVEN
+    stop_bits: 1
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   after:
+    #     delimiter: "\n"
+    #   sequence:
+    #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+
 #define HEATPUMPRX 18
 #define HEATPUMPTX 17
 #define PROXYRX 9

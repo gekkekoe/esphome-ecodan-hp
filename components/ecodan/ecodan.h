@@ -92,11 +92,10 @@ namespace ecodan
         bool dispatch_next_set_cmd();
         bool schedule_cmd(Message& cmd);
         
-        void handle_response();
+        void handle_response(Message& res);
         void handle_get_response(Message& res);
         void handle_set_response(Message& res);
         void handle_connect_response(Message& res);
-        void handle_proxy();
     };
 
     class EcodanClimate : public climate::Climate, public PollingComponent  {

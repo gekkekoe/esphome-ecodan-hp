@@ -1,9 +1,5 @@
 #include "ecodan.h"
 
-#if ARDUINO_ARCH_ESP32
-#include <esp_task_wdt.h>
-#endif
-
 namespace esphome {
 namespace ecodan 
 {
@@ -14,16 +10,9 @@ namespace ecodan
             ESP_LOGE(TAG, "Serial connection unavailable for tx");
             return false;
         }
-#if 0
-        if (port.availableForWrite() < msg.size())
-        {
-            ESP_LOGI(TAG, "Serial tx buffer size: %u", port.availableForWrite());
-            return false;
-        }
-#endif
+
         msg.set_checksum();
         uart->write_array(msg.buffer(), msg.size());
-        //port.flush(true);
 
         //ESP_LOGV(TAG, msg.debug_dump_packet().c_str());
 

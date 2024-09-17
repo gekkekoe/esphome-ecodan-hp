@@ -258,30 +258,23 @@ namespace ecodan
         connected = true;
     }
 
-    void EcodanHeatpump::handle_response() {
-        if (!serial_rx(uart_, res_buffer_))
-            return;
-        
-        //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
-
-        switch (res_buffer_.type())
+    void EcodanHeatpump::handle_response(Message& res) {
+        switch (res.type())
         {
         case MsgType::SET_RES:
-            handle_set_response(res_buffer_);
+            handle_set_response(res);
             break;
         case MsgType::GET_RES:
         case MsgType::CONFIGURATION_RES:
-            handle_get_response(res_buffer_);
+            handle_get_response(res);
             break;
         case MsgType::CONNECT_RES:
-            handle_connect_response(res_buffer_);
+            handle_connect_response(res);
             break;
         default:
-            ESP_LOGI(TAG, "Unknown serial message type received: %#x", static_cast<uint8_t>(res_buffer_.type()));
+            ESP_LOGI(TAG, "Unknown serial message type received: %#x", static_cast<uint8_t>(res.type()));
             break;
         }
-
-        res_buffer_ = Message();
     }
 
     void EcodanHeatpump::handle_set_response(Message& res)

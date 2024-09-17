@@ -42,8 +42,7 @@ namespace ecodan
     }
 
     void EcodanHeatpump::update() {        
-        //ESP_LOGI(TAG, "Update() on core %d", xPortGetCoreID());
-        if (heatpumpInitialized)
+        if (!proxy_uart_ && heatpumpInitialized)
             handle_loop();            
     }
 
@@ -67,26 +66,42 @@ namespace ecodan
             ESP_LOGI(TAG, "UART not configured for 2400 8E1. This may not work...");
         }
 
-        if (!is_connected())
+        if (proxy_uart_) {    
+            if (proxy_uart_->get_baud_rate() != 2400 ||
+                proxy_uart_->get_stop_bits() != 1 ||
+                proxy_uart_->get_data_bits() != 8 ||
+                proxy_uart_->get_parity() != uart::UART_CONFIG_PARITY_EVEN) {
+                ESP_LOGI(TAG, "UART not configured for 2400 8E1. This may not work...");
+            }            
+        }
+        else if (!is_connected()){
             begin_connect();
+        }
 
         return true;
     }
 
     void EcodanHeatpump::loop()
     {
-        if (uart_ && uart_->available())
+        if (uart_ && uart_->available() && serial_rx(uart_, res_buffer_))
         {
-            handle_response();
+            // intercept and interpret message before sending to slave
+            handle_response(res_buffer_);
+            if (proxy_uart_)
+                serial_tx(proxy_uart_, res_buffer_);
+            res_buffer_ = Message();
         }
-        if (proxy_uart_ && proxy_uart_->available())
+
+        if (proxy_uart_ && proxy_uart_->available() && serial_rx(proxy_uart_, proxy_buffer_))
         {
-            handle_proxy();
+            // forward cmds from slave to master
+            serial_tx(uart_, proxy_buffer_);
+            proxy_buffer_ = Message();    
         }
     }
 
     void EcodanHeatpump::handle_loop()
-    {
+    {        
         if (!is_connected() && uart_ && !uart_->available())
         {
             static auto last_attempt = std::chrono::steady_clock::now();
