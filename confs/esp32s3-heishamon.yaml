@@ -52,7 +52,7 @@ uart:
     #   sequence:
     #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
 
-  - id: proxy_uart_id
+  - id: uart_proxy
     rx_pin:
       number: GPIO9
       mode:
@@ -78,6 +78,10 @@ uart:
 #define PROXYRX 9
 #define PROXYTX 8
 
+
+ecodan:
+  uart_id: uart_main
+  proxy_uart_id: uart_proxy
 
 sensor:
   - platform: internal_temperature
