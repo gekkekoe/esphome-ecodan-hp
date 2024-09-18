@@ -81,10 +81,17 @@ namespace ecodan
         return true;
     }
 
+// define to act as a fake heatpump, will respond on connect and set cmds
+#undef REVERSE_EGINEER
+
     void EcodanHeatpump::loop()
     {
         if (uart_ && uart_->available() && serial_rx(uart_, res_buffer_))
         {
+            #ifdef REVERSE_EGINEER
+            ESP_LOGI(TAG, res_buffer_.debug_dump_packet().c_str());
+            #endif
+            
             // intercept and interpret message before sending to slave
             handle_response(res_buffer_);
             if (proxy_uart_)
@@ -96,6 +103,19 @@ namespace ecodan
         {
             // forward cmds from slave to master
             serial_tx(uart_, proxy_buffer_);
+
+            #ifdef REVERSE_EGINEER
+            ESP_LOGI(TAG, proxy_buffer_.debug_dump_packet().c_str());
+            if (proxy_buffer_.type() == MsgType::CONNECT_CMD) {
+                Message cmd{MsgType::CONNECT_RES};
+                serial_tx(proxy_uart_, cmd);
+            }
+            else {
+                Message cmd{MsgType::SET_RES};
+                serial_tx(proxy_uart_, cmd);
+            }
+            #endif
+
             proxy_buffer_ = Message();    
         }
     }
