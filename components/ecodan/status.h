@@ -97,6 +97,7 @@ namespace ecodan
         bool HolidayMode;
         DhwMode HotWaterMode;
         HpMode HeatingCoolingMode = HpMode::OFF;
+        HpMode HeatingCoolingModeZone2 = HpMode::OFF;
 
         // prohibit flags
         bool ProhibitDhw;
@@ -120,81 +121,6 @@ namespace ecodan
             }
             else {
                 ComputedOutputPower = 0.0f;
-            }
-        }
-
-        std::string power_as_string()
-        {
-            switch (Power)
-            {
-                case PowerMode::ON:
-                    return std::string("On");
-                case PowerMode::STANDBY:
-                    return std::string("Standby");
-                default:
-                    return std::string("Unknown");
-            }
-        }
-
-        std::string operation_as_string()
-        {
-            switch (Operation)
-            {
-                case OperationMode::OFF:
-                    return std::string("Off");
-                case OperationMode::DHW_ON:
-                    return std::string("Heating Water");
-                case OperationMode::HEAT_ON:
-                    return std::string("Space Heating");
-                case OperationMode::COOL_ON:
-                    return std::string("Space Cooling");
-                case OperationMode::FROST_PROTECT:
-                    return std::string("Frost Protection");
-                case OperationMode::LEGIONELLA_PREVENTION:
-                    return std::string("Legionella Prevention");
-                default:
-                    return std::string("Unknown");
-            }
-        }
-
-        std::string dhw_status_as_string()
-        {
-            switch (Operation)
-            {
-                case OperationMode::DHW_ON:
-                case OperationMode::LEGIONELLA_PREVENTION:
-                    break;
-                default:
-                    return std::string("Off");
-            }
-
-            switch (HotWaterMode)
-            {
-                case DhwMode::NORMAL:
-                    return std::string("Normal");
-                case DhwMode::ECO:
-                    return std::string("Eco");
-                default:
-                    return std::string("Unknown");
-            }
-        }
-
-        std::string hp_status_as_string()
-        {
-            switch (HeatingCoolingMode)
-            {
-                case HpMode::HEAT_ROOM_TEMP:
-                    return std::string("Heat Target Temperature");
-                case HpMode::HEAT_FLOW_TEMP:
-                    return std::string("Heat Flow Temperature");
-                case HpMode::HEAT_COMPENSATION_CURVE:
-                    return std::string("Heat Compensation Curve");
-                case HpMode::COOL_ROOM_TEMP:
-                    return std::string("Cool Target Temperature");
-                case HpMode::COOL_FLOW_TEMP:
-                    return std::string("Cool Flow Temperature");
-                default:
-                    return std::string("Unknown");
             }
         }
 

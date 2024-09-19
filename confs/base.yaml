@@ -55,35 +55,6 @@ switch:
 
 select:
   - platform: template
-    name: ${heatpump_select_operating_mode}
-    id: heatpump_select_operating_mode
-    optimistic: true
-    restore_value: true
-    options:
-      - ${heat_target_temperature}
-      - ${heat_flow_temperature}
-      - ${heat_compensation_curve}
-      - ${cool_target_temperature}
-      - ${cool_flow_temperature}
-    set_action:
-      - lambda: |-
-          if (x == "${heat_target_temperature}") {
-            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP));
-          }
-          else if (x == "${heat_flow_temperature}") {
-            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP));
-          }
-          else if (x == "${heat_compensation_curve}") {
-            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE));
-          }
-          else if (x == "${cool_target_temperature}") {
-            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP));
-          }
-          else if (x == "${cool_flow_temperature}") {
-            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP));
-          }
-
-  - platform: template
     name: ${heatpump_select_dhw_mode}
     id: heatpump_select_dhw_mode
     optimistic: true
@@ -267,22 +238,6 @@ sensor:
     refrigerant_error_code:
       internal: true
       id: refrigerant_error_code 
-
-    status_heating_cooling:
-      id: status_heating_cooling
-      name: H/C status
-      internal: true
-      on_value:
-        if:
-          condition:
-            - lambda: |-
-                auto mode = static_cast<uint8_t>(id(ecodan_instance).get_status().HeatingCoolingMode);
-                auto index = id(heatpump_select_operating_mode).active_index();
-                return (index.has_value() && index.value() != mode);
-          then:
-            - select.set_index:
-                id: heatpump_select_operating_mode
-                index: !lambda "return static_cast<uint8_t>(id(ecodan_instance).get_status().HeatingCoolingMode);"
 
   - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
     name: ${wifi_signal_db}
