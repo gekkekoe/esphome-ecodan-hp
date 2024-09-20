@@ -124,18 +124,8 @@ select:
       - ${cool_flow_temperature}
     set_action:
       - lambda: |-
-          if (x == "${heat_target_temperature}") {
-            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP), esphome::ecodan::SetZone::ZONE_1);
-          }
-          else if (x == "${heat_flow_temperature}") {
-            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP), esphome::ecodan::SetZone::ZONE_1);
-          }
-          else if (x == "${heat_compensation_curve}") {
-            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE), esphome::ecodan::SetZone::ZONE_1);
-          }
-          else if (x == "${cool_target_temperature}") {
-            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP), esphome::ecodan::SetZone::ZONE_1);
-          }
-          else if (x == "${cool_flow_temperature}") {
-            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP), esphome::ecodan::SetZone::ZONE_1);
+          auto index = id(heatpump_select_operating_mode).index_of(x);
+          auto active_index = id(heatpump_select_operating_mode).active_index();
+          if (index.has_value() && index.value() != active_index.value()) {
+            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(index.value()), esphome::ecodan::SetZone::ZONE_1);
           }
