@@ -9,6 +9,8 @@ namespace ecodan
         if (restore.has_value()) {
             restore->to_call(this).perform();
         }
+        // allow updates on first start
+        this->last_update = std::chrono::steady_clock::now() - std::chrono::seconds(2*60);
     }
 
     void EcodanClimate::refresh() {
