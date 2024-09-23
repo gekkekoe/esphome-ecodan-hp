@@ -110,3 +110,20 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     id: relay_2
     name: Relay 2
+  # enable tx
+  - platform: gpio
+    pin: GPIO5
+    restore_mode: ALWAYS_ON
+    id: enable_heishamon_tx
+    name: Enable
+
+light:
+  - platform: esp32_rmt_led_strip
+    pin: GPIO42
+    num_leds: 1
+    rmt_channel: 0
+    chipset: WS2812
+    name: "RGB LED"
+    id: led
+    restore_mode: ALWAYS_ON
+    rgb_order: GRB
