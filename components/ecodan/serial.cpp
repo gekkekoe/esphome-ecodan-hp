@@ -41,8 +41,8 @@ namespace ecodan
                         skipping = true;
                     }
                     sync_packet = false;
+                    continue;
                 }
-                continue;
             }
             skipping = false;
 
