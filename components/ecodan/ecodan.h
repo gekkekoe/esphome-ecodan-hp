@@ -85,7 +85,7 @@ namespace ecodan
         std::queue<Message> cmdQueue;
 
         void resync_rx();
-        bool serial_rx(uart::UARTComponent *uart, Message& msg);
+        bool serial_rx(uart::UARTComponent *uart, Message& msg, uart::UARTComponent *proxy_uart);
         bool serial_tx(uart::UARTComponent *uart, Message& msg);
 
         bool dispatch_next_status_cmd();
