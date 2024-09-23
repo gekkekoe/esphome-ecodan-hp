@@ -72,10 +72,10 @@ namespace ecodan
                 }
             }
             else {
-                if (msg.get_write_offset() > 7)
+                // stop when we see an ending 0x02 or get_write_offset > 8
+                if (msg.get_write_offset() > 1 && (data == HEADER_MAGIC_B || msg.get_write_offset() > 8))
                     return true;
-                else
-                    continue;
+                continue;
             }
 
             return true;
