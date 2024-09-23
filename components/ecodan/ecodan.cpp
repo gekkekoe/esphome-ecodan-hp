@@ -103,11 +103,11 @@ namespace ecodan
         {
 
             // Test try to handle 0x00 0xff 0xff sequences
-            if (proxy_buffer_.buffer()[0] == 0x02) {
-                uint8_t fake_response[18] = { 0x02, 0xFF, 0xFF, 0x80, 0x00, 0x00, 0x0A, 0x01, 0x00, 0x40, 0x00, 0x00, 0x06, 0x02, 0x7A, 0x00, 0x00, 0xB5 };
-                proxy_uart_->flush();
-                proxy_uart_->write_array(fake_response, 18);
-            }
+            // if (proxy_buffer_.buffer()[0] == 0x02) {
+            //     uint8_t fake_response[18] = { 0x02, 0xFF, 0xFF, 0x80, 0x00, 0x00, 0x0A, 0x01, 0x00, 0x40, 0x00, 0x00, 0x06, 0x02, 0x7A, 0x00, 0x00, 0xB5 };
+            //     proxy_uart_->flush();
+            //     proxy_uart_->write_array(fake_response, 18);
+            // }
 
             // forward cmds from slave to master
             serial_tx(uart_, proxy_buffer_);
