@@ -105,11 +105,11 @@ namespace ecodan
         }
 
         auto now = std::chrono::steady_clock::now();
-        if (now - last_response > std::chrono::minutes(5))
+        if (now - last_response > std::chrono::minutes(2))
         {
             last_response = now;
             connected = false;
-            ESP_LOGW(TAG, "No reply received from the heatpump in the last 5 mins, going to reconnect...");
+            ESP_LOGW(TAG, "No reply received from the heatpump in the last 2 minutes, going to reconnect...");
         }
     
     }
