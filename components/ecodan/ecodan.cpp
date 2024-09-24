@@ -81,38 +81,36 @@ namespace ecodan
         return true;
     }
 
-// define to act as a fake heatpump, will respond on connect and set cmds
-#undef REVERSE_EGINEER
-
     void EcodanHeatpump::loop()
     {
+        static auto last_response = std::chrono::steady_clock::now();
+
         if (uart_ && serial_rx(uart_, res_buffer_, proxy_uart_))
         {
-            #ifdef REVERSE_EGINEER
-            ESP_LOGI(TAG, res_buffer_.debug_dump_packet().c_str());
-            #endif
+            last_response = std::chrono::steady_clock::now();
+            // if (proxy_uart_)
+            //     proxy_uart_->write_array(res_buffer_.buffer(), res_buffer_.size());
             
-            // intercept and interpret message before sending to slave
+            // interpret message
             handle_response(res_buffer_);
             res_buffer_ = Message();
         }
 
         if (proxy_uart_ && serial_rx(proxy_uart_, proxy_buffer_, uart_))
         {
-            #ifdef REVERSE_EGINEER
-            ESP_LOGI(TAG, proxy_buffer_.debug_dump_packet().c_str());
-            if (proxy_buffer_.type() == MsgType::CONNECT_CMD) {
-                Message cmd{MsgType::CONNECT_RES};
-                serial_tx(proxy_uart_, cmd);
-            }
-            else {
-                Message cmd{MsgType::SET_RES};
-                serial_tx(proxy_uart_, cmd);
-            }
-            #endif
-
+            // forward cmds from slave to master
+            // uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
             proxy_buffer_ = Message();    
         }
+
+        auto now = std::chrono::steady_clock::now();
+        if (now - last_response > std::chrono::minutes(5))
+        {
+            last_response = now;
+            connected = false;
+            ESP_LOGW(TAG, "No reply received from the heatpump in the last 5 mins, going to reconnect...");
+        }
+    
     }
 
     void EcodanHeatpump::handle_loop()
