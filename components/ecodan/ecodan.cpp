@@ -85,21 +85,21 @@ namespace ecodan
     {
         static auto last_response = std::chrono::steady_clock::now();
 
-        if (uart_ && serial_rx(uart_, res_buffer_, proxy_uart_))
+        if (uart_ && serial_rx(uart_, res_buffer_))
         {
             last_response = std::chrono::steady_clock::now();
-            // if (proxy_uart_)
-            //     proxy_uart_->write_array(res_buffer_.buffer(), res_buffer_.size());
+            if (proxy_uart_)
+                proxy_uart_->write_array(res_buffer_.buffer(), res_buffer_.size());
             
             // interpret message
             handle_response(res_buffer_);
             res_buffer_ = Message();
         }
 
-        if (proxy_uart_ && serial_rx(proxy_uart_, proxy_buffer_, uart_))
+        if (proxy_uart_ && serial_rx(proxy_uart_, proxy_buffer_))
         {
             // forward cmds from slave to master
-            // uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
+            uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
             proxy_buffer_ = Message();    
         }
 

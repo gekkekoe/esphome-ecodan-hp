@@ -19,19 +19,15 @@ namespace ecodan
         return true;
     }
 
-    bool EcodanHeatpump::serial_rx(uart::UARTComponent *uart, Message& msg, uart::UARTComponent *proxy_uart)
+    bool EcodanHeatpump::serial_rx(uart::UARTComponent *uart, Message& msg)
     {
         uint8_t data;
         bool skipping = false;
 
         while (uart->available() && uart->read_byte(&data)) {
-
-            if (proxy_uart)
-                proxy_uart->write_byte(data);
-
             // Discard bytes until we see one that might reasonably be
             // the first byte of a packet, complaining only once.
-            if (msg.get_write_offset() == 0 && data != HEADER_MAGIC_A) {
+            if (msg.get_write_offset() == 0 && data != HEADER_MAGIC_A && data != HEADER_MAGIC_B) {
                 if (!skipping) {
                     ESP_LOGE(TAG, "Dropping serial data; header magic mismatch");
                     skipping = true;

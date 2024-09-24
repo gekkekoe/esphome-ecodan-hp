@@ -193,14 +193,14 @@ namespace ecodan
 
         bool verify_header()
         {
-            if (buffer_[0] != HEADER_MAGIC_A)
+            if (buffer_[0] != HEADER_MAGIC_A && buffer_[0] != HEADER_MAGIC_B)
                 return false;
 
-            if (buffer_[2] != HEADER_MAGIC_B)
-                return false;
+            // if (buffer_[2] != HEADER_MAGIC_B)
+            //     return false;
 
-            if (buffer_[3] != HEADER_MAGIC_C)
-                return false;
+            // if (buffer_[3] != HEADER_MAGIC_C)
+            //     return false;
 
             if (payload_size() > PAYLOAD_SIZE)
                 return false;
@@ -372,11 +372,10 @@ namespace ecodan
             uint8_t checkSum = 0;
             if (writeOffset_ < size() - 1)
                 return 0;
-            for (size_t i = 0; i < size() - 1; ++i)
-                checkSum += buffer_[i];
+            for (size_t i = 1; i < size() - 1; ++i)
+                checkSum -= buffer_[i];
 
-            checkSum = 0xFC - checkSum;
-            return checkSum & 0xFF;
+            return checkSum;
         }
 
         bool cmd_;
