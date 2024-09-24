@@ -213,6 +213,9 @@ namespace ecodan
 
     bool EcodanHeatpump::dispatch_next_status_cmd()
     {
+        if (proxy_uart_)
+            return true;
+            
         auto static cmdIndex = 0;
         Message& cmd = statusCmdQueue[cmdIndex];
         cmdIndex = (cmdIndex + 1) % MAX_STATUS_CMD_SIZE;
