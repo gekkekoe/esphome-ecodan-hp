@@ -40,7 +40,7 @@ namespace ecodan
             msg.append_byte(data);
 
             // If the header is now complete, check it for sanity.
-            if (msg.get_write_offset() == HEADER_SIZE && !msg.verify_header()) {
+            if (msg.get_write_offset() == msg.header_size() && !msg.verify_header()) {
                 ESP_LOGI(TAG, "Serial port message appears invalid, skipping payload...");
                 msg = Message();
                 continue;
@@ -48,7 +48,7 @@ namespace ecodan
 
             // If we don't yet have the full header, or if we do have the
             // header but not yet the full payload, keep going.
-            if (msg.get_write_offset() <= HEADER_SIZE ||
+            if (msg.get_write_offset() <= msg.header_size() ||
                 msg.get_write_offset() < msg.size()) {
                 continue;
             }
