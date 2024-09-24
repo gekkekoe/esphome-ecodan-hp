@@ -42,7 +42,7 @@ namespace ecodan
     }
 
     void EcodanHeatpump::update() {        
-        if (!proxy_uart_ && heatpumpInitialized)
+        if (heatpumpInitialized)
             handle_loop();            
     }
 

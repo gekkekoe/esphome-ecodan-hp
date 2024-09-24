@@ -184,9 +184,6 @@ namespace ecodan
 
     bool EcodanHeatpump::schedule_cmd(Message& cmd)
     {   
-        if (proxy_uart_)
-            return true;
-        
         cmdQueue.emplace(std::move(cmd));
         return dispatch_next_set_cmd();
     }
@@ -233,7 +230,7 @@ namespace ecodan
 
     bool EcodanHeatpump::dispatch_next_set_cmd()
     {
-        if (cmdQueue.empty() || proxy_uart_)
+        if (cmdQueue.empty())
         {
             return true;
         }
