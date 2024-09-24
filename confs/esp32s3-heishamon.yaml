@@ -89,6 +89,7 @@ sensor:
     entity_category: diagnostic
 
 # is mutual exclusive with wifi
+# comment wifi section in main yaml when using ehternet
 # ethernet:
 #   type: W5500
 #   reset_pin: GPIO14
