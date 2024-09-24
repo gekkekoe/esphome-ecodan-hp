@@ -67,7 +67,7 @@ namespace ecodan
         }
 
         if (proxy_uart_) {    
-            if (proxy_uart_->get_baud_rate() != 2400 ||
+            if ((proxy_uart_->get_baud_rate() != 2400 && proxy_uart_->get_baud_rate() != 9600) ||
                 proxy_uart_->get_stop_bits() != 1 ||
                 proxy_uart_->get_data_bits() != 8 ||
                 proxy_uart_->get_parity() != uart::UART_CONFIG_PARITY_EVEN) {

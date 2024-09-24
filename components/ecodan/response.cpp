@@ -281,11 +281,9 @@ namespace ecodan
 
     void EcodanHeatpump::handle_set_response(Message& res)
     {
-        {
-            //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
-            if (!cmdQueue.empty())
-                cmdQueue.pop();
-        }
+        //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
+        if (!cmdQueue.empty())
+            cmdQueue.pop();
 
         if (res.type() != MsgType::SET_RES)
         {
