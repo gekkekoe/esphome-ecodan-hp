@@ -89,7 +89,7 @@ namespace ecodan
         bool serial_tx(uart::UARTComponent *uart, Message& msg);
 
         bool dispatch_next_status_cmd();
-        bool dispatch_next_set_cmd();
+        bool dispatch_next_cmd();
         bool schedule_cmd(Message& cmd);
         
         void handle_response(Message& res);

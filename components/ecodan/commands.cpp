@@ -185,7 +185,7 @@ namespace ecodan
     bool EcodanHeatpump::schedule_cmd(Message& cmd)
     {   
         cmdQueue.emplace(std::move(cmd));
-        return dispatch_next_set_cmd();
+        return dispatch_next_cmd();
     }
 
     #define MAX_STATUS_CMD_SIZE 19
@@ -228,7 +228,7 @@ namespace ecodan
         return true;
     }
 
-    bool EcodanHeatpump::dispatch_next_set_cmd()
+    bool EcodanHeatpump::dispatch_next_cmd()
     {
         if (cmdQueue.empty())
         {

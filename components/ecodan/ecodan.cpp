@@ -99,7 +99,8 @@ namespace ecodan
         if (proxy_uart_ && serial_rx(proxy_uart_, proxy_buffer_))
         {
             // forward cmds from slave to master
-            uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
+            schedule_cmd(proxy_buffer_);
+            // uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
             proxy_buffer_ = Message();    
         }
 
@@ -130,7 +131,7 @@ namespace ecodan
         }
         else if (is_connected())
         {
-            dispatch_next_set_cmd();
+            dispatch_next_cmd();
 
             if (!dispatch_next_status_cmd())
             {
