@@ -73,14 +73,6 @@ select:
 
 # diagnostics
 text_sensor:
-  - platform: wifi_info
-    ip_address:
-      name: ${esp_ip}
-      icon: mdi:ip
-    ssid:
-      name: ${esp_sidd}
-      icon: mdi:wifi
-
   - platform: version
     name: ${esp_version}
     hide_timestamp: true
@@ -238,23 +230,6 @@ sensor:
     refrigerant_error_code:
       internal: true
       id: refrigerant_error_code 
-
-  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
-    name: ${wifi_signal_db}
-    id: wifi_signal_db
-    update_interval: 5s
-    entity_category: diagnostic
-
-  - platform: copy # Reports the WiFi signal strength in %
-    source_id: wifi_signal_db
-    name: ${wifi_signal_proc}
-    id: wifi_signal_proc
-    filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: " %"
-    entity_category: diagnostic
-    device_class: ""
-    icon: mdi:wifi
 
   - platform: uptime
     name: ${uptime}
