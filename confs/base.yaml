@@ -101,7 +101,7 @@ text_sensor:
         case 1: return std::string("FTC4");
         case 2: return std::string("FTC5");
         case 3: return std::string("FTC6");
-        case 4: return std::string("FTC7");
+        case 5: return std::string("FTC7");
         default: return std::to_string(value);
       }
 
