@@ -14,6 +14,10 @@ It was based on https://github.com/rbroker/ecodan-ha-local. I've also managed to
 English (default), Dutch, Italian, French. Select the language in `ecodan-esphome.yaml` file. 
 If you want to contribute with a translation: copy the file `ecodan-labels-en.yaml` to `ecodan-labels-xx.yaml`, fill in all the labels and submit a pull request.
 
+# proxy mode: run melcloud wifi / procon as slave
+It's possible to run a melcloud wifi adapter or procon as slave. The slave unit will function as usual.
+[see proxy.md for more information](proxy.md)
+
 # server control + prohibit dhw/heating/cooling enabled by default
 In sever control mode, the prohibit flags can be set. You can disable it by commenting the `sever-control.yaml` entry in the `ecodan-esphome.yaml`.
 
@@ -24,6 +28,7 @@ Tested boards
 
 | Board | Link | Notes |
 |:---|:----:|:---|
+| Heishamon V5 large | https://www.tindie.com/products/thehognl/heishamon-communication-pcb/ | [see proxy.md](proxy.md) |
 | m5stack Atom (ESP32 variants) | https://docs.m5stack.com/en/core/ATOM%20Lite | Grove ports used |
 | m5stack AtomS3 (ESP32-S3 variants) | https://docs.m5stack.com/en/core/AtomS3%20Lite | Grove ports used |
 
