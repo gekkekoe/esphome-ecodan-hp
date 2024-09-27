@@ -16,8 +16,9 @@ The big connector (bottom) is connected to the heatpump and the small (top) one 
 |                 | heishamon       | heatpump     |
 |-----------------|-----------------|--------------|
 | big connector   | XAP-05V-1       | ST PAP-05V-S |
-| small connector | ST PAP-05V-S    | ST PAP-05V-S |
+| small connector | ST PAP-05V-S    | B05B-PASK-1  |
 
+Alternatively you can also rewire the melcloud wifi adapter / procon connector to match the pin layout and plug it into the small socket on the heishamomn board (You still need to create a cable for the big connector).
 NOTE: The current version of heishamon V5 requires a 10kΩ pull-up resistor on the RX line from the heat pump. It's recommended to solder it at the back side of the board.
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/solder.png?raw=true)
@@ -33,7 +34,7 @@ Use the following schematics to create the connectors.
 |           | atoms3lite      | heatpump     |
 |-----------|-----------------|--------------|
 |           | grove female    | ST PAP-05V-S |
-|           | ST PAP-05V-S    | ST PAP-05V-S |
+|           | ST PAP-05V-S    | B05B-PASK-1  |
 
 We do need to connect the 12v to the slave port.
 
