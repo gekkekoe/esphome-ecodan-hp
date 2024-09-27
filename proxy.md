@@ -10,21 +10,21 @@ Use the following diagram to create the connectors.
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/heishamon-proxy.png?raw=true)
 
-Heishamon has two connectors (big and small).
-The big connector (bottom) is connected to the heatpump and the small (top) one is connected to the slave.
+Heishamon has two connectors (large and small).
+The large connector (bottom) is connected to the heatpump and the small (top) one is connected to the slave.
 
 |                 | heishamon       | heatpump     |
 |-----------------|-----------------|--------------|
-| big connector   | XAP-05V-1       | ST PAP-05V-S |
+| large connector | XAP-05V-1       | ST PAP-05V-S |
 | small connector | ST PAP-05V-S    | B05B-PASK-1  |
 
-Alternatively you can also rewire the melcloud wifi adapter / procon connector to match the pin layout and plug it into the small socket on the heishamomn board (You still need to create a cable for the big connector).
+Alternatively you can also rewire the melcloud wifi adapter / procon connector to match the pin layout and plug it into the small socket on the heishamomn board (You still need to create a cable for the large connector).
 
 NOTE: The current version of heishamon V5 requires a 10kΩ pull-up resistor on the RX line from the heat pump. It's recommended to solder it at the back side of the board.
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/solder.png?raw=true)
 
-Select the `esp32s3-heisamon.yaml` as configuration in `ecodan-esphome.yaml`. Build and flash the firmware. Connect the small connector to the slave and the big to the heatpump.
+Select the `esp32s3-heisamon.yaml` as configuration in `ecodan-esphome.yaml`. Build and flash the firmware. Connect the small connector to the slave and the large connector to the heatpump.
 
 ### Generic esp32 with two pair of RX/TX GPIO. 
 I will be using a m5stack atom s3 lite as an example.
