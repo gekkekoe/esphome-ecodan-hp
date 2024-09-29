@@ -13,10 +13,10 @@ Use the following diagram to create the connectors.
 Heishamon has two connectors (large and small).
 The large connector (bottom) is connected to the heatpump and the small (top) one is connected to the slave.
 
-|                 | heishamon       | heatpump     |
+|                 | heishamon       |              |
 |-----------------|-----------------|--------------|
-| large connector | XAP-05V-1       | ST PAP-05V-S |
-| small connector | ST PAP-05V-S    | B05B-PASK-1  |
+| large connector | socket: B05B-XASK-1, connector: XAP-05V-1       | socket: B05B-PASK-1, connector: ST PAP-05V-S |
+| small connector | socket: B05B-PASK-1, connector: ST PAP-05V-S    | socket: B05B-PASK-1, connector: ST PAP-05V-S |
 
 Alternatively you can also rewire the melcloud wifi adapter / procon connector to match the pin layout and plug it into the small socket on the heishamomn board (You still need to create a cable for the large connector).
 
@@ -32,10 +32,10 @@ Use the following schematics to create the connectors.
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/atoms3-proxy.png?raw=true)
 
-|           | atoms3lite      | heatpump     |
+|           | atoms3lite      |              |
 |-----------|-----------------|--------------|
-|           | grove female    | ST PAP-05V-S |
-|           | ST PAP-05V-S    | B05B-PASK-1  |
+|           | grove female    | socket: B05B-PASK-1, connector: ST PAP-05V-S |
+|           | pin header      | socket: B05B-PASK-1, connector: ST PAP-05V-S |
 
 We do need to connect the 12v to the slave port.
 
