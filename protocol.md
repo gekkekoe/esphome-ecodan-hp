@@ -32,6 +32,16 @@ prohibit heating zone 2
 prohibit dhw
 { .Hdr { FC, 41, 02, 7A, 10 } .Payload { 34, 04, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 } .Chk { FA } }
 
+### 0x02 sequence (handshake?)
+```c++
+uint8_t first_request[8] = { 0x02, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x02 };
+uint8_t expected_first_response[18] = { 0x02, 0xFF, 0xFF, 0x80, 0x00, 0x00, 0x0A, 0x01, 0x00, 0x40, 0x00, 0x00, 0x06, 0x02, 0x7A, 0x00, 0x00, 0xB5 };
+
+uint8_t second_request[9] = { 0x02, 0xff, 0xff, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00 };
+uint8_t expected_second_response[8] = { 0x02, 0xff, 0xff, 0x81, 0x00, 0x00, 0x00, 0x81 };
+```
+The melcloud wifi adapter initiates and expects the following sequences. It does this at 2400 baud and 9600 baud. We can communicate at 9600 baud with the slave using this sequence. The 0x02 packets have a slightly different format than the regular 0xfc packets. The package size is at offset 6. The last is the checksum.
+
 # Physical
 Serial, 2400, 8, E, 1
 # Command Format
@@ -62,7 +72,8 @@ Payload Size (Bytes)
 |---|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
 | Command | x | x | x | x | x | x | x | x | x | x  | x  |  x |  x |  x |  x |  x |
 ## Checksum
-Checksum = 0xfc - Sum ( PacketBytes[0..20]) ;
+Checksum = 0
+Checksum -= PacketBytes[1..20]
 # Set Request - Packet Type 0x41
 ## Available Commands 
 Active commands so far identified.
