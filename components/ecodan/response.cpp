@@ -95,11 +95,9 @@ namespace ecodan
 
                 break;
             case GetType::SH_TEMPERATURE_STATE:
-                status.Zone1RoomTemperature = res.get_float16(1);
-                if (res.get_u16(3) != 0xF0C4) // 0xF0C4 seems to be a sentinel value for "not reported in the current system"
-                    status.Zone2RoomTemperature = res.get_float16(3);
-                else
-                    status.Zone2RoomTemperature = 0.0f;
+                // 0xF0 seems to be a sentinel value for "not reported in the current system"
+                status.Zone1RoomTemperature = res[1] != 0xF0 ? res.get_float16(1) : 0.0f;
+                status.Zone2RoomTemperature = res[3] != 0xF0 ? res.get_float16(3) : 0.0f;
                 status.OutsideTemperature = res.get_float8(11);
                 status.HpRefrigerantLiquidTemperature = res.get_float16_signed(8);
                 status.HpRefrigerantCondensingTemperature = res.get_float8(10);
