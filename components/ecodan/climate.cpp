@@ -167,7 +167,7 @@ namespace ecodan
         if (this->dhw_climate_mode)  {
 
             //traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT});
-            traits.set_visual_min_temperature(40);
+            traits.set_visual_min_temperature(30);
             traits.set_visual_max_temperature(60);
         }
         else if(this->thermostat_climate_mode) {
