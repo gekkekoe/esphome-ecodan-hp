@@ -222,16 +222,18 @@ Responses so far identified.
 | 0x26 | Various Operantion Mode Flags |
 | 0x28 | Various Operantion Mode Flags |
 | 0x29 | Zone 1 & 2 Temperatures |
-### 0x01 - Time & Date
+### 0x01 - DateTime & Controller Firmware
 |   0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x01  | Y | M | D | h | m | s |   |   |   |    |    |    |    |    |    |    |  
+| 0x01  | Y | M | D | h | m | s | f1 | f2 |   |    |    |    |    |    |    |    |  
 * Y: Year
 * M: Month
 * D: Day
 * h: Hour
 * m: Minute
 * s: Second
+* f1: firmware version hex (first part)
+* f2: firmware version hex (second part)
 ### 0x02 - Defrost
 |   0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|

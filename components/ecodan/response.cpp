@@ -39,6 +39,20 @@ namespace ecodan
         {
             switch (res.payload_type<GetType>())
             {
+             case GetType::DATETIME_FIRMWARE:
+                {
+                    status.ControllerDateTime.tm_year = 100 + res[1];
+                    status.ControllerDateTime.tm_mon = res[2] - 1;
+                    status.ControllerDateTime.tm_mday = res[3];
+                    status.ControllerDateTime.tm_hour = res[4];
+                    status.ControllerDateTime.tm_min = res[5];
+                    status.ControllerDateTime.tm_sec = res[6];                    
+
+                    char firmware[5];
+                    snprintf(firmware, 5, "%02X%02X", res[7], res[8]);
+                    publish_state("controller_firmware_text", std::string(firmware));                
+                }
+                break;               
             case GetType::DEFROST_STATE:
                 status.DefrostActive = res[3] != 0;
                 publish_state("status_defrost", status.DefrostActive);

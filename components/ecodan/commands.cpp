@@ -188,8 +188,9 @@ namespace ecodan
         return dispatch_next_cmd();
     }
 
-    #define MAX_STATUS_CMD_SIZE 19
+    #define MAX_STATUS_CMD_SIZE 20
     Message statusCmdQueue[MAX_STATUS_CMD_SIZE] = {
+        Message{MsgType::GET_CMD, GetType::DATETIME_FIRMWARE},
         Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
         Message{MsgType::GET_CMD, GetType::ERROR_STATE},
         Message{MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY},

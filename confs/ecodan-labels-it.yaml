@@ -50,6 +50,8 @@ substitutions:
   status_booster: Riscaldatore Booster
   compressor_frequency: Freq. Compressore
   controller_version_text: Controller
+  controller_firmware_text: Controller Firmware
+  controller_datetime_text: Controller Date
   cool_consumed: En. Raff. Utilizzata
   cool_cop: COP Raff.
   cool_delivered: En. Raff. Prod. Ieri

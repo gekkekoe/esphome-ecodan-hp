@@ -81,10 +81,22 @@ text_sensor:
     entity_category: diagnostic
 
   - platform: template
+    id: controller_datetime_text
+    name: ${controller_datetime_text}
+    entity_category: diagnostic
+    update_interval: 60s
+    lambda: |-
+      auto dt = id(ecodan_instance).get_status().ControllerDateTime;
+      char buffer[26];
+      strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &dt);
+      return std::string(buffer);
+ 
+  - platform: template
     id: controller_version_text
     name: ${controller_version_text}
     icon: mdi:new-box
     entity_category: diagnostic
+    update_interval: 60s
     lambda: |-
       int value = id(controller_version).state;
       switch (value) {
@@ -100,6 +112,7 @@ text_sensor:
   - platform: template
     id: heat_source_text
     name: ${heat_source_text}
+    update_interval: 60s
     lambda: |-
       int value = id(heat_source).state;
       switch (value) {
@@ -127,10 +140,12 @@ text_sensor:
           case esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION: return std::string("${legionella_prevention}");
           default: return std::string("Unknown");
       }
+
   - platform: template
     id: refrigerant_error_code_text
     name: ${refrigerant_error_code_text}
     entity_category: diagnostic
+    update_interval: 60s
     icon: mdi:alert
     lambda: |-
       auto value = static_cast<uint8_t>(id(refrigerant_error_code).state);
@@ -142,12 +157,17 @@ text_sensor:
           case 3: return std::string("Maintenance Error");
           default: return std::string("Unknown");
       }
+      
   - platform: ecodan
     fault_code_text:
       id: fault_code_text 
       name: ${fault_code_text}
       icon: mdi:alert
       entity_category: diagnostic
+    controller_firmware_text:
+      id: controller_firmware_text
+      name: ${controller_firmware_text}
+      entity_category: diagnostic          
 
 sensor:
   - platform: ecodan

@@ -62,7 +62,7 @@ namespace ecodan
 
     enum class GetType : uint8_t
     {
-        UNKNOWN_0x01 = 0x01,
+        DATETIME_FIRMWARE = 0x01,
         DEFROST_STATE = 0x02,
         ERROR_STATE = 0x03,
         COMPRESSOR_FREQUENCY = 0x04,

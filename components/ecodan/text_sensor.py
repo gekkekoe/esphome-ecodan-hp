@@ -18,6 +18,10 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:new-box",
             entity_category=ENTITY_CATEGORY_NONE,
         ),
+        cv.Optional("controller_firmware_text"): text_sensor.text_sensor_schema(
+            icon="mdi:new-box",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),        
         cv.Optional("heat_source_text"): text_sensor.text_sensor_schema(
             icon="mdi:fire",
             entity_category=ENTITY_CATEGORY_NONE,

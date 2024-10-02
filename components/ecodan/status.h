@@ -59,6 +59,9 @@ namespace ecodan
         uint16_t FaultCodeLetters;
         uint16_t FaultCodeNumeric;
 
+        // datime of controller
+        struct tm ControllerDateTime = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+
         enum class PowerMode : uint8_t
         {
             STANDBY = 0,

@@ -50,6 +50,8 @@ substitutions:
   status_booster: Status booster heater
   compressor_frequency: Kompressor frequentie
   controller_version_text: Controller versie
+  controller_firmware_text: Controller Firmware
+  controller_datetime_text: Controller Datum
   cool_consumed: Koelen verbruikt
   cool_cop: Koelen cop
   cool_delivered: Koelen geleverd

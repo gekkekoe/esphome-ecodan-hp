@@ -39,4 +39,4 @@ Use the following schematics to create the connectors.
 
 We do need to connect the 12v to the slave port.
 
-Select the `esp32s3-atoms3.yaml` as configuration in `ecodan-esphome.yaml`. Build and flash the firmware.
+Select the `esp32s3-proxy.yaml` as configuration in `ecodan-esphome.yaml`. Build and flash the firmware.

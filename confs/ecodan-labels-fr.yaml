@@ -50,6 +50,8 @@ substitutions:
   status_booster: Statut réchauffeur élec
   compressor_frequency: Freq Compresseur
   controller_version_text: Version Controleur
+  controller_firmware_text: Firmware Controleur
+  controller_datetime_text: Date du Controleur
   cool_consumed: Conso Clim
   cool_cop: COP Clim
   cool_delivered: Energ Délivrée Clim
