@@ -48,8 +48,8 @@ namespace ecodan
                     status.ControllerDateTime.tm_min = res[5];
                     status.ControllerDateTime.tm_sec = res[6];                    
 
-                    char firmware[5];
-                    snprintf(firmware, 5, "%02X%02X", res[7], res[8]);
+                    char firmware[6];
+                    snprintf(firmware, 6, "%02X.%02X", res[7], res[8]);
                     publish_state("controller_firmware_text", std::string(firmware));                
                 }
                 break;               

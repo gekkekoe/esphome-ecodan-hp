@@ -88,7 +88,8 @@ text_sensor:
     lambda: |-
       auto dt = id(ecodan_instance).get_status().ControllerDateTime;
       char buffer[26];
-      strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &dt);
+      //strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &dt);
+      strftime(buffer, sizeof(buffer), "%Y-%m-%d", &dt);
       return std::string(buffer);
  
   - platform: template
