@@ -45,6 +45,7 @@ substitutions:
   heatpump_climate_room_z2: Température Zone 2
   z2_room_temp_target: Z2 Temp cible pièce
   z2_room_temp: Z2 Temp pièce
+  mixing_tank_temp: Température Mixing Tank
   boiler_flow_temp: Temp départ ballon
   boiler_return_temp: Temp retour ballon
   status_booster: Statut réchauffeur élec

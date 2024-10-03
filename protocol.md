@@ -312,10 +312,14 @@ Responses so far identified.
 ### 0x0e - Thermistors 2
 |  0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x0e | F | F |   | R | R |   | X | X |   |    |    |    |    |    |    |    |
-* F : Boiler Flow Temperature * 100    Suspected (Where THWB1 installed)
-* R : Boiler Return Temperature * 100     Suspected (Where THWB2 is installed)
-* X : Mixing Tank Temperature * 100        Suspected (Where THW10 is installed)  
+| 0x0e | F | F |   | R | R |   |   |   |   |    |    |    |    |    |    |    |
+* F : Boiler Flow Temperature * 100    (Where THWB1 installed)
+* R : Boiler Return Temperature * 100     (Where THWB2 is installed)
+### 0x0f - Thermistors 2
+|  0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+|------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
+| 0x0f | M | M |   |   |   |   |   |   |   |    |    |    |    |    |    |    |
+* M : Mixing Tank Temperature * 100        (Where THW10 is installed)  
 ### 0x10 - External sources
 |   0   | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|

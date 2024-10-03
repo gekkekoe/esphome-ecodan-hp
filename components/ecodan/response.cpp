@@ -150,9 +150,12 @@ namespace ecodan
                 status.BoilerFlowTemperature = res.get_float16(1);
                 status.BoilerReturnTemperature = res.get_float16(4);
                 publish_state("boiler_flow_temp", status.BoilerFlowTemperature);
-                publish_state("boiler_return_temp", status.BoilerReturnTemperature);
-                                
-                break;                
+                publish_state("boiler_return_temp", status.BoilerReturnTemperature);   
+                break;
+            case GetType::TEMPERATURE_STATE_D:
+                status.MixingTankTemperature = res.get_float16(1);
+                publish_state("mixing_tank_temp", status.MixingTankTemperature);     
+                break;  
             case GetType::EXTERNAL_STATE:
                 // 1 = IN1 Thermostat heat/cool request
                 // 2 = IN6 Thermostat 2

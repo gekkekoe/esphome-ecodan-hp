@@ -264,6 +264,13 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
+        cv.Optional("mixing_tank_temp"): sensor.sensor_schema(
+            unit_of_measurement=UNIT_CELSIUS,
+            icon="mdi:home-thermometer",
+            accuracy_decimals=1,
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),     
         cv.Optional("runtime"): sensor.sensor_schema(
             unit_of_measurement=UNIT_HOUR,
             icon="mdi:clock",

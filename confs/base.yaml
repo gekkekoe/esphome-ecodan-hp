@@ -210,7 +210,10 @@ sensor:
       name: ${boiler_flow_temp}
     boiler_return_temp:
       id: boiler_return_temp
-      name: ${boiler_return_temp}      
+      name: ${boiler_return_temp}
+    mixing_tank_temp:
+      id: mixing_tank_temp
+      name: ${mixing_tank_temp}   
     dhw_temp:
       id: dhw_temp
       name: ${dhw_temp}

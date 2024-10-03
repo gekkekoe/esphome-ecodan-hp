@@ -45,6 +45,7 @@ substitutions:
   heatpump_climate_room_z2: Zone 2 temperatuur
   z2_room_temp_target: Zone 2 ruimte setpoint waarde
   z2_room_temp: Zone 2 ruimte temp
+  mixing_tank_temp: Mixing Tank Temp
   boiler_flow_temp: Boiler aanvoer temp
   boiler_return_temp: Boiler retour temp
   status_booster: Status booster heater
