@@ -109,7 +109,7 @@ esphome upload --device=/dev/ttyACM0 ecodan-esphome.yaml
 esphome upload --device ip_address ecodan-esphome.yaml
 ```
 
-Here's how it's connected inside my heatpump:
+Here's how it's connected inside the heatpump:
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/m5stack_installed.jpg?raw=true)
 
