@@ -1,8 +1,8 @@
 # M5Stack Atom Lite Proxy Example
 
-This will need some soldering and some pins to connect to the Atom.
+This will need some soldering and some pins/sockets to connect to the Atom but works fine without any Grove or ST PAP-05V-S connectors.
 
-
+```
   HP CN105                                                               WiFi If  
 ┌─────────┐                                                            ┌─────────┐
 │  1 12V  ┼────────────────────────────────────────────────────────────┼  1 12V  │
@@ -29,7 +29,7 @@ This will need some soldering and some pins to connect to the Atom.
                        └────┼  Gnd           GPIO33  ┼────────────┘               
                             │                        │                            
                             └────────────────────────┘                            
-
+```
 
 
 You will also need to add the second UART at the end of your `ecodan-esphome.yaml` device config
