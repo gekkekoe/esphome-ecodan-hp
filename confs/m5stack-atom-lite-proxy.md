@@ -32,9 +32,16 @@ This will need some soldering and some pins/sockets to connect to the Atom but w
 ```
 
 
-You will also need to add the second UART at the end of your `ecodan-esphome.yaml` device config
+You will also need to include the device config and add the second UART in your `ecodan-esphome.yaml` device yaml
+```
+packages:
+  base: !include esphome-ecodan-hp/confs/base.yaml
+  esp32: !include esphome-ecodan-hp/confs/m5stack-atom-lite-proxy.yaml
+  ...
+```
 
 ```
+...
 ecodan:
   id: ecodan_instance
   uart_id: uart_main
