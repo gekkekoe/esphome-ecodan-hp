@@ -74,7 +74,7 @@ namespace ecodan
         TEMPERATURE_STATE_A = 0x0C,
         TEMPERATURE_STATE_B = 0x0D,
         TEMPERATURE_STATE_C = 0x0E,
-        UNKNOWN_0x0F = 0x0F,
+        TEMPERATURE_STATE_D = 0x0F,
         EXTERNAL_STATE = 0x10,
         UNKNOWN_0x11 = 0x11,
         ACTIVE_TIME = 0x13,

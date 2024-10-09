@@ -1,0 +1,140 @@
+##########################
+# ESP RGB Status LED
+
+# all ok - white
+# app error - pulse red
+# app warning - pulse yellow
+# ap enabled - pulse white
+# on network disconnected - fast pulse red
+# api disconnected - fast pulse yellow
+# hp error - 
+# heating - orange
+# cooling - blue
+# dhw - purple
+
+# using experimental control for now
+# https://github.com/esphome/esphome/pull/5814
+
+external_components:
+  - source: github://pr#5814
+    components: [ status_indicator, wifi ]
+
+status_indicator:
+  id: status
+  on_turn_off:
+    then:
+    - light.turn_on:
+        id: led
+        red: 100%
+        green: 100%
+        blue: 100%
+        brightness: 100%
+        effect: none
+  on_app_error:
+    then:
+    - light.turn_on:
+        id: led
+        red: 100%
+        green: 0%
+        blue: 0%
+        brightness: 100%
+        effect: slow_pulse
+  on_app_warning:
+    then:
+    - light.turn_on:
+        id: led
+        red: 100%
+        green: 100%
+        blue: 0%
+        brightness: 100%
+        effect: slow_pulse
+  on_wifi_ap_enabled:
+    then:
+    - light.turn_on:
+        id: led
+        red: 100%
+        green: 100%
+        blue: 100%
+        brightness: 100%
+        effect: slow_pulse
+  on_network_disconnected:
+    then:
+    - light.turn_on:
+        id: led
+        red: 100%
+        green: 0%
+        blue: 0%
+        brightness: 100%
+        effect: fast_pulse
+  on_api_disconnected:
+    then:
+    - light.turn_on:
+        id: led
+        red: 100%
+        green: 100%
+        blue: 0%
+        brightness: 100%
+        effect: fast_pulse
+  on_custom_status:
+    - trigger_id: heating
+      group: hp
+      then:
+        - light.turn_on:
+            id: led
+            red: 100%
+            green: 65%
+            blue: 0%
+            brightness: 100%
+            effect: None
+    - trigger_id: cooling
+      group: hp
+      then:
+        - light.turn_on:
+            id: led
+            red: 0%
+            green: 0%
+            blue: 100%
+            brightness: 100%
+            effect: None
+    - trigger_id: hotwater
+      group: hp
+      then:
+        - light.turn_on:
+            id: led
+            red: 100%
+            green: 0%
+            blue: 100%
+            brightness: 100%
+            effect: None
+
+text_sensor:
+  - platform: copy
+    source_id: status_operation
+    id: status_operation_monitor
+    internal: true
+    on_value:
+      then:
+        - if:
+            condition:
+              lambda: return x == "${heating}";
+            then:
+              - status.push:
+                  trigger_id: heating
+        - if:
+            condition:
+              lambda: return x == "${cooling}";
+            then:
+              - status.push:
+                  trigger_id: cooling
+        - if:
+            condition:
+              lambda: return x == "${hotwater}";
+            then:
+              - status.push:
+                  trigger_id: hotwater
+        - if: 
+            condition:
+              - lambda: return ((x != "${heating}") && (x != "${cooling}") && (x != "${hotwater}"));
+            then:
+              - status.pop:
+                  group: "hp"

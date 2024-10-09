@@ -45,6 +45,7 @@ substitutions:
   heatpump_climate_room_z2: Z2 temperatura
   z2_room_temp_target: Z2 T. Ambiente Desiderata
   z2_room_temp: Z2 T. Ambiente
+  mixing_tank_temp: Caldaia Mixing Tank
   boiler_flow_temp: Caldaia T. Mandata
   boiler_return_temp: Caldaia T. Ritorno
   status_booster: Riscaldatore Booster
