@@ -14,6 +14,10 @@ It was based on https://github.com/rbroker/ecodan-ha-local. I've also managed to
 English (default), Dutch, Italian, French. Select the language in `ecodan-esphome.yaml` file. 
 If you want to contribute with a translation: copy the file `ecodan-labels-en.yaml` to `ecodan-labels-xx.yaml`, fill in all the labels and submit a pull request.
 
+# proxy mode: run melcloud wifi / procon as slave
+It's possible to run a melcloud wifi adapter or procon as slave. The slave unit will function as usual.
+[see proxy.md for more information](proxy.md)
+
 # server control + prohibit dhw/heating/cooling enabled by default
 In sever control mode, the prohibit flags can be set. You can disable it by commenting the `sever-control.yaml` entry in the `ecodan-esphome.yaml`.
 
@@ -24,8 +28,10 @@ Tested boards
 
 | Board | Link | Notes |
 |:---|:----:|:---|
-| m5stack Atom (ESP32 variants) | https://docs.m5stack.com/en/core/ATOM%20Lite | Grove ports used |
-| m5stack AtomS3 (ESP32-S3 variants) | https://docs.m5stack.com/en/core/AtomS3%20Lite | Grove ports used |
+| Heishamon V5 large | https://www.tindie.com/products/thehognl/heishamon-communication-pcb/ | [see proxy.md](proxy.md) |
+| M5Stack Atom Lite (ESP32 variants) | https://docs.m5stack.com/en/core/ATOM%20Lite | Grove ports used |
+| M5Stack Atom Lite (ESP32 variants) | https://docs.m5stack.com/en/core/ATOM%20Lite | Pins used [example](confs/m5stack-atom-lite-proxy.md) |
+| M5Stack Atom Lite S3 (ESP32-S3 variants) | https://docs.m5stack.com/en/core/AtomS3%20Lite | Grove ports used |
 
 Cable
 * Get one of the grove female cable and a ST PAP-05V-S connector. Remove one end of the grove connector and replace it with a ST PAP-05V-S connector. Here's an example:
@@ -104,7 +110,7 @@ esphome upload --device=/dev/ttyACM0 ecodan-esphome.yaml
 esphome upload --device ip_address ecodan-esphome.yaml
 ```
 
-Here's how it's connected inside my heatpump:
+Here's how it's connected inside the heatpump:
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/m5stack_installed.jpg?raw=true)
 

@@ -42,7 +42,6 @@ namespace ecodan
     }
 
     void EcodanHeatpump::update() {        
-        //ESP_LOGI(TAG, "Update() on core %d", xPortGetCoreID());
         if (heatpumpInitialized)
             handle_loop();            
     }
@@ -67,26 +66,56 @@ namespace ecodan
             ESP_LOGI(TAG, "UART not configured for 2400 8E1. This may not work...");
         }
 
-        if (!is_connected())
+        if (proxy_uart_) {    
+            if ((proxy_uart_->get_baud_rate() != 2400 && proxy_uart_->get_baud_rate() != 9600) ||
+                proxy_uart_->get_stop_bits() != 1 ||
+                proxy_uart_->get_data_bits() != 8 ||
+                proxy_uart_->get_parity() != uart::UART_CONFIG_PARITY_EVEN) {
+                ESP_LOGI(TAG, "Proxy UART not configured for 2400 8E1. This may not work...");
+            }            
+        }
+        else if (!is_connected()){
             begin_connect();
+        }
 
         return true;
     }
 
     void EcodanHeatpump::loop()
     {
-        if (uart_ && uart_->available())
+        static auto last_response = std::chrono::steady_clock::now();
+
+        if (uart_ && serial_rx(uart_, res_buffer_))
         {
-            handle_response();
+            last_response = std::chrono::steady_clock::now();
+            if (proxy_uart_)
+                proxy_uart_->write_array(res_buffer_.buffer(), res_buffer_.size());
+            
+            // interpret message
+            handle_response(res_buffer_);
+            res_buffer_ = Message();
         }
-        if (proxy_uart_ && proxy_uart_->available())
+
+        if (proxy_uart_ && serial_rx(proxy_uart_, proxy_buffer_))
         {
-            handle_proxy();
+            // forward cmds from slave to master
+            //schedule_cmd(proxy_buffer_);
+            uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
+            proxy_buffer_ = Message();    
         }
+
+        auto now = std::chrono::steady_clock::now();
+        if (now - last_response > std::chrono::minutes(2))
+        {
+            last_response = now;
+            connected = false;
+            ESP_LOGW(TAG, "No reply received from the heatpump in the last 2 minutes, going to reconnect...");
+        }
+    
     }
 
     void EcodanHeatpump::handle_loop()
-    {
+    {        
         if (!is_connected() && uart_ && !uart_->available())
         {
             static auto last_attempt = std::chrono::steady_clock::now();
@@ -102,7 +131,7 @@ namespace ecodan
         }
         else if (is_connected())
         {
-            dispatch_next_set_cmd();
+            dispatch_next_cmd();
 
             if (!dispatch_next_status_cmd())
             {

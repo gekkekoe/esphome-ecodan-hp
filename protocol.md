@@ -32,6 +32,16 @@ prohibit heating zone 2
 prohibit dhw
 { .Hdr { FC, 41, 02, 7A, 10 } .Payload { 34, 04, 00, 00, 00, 01, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00 } .Chk { FA } }
 
+### 0x02 sequence (handshake?)
+```c++
+uint8_t first_request[8] = { 0x02, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x02 };
+uint8_t expected_first_response[18] = { 0x02, 0xFF, 0xFF, 0x80, 0x00, 0x00, 0x0A, 0x01, 0x00, 0x40, 0x00, 0x00, 0x06, 0x02, 0x7A, 0x00, 0x00, 0xB5 };
+
+uint8_t second_request[9] = { 0x02, 0xff, 0xff, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00 };
+uint8_t expected_second_response[8] = { 0x02, 0xff, 0xff, 0x81, 0x00, 0x00, 0x00, 0x81 };
+```
+The melcloud wifi adapter initiates and expects the following sequences. It does this at 2400 baud and 9600 baud. We can communicate at 9600 baud with the slave using this sequence. The 0x02 packets have a slightly different format than the regular 0xfc packets. The package size is at offset 6. The last is the checksum.
+
 # Physical
 Serial, 2400, 8, E, 1
 # Command Format
@@ -62,7 +72,8 @@ Payload Size (Bytes)
 |---|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
 | Command | x | x | x | x | x | x | x | x | x | x  | x  |  x |  x |  x |  x |  x |
 ## Checksum
-Checksum = 0xfc - Sum ( PacketBytes[0..20]) ;
+Checksum = 0
+Checksum -= PacketBytes[1..20]
 # Set Request - Packet Type 0x41
 ## Available Commands 
 Active commands so far identified.
@@ -72,40 +83,46 @@ Active commands so far identified.
 | 0x34 | Controller Settings |
 | 0x35 | Room Settings |
 ### 0x32 - Set Options
-|   0   |   1   | 2 | 3 | 4 |  5  |  6  |  7  |   8   |   9   |  10  |  11  |  12  |  13  | 14 | 15 | 16 |
-|-------|-------|---|---|---|-----|-----|-----|-------|-------|------|------|------|------|----|----|----|
-| 0x32  | Flags | Z | P |   | DHW | HC1 | HC2 | DHWSP | DHWSP | Z1SP | Z1SP | Z2SP | Z2SP |    |    |    |  
+|   0   |   1   |   2   | 3 | 4 |  5  |  6  |  7  |   8   |   9   |  10  |  11  |  12  |  13  | 14 | 15 | 16 |
+|-------|-------|-------|---|---|-----|-----|-----|-------|-------|------|------|------|------|----|----|----|
+| 0x32  | Flags | Flags | P |Unk| DHW | HC1 | HC2 | DHWSP | DHWSP | Z1SP | Z1SP | Z2SP | Z2SP | MRC| MRC|CHK |  
 
-* Flags : Flags to Indicate which fields are active
-  * 0x80 : Set Zone Setpoints, Byte[2] determines which Zones 
-  * 0x40 : Unknown 
-  * 0x20 : Set Hotwater Setpoint
-  * 0x10 : Unknown
-  * 0x08 : Set Heating Control Mode
-  * 0x04 : Set Hot Water Mode
-  * 0x02 : Unknown
-  * 0x01 : Set System Power Power
-* Z : Zones the Command Applies to
-  * 0x00 : Zone 1
-  * 0x01 : Zone 2 ( Probably )
-  * 0x02 : Both
+* Flags (2 Bytes) : Flags to Indicate which fields are active
+  * 0x01 0x00 : Set System Power
+  * 0x02 0x00 : Unknown (Byte 4) - Operation Mode?
+  * 0x04 0x00 : Set Hot Water Mode
+  * 0x08 0x00 : Set Heating Control Mode Zone 1
+  * 0x10 0x00 : Set Heating Control Mode Zone 2
+  * 0x20 0x00 : Set Hotwater Setpoint
+  * 0x40 0x00 : Not Required (uint16)
+  * 0x80 0x00 : Set Zone 1 Setpoints
+  * 0x00 0x01 : Not Required (uint16)
+  * 0x00 0x02 : Set Zone 2 Setpoints
+  * 0x00 0x04 : Not Required (uint16)
+  * 0x00 0x08 : MRC Prohibit
+  * 0x00 0x10 : Not Required (uint16)
 * P : System Power
   * 0x00 : Standby
   * 0x01 : Power On
 * DHW : Hot Water Mode
   * 0x00 : Normal
   * 0x01 : Eco
-* HC1 : Heating Control Mode Zone 1
-  * 0 : Temperature Mode
-  * 1 : Flow Control Mode
-  * 2 : Compensation Curve Mode
-* HC2 : Heating Control Mode Zone 2
-  * 0 : Temperature Mode
-  * 1 : Flow Control Mode
-  * 2 : Compensation Curve Mode
+* HC1 / HC2 : Heating Control Mode Zone 1 / 2
+  * 0 : Heating Temperature Mode
+  * 1 : Heating Flow Control Mode
+  * 2 : Heating Compensation Curve Mode
+  * 3 : Cooling Temperature Mode
+  * 4 : Cooling Flow Control Mode
+  * 5 : Dry Up
 * DHWSP : Hot Water Setpoint (Temperature * 100)
 * Z1SP : Zone 1 Setpoint (* 100)
-* Z2SP : Zone 1 Setpoint (* 100)
+* Z2SP : Zone 2 Setpoint (* 100)
+* MRC Prohibit : (Read 0x26 Byte 14) - **MRC Prohibit command must NOT be written to Shizuoka designed models**
+  * 0 : Disable Prohibits
+  * 8 : Function Set Prohibit
+  * 32 : Setting Temperature Prohibit
+  * 64 : Running Mode Prohibit
+  * 128 : System On/Off Prohibit
 ### 0x34 - Hot Water and Holiday Mode
 |   0   |  1  |  2  | 3 |   4  |  5   |   6  |  7  |   8   |   9   |  10  |  11  |  12  |  13  | 14 | 15 | 16 |
 |-------|-----|-----|---|------|------|------|-----|-------|-------|------|------|------|------|----|----|----|
@@ -153,8 +170,8 @@ Active commands so far identified, 0x00 to 0xff. Commands not listed appear to g
 | 0x0b | Zone 1 & 2 and Outside |Temperature
 | 0x0c | Water Flow Temperatures |
 | 0x0d | Boiler Flow Temperatures |
-| 0x0e | Unknown |
-| 0x10 | Thermostats |
+| 0x0e | Thermistors 2 |
+| 0x10 | External Thermostats |
 | 0x11 | Unknown |
 | 0x13 | Run Hours |
 | 0x14 | Primary Flow Rate & Booster/Immersion |
@@ -173,8 +190,8 @@ Active commands so far identified, 0x00 to 0xff. Commands not listed appear to g
 | 0x27 | Unknown |
 | 0x28 | Various Operantion Mode Flags |
 | 0x29 | Zone 1 & 2 Temperatures |
-| 0xa1 | Unknown |
-| 0xa2 | Unknown |
+| 0xa1 | Consumed Energy |
+| 0xa2 | Delivered Energy |
 | 0xa3 | Unknown - Empty Response |
 | 0xc9 | Hardware configuration |
 ### Payload - All Commands
@@ -205,31 +222,33 @@ Responses so far identified.
 | 0x26 | Various Operantion Mode Flags |
 | 0x28 | Various Operantion Mode Flags |
 | 0x29 | Zone 1 & 2 Temperatures |
-### 0x01 - Time & Date
+### 0x01 - DateTime & Controller Firmware
 |   0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x01  | Y | M | D | h | m | s |   |   |   |    |    |    |    |    |    |    |  
+| 0x01  | Y | M | D | h | m | s | f1 | f2 |   |    |    |    |    |    |    |    |  
 * Y: Year
 * M: Month
 * D: Day
 * h: Hour
 * m: Minute
 * s: Second
+* f1: firmware version hex (first part)
+* f2: firmware version hex (second part)
 ### 0x02 - Defrost
 |   0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
 | 0x02  |   |   | D |   |   |   |   |   |   |    |    |    |    |    |    |    |  
 * D: Defrost
-### 0x03 - Error codes
-|   0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 |  8  | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
-|-------|---|---|---|---|---|---|---|-----|---|----|----|----|----|----|----|----|
-| 0x03  | RE|FC1|FC2|FT1|FT2|   |   |  M  | S |    |    |    |    |    |    |    |  
-* RE: refrigerant error code
-* FC1+FC2: Error code FC1 * 100 + FC2
-* FT1: fault code letter (first)
-* FT2: fault code letter (second)
-* M: Multi Zone Running Parameter (3 = Z2/2 = Z1/1 = Both Active)
-* S: Single Zone Running Parameter (TBC)?
+### 0x03 - Refrigerant and Zone Running Information
+|   0   |  1 | 2  |  3 |  4 |  5 | 6 | 7 |  8  | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+|-------|----|----|----|----|----|---|---|-----|---|----|----|----|----|----|----|----|
+| 0x03  | RF | F1 | F2 | F3 | F4 |   |   |  M  | S |    |    |    |    |    |    |    |  
+* RF: Refrigerant Flt Code
+* F1: Fault Code * 100 + Flt Code (F2) (Numbers)
+* F3: Fault Code (Letter) 1
+* F4: Fault Code (Letter) 2
+* M: Multi Zone Running Parameter (3 = Z2 Working, 2 = Z1 Working, 1 = Both Zones working, 0 = Idle)
+* S: Unknown
 ### 0x04 - Various Flags
 |   0   | 1  | 2 | 3 | 4 | 5 | 6 |  7  | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
@@ -247,11 +266,12 @@ Responses so far identified.
   * 3 : booster heater + immersion heater
   * 4 : boiler
 * HSP : Heat Source Phase – DHW, 0 = Normal, 1 = H/P Phase, 2 = Heater Phase
-### 0x07 
+### 0x07 - Heater Power
 |   0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x07  |   |   |   |   |   |   |   |   | P |    |    |    |    |    |    |    |  
-* P : Heater Power (*10 = %?)
+| 0x07  |   |   |   | I |   | P |   |   |   |    |    |    |    |    |    |    |  
+* I : Input Power (kW) - 0 = 0-1kW, 1 = 1-2kW, 2 = 2-3kW etc.
+* P : Heater Power (to nearest kW)
 ### 0x09 - Zone 1 & 2 Temperatures and Setpoints, Hot Water Setpoint
 | 0    |   1  |   2  | 3    | 4    | 5    | 6    | 7    | 8    |  9  |  10 |  11 | 12 | 13 | 14 | 15 | 16 |
 |------|------|------|------|------|------|------|------|------|-----|-----|-----|----|----|----|----|----|
@@ -292,10 +312,14 @@ Responses so far identified.
 ### 0x0e - Thermistors 2
 |  0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x0e | F | F |   | R | R |   | X | X |   |    |    |    |    |    |    |    |
-* F : Boiler Flow Temperature * 100    Suspected (Where THWB1 installed)
-* R : Boiler Return Temperature * 100     Suspected (Where THWB2 is installed)
-* X : Mixing Tank Temperature * 100        Suspected (Where THW10 is installed)  
+| 0x0e | F | F |   | R | R |   |   |   |   |    |    |    |    |    |    |    |
+* F : Boiler Flow Temperature * 100    (Where THWB1 installed)
+* R : Boiler Return Temperature * 100     (Where THWB2 is installed)
+### 0x0f - Thermistors 2
+|  0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+|------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
+| 0x0f | M | M |   |   |   |   |   |   |   |    |    |    |    |    |    |    |
+* M : Mixing Tank Temperature * 100        (Where THW10 is installed)  
 ### 0x10 - External sources
 |   0   | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
@@ -374,7 +398,7 @@ Responses so far identified.
 * PHZ2 : Prohibit Heating Zone2
 * PCZ2 : Prohibit Cooling Zone2
 * SC : Server Control Mode Active
-### 0x29 - 
+### 0x29 - Heating and Thermostats (Heat/Cool)
 |   0   | 1 | 2 | 3 |  4  |  5  |  6  |  7  | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|---|---|---|-----|-----|-----|-----|---|---|----|----|----|----|----|----|----|
 | 0x29  |   |   | HC | Z1T | Z1T | Z2T | Z2T |   |   |    |    |    |    |    |    |    |  
@@ -396,21 +420,24 @@ Responses so far identified.
 * M: Month
 * D: Day
 ### 0xC9 - Hardware configuration
-|   0   | 1 | 2 | 3 |  4   |  5  |  6  |  7   | 8 | 9 | 10  | 11 | 12 | 13 | 14 | 15 | 16 |
-|-------|---|---|---|------|-----|-----|------|---|---|-----|----|----|----|----|----|----|
-| 0xC9  |   |   |   |      |     |  C  |      |   |   |     |    |    |    |    |    |    |  
-* C: Controller version
-  * 0: FTC2B
-  * 1: FTC4
-  * 2: FTC5
-  * 3: FTC6
-  * 4: FTC7
-  * 128: CAHV1A
-  * 129: CAHV1B
-  * 130: CRHV1A 
-  * 131: CRHV1B
-  * 132: EAHV1A
-  * 133: EAHV1B
-  * 134: QAHV1A
-  * 135: QAHV1B
-  * 144: PWFY1
+|   0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+|-------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
+| 0xC9  |U1 |   |U2 |   |U3 | V |   |   |   |    |    |    |    |    |    |    |  
+* U1: Version of Protocol (Upper/Lower) BCD
+* U2: Version of Model (Upper/Lower) BCD
+* U3: Capacity of Supply
+* V: FTC Version:
+      0: FTC2B
+      1: FTC4
+      2: FTC5
+      3: FTC6
+      5: FTC7
+      128: CAHV1A
+      129: CAHV1B
+      130: CRHV1A
+      131: CRHV1B
+      132: EAHV1A
+      133: EAHV1B
+      134: QAHV1A
+      135: QAHV1B
+      144: PWFY1

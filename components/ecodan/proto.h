@@ -62,7 +62,7 @@ namespace ecodan
 
     enum class GetType : uint8_t
     {
-        UNKNOWN_0x01 = 0x01,
+        DATETIME_FIRMWARE = 0x01,
         DEFROST_STATE = 0x02,
         ERROR_STATE = 0x03,
         COMPRESSOR_FREQUENCY = 0x04,
@@ -74,7 +74,7 @@ namespace ecodan
         TEMPERATURE_STATE_A = 0x0C,
         TEMPERATURE_STATE_B = 0x0D,
         TEMPERATURE_STATE_C = 0x0E,
-        UNKNOWN_0x0F = 0x0F,
+        TEMPERATURE_STATE_D = 0x0F,
         EXTERNAL_STATE = 0x10,
         UNKNOWN_0x11 = 0x11,
         ACTIVE_TIME = 0x13,
@@ -112,16 +112,18 @@ namespace ecodan
         return static_cast<T>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
     }
 
-    const uint8_t HEADER_SIZE = 5;
+    const uint8_t HEADER_SIZE_A = 5;
+    const uint8_t HEADER_SIZE_B = 7;
     const uint8_t PAYLOAD_SIZE = 16;
     const uint8_t CHECKSUM_SIZE = sizeof(uint8_t);
-    const uint8_t TOTAL_MSG_SIZE = HEADER_SIZE + PAYLOAD_SIZE + sizeof(uint8_t);
     const uint8_t MSG_TYPE_OFFSET = 1;
-    const uint8_t PAYLOAD_SIZE_OFFSET = 4;
+    const uint8_t PAYLOAD_SIZE_OFFSET_A = 4;
+    const uint8_t PAYLOAD_SIZE_OFFSET_B = 6;
 
     const uint8_t HEADER_MAGIC_A = 0xFC;
     const uint8_t HEADER_MAGIC_B = 0x02;
     const uint8_t HEADER_MAGIC_C = 0x7A;
+    const uint8_t HEADER_MAGIC_D = 0xFF;
 
     struct Message
     {
@@ -131,12 +133,12 @@ namespace ecodan
         }
 
         Message(MsgType msgType)
-            : cmd_{true}, buffer_{HEADER_MAGIC_A, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE)
+            : cmd_{true}, buffer_{HEADER_MAGIC_A, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE_A)
         {
         }
 
         Message(MsgType msgType, SetType setType)
-            : cmd_{true}, buffer_{HEADER_MAGIC_A, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE)
+            : cmd_{true}, buffer_{HEADER_MAGIC_A, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE_A)
         {
             // All SET_CMD messages have 15-bytes of zero payload.
             char payload[PAYLOAD_SIZE] = {};
@@ -145,7 +147,7 @@ namespace ecodan
         }
 
         Message(MsgType msgType, GetType getType)
-            : cmd_{true}, buffer_{HEADER_MAGIC_A, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE)
+            : cmd_{true}, buffer_{HEADER_MAGIC_A, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE_A)
         {
             // All GET_CMD messages have 15-bytes of zero payload.
             char payload[PAYLOAD_SIZE] = {};
@@ -193,14 +195,12 @@ namespace ecodan
 
         bool verify_header()
         {
-            if (buffer_[0] != HEADER_MAGIC_A)
+            if (buffer_[0] != HEADER_MAGIC_A && buffer_[0] != HEADER_MAGIC_B)
                 return false;
-
-            if (buffer_[2] != HEADER_MAGIC_B)
-                return false;
-
-            if (buffer_[3] != HEADER_MAGIC_C)
-                return false;
+            // if (buffer_[0] == HEADER_MAGIC_A && (buffer_[2] != HEADER_MAGIC_B || buffer_[3] != HEADER_MAGIC_C))
+            //     return false;
+            // else if (buffer_[0] == HEADER_MAGIC_B && (buffer_[1] != HEADER_MAGIC_D || buffer_[2] != HEADER_MAGIC_D))
+            //     return false;
 
             if (payload_size() > PAYLOAD_SIZE)
                 return false;
@@ -218,7 +218,7 @@ namespace ecodan
         template<typename T>
         T payload_type() const
         {
-            return static_cast<T>(buffer_[HEADER_SIZE]);
+            return static_cast<T>(buffer_[header_size()]);
         }
 
         uint8_t* buffer()
@@ -228,26 +228,34 @@ namespace ecodan
 
         size_t size() const
         {
-            return HEADER_SIZE + payload_size() + CHECKSUM_SIZE;
+            return header_size() + payload_size() + CHECKSUM_SIZE;
+        }
+
+        size_t payload_size_offset() const {
+            return buffer_[0] == HEADER_MAGIC_B ? PAYLOAD_SIZE_OFFSET_B : PAYLOAD_SIZE_OFFSET_A; 
         }
 
         size_t payload_size() const
         {
-            return buffer_[PAYLOAD_SIZE_OFFSET];
+            return buffer_[payload_size_offset()];
         }
 
         uint8_t* payload()
         {
-            return buffer_ + HEADER_SIZE;
+            return buffer_ + header_size();
+        }
+
+        size_t header_size() const {
+            return buffer_[0] == HEADER_MAGIC_B ? HEADER_SIZE_B : HEADER_SIZE_A; 
         }
 
         bool write_header(const char* data, uint8_t length)
         {
-            if (length != HEADER_SIZE)
+            if (length != HEADER_SIZE_A && length != HEADER_SIZE_B)
                 return false;
 
             memcpy(buffer_, data, length);
-            writeOffset_ = HEADER_SIZE;
+            writeOffset_ = length;
             valid_ = true;
             return true;
         }
@@ -267,8 +275,8 @@ namespace ecodan
             }
 
             memset(payload() + length, 0, PAYLOAD_SIZE - length);
-            buffer_[PAYLOAD_SIZE_OFFSET] = length;
-            writeOffset_ = HEADER_SIZE + length;
+            buffer_[payload_size_offset()] = length;
+            writeOffset_ = header_size() + length;
             valid_ = true;
             return true;
         }
@@ -279,7 +287,7 @@ namespace ecodan
 
         void append_byte(const char data)
         {
-            if (writeOffset_ < TOTAL_MSG_SIZE) {
+            if (writeOffset_ < header_size() + PAYLOAD_SIZE + sizeof(uint8_t)) {
                 buffer_[writeOffset_] = data;
                 writeOffset_++;
                 valid_ = true;
@@ -372,16 +380,15 @@ namespace ecodan
             uint8_t checkSum = 0;
             if (writeOffset_ < size() - 1)
                 return 0;
-            for (size_t i = 0; i < size() - 1; ++i)
-                checkSum += buffer_[i];
+            for (size_t i = 1; i < size() - 1; ++i)
+                checkSum -= buffer_[i];
 
-            checkSum = 0xFC - checkSum;
-            return checkSum & 0xFF;
+            return checkSum;
         }
 
         bool cmd_;
         bool valid_ = false;
-        uint8_t buffer_[TOTAL_MSG_SIZE];
+        uint8_t buffer_[HEADER_SIZE_B + PAYLOAD_SIZE + sizeof(uint8_t)];
         uint8_t writeOffset_ = 0;
     };
 } // namespace ecodan

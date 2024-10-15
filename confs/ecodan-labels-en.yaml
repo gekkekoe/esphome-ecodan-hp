@@ -45,11 +45,14 @@ substitutions:
   heatpump_climate_room_z2: Zone 2 Temperature
   z2_room_temp_target: Zone 2 Room Setpoint Value
   z2_room_temp: Zone 2 Room Temp
+  mixing_tank_temp: Mixing Tank Temp
   boiler_flow_temp: Boiler Flow Temp
   boiler_return_temp: Boiler Return Temp
   status_booster: Booster Heater
   compressor_frequency: Compressor Frequency
   controller_version_text: Controller Version
+  controller_firmware_text: Controller Firmware
+  controller_datetime_text: Controller Date
   cool_consumed: Cool Consumed
   cool_cop: Cool COP
   cool_delivered: Cool Delivered

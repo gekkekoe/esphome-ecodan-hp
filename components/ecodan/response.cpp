@@ -39,6 +39,20 @@ namespace ecodan
         {
             switch (res.payload_type<GetType>())
             {
+             case GetType::DATETIME_FIRMWARE:
+                {
+                    status.ControllerDateTime.tm_year = 100 + res[1];
+                    status.ControllerDateTime.tm_mon = res[2] - 1;
+                    status.ControllerDateTime.tm_mday = res[3];
+                    status.ControllerDateTime.tm_hour = res[4];
+                    status.ControllerDateTime.tm_min = res[5];
+                    status.ControllerDateTime.tm_sec = res[6];                    
+
+                    char firmware[6];
+                    snprintf(firmware, 6, "%02X.%02X", res[7], res[8]);
+                    publish_state("controller_firmware_text", std::string(firmware));                
+                }
+                break;               
             case GetType::DEFROST_STATE:
                 status.DefrostActive = res[3] != 0;
                 publish_state("status_defrost", status.DefrostActive);
@@ -95,11 +109,9 @@ namespace ecodan
 
                 break;
             case GetType::SH_TEMPERATURE_STATE:
-                status.Zone1RoomTemperature = res.get_float16(1);
-                if (res.get_u16(3) != 0xF0C4) // 0xF0C4 seems to be a sentinel value for "not reported in the current system"
-                    status.Zone2RoomTemperature = res.get_float16(3);
-                else
-                    status.Zone2RoomTemperature = 0.0f;
+                // 0xF0 seems to be a sentinel value for "not reported in the current system"
+                status.Zone1RoomTemperature = res[1] != 0xF0 ? res.get_float16(1) : 0.0f;
+                status.Zone2RoomTemperature = res[3] != 0xF0 ? res.get_float16(3) : 0.0f;
                 status.OutsideTemperature = res.get_float8(11);
                 status.HpRefrigerantLiquidTemperature = res.get_float16_signed(8);
                 status.HpRefrigerantCondensingTemperature = res.get_float8(10);
@@ -138,9 +150,12 @@ namespace ecodan
                 status.BoilerFlowTemperature = res.get_float16(1);
                 status.BoilerReturnTemperature = res.get_float16(4);
                 publish_state("boiler_flow_temp", status.BoilerFlowTemperature);
-                publish_state("boiler_return_temp", status.BoilerReturnTemperature);
-                                
-                break;                
+                publish_state("boiler_return_temp", status.BoilerReturnTemperature);   
+                break;
+            case GetType::TEMPERATURE_STATE_D:
+                status.MixingTankTemperature = res.get_float16(1);
+                publish_state("mixing_tank_temp", status.MixingTankTemperature);     
+                break;  
             case GetType::EXTERNAL_STATE:
                 // 1 = IN1 Thermostat heat/cool request
                 // 2 = IN6 Thermostat 2
@@ -187,7 +202,8 @@ namespace ecodan
                 status.set_power_mode(res[3]);
                 status.set_operation_mode(res[4]);
                 status.set_dhw_mode(res[5]);
-                status.set_heating_cooling_mode(res[6]);
+                status.HeatingCoolingMode = static_cast<Status::HpMode>(res[6]);
+                status.HeatingCoolingModeZone2 = static_cast<Status::HpMode>(res[7]);
                 status.DhwFlowTemperatureSetPoint = res.get_float16(8);
                 //status.RadiatorFlowTemperatureSetPoint = res.get_float16(12);
 
@@ -195,6 +211,7 @@ namespace ecodan
                 publish_state("status_dhw_eco", status.HotWaterMode == Status::DhwMode::ECO);
                 publish_state("status_operation", static_cast<float>(status.Operation));
                 publish_state("status_heating_cooling", static_cast<float>(status.HeatingCoolingMode));
+                publish_state("status_heating_cooling_z2", static_cast<float>(status.HeatingCoolingModeZone2));
 
                 publish_state("dhw_flow_temp_target", status.DhwFlowTemperatureSetPoint);
                 //publish_state("sh_flow_temp_target", status.RadiatorFlowTemperatureSetPoint);
@@ -258,39 +275,30 @@ namespace ecodan
         connected = true;
     }
 
-    void EcodanHeatpump::handle_response() {
-        if (!serial_rx(uart_, res_buffer_))
-            return;
-        
-        //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
-
-        switch (res_buffer_.type())
+    void EcodanHeatpump::handle_response(Message& res) {
+        switch (res.type())
         {
         case MsgType::SET_RES:
-            handle_set_response(res_buffer_);
+            handle_set_response(res);
             break;
         case MsgType::GET_RES:
         case MsgType::CONFIGURATION_RES:
-            handle_get_response(res_buffer_);
+            handle_get_response(res);
             break;
         case MsgType::CONNECT_RES:
-            handle_connect_response(res_buffer_);
+            handle_connect_response(res);
             break;
         default:
-            ESP_LOGI(TAG, "Unknown serial message type received: %#x", static_cast<uint8_t>(res_buffer_.type()));
+            ESP_LOGI(TAG, "Unknown serial message type received: %#x", static_cast<uint8_t>(res.type()));
             break;
         }
-
-        res_buffer_ = Message();
     }
 
     void EcodanHeatpump::handle_set_response(Message& res)
     {
-        {
-            //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
-            if (!cmdQueue.empty())
-                cmdQueue.pop();
-        }
+        //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
+        if (!cmdQueue.empty())
+            cmdQueue.pop();
 
         if (res.type() != MsgType::SET_RES)
         {

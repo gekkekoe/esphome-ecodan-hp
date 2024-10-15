@@ -99,3 +99,39 @@ sensor:
     z2_return_temp:
       id: z2_return_temp
       name: ${z2_return_temp}
+
+    status_heating_cooling_z2:
+      id: status_heating_cooling_z2
+      name: H/C status z2
+      internal: true
+      on_value:
+        if:
+          condition:
+            - lambda: |-
+                auto mode = static_cast<uint8_t>(id(ecodan_instance).get_status().HeatingCoolingModeZone2);
+                auto index = id(heatpump_select_operating_mode_z2).active_index();
+                return (index.has_value() && index.value() != mode);
+          then:
+            - select.set_index:
+                id: heatpump_select_operating_mode_z2
+                index: !lambda "return static_cast<uint8_t>(id(ecodan_instance).get_status().HeatingCoolingModeZone2);"
+
+select:
+  - platform: template
+    name: z2 ${heatpump_select_operating_mode}
+    id: heatpump_select_operating_mode_z2
+    optimistic: true
+    restore_value: true
+    options:
+      - ${heat_target_temperature}
+      - ${heat_flow_temperature}
+      - ${heat_compensation_curve}
+      - ${cool_target_temperature}
+      - ${cool_flow_temperature}
+    set_action:
+      - lambda: |-
+          auto index = id(heatpump_select_operating_mode_z2).index_of(x);
+          auto active_index = id(heatpump_select_operating_mode_z2).active_index();
+          if (index.has_value() && index.value() != active_index.value()) {
+            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(index.value()), esphome::ecodan::SetZone::ZONE_2);
+          }

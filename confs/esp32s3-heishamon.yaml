@@ -31,31 +31,57 @@ esp32:
 
 
 uart:
-  id: uart_ecodan
-  rx_pin:
-    number: GPIO18
-    mode:
-      input: true
-      pullup: true
-  tx_pin:
-    number: GPIO17
-    mode:
-      output: true
-  baud_rate: 2400
-  parity: EVEN
-  stop_bits: 1
-  # debug:
-  #   direction: BOTH
-  #   dummy_receiver: false
-  #   after:
-  #     delimiter: "\n"
-  #   sequence:
-  #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+  - id: uart_ecodan
+    rx_pin:
+      number: GPIO18
+      mode:
+        input: true
+        pullup: true
+    tx_pin:
+      number: GPIO17
+      mode:
+        output: true
+    baud_rate: 2400
+    parity: EVEN
+    stop_bits: 1
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   after:
+    #     delimiter: "\n"
+    #   sequence:
+    #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+
+  - id: uart_proxy
+    rx_pin:
+      number: GPIO9
+      mode:
+        input: true
+        pullup: true
+    tx_pin:
+      number: GPIO8
+      mode:
+        output: true
+    baud_rate: 9600
+    parity: EVEN
+    stop_bits: 1
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   after:
+    #     delimiter: "\n"
+    #   sequence:
+    #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+
 #define HEATPUMPRX 18
 #define HEATPUMPTX 17
 #define PROXYRX 9
 #define PROXYTX 8
 
+
+ecodan:
+  uart_id: uart_main
+  proxy_uart_id: uart_proxy
 
 sensor:
   - platform: internal_temperature
@@ -63,6 +89,7 @@ sensor:
     entity_category: diagnostic
 
 # is mutual exclusive with wifi
+# comment wifi section in main yaml when using ehternet
 # ethernet:
 #   type: W5500
 #   reset_pin: GPIO14
@@ -84,3 +111,20 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     id: relay_2
     name: Relay 2
+  # enable tx
+  - platform: gpio
+    pin: GPIO5
+    restore_mode: ALWAYS_ON
+    id: enable_heishamon_tx
+    name: Enable
+
+light:
+  - platform: esp32_rmt_led_strip
+    pin: GPIO42
+    num_leds: 1
+    rmt_channel: 0
+    chipset: WS2812
+    name: "RGB LED"
+    id: led
+    restore_mode: ALWAYS_ON
+    rgb_order: GRB

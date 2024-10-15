@@ -48,7 +48,7 @@ namespace ecodan
         void set_dhw_force(bool on);
         void set_holiday(bool on);
         void set_power_mode(bool on);
-        void set_hp_mode(uint8_t mode);
+        void set_hp_mode(uint8_t mode, esphome::ecodan::SetZone zone);
         void set_controller_mode(CONTROLLER_FLAG flag, bool on);
         void set_uart_parent(uart::UARTComponent *uart) { this->uart_ = uart; }
         void set_proxy_uart(uart::UARTComponent *uart) { this->proxy_uart_ = uart; }
@@ -89,14 +89,13 @@ namespace ecodan
         bool serial_tx(uart::UARTComponent *uart, Message& msg);
 
         bool dispatch_next_status_cmd();
-        bool dispatch_next_set_cmd();
+        bool dispatch_next_cmd();
         bool schedule_cmd(Message& cmd);
         
-        void handle_response();
+        void handle_response(Message& res);
         void handle_get_response(Message& res);
         void handle_set_response(Message& res);
         void handle_connect_response(Message& res);
-        void handle_proxy();
     };
 
     class EcodanClimate : public climate::Climate, public PollingComponent  {

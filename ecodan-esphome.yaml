@@ -6,18 +6,6 @@ esphome:
   name: ${name}
   friendly_name: ${friendlyName}
 
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-  fast_connect: true
-  power_save_mode: light
-  ap:
-    ssid: "${name}"
-    password: "configesp"
-    ap_timeout: 15s
-
-captive_portal:
-
 ota:
   - platform: esphome
 #  password: !secret heatpump_ota_password
@@ -35,7 +23,7 @@ api:
 
 # packages:
 #  base: !include confs/base.yaml # 
-#  esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
+#  esp32: !include confs/esp32s3-heishamon.yaml # esp32.yaml for regular board
 #  zone1: !include confs/zone1.yaml
 # # disable if you don't want to use zone 2
 # # zone2: !include confs/zone2.yaml
@@ -44,6 +32,7 @@ api:
 #  substitutions: !include confs/ecodan-labels-en.yaml
 #  svc: !include confs/server-control.yaml
 #  dbg: !include confs/debug.yaml
+#  wifi: !include confs/wifi.yaml
 
 external_components:
   - source: github://gekkekoe/esphome-ecodan-hp@main
@@ -70,6 +59,9 @@ packages:
             #confs/debug.yaml,
             ## enable this to monitor WiFi status with ESP in-built LED
             #confs/status_led.yaml,
+            ## enable this to monitor status with custom led colors, uses https://github.com/esphome/esphome/pull/5814
+            #confs/status_led_rgb.yaml,
+            confs/wifi.yaml
            ]
 
 # enable logger
@@ -95,3 +87,4 @@ web_server:
 ecodan:
   id: ecodan_instance
   uart_id: uart_ecodan
+

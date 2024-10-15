@@ -127,12 +127,23 @@ namespace ecodan
         schedule_cmd(cmd);
     }
 
-    void EcodanHeatpump::set_hp_mode(uint8_t mode)
+    void EcodanHeatpump::set_hp_mode(uint8_t mode, esphome::ecodan::SetZone zone)
     {
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
-        cmd[1] = SET_SETTINGS_FLAG_HP_MODE_ZONE1 | SET_SETTINGS_FLAG_HP_MODE_ZONE2;
-        cmd[6] = mode;
-        cmd[7] = mode;
+
+        if (zone == SetZone::ZONE_1) {
+            cmd[1] = SET_SETTINGS_FLAG_HP_MODE_ZONE1;
+            cmd[6] = mode;
+        }
+        else if (zone == SetZone::ZONE_2) {
+            cmd[1] = SET_SETTINGS_FLAG_HP_MODE_ZONE2;
+            cmd[7] = mode;
+        }
+        else {
+            cmd[1] = SET_SETTINGS_FLAG_HP_MODE_ZONE1 | SET_SETTINGS_FLAG_HP_MODE_ZONE2;
+            cmd[6] = mode;
+            cmd[7] = mode;
+        }
 
         schedule_cmd(cmd);
     }
@@ -174,11 +185,12 @@ namespace ecodan
     bool EcodanHeatpump::schedule_cmd(Message& cmd)
     {   
         cmdQueue.emplace(std::move(cmd));
-        return dispatch_next_set_cmd();
+        return dispatch_next_cmd();
     }
 
-    #define MAX_STATUS_CMD_SIZE 19
+    #define MAX_STATUS_CMD_SIZE 21
     Message statusCmdQueue[MAX_STATUS_CMD_SIZE] = {
+        Message{MsgType::GET_CMD, GetType::DATETIME_FIRMWARE},
         Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
         Message{MsgType::GET_CMD, GetType::ERROR_STATE},
         Message{MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY},
@@ -189,6 +201,7 @@ namespace ecodan
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_A},
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_B},
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_C},
+        Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_D},
         Message{MsgType::GET_CMD, GetType::EXTERNAL_STATE},
         Message{MsgType::GET_CMD, GetType::ACTIVE_TIME},
         Message{MsgType::GET_CMD, GetType::PUMP_STATUS},
@@ -202,6 +215,9 @@ namespace ecodan
 
     bool EcodanHeatpump::dispatch_next_status_cmd()
     {
+        if (proxy_uart_)
+            return true;
+            
         auto static cmdIndex = 0;
         Message& cmd = statusCmdQueue[cmdIndex];
         cmdIndex = (cmdIndex + 1) % MAX_STATUS_CMD_SIZE;
@@ -217,7 +233,7 @@ namespace ecodan
         return true;
     }
 
-    bool EcodanHeatpump::dispatch_next_set_cmd()
+    bool EcodanHeatpump::dispatch_next_cmd()
     {
         if (cmdQueue.empty())
         {
