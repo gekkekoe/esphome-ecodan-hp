@@ -31,32 +31,6 @@ This will need some soldering and some pins/sockets to connect to the Atom but w
                             └────────────────────────┘                            
 ```
 
-
-You will also need to include the device config and add the second UART in your `ecodan-esphome.yaml` device yaml
-```
-packages:
-  remote_package:
-    url: https://github.com/gekkekoe/esphome-ecodan-hp/
-    ref: main
-    refresh: always
-    files: [ 
-            confs/base.yaml,
-            confs/m5stack-atom-lite-proxy.yaml.yaml,
-            ...
-            ## enable this to monitor status with custom led colors, uses https://github.com/esphome/esphome/pull/5814
-            confs/status_led_rgb.yaml,
-            ...
-          ]
-```
-
-```
-...
-ecodan:
-  id: ecodan_instance
-  uart_id: uart_main
-  proxy_uart_id: uart_proxy
-```
-
 Including `confs/status_led_rgb.yaml` will show different colors on the Atom's RGB LED depending on state of esp module, wifi or api connection, and heatpump status:
 
 ```

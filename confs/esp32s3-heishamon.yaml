@@ -80,7 +80,6 @@ uart:
 
 
 ecodan:
-  uart_id: uart_main
   proxy_uart_id: uart_proxy
 
 sensor:

@@ -17,7 +17,7 @@ esp32:
       ignore_efuse_mac_crc: false
 
 uart:
-  - id: uart_main
+  - id: uart_ecodan
     rx_pin:
       number: GPIO25
       mode:
@@ -43,6 +43,9 @@ uart:
     baud_rate: 9600
     parity: EVEN
     stop_bits: 1
+
+ecodan:
+  proxy_uart_id: uart_proxy
 
 light:
   - platform: esp32_rmt_led_strip
