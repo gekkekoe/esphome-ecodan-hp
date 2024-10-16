@@ -13,9 +13,6 @@ esphome:
 #     # Custom sdkconfig options
 #     sdkconfig_options:
 #       COMPILER_OPTIMIZATION_SIZE: y
-#     # Advanced tweaking options
-#     advanced:
-#       ignore_efuse_mac_crc: false  
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -25,9 +22,6 @@ esp32:
     # Custom sdkconfig options
     sdkconfig_options:
       COMPILER_OPTIMIZATION_SIZE: y
-    # Advanced tweaking options
-    advanced:
-      ignore_efuse_mac_crc: false
 
 
 uart:
