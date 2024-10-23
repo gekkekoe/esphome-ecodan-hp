@@ -41,19 +41,19 @@ uart:
     #   sequence:
     #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
 
-#  - id: uart_proxy
-#    rx_pin:
-#      number: GPIO7
-#      mode:
-#        input: true
-#        pullup: true
-#    tx_pin:
-#      number: GPIO8
-#      mode:
-#        output: true
-#    baud_rate: 2400
-#    parity: EVEN
-#    stop_bits: 1
+  - id: uart_proxy
+    rx_pin:
+      number: GPIO7
+      mode:
+        input: true
+        pullup: true
+    tx_pin:
+      number: GPIO8
+      mode:
+        output: true
+    baud_rate: 2400
+    parity: EVEN
+    stop_bits: 1
     # debug:
     #   direction: BOTH
     #   dummy_receiver: false
