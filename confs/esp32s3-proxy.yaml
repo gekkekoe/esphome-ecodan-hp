@@ -20,17 +20,17 @@ esp32:
       COMPILER_OPTIMIZATION_SIZE: y
   
 uart:
-  - id: uart_ecodan
+  - id: uart_proxy
     rx_pin:
-      number: GPIO38
+      number: GPIO39
       mode:
         input: true
         pullup: true
     tx_pin:
-      number: GPIO39
+      number: GPIO38
       mode:
         output: true
-    baud_rate: 2400
+    baud_rate: 9600
     parity: EVEN
     stop_bits: 1
     # debug:
@@ -41,7 +41,7 @@ uart:
     #   sequence:
     #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
 
-  - id: uart_proxy
+  - id: uart_ecodan
     rx_pin:
       number: GPIO7
       mode:
@@ -51,7 +51,7 @@ uart:
       number: GPIO8
       mode:
         output: true
-    baud_rate: 9600
+    baud_rate: 2400
     parity: EVEN
     stop_bits: 1
     # debug:
