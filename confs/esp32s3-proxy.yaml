@@ -51,7 +51,7 @@ uart:
       number: GPIO8
       mode:
         output: true
-    baud_rate: 2400
+    baud_rate: 9600
     parity: EVEN
     stop_bits: 1
     # debug:
