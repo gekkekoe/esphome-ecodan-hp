@@ -42,12 +42,12 @@ uart:
   #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
 
     rx_pin:
-      number: GPIO7
+      number: GPIO8
       mode:
         input: true
         pullup: true
     tx_pin:
-      number: GPIO8
+      number: GPIO7
       mode:
         output: true
     baud_rate: 2400
