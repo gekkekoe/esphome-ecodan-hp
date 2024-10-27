@@ -1,3 +1,4 @@
+
 esp32:
   board: esp32dev
   framework:
