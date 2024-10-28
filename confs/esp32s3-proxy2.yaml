@@ -11,38 +11,56 @@ esphome:
           id: ecodan_led_switch
 
 esp32:
-  board: m5stack-atom
+  board: esp32-s3-devkitc-1
   framework:
     type: esp-idf
     version: recommended
     # Custom sdkconfig options
     sdkconfig_options:
       COMPILER_OPTIMIZATION_SIZE: y
-    # Advanced tweaking options
-    advanced:
-      ignore_efuse_mac_crc: false
-
+  
 uart:
-  id: uart_ecodan
-  rx_pin:
-    number: GPIO26
-    mode:
-      input: true
-      pullup: true
-  tx_pin:
-    number: GPIO32
-    mode:
-      output: true
-  baud_rate: 2400
-  parity: EVEN
-  stop_bits: 1
-  # debug:
-  #   direction: BOTH
-  #   dummy_receiver: false
-  #   after:
-  #     delimiter: "\n"
-  #   sequence:
-  #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+  - id: uart_ecodan
+    rx_pin:
+      number: GPIO38
+      mode:
+        input: true
+        pullup: true
+    tx_pin:
+      number: GPIO39
+      mode:
+        output: true
+    baud_rate: 2400
+    parity: EVEN
+    stop_bits: 1
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   after:
+    #     delimiter: "\n"
+    #   sequence:
+    #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+
+  - id: uart_proxy
+    rx_pin:
+      number: GPIO8
+      mode:
+        input: true
+        pullup: true
+    tx_pin:
+      number: GPIO7
+      mode:
+        output: true
+    baud_rate: 9600
+    parity: EVEN
+    stop_bits: 1
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   after:
+    #     delimiter: "\n"
+    #   sequence:
+    #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');  
 
 light:
 #G35=RGB WS2812C-2020
@@ -51,7 +69,7 @@ light:
     id: led
     internal: true
     rgb_order: GRB
-    pin: 27
+    pin: 35
     num_leds: 4
     # RMT 0 channels will be occupied by IR
     rmt_channel: 1
@@ -64,11 +82,11 @@ binary_sensor:
     name: Buttonw
     id: g41button
     pin:
-      number: GPIO39
+      number: GPIO41
       inverted: true
       mode:
         input: true
-#        pullup: true
+        pullup: true
     internal: true
     filters:
       - delayed_off: 10ms
@@ -76,6 +94,10 @@ binary_sensor:
     on_press:
       then:
         - switch.toggle: ecodan_led_switch
+
+ecodan:
+  uart_id: uart_main
+  proxy_uart_id: uart_proxy
 
 ###  ESP restart button
 button:
@@ -130,3 +152,4 @@ switch:
 sensor:
   - platform: internal_temperature
     name: ${internal_esp_temperature}
+    entity_category: diagnostic
