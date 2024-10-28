@@ -130,3 +130,4 @@ switch:
 sensor:
   - platform: internal_temperature
     name: ${internal_esp_temperature}
+    entity_category: diagnostic
