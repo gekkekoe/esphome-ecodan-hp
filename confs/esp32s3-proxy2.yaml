@@ -1,0 +1,155 @@
+esphome:
+  name: ${name}
+  friendly_name: ${friendlyName}
+  platformio_options:
+    board_build.flash_mode: dio
+  on_boot:
+    priority: 200
+    then:
+      - delay: 30s
+      - switch.turn_off:
+          id: ecodan_led_switch
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+    version: recommended
+    # Custom sdkconfig options
+    sdkconfig_options:
+      COMPILER_OPTIMIZATION_SIZE: y
+  
+uart:
+  - id: uart_ecodan
+    rx_pin:
+      number: GPIO38
+      mode:
+        input: true
+        pullup: true
+    tx_pin:
+      number: GPIO39
+      mode:
+        output: true
+    baud_rate: 2400
+    parity: EVEN
+    stop_bits: 1
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   after:
+    #     delimiter: "\n"
+    #   sequence:
+    #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+
+  - id: uart_proxy
+    rx_pin:
+      number: GPIO8
+      mode:
+        input: true
+        pullup: true
+    tx_pin:
+      number: GPIO7
+      mode:
+        output: true
+    baud_rate: 9600
+    parity: EVEN
+    stop_bits: 1
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   after:
+    #     delimiter: "\n"
+    #   sequence:
+    #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');  
+
+light:
+#G35=RGB WS2812C-2020
+  - platform: esp32_rmt_led_strip
+    name: Led
+    id: led
+    internal: true
+    rgb_order: GRB
+    pin: 35
+    num_leds: 4
+    # RMT 0 channels will be occupied by IR
+    rmt_channel: 1
+    chipset: ws2812
+    restore_mode: ALWAYS_ON  #OFF?
+
+#G41=Button
+binary_sensor:
+  - platform: gpio
+    name: Buttonw
+    id: g41button
+    pin:
+      number: GPIO41
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    internal: true
+    filters:
+      - delayed_off: 10ms
+    # Toggle the switch when the pushbutton is pressed
+    on_press:
+      then:
+        - switch.toggle: ecodan_led_switch
+
+ecodan:
+  uart_id: uart_main
+  proxy_uart_id: uart_proxy
+
+###  ESP restart button
+button:
+  - platform: restart
+    id: restart_button
+    name: ${restart_button}
+
+number:
+    ## Set led brightness
+  - platform: template
+    id: led_brightness
+    name: ${led_brightness}
+    icon: mdi:toggle-switch-variant
+    mode: slider
+    entity_category: config
+    optimistic: true
+    min_value: 0
+    max_value: 100
+    step: 10
+    initial_value: 70
+    restore_value: yes
+    unit_of_measurement: "%"
+    on_value:
+      then:
+        - if:
+            condition:
+              - light.is_on: led
+            then:
+            - light.turn_on:
+                id: led
+                brightness: !lambda |-
+                  // output value must be in range 0 - 1.0
+                  return id(led_brightness).state / 100.0;
+
+switch:
+  - platform: template
+    id: ecodan_led_switch
+    name: ${led_switch}
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON 
+    lambda: return id(ecodan_led_switch).state;
+    turn_on_action:
+      - light.turn_on:
+          id: led
+          brightness: !lambda |-
+            // output value must be in range 0 - 1.0
+            return id(led_brightness).state / 100.0;
+    turn_off_action:
+      - light.turn_off:
+          id: led
+
+sensor:
+  - platform: internal_temperature
+    name: ${internal_esp_temperature}
+    entity_category: diagnostic
