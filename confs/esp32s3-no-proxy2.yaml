@@ -95,9 +95,9 @@ binary_sensor:
       then:
         - switch.toggle: ecodan_led_switch
 
-ecodan:
-  uart_id: uart_main
-  proxy_uart_id: uart_proxy
+#ecodan:
+#  uart_id: uart_main
+#  proxy_uart_id: uart_proxy
 
 ###  ESP restart button
 button:
