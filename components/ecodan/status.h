@@ -52,6 +52,7 @@ namespace ecodan
         float Runtime;
         bool WaterPumpActive;
         bool WaterPump2Active;
+        bool WaterPump3Active;
         bool ThreeWayValveActive;
         bool ThreeWayValve2Active;
 
