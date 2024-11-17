@@ -9,9 +9,9 @@ binary_sensor:
     status_three_way_valve_2:
       id: status_three_way_valve_2
       name: ${status_three_way_valve_2}
-    status_water_pump_2:
-      id: status_water_pump_2
-      name: ${status_water_pump_2}
+    status_water_pump_3:
+      id: status_water_pump_3
+      name: ${status_water_pump_3}
 
 climate:
   - platform: ecodan

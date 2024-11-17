@@ -100,5 +100,6 @@ substitutions:
   z2_return_temp: Temp retour
   status_water_pump: Statut pompe à eau
   status_water_pump_2: Statut pompe à eau no2
+  status_water_pump_3: Statut pompe à eau no3
   fault_code_text: Code d'erreur
   refrigerant_error_code_text: Réfrigérant code d'erreur
