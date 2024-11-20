@@ -362,7 +362,7 @@ Responses so far identified.
 | 0x16  | O4 | O3 | O13|   |   |   |   |   |   |    |    |    |    |    |    |    |  
 * O4 : Pump 4 (CPN4)
 * O13 : Pump Output (Out13)
-* O3 : Pump Output (Out3) - Water pump 3 status (Zone 2)
+* O3 : Pump Output (Out3)
 ### 0x26
 | 0 | 1 | 2 |  3  | 4  | 5  | 6  |  7 |   8  |  9   |  10 |  11 | 12 | 13 | 14 |
 |---|---|---|-----|----|----|----|----|------|------|-----|-----|----|----|----|
