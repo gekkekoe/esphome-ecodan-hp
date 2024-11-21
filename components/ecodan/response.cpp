@@ -189,7 +189,7 @@ namespace ecodan
                 break;          
             case GetType::ADDITIONAL_PUMP_STATUS:
                 // byte 2 = water pump 3 (out3 - Zone2) running on/off       
-                status.WaterPump3Active = res[2] != 0;
+                status.WaterPump3Active = res[2] != 0 || true;
                 publish_state("status_water_pump_3", status.WaterPump3Active);
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;           
