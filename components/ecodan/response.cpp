@@ -185,13 +185,13 @@ namespace ecodan
                 publish_state("status_three_way_valve", status.ThreeWayValveActive);
                 publish_state("status_water_pump_2", status.WaterPump2Active);
                 publish_state("status_three_way_valve_2", status.ThreeWayValve2Active);                
-                //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
+                ESP_LOGI(TAG, res.debug_dump_packet().c_str());//
                 break;          
             case GetType::ADDITIONAL_PUMP_STATUS:
                 // byte 2 = water pump 3 (out3 - Zone2) running on/off       
                 status.WaterPump3Active = res[2] != 0;
                 publish_state("status_water_pump_3", status.WaterPump3Active);
-                //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
+                ESP_LOGI(TAG, res.debug_dump_packet().c_str());//
                 break;           
             case GetType::FLOW_RATE:
                 // booster = 2, 
