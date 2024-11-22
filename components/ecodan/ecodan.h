@@ -96,6 +96,9 @@ namespace ecodan
         void handle_get_response(Message& res);
         void handle_set_response(Message& res);
         void handle_connect_response(Message& res);
+
+        void proxy_ping();
+        bool proxy_available();
     };
 
     class EcodanClimate : public climate::Climate, public PollingComponent  {

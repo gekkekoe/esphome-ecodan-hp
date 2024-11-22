@@ -71,7 +71,7 @@ namespace ecodan
                 proxy_uart_->get_stop_bits() != 1 ||
                 proxy_uart_->get_data_bits() != 8 ||
                 proxy_uart_->get_parity() != uart::UART_CONFIG_PARITY_EVEN) {
-                ESP_LOGI(TAG, "Proxy UART not configured for 2400 8E1. This may not work...");
+                ESP_LOGI(TAG, "Proxy UART not configured for 2400/9600 8E1. This may not work...");
             }            
         }
         else if (!is_connected()){
@@ -88,7 +88,7 @@ namespace ecodan
         if (uart_ && serial_rx(uart_, res_buffer_))
         {
             last_response = std::chrono::steady_clock::now();
-            if (proxy_uart_)
+            if (proxy_available())
                 proxy_uart_->write_array(res_buffer_.buffer(), res_buffer_.size());
             
             // interpret message
@@ -96,10 +96,13 @@ namespace ecodan
             res_buffer_ = Message();
         }
 
-        if (proxy_uart_ && serial_rx(proxy_uart_, proxy_buffer_))
+        if (proxy_uart_ && proxy_uart_->available() > 0) {
+            proxy_ping();
+        }
+
+        if (serial_rx(proxy_uart_, proxy_buffer_))
         {
             // forward cmds from slave to master
-            //schedule_cmd(proxy_buffer_);
             uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
             proxy_buffer_ = Message();    
         }
@@ -144,7 +147,6 @@ namespace ecodan
     {
         return connected;
     }
-
 
 } // namespace ecodan
 } // namespace esphome
