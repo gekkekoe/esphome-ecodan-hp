@@ -254,6 +254,9 @@ sensor:
     refrigerant_error_code:
       internal: true
       id: refrigerant_error_code 
+    debug_response_text:
+      internal: true
+      id: debug_response_text 
 
   - platform: uptime
     name: ${uptime}
