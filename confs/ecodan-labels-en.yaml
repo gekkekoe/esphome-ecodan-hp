@@ -54,6 +54,7 @@ substitutions:
   controller_firmware_text: Controller Firmware
   controller_datetime_text: Controller Date
   debug_response_text: Debug Response
+  debug_response_text2: Debug Response 2
   cool_consumed: Cool Consumed
   cool_cop: Cool COP
   cool_delivered: Cool Delivered

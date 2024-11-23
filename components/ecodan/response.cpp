@@ -184,7 +184,8 @@ namespace ecodan
                 publish_state("status_water_pump", status.WaterPumpActive);
                 publish_state("status_three_way_valve", status.ThreeWayValveActive);
                 publish_state("status_water_pump_2", status.WaterPump2Active);
-                publish_state("status_three_way_valve_2", status.ThreeWayValve2Active);                
+                publish_state("status_three_way_valve_2", status.ThreeWayValve2Active);
+                publish_state("debug_response_text2", res.debug_dump_packet());          
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;          
             case GetType::ADDITIONAL_PUMP_STATUS:
