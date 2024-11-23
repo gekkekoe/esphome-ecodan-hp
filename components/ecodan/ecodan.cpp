@@ -85,7 +85,18 @@ namespace ecodan
     {
         static auto last_response = std::chrono::steady_clock::now();
 
-        if (uart_ && serial_rx(uart_, res_buffer_))
+        if (proxy_uart_ && proxy_uart_->available() > 0) {
+            proxy_ping();
+            if (serial_rx(proxy_uart_, proxy_buffer_))
+            {
+                // forward cmds from slave to master
+                if (uart_)
+                    uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
+                proxy_buffer_ = Message();    
+            }
+        }
+
+        if (serial_rx(uart_, res_buffer_))
         {
             last_response = std::chrono::steady_clock::now();
             if (proxy_available())
@@ -94,17 +105,6 @@ namespace ecodan
             // interpret message
             handle_response(res_buffer_);
             res_buffer_ = Message();
-        }
-
-        if (proxy_uart_ && proxy_uart_->available() > 0) {
-            proxy_ping();
-        }
-
-        if (serial_rx(proxy_uart_, proxy_buffer_))
-        {
-            // forward cmds from slave to master
-            uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
-            proxy_buffer_ = Message();    
         }
 
         auto now = std::chrono::steady_clock::now();

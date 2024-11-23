@@ -24,7 +24,7 @@ namespace ecodan
         uint8_t data;
         bool skipping = false;
 
-        while (uart->available() && uart->read_byte(&data)) {
+        while (uart && uart->available() && uart->read_byte(&data)) {
             // Discard bytes until we see one that might reasonably be
             // the first byte of a packet, complaining only once.
             if (msg.get_write_offset() == 0 && data != HEADER_MAGIC_A && data != HEADER_MAGIC_B) {
