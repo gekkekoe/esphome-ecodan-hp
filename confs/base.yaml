@@ -171,7 +171,7 @@ text_sensor:
       entity_category: diagnostic
     debug_response_text:
       id: debug_response_text
-      name: ${controller_firmware_text}
+      name: ${debug_response_text}
       entity_category: diagnostic
 
 sensor:
