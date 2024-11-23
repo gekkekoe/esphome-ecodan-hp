@@ -39,7 +39,7 @@ namespace ecodan
         {
             switch (res.payload_type<GetType>())
             {
-             case GetType::DATETIME_FIRMWARE:
+            case GetType::DATETIME_FIRMWARE:
                 {
                     status.ControllerDateTime.tm_year = 100 + res[1];
                     status.ControllerDateTime.tm_mon = res[2] - 1;
@@ -191,6 +191,7 @@ namespace ecodan
                 // byte 2 = water pump 3 (out3 - Zone2) running on/off       
                 status.WaterPump3Active = res[2] != 0;
                 publish_state("status_water_pump_3", status.WaterPump3Active);
+                publish_state("debug_response_text", res.debug_dump_packet());
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;           
             case GetType::FLOW_RATE:
