@@ -154,7 +154,7 @@ namespace ecodan
                 break;
             case GetType::TEMPERATURE_STATE_D:
                 status.MixingTankTemperature = res.get_float16(1);
-                publish_state("mixing_tank_temp", status.MixingTankTemperature);     
+                publish_state("mixing_tank_temp",  static_cast<float>(status.MixingTankTemperature));     
                 break;  
             case GetType::EXTERNAL_STATE:
                 // 1 = IN1 Thermostat heat/cool request
