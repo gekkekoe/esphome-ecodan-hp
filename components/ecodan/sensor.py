@@ -294,11 +294,12 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:thermostat",
         ),    
         cv.Optional("status_mixing_valve"): sensor.sensor_schema(
-            icon="mdi:thermostat",
-            state_class=STATE_CLASS_MEASUREMENT
+            icon="mdi:valve",
+            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=DEVICE_CLASS_RUNNING
         ), 
         cv.Optional("mixing_valve_step"): sensor.sensor_schema(
-            icon="mdi:thermostat",
+            icon="mdi:valve",
             state_class=STATE_CLASS_MEASUREMENT
         ),         
     }

@@ -102,6 +102,7 @@ substitutions:
   status_water_pump_2: Water Pump 2 Status
   status_water_pump_3: Water Pump 3 Status
   status_mixing_valve: Mixing Valve Status
+  status_mixing_valve_text: Mixing Valve Status
   mixing_valve_step: Mixing Valve Step
   fault_code_text: Fault code
   refrigerant_error_code_text: Refrigerant error code

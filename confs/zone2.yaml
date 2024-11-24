@@ -84,8 +84,8 @@ climate:
 
 text_sensor:
   - platform: template
-    id: status_mixing_valve
-    name: ${status_mixing_valve}
+    id: status_mixing_valve_text
+    name: ${status_mixing_valve_text}
     lambda: |-
       auto value = id(ecodan_instance).get_status().MixingValveStatus;
       switch (value)
@@ -118,6 +118,9 @@ sensor:
     mixing_valve_step:
       id: mixing_valve_step
       name: ${mixing_valve_step}
+    status_mixing_valve:
+      id: status_mixing_valve
+      name: ${status_mixing_valve}
 
     status_heating_cooling_z2:
       id: status_heating_cooling_z2
