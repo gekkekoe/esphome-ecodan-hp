@@ -154,7 +154,7 @@ namespace ecodan
                 break;
             case GetType::TEMPERATURE_STATE_D:
                 status.MixingTankTemperature = res.get_float16(1);
-                publish_state("mixing_tank_temp",  static_cast<float>(status.MixingTankTemperature));     
+                publish_state("mixing_tank_temp", status.MixingTankTemperature);     
                 break;  
             case GetType::EXTERNAL_STATE:
                 // 1 = IN1 Thermostat heat/cool request
@@ -190,7 +190,7 @@ namespace ecodan
                 publish_state("status_water_pump_2", status.WaterPump2Active);
                 publish_state("status_three_way_valve_2", status.ThreeWayValve2Active);
                 publish_state("status_water_pump_3", status.WaterPump3Active);
-                publish_state("status_mixing_valve", status.MixingValveStatus);
+                publish_state("status_mixing_valve",  static_cast<float>(status.MixingValveStatus));
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;              
             case GetType::FLOW_RATE:
