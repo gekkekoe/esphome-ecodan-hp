@@ -82,6 +82,22 @@ climate:
         auto& status = id(ecodan_instance).get_status();
         return status.Zone2RoomTemperature;
 
+text_sensor:
+  - platform: template
+    id: status_mixing_valve
+    name: ${status_mixing_valve}
+    lambda: |-
+      auto value = id(ecodan_instance).get_status().MixingValveStatus;
+      switch (value)
+      {
+          case 0: return std::string("${status_mixing_valve_idle}");
+          case 1: return std::string("${status_mixing_valve_closing}");
+          case 2: return std::string("${status_mixing_valve_opening}");
+          case 3: return std::string("${status_mixing_valve_closed}");
+          case 4: return std::string("${status_mixing_valve_opened}");
+          default: return std::string("Unknown");
+      }
+
 sensor:
   - platform: ecodan
     z2_flow_temp_target:
@@ -99,9 +115,9 @@ sensor:
     z2_return_temp:
       id: z2_return_temp
       name: ${z2_return_temp}
-    status_mixing_valve:
-      id: status_mixing_valve
-      name: ${status_mixing_valve}
+    mixing_valve_step:
+      id: mixing_valve_step
+      name: ${mixing_valve_step}
 
     status_heating_cooling_z2:
       id: status_heating_cooling_z2

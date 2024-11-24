@@ -102,5 +102,11 @@ substitutions:
   status_water_pump_2: Status water pomp 2
   status_water_pump_3: Status water pomp 3
   status_mixing_valve: Mixing Valve Status
+  mixing_valve_step: Mixing Valve Stap
   fault_code_text: Fout code
   refrigerant_error_code_text: Koelmiddel fout code
+  status_mixing_valve_idle: Inactief
+  status_mixing_valve_closing: Sluiten
+  status_mixing_valve_opening: Opening
+  status_mixing_valve_closed: Gesloten
+  status_mixing_valve_opened: Geopend

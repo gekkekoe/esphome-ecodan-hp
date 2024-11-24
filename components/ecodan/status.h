@@ -56,6 +56,7 @@ namespace ecodan
         bool ThreeWayValveActive;
         bool ThreeWayValve2Active;
         uint8_t MixingValveStatus;
+        uint8_t MixingValveStep;
 
         // error codes
         uint8_t RefrigerantErrorCode;

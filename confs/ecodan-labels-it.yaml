@@ -102,5 +102,11 @@ substitutions:
   status_water_pump_2: Pompa Circolazione 2
   status_water_pump_3: Pompa Circolazione 3
   status_mixing_valve: Mixing Valvola Status
+  mixing_valve_step: Mixing Valvola Step
   fault_code_text: Codice di errore
   refrigerant_error_code_text: Liq. Refr. codice di errore
+  status_mixing_valve_idle: Oziare
+  status_mixing_valve_closing: Chiusura
+  status_mixing_valve_opening: Apertura
+  status_mixing_valve_closed: Chiuso
+  status_mixing_valve_opened: Aperto
