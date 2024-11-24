@@ -86,6 +86,7 @@ text_sensor:
   - platform: template
     id: status_mixing_valve_text
     name: ${status_mixing_valve_text}
+    icon: "mdi:valve"
     lambda: |-
       auto value = id(ecodan_instance).get_status().MixingValveStatus;
       switch (value)
