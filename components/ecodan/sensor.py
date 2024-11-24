@@ -9,7 +9,6 @@ from esphome.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLUME_FLOW_RATE,
     DEVICE_CLASS_WATER,
-    DEVICE_CLASS_RUNNING,
     ENTITY_CATEGORY_NONE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_CLASS_MEASUREMENT,
@@ -297,7 +296,6 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("status_mixing_valve"): sensor.sensor_schema(
             icon="mdi:valve",
             state_class=STATE_CLASS_MEASUREMENT,
-            device_class=DEVICE_CLASS_RUNNING
         ), 
         cv.Optional("mixing_valve_step"): sensor.sensor_schema(
             icon="mdi:valve",
