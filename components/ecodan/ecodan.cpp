@@ -94,6 +94,20 @@ namespace ecodan
                     uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
                 proxy_buffer_ = Message();    
             }
+
+            // if we could not get the sync byte after 4*packet size attemp, we are probably using the wrong baud rate
+            if (proxy_rx_sync_fail_count > 4*16) {
+                //swap 9600 <-> 2400
+                int current_baud = proxy_uart_->get_baud_rate(); 
+                int new_baud =  current_baud == 2400 ? 9600 : 2400;
+                ESP_LOGE(TAG, "Could not get sync byte, swapping baud from '%d' to '%d' for slave...", current_baud, new_baud);
+                proxy_uart_->flush();
+                proxy_uart_->set_baud_rate(new_baud);
+                proxy_uart_->load_settings();
+                
+                // reset fail count
+                proxy_rx_sync_fail_count = 0;
+            }
         }
 
         if (serial_rx(uart_, res_buffer_))

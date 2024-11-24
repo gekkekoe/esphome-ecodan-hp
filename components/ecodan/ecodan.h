@@ -76,6 +76,7 @@ namespace ecodan
         uart::UARTComponent *proxy_uart_ = nullptr;
         Message res_buffer_;
         Message proxy_buffer_;
+        int proxy_rx_sync_fail_count = 0;
 
         Status status;
         float temperatureStep = 0.5f;
