@@ -122,6 +122,9 @@ sensor:
     status_mixing_valve:
       id: status_mixing_valve
       name: ${status_mixing_valve}
+    status_multi_zone:
+      id: status_multi_zone
+      name: ${status_multi_zone}
 
     status_heating_cooling_z2:
       id: status_heating_cooling_z2

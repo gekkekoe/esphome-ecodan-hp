@@ -64,9 +64,11 @@ namespace ecodan
                 status.RefrigerantErrorCode = res[1];
                 status.FaultCodeNumeric = res.get_u16(2);
                 status.FaultCodeLetters = res.get_u16(4);
+                status.MultiZoneStatus = res[8];   
 
                 publish_state("refrigerant_error_code", static_cast<float>(status.RefrigerantErrorCode));
                 publish_state("fault_code_text", decode_error(res[4], res[5], status.FaultCodeNumeric));
+                publish_state("status_multi_zone", static_cast<float>(status.MultiZoneStatus));
                 break;
             case GetType::COMPRESSOR_FREQUENCY:
                 status.CompressorFrequency = res[1];
@@ -192,8 +194,9 @@ namespace ecodan
                 publish_state("status_water_pump_2", status.WaterPump2Active);
                 publish_state("status_three_way_valve_2", status.ThreeWayValve2Active);
                 publish_state("status_water_pump_3", status.WaterPump3Active);
-                publish_state("status_mixing_valve",  static_cast<float>(status.MixingValveStatus));
-                publish_state("mixing_valve_step",  static_cast<float>(status.MixingValveStep));
+                publish_state("status_mixing_valve", static_cast<float>(status.MixingValveStatus));
+                publish_state("mixing_valve_step", static_cast<float>(status.MixingValveStep));
+                publish_state("status_mixing_valve_text", "");
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
                 break;              
             case GetType::FLOW_RATE:

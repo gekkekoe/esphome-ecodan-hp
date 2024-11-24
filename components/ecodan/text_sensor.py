@@ -34,6 +34,10 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:fire",
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
+        cv.Optional("status_mixing_valve_text"): text_sensor.text_sensor_schema(
+            icon="mdi:valve",
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),
     }).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):

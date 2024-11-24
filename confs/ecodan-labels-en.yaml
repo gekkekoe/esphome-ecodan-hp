@@ -111,3 +111,4 @@ substitutions:
   status_mixing_valve_opening: Opening
   status_mixing_valve_closed: Closed
   status_mixing_valve_opened: Opened
+  status_multi_zone: Multi Zone Status
