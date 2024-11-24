@@ -80,7 +80,7 @@ namespace ecodan
         ACTIVE_TIME = 0x13,
         FLOW_RATE = 0x14,
         PUMP_STATUS = 0x15,
-        ADDITIONAL_PUMP_STATUS = 0x16,
+        UNKNOWN_0x16 = 0x16,
         UNKNOWN_0x17 = 0x17,
         UNKNOWN_0x18 = 0x18,
         UNKNOWN_0x19 = 0x19,

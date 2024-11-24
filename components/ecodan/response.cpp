@@ -175,26 +175,24 @@ namespace ecodan
             case GetType::PUMP_STATUS:
                 // byte 1 = pump running on/off
                 // byte 4 = pump 2
+                // byte 5 = pump 3
                 // byte 6 = 3 way valve on/off
                 // byte 7 - 3 way valve 2            
+                // byte 11 - Mixing valve status
                 status.WaterPumpActive = res[1] != 0;
                 status.ThreeWayValveActive = res[6] != 0;
                 status.WaterPump2Active = res[4] != 0;
-                status.ThreeWayValve2Active = res[7] != 0;                
+                status.ThreeWayValve2Active = res[7] != 0;         
+                status.WaterPump3Active = res[5] != 0;       
+                status.MixingValveStatus = res[11];   
                 publish_state("status_water_pump", status.WaterPumpActive);
                 publish_state("status_three_way_valve", status.ThreeWayValveActive);
                 publish_state("status_water_pump_2", status.WaterPump2Active);
                 publish_state("status_three_way_valve_2", status.ThreeWayValve2Active);
-                publish_state("debug_response_text2", res.debug_dump_packet());          
-                //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
-                break;          
-            case GetType::ADDITIONAL_PUMP_STATUS:
-                // byte 2 = water pump 3 (out3 - Zone2) running on/off       
-                status.WaterPump3Active = res[2] != 0;
                 publish_state("status_water_pump_3", status.WaterPump3Active);
-                publish_state("debug_response_text", res.debug_dump_packet());
+                publish_state("status_mixing_valve", status.MixingValveStatus);
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
-                break;           
+                break;              
             case GetType::FLOW_RATE:
                 // booster = 2, 
                 // emmersion = 5

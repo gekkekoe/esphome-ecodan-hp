@@ -169,14 +169,6 @@ text_sensor:
       id: controller_firmware_text
       name: ${controller_firmware_text}
       entity_category: diagnostic
-    debug_response_text:
-      id: debug_response_text
-      name: ${debug_response_text}
-      entity_category: diagnostic
-    debug_response_text2:
-      id: debug_response_text2
-      name: ${debug_response_text2}
-      entity_category: diagnostic
 
 sensor:
   - platform: ecodan

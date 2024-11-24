@@ -53,8 +53,6 @@ substitutions:
   controller_version_text: Controller Version
   controller_firmware_text: Controller Firmware
   controller_datetime_text: Controller Date
-  debug_response_text: Debug Response
-  debug_response_text2: Debug Response 2
   cool_consumed: Cool Consumed
   cool_cop: Cool COP
   cool_delivered: Cool Delivered
@@ -103,5 +101,6 @@ substitutions:
   status_water_pump: Water Pump Status
   status_water_pump_2: Water Pump 2 Status
   status_water_pump_3: Water Pump 3 Status
+  status_mixing_valve: Mixing Valve Status
   fault_code_text: Fault code
   refrigerant_error_code_text: Refrigerant error code

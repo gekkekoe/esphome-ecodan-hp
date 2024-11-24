@@ -99,6 +99,9 @@ sensor:
     z2_return_temp:
       id: z2_return_temp
       name: ${z2_return_temp}
+    status_mixing_valve:
+      id: status_mixing_valve
+      name: ${status_mixing_valve}
 
     status_heating_cooling_z2:
       id: status_heating_cooling_z2

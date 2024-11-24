@@ -34,14 +34,6 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:fire",
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
-        cv.Optional("debug_response_text"): text_sensor.text_sensor_schema(
-            icon="mdi:fire",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
-        cv.Optional("debug_response_text2"): text_sensor.text_sensor_schema(
-            icon="mdi:fire",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        ),
     }).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):

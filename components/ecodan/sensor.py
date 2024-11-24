@@ -292,7 +292,11 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("status_heating_cooling_z2"): sensor.sensor_schema(
             entity_category=ENTITY_CATEGORY_NONE,
             icon="mdi:thermostat",
-        ),        
+        ),    
+        cv.Optional("status_mixing_valve"): sensor.sensor_schema(
+            icon="mdi:thermostat",
+            state_class=STATE_CLASS_MEASUREMENT
+        ),       
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
