@@ -105,8 +105,3 @@ substitutions:
   mixing_valve_step: Mixing Valve étape
   fault_code_text: Code d'erreur
   refrigerant_error_code_text: Réfrigérant code d'erreur
-  status_mixing_valve_idle: Inactif
-  status_mixing_valve_closing: Clôture
-  status_mixing_valve_opening: Ouverture
-  status_mixing_valve_closed: Fermé
-  status_mixing_valve_opened: Ouvert

@@ -295,16 +295,12 @@ CONFIG_SCHEMA = cv.Schema(
         ),    
         cv.Optional("status_mixing_valve"): sensor.sensor_schema(
             icon="mdi:valve",
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=ENTITY_CATEGORY_NONE,
         ), 
         cv.Optional("mixing_valve_step"): sensor.sensor_schema(
             icon="mdi:valve",
             state_class=STATE_CLASS_MEASUREMENT
-        ),   
-        cv.Optional("status_multi_zone"): sensor.sensor_schema(
-            icon="mdi:thermostat",
-            state_class=ENTITY_CATEGORY_NONE
-        ),          
+        ),
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
