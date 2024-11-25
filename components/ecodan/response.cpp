@@ -39,7 +39,7 @@ namespace ecodan
         {
             switch (res.payload_type<GetType>())
             {
-             case GetType::DATETIME_FIRMWARE:
+            case GetType::DATETIME_FIRMWARE:
                 {
                     status.ControllerDateTime.tm_year = 100 + res[1];
                     status.ControllerDateTime.tm_mon = res[2] - 1;
@@ -175,18 +175,27 @@ namespace ecodan
             case GetType::PUMP_STATUS:
                 // byte 1 = pump running on/off
                 // byte 4 = pump 2
+                // byte 5 = pump 3
                 // byte 6 = 3 way valve on/off
-                // byte 7 - 3 way valve 2            
+                // byte 7 - 3 way valve 2   
+                // byte 10 - Mixing valve step         
+                // byte 11 - Mixing valve status
                 status.WaterPumpActive = res[1] != 0;
                 status.ThreeWayValveActive = res[6] != 0;
                 status.WaterPump2Active = res[4] != 0;
-                status.ThreeWayValve2Active = res[7] != 0;                
+                status.ThreeWayValve2Active = res[7] != 0;         
+                status.WaterPump3Active = res[5] != 0;       
+                status.MixingValveStep = res[10];   
+                status.MixingValveStatus = res[11];   
                 publish_state("status_water_pump", status.WaterPumpActive);
                 publish_state("status_three_way_valve", status.ThreeWayValveActive);
                 publish_state("status_water_pump_2", status.WaterPump2Active);
-                publish_state("status_three_way_valve_2", status.ThreeWayValve2Active);                
+                publish_state("status_three_way_valve_2", status.ThreeWayValve2Active);
+                publish_state("status_water_pump_3", status.WaterPump3Active);
+                publish_state("status_mixing_valve", static_cast<float>(status.MixingValveStatus));
+                publish_state("mixing_valve_step", static_cast<float>(status.MixingValveStep));
                 //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
-                break;                
+                break;              
             case GetType::FLOW_RATE:
                 // booster = 2, 
                 // emmersion = 5

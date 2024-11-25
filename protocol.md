@@ -341,13 +341,16 @@ Responses so far identified.
 * B : Booster heater active
 * I : Immersion heater active
 ### 0x15 - Pump status
-|   0   | 1  |  2 |  3 |  4 | 5 |  6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
-|-------|----|----|----|----|---|----|---|---|---|----|----|----|----|----|----|----|
-| 0x15  | P1 |    |    | P2 |   | V1 | V2|   |   |    |    |    |    |    |    |    |  
+|   0   | 1  |  2 |  3 |  4 |  5 |  6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+|-------|----|----|----|----|----|----|---|---|---|----|----|----|----|----|----|----|
+| 0x15  | P1 |    |    | P2 | P3 | V1 | V2|   |   | v3 |    |    |    |    |    |    |  
 * P1 : Water pump 1 status
   * 0 : Off
   * 1 : On
 * P2 : Water pump 2 status
+  * 0 : Off
+  * 1 : On
+* P3 : Water pump 3 status (Out3)
   * 0 : Off
   * 1 : On
 * V1 : 3 way valve 1 status
@@ -356,6 +359,11 @@ Responses so far identified.
 * V2 : 3 way valve 2 status
   * 0 : Off
   * 1 : On
+* V3 : Mixing Valve Status
+  * 0 : Idle
+  * 1 : Closing
+  * 2 : Opening
+  * 3 : Closed
 ### 0x16 - Pumps Running
 |   0   | 1  |  2 |  3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|----|----|---|---|---|---|---|---|----|----|----|----|----|----|----|

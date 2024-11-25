@@ -9,9 +9,9 @@ binary_sensor:
     status_three_way_valve_2:
       id: status_three_way_valve_2
       name: ${status_three_way_valve_2}
-    status_water_pump_2:
-      id: status_water_pump_2
-      name: ${status_water_pump_2}
+    status_water_pump_3:
+      id: status_water_pump_3
+      name: ${status_water_pump_3}
 
 climate:
   - platform: ecodan
@@ -99,6 +99,12 @@ sensor:
     z2_return_temp:
       id: z2_return_temp
       name: ${z2_return_temp}
+    mixing_valve_step:
+      id: mixing_valve_step
+      name: ${mixing_valve_step}
+    status_mixing_valve:
+      id: status_mixing_valve
+      name: ${status_mixing_valve}
 
     status_heating_cooling_z2:
       id: status_heating_cooling_z2

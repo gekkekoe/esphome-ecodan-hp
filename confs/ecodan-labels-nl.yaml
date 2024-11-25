@@ -100,5 +100,8 @@ substitutions:
   z2_return_temp: Z2 Retour temp
   status_water_pump: Status water pomp
   status_water_pump_2: Status water pomp 2
+  status_water_pump_3: Status water pomp 3
+  status_mixing_valve: Mixing Valve Status
+  mixing_valve_step: Mixing Valve Stap
   fault_code_text: Fout code
   refrigerant_error_code_text: Koelmiddel fout code

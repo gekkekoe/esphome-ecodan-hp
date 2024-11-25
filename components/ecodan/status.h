@@ -52,8 +52,11 @@ namespace ecodan
         float Runtime;
         bool WaterPumpActive;
         bool WaterPump2Active;
+        bool WaterPump3Active;
         bool ThreeWayValveActive;
         bool ThreeWayValve2Active;
+        uint8_t MixingValveStatus;
+        uint8_t MixingValveStep;
 
         // error codes
         uint8_t RefrigerantErrorCode;

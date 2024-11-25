@@ -168,7 +168,7 @@ text_sensor:
     controller_firmware_text:
       id: controller_firmware_text
       name: ${controller_firmware_text}
-      entity_category: diagnostic          
+      entity_category: diagnostic
 
 sensor:
   - platform: ecodan
@@ -253,7 +253,7 @@ sensor:
 
     refrigerant_error_code:
       internal: true
-      id: refrigerant_error_code 
+      id: refrigerant_error_code
 
   - platform: uptime
     name: ${uptime}
