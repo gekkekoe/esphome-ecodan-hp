@@ -6,6 +6,9 @@ binary_sensor:
     status_prohibit_cool_z1:
       id: status_prohibit_cool_z1
       name: ${status_prohibit_cool_z1}
+    status_water_pump_2:
+      id: status_water_pump_2
+      name: ${status_water_pump_2}
 
 climate:
   - platform: ecodan
