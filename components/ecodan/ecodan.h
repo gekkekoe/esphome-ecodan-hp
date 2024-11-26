@@ -76,6 +76,7 @@ namespace ecodan
         uart::UARTComponent *proxy_uart_ = nullptr;
         Message res_buffer_;
         Message proxy_buffer_;
+        int proxy_rx_sync_fail_count = 0;
 
         Status status;
         float temperatureStep = 0.5f;
@@ -96,6 +97,9 @@ namespace ecodan
         void handle_get_response(Message& res);
         void handle_set_response(Message& res);
         void handle_connect_response(Message& res);
+
+        void proxy_ping();
+        bool proxy_available();
     };
 
     class EcodanClimate : public climate::Climate, public PollingComponent  {

@@ -71,7 +71,7 @@ namespace ecodan
                 proxy_uart_->get_stop_bits() != 1 ||
                 proxy_uart_->get_data_bits() != 8 ||
                 proxy_uart_->get_parity() != uart::UART_CONFIG_PARITY_EVEN) {
-                ESP_LOGI(TAG, "Proxy UART not configured for 2400 8E1. This may not work...");
+                ESP_LOGI(TAG, "Proxy UART not configured for 2400/9600 8E1. This may not work...");
             }            
         }
         else if (!is_connected()){
@@ -85,23 +85,40 @@ namespace ecodan
     {
         static auto last_response = std::chrono::steady_clock::now();
 
-        if (uart_ && serial_rx(uart_, res_buffer_))
+        if (proxy_uart_ && proxy_uart_->available() > 0) {
+            proxy_ping();
+            if (serial_rx(proxy_uart_, proxy_buffer_))
+            {
+                // forward cmds from slave to master
+                if (uart_)
+                    uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
+                proxy_buffer_ = Message();    
+            }
+
+            // if we could not get the sync byte after 4*packet size attemp, we are probably using the wrong baud rate
+            if (proxy_rx_sync_fail_count > 4*16) {
+                //swap 9600 <-> 2400
+                int current_baud = proxy_uart_->get_baud_rate(); 
+                int new_baud =  current_baud == 2400 ? 9600 : 2400;
+                ESP_LOGE(TAG, "Could not get sync byte, swapping baud from '%d' to '%d' for slave...", current_baud, new_baud);
+                proxy_uart_->flush();
+                proxy_uart_->set_baud_rate(new_baud);
+                proxy_uart_->load_settings();
+                
+                // reset fail count
+                proxy_rx_sync_fail_count = 0;
+            }
+        }
+
+        if (serial_rx(uart_, res_buffer_))
         {
             last_response = std::chrono::steady_clock::now();
-            if (proxy_uart_)
+            if (proxy_available())
                 proxy_uart_->write_array(res_buffer_.buffer(), res_buffer_.size());
             
             // interpret message
             handle_response(res_buffer_);
             res_buffer_ = Message();
-        }
-
-        if (proxy_uart_ && serial_rx(proxy_uart_, proxy_buffer_))
-        {
-            // forward cmds from slave to master
-            //schedule_cmd(proxy_buffer_);
-            uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
-            proxy_buffer_ = Message();    
         }
 
         auto now = std::chrono::steady_clock::now();
@@ -144,7 +161,6 @@ namespace ecodan
     {
         return connected;
     }
-
 
 } // namespace ecodan
 } // namespace esphome
