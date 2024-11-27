@@ -87,7 +87,7 @@ namespace ecodan
 
         if (proxy_uart_ && proxy_uart_->available() > 0) {
             proxy_ping();
-            if (serial_rx(proxy_uart_, proxy_buffer_))
+            if (serial_rx(proxy_uart_, proxy_buffer_, true))
             {
                 // forward cmds from slave to master
                 if (uart_)
@@ -96,7 +96,7 @@ namespace ecodan
             }
 
             // if we could not get the sync byte after 4*packet size attemp, we are probably using the wrong baud rate
-            if (proxy_rx_sync_fail_count > 4*16) {
+            if (rx_sync_fail_count > 4*16) {
                 //swap 9600 <-> 2400
                 int current_baud = proxy_uart_->get_baud_rate(); 
                 int new_baud =  current_baud == 2400 ? 9600 : 2400;
@@ -106,7 +106,7 @@ namespace ecodan
                 proxy_uart_->load_settings();
                 
                 // reset fail count
-                proxy_rx_sync_fail_count = 0;
+                rx_sync_fail_count = 0;
             }
         }
 

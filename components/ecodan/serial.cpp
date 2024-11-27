@@ -19,7 +19,7 @@ namespace ecodan
         return true;
     }
 
-    bool EcodanHeatpump::serial_rx(uart::UARTComponent *uart, Message& msg)
+    bool EcodanHeatpump::serial_rx(uart::UARTComponent *uart, Message& msg, bool count_sync_errors)
     {
         uint8_t data;
         bool skipping = false;
@@ -28,7 +28,8 @@ namespace ecodan
             // Discard bytes until we see one that might reasonably be
             // the first byte of a packet, complaining only once.
             if (msg.get_write_offset() == 0 && data != HEADER_MAGIC_A && data != HEADER_MAGIC_B) {
-                proxy_rx_sync_fail_count++;
+                if (count_sync_errors)
+                    rx_sync_fail_count++;
                 if (!skipping) {
                     ESP_LOGE(TAG, "Dropping serial data '%02X', header magic mismatch", data);
                     skipping = true;
@@ -36,7 +37,8 @@ namespace ecodan
                 continue;
             }
             skipping = false;
-            proxy_rx_sync_fail_count = 0;
+            if (count_sync_errors)
+                rx_sync_fail_count = 0;
 
             // Add the byte to the packet.
             msg.append_byte(data);

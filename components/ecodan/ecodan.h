@@ -76,7 +76,7 @@ namespace ecodan
         uart::UARTComponent *proxy_uart_ = nullptr;
         Message res_buffer_;
         Message proxy_buffer_;
-        int proxy_rx_sync_fail_count = 0;
+        int rx_sync_fail_count = 0;
 
         Status status;
         float temperatureStep = 0.5f;
@@ -85,8 +85,7 @@ namespace ecodan
         
         std::queue<Message> cmdQueue;
 
-        void resync_rx();
-        bool serial_rx(uart::UARTComponent *uart, Message& msg);
+        bool serial_rx(uart::UARTComponent *uart, Message& msg, bool count_sync_errors = false);
         bool serial_tx(uart::UARTComponent *uart, Message& msg);
 
         bool dispatch_next_status_cmd();
