@@ -103,5 +103,10 @@ substitutions:
   status_water_pump_3: Status water pomp 3
   status_mixing_valve: Mixing Valve Status
   mixing_valve_step: Mixing Valve Stap
+  status_multi_zone: Multizonestatus
+  status_multi_zone_idle: Inactief
+  status_multi_zone_both: Beide actief
+  status_multi_zone_zone1: Z1 actief
+  status_multi_zone_zone2: Z2 actief
   fault_code_text: Fout code
   refrigerant_error_code_text: Koelmiddel fout code

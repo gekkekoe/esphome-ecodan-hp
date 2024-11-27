@@ -103,5 +103,10 @@ substitutions:
   status_water_pump_3: Statut pompe à eau no3
   status_mixing_valve: Mixing Valve Statut
   mixing_valve_step: Mixing Valve étape
+  status_multi_zone: Multizone Statut
+  status_multi_zone_idle: Inactif
+  status_multi_zone_both: Les deux
+  status_multi_zone_zone1: Z1 fonctionne
+  status_multi_zone_zone2: Z2 fonctionne
   fault_code_text: Code d'erreur
   refrigerant_error_code_text: Réfrigérant code d'erreur

@@ -64,9 +64,11 @@ namespace ecodan
                 status.RefrigerantErrorCode = res[1];
                 status.FaultCodeNumeric = res.get_u16(2);
                 status.FaultCodeLetters = res.get_u16(4);
+                status.MultiZoneStatus = res[8];
 
                 publish_state("refrigerant_error_code", static_cast<float>(status.RefrigerantErrorCode));
                 publish_state("fault_code_text", decode_error(res[4], res[5], status.FaultCodeNumeric));
+                publish_state("status_multi_zone", static_cast<float>(status.MultiZoneStatus));
                 break;
             case GetType::COMPRESSOR_FREQUENCY:
                 status.CompressorFrequency = res[1];
