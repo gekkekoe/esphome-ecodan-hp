@@ -105,7 +105,7 @@ substitutions:
   mixing_valve_step: Mixing Valve Step
   status_multi_zone: Multi Zone Status
   status_multi_zone_idle: Idle
-  status_multi_zone_both: Both Working
+  status_multi_zone_both: Both
   status_multi_zone_zone1: Z1 Working
   status_multi_zone_zone2: Z2 Working
   fault_code_text: Fault code

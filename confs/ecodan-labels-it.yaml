@@ -103,5 +103,10 @@ substitutions:
   status_water_pump_3: Pompa Circolazione 3
   status_mixing_valve: Mixing Valvola Status
   mixing_valve_step: Mixing Valvola Step
+  status_multi_zone: Stato multizona
+  status_multi_zone_idle: Oziare
+  status_multi_zone_both: Entrambi
+  status_multi_zone_zone1: Z1 funzionante
+  status_multi_zone_zone2: Z2 funzionante
   fault_code_text: Codice di errore
   refrigerant_error_code_text: Liq. Refr. codice di errore
