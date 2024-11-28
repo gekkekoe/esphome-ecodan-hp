@@ -1,13 +1,15 @@
 # Using Proxy setup
-There are two options to connect a melcloud wifi adapter / procon as slave.
+There are a few options to connect a melcloud wifi adapter / procon as slave.
 The slave works as normal and you are able to control the heatpump via the esp.
 
 ### Custom proxy pcb
-[The easiest optionn is to use a custom pcb by @fonkse](https://github.com/gekkekoe/esphome-ecodan-hp/discussions/70#discussioncomment-11133291)
+[The easiest option is to use a custom pcb by @fonkse](https://github.com/gekkekoe/esphome-ecodan-hp/discussions/70#discussioncomment-11133291)
 
 @fonkse created a pcb + wires and it is basically plug and play. This is the recommended hardware setup for proxy.
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/proxy-setup.png?raw=true)
+
+Select the `esp32s3-proxy2.yaml` as configuration in `ecodan-esphome.yaml`. Build and flash the firmware.
 
 ### Heishamon large V5
 [Another option is to use a Heishamon v5 (large).](https://www.tindie.com/products/thehognl/heishamon-communication-pcb/
