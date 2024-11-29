@@ -125,7 +125,7 @@ namespace ecodan
 
         void update_output_power_estimation() {
             if (CompressorFrequency > 0 && FlowRate > 0)  {
-                ComputedOutputPower = FlowRate/60.0 * abs(HpFeedTemperature - HpReturnTemperature) * 4.18f;
+                ComputedOutputPower = FlowRate/60.0 * (HpFeedTemperature - HpReturnTemperature) * 4.18f;
             }
             else {
                 ComputedOutputPower = 0.0f;
