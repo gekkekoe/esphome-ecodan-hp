@@ -50,15 +50,23 @@ namespace ecodan
                 case ecodan::Status::HpMode::HEAT_FLOW_TEMP:
                 case ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE:
                     if (this->mode != climate::ClimateMode::CLIMATE_MODE_HEAT && allow_refresh) {
-                        this->mode = climate::ClimateMode::CLIMATE_MODE_HEAT;
-                        should_publish = true;
+                        if (this->climate_zone_identifier == ClimateZoneIdentifier::SINGLE_ZONE
+                            || static_cast<uint8_t>(ClimateZoneIdentifier::MULTI_ZONE_BOTH) == status.MultiZoneStatus
+                            || static_cast<uint8_t>(this->climate_zone_identifier) == status.MultiZoneStatus) {
+                            this->mode = climate::ClimateMode::CLIMATE_MODE_HEAT;
+                            should_publish = true;
+                        }
                     }
                 break;
                 case ecodan::Status::HpMode::COOL_ROOM_TEMP:
                 case ecodan::Status::HpMode::COOL_FLOW_TEMP:
                     if (this->mode != climate::ClimateMode::CLIMATE_MODE_COOL && allow_refresh) {
-                        this->mode = climate::ClimateMode::CLIMATE_MODE_COOL;
-                        should_publish = true;
+                        if (this->climate_zone_identifier == ClimateZoneIdentifier::SINGLE_ZONE
+                            || static_cast<uint8_t>(ClimateZoneIdentifier::MULTI_ZONE_BOTH) == status.MultiZoneStatus
+                            || static_cast<uint8_t>(this->climate_zone_identifier) == status.MultiZoneStatus) {
+                            this->mode = climate::ClimateMode::CLIMATE_MODE_COOL;
+                            should_publish = true;
+                        }
                     } 
                 break;                    
             case ecodan::Status::HpMode::OFF:
