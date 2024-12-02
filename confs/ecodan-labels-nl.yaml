@@ -93,6 +93,7 @@ substitutions:
   output_power: Afgegeven vermogen
   computed_output_power: Geschatte afgegeven vermogen
   outside_temp: Buiten temp
+  outside_temp_filtered: Buiten temp Filt.
   hp_refrigerant_temp: Koelmiddel temp
   hp_refrigerant_condensing_temp: Koelmiddel condensatie temp
   hp_return_temp: Retour temp

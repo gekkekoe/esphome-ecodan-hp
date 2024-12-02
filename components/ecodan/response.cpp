@@ -122,7 +122,11 @@ namespace ecodan
                 publish_state("z2_room_temp", status.Zone2RoomTemperature);
                 publish_state("outside_temp", status.OutsideTemperature);
                 publish_state("hp_refrigerant_temp", status.HpRefrigerantLiquidTemperature); 
-                publish_state("hp_refrigerant_condensing_temp", status.HpRefrigerantCondensingTemperature);                
+                publish_state("hp_refrigerant_condensing_temp", status.HpRefrigerantCondensingTemperature);  
+                if (!status.DefrostActive)
+                {
+                    publish_state("outside_temp_filtered", status.OutsideTemperature);
+                }              
                 break;
             case GetType::TEMPERATURE_STATE_A:
                 status.HpFeedTemperature = res.get_float16(1);

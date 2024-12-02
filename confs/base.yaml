@@ -207,6 +207,9 @@ sensor:
     outside_temp:
       id: outside_temp
       name: ${outside_temp}
+    outside_temp_filtered:
+      id: outside_temp_filtered
+      name: ${outside_temp_filtered}
     hp_feed_temp:
       id: hp_feed_temp
       name: ${hp_feed_temp}
