@@ -54,6 +54,7 @@ namespace ecodan
                 }
                 break;               
             case GetType::DEFROST_STATE:
+            {
                 bool defrostActiveNew = res[3] != 0; 
                 if (!defrostActiveNew && status.DefrostActive)
                 {
@@ -62,6 +63,7 @@ namespace ecodan
                 status.DefrostActive = defrostActiveNew;
                 publish_state("status_defrost", status.DefrostActive);
                 break;
+            }
             case GetType::ERROR_STATE:
                 // 1 = refrigerant error code
                 // 2+3 = fault code, [2]*100+[3]
@@ -116,6 +118,7 @@ namespace ecodan
 
                 break;
             case GetType::SH_TEMPERATURE_STATE:
+            {
                 // 0xF0 seems to be a sentinel value for "not reported in the current system"
                 status.Zone1RoomTemperature = res[1] != 0xF0 ? res.get_float16(1) : 0.0f;
                 status.Zone2RoomTemperature = res[3] != 0xF0 ? res.get_float16(3) : 0.0f;
@@ -136,6 +139,7 @@ namespace ecodan
                     publish_state("outside_temp_filtered", status.OutsideTemperature);
                 }              
                 break;
+            }
             case GetType::TEMPERATURE_STATE_A:
                 status.HpFeedTemperature = res.get_float16(1);
                 status.HpReturnTemperature = res.get_float16(4);
