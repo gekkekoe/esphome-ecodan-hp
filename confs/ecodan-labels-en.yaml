@@ -93,7 +93,7 @@ substitutions:
   output_power: Output Power
   computed_output_power: Estimated Output Power
   outside_temp: Outside Temp
-  outside_temp_filtered: Outside Temp Filt.
+  outside_temp_raw: Outside Temp Raw
   hp_refrigerant_temp: Refrigerant Liquid Temp
   hp_refrigerant_condensing_temp: Refrigerant Condensing Temp
   hp_return_temp: Return Temp

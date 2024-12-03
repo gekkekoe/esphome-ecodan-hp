@@ -93,7 +93,7 @@ substitutions:
   output_power: En. Prod.
   computed_output_power: Stima En. Prod.
   outside_temp: T. Esterna
-  outside_temp_filtered: T. Esterna Filt.
+  outside_temp_raw: T. Esterna Cruda
   hp_refrigerant_temp: T. Mandata Liq. Refr.
   hp_refrigerant_condensing_temp: T. Cond. Liq. Refr.
   hp_return_temp: T. Ritorno Liq. Refr.

@@ -128,7 +128,7 @@ namespace ecodan
 
                 publish_state("z1_room_temp", status.Zone1RoomTemperature);
                 publish_state("z2_room_temp", status.Zone2RoomTemperature);
-                publish_state("outside_temp", status.OutsideTemperature);
+                publish_state("outside_temp_raw", status.OutsideTemperature);
                 publish_state("hp_refrigerant_temp", status.HpRefrigerantLiquidTemperature); 
                 publish_state("hp_refrigerant_condensing_temp", status.HpRefrigerantCondensingTemperature);  
 
@@ -136,7 +136,7 @@ namespace ecodan
                 std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - status.DefrostLastEndTime;
                 if (!status.DefrostActive && elapsed_seconds.count() > 5 * 60)
                 {
-                    publish_state("outside_temp_filtered", status.OutsideTemperature);
+                    publish_state("outside_temp", status.OutsideTemperature);
                 }              
                 break;
             }

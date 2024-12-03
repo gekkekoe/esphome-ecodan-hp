@@ -54,7 +54,7 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        cv.Optional("outside_temp_filtered"): sensor.sensor_schema(
+        cv.Optional("outside_temp_raw"): sensor.sensor_schema(
             unit_of_measurement=UNIT_CELSIUS,
             icon="mdi:sun-thermometer",
             accuracy_decimals=0,
