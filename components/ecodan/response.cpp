@@ -1,7 +1,7 @@
 #include "ecodan.h"
 #include <string>
 #include <algorithm>
-
+#include <chrono>
 namespace esphome {
 namespace ecodan 
 {
@@ -54,7 +54,12 @@ namespace ecodan
                 }
                 break;               
             case GetType::DEFROST_STATE:
-                status.DefrostActive = res[3] != 0;
+                bool defrostActiveNew = res[3] != 0; 
+                if (!defrostActiveNew && status.DefrostActive)
+                {
+                    status.DefrostLastEndTime = std::chrono::system_clock::now();
+                }
+                status.DefrostActive = defrostActiveNew;
                 publish_state("status_defrost", status.DefrostActive);
                 break;
             case GetType::ERROR_STATE:
@@ -123,7 +128,10 @@ namespace ecodan
                 publish_state("outside_temp", status.OutsideTemperature);
                 publish_state("hp_refrigerant_temp", status.HpRefrigerantLiquidTemperature); 
                 publish_state("hp_refrigerant_condensing_temp", status.HpRefrigerantCondensingTemperature);  
-                if (!status.DefrostActive)
+
+                //freeze outside temp during defrost and wait 5 min to cool down
+                std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - status.DefrostLastEndTime;
+                if (!status.DefrostActive && elapsed_seconds > 5 * 60)
                 {
                     publish_state("outside_temp_filtered", status.OutsideTemperature);
                 }              

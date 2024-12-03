@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <chrono>
 
 namespace esphome {
 namespace ecodan 
@@ -10,6 +11,7 @@ namespace ecodan
         bool Initialized = false;
 
         bool DefrostActive;
+        std::chrono::time_point<std::chrono::system_clock> DefrostLastEndTime;
         bool DhwForcedActive;        
         bool BoosterActive;
         bool ImmersionActive;
