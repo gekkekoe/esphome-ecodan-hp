@@ -134,7 +134,7 @@ namespace ecodan
 
                 //freeze outside temp during defrost and wait 5 min to cool down
                 std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - status.DefrostLastEndTime;
-                if (!status.DefrostActive && elapsed_seconds > 5 * 60)
+                if (!status.DefrostActive && elapsed_seconds.count() > 5 * 60)
                 {
                     publish_state("outside_temp_filtered", status.OutsideTemperature);
                 }              
