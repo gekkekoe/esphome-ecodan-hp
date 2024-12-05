@@ -10,7 +10,7 @@ esp32:
 uart:
   id: uart_ecodan
   rx_pin:
-    number: GPIO2
+    number: GPIO3
     mode:
       input: true
       pullup: true
