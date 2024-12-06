@@ -32,7 +32,7 @@ You may have come across this device from forums etc but don’t really understa
 
 Note: For those new to GitHub who have read the instructions for how to make up a cable and flash an Atom with the necessary firmware – do not follow these instructions as this has already been done for you! Indeed the main repository does not include proxy support which means that if you do overwrite the installed firmware then MELCloud will not work.
 
-## Flash it yourself:
+## Flash it yourself.
 If you want to do flash it yourself, install the ESPHome integration. CHoose new device, press continue, give it a name, for example ecodan-esphome, choose for example esp32-s3. DO NOT CHOOSE ENCRYPTION-KEY (skip)
 You need to fill in (wifi) secrets (in the upper right corner of the esphome dashboard).
 Example of the code is here:
@@ -44,9 +44,9 @@ wifi_password: "wifi password"
 ```
 
 And click save.
-Now go to the new device and choose EDIT
+Now go to the new device and choose EDIT.
 Copy the raw code from githubs ecodan-esphome.yaml into this new device and overwrite ALL existing code.
-Instead of the `esp32s3.yaml` Select the `esp32s3-proxy2.yaml` as configuration in `ecodan-esphome.yaml`.
+Instead of the `esp32s3.yaml` Fill in `esp32s3-proxy2.yaml` as configuration in `ecodan-esphome.yaml`.
 
 ```
 packages:
@@ -75,12 +75,12 @@ packages:
            ]
 ```
 
-Click save and install
+Click save and install.
 Choose manual and the code will be compiled to a ecodan-heatpump.bin. Choose Factory format when compiling is finished.
-You can then flash the .bin file, for the first time, by using a usb C cable connected to the Atom S3 lite. (need to power off the heatpump again and remove the m5stack proxy to flash it)
+You can then flash the .bin file, for the first time, by using an usb 'c' cable connected to the Atom S3 lite. (need to power off the heatpump again and remove the m5stack proxy to flash it)
 Flash the atom connected to a usb cable by using: https://web.esphome.io/?dashboard_install
-Click connect and choose the correct com port. And click install
-Next time, the firmware can be updated by wifi directly as esphome detects the device is setup in your network, with the same code.
+Click connect and choose the correct com port. And then click install.
+Next time, the firmware can be updated by wifi directly, from within esphome, as it detects the device is already setup in your network, with the same code.
 
 
 
