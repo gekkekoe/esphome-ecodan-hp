@@ -18,8 +18,6 @@ This guide is written for those with no experience of ESPHome and assumes only a
 You may have come across this device from forums etc but don’t really understand how it works. The cable is supplied with a microcomputer known as an M5 Atom S3 Lite fitted with a ESP32 chip. The cable can be used for local network (non-cloud) control of a Mitsubishi Ecodan heat pump fitted with a Flow Temperature Controller (FTC) which is the white metal box often fitted to the front of the water cylinder. The cable’s standout feature is that is also allows you to use MELCloud as you would normally.
 
  
-![image](https://github.com/fonske/esphome-ecodan-hp/blob/main/img/proxy2_atom.jpg?raw=true)
-
 How to install:
 
  
@@ -30,6 +28,7 @@ The cable needs to be connected to the control board of the heat pump within the
 
 One end of the supplied cable needs to be inserted into the ‘INT’ side of the Atom and the other end inserted into the RED coloured connector of the FTC control board as shown below. If you are using MELCloud and therefore have a WiFi adaptor this obviously needs to be disconnected first and the connector inserted into the ‘EXT’ side of the Atom. Consider mounting the Atom outside of the case for a stronger WiFi connection and easier future access. Note: if installed, do not disconnect and use the white (top) connector by mistake as this is for the wireless remote control receiver (room temperature controller).
 
+![image](https://github.com/fonske/esphome-ecodan-hp/blob/main/img/proxy2_atom.jpg?raw=true)
 
 The Atom is supplied with the firmware already installed so all you need to do is close the FTC case and power up the unit. The Atom will now be in WiFi hotspot mode to allow you to connect it to your home network. See https://esphome.io/components/captive_portal.html for details.
  
