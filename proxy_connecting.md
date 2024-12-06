@@ -33,7 +33,7 @@ You may have come across this device from forums etc but don’t really understa
 Note: For those new to GitHub who have read the instructions for how to make up a cable and flash an Atom with the necessary firmware – do not follow these instructions as this has already been done for you! Indeed the main repository does not include proxy support which means that if you do overwrite the installed firmware then MELCloud will not work.
 
 ## Flash it yourself.
-If you want to do flash it yourself, install the ESPHome integration. CHoose new device, press continue, give it a name, for example ecodan-esphome, choose for example esp32-s3. DO NOT CHOOSE ENCRYPTION-KEY (skip)
+If you want to do flash it yourself, install the ESPHome integration. Choose new device, press continue, give it a name, for example ecodan-esphome, choose for example esp32-s3. DO NOT CHOOSE ENCRYPTION-KEY (skip)
 You need to fill in (wifi) secrets (in the upper right corner of the esphome dashboard).
 Example of the code is here:
 
