@@ -26,7 +26,7 @@ How to install:
 
 The cable needs to be connected to the control board of the heat pump within the FTC case. Before opening the case it must be isolated and you should be aware there are different ways of powering the controller so make sure it’s completely dead first! If you have an immersion heater installed this will also need to be isolated as the contactor for that is within the case but is powered by a separate circuit.
 
- ![image](https://github.com/fonske/esphome-ecodan-hp/blob/main/img/connection_FTC?raw=true)
+ ![image](https://github.com/fonske/esphome-ecodan-hp/blob/main/img/connection_FTC.jpg?raw=true)
 
 One end of the supplied cable needs to be inserted into the ‘INT’ side of the Atom and the other end inserted into the RED coloured connector of the FTC control board as shown below. If you are using MELCloud and therefore have a WiFi adaptor this obviously needs to be disconnected first and the connector inserted into the ‘EXT’ side of the Atom. Consider mounting the Atom outside of the case for a stronger WiFi connection and easier future access. Note: if installed, do not disconnect and use the white (top) connector by mistake as this is for the wireless remote control receiver (room temperature controller).
 
