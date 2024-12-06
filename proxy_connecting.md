@@ -39,9 +39,11 @@ If you want to do flash it yourself, install the ESPHome integration. CHoose new
 You need to fill in (wifi) secrets (in the upper right corner of the esphome dashboard).
 Example of the code is here:
 
+```
 # Your Wi-Fi SSID and password
-wifi_ssid: "WIFI"
-wifi_password: "NotKnownPassWord"
+wifi_ssid: "wifi network id"
+wifi_password: "wifi password"
+```
 
 And click save.
 Now go to the new device and choose EDIT
