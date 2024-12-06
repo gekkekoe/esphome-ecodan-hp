@@ -30,9 +30,21 @@ One end of the supplied cable needs to be inserted into the ‘INT’ side of th
 The Atom is supplied with the firmware already installed so all you need to do is close the FTC case and power up the unit. The Atom will now be in WiFi hotspot mode to allow you to connect it to your home network. See https://esphome.io/components/captive_portal.html for details.
  
 
-Now go to Home Assistant and install the ESPHome integration. With the Atom on your WiFI network it will appear as a new device and can be added in the usual way.
+Now go to Home Assistant. With the Atom on your WiFI network it will appear as a new device and can be added in the usual way.
  
 
 Note: For those new to GitHub who have read the instructions for how to make up a cable and flash an Atom with the necessary firmware – do not follow these instructions as this has already been done for you! Indeed the main repository does not include proxy support which means that if you do overwrite the installed firmware then MELCloud will not work.
 
+If you want to do flash it yourself, install the ESPHome integration. CHoose new device, press continue, give it a name, for example ecodan-esphome, choose for example esp32-s3. DO NOT CHOOSE ENCRYPTION-KEY (skip)
+You need to fill in (wifi) secrets (in the upper right corner of the esphome dashboard).
+Example of the code is here:
+
+# Your Wi-Fi SSID and password
+wifi_ssid: "WIFI"
+wifi_password: "NotKnownPassWord"
+
+And click save.
+Now go to the new device and choose EDIT
+Copy the raw code from githubs ecodan-esphome.yaml into this new device and overwrite ALL existing code.
+Instead of the `esp32s3.yaml` Select the `esp32s3-proxy2.yaml` as configuration in `ecodan-esphome.yaml`. Build and flash the firmware.
 
