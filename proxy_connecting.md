@@ -15,7 +15,7 @@ This guide is written for those with no experience of ESPHome and assumes only a
 You may have come across this device from forums etc but don’t really understand how it works. The cable is supplied with a microcomputer known as an M5 Atom S3 Lite fitted with a ESP32 chip. The cable can be used for local network (non-cloud) control of a Mitsubishi Ecodan heat pump fitted with a Flow Temperature Controller (FTC) which is the white metal box often fitted to the front of the water cylinder. The cable’s standout feature is that is also allows you to use MELCloud as you would normally.
 
  
-How to install:
+## How to install:
 
  
 
