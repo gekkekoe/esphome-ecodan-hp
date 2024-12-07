@@ -78,10 +78,18 @@ namespace ecodan
             {
                 case Status::OperationMode::HEAT_ON:
                 case Status::OperationMode::FROST_PROTECT:
-                        new_action = climate::CLIMATE_ACTION_HEATING;
+                    if (this->climate_zone_identifier == ClimateZoneIdentifier::SINGLE_ZONE
+                        || static_cast<uint8_t>(ClimateZoneIdentifier::MULTI_ZONE_BOTH) == status.MultiZoneStatus
+                        || static_cast<uint8_t>(this->climate_zone_identifier) == status.MultiZoneStatus) {                
+                            new_action = climate::CLIMATE_ACTION_HEATING;
+                        }
                     break;
                 case ecodan::Status::OperationMode::COOL_ON:
-                        new_action = climate::CLIMATE_ACTION_COOLING;
+                     if (this->climate_zone_identifier == ClimateZoneIdentifier::SINGLE_ZONE
+                        || static_cast<uint8_t>(ClimateZoneIdentifier::MULTI_ZONE_BOTH) == status.MultiZoneStatus
+                        || static_cast<uint8_t>(this->climate_zone_identifier) == status.MultiZoneStatus) {                
+                            new_action = climate::CLIMATE_ACTION_COOLING;
+                        }               
                     break;
                 case ecodan::Status::OperationMode::OFF:
                 case ecodan::Status::OperationMode::DHW_ON:

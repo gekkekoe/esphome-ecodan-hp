@@ -1,3 +1,6 @@
+substitutions:
+  zone_identifier_z1: "0"
+
 binary_sensor:
   - platform: ecodan
     status_prohibit_heating_z1:
@@ -15,6 +18,7 @@ climate:
     heatpump_climate_z1:
       name: ${heatpump_climate_z1}
       id: heatpump_climate_z1
+      zone_identifier: ${zone_identifier_z1}
       get_status_func: |-
         return id(ecodan_instance).get_status();
       get_target_temp_func: |-
@@ -68,6 +72,7 @@ climate:
       name: ${heatpump_climate_room_z1}
       id: heatpump_climate_room_z1
       thermostat_climate_mode: true
+      zone_identifier: ${zone_identifier_z1}
       get_status_func: |-
         return id(ecodan_instance).get_status();
       get_target_temp_func: |-

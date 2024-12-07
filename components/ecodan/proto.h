@@ -4,6 +4,14 @@
 namespace esphome {
 namespace ecodan 
 {
+    enum class ClimateZoneIdentifier 
+    {
+        SINGLE_ZONE = 0,
+        MULTI_ZONE_BOTH = 1,
+        MULTI_ZONE_1 = 2,
+        MULTI_ZONE_2 = 3  
+    };
+
     // https://github.com/m000c400/Mitsubishi-CN105-Protocol-Decode
     enum class MsgType : uint8_t
     {

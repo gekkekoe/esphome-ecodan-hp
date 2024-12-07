@@ -116,6 +116,7 @@ namespace ecodan
         void set_status(std::function<const ecodan::Status& (void)> get_status_func) { get_status = get_status_func; };
         void set_dhw_climate_mode(bool mode) { this->dhw_climate_mode = mode; }
         void set_thermostat_climate_mode(bool mode) { this->thermostat_climate_mode = mode; }
+        void set_zone_identifier(uint8_t zone_identifier) { this->climate_zone_identifier = static_cast<ClimateZoneIdentifier>(zone_identifier); }
     private:
         std::function<void(float)> set_target_temp = nullptr;
         std::function<float(void)> get_current_temp = nullptr;
@@ -123,6 +124,7 @@ namespace ecodan
         std::function<const ecodan::Status& (void)> get_status = nullptr;
         bool dhw_climate_mode = false;
         bool thermostat_climate_mode = false;
+        ClimateZoneIdentifier climate_zone_identifier = ClimateZoneIdentifier::SINGLE_ZONE;
 
         void refresh();
         void validate_target_temperature();
