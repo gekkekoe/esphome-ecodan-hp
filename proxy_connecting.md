@@ -48,6 +48,7 @@ And click save.
 Now go to the new device and choose EDIT.
 Copy the raw code from githubs ecodan-esphome.yaml into this new device and overwrite ALL existing code.
 Instead of the `esp32s3.yaml` Fill in `esp32s3-proxy2.yaml` as configuration in `ecodan-esphome.yaml`.
+
 Example packages code:
 
 ```
