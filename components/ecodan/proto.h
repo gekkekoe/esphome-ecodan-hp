@@ -122,6 +122,7 @@ namespace ecodan
 
     const uint8_t HEADER_SIZE_A = 5;
     const uint8_t HEADER_SIZE_B = 7;
+    const uint8_t HEADER_SIZE_E = 2;
     const uint8_t PAYLOAD_SIZE = 16;
     const uint8_t CHECKSUM_SIZE = sizeof(uint8_t);
     const uint8_t MSG_TYPE_OFFSET = 1;
@@ -132,6 +133,7 @@ namespace ecodan
     const uint8_t HEADER_MAGIC_B = 0x02;
     const uint8_t HEADER_MAGIC_C = 0x7A;
     const uint8_t HEADER_MAGIC_D = 0xFF;
+    const uint8_t HEADER_MAGIC_E = 0x6E;
 
     struct Message
     {
@@ -203,7 +205,7 @@ namespace ecodan
 
         bool verify_header()
         {
-            if (buffer_[0] != HEADER_MAGIC_A && buffer_[0] != HEADER_MAGIC_B)
+            if (buffer_[0] != HEADER_MAGIC_A && buffer_[0] != HEADER_MAGIC_B && buffer_[0] != HEADER_MAGIC_E)
                 return false;
             // if (buffer_[0] == HEADER_MAGIC_A && (buffer_[2] != HEADER_MAGIC_B || buffer_[3] != HEADER_MAGIC_C))
             //     return false;
@@ -236,6 +238,9 @@ namespace ecodan
 
         size_t size() const
         {
+            if (buffer_[0] == HEADER_MAGIC_E)
+                return HEADER_SIZE_E;
+
             return header_size() + payload_size() + CHECKSUM_SIZE;
         }
 
@@ -254,7 +259,12 @@ namespace ecodan
         }
 
         size_t header_size() const {
-            return buffer_[0] == HEADER_MAGIC_B ? HEADER_SIZE_B : HEADER_SIZE_A; 
+            if (buffer_[0] == HEADER_MAGIC_B)
+                return HEADER_SIZE_B;
+            else if (buffer_[0] == HEADER_MAGIC_E)
+                return HEADER_SIZE_E;
+            else
+                return HEADER_SIZE_A; 
         }
 
         bool write_header(const char* data, uint8_t length)
@@ -314,6 +324,10 @@ namespace ecodan
 
         bool verify_checksum()
         {
+            // no checksum for header_magic_e
+            if (buffer_[0] == HEADER_MAGIC_E && buffer_[1] == 0x02)
+                return true;
+
             uint8_t v = calculate_checksum();
             if (writeOffset_ < size())
                 return false;

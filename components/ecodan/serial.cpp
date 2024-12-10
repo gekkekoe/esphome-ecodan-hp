@@ -27,7 +27,7 @@ namespace ecodan
         while (uart && uart->available() && uart->read_byte(&data)) {
             // Discard bytes until we see one that might reasonably be
             // the first byte of a packet, complaining only once.
-            if (msg.get_write_offset() == 0 && data != HEADER_MAGIC_A && data != HEADER_MAGIC_B) {
+            if (msg.get_write_offset() == 0 && data != HEADER_MAGIC_A && data != HEADER_MAGIC_B && data != HEADER_MAGIC_E) {
                 if (count_sync_errors)
                     rx_sync_fail_count++;
                 if (!skipping) {
