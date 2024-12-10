@@ -1,0 +1,112 @@
+substitutions:
+  status_three_way_valve: Válvula de 3 vías
+  status_three_way_valve_2: Válvula de 3 vías 2
+  heatpump_climate_dhw: Clima ACS
+  dhw_temp: Temperatura Actual ACS
+  dhw_secondary_temp: Temperatura Secundaria ACS
+  status_dhw_forced: ACS Forzada
+  dhw_flow_temp_drop: Caída Máx. de Temp. ACS
+  status_prohibit_dhw: Prohibir ACS
+  dhw_flow_temp_target: Valor de Consigna ACS
+  status_dhw_eco: ACS Eco
+  esp_ip: IP del ESP
+  internal_esp_temperature: Temperatura Interna ESP
+  esp_sidd: SSID del ESP
+  uptime: Tiempo en funcionamiento del ESP
+  esp_version: Versión de ESP
+  restart_button: Reiniciar ESP
+  status_in1_request: Termostato In1
+  status_in6_request: Termostato In6 (2)
+  status_in5_request: Termostato In5 Exterior
+  heatpump_select_dhw_mode: Modo ACS
+  normal: Normal
+  eco: Eco
+  version: Versión ESP
+  led_brightness: Brillo del LED
+  led_switch: LED
+  heatpump_switch_force_dhw: Forzar ACS
+  heatpump_switch_power_mode: Bomba de calor
+  heatpump_switch_holiday: Modo Vacaciones
+  wifi_signal_proc: Señal WiFi %
+  wifi_signal_db: Señal WiFi dB
+  z1_flow_temp_target: Valor de Consigna de Calef./Refrig. Zona 1
+  status_prohibit_cool_z1: Prohibir Enfriamiento Zona 1
+  status_prohibit_heating_z1: Prohibir Calefacción Zona 1
+  heatpump_climate_z1: Clima Zona 1
+  heatpump_climate_room_z1: Temperatura Zona 1
+  z1_room_temp_target: Valor de Consigna de la Habitación Zona 1
+  z1_room_temp: Temp. Habitación Zona 1
+  heatpump_number_z2_set_flow_temperature: Valor de Consigna de Calef./Refrig. Zona 2
+  z2_flow_temp_target: Valor de Consigna de Calef./Refrig. Zona 2
+  status_prohibit_cool_z2: Prohibir Enfriamiento Zona 2
+  status_prohibit_heating_z2: Prohibir Calefacción Zona 2
+  heatpump_number_z2_set_room_temperature: Consigna de la Habitación Zona 2
+  heatpump_climate_z2: Clima Zona 2
+  heatpump_climate_room_z2: Temperatura Zona 2
+  z2_room_temp_target: Valor de Consigna de la Habitación Zona 2
+  z2_room_temp: Temp. Habitación Zona 2
+  mixing_tank_temp: Temp. Depósito Mezcla
+  boiler_flow_temp: Temp. Flujo Caldera
+  boiler_return_temp: Temp. Retorno Caldera
+  status_booster: Calentador Auxiliar
+  compressor_frequency: Frecuencia del Compresor
+  controller_version_text: Versión del Controlador
+  controller_firmware_text: Firmware del Controlador
+  controller_datetime_text: Fecha del Controlador
+  cool_consumed: Refrigeración Consumida
+  cool_cop: COP de Refrigeración
+  cool_delivered: Refrigeración Entregada
+  status_defrost: Descongelar
+  dhw_consumed: ACS Consumida
+  dhw_cop: COP ACS
+  dhw_delivered: ACS Entregada
+  hp_feed_temp: Temp. Alimentación
+  z1_feed_temp: Temp. Alimentación Z1
+  z2_feed_temp: Temp. Alimentación Z2
+  flow_rate: Caudal
+  heat_source_text: Fuente de Calor
+  heatpump: Bomba de Calor
+  immersion_heater: Calentador de Inmersión
+  booster_heater: Calentador Auxiliar
+  immersion_and_booster_heater: Calentador de Inmersión y Auxiliar
+  boiler: Caldera
+  heating_consumed: Calefacción Consumida
+  heating_cop: COP de Calefacción
+  heating_delivered: Calefacción Entregada
+  status_holiday: Modo Vacaciones
+  status_immersion: Calentador de Inmersión
+  legionella_prevention_temp: Temp. Prevención de Legionela
+  heatpump_select_operating_mode: Modo operativo seleccionado
+  heat_target_temperature: Temperatura Objetivo Calefacción
+  heat_flow_temperature: Temperatura de Flujo de Calefacción
+  heat_compensation_curve: Curva de Compensación de Calefacción
+  cool_target_temperature: Temperatura Objetivo Refrigeración
+  cool_flow_temperature: Temperatura de Flujo de Refrigeración
+  operation_off: Apagado
+  hotwater: Agua Caliente
+  heating: Calefacción
+  cooling: Refrigeración
+  frost_protection: Protección contra heladas
+  legionella_prevention: Prevención de Legionela
+  runtime: Tiempo de Operación
+  status_operation: Modo de Operación
+  output_power: Potencia de Salida
+  computed_output_power: Potencia de Salida Estimada
+  outside_temp: Temp. Exterior
+  hp_refrigerant_temp: Temp. Líquido Refrigerante
+  hp_refrigerant_condensing_temp: Temp. Condensación del Refrigerante
+  hp_return_temp: Temp. Retorno
+  z1_return_temp: Temp. Retorno Z1
+  z2_return_temp: Temp. Retorno Z2
+  status_water_pump: Estado de la Bomba de Agua
+  status_water_pump_2: Estado de la Bomba de Agua 2
+  status_water_pump_3: Estado de la Bomba de Agua 3
+  status_mixing_valve: Estado de la Válvula de Mezcla
+  mixing_valve_step: Paso de la Válvula de Mezcla
+  status_multi_zone: Estado Multi-Zona
+  status_multi_zone_idle: Inactivo
+  status_multi_zone_both: Ambas
+  status_multi_zone_zone1: Z1 en Funcionamiento
+  status_multi_zone_zone2: Z2 en Funcionamiento
+  fault_code_text: Código de Falla
+  refrigerant_error_code_text: Código de Error del Refrigerante
