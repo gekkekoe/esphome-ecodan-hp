@@ -120,6 +120,12 @@ namespace ecodan
         return static_cast<T>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
     }
 
+    template <class T>
+    inline T& operator |=(T& lhs, const T& rhs)
+    {
+        return lhs = static_cast<T>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
+    }
+
     const uint8_t HEADER_SIZE_A = 5;
     const uint8_t HEADER_SIZE_B = 7;
     const uint8_t PAYLOAD_SIZE = 16;

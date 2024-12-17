@@ -152,6 +152,8 @@ namespace ecodan
     {
         Message cmd{MsgType::SET_CMD, SetType::CONTROLLER_SETTING};
         cmd[1] = static_cast<uint8_t>(flag);
+        cmd[2] = 0;
+
         uint8_t value = on ? 1 : 0;
 
         if ((flag & CONTROLLER_FLAG::FORCED_DHW) == CONTROLLER_FLAG::FORCED_DHW)
@@ -175,8 +177,11 @@ namespace ecodan
         if ((flag & CONTROLLER_FLAG::PROHIBIT_Z2_COOLING) == CONTROLLER_FLAG::PROHIBIT_Z2_COOLING)
             cmd[9] = value;
 
-        if ((flag & CONTROLLER_FLAG::SERVER_CONTROL) == CONTROLLER_FLAG::SERVER_CONTROL)
+        if ((flag & CONTROLLER_FLAG::SERVER_CONTROL) == CONTROLLER_FLAG::SERVER_CONTROL) {
+            // when we enter SCM, we need to explicitly set all the prohibit flags (0xFC as flag)
+            cmd[1] = static_cast<uint8_t>(flag | CONTROLLER_FLAG::PROHIBIT_DHW | CONTROLLER_FLAG::PROHIBIT_Z1_HEATING | CONTROLLER_FLAG::PROHIBIT_Z1_COOLING | CONTROLLER_FLAG::PROHIBIT_Z2_HEATING | CONTROLLER_FLAG::PROHIBIT_Z2_COOLING);
             cmd[10] = value;
+        }
 
         //ESP_LOGW(TAG, cmd.debug_dump_packet().c_str());
         schedule_cmd(cmd);

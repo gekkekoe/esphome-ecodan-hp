@@ -108,6 +108,7 @@ namespace ecodan
         HpMode HeatingCoolingModeZone2 = HpMode::OFF;
 
         // prohibit flags
+        bool ServerControl;
         bool ProhibitDhw;
         bool ProhibitHeatingZ1;
         bool ProhibitCoolingZ1;
