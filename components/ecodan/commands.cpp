@@ -187,6 +187,18 @@ namespace ecodan
         schedule_cmd(cmd);
     }
 
+    void EcodanHeatpump::set_mrc_mode(Status::MRC_FLAG flag)
+    {
+        Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
+        cmd[1] = 0;
+        cmd[2] = 0x08; // MRC prohibit flag
+
+        cmd[14] = static_cast<uint8_t>(flag);
+
+        //ESP_LOGE(TAG, cmd.debug_dump_packet().c_str());
+        schedule_cmd(cmd);
+    }
+
     bool EcodanHeatpump::schedule_cmd(Message& cmd)
     {   
         cmdQueue.emplace(std::move(cmd));

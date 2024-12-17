@@ -99,6 +99,15 @@ namespace ecodan
             COOL_FLOW_TEMP = 4
         };
 
+        enum class MRC_FLAG : uint8_t
+        {
+            DISABLED = 0x0,
+            FUNCTION = 0x04, 
+            TEMPERATURE = 0x10, 
+            RUNNING_MODE = 0x20, 
+            SYSTEM_ON_OFF = 0x40
+        };
+
         // Modes
         PowerMode Power;
         OperationMode Operation;
@@ -106,6 +115,8 @@ namespace ecodan
         DhwMode HotWaterMode;
         HpMode HeatingCoolingMode = HpMode::OFF;
         HpMode HeatingCoolingModeZone2 = HpMode::OFF;
+
+        MRC_FLAG MRCFlag = MRC_FLAG::DISABLED;
 
         // prohibit flags
         bool ServerControl;

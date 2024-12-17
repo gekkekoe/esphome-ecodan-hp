@@ -210,9 +210,12 @@ namespace ecodan
                 status.update_output_power_estimation();
                 break;
             case GetType::MODE_FLAGS_A:
+                ESP_LOGE(TAG, res.debug_dump_packet().c_str());
                 status.set_power_mode(res[3]);
                 status.set_operation_mode(res[4]);
                 status.set_dhw_mode(res[5]);
+
+                status.MRCFlag = static_cast<Status::MRC_FLAG>(res[14]);
                 status.HeatingCoolingMode = static_cast<Status::HpMode>(res[6]);
                 status.HeatingCoolingModeZone2 = static_cast<Status::HpMode>(res[7]);
                 status.DhwFlowTemperatureSetPoint = res.get_float16(8);
