@@ -1,0 +1,49 @@
+alias: Koelen toestaan
+description: ""
+trigger:
+  - platform: time
+    at: "00:00:00"
+  - platform: time
+    at: "02:00:00"
+  - platform: time
+    at: "06:00:00"
+  - platform: time
+    at: "04:00:00"
+  - platform: time
+    at: "08:00:00"
+  - platform: time
+    at: "10:00:00"
+  - platform: time
+    at: "12:00:00"
+  - platform: time
+    at: "14:00:00"
+  - platform: time
+    at: "16:00:00"
+  - platform: time
+    at: "18:00:00"
+  - platform: time
+    at: "20:00:00"
+  - platform: time
+    at: "22:00:00"
+condition:
+  - condition: and
+    conditions:
+      - condition: state
+        entity_id: select.ecodan_heatpump_selected_operating_mode
+        state: Cool Flow Temperature
+      - condition: numeric_state
+        entity_id: sensor.ecodan_heatpump_zone_1_room_temp
+        above: 23
+      - condition: state
+        entity_id: sensor.ecodan_heatpump_operation_mode
+        state: "Off"
+        for:
+          hours: 1
+          minutes: 0
+          seconds: 0
+action:
+  - action: switch.turn_off
+    target:
+      entity_id: switch.ecodan_heatpump_server_control_zone_1_prohibit_cooling
+    data: {}
+mode: single

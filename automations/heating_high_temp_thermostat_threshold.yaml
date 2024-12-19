@@ -1,0 +1,23 @@
+alias: Begrenzing temperatuur verwarmen hoog
+description: ""
+trigger:
+  - platform: numeric_state
+    entity_id:
+      - sensor.ecodan_heatpump_zone_1_room_setpoint_value
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+    above: 22
+condition:
+  - condition: state
+    entity_id: select.ecodan_heatpump_selected_operating_mode
+    state: Heat Target Temperature
+action:
+  - action: climate.set_temperature
+    metadata: {}
+    data:
+      temperature: 22
+    target:
+      entity_id: climate.ecodan_heatpump_zone_1_climate
+mode: single

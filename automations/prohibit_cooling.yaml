@@ -1,0 +1,16 @@
+alias: Koelen weigeren
+description: ""
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.ecodan_heatpump_operation_mode
+    from: Space Cooling
+    to: "Off"
+condition: []
+action:
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.ecodan_heatpump_server_control_zone_1_prohibit_cooling
+mode: single
