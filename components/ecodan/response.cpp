@@ -210,7 +210,7 @@ namespace ecodan
                 status.update_output_power_estimation();
                 break;
             case GetType::MODE_FLAGS_A:
-                ESP_LOGE(TAG, res.debug_dump_packet().c_str());
+                //ESP_LOGE(TAG, res.debug_dump_packet().c_str());
                 status.set_power_mode(res[3]);
                 status.set_operation_mode(res[4]);
                 status.set_dhw_mode(res[5]);
