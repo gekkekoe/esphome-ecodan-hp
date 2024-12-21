@@ -33,13 +33,13 @@ uart:
     baud_rate: 2400
     parity: EVEN
     stop_bits: 1
-    # debug:
-    #   direction: BOTH
-    #   dummy_receiver: false
-    #   after:
-    #     delimiter: "\n"
-    #   sequence:
-    #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+    debug:
+      direction: BOTH
+      dummy_receiver: false
+      after:
+        delimiter: "\n"
+      sequence:
+        - lambda: UARTDebug::log_hex(direction, bytes, '_');
 
   - id: uart_proxy
     rx_pin:
@@ -54,13 +54,13 @@ uart:
     baud_rate: 9600
     parity: EVEN
     stop_bits: 1
-    # debug:
-    #   direction: BOTH
-    #   dummy_receiver: false
-    #   after:
-    #     delimiter: "\n"
-    #   sequence:
-    #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');  
+    debug:
+      direction: BOTH
+      dummy_receiver: false
+      after:
+        delimiter: "\n"
+      sequence:
+        - lambda: UARTDebug::log_hex(direction, bytes, ' ');  
 
 light:
 #G35=RGB WS2812C-2020
