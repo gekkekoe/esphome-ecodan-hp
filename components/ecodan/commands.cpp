@@ -272,7 +272,7 @@ namespace ecodan
     bool EcodanHeatpump::begin_connect()
     {
         Message cmd{MsgType::CONNECT_CMD};
-        uint8_t payload[3] = {0xCA, 0x01};
+        uint8_t payload[2] = {0xCA, 0x01};
         cmd.write_payload(payload, sizeof(payload));
 
         ESP_LOGI(TAG, "Attempt to tx CONNECT_CMD!");
