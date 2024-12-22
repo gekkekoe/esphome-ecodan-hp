@@ -51,6 +51,7 @@ uart:
       number: GPIO7
       mode:
         output: true
+        pullup: true
     baud_rate: 2400
     parity: EVEN
     stop_bits: 1
