@@ -92,6 +92,7 @@ substitutions:
   status_operation: Modo de Operación
   output_power: Potencia de Salida
   computed_output_power: Potencia de Salida Estimada
+  daily_computed_output_power: Potencia de Salida Estimada (A diario)
   outside_temp: Temp. Exterior
   hp_refrigerant_temp: Temp. Líquido Refrigerante
   hp_refrigerant_condensing_temp: Temp. Condensación del Refrigerante

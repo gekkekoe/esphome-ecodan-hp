@@ -209,7 +209,7 @@ sensor:
       name: ${output_power} 
     computed_output_power:
       id: computed_output_power
-      name: ${computed_output_power}      
+      name: ${computed_output_power}
     outside_temp:
       id: outside_temp
       name: ${outside_temp}
@@ -286,6 +286,19 @@ sensor:
     state_class: total_increasing
     entity_category: diagnostic
     update_interval: 5s
+
+  - platform: total_daily_energy
+    name: ${daily_computed_output_power}
+    power_id: computed_output_power
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+
+# Enable time component to reset energy at midnight
+time:
+  - platform: homeassistant
+    id: homeassistant_time
 
 binary_sensor:
   - platform: ecodan

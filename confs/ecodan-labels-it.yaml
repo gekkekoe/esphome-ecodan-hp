@@ -92,6 +92,7 @@ substitutions:
   status_operation: Modalità Funzionamento
   output_power: En. Prod.
   computed_output_power: Stima En. Prod.
+  daily_computed_output_power: Stima En. Prod. (Giorno)
   outside_temp: T. Esterna
   hp_refrigerant_temp: T. Mandata Liq. Refr.
   hp_refrigerant_condensing_temp: T. Cond. Liq. Refr.

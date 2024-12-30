@@ -92,6 +92,7 @@ substitutions:
   status_operation: Operation Mode
   output_power: Output Power
   computed_output_power: Estimated Output Power
+  daily_computed_output_power: Estimated Total Daily Energy Produced
   outside_temp: Outside Temp
   hp_refrigerant_temp: Refrigerant Liquid Temp
   hp_refrigerant_condensing_temp: Refrigerant Condensing Temp
