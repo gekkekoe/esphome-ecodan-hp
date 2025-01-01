@@ -1,12 +1,177 @@
+  binary_sensor:
+  - platform: ecodan
+    status_server_control:
+      internal: true
+      id: status_server_control
+      on_state:
+        if:
+          condition:
+            and:
+              - binary_sensor.is_off: status_server_control
+              - switch.is_on: heatpump_switch_server_control_mode
+          then:
+            - switch.template.publish:
+                id: heatpump_switch_server_control_mode
+                state: OFF
+          else:
+            if:
+              condition:
+                and:
+                  - binary_sensor.is_on: status_server_control
+                  - switch.is_off: heatpump_switch_server_control_mode
+              then:
+                - switch.template.publish:
+                    id: heatpump_switch_server_control_mode
+                    state: ON
+    status_server_control_prohibit_dhw:
+      id: status_server_control_prohibit_dhw
+      internal: true
+      on_state:
+        if:
+          condition:
+            and:
+              - switch.is_on: heatpump_switch_server_control_mode
+              - binary_sensor.is_off: status_server_control_prohibit_dhw
+              - switch.is_on: heatpump_switch_server_control_prohibit_dhw
+          then:
+            - switch.template.publish:
+                id: heatpump_switch_server_control_prohibit_dhw
+                state: OFF
+          else:
+            if:
+              condition:
+                and:
+                  - switch.is_on: heatpump_switch_server_control_mode
+                  - binary_sensor.is_on: status_server_control_prohibit_dhw
+                  - switch.is_off: heatpump_switch_server_control_prohibit_dhw
+              then:
+                - switch.template.publish:
+                    id: heatpump_switch_server_control_prohibit_dhw
+                    state: ON
+    status_server_control_prohibit_heating_z1:
+      id: status_server_control_prohibit_heating_z1
+      internal: true
+      on_state:
+        if:
+          condition:
+            and:
+              - switch.is_on: heatpump_switch_server_control_mode
+              - binary_sensor.is_off: status_server_control_prohibit_heating_z1
+              - switch.is_on: heatpump_switch_server_control_prohibit_z1_heating
+          then:
+            - switch.template.publish:
+                id: heatpump_switch_server_control_prohibit_z1_heating
+                state: OFF
+          else:
+            if:
+              condition:
+                and:
+                  - switch.is_on: heatpump_switch_server_control_mode
+                  - binary_sensor.is_on: status_server_control_prohibit_heating_z1
+                  - switch.is_off: heatpump_switch_server_control_prohibit_z1_heating
+              then:
+                - switch.template.publish:
+                    id: heatpump_switch_server_control_prohibit_z1_heating
+                    state: ON
+    status_server_control_prohibit_cool_z1:
+      id: status_server_control_prohibit_cool_z1
+      internal: false
+      on_state:
+        if:
+          condition:
+            and:
+              - switch.is_on: heatpump_switch_server_control_mode
+              - binary_sensor.is_off: status_server_control_prohibit_cool_z1
+              - switch.is_on: heatpump_switch_server_control_prohibit_z1_cooling
+          then:
+            - switch.template.publish:
+                id: heatpump_switch_server_control_prohibit_z1_cooling
+                state: OFF
+          else:
+            if:
+              condition:
+                and:
+                  - switch.is_on: heatpump_switch_server_control_mode
+                  - binary_sensor.is_on: status_server_control_prohibit_cool_z1
+                  - switch.is_off: heatpump_switch_server_control_prohibit_z1_cooling
+              then:
+                - switch.template.publish:
+                    id: heatpump_switch_server_control_prohibit_z1_cooling
+                    state: ON
+    status_server_control_prohibit_heating_z2:
+      id: status_server_control_prohibit_heating_z2
+      internal: true
+      on_state:
+        if:
+          condition:
+            and:
+              - switch.is_on: heatpump_switch_server_control_mode
+              - binary_sensor.is_off: status_server_control_prohibit_heating_z2
+              - switch.is_on: heatpump_switch_server_control_prohibit_z2_heating
+          then:
+            - switch.template.publish:
+                id: heatpump_switch_server_control_prohibit_z2_heating
+                state: OFF
+          else:
+            if:
+              condition:
+                and:
+                  - switch.is_on: heatpump_switch_server_control_mode
+                  - binary_sensor.is_on: status_server_control_prohibit_heating_z2
+                  - switch.is_off: heatpump_switch_server_control_prohibit_z2_heating
+              then:
+                - switch.template.publish:
+                    id: heatpump_switch_server_control_prohibit_z2_heating
+                    state: ON
+    status_server_control_prohibit_cool_z2:
+      id: status_server_control_prohibit_cool_z2
+      internal: true
+      on_state:
+        if:
+          condition:
+            and:
+              - switch.is_on: heatpump_switch_server_control_mode
+              - binary_sensor.is_off: status_server_control_prohibit_cool_z2
+              - switch.is_on: heatpump_switch_server_control_prohibit_z2_cooling
+          then:
+            - switch.template.publish:
+                id: heatpump_switch_server_control_prohibit_z2_cooling
+                state: OFF
+          else:
+            if:
+              condition:
+                and:
+                  - switch.is_on: heatpump_switch_server_control_mode
+                  - binary_sensor.is_on: status_server_control_prohibit_cool_z2
+                  - switch.is_off: heatpump_switch_server_control_prohibit_z2_cooling
+              then:
+                - switch.template.publish:
+                    id: heatpump_switch_server_control_prohibit_z2_cooling
+                    state: ON
+  
+
   switch:
   - platform: template
     name: server control - enable/disable
     id: heatpump_switch_server_control_mode
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: DISABLED
     optimistic: true
     turn_on_action:
       - lambda: |-
-         id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, true);
+          auto& status = id(ecodan_instance).get_status();
+          auto flag = esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
+          if (status.ProhibitDhw)
+            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW;
+          if (status.ProhibitHeatingZ1)
+            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_HEATING;
+          if (status.ProhibitCoolingZ1)
+            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_COOLING;
+          if (status.ProhibitHeatingZ2)
+            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_HEATING;
+          if (status.ProhibitCoolingZ2)
+            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_COOLING;
+
+          id(ecodan_instance).set_controller_mode(flag, true);
     turn_off_action:
       - lambda: |-
          id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
@@ -14,7 +179,7 @@
   - platform: template
     name: server control - prohibit DHW
     id: heatpump_switch_server_control_prohibit_dhw
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: DISABLED
     optimistic: true
     lambda: |-
       if (id(heatpump_switch_server_control_mode).state) {
@@ -34,7 +199,7 @@
   - platform: template
     name: server control - zone 1 prohibit heating
     id: heatpump_switch_server_control_prohibit_z1_heating
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: DISABLED
     optimistic: true
     lambda: |-
       if (id(heatpump_switch_server_control_mode).state) {
@@ -55,7 +220,7 @@
   - platform: template
     name: server control - zone 1 prohibit cooling
     id: heatpump_switch_server_control_prohibit_z1_cooling
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: DISABLED
     optimistic: true
     lambda: |-
       if (id(heatpump_switch_server_control_mode).state) {
@@ -75,7 +240,7 @@
   - platform: template
     name: server control - zone 2 prohibit heating
     id: heatpump_switch_server_control_prohibit_z2_heating
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: DISABLED
     optimistic: true
     lambda: |-
       if (id(heatpump_switch_server_control_mode).state) {
@@ -96,7 +261,7 @@
   - platform: template
     name: server control - zone 2 prohibit cooling
     id: heatpump_switch_server_control_prohibit_z2_cooling
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: DISABLED
     optimistic: true
     lambda: |-
       if (id(heatpump_switch_server_control_mode).state) {

@@ -119,10 +119,10 @@ Active commands so far identified.
 * Z2SP : Zone 2 Setpoint (* 100)
 * MRC Prohibit : (Read 0x26 Byte 14) - **MRC Prohibit command must NOT be written to Shizuoka designed models**
   * 0 : Disable Prohibits
-  * 8 : Function Set Prohibit
-  * 32 : Setting Temperature Prohibit
-  * 64 : Running Mode Prohibit
-  * 128 : System On/Off Prohibit
+  * 0x04 : Function Set Prohibit
+  * 0x10 : Setting Temperature Prohibit
+  * 0x20 : Running Mode Prohibit
+  * 0x40 : System On/Off Prohibit
 ### 0x34 - Hot Water and Holiday Mode
 |   0   |  1  |  2  | 3 |   4  |  5   |   6  |  7  |   8   |   9   |  10  |  11  |  12  |  13  | 14 | 15 | 16 |
 |-------|-----|-----|---|------|------|------|-----|-------|-------|------|------|------|------|----|----|----|

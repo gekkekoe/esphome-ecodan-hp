@@ -92,6 +92,7 @@ substitutions:
   status_operation: Mode de fonctionnement
   output_power: Puissance de sortie
   computed_output_power: Puissance de sortie estimée
+  daily_computed_output_power: Puissance de sortie estimée (Tous les jours)
   outside_temp: Temp Ext
   hp_refrigerant_temp: Temp Liquide Réfrigérant
   hp_refrigerant_condensing_temp: Temp Condensation Liquide Réfrigérant
@@ -110,3 +111,4 @@ substitutions:
   status_multi_zone_zone2: Z2 fonctionne
   fault_code_text: Code d'erreur
   refrigerant_error_code_text: Réfrigérant code d'erreur
+  status_mrc: MRC Statut

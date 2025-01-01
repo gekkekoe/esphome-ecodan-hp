@@ -210,9 +210,12 @@ namespace ecodan
                 status.update_output_power_estimation();
                 break;
             case GetType::MODE_FLAGS_A:
+                //ESP_LOGE(TAG, res.debug_dump_packet().c_str());
                 status.set_power_mode(res[3]);
                 status.set_operation_mode(res[4]);
                 status.set_dhw_mode(res[5]);
+
+                status.MRCFlag = static_cast<Status::MRC_FLAG>(res[14]);
                 status.HeatingCoolingMode = static_cast<Status::HpMode>(res[6]);
                 status.HeatingCoolingModeZone2 = static_cast<Status::HpMode>(res[7]);
                 status.DhwFlowTemperatureSetPoint = res.get_float16(8);
@@ -229,13 +232,13 @@ namespace ecodan
                 break;
             case GetType::MODE_FLAGS_B:
                 status.DhwForcedActive = res[3] != 0;
-                status.ProhibitDhw = res[5] != 0;
                 status.HolidayMode = res[4] != 0;
+                status.ProhibitDhw = res[5] != 0;
                 status.ProhibitHeatingZ1 = res[6] != 0;
                 status.ProhibitCoolingZ1 = res[7] != 0;
                 status.ProhibitHeatingZ2 = res[8] != 0;
                 status.ProhibitCoolingZ2 = res[9] != 0;
-
+                
                 publish_state("status_dhw_forced", status.DhwForcedActive);
                 publish_state("status_holiday", status.HolidayMode);
                 publish_state("status_prohibit_dhw", status.ProhibitDhw);
@@ -243,6 +246,17 @@ namespace ecodan
                 publish_state("status_prohibit_cool_z1", status.ProhibitCoolingZ1);
                 publish_state("status_prohibit_heating_z2", status.ProhibitHeatingZ2);
                 publish_state("status_prohibit_cool_z2", status.ProhibitCoolingZ2);
+
+                // set status for svc switches
+                if (status.ServerControl != (res[10] != 0)) {
+                    status.ServerControl = res[10] != 0;
+                    publish_state("status_server_control", status.ServerControl);
+                    publish_state("status_server_control_prohibit_dhw", status.ProhibitDhw);
+                    publish_state("status_server_control_prohibit_heating_z1", status.ProhibitHeatingZ1);
+                    publish_state("status_server_control_prohibit_cool_z1", status.ProhibitCoolingZ1);
+                    publish_state("status_server_control_prohibit_heating_z2", status.ProhibitHeatingZ2);
+                    publish_state("status_server_control_prohibit_cool_z2", status.ProhibitCoolingZ2);
+                }
                 break;
             case GetType::ENERGY_USAGE:
                 status.EnergyConsumedHeating = res.get_float24(4);

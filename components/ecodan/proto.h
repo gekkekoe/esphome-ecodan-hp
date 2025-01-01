@@ -120,6 +120,18 @@ namespace ecodan
         return static_cast<T>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
     }
 
+    template <class T>
+    inline T operator ^(const T& lhs, const T& rhs)
+    {
+        return static_cast<T>(static_cast<uint8_t>(lhs) ^ static_cast<uint8_t>(rhs));
+    }
+
+    template <class T>
+    inline T& operator |=(T& lhs, const T& rhs)
+    {
+        return lhs = static_cast<T>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
+    }
+
     const uint8_t HEADER_SIZE_A = 5;
     const uint8_t HEADER_SIZE_B = 7;
     const uint8_t PAYLOAD_SIZE = 16;
@@ -128,7 +140,8 @@ namespace ecodan
     const uint8_t PAYLOAD_SIZE_OFFSET_A = 4;
     const uint8_t PAYLOAD_SIZE_OFFSET_B = 6;
 
-    const uint8_t HEADER_MAGIC_A = 0xFC;
+    const uint8_t HEADER_MAGIC_A1 = 0xFC;
+    const uint8_t HEADER_MAGIC_A2 = 0x02;
     const uint8_t HEADER_MAGIC_B = 0x02;
     const uint8_t HEADER_MAGIC_C = 0x7A;
     const uint8_t HEADER_MAGIC_D = 0xFF;
@@ -141,12 +154,12 @@ namespace ecodan
         }
 
         Message(MsgType msgType)
-            : cmd_{true}, buffer_{HEADER_MAGIC_A, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE_A)
+            : cmd_{true}, buffer_{HEADER_MAGIC_A1, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE_A)
         {
         }
 
         Message(MsgType msgType, SetType setType)
-            : cmd_{true}, buffer_{HEADER_MAGIC_A, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE_A)
+            : cmd_{true}, buffer_{HEADER_MAGIC_A1, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE_A)
         {
             // All SET_CMD messages have 15-bytes of zero payload.
             char payload[PAYLOAD_SIZE] = {};
@@ -155,7 +168,7 @@ namespace ecodan
         }
 
         Message(MsgType msgType, GetType getType)
-            : cmd_{true}, buffer_{HEADER_MAGIC_A, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE_A)
+            : cmd_{true}, buffer_{HEADER_MAGIC_A1, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE_A)
         {
             // All GET_CMD messages have 15-bytes of zero payload.
             char payload[PAYLOAD_SIZE] = {};
@@ -203,9 +216,9 @@ namespace ecodan
 
         bool verify_header()
         {
-            if (buffer_[0] != HEADER_MAGIC_A && buffer_[0] != HEADER_MAGIC_B)
+            if (buffer_[0] != HEADER_MAGIC_A1 && buffer_[0] != HEADER_MAGIC_A2)
                 return false;
-            // if (buffer_[0] == HEADER_MAGIC_A && (buffer_[2] != HEADER_MAGIC_B || buffer_[3] != HEADER_MAGIC_C))
+            // if (buffer_[0] == HEADER_MAGIC_A1 && (buffer_[2] != HEADER_MAGIC_B || buffer_[3] != HEADER_MAGIC_C))
             //     return false;
             // else if (buffer_[0] == HEADER_MAGIC_B && (buffer_[1] != HEADER_MAGIC_D || buffer_[2] != HEADER_MAGIC_D))
             //     return false;
@@ -240,7 +253,7 @@ namespace ecodan
         }
 
         size_t payload_size_offset() const {
-            return buffer_[0] == HEADER_MAGIC_B ? PAYLOAD_SIZE_OFFSET_B : PAYLOAD_SIZE_OFFSET_A; 
+            return buffer_[0] == HEADER_MAGIC_A1 ? PAYLOAD_SIZE_OFFSET_A : PAYLOAD_SIZE_OFFSET_B; 
         }
 
         size_t payload_size() const
@@ -254,7 +267,7 @@ namespace ecodan
         }
 
         size_t header_size() const {
-            return buffer_[0] == HEADER_MAGIC_B ? HEADER_SIZE_B : HEADER_SIZE_A; 
+            return buffer_[0] == HEADER_MAGIC_A1 ? HEADER_SIZE_A : HEADER_SIZE_B; 
         }
 
         bool write_header(const char* data, uint8_t length)

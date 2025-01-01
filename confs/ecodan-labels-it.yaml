@@ -92,6 +92,7 @@ substitutions:
   status_operation: Modalità Funzionamento
   output_power: En. Prod.
   computed_output_power: Stima En. Prod.
+  daily_computed_output_power: Stima En. Prod. (Giorno)
   outside_temp: T. Esterna
   hp_refrigerant_temp: T. Mandata Liq. Refr.
   hp_refrigerant_condensing_temp: T. Cond. Liq. Refr.
@@ -110,3 +111,4 @@ substitutions:
   status_multi_zone_zone2: Z2 funzionante
   fault_code_text: Codice di errore
   refrigerant_error_code_text: Liq. Refr. codice di errore
+  status_mrc: MRC Stato

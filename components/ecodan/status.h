@@ -32,8 +32,8 @@ namespace ecodan
         uint8_t MaximumFlowTemperature;
         uint8_t MinimumFlowTemperature;
         float OutsideTemperature;
-        float HpFeedTemperature;
-        float HpReturnTemperature;
+        float HpFeedTemperature {0.0f};
+        float HpReturnTemperature {0.0f};
         float Z1FeedTemperature;
         float Z1ReturnTemperature;
         float Z2FeedTemperature;
@@ -45,7 +45,7 @@ namespace ecodan
         float DhwSecondaryTemperature;
         float BoilerFlowTemperature;
         float BoilerReturnTemperature;
-        uint8_t FlowRate;
+        uint8_t FlowRate {0};
         float DhwFlowTemperatureSetPoint{NAN};
         float RadiatorFlowTemperatureSetPoint;
 
@@ -99,6 +99,15 @@ namespace ecodan
             COOL_FLOW_TEMP = 4
         };
 
+        enum class MRC_FLAG : uint8_t
+        {
+            DISABLED = 0x0,
+            FUNCTION = 0x04, 
+            TEMPERATURE = 0x10, 
+            RUNNING_MODE = 0x20, 
+            SYSTEM_ON_OFF = 0x40
+        };
+
         // Modes
         PowerMode Power;
         OperationMode Operation;
@@ -107,7 +116,10 @@ namespace ecodan
         HpMode HeatingCoolingMode = HpMode::OFF;
         HpMode HeatingCoolingModeZone2 = HpMode::OFF;
 
+        MRC_FLAG MRCFlag = MRC_FLAG::DISABLED;
+
         // prohibit flags
+        bool ServerControl;
         bool ProhibitDhw;
         bool ProhibitHeatingZ1;
         bool ProhibitCoolingZ1;
@@ -115,7 +127,7 @@ namespace ecodan
         bool ProhibitCoolingZ2;
 
         // Efficiency
-        uint8_t CompressorFrequency;
+        uint8_t CompressorFrequency {0};
         float EnergyConsumedHeating;
         float EnergyConsumedCooling;
         float EnergyDeliveredHeating;
@@ -124,8 +136,8 @@ namespace ecodan
         float EnergyDeliveredDhw;
 
         void update_output_power_estimation() {
-            if (CompressorFrequency > 0 && FlowRate > 0)  {
-                ComputedOutputPower = FlowRate/60.0 * (HpFeedTemperature - HpReturnTemperature) * 4.18f;
+            if (!std::isnan(HpFeedTemperature) && !std::isnan(HpReturnTemperature) && FlowRate > 0)  {
+                ComputedOutputPower = FlowRate/60.0 * (HpFeedTemperature - HpReturnTemperature) * 4.2f;
             }
             else {
                 ComputedOutputPower = 0.0f;
