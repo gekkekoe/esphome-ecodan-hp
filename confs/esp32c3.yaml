@@ -1,0 +1,57 @@
+esphome:
+  name: ${name}
+  friendly_name: ${friendlyName}
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: esp-idf
+    version: recommended
+    # Custom sdkconfig options
+    sdkconfig_options:
+      COMPILER_OPTIMIZATION_SIZE: y
+
+uart:
+  id: uart_ecodan
+  rx_pin:
+    number: GPIO3
+    mode:
+      input: true
+      pullup: true
+  tx_pin:
+    number: GPIO2
+    ignore_strapping_warning: true
+    mode:
+      output: true
+  baud_rate: 2400
+  parity: EVEN
+  stop_bits: 1
+  # debug:
+  #   direction: BOTH
+  #   dummy_receiver: false
+  #   after:
+  #     delimiter: "\n"
+  #   sequence:
+  #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+
+
+
+###  ESP restart button
+button:
+  - platform: restart
+    id: restart_button
+    name: ${restart_button}
+
+status_led:
+  pin: 
+    number: 8
+    ignore_strapping_warning: true
+    inverted: true
+  id: esp_status_led
+
+sensor:
+  - platform: internal_temperature
+    name: ${internal_esp_temperature}
+    entity_category: diagnostic
