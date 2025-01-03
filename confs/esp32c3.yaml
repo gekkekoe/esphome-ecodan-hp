@@ -22,6 +22,7 @@ uart:
       pullup: true
   tx_pin:
     number: GPIO2
+    ignore_strapping_warning: true
     mode:
       output: true
   baud_rate: 2400
@@ -46,6 +47,7 @@ button:
 status_led:
   pin: 
     number: 8
+    ignore_strapping_warning: true
     inverted: true
   id: esp_status_led
 
