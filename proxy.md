@@ -9,7 +9,15 @@ The slave works as normal and you are able to control the heatpump via the esp.
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/proxy-setup.png?raw=true)
 
-Select the `esp32s3-proxy2.yaml` as configuration in `ecodan-esphome.yaml`. Build and flash the firmware.
+Select the `esp32s3-proxy2.yaml` as configuration in `ecodan-esphome.yaml`.
+Add `proxy_uart_id: uart_proxy` in `ecodan-esphome.yaml` so it reads:
+```
+ecodan:
+  id: ecodan_instance
+  uart_id: uart_ecodan
+  proxy_uart_id: uart_proxy
+```
+Build and flash the firmware.
 
 ### Heishamon large V5
 [Another option is to use a Heishamon v5 (large).](https://www.tindie.com/products/thehognl/heishamon-communication-pcb/
@@ -33,7 +41,15 @@ NOTE: The current version of heishamon V5 requires a 10kΩ pull-up resistor on t
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/solder.png?raw=true)
 
-Select the `esp32s3-heisamon.yaml` as configuration in `ecodan-esphome.yaml`. Build and flash the firmware. Connect the small connector to the slave and the large connector to the heatpump.
+Select the `esp32s3-heisamon.yaml` as configuration in `ecodan-esphome.yaml`.
+Add `proxy_uart_id: uart_proxy` in `ecodan-esphome.yaml` so it reads:
+```
+ecodan:
+  id: ecodan_instance
+  uart_id: uart_ecodan
+  proxy_uart_id: uart_proxy
+```
+Build and flash the firmware. Connect the small connector to the slave and the large connector to the heatpump.
 
 ### Generic esp32 with two pair of RX/TX GPIO. 
 I will be using a m5stack atom s3 lite as an example.
@@ -48,4 +64,12 @@ Use the following schematics to create the connectors.
 
 We do need to connect the 12v to the slave port.
 
-Select the `esp32s3-proxy.yaml` as configuration in `ecodan-esphome.yaml`. Build and flash the firmware.
+Select the `esp32s3-proxy.yaml` as configuration in `ecodan-esphome.yaml`.
+Add `proxy_uart_id: uart_proxy` in `ecodan-esphome.yaml` so it reads:
+```
+ecodan:
+  id: ecodan_instance
+  uart_id: uart_ecodan
+  proxy_uart_id: uart_proxy
+```
+Build and flash the firmware.
