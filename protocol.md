@@ -287,11 +287,11 @@ Responses so far identified.
 ### 0x0b - Zone 1 & 2 and Outside Temperature
 |   0  |  1  |  2  |  3  | 4 | 5 | 6 | 7 |  8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |------|-----|-----|-----|---|---|---|---|----|---|----|----|----|----|----|----|----|
-| 0x0b | Z1T | Z1T | Z2T |Z2T| ? | ? |   | RT | RT | CT | O  |    |    |    |    |    |
+| 0x0b | Z1T | Z1T | Z2T |Z2T| ? | ? |   | RT | RT | UT | O  |    |    |    |    |    |
 * Z1T : Zone1 Temperature * 100
 * Z2T : Zone2 Temperature * 100
 * RT : Refrigerant Temperature * 100 (Where TH2 is installed)
-* CT : Condensing Temperature /2 - 40
+* UT : Unknown Temperature /2 - 40 (FTC6)
 * O : Outside Temp  /2 - 40
 ### 0x0c - Heater Flow Temps
 |  0   | 1  | 2  | 3 | 4  | 5  | 6 | 7  |  8 | 9 |  10 |  11 | 12 | 13 | 14 | 15 | 16 |
@@ -315,11 +315,13 @@ Responses so far identified.
 | 0x0e | F | F |   | R | R |   |   |   |   |    |    |    |    |    |    |    |
 * F : Boiler Flow Temperature * 100    (Where THWB1 installed)
 * R : Boiler Return Temperature * 100     (Where THWB2 is installed)
-### 0x0f - Thermistors 2
+### 0x0f - Thermistors 3 (FTC6+ Only)
 |  0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x0f | M | M |   |   |   |   |   |   |   |    |    |    |    |    |    |    |
-* M : Mixing Tank Temperature * 100        (Where THW10 is installed)  
+| 0x0f | M | M |   | C | C | R |   |   |   |    |    |    |    |    |    |    |
+* M : Mixing Tank Temperature * 100        (Where THW10 is installed)
+* C : Refrigerant condensing Temperature * 100
+* R : Unknown Temperature /2 - 40 (FTC6)
 ### 0x10 - External sources
 |   0   | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|

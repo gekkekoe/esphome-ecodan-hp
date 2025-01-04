@@ -135,9 +135,28 @@ namespace ecodan
         float EnergyConsumedDhw;
         float EnergyDeliveredDhw;
 
+/* polynomial fit for
+Temp C	specific heat (J/Kg. K)
+0.01	4.212
+10	    4.191
+20	    4.183
+30	    4.174
+40	    4.174
+50	    4.174
+60	    4.179
+70	    4.187
+80	    4.195
+90	    4.208
+100	    4.22
+*/
+        float estimate_water_constant(float temp) {
+            
+            return 4.21f + -2.04e-03 * temp + 3.09e-05 * temp * temp + -9.63e-08 * temp * temp * temp;
+        }
+
         void update_output_power_estimation() {
-            if (!std::isnan(HpFeedTemperature) && !std::isnan(HpReturnTemperature) && FlowRate > 0)  {
-                ComputedOutputPower = FlowRate/60.0 * (HpFeedTemperature - HpReturnTemperature) * 4.2f;
+            if (!std::isnan(HpFeedTemperature) && !std::isnan(HpReturnTemperature) && FlowRate > 0) {
+                ComputedOutputPower = (FlowRate/60.0) * (HpFeedTemperature - HpReturnTemperature) * estimate_water_constant(HpFeedTemperature);
             }
             else {
                 ComputedOutputPower = 0.0f;

@@ -377,6 +377,12 @@ namespace ecodan
             return (value - 40.0f) / 2;
         }
 
+        float get_float8_v3(size_t index)
+        {
+            float value = payload()[index];
+            return (value - 128.0f) / 2;
+        }
+        
         uint16_t get_u16(size_t index)
         {
             return uint16_t(payload()[index] << 8) | payload()[index + 1];

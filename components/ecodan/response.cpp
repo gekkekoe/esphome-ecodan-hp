@@ -116,13 +116,12 @@ namespace ecodan
                 status.Zone2RoomTemperature = res[3] != 0xF0 ? res.get_float16(3) : 0.0f;
                 status.OutsideTemperature = res.get_float8(11);
                 status.HpRefrigerantLiquidTemperature = res.get_float16_signed(8);
-                status.HpRefrigerantCondensingTemperature = res.get_float8(10);
 
                 publish_state("z1_room_temp", status.Zone1RoomTemperature);
                 publish_state("z2_room_temp", status.Zone2RoomTemperature);
                 publish_state("outside_temp", status.OutsideTemperature);
-                publish_state("hp_refrigerant_temp", status.HpRefrigerantLiquidTemperature); 
-                publish_state("hp_refrigerant_condensing_temp", status.HpRefrigerantCondensingTemperature);                
+                publish_state("hp_refrigerant_temp", status.HpRefrigerantLiquidTemperature);
+                //ESP_LOGE(TAG, "0x0b offset 10: \t%f (v1), \t%f (v2), \t%f (v3)", res.get_float8(10), res.get_float8_v2(10), res.get_float8_v3(10));
                 break;
             case GetType::TEMPERATURE_STATE_A:
                 status.HpFeedTemperature = res.get_float16(1);
@@ -156,7 +155,10 @@ namespace ecodan
                 break;
             case GetType::TEMPERATURE_STATE_D:
                 status.MixingTankTemperature = res.get_float16(1);
-                publish_state("mixing_tank_temp", status.MixingTankTemperature);     
+                status.HpRefrigerantCondensingTemperature = res.get_float16_signed(4);
+                publish_state("mixing_tank_temp", status.MixingTankTemperature);
+                publish_state("hp_refrigerant_condensing_temp", status.HpRefrigerantCondensingTemperature);
+                //ESP_LOGE(TAG, "0x0f offset 6: \t%f (v1), \t%f (v2), \t%f (v3)", res.get_float8(6), res.get_float8_v2(6), res.get_float8_v3(6));
                 break;  
             case GetType::EXTERNAL_STATE:
                 // 1 = IN1 Thermostat heat/cool request
