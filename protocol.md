@@ -336,9 +336,10 @@ Responses so far identified.
 ### 0x14 - Primary Cct Flow Rate
 |   0   | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x14  |    | B |   |   | I |   |   |   |   |    | PF |    |    |    |    |    |  
+| 0x14  |    | B1| B2|   | I |   |   |   |   |    | PF |    |    |    |    |    |  
 * PF : Primary Flow Rate (l/min)
-* B : Booster heater active
+* B1 : Booster heater 1 active
+* B2 : Booster heater 2 active
 * I : Immersion heater active
 ### 0x15 - Pump status
 |   0   | 1  |  2 |  3 |  4 |  5 |  6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
