@@ -12,6 +12,7 @@ namespace ecodan
         bool DefrostActive;
         bool DhwForcedActive;        
         bool BoosterActive;
+        bool Booster2Active;
         bool ImmersionActive;
         uint8_t HeatSource;
         bool In1ThermostatRequest;

@@ -204,10 +204,12 @@ namespace ecodan
                 // booster = 2, 
                 // emmersion = 5
                 status.BoosterActive = res[2] != 0;
+                status.Booster2Active = res[3] != 0;
                 status.ImmersionActive = res[5] != 0;
                 status.FlowRate = res[12];
                 publish_state("flow_rate", static_cast<float>(status.FlowRate));
                 publish_state("status_booster", status.BoosterActive);
+                publish_state("status_booster_2", status.Booster2Active);
                 publish_state("status_immersion", status.ImmersionActive);
                 status.update_output_power_estimation();
                 break;

@@ -381,6 +381,9 @@ binary_sensor:
     status_booster:
       id: status_booster
       name: ${status_booster}
+    status_booster_2:
+      id: status_booster_2
+      name: ${status_booster} 2
     status_immersion:
       id: status_immersion
       name: ${status_immersion}

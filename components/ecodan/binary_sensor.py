@@ -33,6 +33,11 @@ CONFIG_SCHEMA = cv.Schema(
             entity_category=ENTITY_CATEGORY_NONE,
             device_class=DEVICE_CLASS_RUNNING,
         ),
+        cv.Optional("status_booster_2"): binary_sensor.binary_sensor_schema(
+            icon="mdi:water-boiler",
+            entity_category=ENTITY_CATEGORY_NONE,
+            device_class=DEVICE_CLASS_RUNNING,
+        ),
         cv.Optional("status_immersion"): binary_sensor.binary_sensor_schema(
             icon="mdi:water-boiler",
             entity_category=ENTITY_CATEGORY_NONE,
