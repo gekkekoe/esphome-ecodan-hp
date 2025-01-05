@@ -51,6 +51,7 @@ namespace ecodan
         void set_hp_mode(uint8_t mode, esphome::ecodan::SetZone zone);
         void set_controller_mode(CONTROLLER_FLAG flag, bool on);
         void set_mrc_mode(Status::MRC_FLAG flag);
+        void set_specific_heat_constant(float newConstant) { specificHeatConstantOverride = newConstant; }
         void set_uart_parent(uart::UARTComponent *uart) { this->uart_ = uart; }
         void set_proxy_uart(uart::UARTComponent *uart) { this->proxy_uart_ = uart; }
         const Status& get_status() const { return status; }
@@ -81,6 +82,7 @@ namespace ecodan
 
         Status status;
         float temperatureStep = 0.5f;
+        float specificHeatConstantOverride {NAN};
         bool connected = false;
         bool heatpumpInitialized = false;
         

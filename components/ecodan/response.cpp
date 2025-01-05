@@ -133,7 +133,7 @@ namespace ecodan
                 publish_state("hp_return_temp", status.HpReturnTemperature);
                 publish_state("dhw_temp", status.DhwTemperature);
                 publish_state("dhw_secondary_temp", status.DhwSecondaryTemperature);
-                status.update_output_power_estimation();
+                status.update_output_power_estimation(specificHeatConstantOverride);
                 break;
             case GetType::TEMPERATURE_STATE_B:
                 status.Z1FeedTemperature = res.get_float16(1);
@@ -211,7 +211,7 @@ namespace ecodan
                 publish_state("status_booster", status.BoosterActive);
                 publish_state("status_booster_2", status.Booster2Active);
                 publish_state("status_immersion", status.ImmersionActive);
-                status.update_output_power_estimation();
+                status.update_output_power_estimation(specificHeatConstantOverride);
                 break;
             case GetType::MODE_FLAGS_A:
                 //ESP_LOGE(TAG, res.debug_dump_packet().c_str());

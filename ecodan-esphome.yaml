@@ -23,7 +23,7 @@ api:
 
 # packages:
 #  base: !include confs/base.yaml # 
-#  esp32: !include confs/esp32s3-heishamon.yaml # esp32.yaml for regular board
+#  esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
 #  zone1: !include confs/zone1.yaml
 # # disable if you don't want to use zone 2
 # # zone2: !include confs/zone2.yaml
@@ -87,4 +87,6 @@ web_server:
 ecodan:
   id: ecodan_instance
   uart_id: uart_ecodan
+# uncomment line below and adjust the heat constant if your system uses a water + glycol mixture
+#  specific_heat_constant_override: 3.9
 
