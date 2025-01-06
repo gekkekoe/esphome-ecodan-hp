@@ -25,8 +25,8 @@ namespace ecodan
             uint16_t translated_code = (code >> 8) * 100 + (code & 0xff);
             char result[256];
             snprintf(result, 256, "%c%c %u", 
-                    FaultCodeFirstChar[std::max<u_int8_t>(0, first & (MAX_FIRST_LETTER_SIZE-1))], 
-                    FaultCodeSecondChar[std::max<u_int8_t>(0, second - 1) & (MAX_SECOND_LETTER_SIZE-1)], 
+                    FaultCodeFirstChar[std::max<u_int8_t>(0, first % MAX_FIRST_LETTER_SIZE)], 
+                    FaultCodeSecondChar[std::max<u_int8_t>(0, second - 1) % MAX_SECOND_LETTER_SIZE], 
                     translated_code);
             fault_code = std::string(result);
         }
