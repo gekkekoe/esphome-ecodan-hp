@@ -27,6 +27,14 @@ uart:
     baud_rate: 2400
     parity: EVEN
     stop_bits: 1
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   after:
+    #     delimiter: "\n"
+    #   sequence:
+    #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+  
   - id: uart_proxy
     rx_pin:
       number: GPIO23
@@ -40,6 +48,13 @@ uart:
     baud_rate: 9600
     parity: EVEN
     stop_bits: 1
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   after:
+    #     delimiter: "\n"
+    #   sequence:
+    #     - lambda: UARTDebug::log_hex(direction, bytes, '_');
 
 ecodan:
   proxy_uart_id: uart_proxy
