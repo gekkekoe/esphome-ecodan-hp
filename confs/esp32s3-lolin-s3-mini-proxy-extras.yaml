@@ -1,0 +1,26 @@
+# you must also include base config confs/esp32s3-lolin-s3-mini.yaml
+
+uart:
+  - id: uart_proxy
+    rx_pin:
+      number: GPIO17
+      mode:
+        input: true
+        pullup: true
+    tx_pin:
+      number: GPIO21
+      mode:
+        output: true
+    baud_rate: 9600
+    parity: EVEN
+    stop_bits: 1
+    # debug:
+    #   direction: BOTH
+    #   dummy_receiver: false
+    #   after:
+    #     delimiter: "\n"
+    #   sequence:
+    #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+
+ecodan:
+  proxy_uart_id: uart_proxy
