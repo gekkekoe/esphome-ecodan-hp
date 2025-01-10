@@ -205,7 +205,7 @@ namespace ecodan
         return dispatch_next_cmd();
     }
 
-    #define MAX_STATUS_CMD_SIZE 21
+    #define MAX_STATUS_CMD_SIZE 22
     Message statusCmdQueue[MAX_STATUS_CMD_SIZE] = {
         Message{MsgType::GET_CMD, GetType::DATETIME_FIRMWARE},
         Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
@@ -227,7 +227,8 @@ namespace ecodan
         Message{MsgType::GET_CMD, GetType::MODE_FLAGS_B},
         Message{MsgType::GET_CMD, GetType::ENERGY_USAGE},
         Message{MsgType::GET_CMD, GetType::ENERGY_DELIVERY},
-        Message{MsgType::GET_CONFIGURATION, GetType::HARDWARE_CONFIGURATION}
+        Message{MsgType::GET_CONFIGURATION, GetType::HARDWARE_CONFIGURATION},
+        Message{MsgType::GET_CMD, GetType::DIP_SWITCHES}
     };
 
     bool EcodanHeatpump::dispatch_next_status_cmd()

@@ -143,12 +143,6 @@ text_sensor:
       }
 
   - platform: template
-    id: status_mrc
-    name: ${status_mrc}
-    lambda: |-
-      return format_bin(static_cast<uint8_t>(id(ecodan_instance).get_status().MRCFlag));
-
-  - platform: template
     id: refrigerant_error_code_text
     name: ${refrigerant_error_code_text}
     entity_category: diagnostic
@@ -164,7 +158,61 @@ text_sensor:
           case 3: return std::string("Maintenance Error");
           default: return std::string("Unknown");
       }
-      
+
+  - platform: template
+    id: status_dip_switch_1
+    entity_category: diagnostic
+    update_interval: 60s
+    icon: mdi:toggle-switch-off-outline
+    name: Dip Switch 1 (8-1)
+    lambda: |-
+      return format_bin(static_cast<uint8_t>(id(ecodan_instance).get_status().DipSwitch1));
+  
+  - platform: template
+    id: status_dip_switch_2
+    entity_category: diagnostic
+    update_interval: 60s
+    icon: mdi:toggle-switch-off-outline
+    name: Dip Switch 2 (8-1)
+    lambda: |-
+      return format_bin(static_cast<uint8_t>(id(ecodan_instance).get_status().DipSwitch2));
+
+  - platform: template
+    id: status_dip_switch_3
+    entity_category: diagnostic
+    update_interval: 60s
+    icon: mdi:toggle-switch-off-outline
+    name: Dip Switch 3 (8-1)
+    lambda: |-
+      return format_bin(static_cast<uint8_t>(id(ecodan_instance).get_status().DipSwitch3));
+
+  - platform: template
+    id: status_dip_switch_4
+    entity_category: diagnostic
+    update_interval: 60s
+    icon: mdi:toggle-switch-off-outline
+    name: Dip Switch 4 (8-1)
+    lambda: |-
+      return format_bin(static_cast<uint8_t>(id(ecodan_instance).get_status().DipSwitch4));
+
+  - platform: template
+    id: status_dip_switch_5
+    entity_category: diagnostic
+    update_interval: 60s
+    icon: mdi:toggle-switch-off-outline
+    name: Dip Switch 5 (8-1)
+    lambda: |-
+      return format_bin(static_cast<uint8_t>(id(ecodan_instance).get_status().DipSwitch5));
+
+  - platform: template
+    id: status_dip_switch_6
+    entity_category: diagnostic
+    update_interval: 60s
+    icon: mdi:toggle-switch-off-outline
+    name: Dip Switch 6 (8-1)
+    lambda: |-
+      return format_bin(static_cast<uint8_t>(id(ecodan_instance).get_status().DipSwitch6));
+
   - platform: ecodan
     fault_code_text:
       id: fault_code_text 

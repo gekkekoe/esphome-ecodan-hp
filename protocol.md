@@ -329,6 +329,16 @@ Responses so far identified.
 * T1 : In1 room thermostat 1 H/C request status (on/off)
 * T2 : In6 room thermostat 2 H/C request status (on/off)
 * T3 : In5 outdoor thermostat (on/off)
+### 0x11 - Dip Switches (FTC6 only?)
+|   0   |  1  |  2  |  3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+|-------|-----|-----|----|---|---|---|---|---|---|----|----|----|----|----|----|----|
+| 0x10  | 1   |     | 2  |   | 3 |   | 4 |   | 5 |    |  6  |    |    |    |    |    |
+* Switch 1 (8..1, 0=off, 1=on)
+* Switch 2 (8..1, 0=off, 1=on)
+* Switch 3 (8..1, 0=off, 1=on)
+* Switch 4 (8..1, 0=off, 1=on)
+* Switch 5 (8..1, 0=off, 1=on)
+* Switch 6 (8..1, 0=off, 1=on)
 ### 0x13 - Run Hours
 |   0   | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|

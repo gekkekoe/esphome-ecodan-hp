@@ -111,4 +111,3 @@ substitutions:
   status_multi_zone_zone2: Z2 Working
   fault_code_text: Fault code
   refrigerant_error_code_text: Refrigerant error code
-  status_mrc: MRC Status byte

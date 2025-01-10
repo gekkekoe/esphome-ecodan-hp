@@ -20,7 +20,7 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Required("get_target_temp_func"): cv.string,
                 cv.Optional("current_temp_func"): cv.string,
                 cv.Optional("zone_identifier"): cv.uint8_t,
-            }).extend(cv.polling_component_schema('100ms')),
+            }).extend(cv.polling_component_schema('250ms')),
         cv.Optional("heatpump_climate_room_z1"): climate.CLIMATE_SCHEMA.extend(
             {
                 cv.GenerateID(CONF_ID): cv.declare_id(ECODAN_CLIMATE),
@@ -30,7 +30,7 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Optional("current_temp_func"): cv.string,
                 cv.Optional("zone_identifier"): cv.uint8_t,
                 cv.Optional("thermostat_climate_mode"): cv.boolean,
-            }).extend(cv.polling_component_schema('100ms')),            
+            }).extend(cv.polling_component_schema('250ms')),            
         cv.Optional("heatpump_climate_z2"): climate.CLIMATE_SCHEMA.extend(
             {
                 cv.GenerateID(CONF_ID): cv.declare_id(ECODAN_CLIMATE),
@@ -39,7 +39,7 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Required("get_target_temp_func"): cv.string,
                 cv.Optional("current_temp_func"): cv.string,
                 cv.Optional("zone_identifier"): cv.uint8_t,
-            }).extend(cv.polling_component_schema('100ms')),
+            }).extend(cv.polling_component_schema('250ms')),
         cv.Optional("heatpump_climate_room_z2"): climate.CLIMATE_SCHEMA.extend(
             {
                 cv.GenerateID(CONF_ID): cv.declare_id(ECODAN_CLIMATE),
@@ -49,7 +49,7 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Optional("current_temp_func"): cv.string,
                 cv.Optional("zone_identifier"): cv.uint8_t,
                 cv.Optional("thermostat_climate_mode"): cv.boolean,
-            }).extend(cv.polling_component_schema('100ms')),     
+            }).extend(cv.polling_component_schema('250ms')),     
         cv.Optional("heatpump_climate_dhw"): climate.CLIMATE_SCHEMA.extend(
             {
                 cv.GenerateID(CONF_ID): cv.declare_id(ECODAN_CLIMATE),
@@ -58,7 +58,7 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Required("get_target_temp_func"): cv.string,
                 cv.Optional("current_temp_func"): cv.string,
                 cv.Optional("dhw_climate_mode"): cv.boolean,
-            }).extend(cv.polling_component_schema('100ms')),                               
+            }).extend(cv.polling_component_schema('250ms')),                               
     })
 
 

@@ -111,4 +111,3 @@ substitutions:
   status_multi_zone_zone2: Z2 actief
   fault_code_text: Fout code
   refrigerant_error_code_text: Koelmiddel fout code
-  status_mrc: MRC Status

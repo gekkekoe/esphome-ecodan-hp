@@ -84,9 +84,10 @@ namespace ecodan
                 break;
             case GetType::HEATING_POWER:
                 status.OutputPower = res[6];
+                //status.EnergyDeliveredHeatingLifeTime = res.get_u16(11);
                 //status.BoosterActive = res[4] == 2;
                 publish_state("output_power", static_cast<float>(status.OutputPower));
-                publish_state("computed_output_power", status.ComputedOutputPower);
+                //publish_state("lifetime_heating_delivered", status.EnergyDeliveredHeatingLifeTime);
                 //publish_state("status_booster", status.BoosterActive ? "On" : "Off");
                 break;
             case GetType::TEMPERATURE_CONFIG:
@@ -134,6 +135,7 @@ namespace ecodan
                 publish_state("dhw_temp", status.DhwTemperature);
                 publish_state("dhw_secondary_temp", status.DhwSecondaryTemperature);
                 status.update_output_power_estimation(specificHeatConstantOverride);
+                publish_state("computed_output_power", status.ComputedOutputPower);
                 break;
             case GetType::TEMPERATURE_STATE_B:
                 status.Z1FeedTemperature = res.get_float16(1);
@@ -212,6 +214,7 @@ namespace ecodan
                 publish_state("status_booster_2", status.Booster2Active);
                 publish_state("status_immersion", status.ImmersionActive);
                 status.update_output_power_estimation(specificHeatConstantOverride);
+                publish_state("computed_output_power", status.ComputedOutputPower);
                 break;
             case GetType::MODE_FLAGS_A:
                 //ESP_LOGE(TAG, res.debug_dump_packet().c_str());
@@ -289,6 +292,14 @@ namespace ecodan
                 // byte 6 = ftc, ft2b , ftc4, ftc5, ftc6
                 status.Controller = res[6];
                 publish_state("controller_version", static_cast<float>(status.Controller));
+                break;
+            case GetType::DIP_SWITCHES:
+                status.DipSwitch1 = res[1];
+                status.DipSwitch2 = res[3];
+                status.DipSwitch3 = res[5];
+                status.DipSwitch4 = res[7];
+                status.DipSwitch5 = res[9];
+                status.DipSwitch6 = res[11];
                 break;
             default:
                 ESP_LOGI(TAG, "Unknown response type received on serial port: %u", static_cast<uint8_t>(res.payload_type<GetType>()));

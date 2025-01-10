@@ -111,4 +111,3 @@ substitutions:
   status_multi_zone_zone2: Z2 fonctionne
   fault_code_text: Code d'erreur
   refrigerant_error_code_text: Réfrigérant code d'erreur
-  status_mrc: MRC Statut

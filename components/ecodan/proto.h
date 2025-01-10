@@ -84,7 +84,7 @@ namespace ecodan
         TEMPERATURE_STATE_C = 0x0E,
         TEMPERATURE_STATE_D = 0x0F,
         EXTERNAL_STATE = 0x10,
-        UNKNOWN_0x11 = 0x11,
+        DIP_SWITCHES = 0x11,
         ACTIVE_TIME = 0x13,
         FLOW_RATE = 0x14,
         PUMP_STATUS = 0x15,
