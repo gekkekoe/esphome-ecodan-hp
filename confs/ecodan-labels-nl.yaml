@@ -70,6 +70,7 @@ substitutions:
   booster_heater: booster heater
   immersion_and_booster_heater: immersion and booster heater
   boiler: boiler
+  energy_consumed_increasing: Totaal verbruikt
   heating_consumed: Verwarmen verbruikt
   heating_cop: Verwarmen cop
   heating_delivered: Verwarmen geleverd

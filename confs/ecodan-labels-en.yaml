@@ -70,6 +70,7 @@ substitutions:
   booster_heater: Booster Heater
   immersion_and_booster_heater: Immersion and Booster Heater
   boiler: Boiler
+  energy_consumed_increasing: Total Energy Consumed
   heating_consumed: Heating Consumed
   heating_cop: Heating COP
   heating_delivered: Heating Delivered

@@ -70,6 +70,7 @@ substitutions:
   booster_heater: Réchauffeur électrique
   immersion_and_booster_heater: Thermoplongeur et Réchauffeur électrique
   boiler: Ballon
+  energy_consumed_increasing: Énergie Totale Consommée
   heating_consumed: Conso chauffage
   heating_cop: COP Chauffage
   heating_delivered: Energ Délivrée Chauffage

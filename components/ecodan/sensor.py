@@ -13,6 +13,7 @@ from esphome.const import (
     ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
     UNIT_CELSIUS,
     UNIT_HERTZ,
     UNIT_HOUR,
@@ -136,6 +137,13 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:waves-arrow-right",
             device_class=DEVICE_CLASS_VOLUME_FLOW_RATE,
             state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        cv.Optional("energy_consumed_increasing"): sensor.sensor_schema(
+            unit_of_measurement=UNIT_KILOWATT_HOURS,
+            icon="mdi:transmission-tower-export",
+            accuracy_decimals=1,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
         ),
         cv.Optional("cool_cop"): sensor.sensor_schema(
             icon="mdi:heat-pump-outline",

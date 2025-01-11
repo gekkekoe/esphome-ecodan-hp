@@ -84,10 +84,10 @@ namespace ecodan
                 break;
             case GetType::HEATING_POWER:
                 status.OutputPower = res[6];
-                //status.EnergyDeliveredHeatingLifeTime = res.get_u16(11);
+                status.EnergyConsumedIncreasing = res.get_u16(11) / 10.0f;
                 //status.BoosterActive = res[4] == 2;
                 publish_state("output_power", static_cast<float>(status.OutputPower));
-                //publish_state("lifetime_heating_delivered", status.EnergyDeliveredHeatingLifeTime);
+                publish_state("energy_consumed_increasing", status.EnergyConsumedIncreasing);
                 //publish_state("status_booster", status.BoosterActive ? "On" : "Off");
                 break;
             case GetType::TEMPERATURE_CONFIG:

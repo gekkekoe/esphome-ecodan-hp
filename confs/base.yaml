@@ -318,6 +318,8 @@ sensor:
       name: ${dhw_consumed}
     dhw_delivered:
       name: ${dhw_delivered}
+    energy_consumed_increasing:
+      name: ${energy_consumed_increasing}
 
     refrigerant_error_code:
       internal: true

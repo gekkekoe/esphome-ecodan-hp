@@ -143,7 +143,7 @@ namespace ecodan
         float EnergyDeliveredCooling;
         float EnergyConsumedDhw;
         float EnergyDeliveredDhw;
-        //float EnergyDeliveredHeatingLifeTime;
+        float EnergyConsumedIncreasing{0};
 
 /* polynomial fit for
 Temp C	specific heat (J/Kg. K)
