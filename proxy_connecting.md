@@ -28,10 +28,10 @@ FTC Flow Temperature Controller (main controller normally fitted on the inside u
    
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/proxy2_atom.jpg?raw=true)
 
-4. If the Atom is pre-flashed, you are basically done. Close the unit and restore the power. The Atom will go into WiFi hotspot mode to allow you to connect it to your home network. See https://esphome.io/components/captive_portal.html for details.
+3. If the Atom is pre-flashed, you are basically done. Close the unit and restore the power. The Atom will go into WiFi hotspot mode to allow you to connect it to your home network. See https://esphome.io/components/captive_portal.html for details.
  
 
-5. Now go to Home Assistant. With the Atom on your WiFI network it will appear as a new device and can be added in the usual way.
+4. Now go to Home Assistant. With the Atom on your WiFI network it will appear as a new device and can be added in the usual way.
 
 ## Flash it yourself.
 If you want to do flash it yourself, install the ESPHome integration as an addon in home assistant. 
