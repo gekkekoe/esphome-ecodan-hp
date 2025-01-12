@@ -26,7 +26,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_PROXY_UART_ID): cv.use_id(UARTComponent),
         cv.Optional(CONF_SPECIFIC_HEAT_CONSTANT): cv.float_,
     }
-    ).extend(cv.polling_component_schema('1000ms')
+    ).extend(cv.polling_component_schema('500ms')
     .extend(uart.UART_DEVICE_SCHEMA))
 
 

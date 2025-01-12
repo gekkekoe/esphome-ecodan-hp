@@ -205,24 +205,24 @@ namespace ecodan
         return dispatch_next_cmd();
     }
 
-    #define MAX_STATUS_CMD_SIZE 22
+    #define MAX_STATUS_CMD_SIZE 18
     Message statusCmdQueue[MAX_STATUS_CMD_SIZE] = {
         Message{MsgType::GET_CMD, GetType::DATETIME_FIRMWARE},
-        Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
+        //Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
         Message{MsgType::GET_CMD, GetType::ERROR_STATE},
-        Message{MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY},
+        //Message{MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY},
         Message{MsgType::GET_CMD, GetType::DHW_STATE},
         Message{MsgType::GET_CMD, GetType::HEATING_POWER},
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_CONFIG},
         Message{MsgType::GET_CMD, GetType::SH_TEMPERATURE_STATE},
-        Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_A},
+        //Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_A},
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_B},
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_C},
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_D},
         Message{MsgType::GET_CMD, GetType::EXTERNAL_STATE},
         Message{MsgType::GET_CMD, GetType::ACTIVE_TIME},
         Message{MsgType::GET_CMD, GetType::PUMP_STATUS},
-        Message{MsgType::GET_CMD, GetType::FLOW_RATE},
+        //Message{MsgType::GET_CMD, GetType::FLOW_RATE},
         Message{MsgType::GET_CMD, GetType::MODE_FLAGS_A},
         Message{MsgType::GET_CMD, GetType::MODE_FLAGS_B},
         Message{MsgType::GET_CMD, GetType::ENERGY_USAGE},
@@ -231,14 +231,34 @@ namespace ecodan
         Message{MsgType::GET_CMD, GetType::DIP_SWITCHES}
     };
 
+    // core cmds needs to be requested more often than regular cmds
+    #define MAX_CORE_STATUS_CMD_SIZE 4
+    Message coreStatusCmdQueue[MAX_CORE_STATUS_CMD_SIZE] = {
+        Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_A},
+        Message{MsgType::GET_CMD, GetType::FLOW_RATE},
+        Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
+        Message{MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY}
+    };
+
     bool EcodanHeatpump::dispatch_next_status_cmd()
     {
         if (proxy_available())
             return true;
         
         auto static cmdIndex = 0;
-        Message& cmd = statusCmdQueue[cmdIndex];
-        cmdIndex = (cmdIndex + 1) % MAX_STATUS_CMD_SIZE;
+        auto static coreCmdIndex = 0;
+        auto static loopIndex = 0;
+
+        loopIndex = (loopIndex + 1) % MAX_CORE_STATUS_CMD_SIZE;
+
+        if (loopIndex == 0) {
+            cmdIndex = (cmdIndex + 1) % MAX_STATUS_CMD_SIZE;
+        }
+        else {
+            coreCmdIndex = (coreCmdIndex + 1) % MAX_CORE_STATUS_CMD_SIZE;
+        }
+
+        Message& cmd = loopIndex == 0 ? statusCmdQueue[cmdIndex] : coreStatusCmdQueue[coreCmdIndex];
 
         if (!serial_tx(uart_, cmd))
         {

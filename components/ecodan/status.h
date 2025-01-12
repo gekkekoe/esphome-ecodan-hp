@@ -84,6 +84,7 @@ namespace ecodan
 
         enum class OperationMode : uint8_t
         {
+            UNAVAILABLE = 255,
             OFF = 0,
             DHW_ON = 1,
             HEAT_ON = 2, // Heating
@@ -119,7 +120,7 @@ namespace ecodan
 
         // Modes
         PowerMode Power;
-        OperationMode Operation;
+        OperationMode Operation = OperationMode::UNAVAILABLE;
         bool HolidayMode;
         DhwMode HotWaterMode;
         HpMode HeatingCoolingMode = HpMode::OFF;
