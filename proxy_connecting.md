@@ -16,7 +16,11 @@ FTC Flow Temperature Controller (main controller normally fitted on the inside u
  
 ## How to install:
 
-1. The cable needs to be connected to the main board of the heat pump within the inside unit. Before opening the unit ensure that there is no power going into the unit (turn off circuit breakers).
+1. The cable needs to be connected to the main board of the heat pump within the inside unit on the brown connector CN105.
+
+> [!WARNING]
+> Before opening the unit ensure that there is no power going into the unit.
+> Switch off heatpump and then turn off circuit breakers to heatpump.
 
  ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/connection_FTC.jpg?raw=true)
 
@@ -31,23 +35,26 @@ FTC Flow Temperature Controller (main controller normally fitted on the inside u
 
 ## Flash it yourself.
 If you want to do flash it yourself, install the ESPHome integration as an addon in home assistant. 
-Choose new device, press continue, give it a name, for example ecodan-esphome, choose for example esp32-s3. DO NOT CHOOSE ENCRYPTION-KEY (skip)
-You need to fill in (wifi) secrets (in the upper right corner of the esphome dashboard).
-Example of the code is here:
+1. Choose new device and press continue
+1. Give it a name, for example ecodan-esphome
+1. Choose for example esp32-s3
+1. A configuration will be added
+> [!IMPORTANT]
+> DO NOT CHOOSE ENCRYPTION-KEY (skip)
 
+1. You need to fill in (wifi) secrets (in the upper right corner of the esphome dashboard).
 ```
 # Your Wi-Fi SSID and password
 wifi_ssid: "wifi network id"
 wifi_password: "wifi password"
 ```
 
-And click save.
-Now go to the new device and choose EDIT.
-Copy the raw code from githubs ecodan-esphome.yaml into this new device and overwrite ALL existing code.
-Instead of the `esp32s3.yaml` Fill in `esp32s3-proxy2.yaml` as configuration in `ecodan-esphome.yaml`.
-
-Example packages code with esp32s3-proxy2.yaml:
-
+1. Click save.
+1. Now go to the new device and choose EDIT.
+1. Copy the raw code from githubs [ecodan-esphome.yaml](ecodan-esphome.yaml) into this new device and overwrite ALL existing code.
+1. Instead of the `esp32s3.yaml` Fill in `esp32s3-proxy2.yaml` as configuration in `ecodan-esphome.yaml`.
+> [!TIP]
+> Example packages code with esp32s3-proxy2.yaml:
 ```
 packages:
   remote_package:
@@ -75,13 +82,14 @@ packages:
             confs/wifi.yaml
            ]
 ```
+1. Click save and install.
+1. Choose manual download and the code will be compiled to a ecodan-heatpump.bin file
+1. Choose Factory format when compiling is completed
+1. You can then flash the .bin file, for the first time, by using an usb 'c' cable connected to the Atom S3 lite. (need to power off the heatpump again and remove the m5stack proxy to flash it with USB cable)
+1. Flash the atom connected to a usb cable by using  [Esphome Web](https://web.esphome.io/?dashboard_install)
+1. Click connect and choose the correct com port. And then click install.
+1. Disconnect from usb cable and install back inside the heatpump on CN105
+1. All done!
 
-Click save and install.
-Choose manual and the code will be compiled to a ecodan-heatpump.bin. Choose Factory format when compiling is finished.
-You can then flash the .bin file, for the first time, by using an usb 'c' cable connected to the Atom S3 lite. (need to power off the heatpump again and remove the m5stack proxy to flash it)
-Flash the atom connected to a usb cable by using: https://web.esphome.io/?dashboard_install
-Click connect and choose the correct com port. And then click install.
-Next time, the firmware can be updated by wifi directly, from within esphome, as it detects the device is already setup in your network, with the same code.
-
-
-
+> [!TIP]
+> Next time, the firmware can be updated through wifi connection directly, from within esphome, as it detects the device and is already setup in your network, with the same esphome code.
