@@ -37,7 +37,8 @@ FTC Flow Temperature Controller (main controller normally fitted on the inside u
 ## Flash it yourself.
 > [!WARNING]
 > NEVER connect a usb cable to the ATOM S3 lite ESP WHEN connected to the heatpump..
-> Switch off heatpump and then turn off circuit breakers to heatpump and remove the ESP first.
+> 
+> Switch OFF heatpump and then turn off circuit breakers to heatpump and remove the ESP first.
 
 If you want to do flash it yourself, install the ESPHome integration as an addon in home assistant. 
 1. Choose new device and press continue
