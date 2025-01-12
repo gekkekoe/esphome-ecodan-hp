@@ -1,6 +1,7 @@
 # Connecting and installing proxy setup
 
-[The easiest option is to use a custom pcb by @fonkse](https://github.com/gekkekoe/esphome-ecodan-hp/discussions/70#discussioncomment-11133291)
+> [!TIP]
+> [The easiest option is to use a custom pcb by @fonkse](https://github.com/gekkekoe/esphome-ecodan-hp/discussions/70#discussioncomment-11133291)
 
 @fonkse created a pcb + wires and it is basically plug and play. This is the recommended hardware setup for proxy.
 
