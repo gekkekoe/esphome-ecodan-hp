@@ -68,14 +68,14 @@ packages:
 logger:
   baud_rate: 0
   logs:
-    esp32.preferences: DEBUG
-    sensor: DEBUG
-    text_sensor: DEBUG
-    binary_sensor: DEBUG
-    switch: DEBUG
-    button: DEBUG
-    number: DEBUG
-    climate: DEBUG
+    esp32.preferences: ERROR
+    sensor: ERROR
+    text_sensor: ERROR
+    binary_sensor: ERROR
+    switch: ERROR
+    button: ERROR
+    number: ERROR
+    climate: ERROR
     component: ERROR
     ecodan.component: ERROR
 
