@@ -342,7 +342,7 @@ sensor:
     name: ${daily_computed_output_power}
     power_id: computed_output_power
     unit_of_measurement: 'kWh'
-    state_class: total_increasing
+    state_class: total
     device_class: energy
     accuracy_decimals: 3
 
