@@ -94,6 +94,7 @@ substitutions:
   output_power: Output Power
   computed_output_power: Estimated Output Power
   daily_computed_output_power: Estimated Total Daily Energy Produced
+  daily_repported_input_power: Reported Total Daily Energy Consumption
   outside_temp: Outside Temp
   hp_refrigerant_temp: Refrigerant Liquid Temp
   hp_refrigerant_condensing_temp: Refrigerant Condensing Temp

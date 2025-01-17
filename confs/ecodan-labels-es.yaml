@@ -94,6 +94,7 @@ substitutions:
   output_power: Potencia de Salida
   computed_output_power: Potencia de Salida Estimada
   daily_computed_output_power: Potencia de Salida Estimada (A diario)
+  daily_repported_input_power: Consumo Total Diario de Energía Reportado
   outside_temp: Temp. Exterior
   hp_refrigerant_temp: Temp. Líquido Refrigerante
   hp_refrigerant_condensing_temp: Temp. Condensación del Refrigerante

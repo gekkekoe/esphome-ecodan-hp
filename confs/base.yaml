@@ -140,6 +140,7 @@ text_sensor:
           case esphome::ecodan::Status::OperationMode::COOL_ON: return std::string("${cooling}");
           case esphome::ecodan::Status::OperationMode::FROST_PROTECT: return std::string("${frost_protection}");
           case esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION: return std::string("${legionella_prevention}");
+          case esphome::ecodan::Status::OperationMode::UNAVAILABLE:
           default: return std::string("Unknown");
       }
 
@@ -319,12 +320,43 @@ sensor:
       name: ${dhw_consumed}
     dhw_delivered:
       name: ${dhw_delivered}
-    energy_consumed_increasing:
-      name: ${energy_consumed_increasing}
-
     refrigerant_error_code:
       internal: true
       id: refrigerant_error_code
+    energy_consumed_increasing:
+      internal: true
+      id: energy_consumed_increasing
+      name: ${energy_consumed_increasing}
+  - platform: copy
+    source_id: energy_consumed_increasing
+    id: delta_energy_consumed_increasing
+    name: ${daily_repported_input_power}
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    filters:
+      - lambda: |-
+          static float last_value = 0.0;
+          static float partial_sum = 0.0;
+          static uint16_t last_day_of_year = 0;
+
+          auto t = id(sntp_time).now();
+          if (!t.is_valid())
+            return {};
+
+          if (last_value == 0) {
+            last_value = x;
+            last_day_of_year = t.day_of_year;
+            return partial_sum;
+          }
+
+          if (t.day_of_year != last_day_of_year) {
+            last_day_of_year = t.day_of_year;
+            partial_sum = 0.0f;
+          }
+
+          partial_sum += x >= last_value ? (x - last_value) : (65536 + x - last_value);
+          last_value = x;
+          return partial_sum;
 
   - platform: uptime
     name: ${uptime}
@@ -348,8 +380,8 @@ sensor:
 
 # Enable time component to reset energy at midnight
 time:
-  - platform: homeassistant
-    id: homeassistant_time
+  - platform: sntp
+    id: sntp_time
 
 binary_sensor:
   - platform: ecodan

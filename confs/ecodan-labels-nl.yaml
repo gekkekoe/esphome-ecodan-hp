@@ -94,6 +94,7 @@ substitutions:
   output_power: Afgegeven vermogen
   computed_output_power: Geschatte afgegeven vermogen
   daily_computed_output_power: Geschatte afgegeven vermogen (Per dag)
+  daily_repported_input_power: Gerapporteerde opgenomen vermogen (Per dag)
   outside_temp: Buiten temp
   hp_refrigerant_temp: Koelmiddel temp
   hp_refrigerant_condensing_temp: Koelmiddel condensatie temp

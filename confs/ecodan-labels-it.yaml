@@ -94,6 +94,7 @@ substitutions:
   output_power: En. Prod.
   computed_output_power: Stima En. Prod.
   daily_computed_output_power: Stima En. Prod. (Giorno)
+  daily_repported_input_power: Consumo Energetico Giornaliero Totale Segnalato
   outside_temp: T. Esterna
   hp_refrigerant_temp: T. Mandata Liq. Refr.
   hp_refrigerant_condensing_temp: T. Cond. Liq. Refr.
