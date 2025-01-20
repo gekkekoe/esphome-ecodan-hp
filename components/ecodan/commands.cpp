@@ -264,6 +264,7 @@ namespace ecodan
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
             cmdIndex = 0;
+            coreCmdIndex = 0;
             connected = false;
             return false;
         }

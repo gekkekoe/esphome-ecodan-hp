@@ -87,6 +87,8 @@ web_server:
 ecodan:
   id: ecodan_instance
   uart_id: uart_ecodan
+# polling interval override in ms, default 500
+#  polling_interval_override: 1000
 # uncomment line below and adjust the heat constant if your system uses a water + glycol mixture
 #  specific_heat_constant_override: 3.9
 
