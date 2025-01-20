@@ -205,12 +205,12 @@ namespace ecodan
         return dispatch_next_cmd();
     }
 
-    #define MAX_STATUS_CMD_SIZE 18
+    #define MAX_STATUS_CMD_SIZE 20
     Message statusCmdQueue[MAX_STATUS_CMD_SIZE] = {
         Message{MsgType::GET_CMD, GetType::DATETIME_FIRMWARE},
-        //Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
+        Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
         Message{MsgType::GET_CMD, GetType::ERROR_STATE},
-        //Message{MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY},
+        Message{MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY},
         Message{MsgType::GET_CMD, GetType::DHW_STATE},
         Message{MsgType::GET_CMD, GetType::HEATING_POWER},
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_CONFIG},
@@ -232,12 +232,12 @@ namespace ecodan
     };
 
     // core cmds needs to be requested more often than regular cmds
-    #define MAX_CORE_STATUS_CMD_SIZE 4
+    #define MAX_CORE_STATUS_CMD_SIZE 2
     Message coreStatusCmdQueue[MAX_CORE_STATUS_CMD_SIZE] = {
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_A},
         Message{MsgType::GET_CMD, GetType::FLOW_RATE},
-        Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
-        Message{MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY}
+        //Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
+        //Message{MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY}
     };
 
     bool EcodanHeatpump::dispatch_next_status_cmd()
