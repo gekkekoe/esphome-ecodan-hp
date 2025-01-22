@@ -1,14 +1,7 @@
 # ESPHome Ecodan heatpump
-It was based on https://github.com/rbroker/ecodan-ha-local. I've also managed to reverse engineer quite some additional properties and controls.
-- 0x03 : error codes
-- 0x05 : heat source
-- 0x0B : refrigerant liquid temperature
-- 0x10 : In1, In5, In6 thermostat status
-- 0x14 : booster / immersion heater states
-- 0x15 : pump status
-- 0x28 : forced dhw status 
-- 0x35 : room temp setpoint (signed) with flags
-- 0xC9 : configuration command. It reports back controller version and much more, need more investigation.
+ESPHome implementation of the CN105 protocal. It can operate as standalone or with slave (melcloud/procon) attached. It includes server control mode, realtime power output estimation and realtime daily energy counters. 
+
+The remote thermostat protocol CNRF is supported by https://github.com/gekkekoe/esphome-ecodan-remote-thermostat. It implements a virtual thermostat that can be linked with any temperature sensor.
 
 # available languages
 English (default), Dutch, Italian, French, Spanish. Select the language in `ecodan-esphome.yaml` file. 
@@ -101,12 +94,13 @@ packages:
 ```console
 esphome compile ecodan-esphome.yaml
 ```
-* To find the tty* where the esp32 is connected at, use `sudo dmesg | grep tty`. On my machine it was `ttyACM0` for usb-c, and `ttyUSB0` for usb-a.
+* To find the tty* where the esp32 is connected at, use `sudo dmesg | grep tty`. On my machine it was `ttyACM0` for usb-c, and `ttyUSB0` for usb-a. On a Mac it's named `tty.usbmodemxxx`
+
 * Connect your esp32 via usb and flash
 ```console 
 esphome upload --device=/dev/ttyACM0 ecodan-esphome.yaml
 ```
-* You can update the firmware via de web interface of the esp after the initial flash, or use the following command to flash over the network
+* You can update the firmware via the web interface of the esp after the initial flash, or use the following command to flash over the network
 ```console 
 esphome upload --device ip_address ecodan-esphome.yaml
 ```
