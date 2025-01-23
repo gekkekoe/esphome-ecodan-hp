@@ -53,7 +53,7 @@ https://www.digikey.nl/en/products/detail/jst-sales-america-inc/PAP-05V-S/759977
 
 # build esphome-ecodan-hp firmware
 ### Build via cmd line:
-* Install ESPHome https://esphome.io/guides/getting_started_command_line.html
+* Install ESPHome https://esphome.io/guides/getting_started_command_line.html. (Use [Python <= 3.12](https://github.com/esphome/issues/issues/6558) to avoid build errors on Windows)
     ```console
     python3 -m venv venv
     source venv/bin/activate
@@ -94,7 +94,7 @@ packages:
 ```console
 esphome compile ecodan-esphome.yaml
 ```
-* To find the tty* where the esp32 is connected at, use `sudo dmesg | grep tty`. On my machine it was `ttyACM0` for usb-c, and `ttyUSB0` for usb-a. On a Mac it's named `tty.usbmodemxxx`
+* To find the tty* where the esp32 is connected at, use `sudo dmesg | grep tty`. On my machine it was `ttyACM0` for usb-c, and `ttyUSB0` for usb-a. `tty.usbmodemxxx` for Mac and `COMXX` for Windows
 
 * Connect your esp32 via usb and flash
 ```console 
