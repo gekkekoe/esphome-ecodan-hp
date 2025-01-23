@@ -3,6 +3,7 @@ wifi:
   password: !secret wifi_password
   fast_connect: true
   power_save_mode: light
+  reboot_timeout: 0s
   ap:
     ssid: "${name}"
     password: "configesp"
