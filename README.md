@@ -75,6 +75,7 @@ packages:
     ref: main
     refresh: always
     files: [ 
+            confs/base.yaml,        # required
             confs/esp32s3.yaml, # confs/esp32.yaml, for regular board
             confs/zone1.yaml,
             ## enable if you want to use zone 2
