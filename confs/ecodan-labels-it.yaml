@@ -93,6 +93,7 @@ substitutions:
   status_operation: Modalità Funzionamento
   output_power: En. Prod.
   computed_output_power: Stima En. Prod.
+  computed_cop: Stimato COP
   daily_computed_output_power: Stima En. Prod. (Giorno)
   daily_repported_input_power: Consumo Energetico Giornaliero Totale Segnalato
   outside_temp: T. Esterna

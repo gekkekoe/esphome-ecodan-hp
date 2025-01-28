@@ -93,6 +93,7 @@ substitutions:
   status_operation: Mode de fonctionnement
   output_power: Puissance de sortie
   computed_output_power: Puissance de sortie estimée
+  computed_cop: COP estimée
   daily_computed_output_power: Puissance de sortie estimée (Tous les jours)
   daily_repported_input_power: Consommation totale d'énergie quotidienne déclarée
   outside_temp: Temp Ext

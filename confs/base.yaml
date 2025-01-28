@@ -160,7 +160,18 @@ text_sensor:
           case 3: return std::string("Maintenance Error");
           default: return std::string("Unknown");
       }
-
+  
+  - platform: ecodan
+    fault_code_text:
+      id: fault_code_text 
+      name: ${fault_code_text}
+      icon: mdi:alert
+      entity_category: diagnostic
+    controller_firmware_text:
+      id: controller_firmware_text
+      name: ${controller_firmware_text}
+      entity_category: diagnostic
+  
   - platform: template
     id: status_dip_switch_1
     entity_category: diagnostic
@@ -214,17 +225,6 @@ text_sensor:
     name: Dip Switch 6 (8-1)
     lambda: |-
       return format_bin(static_cast<uint8_t>(id(ecodan_instance).get_status().DipSwitch6));
-
-  - platform: ecodan
-    fault_code_text:
-      id: fault_code_text 
-      name: ${fault_code_text}
-      icon: mdi:alert
-      entity_category: diagnostic
-    controller_firmware_text:
-      id: controller_firmware_text
-      name: ${controller_firmware_text}
-      entity_category: diagnostic
 
   - platform: template
     id: status_multi_zone
@@ -357,6 +357,52 @@ sensor:
           partial_sum += x >= last_value ? (x - last_value) : (65536 + x - last_value);
           last_value = x;
           return partial_sum;
+  
+  - platform: template
+    id: computed_cop
+    name: ${computed_cop}
+    state_class: measurement
+    accuracy_decimals: 2
+    update_interval: 30s
+    lambda: |-
+      auto status = id(ecodan_instance).get_status();
+
+      // sample every 30s      
+      static float production = 0.0f;
+      static float last_input_value = 0.0f;
+      static bool valid_production = false;
+      
+      if (status.CompressorFrequency == 0.0f) {
+        // only calculate COP when comnpressor is active
+        production = 0.0f;
+        last_input_value = 0.0f;
+        valid_production = false;
+        return 0.0f;
+      }
+
+      production += status.ComputedOutputPower * 30.0 / (60.0*60.0);
+      //ESP_LOGE("ecodan.component", "last: %f, production: %f, raw: %f", last_input_value, production, status.ComputedOutputPower);
+
+      if (last_input_value == 0.0f) {
+        last_input_value = status.EnergyConsumedIncreasing;
+        valid_production = false;
+        return {};
+
+      } else if (last_input_value == status.EnergyConsumedIncreasing) {
+        // no COP change
+        return {};
+
+      } else {
+        // EnergyConsumedIncreasing is reported every ~5mins
+        float consumed = status.EnergyConsumedIncreasing >= last_input_value 
+          ? (status.EnergyConsumedIncreasing - last_input_value) : (65536 + status.EnergyConsumedIncreasing - last_input_value);
+
+          float cop = valid_production ? (production / consumed) : 0.0f;
+          valid_production = true;
+          production = 0.0f;
+          last_input_value = status.EnergyConsumedIncreasing;
+          return cop;
+      }
 
   - platform: uptime
     name: ${uptime}

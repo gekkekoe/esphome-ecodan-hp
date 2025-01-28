@@ -93,6 +93,7 @@ substitutions:
   status_operation: Status Bedrijf
   output_power: Afgegeven vermogen
   computed_output_power: Geschatte afgegeven vermogen
+  computed_cop: Geschatte COP
   daily_computed_output_power: Geschatte afgegeven vermogen (Per dag)
   daily_repported_input_power: Gerapporteerde opgenomen vermogen (Per dag)
   outside_temp: Buiten temp

@@ -93,6 +93,7 @@ substitutions:
   status_operation: Operation Mode
   output_power: Output Power
   computed_output_power: Estimated Output Power
+  computed_cop: Estimated COP
   daily_computed_output_power: Estimated Total Daily Energy Produced
   daily_repported_input_power: Reported Total Daily Energy Consumption
   outside_temp: Outside Temp
