@@ -254,16 +254,15 @@ namespace ecodan
                 publish_state("status_prohibit_heating_z2", status.ProhibitHeatingZ2);
                 publish_state("status_prohibit_cool_z2", status.ProhibitCoolingZ2);
 
+                status.ServerControl = res[10] != 0;
+                publish_state("status_server_control", status.ServerControl);
+
                 // set status for svc switches
-                if (status.ServerControl != (res[10] != 0)) {
-                    status.ServerControl = res[10] != 0;
-                    publish_state("status_server_control", status.ServerControl);
-                    publish_state("status_server_control_prohibit_dhw", status.ProhibitDhw);
-                    publish_state("status_server_control_prohibit_heating_z1", status.ProhibitHeatingZ1);
-                    publish_state("status_server_control_prohibit_cool_z1", status.ProhibitCoolingZ1);
-                    publish_state("status_server_control_prohibit_heating_z2", status.ProhibitHeatingZ2);
-                    publish_state("status_server_control_prohibit_cool_z2", status.ProhibitCoolingZ2);
-                }
+                publish_state("status_server_control_prohibit_dhw", status.ServerControl ? status.ProhibitDhw : false);
+                publish_state("status_server_control_prohibit_heating_z1", status.ServerControl ? status.ProhibitHeatingZ1 : false);
+                publish_state("status_server_control_prohibit_cool_z1", status.ServerControl ? status.ProhibitCoolingZ1 : false);
+                publish_state("status_server_control_prohibit_heating_z2", status.ServerControl ? status.ProhibitHeatingZ2 : false);
+                publish_state("status_server_control_prohibit_cool_z2", status.ServerControl ? status.ProhibitCoolingZ2 : false);
                 break;
             case GetType::ENERGY_USAGE:
                 status.EnergyConsumedHeating = res.get_float24(4);
