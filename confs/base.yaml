@@ -363,11 +363,11 @@ sensor:
     name: ${computed_cop}
     state_class: measurement
     accuracy_decimals: 2
-    update_interval: 30s
+    update_interval: 10s
     lambda: |-
       auto status = id(ecodan_instance).get_status();
 
-      // sample every 30s      
+      // sample every 10s      
       static float production = 0.0f;
       static float last_input_value = 0.0f;
       static bool valid_production = false;
@@ -380,7 +380,7 @@ sensor:
         return 0.0f;
       }
 
-      production += status.ComputedOutputPower * 30.0 / (60.0*60.0);
+      production += status.ComputedOutputPower * 10.0 / (60.0*60.0);
       //ESP_LOGE("ecodan.component", "last: %f, production: %f, raw: %f", last_input_value, production, status.ComputedOutputPower);
 
       if (last_input_value == 0.0f) {
@@ -397,7 +397,7 @@ sensor:
         float consumed = status.EnergyConsumedIncreasing >= last_input_value 
           ? (status.EnergyConsumedIncreasing - last_input_value) : (65536 + status.EnergyConsumedIncreasing - last_input_value);
 
-          float cop = valid_production ? (production / consumed) : 0.0f;
+          float cop = (valid_production || consumed == 0.0f) ? (production / consumed) : 0.0f;
           valid_production = true;
           production = 0.0f;
           last_input_value = status.EnergyConsumedIncreasing;
