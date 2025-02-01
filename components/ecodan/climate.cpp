@@ -120,8 +120,11 @@ namespace ecodan
         bool should_publish = false;
 
         if (this->get_current_temp != nullptr) {
-            this->current_temperature = this->get_current_temp();
-            should_publish = true;
+            float current_temp = this->get_current_temp();
+            if (current_temp != this->current_temperature) {
+                this->current_temperature = current_temp;
+                should_publish = true;
+            }
         }
 
         // if (call.get_mode().has_value()) {
