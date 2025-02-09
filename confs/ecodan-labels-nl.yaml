@@ -113,4 +113,7 @@ substitutions:
   status_multi_zone_zone1: Z1 actief
   status_multi_zone_zone2: Z2 actief
   fault_code_text: Fout code
-  refrigerant_error_code_text: Koelmiddel fout code
+  compressor_starts: Aantal Compressor Starts
+  discharge_temp: Discharge Temp
+  liquid_pipe_temp: Liquid Pipe 1 Temp
+  fan_speed: Ventilatorsnelheid

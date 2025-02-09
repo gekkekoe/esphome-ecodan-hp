@@ -105,7 +105,8 @@ namespace ecodan
         UNKNOWN_0x29 = 0x29, 
         ENERGY_USAGE = 0xA1,
         ENERGY_DELIVERY = 0xA2,
-        HARDWARE_CONFIGURATION = 0xC9
+        HARDWARE_CONFIGURATION = 0xC9,
+        SERVICE_REQUEST_CODE = 0xA3
     };
 
     template <class T>
@@ -175,6 +176,22 @@ namespace ecodan
             payload[0] = static_cast<uint8_t>(getType);
             write_payload(payload, sizeof(payload));
         }
+
+        Message(MsgType msgType, GetType getType, int16_t request_code)
+        : cmd_{true}, buffer_{HEADER_MAGIC_A1, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE_A)
+        {
+            char payload[PAYLOAD_SIZE] = {};
+            payload[0] = static_cast<uint8_t>(getType);
+            write_payload(payload, sizeof(payload));
+            set_int16(request_code, 1);
+        }
+
+        // Message(MsgType msgType, const std::array<char, PAYLOAD_SIZE>& payload)
+        //     : cmd_{true}, buffer_{HEADER_MAGIC_A1, static_cast<uint8_t>(msgType), HEADER_MAGIC_B, HEADER_MAGIC_C, 0x00}, writeOffset_(HEADER_SIZE_A)
+        // {
+        //     //custom payload msg.
+        //     write_payload(payload.data(), payload.size());
+        // }        
 
         Message(Message&& other)
         {
@@ -361,7 +378,7 @@ namespace ecodan
         {
             float value = int16_t(payload()[index] << 8) | payload()[index + 1];
             return value /= 100.0f;
-        }
+        }   
 
         // Used for most single-byte floating point values
         float get_float8(size_t index)
@@ -382,10 +399,20 @@ namespace ecodan
             float value = payload()[index];
             return (value - 128.0f) / 2;
         }
-        
+
         uint16_t get_u16(size_t index)
         {
             return uint16_t(payload()[index] << 8) | payload()[index + 1];
+        }
+
+        int16_t get_int16(size_t index)
+        {
+            return int16_t(payload()[index] << 8) | payload()[index + 1];
+        }        
+    
+        int16_t get_int16_v2(size_t index)
+        {
+            return int16_t(payload()[index+1] << 8) | payload()[index];
         }
 
         void set_float16(float value, size_t index)
@@ -394,6 +421,12 @@ namespace ecodan
 
             payload()[index] = u16 >> 8;
             payload()[index + 1] = u16 & 0xff;
+        }
+
+        void set_int16(int16_t value, size_t index)
+        {
+            payload()[index] = value >> 8;
+            payload()[index + 1] = value & 0xff;
         }
 
         uint8_t& operator[](size_t index)
