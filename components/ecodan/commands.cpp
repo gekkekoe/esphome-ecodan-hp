@@ -231,15 +231,18 @@ namespace ecodan
         Message{MsgType::GET_CMD, GetType::DIP_SWITCHES}
     };
 
+    struct ServiceCodeRuntime {
+        Status::REQUEST_CODE Request;
+        uint32_t SecondsBetweenCalls{0};
+        std::chrono::time_point<std::chrono::steady_clock> LastAttempt{};
+    };
+
     #define MAX_SERVICE_CODE_CMD_SIZE 4
-    Status::REQUEST_CODE serviceCodeCmdQueue[MAX_SERVICE_CODE_CMD_SIZE] = {
-        Status::REQUEST_CODE::COMPRESSOR_STARTS,
-        Status::REQUEST_CODE::TH4_DISCHARGE_TEMP,
-        Status::REQUEST_CODE::TH3_LIQUID_PIPE1_TEMP,
-        //Status::REQUEST_CODE::TH6_2_PHASE_PIPE_TEMP,
-        //Status::REQUEST_CODE::DISCHARGE_SUPERHEAT,
-        //Status::REQUEST_CODE::SUB_COOL,
-        Status::REQUEST_CODE::FAN_SPEED
+    ServiceCodeRuntime serviceCodeCmdQueue[MAX_SERVICE_CODE_CMD_SIZE] = {
+        ServiceCodeRuntime{Status::REQUEST_CODE::COMPRESSOR_STARTS, 30*60, std::chrono::steady_clock::now() - std::chrono::seconds(60*60)},
+        ServiceCodeRuntime{Status::REQUEST_CODE::TH4_DISCHARGE_TEMP, 0, std::chrono::steady_clock::time_point{}},
+        ServiceCodeRuntime{Status::REQUEST_CODE::TH3_LIQUID_PIPE1_TEMP, 0, std::chrono::steady_clock::time_point{}},
+        ServiceCodeRuntime{Status::REQUEST_CODE::FAN_SPEED, 0, std::chrono::steady_clock::time_point{}}
     };
 
     bool EcodanHeatpump::dispatch_next_status_cmd()
@@ -254,10 +257,22 @@ namespace ecodan
         loopIndex = (loopIndex + 1) % MAX_STATUS_CMD_SIZE;
 
         if (loopIndex == 0) {
-            if (activeRequestCode == Status::REQUEST_CODE::NONE) {
+            int counter = 0;
+            while (counter <= MAX_SERVICE_CODE_CMD_SIZE && activeRequestCode == Status::REQUEST_CODE::NONE) {
+                counter++;
                 serviceCodeCmdIndex = (serviceCodeCmdIndex + 1) % MAX_SERVICE_CODE_CMD_SIZE;
-                activeRequestCode = serviceCodeCmdQueue[serviceCodeCmdIndex];    
+                auto& request = serviceCodeCmdQueue[serviceCodeCmdIndex];
+
+                if (request.SecondsBetweenCalls > 0) {
+                    auto allow_run = std::chrono::steady_clock::now() - request.LastAttempt > std::chrono::seconds(request.SecondsBetweenCalls);
+                    if (!allow_run) // skip and handle next service call 
+                        continue;
+
+                    serviceCodeCmdQueue[serviceCodeCmdIndex].LastAttempt = std::chrono::steady_clock::now();
+                } 
+                activeRequestCode = serviceCodeCmdQueue[serviceCodeCmdIndex].Request;
             }
+            //ESP_LOGE(TAG, "Active svc: %d", static_cast<int16_t>(activeRequestCode));
             return true;
         }
 

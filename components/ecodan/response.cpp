@@ -81,6 +81,7 @@ namespace ecodan
                     }
                 }
             }
+            break;
         case GetType::DATETIME_FIRMWARE:
             {
                 status.ControllerDateTime.tm_year = 100 + res[1];
@@ -92,7 +93,7 @@ namespace ecodan
 
                 char firmware[6];
                 snprintf(firmware, 6, "%02X.%02X", res[7], res[8]);
-                publish_state("controller_firmware_text", std::string(firmware));                
+                publish_state("controller_firmware_text", std::string(firmware));
             }
             break;               
         case GetType::DEFROST_STATE:
