@@ -40,6 +40,10 @@ namespace ecodan
             binarySensors[key] = obj;
         }
 
+        void enable_request_codes() {
+            hasRequestCodeSensors = true;
+        }
+
         // exposed as external component commands
         void set_room_temperature(float value, esphome::ecodan::SetZone zone);
         void set_flow_target_temperature(float value, esphome::ecodan::SetZone zone);
@@ -87,6 +91,7 @@ namespace ecodan
         bool connected = false;
         bool heatpumpInitialized = false;
         
+        bool hasRequestCodeSensors = false;
         Status::REQUEST_CODE activeRequestCode = Status::REQUEST_CODE::NONE;
         std::queue<Message> cmdQueue;
 

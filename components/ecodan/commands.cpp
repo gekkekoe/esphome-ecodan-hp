@@ -237,19 +237,18 @@ namespace ecodan
         std::chrono::time_point<std::chrono::steady_clock> LastAttempt{};
     };
 
-    #define MAX_SERVICE_CODE_CMD_SIZE 9
+    #define MAX_SERVICE_CODE_CMD_SIZE 6
     ServiceCodeRuntime serviceCodeCmdQueue[MAX_SERVICE_CODE_CMD_SIZE] = {
         ServiceCodeRuntime{Status::REQUEST_CODE::COMPRESSOR_STARTS, 30*60, std::chrono::steady_clock::now() - std::chrono::seconds(60*60)},
         ServiceCodeRuntime{Status::REQUEST_CODE::TH4_DISCHARGE_TEMP, 0, std::chrono::steady_clock::time_point{}},
         ServiceCodeRuntime{Status::REQUEST_CODE::TH3_LIQUID_PIPE1_TEMP, 0, std::chrono::steady_clock::time_point{}},
-        ServiceCodeRuntime{Status::REQUEST_CODE::TH6_2_PHASE_PIPE_TEMP, 0, std::chrono::steady_clock::time_point{}},
-        ServiceCodeRuntime{Status::REQUEST_CODE::TH32_SUCTION_PIPE_TEMP, 0, std::chrono::steady_clock::time_point{}},
-        ServiceCodeRuntime{Status::REQUEST_CODE::TH8_HEAT_SINK_TEMP, 0, std::chrono::steady_clock::time_point{}},
+        //ServiceCodeRuntime{Status::REQUEST_CODE::TH6_2_PHASE_PIPE_TEMP, 0, std::chrono::steady_clock::time_point{}},
+        //ServiceCodeRuntime{Status::REQUEST_CODE::TH32_SUCTION_PIPE_TEMP, 0, std::chrono::steady_clock::time_point{}},
+        //ServiceCodeRuntime{Status::REQUEST_CODE::TH8_HEAT_SINK_TEMP, 0, std::chrono::steady_clock::time_point{}},
         ServiceCodeRuntime{Status::REQUEST_CODE::DISCHARGE_SUPERHEAT, 0, std::chrono::steady_clock::time_point{}},
         ServiceCodeRuntime{Status::REQUEST_CODE::SUB_COOL, 0, std::chrono::steady_clock::time_point{}},
         ServiceCodeRuntime{Status::REQUEST_CODE::FAN_SPEED, 0, std::chrono::steady_clock::time_point{}}
     };
-
 
     bool EcodanHeatpump::dispatch_next_status_cmd()
     {
@@ -262,7 +261,7 @@ namespace ecodan
 
         loopIndex = (loopIndex + 1) % MAX_STATUS_CMD_SIZE;
 
-        if (loopIndex == 0) {
+        if (hasRequestCodeSensors && loopIndex == 0) {
             int counter = 0;
             while (counter <= MAX_SERVICE_CODE_CMD_SIZE && activeRequestCode == Status::REQUEST_CODE::NONE) {
                 counter++;

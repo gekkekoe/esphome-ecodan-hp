@@ -75,8 +75,9 @@ packages:
     ref: main
     refresh: always
     files: [ 
-            confs/base.yaml,        # required
-            confs/esp32s3.yaml, # confs/esp32.yaml, for regular board
+            confs/base.yaml,            # required
+            confs/request-codes.yaml,   # disable if your unit does not support request codes (service menu)
+            confs/esp32s3.yaml,         # confs/esp32.yaml, for regular board
             confs/zone1.yaml,
             ## enable if you want to use zone 2
             #confs/zone2.yaml,
