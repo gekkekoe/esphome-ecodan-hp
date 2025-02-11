@@ -56,20 +56,28 @@ namespace ecodan
                             publish_state("discharge_temp", static_cast<float>(status.RcDischargeTemp));
                         break;
                         case Status::REQUEST_CODE::TH3_LIQUID_PIPE1_TEMP:
-                            status.RcLiquidPipeTemp = res.get_int16_v2(4);
-                            publish_state("liquid_pipe_temp", status.RcLiquidPipeTemp); 
+                            status.RcOuLiquidPipeTemp = res.get_int16_v2(4);
+                            publish_state("ou_liquid_pipe_temp", status.RcOuLiquidPipeTemp); 
                         break;
                         case Status::REQUEST_CODE::TH6_2_PHASE_PIPE_TEMP:
-                            status.RcTwoPhasePipeTemp = res.get_int16_v2(4);
-                            publish_state("two_phase_pipe_temp", status.RcTwoPhasePipeTemp); 
+                            status.RcOuTwoPhasePipeTemp = res.get_int16_v2(4);
+                            publish_state("ou_two_phase_pipe_temp", status.RcOuTwoPhasePipeTemp); 
+                        break;
+                        case Status::REQUEST_CODE::TH32_SUCTION_PIPE_TEMP:
+                            status.RcOuSuctionPipeTemp = res.get_int16_v2(4);
+                            publish_state("ou_suction_pipe_temp", status.RcOuSuctionPipeTemp); 
+                        break;
+                        case Status::REQUEST_CODE::TH8_HEAT_SINK_TEMP:
+                            status.RcOuHeatSinkTemp = res.get_int16_v2(4);
+                            publish_state("ou_heatsink_temp", status.RcOuHeatSinkTemp); 
                         break;
                         case Status::REQUEST_CODE::DISCHARGE_SUPERHEAT:
-                            status.RcDischargeSuperHeatTemp = static_cast<uint8_t>(res[4]);
-                            publish_state("super_heat_temp", static_cast<float>(status.RcDischargeSuperHeatTemp));
+                            status.RcDischargeSuperHeatTemp = res.get_int16_v2(4);
+                            publish_state("super_heat_temp", status.RcDischargeSuperHeatTemp);
                         break;
                         case Status::REQUEST_CODE::SUB_COOL:
-                            status.RcSubCoolTemp = static_cast<uint8_t>(res[4]);
-                            publish_state("sub_cool_temp", static_cast<float>(status.RcSubCoolTemp));
+                            status.RcSubCoolTemp = res.get_int16_v2(4);
+                            publish_state("sub_cool_temp", status.RcSubCoolTemp);
                         break;
                         case Status::REQUEST_CODE::FAN_SPEED:
                             status.RcFanSpeedRpm = res.get_int16_v2(4);

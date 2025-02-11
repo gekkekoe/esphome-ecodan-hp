@@ -114,7 +114,12 @@ substitutions:
   status_multi_zone_zone2: Z2 fonctionne
   fault_code_text: Code d'erreur
   refrigerant_error_code_text: Réfrigérant code d'erreur
-  compressor_starts: Démarrages cumulés du Compresseur
-  discharge_temp: Température de décharge
-  liquid_pipe_temp: Température du tuyau de liquide 1
-  fan_speed: Vitesse du ventilateur
+  compressor_starts: Accumulated Compressor Starts
+  discharge_temp: Discharge Temp
+  ou_liquid_pipe_temp: Outside Unit Liquid Pipe 1 Temp
+  ou_two_phase_pipe_temp: Outside Unit Two Phase Pipe Temp
+  ou_suction_pipe_temp: Outside Unit Suction Pipe Temp
+  ou_heatsink_temp: Outside Unit Heatsink Temp
+  super_heat_temp: Discharge Superheat Temp
+  sub_cool_temp: Subcooling Temp
+  fan_speed: Fan Speed

@@ -315,7 +315,7 @@ CONFIG_SCHEMA = cv.Schema(
             state_class=ENTITY_CATEGORY_NONE
         ),
         cv.Optional("compressor_starts"): sensor.sensor_schema(
-            icon="mdi:clock",
+            icon="mdi:counter",
             entity_category=ENTITY_CATEGORY_NONE,
         ),
         cv.Optional("discharge_temp"): sensor.sensor_schema(
@@ -325,37 +325,51 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        cv.Optional("liquid_pipe_temp"): sensor.sensor_schema(
+        cv.Optional("ou_liquid_pipe_temp"): sensor.sensor_schema(
             unit_of_measurement=UNIT_CELSIUS,
             icon="mdi:coolant-temperature",
             accuracy_decimals=1,
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
-        # cv.Optional("two_phase_pipe_temp"): sensor.sensor_schema(
-        #     unit_of_measurement=UNIT_CELSIUS,
-        #     icon="mdi:coolant-temperature",
-        #     accuracy_decimals=1,
-        #     device_class=DEVICE_CLASS_TEMPERATURE,
-        #     state_class=STATE_CLASS_MEASUREMENT,
-        # ),
-        # cv.Optional("super_heat_temp"): sensor.sensor_schema(
-        #     unit_of_measurement=UNIT_CELSIUS,
-        #     icon="mdi:coolant-temperature",
-        #     accuracy_decimals=1,
-        #     device_class=DEVICE_CLASS_TEMPERATURE,
-        #     state_class=STATE_CLASS_MEASUREMENT,
-        # ),
-        # cv.Optional("sub_cool_temp"): sensor.sensor_schema(
-        #     unit_of_measurement=UNIT_CELSIUS,
-        #     icon="mdi:coolant-temperature",
-        #     accuracy_decimals=1,
-        #     device_class=DEVICE_CLASS_TEMPERATURE,
-        #     state_class=STATE_CLASS_MEASUREMENT,
-        # ),
+        cv.Optional("ou_two_phase_pipe_temp"): sensor.sensor_schema(
+            unit_of_measurement=UNIT_CELSIUS,
+            icon="mdi:coolant-temperature",
+            accuracy_decimals=1,
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        cv.Optional("ou_suction_pipe_temp"): sensor.sensor_schema(
+            unit_of_measurement=UNIT_CELSIUS,
+            icon="mdi:coolant-temperature",
+            accuracy_decimals=1,
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        cv.Optional("ou_heatsink_temp"): sensor.sensor_schema(
+            unit_of_measurement=UNIT_CELSIUS,
+            icon="mdi:coolant-temperature",
+            accuracy_decimals=1,
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        cv.Optional("super_heat_temp"): sensor.sensor_schema(
+            unit_of_measurement=UNIT_CELSIUS,
+            icon="mdi:coolant-temperature",
+            accuracy_decimals=1,
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        cv.Optional("sub_cool_temp"): sensor.sensor_schema(
+            unit_of_measurement=UNIT_CELSIUS,
+            icon="mdi:coolant-temperature",
+            accuracy_decimals=1,
+            device_class=DEVICE_CLASS_TEMPERATURE,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
         cv.Optional("fan_speed"): sensor.sensor_schema(
             unit_of_measurement=UNIT_REVOLUTIONS_PER_MINUTE,
-            icon="mdi:sine-wave",
+            icon="mdi:fan",
             accuracy_decimals=0,
             device_class=DEVICE_CLASS_FREQUENCY,
             state_class=STATE_CLASS_MEASUREMENT,
