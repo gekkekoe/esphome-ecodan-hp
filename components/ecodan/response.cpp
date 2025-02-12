@@ -352,8 +352,8 @@ namespace ecodan
             status.DipSwitch6 = res[11];
             break;
         default:
-            ESP_LOGE(TAG, "Unknown response type received on serial port: %u", static_cast<uint8_t>(res.payload_type<GetType>()));
-            ESP_LOGE(TAG, res.debug_dump_packet().c_str());
+            ESP_LOGI(TAG, "Unknown response type received on serial port: %u", static_cast<uint8_t>(res.payload_type<GetType>()));
+            //ESP_LOGE(TAG, res.debug_dump_packet().c_str());
             break;
         }
     }
