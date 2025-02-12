@@ -117,4 +117,5 @@ substitutions:
   compressor_starts: Démarrages cumulés du compresseur
   discharge_temp: Temperatura di scarico
   ou_liquid_pipe_temp: Temperatura tubo liquido unità esterna 1
+  ou_two_phase_pipe_temp: Unità esterna Temperatura tubo bifase
   fan_speed: Velocità della ventola

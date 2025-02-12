@@ -117,4 +117,5 @@ substitutions:
   compressor_starts: Compressor Starts
   discharge_temp: Ontladingstemperatuur
   ou_liquid_pipe_temp: Buitenunit Vloeistofleiding 1
+  ou_two_phase_pipe_temp: Buitenunit Tweefasenbuistemperatuur
   fan_speed: Ventilatorsnelheid

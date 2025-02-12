@@ -9,9 +9,9 @@ sensor:
     ou_liquid_pipe_temp:
       id: ou_liquid_pipe_temp
       name: ${ou_liquid_pipe_temp}
-    # ou_two_phase_pipe_temp:
-    #   id: ou_two_phase_pipe_temp
-    #   name: ${ou_two_phase_pipe_temp}
+    ou_two_phase_pipe_temp:
+      id: ou_two_phase_pipe_temp
+      name: ${ou_two_phase_pipe_temp}
     # ou_suction_pipe_temp:
     #   id: ou_suction_pipe_temp
     #   name: ${ou_suction_pipe_temp}

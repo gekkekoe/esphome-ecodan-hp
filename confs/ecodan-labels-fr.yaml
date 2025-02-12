@@ -117,4 +117,5 @@ substitutions:
   compressor_starts: Démarrages cumulés du compresseur
   discharge_temp: Température de décharge
   ou_liquid_pipe_temp: Température du tuyau de liquide 1 de l'unité extérieure
+  ou_two_phase_pipe_temp: Température du tuyau biphasé de l'unité extérieure
   fan_speed: Vitesse du ventilateur
