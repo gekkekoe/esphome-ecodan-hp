@@ -117,4 +117,5 @@ substitutions:
   compressor_starts: Arranques acumulados del compresor
   discharge_temp: Temperatura de descarga
   ou_liquid_pipe_temp: Tubo de líquido de la unidad exterior 1 Temperatura
+  ou_two_phase_pipe_temp: Temperatura de la tubería bifásica de la unidad exterior
   fan_speed: Velocidad del ventilador
