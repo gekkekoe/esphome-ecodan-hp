@@ -1,0 +1,30 @@
+sensor:
+  - platform: ecodan
+    compressor_starts:
+      id: compressor_starts
+      name: ${compressor_starts}
+    discharge_temp:
+      id: discharge_temp
+      name: ${discharge_temp}
+    ou_liquid_pipe_temp:
+      id: ou_liquid_pipe_temp
+      name: ${ou_liquid_pipe_temp}
+    # ou_two_phase_pipe_temp:
+    #   id: ou_two_phase_pipe_temp
+    #   name: ${ou_two_phase_pipe_temp}
+    # ou_suction_pipe_temp:
+    #   id: ou_suction_pipe_temp
+    #   name: ${ou_suction_pipe_temp}
+    # ou_heatsink_temp:
+    #   id: ou_heatsink_temp
+    #   name: ${ou_heatsink_temp}
+    ## these values can be computed: TH4 (discharge temp) - T63HS (condensing temp), T63HS−TH2 (liquid temp)
+    # super_heat_temp:
+    #   id: super_heat_temp
+    #   name: ${super_heat_temp}
+    # sub_cool_temp:
+    #   id: sub_cool_temp
+    #   name: ${sub_cool_temp}
+    fan_speed:
+      id: fan_speed
+      name: ${fan_speed}

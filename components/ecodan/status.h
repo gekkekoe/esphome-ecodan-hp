@@ -118,6 +118,21 @@ namespace ecodan
             SYSTEM_ON_OFF = 0x40
         };
 
+        enum class REQUEST_CODE : int16_t 
+        {
+            COMPRESSOR_STARTS = 3,
+            TH4_DISCHARGE_TEMP = 4,
+            TH3_LIQUID_PIPE1_TEMP = 5,
+            TH6_2_PHASE_PIPE_TEMP = 7,
+            TH32_SUCTION_PIPE_TEMP = 8,
+            TH8_HEAT_SINK_TEMP = 10,
+            //TH33_SURFACE_TEMP = 11,
+            DISCHARGE_SUPERHEAT = 12,
+            SUB_COOL = 13,
+            FAN_SPEED = 19,
+            NONE = 0x7fff
+        };
+
         // Modes
         PowerMode Power;
         OperationMode Operation = OperationMode::UNAVAILABLE;
@@ -145,6 +160,17 @@ namespace ecodan
         float EnergyConsumedDhw;
         float EnergyDeliveredDhw;
         float EnergyConsumedIncreasing{0};
+
+        // Service codes
+        uint16_t RcCompressorStarts;
+        float RcDischargeTemp;
+        float RcOuLiquidPipeTemp;
+        float RcOuTwoPhasePipeTemp;
+        float RcOuSuctionPipeTemp;
+        float RcOuHeatSinkTemp;
+        float RcDischargeSuperHeatTemp;
+        float RcSubCoolTemp;
+        uint16_t RcFanSpeedRpm;
 
 /* polynomial fit for
 Temp C	specific heat (J/Kg. K)

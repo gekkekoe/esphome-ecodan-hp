@@ -114,3 +114,7 @@ substitutions:
   status_multi_zone_zone2: Z2 en Funcionamiento
   fault_code_text: Código de Falla
   refrigerant_error_code_text: Código de Error del Refrigerante
+  compressor_starts: Arranques acumulados del compresor
+  discharge_temp: Temperatura de descarga
+  ou_liquid_pipe_temp: Tubo de líquido de la unidad exterior 1 Temperatura
+  fan_speed: Velocidad del ventilador

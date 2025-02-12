@@ -205,7 +205,7 @@ namespace ecodan
         return dispatch_next_cmd();
     }
 
-    #define MAX_STATUS_CMD_SIZE 20
+    #define MAX_STATUS_CMD_SIZE 22
     Message statusCmdQueue[MAX_STATUS_CMD_SIZE] = {
         Message{MsgType::GET_CMD, GetType::DATETIME_FIRMWARE},
         Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
@@ -215,14 +215,14 @@ namespace ecodan
         Message{MsgType::GET_CMD, GetType::HEATING_POWER},
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_CONFIG},
         Message{MsgType::GET_CMD, GetType::SH_TEMPERATURE_STATE},
-        //Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_A},
+        Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_A},
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_B},
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_C},
         Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_D},
         Message{MsgType::GET_CMD, GetType::EXTERNAL_STATE},
         Message{MsgType::GET_CMD, GetType::ACTIVE_TIME},
         Message{MsgType::GET_CMD, GetType::PUMP_STATUS},
-        //Message{MsgType::GET_CMD, GetType::FLOW_RATE},
+        Message{MsgType::GET_CMD, GetType::FLOW_RATE},
         Message{MsgType::GET_CMD, GetType::MODE_FLAGS_A},
         Message{MsgType::GET_CMD, GetType::MODE_FLAGS_B},
         Message{MsgType::GET_CMD, GetType::ENERGY_USAGE},
@@ -231,41 +231,77 @@ namespace ecodan
         Message{MsgType::GET_CMD, GetType::DIP_SWITCHES}
     };
 
-    // core cmds needs to be requested more often than regular cmds
-    #define MAX_CORE_STATUS_CMD_SIZE 2
-    Message coreStatusCmdQueue[MAX_CORE_STATUS_CMD_SIZE] = {
-        Message{MsgType::GET_CMD, GetType::TEMPERATURE_STATE_A},
-        Message{MsgType::GET_CMD, GetType::FLOW_RATE},
-        //Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
-        //Message{MsgType::GET_CMD, GetType::COMPRESSOR_FREQUENCY}
+    struct ServiceCodeRuntime {
+        Status::REQUEST_CODE Request;
+        uint32_t SecondsBetweenCalls{0};
+        std::chrono::time_point<std::chrono::steady_clock> LastAttempt{};
+    };
+
+    #define MAX_SERVICE_CODE_CMD_SIZE 4
+    ServiceCodeRuntime serviceCodeCmdQueue[MAX_SERVICE_CODE_CMD_SIZE] = {
+        ServiceCodeRuntime{Status::REQUEST_CODE::COMPRESSOR_STARTS, 30*60, std::chrono::steady_clock::now() - std::chrono::seconds(60*60)},
+        ServiceCodeRuntime{Status::REQUEST_CODE::TH4_DISCHARGE_TEMP, 0, std::chrono::steady_clock::time_point{}},
+        ServiceCodeRuntime{Status::REQUEST_CODE::TH3_LIQUID_PIPE1_TEMP, 0, std::chrono::steady_clock::time_point{}},
+        //ServiceCodeRuntime{Status::REQUEST_CODE::TH6_2_PHASE_PIPE_TEMP, 0, std::chrono::steady_clock::time_point{}},
+        //ServiceCodeRuntime{Status::REQUEST_CODE::TH32_SUCTION_PIPE_TEMP, 0, std::chrono::steady_clock::time_point{}},
+        //ServiceCodeRuntime{Status::REQUEST_CODE::TH8_HEAT_SINK_TEMP, 0, std::chrono::steady_clock::time_point{}},
+        //ServiceCodeRuntime{Status::REQUEST_CODE::DISCHARGE_SUPERHEAT, 0, std::chrono::steady_clock::time_point{}},
+        //ServiceCodeRuntime{Status::REQUEST_CODE::SUB_COOL, 0, std::chrono::steady_clock::time_point{}},
+        ServiceCodeRuntime{Status::REQUEST_CODE::FAN_SPEED, 0, std::chrono::steady_clock::time_point{}}
     };
 
     bool EcodanHeatpump::dispatch_next_status_cmd()
     {
-        if (proxy_available())
+        if (proxy_available() || !handle_active_request_codes())
             return true;
         
         auto static cmdIndex = 0;
-        auto static coreCmdIndex = 0;
+        auto static serviceCodeCmdIndex = 0;
         auto static loopIndex = 0;
 
-        loopIndex = (loopIndex + 1) % MAX_CORE_STATUS_CMD_SIZE;
+        loopIndex = (loopIndex + 1) % MAX_STATUS_CMD_SIZE;
 
-        if (loopIndex == 0) {
-            cmdIndex = (cmdIndex + 1) % MAX_STATUS_CMD_SIZE;
+        if (hasRequestCodeSensors && loopIndex == 0) {
+            int counter = 0;
+            while (counter <= MAX_SERVICE_CODE_CMD_SIZE && activeRequestCode == Status::REQUEST_CODE::NONE) {
+                counter++;
+                serviceCodeCmdIndex = (serviceCodeCmdIndex + 1) % MAX_SERVICE_CODE_CMD_SIZE;
+                auto& request = serviceCodeCmdQueue[serviceCodeCmdIndex];
+
+                if (request.SecondsBetweenCalls > 0) {
+                    auto allow_run = std::chrono::steady_clock::now() - request.LastAttempt > std::chrono::seconds(request.SecondsBetweenCalls);
+                    if (!allow_run) // skip and handle next service call 
+                        continue;
+
+                    serviceCodeCmdQueue[serviceCodeCmdIndex].LastAttempt = std::chrono::steady_clock::now();
+                } 
+                activeRequestCode = serviceCodeCmdQueue[serviceCodeCmdIndex].Request;
+            }
+            //ESP_LOGE(TAG, "Active svc: %d", static_cast<int16_t>(activeRequestCode));
+            return true;
         }
-        else {
-            coreCmdIndex = (coreCmdIndex + 1) % MAX_CORE_STATUS_CMD_SIZE;
-        }
 
-        Message& cmd = loopIndex == 0 ? statusCmdQueue[cmdIndex] : coreStatusCmdQueue[coreCmdIndex];
-
-        if (!serial_tx(uart_, cmd))
+        cmdIndex = (cmdIndex + 1) % MAX_STATUS_CMD_SIZE;
+        if (!serial_tx(uart_, statusCmdQueue[cmdIndex]))
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
             cmdIndex = 0;
-            coreCmdIndex = 0;
+            serviceCodeCmdIndex = 0;
             connected = false;
+            return false;
+        }
+        return true;
+    }
+
+    bool EcodanHeatpump::handle_active_request_codes() {
+        if (activeRequestCode != Status::REQUEST_CODE::NONE) {
+            Message svc_cmd{MsgType::GET_CMD, GetType::SERVICE_REQUEST_CODE, static_cast<int16_t>(activeRequestCode)};
+            if (!serial_tx(uart_, svc_cmd))
+            {
+                ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
+                connected = false;
+                return false;
+            }
             return false;
         }
 
@@ -274,6 +310,9 @@ namespace ecodan
 
     bool EcodanHeatpump::dispatch_next_cmd()
     {
+        if (!handle_active_request_codes())
+            return true;
+
         if (cmdQueue.empty())
         {
             return true;
