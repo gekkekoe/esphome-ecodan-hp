@@ -114,9 +114,7 @@ substitutions:
   status_multi_zone_zone2: Z2 funzionante
   fault_code_text: Codice di errore
   refrigerant_error_code_text: Liq. Refr. codice di errore
-  compressor_starts: Accumulated Compressor Starts
-  discharge_temp: Discharge Temp
-  ou_liquid_pipe_temp: Outside Unit Liquid Pipe 1 Temp
-  super_heat_temp: Discharge Superheat Temp
-  sub_cool_temp: Subcooling Temp
-  fan_speed: Fan Speed
+  compressor_starts: Démarrages cumulés du compresseur
+  discharge_temp: Temperatura di scarico
+  ou_liquid_pipe_temp: Temperatura tubo liquido unità esterna 1
+  fan_speed: Velocità della ventola

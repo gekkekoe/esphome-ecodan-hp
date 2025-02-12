@@ -18,12 +18,13 @@ sensor:
     # ou_heatsink_temp:
     #   id: ou_heatsink_temp
     #   name: ${ou_heatsink_temp}
-    super_heat_temp:
-      id: super_heat_temp
-      name: ${super_heat_temp}
-    sub_cool_temp:
-      id: sub_cool_temp
-      name: ${sub_cool_temp}
+    ## these values can be computed: TH4 (discharge temp) - T63HS (condensing temp), T63HS−TH2 (liquid temp)
+    # super_heat_temp:
+    #   id: super_heat_temp
+    #   name: ${super_heat_temp}
+    # sub_cool_temp:
+    #   id: sub_cool_temp
+    #   name: ${sub_cool_temp}
     fan_speed:
       id: fan_speed
       name: ${fan_speed}
