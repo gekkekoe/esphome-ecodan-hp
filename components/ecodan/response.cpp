@@ -52,8 +52,8 @@ namespace ecodan
                             publish_state("compressor_starts", static_cast<float>(status.RcCompressorStarts));
                         break;
                         case Status::REQUEST_CODE::TH4_DISCHARGE_TEMP:
-                            status.RcDischargeTemp = static_cast<int8_t>(res[4]);
-                            publish_state("discharge_temp", static_cast<float>(status.RcDischargeTemp));
+                            status.RcDischargeTemp = res.get_int16_v2(4);
+                            publish_state("discharge_temp", status.RcDischargeTemp);
                         break;
                         case Status::REQUEST_CODE::TH3_LIQUID_PIPE1_TEMP:
                             status.RcOuLiquidPipeTemp = res.get_int16_v2(4);
