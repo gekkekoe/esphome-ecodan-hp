@@ -119,3 +119,8 @@ substitutions:
   ou_liquid_pipe_temp: Tubo de líquido de la unidad exterior 1 Temperatura
   ou_two_phase_pipe_temp: Temperatura de la tubería bifásica de la unidad exterior
   fan_speed: Velocidad del ventilador
+  ou_suction_pipe_temp: Temperatura de la tubería de succión de la unidad exterior
+  ou_heatsink_temp: Temperatura del disipador de calor de la unidad exterior
+  ou_compressor_surface_temp: Temperatura de la superficie del compresor de la unidad exterior
+  super_heat_temp: Temperatura de sobrecalentamiento de descarga
+  sub_cool_temp: Temperatura de subenfriamiento

@@ -71,6 +71,10 @@ namespace ecodan
                             status.RcOuHeatSinkTemp = res.get_int16_v2(4);
                             publish_state("ou_heatsink_temp", status.RcOuHeatSinkTemp); 
                         break;
+                        case Status::REQUEST_CODE::TH33_SURFACE_TEMP:
+                            status.RcOuCompressorSurfaceTemp = res.get_int16_v2(4);
+                            publish_state("ou_compressor_surface_temp", status.RcOuCompressorSurfaceTemp); 
+                        break;
                         case Status::REQUEST_CODE::DISCHARGE_SUPERHEAT:
                             status.RcDischargeSuperHeatTemp = res.get_int16_v2(4);
                             publish_state("super_heat_temp", status.RcDischargeSuperHeatTemp);
@@ -212,6 +216,32 @@ namespace ecodan
             publish_state("mixing_tank_temp", status.MixingTankTemperature);
             publish_state("hp_refrigerant_condensing_temp", status.HpRefrigerantCondensingTemperature);
             //ESP_LOGE(TAG, "0x0f offset 6: \t%f (v1), \t%f (v2), \t%f (v3)", res.get_float8(6), res.get_float8_v2(6), res.get_float8_v3(6));
+
+            if (status.FTCVersion == Status::FTC_VERSION::FTC7) {
+                status.RcDischargeTemp = static_cast<uint8_t>(res[7]);
+                publish_state("discharge_temp", status.RcDischargeTemp);
+
+                status.RcOuLiquidPipeTemp = res.get_float8(8, 39.0f);
+                publish_state("ou_liquid_pipe_temp", status.RcOuLiquidPipeTemp); 
+
+                status.RcOuTwoPhasePipeTemp = res.get_float8(9, 39.0f);
+                publish_state("ou_two_phase_pipe_temp", status.RcOuTwoPhasePipeTemp); 
+
+                status.RcOuSuctionPipeTemp = res.get_float8(10, 39.0f);
+                publish_state("ou_suction_pipe_temp", status.RcOuSuctionPipeTemp); 
+
+                status.RcOuHeatSinkTemp = static_cast<uint8_t>(res[11]) - 40.0f;
+                publish_state("ou_heatsink_temp", status.RcOuHeatSinkTemp); 
+
+                status.RcOuCompressorSurfaceTemp = static_cast<uint8_t>(res[12]) - 40.0f;
+                publish_state("ou_compressor_surface_temp", status.RcOuCompressorSurfaceTemp); 
+                
+                status.RcDischargeSuperHeatTemp = static_cast<uint8_t>(res[13]);
+                publish_state("super_heat_temp", status.RcDischargeSuperHeatTemp);
+
+                status.RcSubCoolTemp =  res.get_float8(14, 39.0f);
+                publish_state("sub_cool_temp", status.RcSubCoolTemp);
+            }
             break;  
         case GetType::EXTERNAL_STATE:
             // 1 = IN1 Thermostat heat/cool request
@@ -341,6 +371,24 @@ namespace ecodan
         case GetType::HARDWARE_CONFIGURATION:
             // byte 6 = ftc, ft2b , ftc4, ftc5, ftc6
             status.Controller = res[6];
+            switch(status.Controller) {
+                case 1:
+                    status.FTCVersion = Status::FTC_VERSION::FTC4;
+                break;
+                case 2:
+                    status.FTCVersion = Status::FTC_VERSION::FTC5;
+                break;
+                case 3:
+                    status.FTCVersion = Status::FTC_VERSION::FTC6;
+                break;
+                case 4:
+                    status.FTCVersion = Status::FTC_VERSION::FTC7;
+                break;
+                default:
+                    status.FTCVersion = Status::FTC_VERSION::UNKNOWN;
+                break;
+            }
+
             publish_state("controller_version", static_cast<float>(status.Controller));
             break;
         case GetType::DIP_SWITCHES:

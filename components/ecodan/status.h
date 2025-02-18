@@ -126,11 +126,25 @@ namespace ecodan
             TH6_2_PHASE_PIPE_TEMP = 7,
             TH32_SUCTION_PIPE_TEMP = 8,
             TH8_HEAT_SINK_TEMP = 10,
-            //TH33_SURFACE_TEMP = 11,
+            TH33_SURFACE_TEMP = 11,
             DISCHARGE_SUPERHEAT = 12,
             SUB_COOL = 13,
             FAN_SPEED = 19,
             NONE = 0x7fff
+        };
+
+        enum class FTC_VERSION : uint8_t
+        {
+            UNKNOWN = 0x00,
+            FTC4 = 0x01,
+            FTC5 = 0x02, 
+            FTC6 = 0x04, 
+            FTC7 = 0x08,
+            // some shortcuts
+            FTC5_AND_BELOW = 0x01 | 0x02, 
+            FTC6_AND_BELOW = 0x01 | 0x02 | 0x04, 
+            FTC7_AND_BELOW = 0x01 | 0x02 | 0x04 | 0x08,
+            ALL = 0x01 | 0x02 | 0x04 | 0x08
         };
 
         // Modes
@@ -142,6 +156,7 @@ namespace ecodan
         HpMode HeatingCoolingModeZone2 = HpMode::OFF;
 
         MRC_FLAG MRCFlag = MRC_FLAG::DISABLED;
+        FTC_VERSION FTCVersion = FTC_VERSION::UNKNOWN;
 
         // prohibit flags
         bool ServerControl;
@@ -168,6 +183,7 @@ namespace ecodan
         float RcOuTwoPhasePipeTemp;
         float RcOuSuctionPipeTemp;
         float RcOuHeatSinkTemp;
+        float RcOuCompressorSurfaceTemp;
         float RcDischargeSuperHeatTemp;
         float RcSubCoolTemp;
         uint16_t RcFanSpeedRpm;
