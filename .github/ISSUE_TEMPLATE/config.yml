@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussion section
+    url: https://github.com/gekkekoe/esphome-ecodan-hp/discussions
+    about: Please ask and answer questions here.
