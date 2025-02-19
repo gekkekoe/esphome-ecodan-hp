@@ -36,31 +36,6 @@ uart:
     #   sequence:
     #     - lambda: UARTDebug::log_hex(direction, bytes, ' ');
 
-light:
-  - platform: esp32_rmt_led_strip
-    name: Led
-    id: led
-    internal: true
-    rgb_order: RGB
-    pin: GPIO47
-    num_leds: 1
-    rmt_channel: 0
-    chipset: ws2812
-    restore_mode: ALWAYS_OFF
-    effects:
-      - pulse:
-          name: slow_pulse
-          transition_length: 250ms
-          update_interval: 250ms
-          min_brightness: 25%
-          max_brightness: 100%
-      - pulse:
-          name: fast_pulse
-          transition_length: 100ms
-          update_interval: 100ms
-          min_brightness: 25%
-          max_brightness: 100%
-
 button:
   - platform: restart
     id: restart_button
