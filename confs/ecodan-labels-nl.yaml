@@ -119,3 +119,8 @@ substitutions:
   ou_liquid_pipe_temp: Buitenunit Vloeistofleiding 1
   ou_two_phase_pipe_temp: Buitenunit Tweefasenbuistemperatuur
   fan_speed: Ventilatorsnelheid
+  ou_suction_pipe_temp: Buitenunit aanzuig leiding temperatuur
+  ou_heatsink_temp: Buitenunit koellichaam temperatuur
+  ou_compressor_surface_temp: Buitenunit Compressor Oppervlakte temperatuur
+  super_heat_temp: Discharge Superheat temperatuur
+  sub_cool_temp: Subcooling temperatuur

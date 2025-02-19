@@ -1,0 +1,75 @@
+name: Build Release Firmware OTA images
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  build:
+    name: Build Release Assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+      - name: Create dummy wifi credentials
+        run: |
+          echo "wifi_ssid: dummy" > secrets.yaml
+          echo "wifi_password: dummydummydummy" >> secrets.yaml
+      - name: prepare build yaml
+        run: |
+          cp ecodan-esphome.yaml ecodan-esp32s3.yaml
+          sed "s/esp32s3.yaml,/esp32s3-proxy2.yaml,/g" ecodan-esphome.yaml > ecodan-esp32s3-proxy2.yaml
+
+      - name: Generated yaml
+        run: |
+          ls ecodan-esp32*.yaml
+          cat secrets.yaml
+          cat ecodan-esp32s3-proxy2.yaml
+
+      - name: Display the release tag
+        run: echo ${{ github.event.release.tag_name }}
+
+      - name: Prepare build env
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup esphome build env
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install wheel
+          pip install esphome
+
+      - name: Build esp32s3 firmware
+        run: |
+          source venv/bin/activate
+          esphome compile ecodan-esp32s3.yaml
+          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.bin esp32s3-ota-${{ github.event.release.tag_name }}.bin
+          md5sum esp32s3-ota-${{ github.event.release.tag_name }}.bin > esp32s3-ota-${{ github.event.release.tag_name }}.md5
+
+      - name: Build esp32s3 proxy firmware
+        run: |
+          source venv/bin/activate
+          esphome compile ecodan-esp32s3-proxy2.yaml
+          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.bin esp32s3-proxy2-ota-${{ github.event.release.tag_name }}.bin
+          md5sum esp32s3-proxy2-ota-${{ github.event.release.tag_name }}.bin > esp32s3-proxy2-ota-${{ github.event.release.tag_name }}.md5
+      
+      - name: Upload OTA firmwares
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          file: esp32s3*.bin
+          file_glob: true
+          
+      - name: Upload OTA firmwares checksums
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          file: esp32s3*.md5
+          file_glob: true
