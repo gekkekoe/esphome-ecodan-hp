@@ -5,6 +5,9 @@ substitutions:
 esphome:
   name: ${name}
   friendly_name: ${friendlyName}
+  project:
+    name: Gekkekoe.Ecodan ESPHome Heatpump
+    version: "VERSION"
 
 ota:
   - platform: esphome
@@ -68,7 +71,7 @@ packages:
 
 # enable logger
 logger:
-  baud_rate: 0
+  baud_rate: 115200
   logs:
     esp32.preferences: ERROR
     sensor: ERROR

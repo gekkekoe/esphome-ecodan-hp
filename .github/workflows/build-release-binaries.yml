@@ -4,6 +4,10 @@ on:
   release:
     types:
       - created
+env:
+  FIRMWARE: esp32s3-ota-${{ github.event.release.tag_name }}
+  FIRMWARE_PROXY: esp32s3-proxy2-ota-${{ github.event.release.tag_name }}
+  TAG: ${{ github.event.release.tag_name }}
 
 jobs:
   build:
@@ -12,16 +16,14 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-        with:
-          ref: dev
       - name: Create dummy wifi credentials
         run: |
           echo "wifi_ssid: dummy" > secrets.yaml
           echo "wifi_password: dummydummydummy" >> secrets.yaml
       - name: prepare build yaml
         run: |
-          cp ecodan-esphome.yaml ecodan-esp32s3.yaml
-          sed "s/esp32s3.yaml,/esp32s3-proxy2.yaml,/g" ecodan-esphome.yaml > ecodan-esp32s3-proxy2.yaml
+          sed "s/VERSION/$TAG/g" ecodan-esphome.yaml > ecodan-esp32s3.yaml
+          sed "s/esp32s3.yaml,/esp32s3-proxy2.yaml,/g; s/VERSION/$TAG/g" ecodan-esphome.yaml > ecodan-esp32s3-proxy2.yaml
 
       - name: Generated yaml
         run: |
@@ -48,15 +50,27 @@ jobs:
         run: |
           source venv/bin/activate
           esphome compile ecodan-esp32s3.yaml
-          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.bin esp32s3-ota-${{ github.event.release.tag_name }}.bin
-          md5sum esp32s3-ota-${{ github.event.release.tag_name }}.bin > esp32s3-ota-${{ github.event.release.tag_name }}.md5
+          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.ota.bin $FIRMWARE.bin
+          md5sum $FIRMWARE.bin > $FIRMWARE.md5
+
+      - name: Create manifest.json for esp32s3 firmware
+        run: |
+          md5=$(md5sum $FIRMWARE.bin | cut -d ' ' -f 1)
+          sed "s/TAG/$TAG/g; s/MD5/$md5/g; s/FILE/$FIRMWARE.bin/g" json/manifest.json > manifest-esp32s3.json
+          cat manifest-esp32s3.json
 
       - name: Build esp32s3 proxy firmware
         run: |
           source venv/bin/activate
           esphome compile ecodan-esp32s3-proxy2.yaml
-          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.bin esp32s3-proxy2-ota-${{ github.event.release.tag_name }}.bin
-          md5sum esp32s3-proxy2-ota-${{ github.event.release.tag_name }}.bin > esp32s3-proxy2-ota-${{ github.event.release.tag_name }}.md5
+          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.ota.bin $FIRMWARE_PROXY.bin
+          md5sum $FIRMWARE_PROXY.bin > $FIRMWARE_PROXY.md5
+
+      - name: Create manifest.json for esp32s3 proxy firmware
+        run: |
+          md5=$(md5sum $FIRMWARE_PROXY.bin | cut -d ' ' -f 1)
+          sed "s/TAG/$TAG/g; s/MD5/$md5/g; s/FILE/$FIRMWARE_PROXY.bin/g" json/manifest.json > manifest-esp32s3-proxy2.json
+          cat manifest-esp32s3-proxy2.json
       
       - name: Upload OTA firmwares
         uses: svenstaro/upload-release-action@v2
@@ -72,4 +86,12 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
           file: esp32s3*.md5
+          file_glob: true
+
+      - name: Upload OTA manifests
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          file: manifest*.json
           file_glob: true

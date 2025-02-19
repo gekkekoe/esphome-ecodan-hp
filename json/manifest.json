@@ -1,0 +1,14 @@
+{
+    "name": "Ecodan ESPHome HP",
+    "version": "TAG",
+    "builds": [
+      {
+        "chipFamily": "ESP32-S3",
+        "ota": {
+          "md5": "MD5",
+          "path": "https://github.com/gekkekoe/esphome-ecodan-hp/releases/latest/download/FILE",
+          "release_url": "https://github.com/gekkekoe/esphome-ecodan-hp/releases/tag/TAG"
+        }
+      }
+    ]
+  }

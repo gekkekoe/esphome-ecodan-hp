@@ -12,6 +12,18 @@ esp32:
     # Custom sdkconfig options
     sdkconfig_options:
       COMPILER_OPTIMIZATION_SIZE: y
+
+# enable ota update via http request
+http_request:
+  buffer_size_tx: 20248
+
+ota:
+  - platform: http_request
+
+update:
+  - platform: http_request
+    name: Firmware Update
+    source: https://github.com/gekkekoe/esphome-ecodan-hp/releases/latest/download/manifest-esp32s3-proxy2.json
   
 uart:
   - id: uart_ecodan
