@@ -10,6 +10,7 @@ wifi:
     ap_timeout: 15s
 
 captive_portal:
+  id: id_captive_portal
 
 text_sensor:
   - platform: wifi_info

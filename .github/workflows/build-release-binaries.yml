@@ -22,8 +22,8 @@ jobs:
           echo "wifi_password: dummydummydummy" >> secrets.yaml
       - name: prepare build yaml
         run: |
-          sed "s/VERSION/$TAG/g" ecodan-esphome.yaml > ecodan-esp32s3.yaml
-          sed "s/esp32s3.yaml,/esp32s3-proxy2.yaml,/g; s/VERSION/$TAG/g" ecodan-esphome.yaml > ecodan-esp32s3-proxy2.yaml
+          sed "s/VERSION/$TAG/g; s/#confs\\/esp32s3-led.yaml/confs\/esp32s3-led.yaml/g;" ecodan-esphome.yaml > ecodan-esp32s3.yaml
+          sed "s/esp32s3.yaml,/esp32s3-proxy2.yaml,/g; s/#confs\\/esp32s3-led.yaml/confs\/esp32s3-led.yaml/g; s/VERSION/$TAG/g" ecodan-esphome.yaml > ecodan-esp32s3-proxy2.yaml
 
       - name: Generated yaml
         run: |
