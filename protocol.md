@@ -316,13 +316,21 @@ Responses so far identified.
 | 0x0e | F | F |   | R | R |   |   |   |   |    |    |    |    |    |    |    |
 * F : Boiler Flow Temperature * 100    (Where THWB1 installed)
 * R : Boiler Return Temperature * 100     (Where THWB2 is installed)
-### 0x0f - Thermistors 3 (FTC6+ Only)
+### 0x0f - Thermistors 3 (FTC6+ Only, FTC7+ for byte >= 7)
 |  0   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
-| 0x0f | M | M |   | C | C | R |   |   |   |    |    |    |    |    |    |    |
+| 0x0f | M | M |   | C | C | R |TH4|TH3|TH6|TH32| TH8|TH33| SH | SC |    |    |
 * M : Mixing Tank Temperature * 100        (Where THW10 is installed)
 * C : Refrigerant condensing Temperature * 100
 * R : Unknown Temperature /2 - 40 (FTC6)
+* TH4: Outdoor unit Discharge temp (uint8_t)
+* TH3: Outdoor unit Liquid pipe 1 temp (/2 - 39)
+* TH6: Outdoor unit Two phase pipe temp (/2 - 39)
+* TH32: Outdoor unit Suction temp (/2 - 39)
+* TH8: Outdoor unit Heat sink temp (uint8_t - 40)
+* TH33: Outdoor unit Compressor surface temp (uint8_t - 40)
+* SH: Superheat (uint8_t)
+* SC: Subcool (/2 - 39)
 ### 0x10 - External sources
 |   0   | 1  | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
 |-------|----|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|
