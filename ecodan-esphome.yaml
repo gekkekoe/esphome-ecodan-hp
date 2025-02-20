@@ -2,13 +2,6 @@ substitutions:
   name: ecodan-heatpump
   friendlyName: Ecodan heatpump
 
-esphome:
-  name: ${name}
-  friendly_name: ${friendlyName}
-  project:
-    name: Gekkekoe.Ecodan ESPHome Heatpump
-    version: "VERSION"
-
 ota:
   - platform: esphome
 #  password: !secret heatpump_ota_password

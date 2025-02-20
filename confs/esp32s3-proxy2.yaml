@@ -3,6 +3,9 @@ esphome:
   friendly_name: ${friendlyName}
   platformio_options:
     board_build.flash_mode: dio
+  project:
+    name: Gekkekoe.Ecodan ESPHome Heatpump
+    version: "VERSION"
 
 esp32:
   board: esp32-s3-devkitc-1
