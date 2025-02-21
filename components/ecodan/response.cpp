@@ -216,8 +216,16 @@ namespace ecodan
             publish_state("mixing_tank_temp", status.MixingTankTemperature);
             publish_state("hp_refrigerant_condensing_temp", status.HpRefrigerantCondensingTemperature);
             //ESP_LOGE(TAG, "0x0f offset 6: \t%f (v1), \t%f (v2), \t%f (v3)", res.get_float8(6), res.get_float8_v2(6), res.get_float8_v3(6));
-
-            if (status.FTCVersion == Status::FTC_VERSION::FTC7) {
+ 
+            // detect if unit reports extended 0x0f messages
+            if (!status.ReportsExtendedOutdoorUnitThermistors) {
+                for (auto i = 7; i < 15; i++) {
+                    if (res[i] != 0) {
+                        status.ReportsExtendedOutdoorUnitThermistors = true;
+                        break;
+                    }
+                }
+            } else {
                 status.RcDischargeTemp = static_cast<uint8_t>(res[7]);
                 publish_state("discharge_temp", status.RcDischargeTemp);
 
@@ -371,24 +379,6 @@ namespace ecodan
         case GetType::HARDWARE_CONFIGURATION:
             // byte 6 = ftc, ft2b , ftc4, ftc5, ftc6
             status.Controller = res[6];
-            switch(status.Controller) {
-                case 1:
-                    status.FTCVersion = Status::FTC_VERSION::FTC4;
-                break;
-                case 2:
-                    status.FTCVersion = Status::FTC_VERSION::FTC5;
-                break;
-                case 3:
-                    status.FTCVersion = Status::FTC_VERSION::FTC6;
-                break;
-                case 4:
-                    status.FTCVersion = Status::FTC_VERSION::FTC7;
-                break;
-                default:
-                    status.FTCVersion = Status::FTC_VERSION::UNKNOWN;
-                break;
-            }
-
             publish_state("controller_version", static_cast<float>(status.Controller));
             break;
         case GetType::DIP_SWITCHES:

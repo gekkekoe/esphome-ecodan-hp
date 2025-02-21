@@ -133,20 +133,6 @@ namespace ecodan
             NONE = 0x7fff
         };
 
-        enum class FTC_VERSION : uint8_t
-        {
-            UNKNOWN = 0x00,
-            FTC4 = 0x01,
-            FTC5 = 0x02, 
-            FTC6 = 0x04, 
-            FTC7 = 0x08,
-            // some shortcuts
-            FTC5_AND_BELOW = 0x01 | 0x02, 
-            FTC6_AND_BELOW = 0x01 | 0x02 | 0x04, 
-            FTC7_AND_BELOW = 0x01 | 0x02 | 0x04 | 0x08,
-            ALL = 0x01 | 0x02 | 0x04 | 0x08
-        };
-
         // Modes
         PowerMode Power;
         OperationMode Operation = OperationMode::UNAVAILABLE;
@@ -156,7 +142,7 @@ namespace ecodan
         HpMode HeatingCoolingModeZone2 = HpMode::OFF;
 
         MRC_FLAG MRCFlag = MRC_FLAG::DISABLED;
-        FTC_VERSION FTCVersion = FTC_VERSION::UNKNOWN;
+        bool ReportsExtendedOutdoorUnitThermistors = false;
 
         // prohibit flags
         bool ServerControl;
