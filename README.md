@@ -50,8 +50,20 @@ https://www.digikey.nl/en/products/detail/seeed-technology-co-ltd/110990036/5482
 JST PAP-05V-S connector
 https://www.digikey.nl/en/products/detail/jst-sales-america-inc/PAP-05V-S/759977
 
+# easy install: Download the latest firmware
+## Get the factory.bin firmware for initial flash
+* Go to https://github.com/gekkekoe/esphome-ecodan-hp/releases/latest and download one of the factory.bin files. 
+```
+Firmware for Atom S3 (Lite): esp32s3-xx-version.factory.bin (where xx = language)
+Firmware for Atom S3 (Lite) with proxy PCB: esp32s3-proxy2-xx-version.factory.bin (where xx = language)
+```
+* Go to https://web.esphome.io/?dashboard_install (Only works in Chrome or Edge), connect the atom via usb-c and click connect. Chrome will let you select the detected esp. Finally you click install and select the factory.bin firmware (downloaded in previous step) and flash.
 
-# build esphome-ecodan-hp firmware
+* Power the esp via usb-c. The led indicator will turn blue indicating that its in access point mode. Connect to the wifi network `ecodan-heatpump` with password `configesp`. Fill in your wifi credentials and click save. The esp will reboot and the led will become green indicating that the wifi is connected correctly. Disconnect the unit from the computer and connect it to the heatpump via the CN105 connector (don't forget to power down the unit via circuit breaker!).
+
+* You will get notifications if an update is available and its updateable in Home Assistant itself. 
+
+# build esphome-ecodan-hp firmware from source
 ### Build via cmd line:
 * Install ESPHome https://esphome.io/guides/getting_started_command_line.html. (Use [Python <= 3.12](https://github.com/esphome/issues/issues/6558) to avoid build errors on Windows)
     ```console
