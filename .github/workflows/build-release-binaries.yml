@@ -4,15 +4,16 @@ on:
   release:
     types:
       - created
-env:
-  FIRMWARE: esp32s3-ota-${{ github.event.release.tag_name }}
-  FIRMWARE_PROXY: esp32s3-proxy2-ota-${{ github.event.release.tag_name }}
-  TAG: ${{ github.event.release.tag_name }}
+#  workflow_dispatch:
 
 jobs:
   build:
     name: Build Release Assets
     runs-on: ubuntu-latest
+    strategy:
+      matrix: 
+        lang: [en, nl, es, fr, it]
+        board: [esp32s3, esp32s3-proxy2]
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -20,16 +21,22 @@ jobs:
         run: |
           echo "wifi_ssid: dummy" > secrets.yaml
           echo "wifi_password: dummydummydummy" >> secrets.yaml
+          echo "PREFIX=${{ matrix.board }}-${{ matrix.lang }}-${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          echo "MANIFEST=manifest-${{ matrix.board }}-${{ matrix.lang }}" >> $GITHUB_ENV
+
       - name: prepare build yaml
         run: |
-          sed "s/VERSION/$TAG/g; s/#confs\\/esp32s3-led.yaml/confs\/esp32s3-led.yaml/g;" ecodan-esphome.yaml > ecodan-esp32s3.yaml
-          sed "s/esp32s3.yaml,/esp32s3-proxy2.yaml,/g; s/#confs\\/esp32s3-led.yaml/confs\/esp32s3-led.yaml/g; s/VERSION/$TAG/g" ecodan-esphome.yaml > ecodan-esp32s3-proxy2.yaml
+          sed "s/esp32s3.yaml,/${{ matrix.board }}.yaml,/g; \
+              s/ecodan-labels-en.yaml,/ecodan-labels-${{ matrix.lang }}.yaml,/g; \
+              s/#confs\\/esp32s3-led.yaml/confs\/esp32s3-led.yaml/g" ecodan-esphome.yaml > build.yaml
+          sed "s/manifest/$MANIFEST/g; s/VERSION/$PREFIX/g" confs/ota.yaml > ota.yaml
+          echo "<<: !include ota.yaml" >> build.yaml
 
       - name: Generated yaml
         run: |
-          ls ecodan-esp32*.yaml
           cat secrets.yaml
-          cat ecodan-esp32s3-proxy2.yaml
+          cat ota.yaml
+          cat build.yaml
 
       - name: Display the release tag
         run: echo ${{ github.event.release.tag_name }}
@@ -46,46 +53,32 @@ jobs:
           pip install wheel
           pip install esphome
 
-      - name: Build esp32s3 firmware
+      - name: Build firmware
         run: |
           source venv/bin/activate
-          esphome compile ecodan-esp32s3.yaml
-          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.ota.bin $FIRMWARE.bin
-          md5sum $FIRMWARE.bin > $FIRMWARE.md5
+          esphome compile build.yaml
+          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.ota.bin $PREFIX.ota.bin
+          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.factory.bin $PREFIX.factory.bin
 
-      - name: Create manifest.json for esp32s3 firmware
+      - name: Create manifest.json for firmware
         run: |
-          md5=$(md5sum $FIRMWARE.bin | cut -d ' ' -f 1)
-          sed "s/TAG/$TAG/g; s/MD5/$md5/g; s/FILE/$FIRMWARE.bin/g" json/manifest.json > manifest-esp32s3.json
-          cat manifest-esp32s3.json
+          md5ota=$(md5sum $PREFIX.ota.bin | cut -d ' ' -f 1)
+          echo "md5: $md5ota"
+          echo "ota: $PREFIX.ota.bin"
+          echo "factory: $PREFIX.factory.bin"
 
-      - name: Build esp32s3 proxy firmware
-        run: |
-          source venv/bin/activate
-          esphome compile ecodan-esp32s3-proxy2.yaml
-          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.ota.bin $FIRMWARE_PROXY.bin
-          md5sum $FIRMWARE_PROXY.bin > $FIRMWARE_PROXY.md5
-
-      - name: Create manifest.json for esp32s3 proxy firmware
-        run: |
-          md5=$(md5sum $FIRMWARE_PROXY.bin | cut -d ' ' -f 1)
-          sed "s/TAG/$TAG/g; s/MD5/$md5/g; s/FILE/$FIRMWARE_PROXY.bin/g" json/manifest.json > manifest-esp32s3-proxy2.json
-          cat manifest-esp32s3-proxy2.json
+          sed "s/VERSION/$PREFIX/g; \
+              s/MD5OTA/$md5ota/g; \
+              s/FILEOTA/$PREFIX.ota.bin/g; \
+              s/FILEFACTORY/$PREFIX.factory.bin/g" json/manifest.json > $MANIFEST.json
+          cat $MANIFEST.json
       
       - name: Upload OTA firmwares
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
-          file: esp32s3*.bin
-          file_glob: true
-          
-      - name: Upload OTA firmwares checksums
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }}
-          file: esp32s3*.md5
+          file: ${{ matrix.board }}*.bin
           file_glob: true
 
       - name: Upload OTA manifests
@@ -95,3 +88,5 @@ jobs:
           tag: ${{ github.ref }}
           file: manifest*.json
           file_glob: true
+
+  

@@ -2,8 +2,13 @@ substitutions:
   name: ecodan-heatpump
   friendlyName: Ecodan heatpump
 
+# enable ota update via http request
+http_request:
+  buffer_size_tx: 20248
+
 ota:
   - platform: esphome
+  - platform: http_request
 #  password: !secret heatpump_ota_password
 
 api:
