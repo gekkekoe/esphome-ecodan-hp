@@ -1,14 +1,20 @@
 {
     "name": "Ecodan ESPHome HP",
-    "version": "TAG",
+    "version": "VERSION",
     "builds": [
       {
         "chipFamily": "ESP32-S3",
         "ota": {
-          "md5": "MD5",
-          "path": "https://github.com/gekkekoe/esphome-ecodan-hp/releases/latest/download/FILE",
-          "release_url": "https://github.com/gekkekoe/esphome-ecodan-hp/releases/tag/TAG"
-        }
+          "md5": "MD5OTA",
+          "path": "https://github.com/gekkekoe/esphome-ecodan-hp/releases/latest/download/FILEOTA",
+          "release_url": "https://github.com/gekkekoe/esphome-ecodan-hp/releases/latest"
+        },
+        "parts": [
+          { 
+            "path": "https://github.com/gekkekoe/esphome-ecodan-hp/releases/latest/download/FILEFACTORY", 
+            "offset": 0 
+          }
+        ]
       }
     ]
   }

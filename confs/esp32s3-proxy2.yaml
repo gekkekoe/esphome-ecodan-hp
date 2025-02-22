@@ -3,9 +3,6 @@ esphome:
   friendly_name: ${friendlyName}
   platformio_options:
     board_build.flash_mode: dio
-  project:
-    name: Gekkekoe.Ecodan ESPHome Heatpump
-    version: "VERSION"
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -16,18 +13,6 @@ esp32:
     sdkconfig_options:
       COMPILER_OPTIMIZATION_SIZE: y
 
-# enable ota update via http request
-http_request:
-  buffer_size_tx: 20248
-
-ota:
-  - platform: http_request
-
-# update:
-#   - platform: http_request
-#     name: Firmware Update
-#     source: https://github.com/gekkekoe/esphome-ecodan-hp/releases/latest/download/manifest-esp32s3-proxy2.json
-  
 uart:
   - id: uart_ecodan
     rx_pin:

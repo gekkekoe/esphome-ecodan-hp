@@ -1,0 +1,17 @@
+esphome:
+  project:
+    name: Gekkekoe.Ecodan ESPHome Heatpump
+    version: "VERSION"
+
+# enable ota update via http request
+http_request:
+  buffer_size_tx: 20248
+
+ota:
+  - platform: esphome
+  - platform: http_request
+
+update:
+  - platform: http_request
+    name: Firmware Update
+    source: https://github.com/gekkekoe/esphome-ecodan-hp/releases/latest/download/manifest.json
