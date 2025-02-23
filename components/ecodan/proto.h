@@ -405,6 +405,11 @@ namespace ecodan
             return uint16_t(payload()[index] << 8) | payload()[index + 1];
         }
 
+        int16_t get_uint16_v2(size_t index)
+        {
+            return uint16_t(payload()[index+1] << 8) | payload()[index];
+        }
+
         int16_t get_int16(size_t index)
         {
             return int16_t(payload()[index] << 8) | payload()[index + 1];

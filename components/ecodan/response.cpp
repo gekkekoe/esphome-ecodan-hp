@@ -48,7 +48,7 @@ namespace ecodan
                 if (res[3] == 2) {
                     switch(res_request_code) {
                         case Status::REQUEST_CODE::COMPRESSOR_STARTS:
-                            status.RcCompressorStarts = res.get_int16_v2(4) * 100;
+                            status.RcCompressorStarts = res.get_uint16_v2(4) * 100;
                             publish_state("compressor_starts", static_cast<float>(status.RcCompressorStarts));
                         break;
                         case Status::REQUEST_CODE::TH4_DISCHARGE_TEMP:
