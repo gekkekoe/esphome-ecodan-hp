@@ -14,6 +14,7 @@ jobs:
       matrix: 
         lang: [en, nl, es, fr, it]
         board: [esp32s3, esp32s3-proxy2]
+        zone: [z1, z2]
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -21,8 +22,8 @@ jobs:
         run: |
           echo "wifi_ssid: dummy" > secrets.yaml
           echo "wifi_password: dummydummydummy" >> secrets.yaml
-          echo "PREFIX=${{ matrix.board }}-${{ matrix.lang }}-${{ github.event.release.tag_name }}" >> $GITHUB_ENV
-          echo "MANIFEST=manifest-${{ matrix.board }}-${{ matrix.lang }}" >> $GITHUB_ENV
+          echo "PREFIX=${{ matrix.board }}-${{ matrix.zone }}-${{ matrix.lang }}-${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          echo "MANIFEST=manifest-${{ matrix.board }}-${{ matrix.zone }}-${{ matrix.lang }}" >> $GITHUB_ENV
 
       - name: prepare build yaml
         run: |
@@ -31,6 +32,12 @@ jobs:
               s/#confs\\/esp32s3-led.yaml/confs\/esp32s3-led.yaml/g" ecodan-esphome.yaml > build.yaml
           sed "s/manifest/$MANIFEST/g; s/VERSION/$PREFIX/g" confs/ota.yaml > ota.yaml
           echo "<<: !include ota.yaml" >> build.yaml
+
+      - if: matrix.zone == 'z2'
+        name: adjust build.yaml for 2 zones
+        run: |
+          cat build.yaml
+          sed -i "s/#confs\\/zone2.yaml/confs\/zone2.yaml/g" build.yaml
 
       - name: Generated yaml
         run: |
@@ -72,6 +79,13 @@ jobs:
               s/FILEOTA/$PREFIX.ota.bin/g; \
               s/FILEFACTORY/$PREFIX.factory.bin/g" json/manifest.json > $MANIFEST.json
           cat $MANIFEST.json
+
+      - if: matrix.zone == 'z1'
+        name: Copy z1 to default manifest for backwards compatibility purposes
+        run: |
+          Z1MANIFEST=manifest-${{ matrix.board }}-${{ matrix.lang }}
+          cp $MANIFEST.json $Z1MANIFEST.json
+          cat $Z1MANIFEST.json
       
       - name: Upload OTA firmwares
         uses: svenstaro/upload-release-action@v2
