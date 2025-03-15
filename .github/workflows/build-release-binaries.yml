@@ -6,6 +6,9 @@ on:
       - created
 #  workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build Release Assets
@@ -61,13 +64,21 @@ jobs:
           pip install esphome
 
       - name: Build firmware
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        shell: bash
         run: |
           source venv/bin/activate
           esphome compile build.yaml
           cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.ota.bin $PREFIX.ota.bin
           cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.factory.bin $PREFIX.factory.bin
+          gh release upload ${{github.event.release.tag_name}} $PREFIX.ota.bin
+          gh release upload ${{github.event.release.tag_name}} $PREFIX.factory.bin
 
       - name: Create manifest.json for firmware
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        shell: bash
         run: |
           md5ota=$(md5sum $PREFIX.ota.bin | cut -d ' ' -f 1)
           echo "md5: $md5ota"
@@ -79,28 +90,15 @@ jobs:
               s/FILEOTA/$PREFIX.ota.bin/g; \
               s/FILEFACTORY/$PREFIX.factory.bin/g" json/manifest.json > $MANIFEST.json
           cat $MANIFEST.json
+          gh release upload ${{github.event.release.tag_name}} $MANIFEST.json
 
       - if: matrix.zone == 'z1'
         name: Copy z1 to default manifest for backwards compatibility purposes
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        shell: bash
         run: |
           Z1MANIFEST=manifest-${{ matrix.board }}-${{ matrix.lang }}
           cp $MANIFEST.json $Z1MANIFEST.json
           cat $Z1MANIFEST.json
-      
-      - name: Upload OTA firmwares
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }}
-          file: ${{ matrix.board }}*.bin
-          file_glob: true
-
-      - name: Upload OTA manifests
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }}
-          file: manifest*.json
-          file_glob: true
-
-  
+          gh release upload ${{github.event.release.tag_name}} $Z1MANIFEST.json
