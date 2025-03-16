@@ -91,14 +91,3 @@ jobs:
               s/FILEFACTORY/$PREFIX.factory.bin/g" json/manifest.json > $MANIFEST.json
           cat $MANIFEST.json
           gh release upload ${{github.event.release.tag_name}} $MANIFEST.json
-
-      - if: matrix.zone == 'z1'
-        name: Copy z1 to default manifest for backwards compatibility purposes
-        env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
-        shell: bash
-        run: |
-          Z1MANIFEST=manifest-${{ matrix.board }}-${{ matrix.lang }}
-          cp $MANIFEST.json $Z1MANIFEST.json
-          cat $Z1MANIFEST.json
-          gh release upload ${{github.event.release.tag_name}} $Z1MANIFEST.json
