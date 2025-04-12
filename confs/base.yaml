@@ -145,6 +145,22 @@ text_sensor:
       }
 
   - platform: template
+    id: refrigerant_code
+    name: ${refrigerant_code}
+    entity_category: diagnostic
+    update_interval: 60s
+    icon: mdi:coolant-temperature
+    lambda: |-
+      auto value = id(ecodan_instance).get_status().RefrigerantCode;
+      switch (value)
+      {
+          case 0: return std::string("R410A");
+          case 1: return std::string("R32");
+          case 2: return std::string("R290");
+          default: return std::string("Unknown");
+      }
+  
+  - platform: template
     id: refrigerant_error_code_text
     name: ${refrigerant_error_code_text}
     entity_category: diagnostic

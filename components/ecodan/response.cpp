@@ -380,6 +380,10 @@ namespace ecodan
             // byte 6 = ftc, ft2b , ftc4, ftc5, ftc6
             status.Controller = res[6];
             publish_state("controller_version", static_cast<float>(status.Controller));
+
+            // byte 10 = R410A, R32, R290
+            status.RefrigerantCode = res[10];
+
             break;
         case GetType::DIP_SWITCHES:
             status.DipSwitch1 = res[1];
