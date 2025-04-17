@@ -18,6 +18,16 @@ climate:
 
 switch:
   - platform: template
+    name: UART Logging
+    id: uart_debug_switch
+    restore_mode: ALWAYS_OFF
+    optimistic: true
+    turn_on_action:
+      - logger.set_level: VERBOSE
+    turn_off_action:
+      - logger.set_level: ERROR
+
+  - platform: template
     name: ${heatpump_switch_force_dhw}
     id: heatpump_switch_force_dhw
     restore_mode: DISABLED

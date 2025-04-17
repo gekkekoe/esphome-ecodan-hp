@@ -25,7 +25,7 @@ api:
 # packages:
 #  base: !include confs/base.yaml # required
 #  req: !include confs/request-codes.yaml 
-#  esp32: !include confs/esp32s3-proxy2.yaml # esp32.yaml for regular board
+#  esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
 #  led_status: !include confs/esp32s3-led.yaml
 #  zone1: !include confs/zone1.yaml
 # # disable if you don't want to use zone 2
@@ -68,17 +68,17 @@ packages:
 # enable logger
 logger:
   baud_rate: 115200
-  logs:
-    esp32.preferences: ERROR
-    sensor: ERROR
-    text_sensor: ERROR
-    binary_sensor: ERROR
-    switch: ERROR
-    button: ERROR
-    number: ERROR
-    climate: ERROR
-    component: ERROR
-    ecodan.component: ERROR
+  # logs:
+  #   esp32.preferences: ERROR
+  #   sensor: ERROR
+  #   text_sensor: ERROR
+  #   binary_sensor: ERROR
+  #   switch: ERROR
+  #   button: ERROR
+  #   number: ERROR
+  #   climate: ERROR
+  #   component: ERROR
+  #   ecodan.component: ERROR
 
 # Enable Web server.
 web_server:
