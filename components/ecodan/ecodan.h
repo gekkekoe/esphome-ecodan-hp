@@ -72,7 +72,6 @@ namespace ecodan
         void publish_state(const std::string& sensorKey, bool sensorValue);
 
         bool begin_connect();
-        bool begin_update_status();
 
         bool initialize();
         void handle_loop();
@@ -84,6 +83,7 @@ namespace ecodan
         Message res_buffer_;
         Message proxy_buffer_;
         int rx_sync_fail_count = 0;
+        uint8_t initialCount = 0;
 
         Status status;
         float temperatureStep = 0.5f;
@@ -97,6 +97,14 @@ namespace ecodan
 
         bool serial_rx(uart::UARTComponent *uart, Message& msg, bool count_sync_errors = false);
         bool serial_tx(uart::UARTComponent *uart, Message& msg);
+        
+        bool disconnect();
+        void reset_connection() {
+            connected = false;
+            initialCount = 0;
+            disconnect();
+        };
+        bool initialCmdCompleted() { return initialCount == 3; };
 
         bool dispatch_next_status_cmd();
         bool dispatch_next_cmd();

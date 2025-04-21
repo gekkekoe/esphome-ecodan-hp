@@ -125,7 +125,7 @@ namespace ecodan
         if (now - last_response > std::chrono::minutes(2))
         {
             last_response = now;
-            connected = false;
+            reset_connection();
             ESP_LOGW(TAG, "No reply received from the heatpump in the last 2 minutes, going to reconnect...");
         }
     

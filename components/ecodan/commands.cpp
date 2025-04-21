@@ -205,7 +205,13 @@ namespace ecodan
         return dispatch_next_cmd();
     }
 
-    #define MAX_STATUS_CMD_SIZE 22
+    #define MAX_INITIAL_CMD_SIZE 2
+    Message initialCmdQueue[MAX_INITIAL_CMD_SIZE] = {
+        Message{MsgType::GET_CONFIGURATION, GetType::HARDWARE_CONFIGURATION},
+        Message{MsgType::GET_CMD, GetType::DIP_SWITCHES}
+    };
+
+    #define MAX_STATUS_CMD_SIZE 20
     Message statusCmdQueue[MAX_STATUS_CMD_SIZE] = {
         Message{MsgType::GET_CMD, GetType::DATETIME_FIRMWARE},
         Message{MsgType::GET_CMD, GetType::DEFROST_STATE},
@@ -226,9 +232,7 @@ namespace ecodan
         Message{MsgType::GET_CMD, GetType::MODE_FLAGS_A},
         Message{MsgType::GET_CMD, GetType::MODE_FLAGS_B},
         Message{MsgType::GET_CMD, GetType::ENERGY_USAGE},
-        Message{MsgType::GET_CMD, GetType::ENERGY_DELIVERY},
-        Message{MsgType::GET_CONFIGURATION, GetType::HARDWARE_CONFIGURATION},
-        Message{MsgType::GET_CMD, GetType::DIP_SWITCHES}
+        Message{MsgType::GET_CMD, GetType::ENERGY_DELIVERY}
     };
 
     struct ServiceCodeRuntime {
@@ -263,7 +267,7 @@ namespace ecodan
         loopIndex = (loopIndex + 1) % MAX_STATUS_CMD_SIZE;
 
         // only execute when we have sensors and a ftc version is known, since ftc7 gets a lot for free
-        if (hasRequestCodeSensors && loopIndex == 0) {
+        if (hasRequestCodeSensors && initialCmdCompleted() && loopIndex == 0) {
             int counter = 0;
             while (counter <= MAX_SERVICE_CODE_CMD_SIZE && activeRequestCode == Status::REQUEST_CODE::NONE) {
                 counter++;
@@ -287,13 +291,14 @@ namespace ecodan
             return true;
         }
 
-        cmdIndex = (cmdIndex + 1) % MAX_STATUS_CMD_SIZE;
-        if (!serial_tx(uart_, statusCmdQueue[cmdIndex]))
+        cmdIndex = (cmdIndex + 1) % (!initialCmdCompleted() ? MAX_INITIAL_CMD_SIZE : MAX_STATUS_CMD_SIZE);
+        auto& cmd = !initialCmdCompleted() ? initialCmdQueue[cmdIndex] : statusCmdQueue[cmdIndex];
+        if (!serial_tx(uart_, cmd))
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
             cmdIndex = 0;
             serviceCodeCmdIndex = 0;
-            connected = false;
+            reset_connection();
             return false;
         }
         return true;
@@ -305,7 +310,7 @@ namespace ecodan
             if (!serial_tx(uart_, svc_cmd))
             {
                 ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
-                connected = false;
+                reset_connection();
                 return false;
             }
             return false;
@@ -329,7 +334,7 @@ namespace ecodan
         if (!serial_tx(uart_, cmdQueue.front()))
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
-            connected = false;
+            reset_connection();
             return false;
         }
 
@@ -346,6 +351,22 @@ namespace ecodan
         if (!serial_tx(uart_, cmd))
         {
             ESP_LOGI(TAG, "Failed to tx CONNECT_CMD!");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool EcodanHeatpump::disconnect()
+    {
+        Message cmd{MsgType::CONNECT_CMD};
+        uint8_t payload[2] = {0xCA, 0x02};
+        cmd.write_payload(payload, sizeof(payload));
+
+        ESP_LOGI(TAG, "Attempt to tx DISCONNECT_CMD!");
+        if (!serial_tx(uart_, cmd))
+        {
+            ESP_LOGI(TAG, "Failed to tx DISCONNECT_CMD!");
             return false;
         }
 

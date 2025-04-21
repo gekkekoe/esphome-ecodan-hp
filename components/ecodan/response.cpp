@@ -383,6 +383,7 @@ namespace ecodan
 
             // byte 10 = R410A, R32, R290
             status.RefrigerantCode = res[10];
+            initialCount |= 1;
 
             break;
         case GetType::DIP_SWITCHES:
@@ -392,6 +393,7 @@ namespace ecodan
             status.DipSwitch4 = res[7];
             status.DipSwitch5 = res[9];
             status.DipSwitch6 = res[11];
+            initialCount |= 2;
             break;
         default:
             ESP_LOGI(TAG, "Unknown response type received on serial port: %u", static_cast<uint8_t>(res.payload_type<GetType>()));
