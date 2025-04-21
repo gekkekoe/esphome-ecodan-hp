@@ -382,7 +382,7 @@ namespace ecodan
             publish_state("controller_version", static_cast<float>(status.Controller));
 
             // byte 10 = R410A, R32, R290
-            status.RefrigerantCode = res[10];
+            // status.RefrigerantCode = res[10];
             initialCount |= 1;
 
             break;

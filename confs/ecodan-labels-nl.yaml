@@ -114,7 +114,7 @@ substitutions:
   status_multi_zone_zone2: Z2 actief
   fault_code_text: Fout code
   refrigerant_error_code_text: Koelmiddel fout code
-  refrigerant_code: Koudemiddel
+  # refrigerant_code: Koudemiddel
   compressor_starts: Compressor Starts
   discharge_temp: Ontladingstemperatuur
   ou_liquid_pipe_temp: Buitenunit Vloeistofleiding 1

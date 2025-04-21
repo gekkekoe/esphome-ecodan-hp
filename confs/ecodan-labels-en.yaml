@@ -114,7 +114,7 @@ substitutions:
   status_multi_zone_zone2: Z2 Working
   fault_code_text: Fault code
   refrigerant_error_code_text: Refrigerant error code
-  refrigerant_code: Refrigerant
+  # refrigerant_code: Refrigerant
   compressor_starts: Accumulated Compressor Starts
   discharge_temp: Discharge Temp
   ou_liquid_pipe_temp: Outside Unit Liquid Pipe 1 Temp
