@@ -8,11 +8,13 @@ from esphome.const import (
 
 from . import ECODAN, CONF_ECODAN_ID, ECODAN_CLIMATE
 AUTO_LOAD = ["ecodan"]
+ecodan_ns = cg.esphome_ns.namespace("ecodan")
+EcodanClimate = ecodan_ns.class_("EcodanClimate", climate.Climate, cg.Component)
 
 CONFIG_SCHEMA = cv.Schema(
     {
         #cv.GenerateID(CONF_ECODAN_ID): cv.use_id(ECODAN), 
-        cv.Optional("heatpump_climate_z1"): climate.CLIMATE_SCHEMA.extend(
+        cv.Optional("heatpump_climate_z1"): climate.climate_schema(EcodanClimate).extend(
             {
                 cv.GenerateID(CONF_ID): cv.declare_id(ECODAN_CLIMATE),
                 cv.Required("get_status_func"): cv.string,
@@ -21,7 +23,7 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Optional("current_temp_func"): cv.string,
                 cv.Optional("zone_identifier"): cv.uint8_t,
             }).extend(cv.polling_component_schema('250ms')),
-        cv.Optional("heatpump_climate_room_z1"): climate.CLIMATE_SCHEMA.extend(
+        cv.Optional("heatpump_climate_room_z1"): climate.climate_schema(EcodanClimate).extend(
             {
                 cv.GenerateID(CONF_ID): cv.declare_id(ECODAN_CLIMATE),
                 cv.Required("get_status_func"): cv.string,
@@ -31,7 +33,7 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Optional("zone_identifier"): cv.uint8_t,
                 cv.Optional("thermostat_climate_mode"): cv.boolean,
             }).extend(cv.polling_component_schema('250ms')),            
-        cv.Optional("heatpump_climate_z2"): climate.CLIMATE_SCHEMA.extend(
+        cv.Optional("heatpump_climate_z2"): climate.climate_schema(EcodanClimate).extend(
             {
                 cv.GenerateID(CONF_ID): cv.declare_id(ECODAN_CLIMATE),
                 cv.Required("get_status_func"): cv.string,
@@ -40,7 +42,7 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Optional("current_temp_func"): cv.string,
                 cv.Optional("zone_identifier"): cv.uint8_t,
             }).extend(cv.polling_component_schema('250ms')),
-        cv.Optional("heatpump_climate_room_z2"): climate.CLIMATE_SCHEMA.extend(
+        cv.Optional("heatpump_climate_room_z2"): climate.climate_schema(EcodanClimate).extend(
             {
                 cv.GenerateID(CONF_ID): cv.declare_id(ECODAN_CLIMATE),
                 cv.Required("get_status_func"): cv.string,
@@ -50,7 +52,7 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.Optional("zone_identifier"): cv.uint8_t,
                 cv.Optional("thermostat_climate_mode"): cv.boolean,
             }).extend(cv.polling_component_schema('250ms')),     
-        cv.Optional("heatpump_climate_dhw"): climate.CLIMATE_SCHEMA.extend(
+        cv.Optional("heatpump_climate_dhw"): climate.climate_schema(EcodanClimate).extend(
             {
                 cv.GenerateID(CONF_ID): cv.declare_id(ECODAN_CLIMATE),
                 cv.Required("get_status_func"): cv.string,
