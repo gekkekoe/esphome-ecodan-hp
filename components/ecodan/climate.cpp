@@ -179,8 +179,7 @@ namespace ecodan
         if (this->dhw_climate_mode)  {
 
             traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT});
-            // allow 0 as min temp, ftc accepts it, eventhough mrc shows 40c
-            traits.set_visual_min_temperature(0);
+            traits.set_visual_min_temperature(40);
             traits.set_visual_max_temperature(60);
         }
         else if(this->thermostat_climate_mode) {
