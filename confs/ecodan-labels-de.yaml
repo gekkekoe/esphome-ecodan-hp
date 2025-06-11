@@ -1,0 +1,126 @@
+substitutions:
+  boiler: Kessel
+  boiler_flow_temp: Kessel-Vorlauftemperatur
+  boiler_return_temp: Kessel-Rücklauftemperatur
+  booster_heater: Zusatzheizung
+  compressor_frequency: Kompressor-Frequenz
+  compressor_starts: Kompressor-Starts (kumuliert)
+  computed_cop: Geschätzter COP
+  computed_output_power: Geschätzte Leistung
+  controller_datetime_text: Controller-Datum
+  controller_firmware_text: Controller-Firmware
+  controller_version_text: Controller-Version
+  cool_consumed: Kühlung Verbraucht
+  cool_cop: Kühlung COP
+  cool_delivered: Kühlung Geliefert
+  cool_flow_temperature: Kühl-Vorlauftemperatur
+  cool_target_temperature: Kühl-Solltemperatur
+  cooling: Raumkühlung
+  daily_computed_output_power: Geschätzte tägliche Energieproduktion
+  daily_repported_input_power: Gemeldeter täglicher Energieverbrauch
+  dhw_consumed: TWW Verbraucht
+  dhw_cop: TWW COP
+  dhw_delivered: TWW Geliefert
+  dhw_flow_temp_drop: TWW Maximale Temp-Absenkung
+  dhw_flow_temp_target: TWW Sollwert
+  dhw_secondary_temp: TWW Sekundärtemperatur
+  dhw_temp: TWW Aktuelle Temperatur
+  discharge_temp: Ablass-Temperatur
+  eco: Eco
+  energy_consumed_increasing: Gesamtenergieverbrauch
+  esp_ip: ESP-IP
+  esp_sidd: ESP SSID
+  esp_version: ESP Version
+  fan_speed: Lüftergeschwindigkeit
+  fault_code_text: Fehlercode
+  flow_rate: Durchflussrate
+  frost_protection: Frostschutz
+  heat_compensation_curve: Heiz-Kompensationskurve
+  heat_flow_temperature: Heiz-Vorlauftemperatur
+  heat_source_text: Wärmequelle
+  heat_target_temperature: Heiz-Solltemperatur
+  heating: Raumheizung
+  heating_consumed: Heizung Verbraucht
+  heating_cop: Heizung COP
+  heating_delivered: Heizung Geliefert
+  heatpump: Wärmepumpe
+  heatpump_climate_dhw: Trinkwarmwasser (TWW) Klima
+  heatpump_climate_room_z1: Zone 1 Raumtemperatur
+  heatpump_climate_room_z2: Zone 2 Temperatur
+  heatpump_climate_z1: Zone 1 Heizen/Kühlen
+  heatpump_climate_z2: Zone 2 Heizen/Kühlen
+  heatpump_number_z2_set_flow_temperature: Zone 2 Heiz-/Kühl-Sollwert
+  heatpump_number_z2_set_room_temperature: Zone 2 Raum-Sollwert
+  heatpump_select_dhw_mode: TWW-Modus
+  heatpump_select_operating_mode: Betriebsmodus
+  heatpump_switch_force_dhw: TWW erzwingen
+  heatpump_switch_holiday: Urlaubsmodus
+  heatpump_switch_power_mode: Wärmepumpe
+  hotwater: Warmwasser
+  hp_feed_temp: Vorlauftemperatur
+  hp_refrigerant_condensing_temp: Kältemittel-Verflüssigungstemperatur
+  hp_refrigerant_temp: Kältemittel-Flüssigkeitstemperatur
+  hp_return_temp: Rücklauftemperatur
+  immersion_and_booster_heater: Elektro- und Zusatzheizung
+  immersion_heater: Elektroheizung
+  internal_esp_temperature: ESP Innentemperatur
+  led_brightness: LED-Helligkeit
+  led_switch: LED
+  legionella_prevention: Legionellen-Schutz
+  legionella_prevention_temp: Legionellen-Schutztemperatur
+  mixing_tank_temp: Mischbehälter-Temperatur
+  mixing_valve_step: Mischventil-Schritt
+  normal: Normal
+  operation_off: Aus
+  ou_compressor_surface_temp: Außengerät Kompressor-Oberflächentemp
+  ou_heatsink_temp: Außengerät Kühlkörper Temp
+  ou_liquid_pipe_temp: Außengerät Flüssigkeitsleitung 1 Temp
+  ou_suction_pipe_temp: Außengerät Saugleitung Temp
+  ou_two_phase_pipe_temp: Außengerät Zweiphasenleitung Temp
+  output_power: Ausgangsleistung
+  outside_temp: Außentemperatur
+  refrigerant_error_code_text: Kältemittel-Fehlercode
+  restart_button: ESP neu starten
+  runtime: Betriebszeit
+  status_booster: Zusatzheizung
+  status_defrost: Abtauen
+  status_dhw_eco: TWW Eco
+  status_dhw_forced: TWW Erzwungen
+  status_holiday: Urlaubsmodus
+  status_immersion: Elektroheizung
+  status_in1_request: In1 Thermostat
+  status_in5_request: In5 Außenthermostat
+  status_in6_request: In6 Thermostat 2
+  status_mixing_valve: Mischventil-Status
+  status_multi_zone: Multi-Zonen-Status
+  status_multi_zone_both: Beide
+  status_multi_zone_idle: Leerlauf
+  status_multi_zone_zone1: Z1 Aktiv
+  status_multi_zone_zone2: Z2 Aktiv
+  status_operation: Betriebsmodus
+  status_prohibit_cool_z1: Zone 1 Kühlung gesperrt
+  status_prohibit_cool_z2: Zone 2 Kühlung gesperrt
+  status_prohibit_dhw: TWW Sperre
+  status_prohibit_heating_z1: Zone 1 Heizung gesperrt
+  status_prohibit_heating_z2: Zone 2 Heizung gesperrt
+  status_three_way_valve: 3-Wege-Ventil
+  status_three_way_valve_2: 3-Wege-Ventil 2
+  status_water_pump: Wasserpumpen-Status
+  status_water_pump_2: Wasserpumpen-Status 2
+  status_water_pump_3: Wasserpumpen-Status 3
+  sub_cool_temp: Unterkühlungstemperatur
+  super_heat_temp: Ablass-Überhitzungstemperatur
+  uptime: ESP Betriebszeit
+  version: ESP Version
+  wifi_signal_db: WiFi-Signal dB
+  wifi_signal_proc: WiFi-Signal %
+  z1_feed_temp: Z1 Vorlauftemperatur
+  z1_flow_temp_target: Zone 1 Heizen/Kühlen Sollwert
+  z1_return_temp: Z1 Rücklauftemperatur
+  z1_room_temp: Zone 1 Raumtemperatur
+  z1_room_temp_target: Zone 1 Raum-Sollwert
+  z2_feed_temp: Z2 Vorlauftemperatur
+  z2_flow_temp_target: Zone 2 Heizen/Kühlen Sollwert
+  z2_return_temp: Z2 Rücklauftemperatur
+  z2_room_temp: Zone 2 Raumtemperatur
+  z2_room_temp_target: Zone 2 Raum-Sollwert
