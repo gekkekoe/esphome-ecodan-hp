@@ -1,0 +1,127 @@
+substitutions:
+  status_three_way_valve: 3-tieventtiili
+  status_three_way_valve_2: 3-tieventtiili 2
+  heatpump_climate_dhw: LKV ilmasto
+  dhw_temp: LKV lämpötila
+  dhw_secondary_temp: LKV toissijainen lämpötila
+  status_dhw_forced: LKV pakotettu
+  dhw_flow_temp_drop: LKV maksimilämpötilan pudotus
+  status_prohibit_dhw: LKV esto
+  dhw_flow_temp_target: LKV asetusarvo
+  status_dhw_eco: LKV Eco
+  esp_ip: ESP IP-osoite
+  internal_esp_temperature: ESP:n sisäinen lämpötila
+  esp_sidd: ESP SSID
+  uptime: ESP:n käyntiaika
+  esp_version: ESP-versio
+  restart_button: ESP:n uudelleenkäynnistys
+  status_in1_request: In1 Termostaatti
+  status_in6_request: In6 Termostaatti 2
+  status_in5_request: In5 Ulkolämpötila-anturi
+  heatpump_select_dhw_mode: LKV tila
+  normal: Normaali
+  eco: Säästö
+  version: ESP-versio
+  led_brightness: LEDin kirkkaus
+  led_switch: LED
+  heatpump_switch_force_dhw: Pakota LKV
+  heatpump_switch_power_mode: Lämpöpumppu
+  heatpump_switch_holiday: Lomatoiminto
+  wifi_signal_proc: WiFi-signaali %
+  wifi_signal_db: WiFi-signaali dB
+  z1_flow_temp_target: Vyöhyke 1 L/J asetusarvo
+  status_prohibit_cool_z1: Vyöhyke 1 jäähdytyksen esto
+  status_prohibit_heating_z1: Vyöhyke 1 lämmityksen esto
+  heatpump_climate_z1: Vyöhyke 1 ilmasto
+  heatpump_climate_room_z1: Vyöhyke 1 huonelämpötila
+  z1_room_temp_target: Vyöhyke 1 huoneen asetusarvo
+  z1_room_temp: Vyöhyke 1 huonelämpötila
+  heatpump_number_z2_set_flow_temperature: Vyöhyke 2 L/J asetusarvo
+  z2_flow_temp_target: Vyöhyke 2 L/J asetusarvo
+  status_prohibit_cool_z2: Vyöhyke 2 jäähdytyksen esto
+  status_prohibit_heating_z2: Vyöhyke 2 lämmityksen esto
+  heatpump_number_z2_set_room_temperature: Vyöhyke 2 huoneen asetusarvo
+  heatpump_climate_z2: Vyöhyke 2 ilmasto
+  heatpump_climate_room_z2: Vyöhyke 2 huonelämpötila
+  z2_room_temp_target: Vyöhyke 2 huoneen asetusarvo
+  z2_room_temp: Vyöhyke 2 huonelämpötila
+  mixing_tank_temp: Sekoitussäiliön lämpötila
+  boiler_flow_temp: Kattilan menolämpötila
+  boiler_return_temp: Kattilan paluulämpötila
+  status_booster: Tehostinlämmitin
+  compressor_frequency: Kompressorin taajuus
+  controller_version_text: Ohjaimen versio
+  controller_firmware_text: Ohjaimen laiteohjelmisto
+  controller_datetime_text: Ohjaimen päivämäärä
+  cool_consumed: Jäähdytys kulutettu
+  cool_cop: Jäähdytyksen COP
+  cool_delivered: Jäähdytys tuotettu
+  status_defrost: Sulatus
+  dhw_consumed: LKV kulutettu
+  dhw_cop: LKV COP
+  dhw_delivered: LKV tuotettu
+  hp_feed_temp: Menolämpötila
+  z1_feed_temp: Vyöhyke 1 menolämpötila
+  z2_feed_temp: Vyöhyke 2 menolämpötila
+  flow_rate: Virtausnopeus
+  heat_source_text: Lämpölähde
+  heatpump: Lämpöpumppu
+  immersion_heater: Vastuslämmitin
+  booster_heater: Tehostinlämmitin
+  immersion_and_booster_heater: Vastus- ja tehostinlämmitin
+  boiler: Kattila
+  energy_consumed_increasing: Kokonaisenergiankulutus
+  heating_consumed: Lämmityksen kulutus
+  heating_cop: Lämmityksen COP
+  heating_delivered: Lämmityksen tuotanto
+  status_holiday: Lomatoiminto
+  status_immersion: Vastuslämmitin
+  legionella_prevention_temp: Legionellasuojauslämpötila
+  heatpump_select_operating_mode: Valittu toimintatila
+  heat_target_temperature: Lämmityksen tavoitelämpötila
+  heat_flow_temperature: Lämmityksen menolämpötila
+  heat_compensation_curve: Lämmityksen kompensaatiokäyrä
+  cool_target_temperature: Jäähdytyksen tavoitelämpötila
+  cool_flow_temperature: Jäähdytyksen menolämpötila
+  operation_off: "Pois"
+  hotwater: Käyttöveden lämmitys
+  heating: Tilojen lämmitys
+  cooling: Tilojen jäähdytys
+  frost_protection: Jäätymissuojaus
+  legionella_prevention: Legionellasuojaus
+  runtime: Käyttöaika
+  status_operation: Toimintatila
+  output_power: Lähtöteho
+  computed_output_power: Arvioitu lähtöteho
+  computed_cop: Arvioitu COP
+  daily_computed_output_power: Arvioitu päivittäinen tuotettu energia
+  daily_repported_input_power: Raportoitu päivittäinen energiankulutus
+  outside_temp: Ulkolämpötila
+  hp_refrigerant_temp: Kylmäaineen nestelämpötila
+  hp_refrigerant_condensing_temp: Kylmäaineen lauhtumislämpötila
+  hp_return_temp: Paluulämpötila
+  z1_return_temp: Vyöhyke 1 paluulämpötila
+  z2_return_temp: Vyöhyke 2 paluulämpötila 
+  status_water_pump: Vesipumpun tila
+  status_water_pump_2: Vesipumppu 2 tila
+  status_water_pump_3: Vesipumppu 3 tila
+  status_mixing_valve: Sekoitusventtiilin tila
+  mixing_valve_step: Sekoitusventtiilin asento
+  status_multi_zone: Monivyöhyketila
+  status_multi_zone_idle: Lepotila
+  status_multi_zone_both: Molemmat
+  status_multi_zone_zone1: Vyöhyke 1 käytössä
+  status_multi_zone_zone2: Vyöhyke 2 käytössä
+  fault_code_text: Vikakoodi
+  refrigerant_error_code_text: Kylmäaineen vikakoodi
+  # refrigerant_code: Kylmäaine
+  compressor_starts: Kompressorin käynnistykset yhteensä
+  discharge_temp: Puristuslämpötila
+  ou_liquid_pipe_temp: Ulkoyksikön nestelinjan lämpötila 1
+  ou_two_phase_pipe_temp: Ulkoyksikön kaksivaiheputken lämpötila
+  ou_suction_pipe_temp: Ulkoyksikön imulinjan lämpötila
+  ou_heatsink_temp: Ulkoyksikön jäähdytysrivan lämpötila
+  ou_compressor_surface_temp: Ulkoyksikön kompressorin pintalämpötila
+  super_heat_temp: Puristuksen ylikuumenemislämpötila
+  sub_cool_temp: Alijäähdytyslämpötila
+  fan_speed: Puhaltimen nopeus
