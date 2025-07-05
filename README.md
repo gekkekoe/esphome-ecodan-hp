@@ -4,7 +4,7 @@ ESPHome implementation of the CN105 protocol. It can operate as standalone or wi
 The remote thermostat protocol CNRF is supported by https://github.com/gekkekoe/esphome-ecodan-remote-thermostat. It implements a virtual thermostat that can be linked with any temperature sensor.
 
 # available languages
-English (default), Dutch, Italian, French, Spanish, German. Select the language in `ecodan-esphome.yaml` file. 
+English (default), Dutch, Italian, French, Spanish, German, Finnish. Select the language in `ecodan-esphome.yaml` file. 
 If you want to contribute with a translation: copy the file `ecodan-labels-en.yaml` to `ecodan-labels-xx.yaml`, fill in all the labels and submit a pull request.
 
 # features
