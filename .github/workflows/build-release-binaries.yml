@@ -61,7 +61,7 @@ jobs:
           python -m venv venv
           source venv/bin/activate
           pip install wheel
-          pip install esphome
+          pip install esphome==2025.5.2
 
       - name: Build firmware
         env:
