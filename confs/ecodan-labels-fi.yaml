@@ -1,7 +1,7 @@
 substitutions:
   status_three_way_valve: 3-tieventtiili
   status_three_way_valve_2: 3-tieventtiili 2
-  heatpump_climate_dhw: LKV ilmastointi
+  heatpump_climate_dhw: LKV tila
   dhw_temp: LKV lämpötila
   dhw_secondary_temp: LKV toissijainen lämpötila
   status_dhw_forced: LKV pakotettu
@@ -29,19 +29,19 @@ substitutions:
   heatpump_switch_holiday: Lomatoiminto
   wifi_signal_proc: WiFi-signaali %
   wifi_signal_db: WiFi-signaali dB
-  z1_flow_temp_target: Vyöhyke 1 H/J asetusarvo
+  z1_flow_temp_target: Vyöhyke 1 L/J asetusarvo
   status_prohibit_cool_z1: Vyöhyke 1 jäähdytyksen esto
   status_prohibit_heating_z1: Vyöhyke 1 lämmityksen esto
-  heatpump_climate_z1: Vyöhyke 1 ilmastointi
+  heatpump_climate_z1: Vyöhyke 1 tila
   heatpump_climate_room_z1: Vyöhyke 1 huonelämpötila
   z1_room_temp_target: Vyöhyke 1 huoneen asetusarvo
   z1_room_temp: Vyöhyke 1 huonelämpötila
-  heatpump_number_z2_set_flow_temperature: Vyöhyke 2 H/J asetusarvo
-  z2_flow_temp_target: Vyöhyke 2 H/J asetusarvo
+  heatpump_number_z2_set_flow_temperature: Vyöhyke 2 L/J asetusarvo
+  z2_flow_temp_target: Vyöhyke 2 L/J asetusarvo
   status_prohibit_cool_z2: Vyöhyke 2 jäähdytyksen esto
   status_prohibit_heating_z2: Vyöhyke 2 lämmityksen esto
   heatpump_number_z2_set_room_temperature: Vyöhyke 2 huoneen asetusarvo
-  heatpump_climate_z2: Vyöhyke 2 ilmastointi
+  heatpump_climate_z2: Vyöhyke 2 tila
   heatpump_climate_room_z2: Vyöhyke 2 huonelämpötila
   z2_room_temp_target: Vyöhyke 2 huoneen asetusarvo
   z2_room_temp: Vyöhyke 2 huonelämpötila
