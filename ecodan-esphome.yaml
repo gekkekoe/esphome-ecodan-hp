@@ -9,6 +9,7 @@ http_request:
 ota:
   - platform: esphome
   - platform: http_request
+  - platform: web_server
 #  password: !secret heatpump_ota_password
 
 api:

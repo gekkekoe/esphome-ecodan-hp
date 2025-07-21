@@ -10,6 +10,7 @@ http_request:
 ota:
   - platform: esphome
   - platform: http_request
+  - platform: web_server
 
 update:
   - platform: http_request
