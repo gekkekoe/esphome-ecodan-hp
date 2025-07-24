@@ -32,7 +32,8 @@ jobs:
         run: |
           sed "s/esp32s3.yaml,/${{ matrix.board }}.yaml,/g; \
               s/ecodan-labels-en.yaml,/ecodan-labels-${{ matrix.lang }}.yaml,/g; \
-              s/#confs\\/esp32s3-led.yaml/confs\/esp32s3-led.yaml/g" ecodan-esphome.yaml > build.yaml
+              s/#confs\\/esp32s3-led.yaml/confs\/esp32s3-led.yaml/g; \
+              s/confs\\/wifi.yaml/confs\/wifi-ota.yaml/g" ecodan-esphome.yaml > build.yaml
           sed "s/manifest/$MANIFEST/g; s/VERSION/$PREFIX/g" confs/ota.yaml > ota.yaml
           echo "<<: !include ota.yaml" >> build.yaml
 
