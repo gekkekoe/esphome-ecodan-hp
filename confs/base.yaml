@@ -460,6 +460,7 @@ binary_sensor:
     status_holiday:
       id: status_holiday
       name: ${status_holiday}
+      trigger_on_initial_state: true
       on_state:
         if:
           condition:
@@ -483,6 +484,7 @@ binary_sensor:
     status_dhw_forced:
       name: ${status_dhw_forced}
       id: status_dhw_forced
+      trigger_on_initial_state: true
       on_state:
         if:
           condition:
@@ -506,6 +508,7 @@ binary_sensor:
     status_power:
       internal: true
       id: status_power
+      trigger_on_initial_state: true
       on_state:
         if:
           condition:

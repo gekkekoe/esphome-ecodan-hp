@@ -3,6 +3,7 @@
     status_server_control:
       internal: true
       id: status_server_control
+      trigger_on_initial_state: true
       on_state:
         if:
           condition:
@@ -26,6 +27,7 @@
     status_server_control_prohibit_dhw:
       id: status_server_control_prohibit_dhw
       internal: true
+      trigger_on_initial_state: true
       on_state:
         if:
           condition:
@@ -51,6 +53,7 @@
     status_server_control_prohibit_heating_z1:
       id: status_server_control_prohibit_heating_z1
       internal: true
+      trigger_on_initial_state: true
       on_state:
         if:
           condition:
@@ -76,6 +79,7 @@
     status_server_control_prohibit_cool_z1:
       id: status_server_control_prohibit_cool_z1
       internal: false
+      trigger_on_initial_state: true
       on_state:
         if:
           condition:
@@ -101,6 +105,7 @@
     status_server_control_prohibit_heating_z2:
       id: status_server_control_prohibit_heating_z2
       internal: true
+      trigger_on_initial_state: true
       on_state:
         if:
           condition:
@@ -126,6 +131,7 @@
     status_server_control_prohibit_cool_z2:
       id: status_server_control_prohibit_cool_z2
       internal: true
+      trigger_on_initial_state: true
       on_state:
         if:
           condition:
