@@ -100,8 +100,8 @@ substitutions:
   hp_refrigerant_temp: Temp Liquide Réfrigérant
   hp_refrigerant_condensing_temp: Temp Condensation Liquide Réfrigérant
   hp_return_temp: Temp retour
-  z1_return_temp: Temp retour
-  z2_return_temp: Temp retour
+  z1_return_temp: z1 Temp retour
+  z2_return_temp: z2 Temp retour
   status_water_pump: Statut pompe à eau
   status_water_pump_2: Statut pompe à eau no2
   status_water_pump_3: Statut pompe à eau no3
