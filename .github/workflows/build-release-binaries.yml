@@ -41,7 +41,8 @@ jobs:
         name: adjust build.yaml for 2 zones
         run: |
           cat build.yaml
-          sed -i "s/#confs\\/zone2.yaml/confs\/zone2.yaml/g" build.yaml
+          sed -i "s/#confs\\/zone2.yaml/confs\/zone2.yaml/g; \
+              s/#confs\\/server-control-z2.yaml/confs\/server-control-z2.yaml/g" build.yaml
 
       - name: Generated yaml
         run: |
