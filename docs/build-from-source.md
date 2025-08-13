@@ -36,7 +36,6 @@ packages:
             #confs/ecodan-labels-es.yaml,
             #confs/ecodan-labels-de.yaml,
             #confs/ecodan-labels-fi.yaml,
-            confs/server-control.yaml,
             #confs/debug.yaml,
            ]
 ```
