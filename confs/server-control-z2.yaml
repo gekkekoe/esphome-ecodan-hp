@@ -53,6 +53,7 @@
                     id: heatpump_switch_server_control_prohibit_z2_cooling
                     state: ON
   
+  switch:
   - platform: template
     name: server control - zone 2 prohibit heating
     id: heatpump_switch_server_control_prohibit_z2_heating
