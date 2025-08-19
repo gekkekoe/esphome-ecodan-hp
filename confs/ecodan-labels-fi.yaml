@@ -50,6 +50,11 @@ substitutions:
   boiler_return_temp: Kattilan paluulämpötila
   status_booster: Tehostinlämmitin
   compressor_frequency: Kompressorin taajuus
+  status_compressor: Kompressorin
+  compressor_level_text: kompressorin taso
+  compressor_level_normal: Normal
+  compressor_level_min: Min
+  compressor_level_max: Maks
   controller_version_text: Ohjaimen versio
   controller_firmware_text: Ohjaimen laiteohjelmisto
   controller_datetime_text: Ohjaimen päivämäärä

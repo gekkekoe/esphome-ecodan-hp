@@ -34,6 +34,10 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:fire",
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
+        cv.Optional("compressor_level_text"): text_sensor.text_sensor_schema(
+            icon="mdi:hvac",
+            entity_category=ENTITY_CATEGORY_NONE,
+        ),
     }).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):

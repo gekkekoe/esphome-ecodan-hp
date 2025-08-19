@@ -12,6 +12,9 @@ binary_sensor:
     status_water_pump_2:
       id: status_water_pump_2
       name: ${status_water_pump_2}
+    status_compressor:
+      id: status_compressor
+      name: ${status_compressor}
 
 climate:
   - platform: ecodan

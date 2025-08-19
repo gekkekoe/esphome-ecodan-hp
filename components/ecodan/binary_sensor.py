@@ -132,6 +132,11 @@ CONFIG_SCHEMA = cv.Schema(
             entity_category=ENTITY_CATEGORY_NONE,
             icon="mdi:power-off",
         ),
+        cv.Optional("status_compressor"): binary_sensor.binary_sensor_schema(
+            icon="mdi:hvac",
+            entity_category=ENTITY_CATEGORY_NONE,
+            device_class=DEVICE_CLASS_RUNNING,
+        ),     
     }).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):

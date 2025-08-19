@@ -127,14 +127,15 @@ namespace ecodan
             break;
         case GetType::COMPRESSOR_FREQUENCY:
             status.CompressorFrequency = res[1];
+            // 0 = normal, 1 = min, 2 = max 
+            status.CompressorOperatingLevel = res[8];
             publish_state("compressor_frequency", static_cast<float>(status.CompressorFrequency));
             break;
         case GetType::DHW_STATE:
             // 6 = heat source , 0x0 = heatpump, 0x1 = screw in heater, 0x2 = electric heater..
             status.HeatSource = res[6];
-            //status.DhwForcedActive = res[7] != 0 && res[5] == 0; // byte 5 -> 7 is normal dhw, 0 - forced dhw
-            //publish_state("status_dhw_forced", status.DhwForcedActive ? "On" : "Off");
-
+            // 0 = normal, 1 = hp phase, 2 = heater phase
+            //status.DhwStage = res[7];
             publish_state("heat_source", static_cast<float>(status.HeatSource));
             break;
         case GetType::HEATING_POWER:
@@ -264,7 +265,9 @@ namespace ecodan
             break;
         case GetType::ACTIVE_TIME:
             status.Runtime = res.get_float24_v2(3);
+            status.CompressorOn = res[1] != 0;
             publish_state("runtime", status.Runtime);
+            publish_state("status_compressor", status.CompressorOn);
             //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
             break;
         case GetType::PUMP_STATUS:
