@@ -137,19 +137,6 @@ text_sensor:
       } 
 
   - platform: template
-    id: compressor_level_text
-    name: ${compressor_level_text}
-    update_interval: 3s
-    lambda: |-
-      auto value = id(ecodan_instance).get_status().CompressorOperatingLevel;
-      switch (value) {
-        case 0: return std::string("${compressor_level_normal}");
-        case 1: return std::string("${compressor_level_min}");
-        case 2: return std::string("${compressor_level_max}");
-        default: return std::to_string(value);
-      } 
-
-  - platform: template
     id: status_operation
     name: ${status_operation}
     update_interval: 3s

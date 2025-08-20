@@ -50,10 +50,6 @@ substitutions:
   boiler_return_temp: Boiler retour temp
   status_booster: Status booster heater
   compressor_frequency: Kompressor frequentie
-  compressor_level_text: Kompressor Niveau
-  compressor_level_normal: Normaal
-  compressor_level_min: Min
-  compressor_level_max: Max
   controller_version_text: Controller versie
   controller_firmware_text: Controller Firmware
   controller_datetime_text: Controller Datum

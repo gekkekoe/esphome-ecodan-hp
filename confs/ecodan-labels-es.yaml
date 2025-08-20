@@ -51,10 +51,6 @@ substitutions:
   status_booster: Calentador Auxiliar
   compressor_frequency: Frecuencia del Compresor
   status_compressor: Compresor
-  compressor_level_text: Nivel del Compresor
-  compressor_level_normal: Normal
-  compressor_level_min: Mínimo
-  compressor_level_max: Máximo
   controller_version_text: Versión del Controlador
   controller_firmware_text: Firmware del Controlador
   controller_datetime_text: Fecha del Controlador

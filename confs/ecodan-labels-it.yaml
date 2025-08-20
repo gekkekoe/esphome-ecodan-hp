@@ -51,10 +51,6 @@ substitutions:
   status_booster: Riscaldatore Booster
   compressor_frequency: Freq. Compressore
   status_compressor: Compressore
-  compressor_level_text: Livello del Compressore
-  compressor_level_normal: Normale
-  compressor_level_min: Minimo
-  compressor_level_max: Massimo
   controller_version_text: Controller
   controller_firmware_text: Controller Firmware
   controller_datetime_text: Controller Date

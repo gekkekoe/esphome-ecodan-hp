@@ -157,7 +157,7 @@ namespace ecodan
 
         // Efficiency
         uint8_t CompressorFrequency {0};
-        uint8_t CompressorOperatingLevel {0};
+        //uint8_t CompressorOperatingLevel {0};
         bool CompressorOn = false;
         float EnergyConsumedHeating;
         float EnergyConsumedCooling;

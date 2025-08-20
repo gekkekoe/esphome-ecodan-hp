@@ -51,10 +51,6 @@ substitutions:
   status_booster: Booster Heater
   compressor_frequency: Compressor Frequency
   status_compressor: Compressor
-  compressor_level_text: Compressor Level
-  compressor_level_normal: Normal
-  compressor_level_min: Min
-  compressor_level_max: Max
   controller_version_text: Controller Version
   controller_firmware_text: Controller Firmware
   controller_datetime_text: Controller Date

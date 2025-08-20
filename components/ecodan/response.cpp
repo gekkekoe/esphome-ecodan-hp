@@ -128,7 +128,7 @@ namespace ecodan
         case GetType::COMPRESSOR_FREQUENCY:
             status.CompressorFrequency = res[1];
             // 0 = normal, 1 = min, 2 = max 
-            status.CompressorOperatingLevel = res[8];
+            // status.CompressorOperatingLevel = res[8];
             publish_state("compressor_frequency", static_cast<float>(status.CompressorFrequency));
             break;
         case GetType::DHW_STATE:
