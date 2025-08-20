@@ -50,7 +50,6 @@ substitutions:
   boiler_return_temp: Boiler retour temp
   status_booster: Status booster heater
   compressor_frequency: Kompressor frequentie
-  compressor_frequency: Kompressor
   compressor_level_text: Kompressor Niveau
   compressor_level_normal: Normaal
   compressor_level_min: Min
