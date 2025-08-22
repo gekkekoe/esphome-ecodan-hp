@@ -49,8 +49,8 @@ substitutions:
   boiler_flow_temp: Boiler aanvoer temp
   boiler_return_temp: Boiler retour temp
   status_booster: Status booster heater
-  compressor_frequency: Kompressor frequentie
-  status_compressor: Kompressor
+  compressor_frequency: Compressor frequentie
+  status_compressor: Compressor
   controller_version_text: Controller versie
   controller_firmware_text: Controller Firmware
   controller_datetime_text: Controller Datum
