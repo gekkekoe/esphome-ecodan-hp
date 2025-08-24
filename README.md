@@ -16,8 +16,10 @@ If you want to contribute with a translation: copy the file `ecodan-labels-en.ya
 | Server Control | Restrict/Allow Dhw/Heating/Cooling  |
 | Proxy support | Use a Melcloud WiFi adapter or procon melcobems unit in combination with the esp  |
 | Realtime metrics | `Power output`, `Consumption`, `Production`, `COP` (no external meter required, FTC6+)  |
-| Misc |  `Fan speed`, `Compressor starts`, `Outdoor unit thermistors` |
+| Misc* |  `Fan speed`, `Compressor starts`, `Outdoor unit thermistors` |
 | Updates | OTA updates available when using the default recommended hardware |
+
+\* <sup><i>These features are not available in proxy, since we are observing</sup></i>
 
 # links
 * [Recommended hardware](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/docs/hardware.md)
