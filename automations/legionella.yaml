@@ -1,6 +1,6 @@
 # Heatpump automations
 - id: HeatpumpLegionellaStartBoilerSetpoint
-  alias: Set boiler setpoint to 59 when starting legionella run
+  alias: Set boiler setpoint to 55 when starting legionella run
   trigger:
     - trigger: state
       entity_id:
@@ -9,12 +9,12 @@
   conditions:
       - condition: numeric_state
         entity_id: sensor.ecodan_heatpump_dhw_setpoint_value
-        below: 59
+        below: 55
   action:
     - action: climate.set_temperature
       data:
         entity_id: climate.ecodan_heatpump_dhw_climate
-        temperature: 59
+        temperature: 55
 - id: HeatpumpLegionellaFinishBoilerSetpoint
   alias: Set boiler setpoint to 47 when legionella run is completed
   trigger:
