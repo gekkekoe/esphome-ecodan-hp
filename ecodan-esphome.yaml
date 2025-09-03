@@ -17,6 +17,10 @@ api:
 #  encryption:
 #    key: !secret heatpump_encryption_key
 
+# uncomment if you have multiple esp running
+# esphome:
+#   name_add_mac_suffix: false
+
 # external_components:
 # - source:
 #     type: local
