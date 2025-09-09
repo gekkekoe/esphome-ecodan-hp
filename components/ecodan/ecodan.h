@@ -40,8 +40,12 @@ namespace ecodan
             binarySensors[key] = obj;
         }
 
-        void enable_request_codes() {
+        void enable_request_code_sensors() {
             hasRequestCodeSensors = true;
+        }
+
+        void enable_request_codes(bool enable) {
+            requestCodesEnabled = enable;
         }
 
         // exposed as external component commands
@@ -92,6 +96,8 @@ namespace ecodan
         bool heatpumpInitialized = false;
         
         bool hasRequestCodeSensors = false;
+        bool requestCodesEnabled = true;
+
         Status::REQUEST_CODE activeRequestCode = Status::REQUEST_CODE::NONE;
         std::queue<Message> cmdQueue;
 

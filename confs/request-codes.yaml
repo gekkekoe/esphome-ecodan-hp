@@ -31,3 +31,16 @@ sensor:
     fan_speed:
       id: fan_speed
       name: ${fan_speed}
+
+switch:
+  - platform: template
+    name: service codes enabled
+    id: heatpump_switch_service_codes_enabled
+    restore_mode: ALWAYS_ON
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          id(ecodan_instance).enable_request_codes(true);
+    turn_off_action:
+      - lambda: |-
+         id(ecodan_instance).enable_request_codes(false);

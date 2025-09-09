@@ -395,4 +395,4 @@ async def to_code(config):
             sens = await sensor.new_sensor(conf)
             cg.add(hp.register_sensor(sens, key))
             if key in ["compressor_starts", "discharge_temp", "ou_liquid_pipe_temp", "ou_two_phase_pipe_temp", "fan_speed"]:
-                cg.add(hp.enable_request_codes())
+                cg.add(hp.enable_request_code_sensors())

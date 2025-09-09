@@ -267,7 +267,7 @@ namespace ecodan
         loopIndex = (loopIndex + 1) % MAX_STATUS_CMD_SIZE;
 
         // only execute when we have sensors and a ftc version is known, since ftc7 gets a lot for free
-        if (hasRequestCodeSensors && initialCmdCompleted() && loopIndex == 0) {
+        if (hasRequestCodeSensors && requestCodesEnabled && initialCmdCompleted() && loopIndex == 0) {
             int counter = 0;
             while (counter <= MAX_SERVICE_CODE_CMD_SIZE && activeRequestCode == Status::REQUEST_CODE::NONE) {
                 counter++;
