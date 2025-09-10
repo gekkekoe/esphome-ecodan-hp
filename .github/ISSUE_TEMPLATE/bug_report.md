@@ -25,3 +25,6 @@ If applicable, add screenshots to help explain your problem.
 
 **Heatpump model**
 Add heatpump model here.
+
+**Esphome version**
+Add esphome version here.
