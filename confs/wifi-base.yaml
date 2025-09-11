@@ -22,7 +22,9 @@ sensor:
     name: ${wifi_signal_proc}
     id: wifi_signal_proc
     filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+      - lambda:
+          float strength = 2 * (x + 100.0);
+          return clamp(strength, 0.0f, 100.0f);
     unit_of_measurement: " %"
     entity_category: diagnostic
     device_class: ""
