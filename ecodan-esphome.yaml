@@ -71,7 +71,7 @@ packages:
             #confs/ecodan-labels-fr.yaml,
             #confs/ecodan-labels-de.yaml,
             #confs/ecodan-labels-fi.yaml,
-            #confs/debug.yaml,
+            confs/debug.yaml,
             confs/wifi.yaml
            ]
 
