@@ -532,7 +532,9 @@ binary_sensor:
     status_dhw_eco:
       id: status_dhw_eco 
       name: ${status_dhw_eco}
-
+    status_compressor:
+      id: status_compressor
+      name: ${status_compressor}
     status_defrost:
       id: status_defrost
       name: ${status_defrost}
