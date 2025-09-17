@@ -5,6 +5,8 @@ from esphome.const import CONF_ID
 from esphome.const import (
     ENTITY_CATEGORY_NONE,
     DEVICE_CLASS_RUNNING,
+    DEVICE_CLASS_PROBLEM,
+    ENTITY_CATEGORY_DIAGNOSTIC
 )
 
 from . import ECODAN, CONF_ECODAN_ID
@@ -136,7 +138,12 @@ CONFIG_SCHEMA = cv.Schema(
             icon="mdi:hvac",
             entity_category=ENTITY_CATEGORY_NONE,
             device_class=DEVICE_CLASS_RUNNING,
-        ),     
+        ),
+        cv.Optional("status_short_cycle_lockout"): binary_sensor.binary_sensor_schema(
+            icon="mdi:hvac",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            device_class=DEVICE_CLASS_PROBLEM,
+        ),
     }).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):

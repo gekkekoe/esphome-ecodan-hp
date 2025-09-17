@@ -125,3 +125,7 @@ substitutions:
   z2_return_temp: Z2 Rücklauftemperatur
   z2_room_temp: Zone 2 Raumtemperatur
   z2_room_temp_target: Zone 2 Raum-Sollwert
+  status_short_cycle_lockout_de: 'Kurzzyklus: Sperre'
+  minimum_compressor_on_time_de: 'Kurzzyklus: Minimale Laufzeit'
+  lockout_duration_de: 'Kurzzyklus: Sperrdauer (min)'
+  short_cycle_mitigation_button_de: 'Kurzzyklus: Sperre abbrechen'

@@ -46,11 +46,11 @@ climate:
         switch (mode) {
             case esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP:
             case esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP:
-              id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::SetZone::ZONE_2);
+              id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::Zone::ZONE_2);
             break;
             case esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP:
             case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
-              id(ecodan_instance).set_room_temperature(x, esphome::ecodan::SetZone::ZONE_2);
+              id(ecodan_instance).set_room_temperature(x, esphome::ecodan::Zone::ZONE_2);
             break;                    
             default:
               break;
@@ -82,7 +82,7 @@ climate:
         auto& status = id(ecodan_instance).get_status();
         return status.Zone2SetTemperature;
       target_temp_func: |-
-        id(ecodan_instance).set_room_temperature(x, esphome::ecodan::SetZone::ZONE_2);
+        id(ecodan_instance).set_room_temperature(x, esphome::ecodan::Zone::ZONE_2);
       current_temp_func: |-
         auto& status = id(ecodan_instance).get_status();
         return status.Zone2RoomTemperature;
@@ -144,5 +144,5 @@ select:
           auto index = id(heatpump_select_operating_mode_z2).index_of(x);
           auto active_index = id(heatpump_select_operating_mode_z2).active_index();
           if (index.has_value() && index.value() != active_index.value()) {
-            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(index.value()), esphome::ecodan::SetZone::ZONE_2);
+            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(index.value()), esphome::ecodan::Zone::ZONE_2);
           }

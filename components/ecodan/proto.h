@@ -54,7 +54,7 @@ namespace ecodan
 #define SET_SETTINGS_FLAG_HOLIDAY_MODE_TOGGLE 0x2
 
 
-    enum class SetZone
+    enum class Zone
     {
         ZONE_1,
         ZONE_2,

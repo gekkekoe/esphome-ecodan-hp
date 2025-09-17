@@ -179,6 +179,42 @@ namespace ecodan
         float RcSubCoolTemp;
         uint16_t RcFanSpeedRpm;
 
+        CONTROLLER_FLAG get_svc_flags() const
+        {
+            CONTROLLER_FLAG flag;
+            if (ProhibitDhw)
+                flag |= CONTROLLER_FLAG::PROHIBIT_DHW;
+            if (ProhibitHeatingZ1)
+                flag |= CONTROLLER_FLAG::PROHIBIT_Z1_HEATING;
+            if (ProhibitCoolingZ1)
+                flag |= CONTROLLER_FLAG::PROHIBIT_Z1_COOLING;
+            if (ProhibitHeatingZ2)
+                flag |= CONTROLLER_FLAG::PROHIBIT_Z2_HEATING;
+            if (ProhibitCoolingZ2)
+                flag |= CONTROLLER_FLAG::PROHIBIT_Z2_COOLING;
+            if (ServerControl)
+                flag |= CONTROLLER_FLAG::SERVER_CONTROL;
+
+            return flag;
+        }
+        
+        bool is_heating(Zone zone) const {
+            auto mode = zone == Zone::ZONE_1 ? HeatingCoolingMode : HeatingCoolingModeZone2;
+
+            if (mode == HpMode::HEAT_FLOW_TEMP || mode == HpMode::HEAT_ROOM_TEMP || mode == HpMode::HEAT_COMPENSATION_CURVE)
+                return true;
+            return false;
+        }
+
+        bool is_cooling(Zone zone) const {
+            auto mode = zone == Zone::ZONE_1 ? HeatingCoolingMode : HeatingCoolingModeZone2;
+
+            if (mode == HpMode::COOL_FLOW_TEMP || mode == HpMode::COOL_ROOM_TEMP)
+                return true;
+
+            return false;
+        }
+
 /* polynomial fit for
 Temp C	specific heat (J/Kg. K)
 0.01	4.212

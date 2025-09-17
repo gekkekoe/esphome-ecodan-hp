@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 #include <chrono>
+#include <optional>
 
 #include "esphome.h"
 #include "esphome/core/component.h"
@@ -49,21 +50,24 @@ namespace ecodan
         }
 
         // exposed as external component commands
-        void set_room_temperature(float value, esphome::ecodan::SetZone zone);
-        void set_flow_target_temperature(float value, esphome::ecodan::SetZone zone);
+        void set_room_temperature(float value, esphome::ecodan::Zone zone);
+        void set_flow_target_temperature(float value, esphome::ecodan::Zone zone);
         void set_dhw_target_temperature(float value);
         void set_dhw_mode(Status::DhwMode dhwMode);
         void set_dhw_force(bool on);
         void set_holiday(bool on);
         void set_power_mode(bool on);
-        void set_hp_mode(uint8_t mode, esphome::ecodan::SetZone zone);
+        void set_hp_mode(uint8_t mode, esphome::ecodan::Zone zone);
         void set_controller_mode(CONTROLLER_FLAG flag, bool on);
         void set_mrc_mode(Status::MRC_FLAG flag);
+        void set_svc_state_before_lockout(CONTROLLER_FLAG flag) { serverControlFlagBeforeLockout = flag; }
+        void reset_svc_state_before_lockout() { serverControlFlagBeforeLockout.reset(); }
         void set_specific_heat_constant(float newConstant) { specificHeatConstantOverride = newConstant; }
         void set_polling_interval(uint32_t ms) { this->set_update_interval(ms); }
         void set_uart_parent(uart::UARTComponent *uart) { this->uart_ = uart; }
         void set_proxy_uart(uart::UARTComponent *uart) { this->proxy_uart_ = uart; }
         const Status& get_status() const { return status; }
+        std::optional<CONTROLLER_FLAG> get_svc_state_before_lockout() { return serverControlFlagBeforeLockout; }
 
     protected:
         std::map<std::string, sensor::Sensor*> sensors;
@@ -97,8 +101,9 @@ namespace ecodan
         
         bool hasRequestCodeSensors = false;
         bool requestCodesEnabled = true;
-
         Status::REQUEST_CODE activeRequestCode = Status::REQUEST_CODE::NONE;
+
+        std::optional<CONTROLLER_FLAG> serverControlFlagBeforeLockout = {};
         std::queue<Message> cmdQueue;
 
         bool serial_rx(uart::UARTComponent *uart, Message& msg, bool count_sync_errors = false);

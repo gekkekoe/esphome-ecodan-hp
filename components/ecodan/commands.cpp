@@ -8,15 +8,15 @@
 namespace esphome {
 namespace ecodan 
 {
-    void EcodanHeatpump::set_room_temperature(float newTemp, esphome::ecodan::SetZone zone)
+    void EcodanHeatpump::set_room_temperature(float newTemp, esphome::ecodan::Zone zone)
     {
         Message cmd{MsgType::SET_CMD, SetType::ROOM_SETTINGS};
 
-        if (zone == SetZone::ZONE_1) {
+        if (zone == Zone::ZONE_1) {
             cmd[1] = 0x02;
             cmd.set_float16(newTemp, 4);
         }
-        else if (zone == SetZone::ZONE_2) {
+        else if (zone == Zone::ZONE_2) {
             cmd[1] = 0x08;
             cmd.set_float16(newTemp, 6);
         }
@@ -30,12 +30,12 @@ namespace ecodan
         // auto flag = status.HeatingCoolingMode == Status::HpMode::COOL_ROOM_TEMP
         //     ? static_cast<uint8_t>(Status::HpMode::COOL_ROOM_TEMP) : static_cast<uint8_t>(Status::HpMode::HEAT_ROOM_TEMP);
 
-        // if (zone == SetZone::BOTH || zone == SetZone::ZONE_1) {
+        // if (zone == Zone::BOTH || zone == Zone::ZONE_1) {
         //     cmd[6] = flag;
         //     cmd.set_float16(newTemp, 10);
         // }
             
-        // if (zone == SetZone::BOTH || zone == SetZone::ZONE_2) {
+        // if (zone == Zone::BOTH || zone == Zone::ZONE_2) {
         //     cmd[7] = flag;
         //     cmd.set_float16(newTemp, 12);
         // }
@@ -44,7 +44,7 @@ namespace ecodan
         schedule_cmd(cmd);
     }
 
-    void EcodanHeatpump::set_flow_target_temperature(float newTemp, esphome::ecodan::SetZone zone)
+    void EcodanHeatpump::set_flow_target_temperature(float newTemp, esphome::ecodan::Zone zone)
     {
 
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
@@ -67,12 +67,12 @@ namespace ecodan
             break;
         }
 
-        if (zone == SetZone::ZONE_1) {
+        if (zone == Zone::ZONE_1) {
             cmd[1] = 0x80;
             cmd[6] = flag;
             cmd.set_float16(newTemp, 10);
         }
-        else if (zone == SetZone::ZONE_2) {
+        else if (zone == Zone::ZONE_2) {
             cmd[2] = 0x02;
             cmd[7] = flag;
             cmd.set_float16(newTemp, 12);
@@ -127,15 +127,15 @@ namespace ecodan
         schedule_cmd(cmd);
     }
 
-    void EcodanHeatpump::set_hp_mode(uint8_t mode, esphome::ecodan::SetZone zone)
+    void EcodanHeatpump::set_hp_mode(uint8_t mode, esphome::ecodan::Zone zone)
     {
         Message cmd{MsgType::SET_CMD, SetType::BASIC_SETTINGS};
 
-        if (zone == SetZone::ZONE_1) {
+        if (zone == Zone::ZONE_1) {
             cmd[1] = SET_SETTINGS_FLAG_HP_MODE_ZONE1;
             cmd[6] = mode;
         }
-        else if (zone == SetZone::ZONE_2) {
+        else if (zone == Zone::ZONE_2) {
             cmd[1] = SET_SETTINGS_FLAG_HP_MODE_ZONE2;
             cmd[7] = mode;
         }

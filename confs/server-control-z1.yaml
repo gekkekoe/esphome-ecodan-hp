@@ -112,18 +112,8 @@
     turn_on_action:
       - lambda: |-
           auto& status = id(ecodan_instance).get_status();
-          auto flag = esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
-          if (status.ProhibitDhw)
-            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW;
-          if (status.ProhibitHeatingZ1)
-            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_HEATING;
-          if (status.ProhibitCoolingZ1)
-            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_COOLING;
-          if (status.ProhibitHeatingZ2)
-            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_HEATING;
-          if (status.ProhibitCoolingZ2)
-            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_COOLING;
-
+          auto flag = status.get_svc_flags();
+          flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
           id(ecodan_instance).set_controller_mode(flag, true);
     turn_off_action:
       - lambda: |-

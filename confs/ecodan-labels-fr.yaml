@@ -126,3 +126,7 @@ substitutions:
   ou_compressor_surface_temp: Température de surface du compresseur de l'unité extérieure
   super_heat_temp: Température de surchauffe de décharge
   sub_cool_temp: Température de sous-refroidissement
+  status_short_cycle_lockout_fr: 'Court-circuit: Verrouillage'
+  minimum_compressor_on_time_fr: 'Court-circuit: Durée minimale du compresseur'
+  lockout_duration_fr: 'Court-circuit: Durée du verrouillage (min)'
+  short_cycle_mitigation_button_fr: 'Court-circuit: Annuler le verrouillage'
