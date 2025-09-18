@@ -126,7 +126,7 @@ substitutions:
   ou_compressor_surface_temp: Temperatura superficiale del compressore dell'unità esterna
   super_heat_temp: Temperatura di surriscaldamento dello scarico
   sub_cool_temp: Temperatura di sottoraffreddamento
-  status_short_cycle_lockout_it: 'Ciclo breve: Blocco'
-  minimum_compressor_on_time_it: 'Ciclo breve: Tempo minimo compressore'
-  lockout_duration_it: 'Ciclo breve: Durata blocco (min)'
-  short_cycle_mitigation_button_it: 'Ciclo breve: Annulla blocco'
+  status_short_cycle_lockout: 'Ciclo breve: Blocco'
+  minimum_compressor_on_time: 'Ciclo breve: Tempo minimo compressore'
+  lockout_duration: 'Ciclo breve: Durata blocco (min)'
+  short_cycle_mitigation_button: 'Ciclo breve: Annulla blocco'

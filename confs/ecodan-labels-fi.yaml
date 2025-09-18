@@ -126,7 +126,7 @@ substitutions:
   super_heat_temp: Puristuksen ylikuumenemislämpötila
   sub_cool_temp: Alijäähdytyslämpötila
   fan_speed: Puhaltimen nopeus
-  status_short_cycle_lockout_fi: 'Lyhyt sykli: Lukitus'
-  minimum_compressor_on_time_fi: 'Lyhyt sykli: Minimi käyntiaika'
-  lockout_duration_fi: 'Lyhyt sykli: Lukitusaika (min)'
-  short_cycle_mitigation_button_fi: 'Lyhyt sykli: Peruuta lukitus'
+  status_short_cycle_lockout: 'Lyhyt sykli: Lukitus'
+  minimum_compressor_on_time: 'Lyhyt sykli: Minimi käyntiaika'
+  lockout_duration: 'Lyhyt sykli: Lukitusaika (min)'
+  short_cycle_mitigation_button: 'Lyhyt sykli: Peruuta lukitus'
