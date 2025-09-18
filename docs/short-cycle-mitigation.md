@@ -19,10 +19,9 @@ After the lockout duration expires, normal operation is automatically resumed, a
 This feature improves the reliability, efficiency, and lifespan of your heat pump by ensuring that the compressor runs for a reasonable minimum period before cycling off.
 
 ## Parameters
-
-| Board | Notes |
+| Parameter | Notes |
 |:---|:---|
-| Short-Cycle: Lockout | A binary sensor indicating if the system is currently in lockout mode. |
-| Short-Cycle: Minimum On-Time | Minimum compressor on-time. If the compressor runtime is below this number, a lockout phase is initiated. |
-| Short-Cycle: Lockout Duration (min) | The lockout duration. 0 is the default and basically means the feature is disabled. |
-| Short-Cycle: Cancel Lockout | A button to manually cancel a lockout phase. The lockout phase is automatically cancelled after the lockout duration. |
+| Short-Cycle: Lockout | A binary sensor that indicates whether the system is currently in lockout mode. |
+| Short-Cycle: Minimum On-Time | The minimum compressor on-time. If the compressor runtime is below this value, a lockout phase is initiated. |
+| Short-Cycle: Lockout Duration (min) | The duration of the lockout. A value of 0 is the default and effectively disables this feature. |
+| Short-Cycle: Cancel Lockout | A button to manually cancel a lockout phase. The lockout phase is automatically cleared after the specified lockout duration. |
