@@ -1,0 +1,131 @@
+substitutions:
+  status_three_way_valve: 3ウェイバルブ
+  status_three_way_valve_2: 3ウェイバルブ2
+  heatpump_climate_dhw: 給湯気候
+  dhw_temp: 給湯現在温度
+  dhw_secondary_temp: 給湯二次温度
+  status_dhw_forced: 給湯強制
+  dhw_flow_temp_drop: 給湯最大温度差
+  status_prohibit_dhw: 給湯禁止
+  dhw_flow_temp_target: 給湯設定値
+  status_dhw_eco: 給湯エコ
+  esp_ip: ESP IP
+  internal_esp_temperature: ESP 内部温度
+  esp_sidd: ESP SSID
+  uptime: ESP 稼働時間
+  esp_version: ESP バージョン
+  restart_button: ESP 再起動
+  status_in1_request: In1 サーモスタット
+  status_in6_request: In6 サーモスタット2
+  status_in5_request: In5 屋外サーモスタット
+  heatpump_select_dhw_mode: 給湯モード
+  normal: 通常
+  eco: エコ
+  version: ESP バージョン
+  led_brightness: LED 明るさ
+  led_switch: LED
+  heatpump_switch_force_dhw: 給湯強制
+  heatpump_switch_power_mode: ヒートポンプ
+  heatpump_switch_holiday: ホリデーモード
+  wifi_signal_proc: WiFi 信号 %
+  wifi_signal_db: WiFi 信号 dB
+  z1_flow_temp_target: ゾーン1 H/C 設定値
+  status_prohibit_cool_z1: ゾーン1 冷却禁止
+  status_prohibit_heating_z1: ゾーン1 加熱禁止
+  heatpump_climate_z1: ゾーン1 気候
+  heatpump_climate_room_z1: ゾーン1 温度
+  z1_room_temp_target: ゾーン1 室温設定値
+  z1_room_temp: ゾーン1 室温
+  heatpump_number_z2_set_flow_temperature: ゾーン2 H/C 設定値
+  z2_flow_temp_target: ゾーン2 H/C 設定値
+  status_prohibit_cool_z2: ゾーン2 冷却禁止
+  status_prohibit_heating_z2: ゾーン2 加熱禁止
+  heatpump_number_z2_set_room_temperature: ゾーン2 室温設定値
+  heatpump_climate_z2: ゾーン2 気候
+  heatpump_climate_room_z2: ゾーン2 温度
+  z2_room_temp_target: ゾーン2 室温設定値
+  z2_room_temp: ゾーン2 室温
+  mixing_tank_temp: 混合タンク温度
+  boiler_flow_temp: ボイラー流量温度
+  boiler_return_temp: ボイラー戻り温度
+  status_booster: ブースターヒーター
+  compressor_frequency: コンプレッサー周波数
+  status_compressor: コンプレッサー
+  controller_version_text: コントローラバージョン
+  controller_firmware_text: コントローラファームウェア
+  controller_datetime_text: コントローラ日付
+  cool_consumed: 冷房消費量
+  cool_cop: 冷房COP
+  cool_delivered: 冷房供給量
+  status_defrost: デフロスト
+  dhw_consumed: 給湯消費量
+  dhw_cop: 給湯COP
+  dhw_delivered: 給湯供給量
+  hp_feed_temp: 給水温度
+  z1_feed_temp: Z1 給水温度
+  z2_feed_temp: Z2 給水温度
+  flow_rate: 流量
+  heat_source_text: 熱源
+  heatpump: ヒートポンプ
+  immersion_heater: 浸漬ヒーター
+  booster_heater: ブースターヒーター
+  immersion_and_booster_heater: 浸漬＋ブースターヒーター
+  boiler: ボイラー
+  energy_consumed_increasing: 総消費エネルギー
+  heating_consumed: 暖房消費量
+  heating_cop: 暖房COP
+  heating_delivered: 暖房供給量
+  status_holiday: ホリデーモード
+  status_immersion: 浸漬ヒーター
+  legionella_prevention_temp: レジオネラ予防温度
+  heatpump_select_operating_mode: 選択運転モード
+  heat_target_temperature: 暖房目標温度
+  heat_flow_temperature: 暖房流量温度
+  heat_compensation_curve: 暖房補償曲線
+  cool_target_temperature: 冷房目標温度
+  cool_flow_temperature: 冷房流量温度
+  operation_off: オフ
+  hotwater: 給湯
+  heating: 暖房
+  cooling: 冷房
+  frost_protection: 凍結防止
+  legionella_prevention: レジオネラ予防
+  runtime: 運転時間
+  status_operation: 運転モード
+  output_power: 出力
+  computed_output_power: 推定出力
+  computed_cop: 推定COP
+  daily_computed_output_power: 推定日次総エネルギー
+  daily_repported_input_power: 日次総消費電力報告
+  outside_temp: 外気温
+  hp_refrigerant_temp: 冷媒液温
+  hp_refrigerant_condensing_temp: 冷媒凝縮温度
+  hp_return_temp: 戻り温度
+  z1_return_temp: Z1 戻り温度
+  z2_return_temp: Z2 戻り温度
+  status_water_pump: 水ポンプ状態
+  status_water_pump_2: 水ポンプ2状態
+  status_water_pump_3: 水ポンプ3状態
+  status_mixing_valve: 混合バルブ状態
+  mixing_valve_step: 混合バルブステップ
+  status_multi_zone: マルチゾーン状態
+  status_multi_zone_idle: アイドル
+  status_multi_zone_both: 両方
+  status_multi_zone_zone1: Z1 運転中
+  status_multi_zone_zone2: Z2 運転中
+  fault_code_text: エラーコード
+  refrigerant_error_code_text: 冷媒エラーコード
+  compressor_starts: コンプレッサー累積起動回数
+  discharge_temp: 排出温度
+  ou_liquid_pipe_temp: 室外機液管1温度
+  ou_two_phase_pipe_temp: 室外機二相管温度
+  ou_suction_pipe_temp: 室外機吸込み管温度
+  ou_heatsink_temp: 室外機ヒートシンク温度
+  ou_compressor_surface_temp: 室外機コンプレッサー表面温度
+  super_heat_temp: 過熱温度
+  sub_cool_temp: 過冷却温度
+  fan_speed: 送風機速度
+  status_short_cycle_lockout: '短サイクル：ロックアウト'
+  minimum_compressor_on_time: '短サイクル：最小運転時間'
+  lockout_duration: '短サイクル：ロックアウト時間（分）'
+  short_cycle_mitigation_button: '短サイクル：ロックアウト解除'

@@ -15,9 +15,12 @@ Select the language in the `ecodan-esphome.yaml` file.
 | Spanish | es |
 | German | de |
 | Finnish | fi |
+| Japanese | ja |
 | Norwegian | no |
 | Swedish | sv |
 | Danish | da |
+| Korean | ko |
+| Chinese Simplified | zh |
 | Polish | pl |
 
 If you want to contribute a translation: copy the file `ecodan-labels-en.yaml` to `ecodan-labels-xx.yaml` (replace `xx` with your language code), fill in all the labels, and submit a pull request.
