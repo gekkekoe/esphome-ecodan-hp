@@ -26,7 +26,7 @@ substitutions:
   led_switch: LED
   heatpump_switch_force_dhw: Tving Brugsvand
   heatpump_switch_power_mode: Varmepumpe
-  heatpump_switch_holiday: Ferietilstand
+  heatpump_switch_holiday: Ferie-tilstand styring
   wifi_signal_proc: WiFi-signal %
   wifi_signal_db: WiFi-signal dB
   z1_flow_temp_target: Zone 1 H/C indstillet værdi

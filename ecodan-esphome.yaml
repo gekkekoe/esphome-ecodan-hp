@@ -71,12 +71,9 @@ packages:
             # confs/ecodan-labels-fr.yaml,  # French
             # confs/ecodan-labels-de.yaml,  # German
             # confs/ecodan-labels-fi.yaml,  # Finnish
-            # confs/ecodan-labels-ja.yaml,  # Japanese
             # confs/ecodan-labels-no.yaml,  # Norwegian
             # confs/ecodan-labels-sv.yaml,  # Swedish
             # confs/ecodan-labels-da.yaml,  # Danish
-            # confs/ecodan-labels-ko.yaml,  # Korean
-            # confs/ecodan-labels-zh.yaml,  # Chinese
             # confs/ecodan-labels-pl.yaml,  # Polish
             confs/debug.yaml,
             confs/wifi.yaml

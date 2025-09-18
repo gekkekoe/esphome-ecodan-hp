@@ -27,7 +27,7 @@ substitutions:
   led_switch: LED
   heatpump_switch_force_dhw: Tvinga varmvatten
   heatpump_switch_power_mode: Värmepump
-  heatpump_switch_holiday: Semesterläge
+  heatpump_switch_holiday: Semesterläge kontroll
   wifi_signal_proc: WiFi-signal %
   wifi_signal_db: WiFi-signal dB
   z1_flow_temp_target: Zon 1 H/C inställt värde
