@@ -1,0 +1,131 @@
+substitutions:
+  status_three_way_valve: 3방 밸브
+  status_three_way_valve_2: 3방 밸브 2
+  heatpump_climate_dhw: 온수 클라이밋
+  dhw_temp: 온수 현재 온도
+  dhw_secondary_temp: 온수 2차 온도
+  status_dhw_forced: 온수 강제
+  dhw_flow_temp_drop: 온수 최대 온도차
+  status_prohibit_dhw: 온수 금지
+  dhw_flow_temp_target: 온수 설정값
+  status_dhw_eco: 온수 에코
+  esp_ip: ESP IP
+  internal_esp_temperature: ESP 내부 온도
+  esp_sidd: ESP SSID
+  uptime: ESP 가동 시간
+  esp_version: ESP 버전
+  restart_button: ESP 재시작
+  status_in1_request: In1 온도조절기
+  status_in6_request: In6 온도조절기 2
+  status_in5_request: In5 실외 온도조절기
+  heatpump_select_dhw_mode: 온수 모드
+  normal: 정상
+  eco: 에코
+  version: ESP 버전
+  led_brightness: LED 밝기
+  led_switch: LED
+  heatpump_switch_force_dhw: 온수 강제
+  heatpump_switch_power_mode: 히트펌프
+  heatpump_switch_holiday: 휴일 모드
+  wifi_signal_proc: WiFi 신호 %
+  wifi_signal_db: WiFi 신호 dB
+  z1_flow_temp_target: 존 1 H/C 설정값
+  status_prohibit_cool_z1: 존 1 냉방 금지
+  status_prohibit_heating_z1: 존 1 난방 금지
+  heatpump_climate_z1: 존 1 클라이밋
+  heatpump_climate_room_z1: 존 1 온도
+  z1_room_temp_target: 존 1 실내 설정값
+  z1_room_temp: 존 1 실내 온도
+  heatpump_number_z2_set_flow_temperature: 존 2 H/C 설정값
+  z2_flow_temp_target: 존 2 H/C 설정값
+  status_prohibit_cool_z2: 존 2 냉방 금지
+  status_prohibit_heating_z2: 존 2 난방 금지
+  heatpump_number_z2_set_room_temperature: 존 2 실내 설정값
+  heatpump_climate_z2: 존 2 클라이밋
+  heatpump_climate_room_z2: 존 2 온도
+  z2_room_temp_target: 존 2 실내 설정값
+  z2_room_temp: 존 2 실내 온도
+  mixing_tank_temp: 혼합 탱크 온도
+  boiler_flow_temp: 보일러 공급 온도
+  boiler_return_temp: 보일러 반환 온도
+  status_booster: 부스터 히터
+  compressor_frequency: 압축기 주파수
+  status_compressor: 압축기
+  controller_version_text: 컨트롤러 버전
+  controller_firmware_text: 컨트롤러 펌웨어
+  controller_datetime_text: 컨트롤러 날짜
+  cool_consumed: 냉방 소비량
+  cool_cop: 냉방 COP
+  cool_delivered: 냉방 공급량
+  status_defrost: 제상
+  dhw_consumed: 온수 소비량
+  dhw_cop: 온수 COP
+  dhw_delivered: 온수 공급량
+  hp_feed_temp: 공급 온도
+  z1_feed_temp: Z1 공급 온도
+  z2_feed_temp: Z2 공급 온도
+  flow_rate: 유량
+  heat_source_text: 열원
+  heatpump: 히트펌프
+  immersion_heater: 침지 히터
+  booster_heater: 부스터 히터
+  immersion_and_booster_heater: 침지 + 부스터 히터
+  boiler: 보일러
+  energy_consumed_increasing: 총 소비 에너지
+  heating_consumed: 난방 소비량
+  heating_cop: 난방 COP
+  heating_delivered: 난방 공급량
+  status_holiday: 휴일 모드
+  status_immersion: 침지 히터
+  legionella_prevention_temp: 레지오넬라 예방 온도
+  heatpump_select_operating_mode: 선택 운전 모드
+  heat_target_temperature: 난방 목표 온도
+  heat_flow_temperature: 난방 공급 온도
+  heat_compensation_curve: 난방 보정 곡선
+  cool_target_temperature: 냉방 목표 온도
+  cool_flow_temperature: 냉방 공급 온도
+  operation_off: 끄기
+  hotwater: 온수
+  heating: 난방
+  cooling: 냉방
+  frost_protection: 동결 방지
+  legionella_prevention: 레지오넬라 예방
+  runtime: 운전 시간
+  status_operation: 운전 모드
+  output_power: 출력
+  computed_output_power: 예상 출력
+  computed_cop: 예상 COP
+  daily_computed_output_power: 예상 일일 총 에너지
+  daily_repported_input_power: 보고된 일일 총 에너지
+  outside_temp: 외부 온도
+  hp_refrigerant_temp: 냉매 액체 온도
+  hp_refrigerant_condensing_temp: 냉매 응축 온도
+  hp_return_temp: 반환 온도
+  z1_return_temp: Z1 반환 온도
+  z2_return_temp: Z2 반환 온도
+  status_water_pump: 물펌프 상태
+  status_water_pump_2: 물펌프 2 상태
+  status_water_pump_3: 물펌프 3 상태
+  status_mixing_valve: 혼합 밸브 상태
+  mixing_valve_step: 혼합 밸브 단계
+  status_multi_zone: 멀티존 상태
+  status_multi_zone_idle: 유휴
+  status_multi_zone_both: 둘 다
+  status_multi_zone_zone1: Z1 작동 중
+  status_multi_zone_zone2: Z2 작동 중
+  fault_code_text: 오류 코드
+  refrigerant_error_code_text: 냉매 오류 코드
+  compressor_starts: 누적 압축기 시작
+  discharge_temp: 배출 온도
+  ou_liquid_pipe_temp: 실외 액관 1 온도
+  ou_two_phase_pipe_temp: 실외 2상관 온도
+  ou_suction_pipe_temp: 실외 흡입관 온도
+  ou_heatsink_temp: 실외 히트싱크 온도
+  ou_compressor_surface_temp: 실외 압축기 표면 온도
+  super_heat_temp: 과열 온도
+  sub_cool_temp: 과냉각 온도
+  fan_speed: 팬 속도
+  status_short_cycle_lockout: '단사이클: 잠김'
+  minimum_compressor_on_time: '단사이클: 최소 가동 시간'
+  lockout_duration: '단사이클: 잠김 지속 시간(분)'
+  short_cycle_mitigation_button: '단사이클: 잠김 해제'

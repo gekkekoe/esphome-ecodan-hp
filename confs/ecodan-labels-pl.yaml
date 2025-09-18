@@ -1,0 +1,131 @@
+substitutions:
+  status_three_way_valve: Zawór 3-drogowy
+  status_three_way_valve_2: Zawór 3-drogowy 2
+  heatpump_climate_dhw: Klimat CWU
+  dhw_temp: Aktualna temperatura CWU
+  dhw_secondary_temp: Temperatura wtórna CWU
+  status_dhw_forced: Wymuszenie CWU
+  dhw_flow_temp_drop: Maksymalny spadek temperatury CWU
+  status_prohibit_dhw: Zakaz CWU
+  dhw_flow_temp_target: Ustawiona wartość CWU
+  status_dhw_eco: Ekologiczny CWU
+  esp_ip: IP ESP
+  internal_esp_temperature: Temperatura wewnętrzna ESP
+  esp_sidd: SSID ESP
+  uptime: Czas pracy ESP
+  esp_version: Wersja ESP
+  restart_button: Restart ESP
+  status_in1_request: Termostat In1
+  status_in6_request: Termostat In6 2
+  status_in5_request: Termostat zewnętrzny In5
+  heatpump_select_dhw_mode: Tryb CWU
+  normal: Normalny
+  eco: Ekologiczny
+  version: Wersja ESP
+  led_brightness: Jasność LED
+  led_switch: LED
+  heatpump_switch_force_dhw: Wymuszenie CWU
+  heatpump_switch_power_mode: Tryb grzania
+  heatpump_switch_holiday: Tryb wakacyjny
+  wifi_signal_proc: Sygnał WiFi %
+  wifi_signal_db: Sygnał WiFi dB
+  z1_flow_temp_target: Ustawiona wartość H/C Strefa 1
+  status_prohibit_cool_z1: Zakaz chłodzenia Strefa 1
+  status_prohibit_heating_z1: Zakaz ogrzewania Strefa 1
+  heatpump_climate_z1: Klimat Strefa 1
+  heatpump_climate_room_z1: Temperatura Strefa 1
+  z1_room_temp_target: Ustawiona temperatura Strefa 1
+  z1_room_temp: Temperatura Strefa 1
+  heatpump_number_z2_set_flow_temperature: Ustawiona temperatura H/C Strefa 2
+  z2_flow_temp_target: Ustawiona wartość H/C Strefa 2
+  status_prohibit_cool_z2: Zakaz chłodzenia Strefa 2
+  status_prohibit_heating_z2: Zakaz ogrzewania Strefa 2
+  heatpump_number_z2_set_room_temperature: Ustawiona temperatura Strefa 2
+  heatpump_climate_z2: Klimat Strefa 2
+  heatpump_climate_room_z2: Temperatura Strefa 2
+  z2_room_temp_target: Ustawiona temperatura Strefa 2
+  z2_room_temp: Temperatura Strefa 2
+  mixing_tank_temp: Temperatura zbiornika mieszającego
+  boiler_flow_temp: Temperatura wody kotła
+  boiler_return_temp: Temperatura powrotu kotła
+  status_booster: Grzałka wspomagająca
+  compressor_frequency: Częstotliwość sprężarki
+  status_compressor: Sprężarka
+  controller_version_text: Wersja sterownika
+  controller_firmware_text: Oprogramowanie sterownika
+  controller_datetime_text: Data sterownika
+  cool_consumed: Chłodzenie zużyte
+  cool_cop: COP chłodzenia
+  cool_delivered: Chłodzenie dostarczone
+  status_defrost: Odmrażanie
+  dhw_consumed: CWU zużyte
+  dhw_cop: COP CWU
+  dhw_delivered: CWU dostarczone
+  hp_feed_temp: Temperatura zasilania
+  z1_feed_temp: Temperatura zasilania Z1
+  z2_feed_temp: Temperatura zasilania Z2
+  flow_rate: Przepływ
+  heat_source_text: Źródło ciepła
+  heatpump: Pompa ciepła
+  immersion_heater: Grzałka elektryczna
+  booster_heater: Grzałka wspomagająca
+  immersion_and_booster_heater: Grzałka elektryczna i wspomagająca
+  boiler: Kocioł
+  energy_consumed_increasing: Całkowite zużycie energii
+  heating_consumed: Ogrzewanie zużyte
+  heating_cop: COP ogrzewania
+  heating_delivered: Ogrzewanie dostarczone
+  status_holiday: Tryb wakacyjny
+  status_immersion: Grzałka elektryczna
+  legionella_prevention_temp: Temperatura zapobiegania legionelli
+  heatpump_select_operating_mode: Wybrany tryb pracy
+  heat_target_temperature: Ustawiona temperatura grzania
+  heat_flow_temperature: Temperatura zasilania grzania
+  heat_compensation_curve: Krzywa kompensacji grzania
+  cool_target_temperature: Ustawiona temperatura chłodzenia
+  cool_flow_temperature: Temperatura zasilania chłodzenia
+  operation_off: "Wyłączony"
+  hotwater: Woda grzewcza
+  heating: Ogrzewanie pomieszczeń
+  cooling: Chłodzenie pomieszczeń
+  frost_protection: Ochrona przed mrozem
+  legionella_prevention: Zapobieganie legionelli
+  runtime: Czas pracy
+  status_operation: Tryb pracy
+  output_power: Moc wyjściowa
+  computed_output_power: Szacowana moc wyjściowa
+  computed_cop: Szacowany COP
+  daily_computed_output_power: Szacowana całkowita dzienna produkcja energii
+  daily_repported_input_power: Zgłoszone całkowite dzienne zużycie energii
+  outside_temp: Temperatura zewnętrzna
+  hp_refrigerant_temp: Temperatura czynnika chłodniczego
+  hp_refrigerant_condensing_temp: Temperatura skraplania czynnika chłodniczego
+  hp_return_temp: Temperatura powrotu
+  z1_return_temp: Temperatura powrotu Z1
+  z2_return_temp: Temperatura powrotu Z2
+  status_water_pump: Status pompy obiegowej
+  status_water_pump_2: Status pompy obiegowej 2
+  status_water_pump_3: Status pompy obiegowej 3
+  status_mixing_valve: Status zaworu mieszającego
+  mixing_valve_step: Krok zaworu mieszającego
+  status_multi_zone: Status wielu stref
+  status_multi_zone_idle: Bezczynny
+  status_multi_zone_both: Obie
+  status_multi_zone_zone1: Z1 działa
+  status_multi_zone_zone2: Z2 działa
+  fault_code_text: Kod błędu
+  refrigerant_error_code_text: Kod błędu czynnika chłodniczego
+  compressor_starts: Liczba uruchomień sprężarki
+  discharge_temp: Temperatura wylotu
+  ou_liquid_pipe_temp: Temperatura rury cieczy jednostki zewnętrznej
+  ou_two_phase_pipe_temp: Temperatura rury dwufazowej jednostki zewnętrznej
+  ou_suction_pipe_temp: Temperatura rury ssącej jednostki zewnętrznej
+  ou_heatsink_temp: Temperatura radiatora jednostki zewnętrznej
+  ou_compressor_surface_temp: Temperatura powierzchni sprężarki jednostki zewnętrznej
+  super_heat_temp: Temperatura przegrzania
+  sub_cool_temp: Temperatura podchłodzenia
+  fan_speed: Prędkość wentylatora
+  status_short_cycle_lockout: 'Krótki cykl: Zablokowane'
+  minimum_compressor_on_time: 'Krótki cykl: Minimalny czas pracy'
+  lockout_duration: 'Krótki cykl: Czas blokady (min)'
+  short_cycle_mitigation_button: 'Krótki cykl: Anuluj blokadę'

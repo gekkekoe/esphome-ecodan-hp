@@ -64,13 +64,20 @@ packages:
             ## enable if you want to use zone 2
             #confs/zone2.yaml,
             #confs/server-control-z2.yaml,
-            ## enable label language file
-            confs/ecodan-labels-en.yaml,
-            #confs/ecodan-labels-nl.yaml,
-            #confs/ecodan-labels-it.yaml,
-            #confs/ecodan-labels-fr.yaml,
-            #confs/ecodan-labels-de.yaml,
-            #confs/ecodan-labels-fi.yaml,
+            ## enable label language files
+            confs/ecodan-labels-en.yaml,  # English
+            # confs/ecodan-labels-nl.yaml,  # Dutch
+            # confs/ecodan-labels-it.yaml,  # Italian
+            # confs/ecodan-labels-fr.yaml,  # French
+            # confs/ecodan-labels-de.yaml,  # German
+            # confs/ecodan-labels-fi.yaml,  # Finnish
+            # confs/ecodan-labels-ja.yaml,  # Japanese
+            # confs/ecodan-labels-no.yaml,  # Norwegian
+            # confs/ecodan-labels-sv.yaml,  # Swedish
+            # confs/ecodan-labels-da.yaml,  # Danish
+            # confs/ecodan-labels-ko.yaml,  # Korean
+            # confs/ecodan-labels-zh.yaml,  # Chinese
+            # confs/ecodan-labels-pl.yaml,  # Polish
             confs/debug.yaml,
             confs/wifi.yaml
            ]

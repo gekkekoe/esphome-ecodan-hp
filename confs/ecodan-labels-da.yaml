@@ -1,0 +1,131 @@
+substitutions:
+  status_three_way_valve: 3-vejs ventil
+  status_three_way_valve_2: 3-vejs ventil 2
+  heatpump_climate_dhw: Brugsvandsklima
+  dhw_temp: Brugsvand nuværende temp
+  dhw_secondary_temp: Brugsvand sekundær temp
+  status_dhw_forced: Brugsvand tvunget
+  dhw_flow_temp_drop: Brugsvand maks tempfald
+  status_prohibit_dhw: Brugsvand forbudt
+  dhw_flow_temp_target: Brugsvand indstillet værdi
+  status_dhw_eco: Brugsvand eco
+  esp_ip: ESP IP
+  internal_esp_temperature: ESP intern temperatur
+  esp_sidd: ESP SSID
+  uptime: ESP driftstid
+  esp_version: ESP version
+  restart_button: ESP genstart
+  status_in1_request: In1 termostat
+  status_in6_request: In6 termostat 2
+  status_in5_request: In5 udendørs termostat
+  heatpump_select_dhw_mode: Brugsvandstilstand
+  normal: Normal
+  eco: Eco
+  version: ESP version
+  led_brightness: LED lysstyrke
+  led_switch: LED
+  heatpump_switch_force_dhw: Tving Brugsvand
+  heatpump_switch_power_mode: Varmepumpe
+  heatpump_switch_holiday: Ferietilstand
+  wifi_signal_proc: WiFi-signal %
+  wifi_signal_db: WiFi-signal dB
+  z1_flow_temp_target: Zone 1 H/C indstillet værdi
+  status_prohibit_cool_z1: Zone 1 køling forbudt
+  status_prohibit_heating_z1: Zone 1 opvarmning forbudt
+  heatpump_climate_z1: Zone 1 klima
+  heatpump_climate_room_z1: Zone 1 temperatur
+  z1_room_temp_target: Zone 1 rum indstilling
+  z1_room_temp: Zone 1 rumtemperatur
+  heatpump_number_z2_set_flow_temperature: Zone 2 H/C indstilling
+  z2_flow_temp_target: Zone 2 H/C indstillet værdi
+  status_prohibit_cool_z2: Zone 2 køling forbudt
+  status_prohibit_heating_z2: Zone 2 opvarmning forbudt
+  heatpump_number_z2_set_room_temperature: Zone 2 rum indstilling
+  heatpump_climate_z2: Zone 2 klima
+  heatpump_climate_room_z2: Zone 2 temperatur
+  z2_room_temp_target: Zone 2 rum indstilling
+  z2_room_temp: Zone 2 rumtemperatur
+  mixing_tank_temp: Blandingsbeholder temperatur
+  boiler_flow_temp: Kedelfremledning temperatur
+  boiler_return_temp: Kedel retur temperatur
+  status_booster: Booster varme
+  compressor_frequency: Kompressor frekvens
+  status_compressor: Kompressor
+  controller_version_text: Controller version
+  controller_firmware_text: Controller firmware
+  controller_datetime_text: Controller dato
+  cool_consumed: Køling brugt
+  cool_cop: Køle COP
+  cool_delivered: Køling leveret
+  status_defrost: Afrimning
+  dhw_consumed: Brugsvand brugt
+  dhw_cop: Brugsvand COP
+  dhw_delivered: Brugsvand leveret
+  hp_feed_temp: Fremledning temperatur
+  z1_feed_temp: Z1 fremledning temperatur
+  z2_feed_temp: Z2 fremledning temperatur
+  flow_rate: Flow
+  heat_source_text: Varme kilde
+  heatpump: Varmepumpe
+  immersion_heater: Immersionsvarmer
+  booster_heater: Booster varmer
+  immersion_and_booster_heater: Immersions + booster varmer
+  boiler: Kedel
+  energy_consumed_increasing: Total energi brugt
+  heating_consumed: Opvarmning brugt
+  heating_cop: Opvarmning COP
+  heating_delivered: Opvarmning leveret
+  status_holiday: Ferietilstand
+  status_immersion: Immersionsvarmer
+  legionella_prevention_temp: Legionella forebyggelse temperatur
+  heatpump_select_operating_mode: Valgt driftsmodus
+  heat_target_temperature: Varme måltemperatur
+  heat_flow_temperature: Varme fremledning temperatur
+  heat_compensation_curve: Varme kompensationskurve
+  cool_target_temperature: Køle måltemperatur
+  cool_flow_temperature: Køle fremledning temperatur
+  operation_off: Fra
+  hotwater: Brugsvand
+  heating: Opvarmning
+  cooling: Køling
+  frost_protection: Frostbeskyttelse
+  legionella_prevention: Legionella forebyggelse
+  runtime: Drifttid
+  status_operation: Driftsmodus
+  output_power: Effekt
+  computed_output_power: Beregnet effekt
+  computed_cop: Beregnet COP
+  daily_computed_output_power: Beregnet total daglig energi
+  daily_repported_input_power: Rapporteret total daglig energiforbrug
+  outside_temp: Udetemperatur
+  hp_refrigerant_temp: Kølemiddel væsketemperatur
+  hp_refrigerant_condensing_temp: Kølemiddel kondensationstemperatur
+  hp_return_temp: Retur temperatur
+  z1_return_temp: Z1 retur temperatur
+  z2_return_temp: Z2 retur temperatur
+  status_water_pump: Vandpumpe status
+  status_water_pump_2: Vandpumpe 2 status
+  status_water_pump_3: Vandpumpe 3 status
+  status_mixing_valve: Blandingsventil status
+  mixing_valve_step: Blandingsventil trin
+  status_multi_zone: Multi-zone status
+  status_multi_zone_idle: Inaktiv
+  status_multi_zone_both: Begge
+  status_multi_zone_zone1: Z1 aktiv
+  status_multi_zone_zone2: Z2 aktiv
+  fault_code_text: Fejlkode
+  refrigerant_error_code_text: Kølemiddel fejlkode
+  compressor_starts: Akkumulerede kompressor starter
+  discharge_temp: Udløbstemperatur
+  ou_liquid_pipe_temp: Udendørs væskepipe 1 temp
+  ou_two_phase_pipe_temp: Udendørs tofasepipe temp
+  ou_suction_pipe_temp: Udendørs sugepipe temp
+  ou_heatsink_temp: Udendørs køleflade temp
+  ou_compressor_surface_temp: Udendørs kompressor overfladetemp
+  super_heat_temp: Overhedning temp
+  sub_cool_temp: Underkøling temp
+  fan_speed: Blæserhastighed
+  status_short_cycle_lockout: 'Kort cyklus: Låst'
+  minimum_compressor_on_time: 'Kort cyklus: Min driftstid'
+  lockout_duration: 'Kort cyklus: Låstid (min)'
+  short_cycle_mitigation_button: 'Kort cyklus: Ophæv lås'

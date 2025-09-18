@@ -1,0 +1,132 @@
+# Swedish (sv)
+substitutions:
+  status_three_way_valve: 3-vägsventil
+  status_three_way_valve_2: 3-vägsventil 2
+  heatpump_climate_dhw: Varmvattenklimat
+  dhw_temp: Varmvatten nuvarande temp
+  dhw_secondary_temp: Varmvatten sekundär temp
+  status_dhw_forced: Varmvatten tvingat
+  dhw_flow_temp_drop: Varmvatten max tempfall
+  status_prohibit_dhw: Varmvatten förbjudet
+  dhw_flow_temp_target: Varmvatten inställd värde
+  status_dhw_eco: Varmvatten eco
+  esp_ip: ESP IP
+  internal_esp_temperature: ESP intern temperatur
+  esp_sidd: ESP SSID
+  uptime: ESP driftstid
+  esp_version: ESP version
+  restart_button: ESP starta om
+  status_in1_request: In1 termostat
+  status_in6_request: In6 termostat 2
+  status_in5_request: In5 utomhustermostat
+  heatpump_select_dhw_mode: Varmvattenläge
+  normal: Normal
+  eco: Eco
+  version: ESP version
+  led_brightness: LED ljusstyrka
+  led_switch: LED
+  heatpump_switch_force_dhw: Tvinga varmvatten
+  heatpump_switch_power_mode: Värmepump
+  heatpump_switch_holiday: Semesterläge
+  wifi_signal_proc: WiFi-signal %
+  wifi_signal_db: WiFi-signal dB
+  z1_flow_temp_target: Zon 1 H/C inställt värde
+  status_prohibit_cool_z1: Zon 1 kylning förbjudet
+  status_prohibit_heating_z1: Zon 1 uppvärmning förbjudet
+  heatpump_climate_z1: Zon 1 klimat
+  heatpump_climate_room_z1: Zon 1 temperatur
+  z1_room_temp_target: Zon 1 rum inställt värde
+  z1_room_temp: Zon 1 rumstemperatur
+  heatpump_number_z2_set_flow_temperature: Zon 2 H/C inställning
+  z2_flow_temp_target: Zon 2 H/C inställt värde
+  status_prohibit_cool_z2: Zon 2 kylning förbjudet
+  status_prohibit_heating_z2: Zon 2 uppvärmning förbjudet
+  heatpump_number_z2_set_room_temperature: Zon 2 rum inställt värde
+  heatpump_climate_z2: Zon 2 klimat
+  heatpump_climate_room_z2: Zon 2 temperatur
+  z2_room_temp_target: Zon 2 rum inställt värde
+  z2_room_temp: Zon 2 rumstemperatur
+  mixing_tank_temp: Blandningstank temperatur
+  boiler_flow_temp: Panna framledning temperatur
+  boiler_return_temp: Panna retur temperatur
+  status_booster: Booster värmare
+  compressor_frequency: Kompressor frekvens
+  status_compressor: Kompressor
+  controller_version_text: Styrenhet version
+  controller_firmware_text: Styrenhet firmware
+  controller_datetime_text: Styrenhet datum
+  cool_consumed: Kylning förbrukad
+  cool_cop: Kyl-COP
+  cool_delivered: Kylning levererad
+  status_defrost: Avfrostning
+  dhw_consumed: Varmvatten förbrukad
+  dhw_cop: Varmvatten COP
+  dhw_delivered: Varmvatten levererad
+  hp_feed_temp: Framledning temperatur
+  z1_feed_temp: Z1 framledning temperatur
+  z2_feed_temp: Z2 framledning temperatur
+  flow_rate: Flöde
+  heat_source_text: Värmekälla
+  heatpump: Värmepump
+  immersion_heater: Immersionsvärmare
+  booster_heater: Booster värmare
+  immersion_and_booster_heater: Immersions + booster värmare
+  boiler: Panna
+  energy_consumed_increasing: Total energi förbrukad
+  heating_consumed: Uppvärmning förbrukad
+  heating_cop: Uppvärmnings-COP
+  heating_delivered: Uppvärmning levererad
+  status_holiday: Semesterläge
+  status_immersion: Immersionsvärmare
+  legionella_prevention_temp: Legionellaskydd temperatur
+  heatpump_select_operating_mode: Vald driftläge
+  heat_target_temperature: Värme måltemperatur
+  heat_flow_temperature: Värme framledning temperatur
+  heat_compensation_curve: Värmekompensationskurva
+  cool_target_temperature: Kyl måltemperatur
+  cool_flow_temperature: Kyl framledning temperatur
+  operation_off: Av
+  hotwater: Varmvatten
+  heating: Uppvärmning
+  cooling: Kylning
+  frost_protection: Frostskydd
+  legionella_prevention: Legionellaskydd
+  runtime: Drifttid
+  status_operation: Driftläge
+  output_power: Effekt
+  computed_output_power: Beräknad effekt
+  computed_cop: Beräknad COP
+  daily_computed_output_power: Beräknad total daglig energi
+  daily_repported_input_power: Rapporterat total daglig energiförbrukning
+  outside_temp: Utetemperatur
+  hp_refrigerant_temp: Kylmedelsvätsketemperatur
+  hp_refrigerant_condensing_temp: Kylmedelskondensationstemperatur
+  hp_return_temp: Retur temperatur
+  z1_return_temp: Z1 retur temperatur
+  z2_return_temp: Z2 retur temperatur
+  status_water_pump: Vattenpump status
+  status_water_pump_2: Vattenpump 2 status
+  status_water_pump_3: Vattenpump 3 status
+  status_mixing_valve: Blandningsventil status
+  mixing_valve_step: Blandningsventil steg
+  status_multi_zone: Multi-zon status
+  status_multi_zone_idle: Inaktiv
+  status_multi_zone_both: Båda
+  status_multi_zone_zone1: Z1 aktiv
+  status_multi_zone_zone2: Z2 aktiv
+  fault_code_text: Felkod
+  refrigerant_error_code_text: Kylmedels felkod
+  compressor_starts: Ackumulerade kompressorstarter
+  discharge_temp: Utlopp temperatur
+  ou_liquid_pipe_temp: Utomhus vätskepipe 1 temp
+  ou_two_phase_pipe_temp: Utomhus tvåfaspipe temp
+  ou_suction_pipe_temp: Utomhus sugpipe temp
+  ou_heatsink_temp: Utomhus kylfläns temp
+  ou_compressor_surface_temp: Utomhus kompressor yttemperatur
+  super_heat_temp: Överhettning temp
+  sub_cool_temp: Underkylning temp
+  fan_speed: Fläkthastighet
+  status_short_cycle_lockout: 'Kort cykel: Låst'
+  minimum_compressor_on_time: 'Kort cykel: Min drifttid'
+  lockout_duration: 'Kort cykel: Låstid (min)'
+  short_cycle_mitigation_button: 'Kort cykel: Avbryt lås'

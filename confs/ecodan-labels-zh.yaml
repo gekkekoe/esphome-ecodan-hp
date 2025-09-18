@@ -1,0 +1,131 @@
+substitutions:
+  status_three_way_valve: 三通阀
+  status_three_way_valve_2: 三通阀 2
+  heatpump_climate_dhw: 热水气候
+  dhw_temp: 热水当前温度
+  dhw_secondary_temp: 热水二次温度
+  status_dhw_forced: 热水强制
+  dhw_flow_temp_drop: 热水最大温差
+  status_prohibit_dhw: 热水禁止
+  dhw_flow_temp_target: 热水设定值
+  status_dhw_eco: 热水节能
+  esp_ip: ESP IP
+  internal_esp_temperature: ESP 内部温度
+  esp_sidd: ESP SSID
+  uptime: ESP 运行时间
+  esp_version: ESP 版本
+  restart_button: ESP 重启
+  status_in1_request: In1 温控器
+  status_in6_request: In6 温控器 2
+  status_in5_request: In5 室外温控器
+  heatpump_select_dhw_mode: 热水模式
+  normal: 正常
+  eco: 节能
+  version: ESP 版本
+  led_brightness: LED 亮度
+  led_switch: LED
+  heatpump_switch_force_dhw: 强制热水
+  heatpump_switch_power_mode: 热泵
+  heatpump_switch_holiday: 假日模式
+  wifi_signal_proc: WiFi 信号 %
+  wifi_signal_db: WiFi 信号 dB
+  z1_flow_temp_target: 区域1 H/C 设定值
+  status_prohibit_cool_z1: 区域1 制冷禁止
+  status_prohibit_heating_z1: 区域1 供热禁止
+  heatpump_climate_z1: 区域1 气候
+  heatpump_climate_room_z1: 区域1 温度
+  z1_room_temp_target: 区域1 房间设定值
+  z1_room_temp: 区域1 房间温度
+  heatpump_number_z2_set_flow_temperature: 区域2 H/C 设定值
+  z2_flow_temp_target: 区域2 H/C 设定值
+  status_prohibit_cool_z2: 区域2 制冷禁止
+  status_prohibit_heating_z2: 区域2 供热禁止
+  heatpump_number_z2_set_room_temperature: 区域2 房间设定值
+  heatpump_climate_z2: 区域2 气候
+  heatpump_climate_room_z2: 区域2 温度
+  z2_room_temp_target: 区域2 房间设定值
+  z2_room_temp: 区域2 房间温度
+  mixing_tank_temp: 混水罐温度
+  boiler_flow_temp: 锅炉供水温度
+  boiler_return_temp: 锅炉回水温度
+  status_booster: 增压器
+  compressor_frequency: 压缩机频率
+  status_compressor: 压缩机
+  controller_version_text: 控制器版本
+  controller_firmware_text: 控制器固件
+  controller_datetime_text: 控制器日期
+  cool_consumed: 制冷消耗
+  cool_cop: 制冷 COP
+  cool_delivered: 制冷供给
+  status_defrost: 除霜
+  dhw_consumed: 热水消耗
+  dhw_cop: 热水 COP
+  dhw_delivered: 热水供给
+  hp_feed_temp: 供水温度
+  z1_feed_temp: Z1 供水温度
+  z2_feed_temp: Z2 供水温度
+  flow_rate: 流量
+  heat_source_text: 热源
+  heatpump: 热泵
+  immersion_heater: 浸入式加热
+  booster_heater: 增压加热
+  immersion_and_booster_heater: 浸入+增压加热
+  boiler: 锅炉
+  energy_consumed_increasing: 总消耗能量
+  heating_consumed: 供暖消耗
+  heating_cop: 供暖 COP
+  heating_delivered: 供暖供给
+  status_holiday: 假日模式
+  status_immersion: 浸入式加热
+  legionella_prevention_temp: 防军团菌温度
+  heatpump_select_operating_mode: 选定运行模式
+  heat_target_temperature: 供暖目标温度
+  heat_flow_temperature: 供暖流量温度
+  heat_compensation_curve: 供暖补偿曲线
+  cool_target_temperature: 制冷目标温度
+  cool_flow_temperature: 制冷流量温度
+  operation_off: 关闭
+  hotwater: 热水
+  heating: 供暖
+  cooling: 制冷
+  frost_protection: 防冻
+  legionella_prevention: 防军团菌
+  runtime: 运行时间
+  status_operation: 运行模式
+  output_power: 输出功率
+  computed_output_power: 估算输出功率
+  computed_cop: 估算 COP
+  daily_computed_output_power: 估算日总能量
+  daily_repported_input_power: 日总能量报告
+  outside_temp: 室外温度
+  hp_refrigerant_temp: 制冷剂液温
+  hp_refrigerant_condensing_temp: 制冷剂冷凝温度
+  hp_return_temp: 回水温度
+  z1_return_temp: Z1 回水温度
+  z2_return_temp: Z2 回水温度
+  status_water_pump: 水泵状态
+  status_water_pump_2: 水泵2状态
+  status_water_pump_3: 水泵3状态
+  status_mixing_valve: 混水阀状态
+  mixing_valve_step: 混水阀步进
+  status_multi_zone: 多区状态
+  status_multi_zone_idle: 空闲
+  status_multi_zone_both: 两个都
+  status_multi_zone_zone1: Z1 工作中
+  status_multi_zone_zone2: Z2 工作中
+  fault_code_text: 故障代码
+  refrigerant_error_code_text: 制冷剂错误代码
+  compressor_starts: 累计压缩机启动次数
+  discharge_temp: 排出温度
+  ou_liquid_pipe_temp: 室外机液管1温度
+  ou_two_phase_pipe_temp: 室外机两相管温度
+  ou_suction_pipe_temp: 室外机吸入管温度
+  ou_heatsink_temp: 室外机散热片温度
+  ou_compressor_surface_temp: 室外机压缩机表面温度
+  super_heat_temp: 过热温度
+  sub_cool_temp: 过冷温度
+  fan_speed: 风扇速度
+  status_short_cycle_lockout: 短周期锁定
+  minimum_compressor_on_time: 短周期最小运行时间
+  lockout_duration: 短周期锁定时间(分钟)
+  short_cycle_mitigation_button: 短周期取消锁定
