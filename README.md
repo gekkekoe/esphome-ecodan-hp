@@ -18,6 +18,7 @@ If you want to contribute with a translation: copy the file `ecodan-labels-en.ya
 | Realtime metrics | `Power output`, `Consumption`, `Production`, `COP` (no external meter required, FTC6+)  |
 | Misc* |  `Fan speed`, `Compressor starts`, `Outdoor unit thermistors` |
 | Updates | OTA updates available when using the default recommended hardware |
+| Short cycle detection & mitigation | The short-cycle mitigation feature protects your heat pump from excessive on/off cycling. [documentation](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/docs/short-cycle-mitigation.md) |
 
 \* <sup><i>These features are not available in proxy, since we are observing</sup></i>
 
