@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix: 
-        lang: [ "en", "nl", "es", "fr", "it", "de", "fi", "sv", "no", "da", "pl", "ja", "ko", "zh" ]
+        lang: [ "en", "nl", "es", "fr", "it", "de", "fi", "sv", "no", "pl", "da"]
         board: [esp32s3, esp32s3-proxy2]
         zone: [z1, z2]
     steps:
