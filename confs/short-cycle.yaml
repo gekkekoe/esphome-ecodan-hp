@@ -1,0 +1,153 @@
+select:
+  - platform: template
+    id: lockout_duration
+    name: ${lockout_duration}
+    optimistic: true
+    restore_value: true
+    options:
+      - "0"
+      - "15"
+      - "30"
+      - "45"
+      - "60"
+    initial_option: "0"
+
+
+binary_sensor:
+  - platform: ecodan
+    status_short_cycle_lockout:
+      id: status_short_cycle_lockout
+      name: ${status_short_cycle_lockout}
+    status_compressor:
+      id: status_compressor
+      name: ${status_compressor}
+      on_state_change:
+        then:
+          - lambda: |-
+              if (x.has_value()) {
+                // OFF -> ON OR UNKNOWN -> ON
+                if (!x_previous.has_value() || (!*x_previous && *x)) {
+                  ESP_LOGI(esphome::ecodan::TAG, "Compressor START detected");
+                  id(compressor_start_time) = millis();
+                }
+                // ON -> OFF
+                else if (x_previous.has_value() && *x_previous && !*x) {
+                  ESP_LOGI(esphome::ecodan::TAG, "Compressor STOP detected");
+
+                  if (id(compressor_start_time) == 0 || id(status_short_cycle_lockout).state)
+                    return;
+
+                  uint32_t min_duration_ms = id(minimum_compressor_on_time).state * 60000;
+                  if (min_duration_ms == 0)
+                    return;
+
+                  auto& status = id(ecodan_instance).get_status();
+                  if (status.is_heating(esphome::ecodan::Zone::ZONE_1) 
+                    || status.is_cooling(esphome::ecodan::Zone::ZONE_1)
+                    || status.is_heating(esphome::ecodan::Zone::ZONE_2) 
+                    || status.is_cooling(esphome::ecodan::Zone::ZONE_2)) {
+
+                      uint32_t run_duration_ms = millis() - id(compressor_start_time);
+                      if (run_duration_ms < min_duration_ms) {
+                        id(status_short_cycle_lockout).publish_state(true);
+                        id(short_cycle_mitigation_script).execute();
+                      }
+                  }
+                }
+              }
+
+
+script:
+  - id: short_cycle_mitigation_script
+    mode: single
+    then:
+      - logger.log:
+          level: WARN
+          format: "Short-cycling detected! Starting a lockout for %s minutes."
+          args: [ id(lockout_duration).state.c_str() ]
+      - lambda: |-
+          auto& status = id(ecodan_instance).get_status();
+          auto flag = status.get_svc_flags();
+
+          // we are already in svc, need to backup the old flags for restore.
+          if (status.ServerControl)
+            id(ecodan_instance).set_svc_state_before_lockout(flag);
+          else
+            id(ecodan_instance).reset_svc_state_before_lockout();
+
+          if (status.is_heating(esphome::ecodan::Zone::ZONE_1))
+            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_HEATING;
+          else if (status.is_cooling(esphome::ecodan::Zone::ZONE_1))
+            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_COOLING;
+
+          if (status.is_heating(esphome::ecodan::Zone::ZONE_2))
+            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_HEATING;
+          else if (status.is_cooling(esphome::ecodan::Zone::ZONE_2))
+            flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_COOLING;
+          
+          flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
+          id(ecodan_instance).set_controller_mode(flag, true);
+          
+      - delay: !lambda "return atoi(id(lockout_duration).state.c_str()) * 60 * 1000;"
+      - logger.log:
+          level: INFO
+          format: "Lockout period over. Restoring operations."
+      - script.execute: restore_svc_state
+
+  - id: restore_svc_state
+    then:
+      - logger.log:
+          level: INFO
+          format: "Executing restore states after lockout"
+      - lambda: |-
+          id(status_short_cycle_lockout).publish_state(false);
+          auto flag_before_lockout = id(ecodan_instance).get_svc_state_before_lockout();
+
+          if (flag_before_lockout.has_value()) {
+            auto flag = *flag_before_lockout;
+            flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
+            id(ecodan_instance).set_controller_mode(flag, true);
+          } else {
+            id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
+          }
+
+button:
+  - platform: template
+    id: short_cycle_mitigation_button
+    name: ${short_cycle_mitigation_button}
+    on_press:
+      - logger.log:
+          level: INFO
+          format: "Lockout script cancelled by button"
+      - script.stop: short_cycle_mitigation_script
+      - script.execute: restore_svc_state
+
+  # - platform: template
+  #   name: "Short-Cycle: Start Compressor (Simulated)"
+  #   on_press:
+  #     - lambda: |-
+  #         id(status_compressor).publish_state(true);
+
+  # - platform: template
+  #   name: "Short-Cycle: Stop Compressor (Simulated)"
+  #   on_press:
+  #     - lambda: |-
+  #         id(status_compressor).publish_state(false);
+globals:
+  # For short-cycle detection
+  - id: compressor_start_time
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+
+number:
+  - platform: template
+    # Short-cycle protection
+    id: minimum_compressor_on_time
+    name: ${minimum_compressor_on_time}
+    optimistic: true
+    restore_value: true
+    initial_value: 5 # minutes
+    min_value: 1
+    max_value: 20
+    step: 1
