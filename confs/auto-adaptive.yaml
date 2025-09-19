@@ -1,0 +1,251 @@
+globals:
+  # For adaptive curves
+  - id: heating_curve_offset
+    type: float
+    restore_value: yes
+    initial_value: '25.0'
+  - id: cooling_curve_offset
+    type: float
+    restore_value: yes
+    initial_value: '22.0'
+  - id: heating_previous_temp_error
+    type: float
+    restore_value: no 
+    initial_value: '0.0'
+  - id: cooling_previous_temp_error
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+
+number:
+  # Slope settings
+  - platform: template
+    id: heating_slope
+    name: ${heating_slope}
+    optimistic: true
+    restore_value: true
+    initial_value: 0.8
+    min_value: 0.2
+    max_value: 2.5
+    step: 0.1
+  - platform: template
+    id: cooling_slope
+    name: ${cooling_slope}
+    optimistic: true
+    restore_value: true
+    initial_value: 1.2
+    min_value: 0.2
+    max_value: 2.5
+    step: 0.1
+  # Safety limits
+  - platform: template
+    id: maximum_heating_flow_temp
+    name: ${maximum_heating_flow_temp}
+    optimistic: true
+    restore_value: true
+    initial_value: 38.0
+    min_value: 30.0
+    max_value: 55.0
+    step: 0.5
+  - platform: template
+    id: minimum_cooling_flow_temp
+    name: ${minimum_cooling_flow_temp}
+    optimistic: true
+    restore_value: true
+    initial_value: 18.0
+    min_value: 10.0
+    max_value: 25.0
+    step: 0.5
+  # Temperature feedback via api
+  - platform: template
+    id: temperature_feedback
+    optimistic: true
+    min_value: -50
+    max_value: 100
+    step: 0.1
+    internal: true
+  - platform: template
+    id: target_temperature_feedback
+    optimistic: true
+    min_value: -50
+    max_value: 100
+    step: 0.1
+    internal: true
+
+select:
+  - platform: template
+    id: temperature_feedback_source
+    name: ${temperature_feedback_source}
+    optimistic: true
+    restore_value: true
+    options:
+      - "${temperature_feedback_option_room}"
+      - "${temperature_feedback_option_api}"
+    initial_option: "${temperature_feedback_option_room}"
+  - platform: template
+    id: heating_system_type
+    name: ${heating_system_type}
+    optimistic: true
+    restore_value: true
+    options:
+      - "${heating_system_type_option_ufh}"
+      - "${heating_system_type_option_ufh_rad}"
+      - "${heating_system_type_option_rad}"
+    initial_option: "${heating_system_type_option_ufh}"
+
+switch:
+  - platform: template
+    name: ${auto_adaptive_control_enabled}
+    id: auto_adaptive_control_enabled
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+
+interval:
+  - interval: 10min
+    then:
+      - script.execute: auto_auto_adaptive_loop
+
+script:
+  - id: auto_auto_adaptive_loop
+    # avoid multiple queues of this script, "restart" if current one needs to be cancelled
+    mode: single
+    then:
+      - lambda: |-
+
+          if (!id(auto_adaptive_control_enabled).state)
+            return; // feature is not enabled by default
+
+          auto& status = id(ecodan_instance).get_status();
+
+          if (status.HeatingCoolingMode != esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP 
+              && status.HeatingCoolingMode != esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP) {
+            ESP_LOGW(esphome::ecodan::TAG, "Auto Adaptive is only available in fixed flow modes");
+            return;
+          }
+
+          if (isnan(id(hp_feed_temp).state) || isnan(id(outside_temp).state)) {
+            ESP_LOGW(esphome::ecodan::TAG, "Feed temp / Outside Temp not available");
+            return;
+          }
+
+          // don't run during lockout / defrost
+          if (id(status_short_cycle_lockout).state || status.DefrostActive) {
+            ESP_LOGW(esphome::ecodan::TAG, "Lockout / Defrost Active");
+            return;
+          }
+
+          const float SATURATION_MARGIN = 2.0f;
+
+          float actual_flow_temp = id(hp_feed_temp).state;
+          float actual_outside_temp = id(outside_temp).state;
+
+          float room_temp = NAN;
+          float room_target_temp = NAN;
+          float requested_flow_temp = NAN;
+          auto feedback_temperature_index = id(temperature_feedback_source).active_index().value_or(0);
+
+          // get from room thermostats 
+          if (status.is_heating(esphome::ecodan::Zone::ZONE_1) || status.is_cooling(esphome::ecodan::Zone::ZONE_1)) {
+            room_temp = status.Zone1RoomTemperature;
+            room_target_temp = status.Zone1SetTemperature;
+            requested_flow_temp = status.Zone1FlowTemperatureSetPoint;
+          } 
+          else if (status.is_heating(esphome::ecodan::Zone::ZONE_2) || status.is_cooling(esphome::ecodan::Zone::ZONE_2)) {
+            room_temp = status.Zone2RoomTemperature; 
+            room_target_temp = status.Zone2SetTemperature;
+            requested_flow_temp = status.Zone2FlowTemperatureSetPoint;
+          }
+          
+          // use from api if selected
+          if (feedback_temperature_index == 1)
+            room_temp = id(temperature_feedback).state;
+
+          // missing sensors data
+          if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp)) {
+            ESP_LOGW(esphome::ecodan::TAG, "Room / Room Target / Requested Flow Temp not available");
+            return;
+          }
+
+          // set profile params based on heating system type
+          float learning_rate;
+          float error_margin_positive;
+          float error_margin_negative;
+          auto heating_type_index = id(heating_system_type).active_index().value_or(0);
+          if (heating_type_index == 0) { // UFH
+            learning_rate = 0.03f;
+            error_margin_positive = 0.4f;
+            error_margin_negative = -0.3f;
+          } else if (heating_type_index == 1) { // UFH + Radiators
+            learning_rate = 0.04f;
+            error_margin_positive = 0.3f;
+            error_margin_negative = -0.2f;
+          } else { // Radiators
+            learning_rate = 0.05f;
+            error_margin_positive = 0.3f;
+            error_margin_negative = -0.2f;
+          }
+
+          if (status.is_heating(esphome::ecodan::Zone::ZONE_1) || status.is_heating(esphome::ecodan::Zone::ZONE_2)) {
+            // --- HEATING MODE ---
+            float calculated_flow = (20.0f - actual_outside_temp) * id(heating_slope).state + id(heating_curve_offset);
+
+            // Safety limit
+            float max_flow_temp = id(maximum_heating_flow_temp).state;
+            if (calculated_flow > max_flow_temp) {
+              calculated_flow = max_flow_temp;
+              ESP_LOGW(esphome::ecodan::TAG, "Target flow temp limited to %.1f °C (safety limit)!", max_flow_temp);
+            }
+
+            // Anti-windup (saturation)                        
+            bool is_saturated = (requested_flow_temp - actual_flow_temp) > SATURATION_MARGIN;
+            if (is_saturated) {
+              ESP_LOGW(esphome::ecodan::TAG, "Heat pump (heating) is saturated. Learning process paused.");
+            }
+            else {
+              float error = room_target_temp - room_temp;
+              if (error > error_margin_positive && error >= id(heating_previous_temp_error)) {
+                id(heating_curve_offset) += learning_rate;
+              } else if (error < error_margin_negative) {
+                id(heating_curve_offset) -= learning_rate;
+              }
+              id(heating_previous_temp_error) = error;
+            }
+
+            calculated_flow = round(calculated_flow * 2) / 2.0f;
+            if (status.is_heating(esphome::ecodan::Zone::ZONE_1))
+              id(ecodan_instance).set_flow_target_temperature(calculated_flow, esphome::ecodan::Zone::ZONE_1);
+            if (status.is_heating(esphome::ecodan::Zone::ZONE_2))
+              id(ecodan_instance).set_flow_target_temperature(calculated_flow, esphome::ecodan::Zone::ZONE_2);
+          }
+          else if (status.is_cooling(esphome::ecodan::Zone::ZONE_1) || status.is_cooling(esphome::ecodan::Zone::ZONE_2)) {
+            // --- COOLING MODE ---
+            float calculated_flow = id(cooling_curve_offset) - (actual_outside_temp - 20.0f) * id(cooling_slope).state;
+            
+            // Safety limit (condensation)
+            float min_flow_temp = id(minimum_cooling_flow_temp).state;
+            if (calculated_flow < min_flow_temp) {
+              calculated_flow = min_flow_temp;
+              ESP_LOGW(esphome::ecodan::TAG, "Target flow temp limited to %.1f °C (condensation limit)!", min_flow_temp);
+            }
+
+            // Anti-windup (saturation)                        
+            bool is_saturated = (actual_flow_temp - requested_flow_temp) > SATURATION_MARGIN;
+            if (is_saturated) {
+              ESP_LOGW(esphome::ecodan::TAG, "Heat pump (cooling) is saturated. Learning process paused.");
+            }
+            else {
+              float error = room_temp - room_target_temp;
+              if (error > error_margin_positive && error >= id(cooling_previous_temp_error)) {
+                id(cooling_curve_offset) -= learning_rate;
+              } else if (error < error_margin_negative) {
+                id(cooling_curve_offset) += learning_rate; 
+              }
+              id(cooling_previous_temp_error) = error;
+            }
+
+            calculated_flow = round(calculated_flow * 2) / 2.0f;
+            if (status.is_cooling(esphome::ecodan::Zone::ZONE_1))
+              id(ecodan_instance).set_flow_target_temperature(calculated_flow, esphome::ecodan::Zone::ZONE_1);
+            if (status.is_cooling(esphome::ecodan::Zone::ZONE_2))
+              id(ecodan_instance).set_flow_target_temperature(calculated_flow, esphome::ecodan::Zone::ZONE_2);
+          }
