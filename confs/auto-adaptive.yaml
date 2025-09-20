@@ -78,7 +78,7 @@ number:
 # expose learned curve values
 sensor:
   - platform: template
-    name: "Auto-Adaptive Heating Offset"
+    name: ${heating_offset_sensor}
     id: heating_offset_sensor
     lambda: 'return id(heating_curve_offset);'
     unit_of_measurement: "°C"
@@ -86,7 +86,7 @@ sensor:
     update_interval: ${update_interval_minutes} 
 
   - platform: template
-    name: "Auto-Adaptive Cooling Offset"
+    name: ${cooling_offset_sensor}
     id: cooling_offset_sensor
     lambda: 'return id(cooling_curve_offset);'
     unit_of_measurement: "°C"
