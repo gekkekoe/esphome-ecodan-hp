@@ -11,9 +11,17 @@ The system is designed to be highly robust and accounts for real-world scenarios
 
 ---
 
+## Persistent Learning
+
+A significant advantage of this system is that all learned parameters, specifically the crucial **`heating_curve_offset`** and **`cooling_curve_offset`**, are automatically saved to the ESP32's flash memory.
+
+Unlike the native Mitsubishi auto-adaptive function, which can lose its learned data after a power cycle, this implementation ensures that a reboot or power outage **does not cost time to re-learn**. The system immediately resumes operation with its last known optimal settings, ensuring continuous efficiency.
+
+---
+
 ## Important Note on Operating Mode
 
-For this feature to function correctly, the heat pump must be set to a **Fixed Flow Temperature** mode for both heating and cooling. The Auto-Adaptive algorithm takes over the role of the built-in heating curve by dynamically adjusting this fixed setpoint. 
+For this feature to function correctly, the heat pump must be set to a **Fixed Flow Temperature** mode for both heating and cooling. The Auto-Adaptive algorithm takes over the role of the built-in heating curve by dynamically adjusting this fixed setpoint.
 
 ---
 
@@ -31,7 +39,11 @@ All parameters are adjustable in real-time from the Home Assistant interface.
 | **`Auto-adaptive: Min. Cooling Flow Temperature`**| Sets a hard safety limit for the flow temperature during cooling to prevent condensation. | **Default**: `18.0°C`                                                                                                                           |
 | **`Auto-Adaptive: Room Temperature source`** | Selects the source for the room temperature reading used by the algorithm.             | **Default**: `Room Thermostat`<br>• **Room Thermostat**: Uses the Ecodan thermostat.<br>• **Rest API**: Uses an external sensor from Home Assistant. |
 
-**Suggestion**: We recommend setting the `initial_value` for the `heating_curve_offset` global based on your heating system type for the best performance from day one.
+---
+
+## Fine-Tuning Initial Values in YAML
+
+While the system learns automatically, providing a good starting point in your YAML configuration is crucial for immediate efficiency. This is especially true for the **`heating_curve_offset`**, which is the baseline for the heating curve.
 
 | System Type                      | Recommended `initial_value` for `heating_curve_offset` |
 | -------------------------------- | -------------------------------------------------------- |

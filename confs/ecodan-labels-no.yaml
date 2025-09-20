@@ -141,3 +141,5 @@ substitutions:
   heating_system_type_option_ufh: 'Gulvvarme'
   heating_system_type_option_ufh_rad: 'Gulvvarme + Radiatorer'
   heating_system_type_option_rad: 'Radiatorer'
+  heating_offset_sensor: 'Autoadaptiv: Forskyvning Varme'
+  cooling_offset_sensor: 'Autoadaptiv: Forskyvning Kjøling'

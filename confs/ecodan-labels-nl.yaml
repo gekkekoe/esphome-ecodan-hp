@@ -142,3 +142,5 @@ substitutions:
   heating_system_type_option_ufh: 'Vloerverwarming'
   heating_system_type_option_ufh_rad: 'Vloerverwarming + Radiatoren'
   heating_system_type_option_rad: 'Radiatoren'
+  heating_offset_sensor: 'Auto-Adaptief: Offset Verwarming'
+  cooling_offset_sensor: 'Auto-Adaptief: Offset Koeling'

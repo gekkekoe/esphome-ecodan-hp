@@ -142,3 +142,5 @@ substitutions:
   heating_system_type_option_ufh: 'Suelo Radiante'
   heating_system_type_option_ufh_rad: 'Suelo Radiante + Radiadores'
   heating_system_type_option_rad: 'Radiadores'
+  heating_offset_sensor: 'Autoadaptativo: Desplazamiento Calefacción'
+  cooling_offset_sensor: 'Autoadaptativo: Desplazamiento Refrigeración'

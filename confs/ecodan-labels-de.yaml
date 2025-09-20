@@ -141,3 +141,5 @@ substitutions:
   heating_system_type_option_ufh: 'Fußbodenheizung'
   heating_system_type_option_ufh_rad: 'Fußbodenheizung + Heizkörper'
   heating_system_type_option_rad: 'Heizkörper'
+  heating_offset_sensor: 'Auto-Adaptiv: Offset Heizen'
+  cooling_offset_sensor: 'Auto-Adaptiv: Offset Kühlen'

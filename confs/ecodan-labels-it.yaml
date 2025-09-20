@@ -142,3 +142,5 @@ substitutions:
   heating_system_type_option_ufh: 'Riscaldamento a Pavimento'
   heating_system_type_option_ufh_rad: 'Riscaldamento a Pavimento + Radiatori'
   heating_system_type_option_rad: 'Radiatori'
+  heating_offset_sensor: 'Autoadattivo: Offset Riscaldamento'
+  cooling_offset_sensor: 'Autoadattivo: Offset Raffrescamento'

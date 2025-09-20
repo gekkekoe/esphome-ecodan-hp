@@ -142,3 +142,5 @@ substitutions:
   heating_system_type_option_ufh: 'Lattialämmitys'
   heating_system_type_option_ufh_rad: 'Lattialämmitys + Patterit'
   heating_system_type_option_rad: 'Patterit'
+  heating_offset_sensor: 'Automaattisesti mukautuva: Lämmityksen siirtymä'
+  cooling_offset_sensor: 'Automaattisesti mukautuva: Jäähdytyksen siirtymä'

@@ -144,3 +144,5 @@ substitutions:
   heating_system_type_option_ufh: 'Underfloor Heating'
   heating_system_type_option_ufh_rad: 'Underfloor Heating + Radiators'
   heating_system_type_option_rad: 'Radiators'
+  heating_offset_sensor: 'Auto-Adaptive: Heating Offset'
+  cooling_offset_sensor: 'Auto-Adaptive: Cooling Offset'

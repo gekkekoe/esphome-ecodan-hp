@@ -142,3 +142,5 @@ substitutions:
   heating_system_type_option_ufh: 'Chauffage au Sol'
   heating_system_type_option_ufh_rad: 'Chauffage au Sol + Radiateurs'
   heating_system_type_option_rad: 'Radiateurs'
+  heating_offset_sensor: 'Auto-Adaptatif: Décalage Chauffage'
+  cooling_offset_sensor: 'Auto-Adaptatif: Décalage Refroidissement'
