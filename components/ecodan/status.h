@@ -179,6 +179,20 @@ namespace ecodan
         float RcSubCoolTemp;
         uint16_t RcFanSpeedRpm;
 
+        bool has_cooling() const {
+            // SW2-4
+            return DipSwitch2 & 0x08;
+        }
+
+        bool has_independent_z2() const {
+            if ((DipSwitch3 & 0x20) && !(DipSwitch2 & 0x40)) {  // SW3-6 True, SW2-7 False
+                return false;
+            } else if ((DipSwitch2 & 0x02) || (DipSwitch2 & 0x04)) {  // SW2-1 or SW2-2 True
+                return true;
+            }
+            return false;
+        }
+
         CONTROLLER_FLAG get_svc_flags() const
         {
             CONTROLLER_FLAG flag;
