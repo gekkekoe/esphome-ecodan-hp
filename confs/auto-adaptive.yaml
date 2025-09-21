@@ -165,12 +165,12 @@ script:
           auto feedback_temperature_index = id(temperature_feedback_source).active_index().value_or(0);
 
           // get from room thermostats 
-          if (status.is_heating(esphome::ecodan::Zone::ZONE_1) || status.is_cooling(esphome::ecodan::Zone::ZONE_1)) {
+          if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) || status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1)) {
             room_temp = status.Zone1RoomTemperature;
             room_target_temp = status.Zone1SetTemperature;
             requested_flow_temp = status.Zone1FlowTemperatureSetPoint;
           } 
-          else if (status.is_heating(esphome::ecodan::Zone::ZONE_2) || status.is_cooling(esphome::ecodan::Zone::ZONE_2)) {
+          else if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) || status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2)) {
             room_temp = status.Zone2RoomTemperature; 
             room_target_temp = status.Zone2SetTemperature;
             requested_flow_temp = status.Zone2FlowTemperatureSetPoint;
@@ -205,7 +205,7 @@ script:
             error_margin_negative = -0.2f;
           }
 
-          if (status.is_heating(esphome::ecodan::Zone::ZONE_1) || status.is_heating(esphome::ecodan::Zone::ZONE_2)) {
+          if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) || status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2)) {
             // --- HEATING MODE ---
             float calculated_flow = (20.0f - actual_outside_temp) * id(heating_slope).state + id(heating_curve_offset);
 
@@ -232,12 +232,12 @@ script:
             }
 
             calculated_flow = round(calculated_flow * 2) / 2.0f;
-            if (status.is_heating(esphome::ecodan::Zone::ZONE_1))
+            if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1))
               id(ecodan_instance).set_flow_target_temperature(calculated_flow, esphome::ecodan::Zone::ZONE_1);
-            if (status.is_heating(esphome::ecodan::Zone::ZONE_2))
+            if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2))
               id(ecodan_instance).set_flow_target_temperature(calculated_flow, esphome::ecodan::Zone::ZONE_2);
           }
-          else if (status.is_cooling(esphome::ecodan::Zone::ZONE_1) || status.is_cooling(esphome::ecodan::Zone::ZONE_2)) {
+          else if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) || status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2)) {
             // --- COOLING MODE ---
             float calculated_flow = id(cooling_curve_offset) - (actual_outside_temp - 20.0f) * id(cooling_slope).state;
             
@@ -264,8 +264,8 @@ script:
             }
 
             calculated_flow = round(calculated_flow * 2) / 2.0f;
-            if (status.is_cooling(esphome::ecodan::Zone::ZONE_1))
+            if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1))
               id(ecodan_instance).set_flow_target_temperature(calculated_flow, esphome::ecodan::Zone::ZONE_1);
-            if (status.is_cooling(esphome::ecodan::Zone::ZONE_2))
+            if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2))
               id(ecodan_instance).set_flow_target_temperature(calculated_flow, esphome::ecodan::Zone::ZONE_2);
           }

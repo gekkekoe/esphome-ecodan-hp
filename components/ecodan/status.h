@@ -206,10 +206,32 @@ namespace ecodan
             return false;
         }
 
+        bool is_auto_adaptive_heating(Zone zone) const {
+            auto mode = zone == Zone::ZONE_1 ? HeatingCoolingMode : HeatingCoolingModeZone2;
+
+            if (mode == HpMode::HEAT_FLOW_TEMP) {
+                if (ServerControl)
+                    return zone == Zone::ZONE_1 ? !ProhibitHeatingZ1 : !ProhibitHeatingZ2;
+                return true;
+            }
+            return false;
+        }
+
         bool is_cooling(Zone zone) const {
             auto mode = zone == Zone::ZONE_1 ? HeatingCoolingMode : HeatingCoolingModeZone2;
 
             if (mode == HpMode::COOL_FLOW_TEMP || mode == HpMode::COOL_ROOM_TEMP)
+                return true;
+
+            return false;
+        }
+
+        bool is_auto_adaptive_cooling(Zone zone) const {
+            auto mode = zone == Zone::ZONE_1 ? HeatingCoolingMode : HeatingCoolingModeZone2;
+
+            if (mode == HpMode::COOL_FLOW_TEMP )
+                if (ServerControl)
+                    return zone == Zone::ZONE_1 ? !ProhibitCoolingZ1 : !ProhibitCoolingZ2;
                 return true;
 
             return false;
