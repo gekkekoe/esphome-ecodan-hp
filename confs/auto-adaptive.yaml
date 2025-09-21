@@ -113,13 +113,13 @@ switch:
     id: auto_adaptive_control_enabled
     restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
-    lambda: |-
-      auto& status = id(ecodan_instance).get_status();
-      if (status.HeatingCoolingMode == esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP 
-          || status.HeatingCoolingMode == esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP) {
-        return true;
-      }
-      return false;
+    # lambda: |-
+    #   auto& status = id(ecodan_instance).get_status();
+    #   if (status.HeatingCoolingMode == esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP 
+    #       || status.HeatingCoolingMode == esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP) {
+    #     return true;
+    #   }
+    #   return false;
 
 interval:
   - interval: ${update_interval_minutes}
