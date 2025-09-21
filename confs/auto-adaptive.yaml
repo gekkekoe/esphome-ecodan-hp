@@ -44,6 +44,7 @@ number:
   - platform: template
     id: maximum_heating_flow_temp
     name: ${maximum_heating_flow_temp}
+    unit_of_measurement: "°C"
     optimistic: true
     restore_value: true
     initial_value: 38.0
@@ -53,15 +54,27 @@ number:
   - platform: template
     id: minimum_cooling_flow_temp
     name: ${minimum_cooling_flow_temp}
+    unit_of_measurement: "°C"
     optimistic: true
     restore_value: true
     initial_value: 18.0
     min_value: 10.0
     max_value: 25.0
     step: 0.5
+  - platform: template
+    id: cooling_smart_start_temp
+    unit_of_measurement: "°C"
+    name: ${cooling_smart_start_temp}
+    optimistic: true
+    restore_value: true
+    initial_value: 19.0
+    min_value: 16.0
+    max_value: 22.0
+    step: 0.5
   # Temperature feedback via api
   - platform: template
     id: temperature_feedback
+    unit_of_measurement: "°C"
     optimistic: true
     min_value: -50
     max_value: 100
@@ -240,7 +253,14 @@ script:
           else if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) || status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2)) {
             // --- COOLING MODE ---
             float calculated_flow = id(cooling_curve_offset) - (actual_outside_temp - 20.0f) * id(cooling_slope).state;
-            
+
+            // use smart start for cooling
+            float smart_start_temp = id(cooling_smart_start_temp).state;
+            if (calculated_flow > smart_start_temp) {
+              calculated_flow = smart_start_temp;
+              ESP_LOGD("adaptive_logic", "Using Smart Start Temp of %.1f°C.", calculated_flow);
+            }
+
             // Safety limit (condensation)
             float min_flow_temp = id(minimum_cooling_flow_temp).state;
             if (calculated_flow < min_flow_temp) {

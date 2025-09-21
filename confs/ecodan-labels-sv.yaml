@@ -135,6 +135,7 @@ substitutions:
   cooling_slope: 'Autoadaptiv: Lutning Kylkurva'
   maximum_heating_flow_temp: 'Autoadaptiv: Max. Framledningstemp. Värme'
   minimum_cooling_flow_temp: 'Autoadaptiv: Min. Framledningstemp. Kyla'
+  cooling_smart_start_temp: 'Autoadaptiv: Smart Starttemp Kyla'
   temperature_feedback_source: 'Autoadaptiv: Källa för Rumstemperatur'
   temperature_feedback_option_room: 'Rumstermostat'
   temperature_feedback_option_api: 'REST API'

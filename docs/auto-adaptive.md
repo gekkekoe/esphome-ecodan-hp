@@ -25,19 +25,6 @@ For this feature to function correctly, the heat pump must be set to a **Fixed F
 
 ---
 
-## How Temperature Control Works
-
-The algorithm bases its calculations on two key values: the **current room temperature** and the **target room temperature**.
-
-* By default, both of these values are read directly from the active Ecodan zone thermostat (Zone 1 or Zone 2).
-* The `Room Temperature source` parameter allows you to override **only the current room temperature** with an external value (e.g., from an averaged sensor in Home Assistant). 
-```bash
-curl -X POST "http://<esp_ip>/number/temperature_feedback/set?value=22.5" -d ""
-```
-* The **target temperature is always taken from the setpoint on the active Ecodan zone thermostat.**
-
----
-
 ## Configuration Parameters
 
 All parameters are adjustable in real-time from the Home Assistant interface.
@@ -49,8 +36,9 @@ All parameters are adjustable in real-time from the Home Assistant interface.
 | **`Auto-Adaptive: Heating Curve Slope`** | Determines how aggressively the flow temp rises as the outside temp drops.             | **Default**: `1.5`<br>• **Low (0.6-0.8)** for well-insulated homes with UFH.<br>• **High (1.2-1.6)** for older homes with radiators.          |
 | **`Auto-Adaptive: Cooling Curve Slope`** | Determines how aggressively the flow temp drops as the outside temp rises.             | **Default**: `1.2`<br>• **Low (0.8-1.2)** for homes with good sun protection.<br>• **High (1.8-2.5)** for homes with high solar gain.          |
 | **`Auto-Adaptive: Max. Heating Flow Temperature`**| Sets a hard safety limit for the flow temperature during heating to protect floors.      | **Default**: `38.0°C`                                                                                                                           |
-| **`Auto-adaptive: Min. Cooling Flow Temperature`**| Sets a hard safety limit for the flow temperature during cooling to prevent condensation. | **Default**: `18.0°C`                                                                                                                           |
-| **`Auto-Adaptive: Room Temperature source`** | Selects the source for the **current** room temperature reading. The **target** temperature is always read from the active Ecodan thermostat.             | **Default**: `Room Thermostat`<br>• **Room Thermostat**: Uses the current temperature from the Ecodan thermostat.<br>• **Rest API**: Overrides the current temperature with an external sensor. |
+| **`Auto-Adaptive: Min. Cooling Flow Temperature`**| Sets a hard safety limit for the flow temperature during cooling to prevent condensation. | **Default**: `18.0°C`                                                                                                                           |
+| **`Auto-Adaptive: Cooling Smart Start Temp`** | Sets an "efficiency ceiling" for cooling. The system will never start cooling with a flow temperature *higher* than this value, preventing inefficient cycles on mild days. | **Default**: `18.0°C`<br>This value must be higher than or equal to the `Min. Cooling Flow Temperature`. |
+| **`Auto-Adaptive: Room Temperature source`** | Selects the source for the **current** room temperature. The **target** temperature is always read from the active Ecodan thermostat. | **Default**: `Room Thermostat`<br>• **Room Thermostat**: Uses the current temperature from the Ecodan thermostat.<br>• **Rest API**: Overrides the current temperature with an external sensor. E.g.:<br>`curl -X POST "http://<esp_ip>/number/temperature_feedback/set?value=21.5"`|
 
 ---
 
