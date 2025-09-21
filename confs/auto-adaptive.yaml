@@ -10,7 +10,7 @@ globals:
   - id: cooling_curve_offset
     type: float
     restore_value: yes
-    initial_value: '22.0'
+    initial_value: '19.0'
   - id: heating_previous_temp_error
     type: float
     restore_value: no 
