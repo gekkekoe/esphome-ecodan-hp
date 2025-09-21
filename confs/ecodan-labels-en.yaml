@@ -137,6 +137,7 @@ substitutions:
   cooling_slope: 'Auto-Adaptive: Cooling Curve Slope'
   maximum_heating_flow_temp: 'Auto-Adaptive: Max. Heating Flow Temperature'
   minimum_cooling_flow_temp: 'Auto-Adaptive: Min. Cooling Flow Temperature'
+  cooling_smart_start_temp: 'Auto-Adaptive: Cooling Smart Start Temp'
   temperature_feedback_source: 'Auto-Adaptive: Room Temperature source'
   temperature_feedback_option_room: 'Room Thermostat'
   temperature_feedback_option_api: 'Rest API'

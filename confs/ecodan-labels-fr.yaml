@@ -128,6 +128,7 @@ substitutions:
   sub_cool_temp: Température de sous-refroidissement
   status_short_cycle_lockout: 'Court-circuit: Verrouillage'
   minimum_compressor_on_time: 'Court-circuit: Durée minimale du compresseur'
+  cooling_smart_start_temp: 'Auto-Adaptatif: Temp. de Démarrage Intelligent Refroidissement'
   lockout_duration: 'Court-circuit: Durée du verrouillage (min)'
   short_cycle_mitigation_button: 'Court-circuit: Annuler le verrouillage'
   auto_adaptive_control_enabled: 'Auto-Adaptatif: Commande'

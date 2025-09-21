@@ -135,6 +135,7 @@ substitutions:
   cooling_slope: 'Automaattisesti mukautuva: Jäähdytyskäyrän jyrkkyys'
   maximum_heating_flow_temp: 'Automaattisesti mukautuva: Enimmäismenoilman lämpötila (lämmitys)'
   minimum_cooling_flow_temp: 'Automaattisesti mukautuva: Vähimmäismenoilman lämpötila (jäähdytys)'
+  cooling_smart_start_temp: 'Automaattisesti mukautuva: Älykäs aloituslämpötila (jäähdytys)'
   temperature_feedback_source: 'Automaattisesti mukautuva: Huonelämpötilan lähde'
   temperature_feedback_option_room: 'Huonetermostaatti'
   temperature_feedback_option_api: 'REST API'

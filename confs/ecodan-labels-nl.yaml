@@ -135,6 +135,7 @@ substitutions:
   cooling_slope: 'Auto-Adaptief: Helling Koelcurve'
   maximum_heating_flow_temp: 'Auto-Adaptief: Max. Aanvoertemperatuur Verw.'
   minimum_cooling_flow_temp: 'Auto-Adaptief: Min. Aanvoertemperatuur Koelen'
+  cooling_smart_start_temp: 'Auto-Adaptief: Koeling Smart Start Temp'
   temperature_feedback_source: 'Auto-Adaptief: Bron Kamertemperatuur'
   temperature_feedback_option_room: 'Kamerthermostaat'
   temperature_feedback_option_api: 'REST API'
