@@ -238,8 +238,8 @@ script:
             float requested_flow_temp = (zone == esphome::ecodan::Zone::ZONE_1) ? status.Zone1FlowTemperatureSetPoint : status.Zone2FlowTemperatureSetPoint;
             float actual_flow_temp = (zone == esphome::ecodan::Zone::ZONE_1) ? status.Z1FeedTemperature : status.Z2FeedTemperature;
             
-            // for single zone feed temp
-            if (status.MultiZoneStatus == 0) 
+            // use regular feed temp when z2 is not independent
+            if (!status.has_independent_z2()) 
               actual_flow_temp = id(hp_feed_temp).state;
             
             if (id(temperature_feedback_source).active_index().value_or(0) == 1)
