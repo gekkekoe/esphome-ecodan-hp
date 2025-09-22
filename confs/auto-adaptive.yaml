@@ -162,6 +162,15 @@ switch:
     #   }
     #   return false;
 
+# button:
+#   - platform: template
+#     name: 'Auto-Adaptive: Run'
+#     id: run_auto_adaptive_cycle
+#     icon: "mdi:play-circle"
+#     on_press:
+#       then:
+#         - script.execute: auto_auto_adaptive_loop
+
 interval:
   - interval: ${update_interval_minutes}
     then:
@@ -173,24 +182,24 @@ script:
     mode: single
     then:
       - lambda: |-
-
           if (!id(auto_adaptive_control_enabled).state) return;
           auto& status = id(ecodan_instance).get_status();
           if ((status.HeatingCoolingMode != esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP && status.HeatingCoolingMode != esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP) &&
               (status.HeatingCoolingModeZone2 != esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP && status.HeatingCoolingModeZone2 != esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP)) {
-            ESP_LOGD("auto_adaptive", "Auto Adaptive is only available in fixed flow modes. Exiting.");
+            ESP_LOGD("auto_adaptive", "Not in fixed flow mode. Exiting.");
             return;
           }
           if (isnan(id(hp_feed_temp).state) || isnan(id(outside_temp).state)) {
-            ESP_LOGW("auto_adaptive", "Feed temp or Outside Temp not available. Exiting.");
+            ESP_LOGW("auto_adaptive", "Sensor data unavailable. Exiting.");
             return;
           }
           if (id(status_short_cycle_lockout).state || status.DefrostActive) {
-            ESP_LOGI("auto_adaptive", "Lockout or Defrost Active. Exiting.");
+            ESP_LOGI("auto_adaptive", "Lockout or Defrost is active. Exiting.");
             return;
           }
 
-          // float* since we need to update the (learned) value within the loop
+          ESP_LOGD("auto_adaptive", "Starting auto-adaptive cycle, z2 independent: %d, has_cooling: %d", status.has_independent_z2(), status.has_cooling());
+
           float* heating_offsets[] = {&id(heating_curve_offset_z1), &id(heating_curve_offset_z2)};
           float* cooling_offsets[] = {&id(cooling_curve_offset_z1), &id(cooling_curve_offset_z2)};
           float* heating_prev_errors[] = {&id(heating_previous_temp_error_z1), &id(heating_previous_temp_error_z2)};
@@ -199,11 +208,9 @@ script:
           const float SATURATION_MARGIN = 2.0f;
           float actual_outside_temp = id(outside_temp).state;
 
-          // Arrays to store the calculated flow for each zone
           float calculated_flows_heat[2] = {0.0f, 0.0f};
           float calculated_flows_cool[2] = {100.0f, 100.0f};
 
-          // shared params
           float learning_rate;
           float error_margin_positive;
           float error_margin_negative;
@@ -216,7 +223,6 @@ script:
             learning_rate = 0.05f; error_margin_positive = 0.3f; error_margin_negative = -0.2f;
           }
 
-          // process all zones
           esphome::ecodan::Zone all_zones[] = {esphome::ecodan::Zone::ZONE_1, esphome::ecodan::Zone::ZONE_2};
           for (std::size_t i = 0; i < std::size(all_zones); i++) {
               auto zone = all_zones[i];
@@ -236,19 +242,33 @@ script:
                   room_temp = id(temperature_feedback).state;
               }
               if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp)) continue;
+              
+              ESP_LOGD("auto_adaptive", "Processing Zone %d: Room=%.1f, Target=%.1f, Outside=%.1f", (i + 1), room_temp, room_target_temp, actual_outside_temp);
 
               if (is_heating_active) {
                   float& offset = *heating_offsets[i];
                   float& prev_error = *heating_prev_errors[i];
                   
                   float calculated_flow = (20.0f - actual_outside_temp) * id(heating_slope).state + offset;
-                  if (calculated_flow > id(maximum_heating_flow_temp).state) calculated_flow = id(maximum_heating_flow_temp).state;
+                  if (calculated_flow > id(maximum_heating_flow_temp).state) {
+                    calculated_flow = id(maximum_heating_flow_temp).state;
+                    ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit)", (i + 1), calculated_flow);
+                  }
 
                   bool is_saturated = (requested_flow_temp - actual_flow_temp) > SATURATION_MARGIN;
-                  if (!is_saturated) {
+                  if (is_saturated) {
+                      ESP_LOGW("auto_adaptive", "Z%d HEATING: HP Saturated (Req: %.1f, Act: %.1f). Learning paused.", (i + 1), requested_flow_temp, actual_flow_temp);
+                  } else {
                     float error = room_target_temp - room_temp;
-                    if (error > error_margin_positive && error >= prev_error) offset += learning_rate;
-                    else if (error < error_margin_negative) offset -= learning_rate;
+                    if (error > error_margin_positive && error >= prev_error) {
+                      float old_offset = offset;
+                      offset += learning_rate;
+                      ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too cold (err: %.2f). Offset increased from %.2f to %.2f", (i + 1), error, old_offset, offset);
+                    } else if (error < error_margin_negative) {
+                      float old_offset = offset;
+                      offset -= learning_rate;
+                      ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too warm (err: %.2f). Offset decreased from %.2f to %.2f", (i + 1), error, old_offset, offset);
+                    }
                     prev_error = error;
                   }
                   
@@ -260,14 +280,29 @@ script:
                   float& prev_error = *cooling_prev_errors[i];
                   
                   float calculated_flow = offset - (actual_outside_temp - 20.0f) * id(cooling_slope).state;
-                  if (calculated_flow > id(cooling_smart_start_temp).state) calculated_flow = id(cooling_smart_start_temp).state;
-                  if (calculated_flow < id(minimum_cooling_flow_temp).state) calculated_flow = id(minimum_cooling_flow_temp).state;
+                  if (calculated_flow > id(cooling_smart_start_temp).state) {
+                    calculated_flow = id(cooling_smart_start_temp).state;
+                    ESP_LOGD("auto_adaptive", "Z%d COOLING: Using Smart Start Temp of %.1f°C", (i + 1), calculated_flow);
+                  }
+                  if (calculated_flow < id(minimum_cooling_flow_temp).state) {
+                    calculated_flow = id(minimum_cooling_flow_temp).state;
+                    ESP_LOGW("auto_adaptive", "Z%d COOLING: Flow limited to %.1f°C (Condensation Limit)", (i + 1), calculated_flow);
+                  }
                     
                   bool is_saturated = (actual_flow_temp - requested_flow_temp) > SATURATION_MARGIN;
-                  if (!is_saturated) {
+                  if (is_saturated) {
+                      ESP_LOGW("auto_adaptive", "Z%d COOLING: HP Saturated (Req: %.1f, Act: %.1f). Learning paused.", (i + 1), requested_flow_temp, actual_flow_temp);
+                  } else {
                     float error = room_temp - room_target_temp;
-                    if (error > error_margin_positive && error >= prev_error) offset -= learning_rate;
-                    else if (error < error_margin_negative) offset += learning_rate;
+                    if (error > error_margin_positive && error >= prev_error) {
+                      float old_offset = offset;
+                      offset -= learning_rate;
+                      ESP_LOGI("auto_adaptive", "Z%d COOLING: Room too warm (err: %.2f). Offset decreased from %.2f to %.2f", (i + 1), error, old_offset, offset);
+                    } else if (error < error_margin_negative) {
+                      float old_offset = offset;
+                      offset += learning_rate;
+                      ESP_LOGI("auto_adaptive", "Z%d COOLING: Room too cold (err: %.2f). Offset increased from %.2f to %.2f", (i + 1), error, old_offset, offset);
+                    }
                     prev_error = error;
                   }
                   
@@ -275,30 +310,37 @@ script:
               }
           }
 
-          // determine the new feed temps taht needs to be send
           bool is_heating_demand = calculated_flows_heat[0] > 0.0f || calculated_flows_heat[1] > 0.0f;
           bool is_cooling_demand = calculated_flows_cool[0] < 100.0f || calculated_flows_cool[1] < 100.0f;
 
           if (status.has_independent_z2()) {
-              // --- Independent Mode: Send specific setpoints to each active zone ---
               if (is_heating_demand) {
-                  if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1)) 
+                  if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1)) {
+                    ESP_LOGD("auto_adaptive", "CMD: Set Z1 Heat Flow -> %.1f°C", calculated_flows_heat[0]);
                     id(ecodan_instance).set_flow_target_temperature(calculated_flows_heat[0], esphome::ecodan::Zone::ZONE_1);
-                  if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2)) 
+                  }
+                  if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2)) {
+                    ESP_LOGD("auto_adaptive", "CMD: Set Z2 Heat Flow -> %.1f°C", calculated_flows_heat[1]);
                     id(ecodan_instance).set_flow_target_temperature(calculated_flows_heat[1], esphome::ecodan::Zone::ZONE_2);
+                  }
               } else if (is_cooling_demand) {
-                  if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1)) 
+                  if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1)) {
+                    ESP_LOGD("auto_adaptive", "CMD: Set Z1 Cool Flow -> %.1f°C", calculated_flows_cool[0]);
                     id(ecodan_instance).set_flow_target_temperature(calculated_flows_cool[0], esphome::ecodan::Zone::ZONE_1);
-                  if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2))
+                  }
+                  if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2)) {
+                    ESP_LOGD("auto_adaptive", "CMD: Set Z2 Cool Flow -> %.1f°C", calculated_flows_cool[1]);
                     id(ecodan_instance).set_flow_target_temperature(calculated_flows_cool[1], esphome::ecodan::Zone::ZONE_2);
+                  }
               }
           } else {
-              // --- Dependent Mode: "Highest/Lowest Demand Wins" and send to master (Zone 1) ---
               if (is_heating_demand) {
                   float final_flow = fmax(calculated_flows_heat[0], calculated_flows_heat[1]);
+                  ESP_LOGD("auto_adaptive", "CMD: Set Dependent Heat Flow -> %.1f°C (max of Z1:%.1f, Z2:%.1f)", final_flow, calculated_flows_heat[0], calculated_flows_heat[1]);
                   id(ecodan_instance).set_flow_target_temperature(final_flow, esphome::ecodan::Zone::ZONE_1);
               } else if (is_cooling_demand) {
                   float final_flow = fmin(calculated_flows_cool[0], calculated_flows_cool[1]);
+                  ESP_LOGD("auto_adaptive", "CMD: Set Dependent Cool Flow -> %.1f°C (min of Z1:%.1f, Z2:%.1f)", final_flow, calculated_flows_cool[0], calculated_flows_cool[1]);
                   id(ecodan_instance).set_flow_target_temperature(final_flow, esphome::ecodan::Zone::ZONE_1);
               }
           }
