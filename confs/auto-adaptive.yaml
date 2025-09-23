@@ -169,15 +169,15 @@ switch:
 #     icon: "mdi:play-circle"
 #     on_press:
 #       then:
-#         - script.execute: auto_auto_adaptive_loop
+#         - script.execute: auto_adaptive_loop
 
 interval:
   - interval: ${update_interval_minutes}
     then:
-      - script.execute: auto_auto_adaptive_loop
+      - script.execute: auto_adaptive_loop
 
 script:
-  - id: auto_auto_adaptive_loop
+  - id: auto_adaptive_loop
     # avoid multiple queues of this script, "restart" if current one needs to be cancelled
     mode: single
     then:
