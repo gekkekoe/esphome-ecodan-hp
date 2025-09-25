@@ -146,3 +146,4 @@ substitutions:
   heating_offset_sensor: 'Automaattisesti mukautuva: Lämmityksen siirtymä'
   cooling_offset_sensor: 'Automaattisesti mukautuva: Jäähdytyksen siirtymä'
   auto_adaptive_setpoint_bias: 'Automaattisesti mukautuva: Asetusarvon poikkeama'
+  dynamic_learning_rate_sensor: 'Automaattisesti mukautuva: Dynaaminen oppimisnopeus'

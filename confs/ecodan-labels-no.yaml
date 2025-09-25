@@ -145,3 +145,4 @@ substitutions:
   heating_offset_sensor: 'Autoadaptiv: Forskyvning Varme'
   cooling_offset_sensor: 'Autoadaptiv: Forskyvning Kjøling'
   auto_adaptive_setpoint_bias: 'Autoadaptiv: Settpunkt-bias'
+  dynamic_learning_rate_sensor: 'Autoadaptiv: Dynamisk Læringsrate'
