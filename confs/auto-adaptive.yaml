@@ -86,6 +86,16 @@ number:
     min_value: 16.0
     max_value: 22.0
     step: 0.5
+  - platform: template
+    id: auto_adaptive_setpoint_bias
+    unit_of_measurement: "°C"
+    name: ${auto_adaptive_setpoint_bias}
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: -2.5
+    max_value: 2.5
+    step: 0.5
   # Temperature feedback via api
   - platform: template
     id: temperature_feedback
@@ -232,7 +242,10 @@ script:
                   
               if (!is_heating_active && !is_cooling_active) continue;
 
-              // --- Get Data for the active zone ---
+              float setpoint_bias = id(auto_adaptive_setpoint_bias).state;
+              if (isnan(setpoint_bias))
+                setpoint_bias = 0.0f;
+
               float room_temp = (i == 0) ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
               float room_target_temp = (i == 0) ? status.Zone1SetTemperature : status.Zone2SetTemperature;
               float requested_flow_temp = (i == 0) ? status.Zone1FlowTemperatureSetPoint : status.Zone2FlowTemperatureSetPoint;
@@ -242,8 +255,10 @@ script:
                   room_temp = id(temperature_feedback).state;
               }
               if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp)) continue;
-              
-              ESP_LOGD("auto_adaptive", "Processing Zone %d: Room=%.1f, Target=%.1f, Outside=%.1f", (i + 1), room_temp, room_target_temp, actual_outside_temp);
+
+              ESP_LOGD("auto_adaptive", "Processing Zone %d: Room=%.1f, Target=%.1f, Outside=%.1f, Bias=%.1f", 
+                (i + 1), room_temp, room_target_temp, actual_outside_temp, setpoint_bias);
+              room_target_temp += setpoint_bias;
 
               if (is_heating_active) {
                   float& offset = *heating_offsets[i];

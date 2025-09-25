@@ -147,3 +147,4 @@ substitutions:
   heating_system_type_option_rad: 'Radiators'
   heating_offset_sensor: 'Auto-Adaptive: Heating Offset'
   cooling_offset_sensor: 'Auto-Adaptive: Cooling Offset'
+  auto_adaptive_setpoint_bias: 'Auto-Adaptive: Setpoint Bias'

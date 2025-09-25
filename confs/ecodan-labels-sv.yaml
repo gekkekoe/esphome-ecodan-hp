@@ -145,3 +145,4 @@ substitutions:
   heating_system_type_option_rad: 'Radiatorer'
   heating_offset_sensor: 'Autoadaptiv: Förskjutning Värme'
   cooling_offset_sensor: 'Autoadaptiv: Förskjutning Kyla'
+  auto_adaptive_setpoint_bias: 'Autoadaptiv: Börvärdes-bias'

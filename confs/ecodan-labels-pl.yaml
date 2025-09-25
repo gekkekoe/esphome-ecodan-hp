@@ -144,3 +144,4 @@ substitutions:
   heating_system_type_option_rad: 'Grzejniki'
   heating_offset_sensor: 'Autoadaptacja: Przesunięcie Ogrzewanie'
   cooling_offset_sensor: 'Autoadaptacja: Przesunięcie Chłodzenie'
+  auto_adaptive_setpoint_bias: 'Autoadaptacja: Przesunięcie Wartości Zadanej'

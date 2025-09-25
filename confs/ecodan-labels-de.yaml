@@ -144,3 +144,4 @@ substitutions:
   heating_system_type_option_rad: 'Heizkörper'
   heating_offset_sensor: 'Auto-Adaptiv: Offset Heizen'
   cooling_offset_sensor: 'Auto-Adaptiv: Offset Kühlen'
+  auto_adaptive_setpoint_bias: 'Auto-Adaptiv: Sollwert-Bias'

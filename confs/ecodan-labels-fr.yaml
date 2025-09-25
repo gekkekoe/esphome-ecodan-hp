@@ -145,3 +145,4 @@ substitutions:
   heating_system_type_option_rad: 'Radiateurs'
   heating_offset_sensor: 'Auto-Adaptatif: Décalage Chauffage'
   cooling_offset_sensor: 'Auto-Adaptatif: Décalage Refroidissement'
+  auto_adaptive_setpoint_bias: 'Auto-Adaptatif: Bias de Consigne'
