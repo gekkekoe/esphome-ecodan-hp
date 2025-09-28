@@ -73,7 +73,7 @@ While the system learns automatically, providing a good starting point in your Y
 
 ### Step 1: Physical Thermostat Connection (If Applicable)
 
-This guide assumes a common scenario where an external room thermostat (like a Tado, Nest, etc.) is wired to the **IN1** terminal on your heat pump's FTC board. This thermostat is responsible for sending the main heat request signal to the heat pump.
+This guide assumes a common scenario where an external room thermostat (like a Tado, Nest, etc.) is wired to the **IN1** terminal on your heat pump's FTC board. This thermostat is responsible for sending the main heat request signal to the heat pump. It should work with the remote wireless thermostat as well.
 
 ### Step 2: Set Up the Temperature Feedback Loop
 
@@ -88,6 +88,23 @@ Example REST API call to set the feedback temperature to 21.5°C:
 ```bash
 curl -X POST "http://<esp_ip>/number/temperature_feedback/set?value=21.5"
 ```
+
+Example Home Assistent automation:
+```yaml
+- id: 'SyncTemperatureToAdaptiveController'
+  alias: 'Sync Room Temp to Auto-Adaptive Controller'
+  trigger:
+    - platform: state
+      entity_id: climate.kantoor #<-- Your main thermostat entity
+      attribute: current_temperature
+  action:
+    - service: number.set_value
+      target:
+        entity_id: number.temperature_feedback #<-- Your ESPHome feedback entity
+      data:
+        value: "{{ trigger.to_state.attributes.current_temperature }}"
+```
+
 ### Step 3: Configure Initial Parameters
 
 In Home Assistant, navigate to your dashboard and set the initial parameters for the controller on the **"Auto-Adaptive Settings"** tab.
@@ -103,7 +120,7 @@ In Home Assistant, navigate to your dashboard and set the initial parameters for
 Now you are ready to let the algorithm take control.
 
 1.  **Set Heat Pump to Fixed Flow Mode**: On your main Mitsubishi thermostat or control panel, ensure that the active zone(s) are set to **Fixed Flow Temperature** mode for heating (and cooling, if applicable). This is critical, as it allows the ESPHome controller to have full control.
-2.  **Enable Auto-Adaptive Control**: On the "Overview & Control" tab in Home Assistant, turn **ON** the `Auto-Adaptive: Control` switch.
+2.  **Enable Auto-Adaptive Control**: In Home Assistant, turn **ON** the `Auto-Adaptive: Control` switch.
 
 ---
 
