@@ -103,12 +103,12 @@ number:
   # Temperature feedback via api
   - platform: template
     id: temperature_feedback
+    name: ${temperature_feedback}
     unit_of_measurement: "°C"
     optimistic: true
     min_value: -50
     max_value: 100
     step: 0.1
-    internal: true
 
 # expose learned curve values
 sensor:

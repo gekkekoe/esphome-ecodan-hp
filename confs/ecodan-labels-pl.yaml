@@ -146,3 +146,4 @@ substitutions:
   cooling_offset_sensor: 'Autoadaptacja: Przesunięcie Chłodzenie'
   auto_adaptive_setpoint_bias: 'Autoadaptacja: Przesunięcie Wartości Zadanej'
   dynamic_learning_rate_sensor: 'Autoadaptacja: Dynamiczne Tempo Uczenia się'
+  temperature_feedback: 'Autoadaptacja: Sprzężenie Zwrotne Aktualnej Temperatury'

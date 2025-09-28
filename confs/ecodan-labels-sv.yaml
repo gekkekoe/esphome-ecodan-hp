@@ -147,3 +147,4 @@ substitutions:
   cooling_offset_sensor: 'Autoadaptiv: Förskjutning Kyla'
   auto_adaptive_setpoint_bias: 'Autoadaptiv: Börvärdes-bias'
   dynamic_learning_rate_sensor: 'Autoadaptiv: Dynamisk Inlärningshastighet'
+  temperature_feedback: 'Autoadaptiv: Återkoppling Aktuell Rumstemperatur'
