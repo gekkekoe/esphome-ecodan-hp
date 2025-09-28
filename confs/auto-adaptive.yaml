@@ -106,6 +106,7 @@ number:
     name: ${temperature_feedback}
     unit_of_measurement: "°C"
     optimistic: true
+    initial_value: 20.0
     min_value: -50
     max_value: 100
     step: 0.1
