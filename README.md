@@ -3,6 +3,8 @@ ESPHome implementation of the CN105 protocol. It can operate as standalone or wi
 
 The remote thermostat protocol CNRF is supported by [esphome-ecodan-remote-thermostat](https://github.com/gekkekoe/esphome-ecodan-remote-thermostat). It implements a virtual thermostat that can be linked with any temperature sensor.
 
+![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/ha-integration.png?raw=true)
+
 # Available Languages
 Select the language in the `ecodan-esphome.yaml` file.  
 
@@ -46,10 +48,6 @@ If you want to contribute a translation: copy the file `ecodan-labels-en.yaml` t
 * [Build from source](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/docs/build-from-source.md)
 
 # Result
-Example dashboard in Home Assistant:
-
-![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/ha-integration.png?raw=true)
-
 Here's how it's connected inside the heatpump:
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/m5stack_installed.jpg?raw=true)

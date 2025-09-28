@@ -1,0 +1,251 @@
+title: Home
+views:
+  - theme: Backend-selected
+    title: Home
+    path: home
+    type: sidebar
+    badges: []  
+  - type: sections
+    max_columns: 10
+    title: HP dashboard
+    path: hp-dashboard
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Basic Controls
+            heading_style: title
+          - type: grid
+            square: false
+            columns: 1
+            cards:
+              - type: entities
+                entities:
+                  - entity: select.ecodan_heatpump_dhw_mode
+                    name: DHW Mode
+                  - entity: switch.ecodan_heatpump_force_dhw
+                    name: Force DHW
+                  - entity: switch.ecodan_heatpump_heatpump
+                    name: Heatpump
+                  - entity: switch.ecodan_heatpump_holiday_mode
+                    name: Holiday Mode
+                  - entity: select.ecodan_heatpump_selected_operating_mode
+                    name: Selected operating mode
+                  - entity: switch.ecodan_heatpump_ceb1f0_service_codes_enabled
+                    name: Service codes enabled
+                  - entity: switch.ecodan_heatpump_uart_logging
+                    name: UART Logging
+                title: Ecodan heatpump ceb1f0
+              - type: thermostat
+                entity: climate.ecodan_heatpump_dhw_climate
+                features:
+                  - type: climate-hvac-modes
+                    hvac_modes:
+                      - 'off'
+                      - heat
+              - type: thermostat
+                entity: climate.ecodan_heatpump_zone_1_climate
+                features:
+                  - type: climate-hvac-modes
+                    hvac_modes:
+                      - 'off'
+                      - cool
+                      - heat
+              - type: thermostat
+                entity: climate.ecodan_heatpump_zone_1_temperature
+                features:
+                  - type: climate-hvac-modes
+                    hvac_modes:
+                      - 'off'
+                      - cool
+                      - heat
+      - type: grid
+        cards:
+          - type: heading
+            heading_style: title
+            heading: Advanced Controls
+          - type: grid
+            square: false
+            columns: 1
+            cards:
+              - type: entities
+                entities:
+                  - entity: switch.ecodan_heatpump_ceb1f0_auto_adaptive_control
+                    name: 'Auto-Adaptive: Control'
+                  - entity: >-
+                      number.ecodan_heatpump_ceb1f0_auto_adaptive_cooling_curve_slope
+                    name: 'Auto-Adaptive: Cooling Curve Slope'
+                  - entity: >-
+                      number.ecodan_heatpump_ceb1f0_auto_adaptive_heating_curve_slope
+                    name: 'Auto-Adaptive: Heating Curve Slope'
+                  - entity: >-
+                      select.ecodan_heatpump_ceb1f0_auto_adaptive_heating_system_type
+                    name: 'Auto-Adaptive: Heating System Type'
+                  - entity: >-
+                      number.ecodan_heatpump_ceb1f0_auto_adaptive_max_heating_flow_temperature
+                    name: 'Auto-Adaptive: Max. Heating Flow Temperature'
+                  - entity: >-
+                      number.ecodan_heatpump_ceb1f0_auto_adaptive_min_cooling_flow_temperature
+                    name: 'Auto-Adaptive: Min. Cooling Flow Temperature'
+                  - entity: >-
+                      select.ecodan_heatpump_ceb1f0_auto_adaptive_room_temperature_source
+                    name: 'Auto-Adaptive: Room Temperature source'
+                show_header_toggle: false
+                state_color: true
+                title: Auto Adaptive
+          - type: grid
+            square: false
+            columns: 1
+            cards:
+              - type: entities
+                entities:
+                  - entity: button.ecodan_heatpump_ceb1f0_short_cycle_cancel_lockout
+                    name: 'Short-Cycle: Cancel Lockout'
+                  - entity: >-
+                      select.ecodan_heatpump_ceb1f0_short_cycle_lockout_duration_min
+                    name: 'Short-Cycle: Lockout Duration (min)'
+                  - entity: number.ecodan_heatpump_ceb1f0_short_cycle_minimum_on_time
+                    name: 'Short-Cycle: Minimum On-Time'
+                show_header_toggle: false
+                state_color: true
+                title: Short Cycle
+          - type: grid
+            square: false
+            columns: 1
+            cards:
+              - type: entities
+                entities:
+                  - entity: select.ecodan_heatpump_selected_operating_mode
+                    name: Selected operating mode
+                  - entity: switch.ecodan_heatpump_server_control_enable_disable
+                    name: Server control - enable/disable
+                  - entity: switch.ecodan_heatpump_server_control_prohibit_dhw
+                    name: Server control - prohibit DHW
+                  - entity: >-
+                      switch.ecodan_heatpump_server_control_zone_1_prohibit_cooling
+                    name: Server control - zone 1 prohibit cooling
+                  - entity: >-
+                      switch.ecodan_heatpump_server_control_zone_1_prohibit_heating
+                    name: Server control - zone 1 prohibit heating
+                title: Server Control
+                show_header_toggle: false
+      - type: grid
+        cards:
+          - type: heading
+            heading: Overview
+            heading_style: title
+          - type: history-graph
+            entities:
+              - entity: sensor.ecodan_heatpump_operation_mode
+              - entity: binary_sensor.ecodan_heatpump_booster_heater
+              - entity: binary_sensor.ecodan_heatpump_defrost
+              - entity: binary_sensor.ecodan_heatpump_ceb1f0_short_cycle_lockout
+            hours_to_show: 24
+            logarithmic_scale: false
+          - chart_type: line
+            period: day
+            type: statistics-graph
+            entities:
+              - sensor.ecodan_heatpump_feed_temp
+              - sensor.ecodan_heatpump_return_temp
+              - sensor.ecodan_heatpump_outside_temp
+            stat_types:
+              - mean
+            hide_legend: false
+          - chart_type: line
+            period: 5minute
+            type: statistics-graph
+            entities:
+              - sensor.ecodan_heatpump_compressor_frequency
+            stat_types:
+              - mean
+            hide_legend: true
+            days_to_show: 1
+          - show_name: true
+            show_icon: true
+            show_state: true
+            type: glance
+            entities:
+              - entity: sensor.ecodan_heatpump_heating_consumed
+              - entity: sensor.ecodan_heatpump_heating_delivered
+              - entity: sensor.ecodan_heatpump_heating_cop
+              - entity: sensor.ecodan_heatpump_cool_consumed
+              - entity: sensor.ecodan_heatpump_cool_delivered
+              - entity: sensor.ecodan_heatpump_cool_cop
+              - entity: sensor.ecodan_heatpump_dhw_consumed
+              - entity: sensor.ecodan_heatpump_dhw_delivered
+              - entity: sensor.ecodan_heatpump_dhw_cop
+            columns: 3
+    header:
+      layout: responsive
+      badges_position: bottom
+      badges_wrap: wrap
+    badges:
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.kwh_meter_3_phase_active_power
+        name: Consumption
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.ecodan_heatpump_estimated_output_power
+        name: Output
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.heatpump_cop
+        name: COP
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.ecodan_heatpump_operation_mode
+        name: Operating Mode
+        show_entity_picture: false
+        state_content: state
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.ecodan_heatpump_flow_rate
+        name: Flow Rate
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: binary_sensor.ecodan_heatpump_ceb1f0_compressor
+        name: Compressor
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: binary_sensor.ecodan_heatpump_booster_heater
+        name: Booster
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: binary_sensor.ecodan_heatpump_defrost
+        name: Defrost
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.ecodan_heatpump_accumulated_compressor_starts
+        name: Compressor Starts
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.ecodan_heatpump_operating_runtime
+        name: Runtime
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: switch.ecodan_heatpump_ceb1f0_auto_adaptive_control
+        name: Auto Adaptive
