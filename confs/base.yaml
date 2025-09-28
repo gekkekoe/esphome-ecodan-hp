@@ -423,7 +423,7 @@ sensor:
         float consumed = status.EnergyConsumedIncreasing >= last_input_value 
           ? (status.EnergyConsumedIncreasing - last_input_value) : (65536 + status.EnergyConsumedIncreasing - last_input_value);
 
-          float cop = (valid_production || consumed == 0.0f) ? (production / consumed) : 0.0f;
+          float cop = (valid_production && consumed != 0.0f) ? (production / consumed) : 0.0f;
           valid_production = true;
           production = 0.0f;
           last_input_value = status.EnergyConsumedIncreasing;
