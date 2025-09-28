@@ -295,6 +295,11 @@ script:
                     ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit)", (i + 1), calculated_flow);
                   }
 
+                  if (calculated_flow < 25.0f) {
+                    calculated_flow = 25f;
+                    ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Min Limit)", (i + 1), calculated_flow);
+                  }
+
                   bool is_saturated = (requested_flow_temp - actual_flow_temp) > SATURATION_MARGIN;
                   if (is_saturated) {
                       ESP_LOGW("auto_adaptive", "Z%d HEATING: HP Saturated (Req: %.1f, Act: %.1f). Learning paused.", (i + 1), requested_flow_temp, actual_flow_temp);
