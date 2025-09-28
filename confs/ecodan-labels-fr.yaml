@@ -147,3 +147,4 @@ substitutions:
   cooling_offset_sensor: 'Auto-Adaptatif: Décalage Refroidissement'
   auto_adaptive_setpoint_bias: 'Auto-Adaptatif: Bias de Consigne'
   dynamic_learning_rate_sensor: "Auto-Adaptatif: Taux d'Apprentissage Dynamique"
+  temperature_feedback: 'Auto-Adaptatif: Retour de Température Ambiante Actuelle'

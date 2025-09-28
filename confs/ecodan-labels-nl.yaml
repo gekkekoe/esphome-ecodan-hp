@@ -147,3 +147,4 @@ substitutions:
   cooling_offset_sensor: 'Auto-Adaptief: Offset Koeling'
   auto_adaptive_setpoint_bias: 'Auto-Adaptief: Setpoint Bias'
   dynamic_learning_rate_sensor: 'Auto-Adaptief: Dynamische Leersnelheid'
+  temperature_feedback: 'Auto-Adaptief: Terugkoppeling Huidige Kamertemperatuur'
