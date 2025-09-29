@@ -138,7 +138,7 @@ substitutions:
   cooling_smart_start_temp: 'Autoadaptiv: Smart Starttemp Kyla'
   temperature_feedback_source: 'Autoadaptiv: Källa för Rumstemperatur'
   temperature_feedback_option_room: 'Rumstermostat'
-  temperature_feedback_option_api: 'REST API'
+  temperature_feedback_option_api: 'Home Assistant / REST API'
   heating_system_type: 'Autoadaptiv: Typ av Värmesystem'
   heating_system_type_option_ufh: 'Golvvärme'
   heating_system_type_option_ufh_rad: 'Golvvärme + Radiatorer'

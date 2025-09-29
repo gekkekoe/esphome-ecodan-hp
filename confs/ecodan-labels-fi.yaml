@@ -138,7 +138,7 @@ substitutions:
   cooling_smart_start_temp: 'Automaattisesti mukautuva: Älykäs aloituslämpötila (jäähdytys)'
   temperature_feedback_source: 'Automaattisesti mukautuva: Huonelämpötilan lähde'
   temperature_feedback_option_room: 'Huonetermostaatti'
-  temperature_feedback_option_api: 'REST API'
+  temperature_feedback_option_api: 'Home Assistant / REST API'
   heating_system_type: 'Automaattisesti mukautuva: Lämmitysjärjestelmän tyyppi'
   heating_system_type_option_ufh: 'Lattialämmitys'
   heating_system_type_option_ufh_rad: 'Lattialämmitys + Patterit'

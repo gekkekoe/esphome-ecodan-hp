@@ -138,7 +138,7 @@ substitutions:
   cooling_smart_start_temp: 'Auto-Adaptief: Koeling Smart Start Temp'
   temperature_feedback_source: 'Auto-Adaptief: Bron Kamertemperatuur'
   temperature_feedback_option_room: 'Kamerthermostaat'
-  temperature_feedback_option_api: 'REST API'
+  temperature_feedback_option_api: 'Home Assistant / REST API'
   heating_system_type: 'Auto-Adaptief: Type Verwarmingssysteem'
   heating_system_type_option_ufh: 'Vloerverwarming'
   heating_system_type_option_ufh_rad: 'Vloerverwarming + Radiatoren'

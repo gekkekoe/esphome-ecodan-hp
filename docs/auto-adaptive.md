@@ -86,7 +86,8 @@ You can do this in two ways:
 
 Example REST API call to set the feedback temperature to 21.5°C:
 ```bash
-curl -X POST "http://<esp_ip>/number/temperature_feedback/set?value=21.5"
+curl -X POST "http://<esp_ip>/number/temperature_feedback_z1/set?value=21.5"
+curl -X POST "http://<esp_ip>/number/temperature_feedback_z2/set?value=21.5" # only for 2 zones
 ```
 
 Example Home Assistent automation:
@@ -105,7 +106,7 @@ Example Home Assistent automation:
   action:
     - action: number.set_value
       target:
-        entity_id: number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback
+        entity_id: number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1 # also add z2 if you have 2 zones
       data:
         value: "{{ trigger.to_state.attributes.current_temperature }}"
 

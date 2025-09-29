@@ -137,7 +137,7 @@ substitutions:
   cooling_smart_start_temp: 'Autoadaptacja: Inteligentna Temp. Startu Chłodzenia'
   temperature_feedback_source: 'Autoadaptacja: Źródło Temperatury w Pomieszczeniu'
   temperature_feedback_option_room: 'Termostat Pokojowy'
-  temperature_feedback_option_api: 'REST API'
+  temperature_feedback_option_api: 'Home Assistant / REST API'
   heating_system_type: 'Autoadaptacja: Typ Systemu Grzewczego'
   heating_system_type_option_ufh: 'Ogrzewanie Podłogowe'
   heating_system_type_option_ufh_rad: 'Ogrzewanie Podłogowe + Grzejniki'

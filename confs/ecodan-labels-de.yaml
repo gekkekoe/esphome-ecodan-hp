@@ -137,7 +137,7 @@ substitutions:
   cooling_smart_start_temp: 'Auto-Adaptiv: Smart-Start-Temperatur Kühlen'
   temperature_feedback_source: 'Auto-Adaptiv: Quelle Raumtemperatur'
   temperature_feedback_option_room: 'Raumthermostat'
-  temperature_feedback_option_api: 'REST API'
+  temperature_feedback_option_api: 'Home Assistant / REST API'
   heating_system_type: 'Auto-Adaptiv: Typ des Heizsystems'
   heating_system_type_option_ufh: 'Fußbodenheizung'
   heating_system_type_option_ufh_rad: 'Fußbodenheizung + Heizkörper'

@@ -108,8 +108,11 @@ views:
                       select.ecodan_heatpump_auto_adaptive_room_temperature_source
                     name: Room Temperature source
                   - entity: >-
-                      number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback
-                    name: Room Feedback
+                      number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1
+                    name: Room Feedback z1
+                  - entity: >-
+                      number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z2
+                    name: Room Feedback z2
                 show_header_toggle: false
                 state_color: true
                 title: Auto Adaptive
