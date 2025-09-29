@@ -31,7 +31,7 @@ views:
                     name: Holiday Mode
                   - entity: select.ecodan_heatpump_selected_operating_mode
                     name: Selected operating mode
-                  - entity: switch.ecodan_heatpump_ceb1f0_service_codes_enabled
+                  - entity: switch.ecodan_heatpump_service_codes_enabled
                     name: Service codes enabled
                   - entity: switch.ecodan_heatpump_uart_logging
                     name: UART Logging
@@ -70,51 +70,6 @@ views:
             cards:
               - type: entities
                 entities:
-                  - entity: switch.ecodan_heatpump_ceb1f0_auto_adaptive_control
-                    name: 'Auto-Adaptive: Control'
-                  - entity: >-
-                      number.ecodan_heatpump_ceb1f0_auto_adaptive_cooling_curve_slope
-                    name: 'Auto-Adaptive: Cooling Curve Slope'
-                  - entity: >-
-                      number.ecodan_heatpump_ceb1f0_auto_adaptive_heating_curve_slope
-                    name: 'Auto-Adaptive: Heating Curve Slope'
-                  - entity: >-
-                      select.ecodan_heatpump_ceb1f0_auto_adaptive_heating_system_type
-                    name: 'Auto-Adaptive: Heating System Type'
-                  - entity: >-
-                      number.ecodan_heatpump_ceb1f0_auto_adaptive_max_heating_flow_temperature
-                    name: 'Auto-Adaptive: Max. Heating Flow Temperature'
-                  - entity: >-
-                      number.ecodan_heatpump_ceb1f0_auto_adaptive_min_cooling_flow_temperature
-                    name: 'Auto-Adaptive: Min. Cooling Flow Temperature'
-                  - entity: >-
-                      select.ecodan_heatpump_ceb1f0_auto_adaptive_room_temperature_source
-                    name: 'Auto-Adaptive: Room Temperature source'
-                show_header_toggle: false
-                state_color: true
-                title: Auto Adaptive
-          - type: grid
-            square: false
-            columns: 1
-            cards:
-              - type: entities
-                entities:
-                  - entity: button.ecodan_heatpump_ceb1f0_short_cycle_cancel_lockout
-                    name: 'Short-Cycle: Cancel Lockout'
-                  - entity: >-
-                      select.ecodan_heatpump_ceb1f0_short_cycle_lockout_duration_min
-                    name: 'Short-Cycle: Lockout Duration (min)'
-                  - entity: number.ecodan_heatpump_ceb1f0_short_cycle_minimum_on_time
-                    name: 'Short-Cycle: Minimum On-Time'
-                show_header_toggle: false
-                state_color: true
-                title: Short Cycle
-          - type: grid
-            square: false
-            columns: 1
-            cards:
-              - type: entities
-                entities:
                   - entity: select.ecodan_heatpump_selected_operating_mode
                     name: Selected operating mode
                   - entity: switch.ecodan_heatpump_server_control_enable_disable
@@ -129,6 +84,50 @@ views:
                     name: Server control - zone 1 prohibit heating
                 title: Server Control
                 show_header_toggle: false
+          - type: grid
+            square: false
+            columns: 1
+            cards:
+              - type: entities
+                entities:
+                  - entity: switch.ecodan_heatpump_auto_adaptive_control
+                    name: Control
+                  - entity: number.ecodan_heatpump_auto_adaptive_cooling_curve_slope
+                    name: Cooling Curve Slope
+                  - entity: number.ecodan_heatpump_auto_adaptive_heating_curve_slope
+                    name: Heating Curve Slope
+                  - entity: select.ecodan_heatpump_auto_adaptive_heating_system_type
+                    name: Heating System Type
+                  - entity: >-
+                      number.ecodan_heatpump_auto_adaptive_max_heating_flow_temperature
+                    name: Max. Heating Flow Temperature
+                  - entity: >-
+                      number.ecodan_heatpump_auto_adaptive_min_cooling_flow_temperature
+                    name: Min. Cooling Flow Temperature
+                  - entity: >-
+                      select.ecodan_heatpump_auto_adaptive_room_temperature_source
+                    name: Room Temperature source
+                  - entity: >-
+                      number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback
+                    name: Room Feedback
+                show_header_toggle: false
+                state_color: true
+                title: Auto Adaptive
+          - type: grid
+            square: false
+            columns: 1
+            cards:
+              - type: entities
+                entities:
+                  - entity: button.ecodan_heatpump_short_cycle_cancel_lockout
+                    name: Cancel Lockout
+                  - entity: select.ecodan_heatpump_short_cycle_lockout_duration_min
+                    name: Lockout Duration (min)
+                  - entity: number.ecodan_heatpump_short_cycle_minimum_on_time
+                    name: Minimum On-Time
+                show_header_toggle: false
+                state_color: true
+                title: Short Cycle
       - type: grid
         cards:
           - type: heading
@@ -139,11 +138,11 @@ views:
               - entity: sensor.ecodan_heatpump_operation_mode
               - entity: binary_sensor.ecodan_heatpump_booster_heater
               - entity: binary_sensor.ecodan_heatpump_defrost
-              - entity: binary_sensor.ecodan_heatpump_ceb1f0_short_cycle_lockout
+              - entity: binary_sensor.ecodan_heatpump_short_cycle_lockout
             hours_to_show: 24
             logarithmic_scale: false
           - chart_type: line
-            period: day
+            period: 5minute
             type: statistics-graph
             entities:
               - sensor.ecodan_heatpump_feed_temp
@@ -152,6 +151,7 @@ views:
             stat_types:
               - mean
             hide_legend: false
+            days_to_show: 1
           - chart_type: line
             period: 5minute
             type: statistics-graph
@@ -217,7 +217,7 @@ views:
         show_name: true
         show_state: true
         show_icon: true
-        entity: binary_sensor.ecodan_heatpump_ceb1f0_compressor
+        entity: binary_sensor.ecodan_heatpump_compressor
         name: Compressor
       - type: entity
         show_name: true
@@ -247,5 +247,5 @@ views:
         show_name: true
         show_state: true
         show_icon: true
-        entity: switch.ecodan_heatpump_ceb1f0_auto_adaptive_control
+        entity: switch.ecodan_heatpump_auto_adaptive_control
         name: Auto Adaptive
