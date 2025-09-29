@@ -91,23 +91,23 @@ curl -X POST "http://<esp_ip>/number/temperature_feedback/set?value=21.5"
 
 Example Home Assistent automation:
 ```yaml
-alias: Sync Room Temp to Auto-Adaptive Controller
-triggers:
-  - trigger: state
-    entity_id: climate.kantoor # Replace with your climate entity
-    attribute: current_temperature
-conditions:
-  - condition: template
-    value_template: >-
-      {{ trigger.from_state.attributes.current_temperature !=
-      trigger.to_state.attributes.current_temperature }}
-actions:
-  - action: number.set_value
-    target:
-      entity_id: number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback
-    data:
-      value: "{{ trigger.to_state.attributes.current_temperature }}"
-
+- id: SyncTemperatureToAdaptiveController
+  alias: Sync Room Temp to Auto-Adaptive Controller
+  trigger:
+    - trigger: state
+      entity_id: climate.kantoor # Replace with your main thermostat
+      attribute: current_temperature
+  condition:
+    - condition: template
+      value_template:
+        "{{ trigger.from_state.attributes.current_temperature != trigger.to_state.attributes.current_temperature
+        }}"
+  action:
+    - action: number.set_value
+      target:
+        entity_id: number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback
+      data:
+        value: "{{ trigger.to_state.attributes.current_temperature }}"
 
 ```
 
