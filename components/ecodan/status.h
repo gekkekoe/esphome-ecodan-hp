@@ -243,10 +243,11 @@ namespace ecodan
         bool is_auto_adaptive_cooling(Zone zone) const {
             auto mode = zone == Zone::ZONE_1 ? HeatingCoolingMode : HeatingCoolingModeZone2;
 
-            if (mode == HpMode::COOL_FLOW_TEMP )
+            if (mode == HpMode::COOL_FLOW_TEMP ) {
                 if (ServerControl)
                     return zone == Zone::ZONE_1 ? !ProhibitCoolingZ1 : !ProhibitCoolingZ2;
                 return true;
+            }
 
             return false;
         }
