@@ -217,15 +217,25 @@ script:
       - lambda: |-
           if (!id(auto_adaptive_control_enabled).state) return;
           auto& status = id(ecodan_instance).get_status();
+
+          if (status.Operation == esphome::ecodan::Status::OperationMode::OFF
+            || status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON
+            || status.Operation == esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION) {
+            ESP_LOGD("auto_adaptive", "No Heating/Cooling demand. Exiting.");
+            return;
+          }
+
           if ((status.HeatingCoolingMode != esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP && status.HeatingCoolingMode != esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP) &&
               (status.HeatingCoolingModeZone2 != esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP && status.HeatingCoolingModeZone2 != esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP)) {
             ESP_LOGD("auto_adaptive", "Not in fixed flow mode. Exiting.");
             return;
           }
+
           if (isnan(id(hp_feed_temp).state) || isnan(id(outside_temp).state)) {
             ESP_LOGW("auto_adaptive", "Sensor data unavailable. Exiting.");
             return;
           }
+
           if (id(status_short_cycle_lockout).state || status.DefrostActive) {
             ESP_LOGI("auto_adaptive", "Lockout or Defrost is active. Exiting.");
             return;
