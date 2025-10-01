@@ -303,13 +303,13 @@ script:
                   
                   float calculated_flow = (20.0f - actual_outside_temp) * id(heating_slope).state + offset;
                   if (calculated_flow > id(maximum_heating_flow_temp).state) {
+                    ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit), calculated_flow: %.1f", (i + 1), id(maximum_heating_flow_temp).state, calculated_flow);
                     calculated_flow = id(maximum_heating_flow_temp).state;
-                    ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit)", (i + 1), calculated_flow);
                   }
 
                   if (calculated_flow < 25.0f) {
+                    ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Min Limit), calculated_flow: %.1f", (i + 1), 25.0f, calculated_flow);
                     calculated_flow = 25.0f;
-                    ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Min Limit)", (i + 1), calculated_flow);
                   }
 
                   bool is_saturated = (requested_flow_temp - actual_flow_temp) > SATURATION_MARGIN;
@@ -326,12 +326,10 @@ script:
                       ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too warm (err: %.2f). Offset decreased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                     }
                     prev_error = error;
-                  }
-                  
+                  }                  
                   calculated_flows_heat[i] = round(calculated_flow * 2) / 2.0f;
-              }
-              
-              if (is_cooling_active) {
+
+              } else if (is_cooling_active) {
                   float& offset = *cooling_offsets[i];
                   float& prev_error = *cooling_prev_errors[i];
                   
