@@ -108,7 +108,7 @@ Example Home Assistent automation:
       target:
         entity_id: number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1 # also add z2 if you have 2 zones
       data:
-        value: '{{ state_attr(''climate.kantoor'', ''current_temperature'') }}' # Replace with your main thermostat 
+        value: "{{ state_attr('climate.kantoor', 'current_temperature') }}" # Replace with your main thermostat 
 
 ```
 
