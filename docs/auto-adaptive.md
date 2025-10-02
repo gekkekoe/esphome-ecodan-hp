@@ -112,6 +112,12 @@ Example Home Assistent automation:
 
 ```
 
+Put the automation in a file `automations.yaml` and include that file in the main home assistant `configuration.yaml`.
+```yaml
+automation: !include automations.yaml
+```
+Restart HA, and the automation should be visible in Settings > Automations & scenes. 
+
 ### Step 3: Configure Initial Parameters
 
 In Home Assistant, navigate to your dashboard and set the initial parameters for the controller on the **"Auto-Adaptive Settings"** tab.
