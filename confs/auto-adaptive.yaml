@@ -129,6 +129,7 @@ sensor:
     id: heating_offset_sensor_z1
     lambda: 'return id(heating_curve_offset_z1);'
     unit_of_measurement: "°C"
+    accuracy_decimals: 2
     icon: "mdi:chart-line"
     update_interval: ${update_interval_minutes} 
   - platform: template
@@ -136,6 +137,7 @@ sensor:
     id: heating_offset_sensor_z2
     lambda: 'return id(heating_curve_offset_z2);'
     unit_of_measurement: "°C"
+    accuracy_decimals: 2
     icon: "mdi:chart-line"
     update_interval: ${update_interval_minutes}
   - platform: template
@@ -143,6 +145,7 @@ sensor:
     id: cooling_offset_sensor_z1
     lambda: 'return id(cooling_curve_offset_z1);'
     unit_of_measurement: "°C"
+    accuracy_decimals: 2
     icon: "mdi:chart-line-variant"
     update_interval: ${update_interval_minutes}
   - platform: template
@@ -150,6 +153,7 @@ sensor:
     id: cooling_offset_sensor_z2
     lambda: 'return id(cooling_curve_offset_z2);'
     unit_of_measurement: "°C"
+    accuracy_decimals: 2
     icon: "mdi:chart-line-variant"
     update_interval: ${update_interval_minutes}
   - platform: template
@@ -306,6 +310,9 @@ script:
               float dynamic_error_margin_negative = -0.2f - (fabs(error) * 0.1f);
               if (dynamic_error_margin_negative < -0.8f)
                 dynamic_error_margin_negative = -0.8f;
+
+              ESP_LOGD("auto_adaptive", "Error: Current=%.1f, Dynamic+=%.1f, Dynamic-=%.1f, LR=%.3f", 
+                error, dynamic_error_margin_positive, dynamic_error_margin_negative, learning_rate);
 
               if (is_heating_active) {
                   float& offset = *heating_offsets[i];
