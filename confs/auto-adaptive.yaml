@@ -5,11 +5,11 @@ globals:
   - id: heating_curve_offset_z1
     type: float
     restore_value: yes
-    initial_value: '25.0'
+    initial_value: '27.0'
   - id: heating_curve_offset_z2
     type: float
     restore_value: yes
-    initial_value: '25.0'
+    initial_value: '27.0'
   - id: cooling_curve_offset_z1
     type: float
     restore_value: yes
