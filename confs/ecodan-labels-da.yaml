@@ -32,8 +32,8 @@ substitutions:
   z1_flow_temp_target: Zone 1 H/C indstillet værdi
   status_prohibit_cool_z1: Zone 1 køling forbudt
   status_prohibit_heating_z1: Zone 1 opvarmning forbudt
-  heatpump_climate_z1: Zone 1 klima
-  heatpump_climate_room_z1: Zone 1 temperatur
+  heatpump_climate_z1: Zone 1 Fremløbstemp
+  heatpump_climate_room_z1: Zone 1 Rumtemp
   z1_room_temp_target: Zone 1 rum indstilling
   z1_room_temp: Zone 1 rumtemperatur
   heatpump_number_z2_set_flow_temperature: Zone 2 H/C indstilling
@@ -41,8 +41,8 @@ substitutions:
   status_prohibit_cool_z2: Zone 2 køling forbudt
   status_prohibit_heating_z2: Zone 2 opvarmning forbudt
   heatpump_number_z2_set_room_temperature: Zone 2 rum indstilling
-  heatpump_climate_z2: Zone 2 klima
-  heatpump_climate_room_z2: Zone 2 temperatur
+  heatpump_climate_z2: Zone 2 Fremløbstemp
+  heatpump_climate_room_z2: Zone 2 Rumtemp
   z2_room_temp_target: Zone 2 rum indstilling
   z2_room_temp: Zone 2 rumtemperatur
   mixing_tank_temp: Blandingsbeholder temperatur
