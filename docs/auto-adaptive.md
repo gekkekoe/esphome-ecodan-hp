@@ -118,17 +118,19 @@ automation: !include automations.yaml
 ```
 Restart HA, and the automation should be visible in Settings > Automations & scenes. 
 
-### Step 3: Configure Initial Parameters
+### Step 3: Set target temperatures (setpoint)
+If you are using an external thermostat, you need to adjust the Zone 1 and Zone 2 temperature climate entities to reflect the setpoint of that external thermostat. This probably does not change often and can be done manually once. If it does change often, you can use an automation similar to the one in the previous step to sync the setpoint.
+
+### Step 4: Configure Initial Parameters
 
 In Home Assistant, navigate to your dashboard and set the initial parameters for the controller on the **"Auto-Adaptive Settings"** tab.
-
 
 
 1.  **Set the Heating System Profile**: Choose the option from the `Auto-Adaptive: Heating System Type` dropdown that best matches your home (`Underfloor Heating`, `Underfloor Heating + Radiators`, or `Radiators`).
 2.  **Set the Heating Curve Slope**: Adjust the `Auto-Adaptive: Heating Curve Slope` slider. A good starting point for underfloor heating is `0.7`-`0.8`, while radiators often need a steeper slope like `1.4`-`1.6`.
 3.  **Set Safety Limits**: Adjust the `Auto-Adaptive: Max. Heating Flow Temperature` slider to a value that is safe for your floors (e.g., `38.0°C` for UFH). Do the same for the cooling limits.
 
-### Step 4: Activate the System
+### Step 5: Activate the System
 
 Now you are ready to let the algorithm take control.
 
