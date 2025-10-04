@@ -23,51 +23,12 @@ climate:
         return id(ecodan_instance).get_status();
       get_target_temp_func: |-
         auto& status = id(ecodan_instance).get_status();
-        auto mode = status.HeatingCoolingMode;
-        switch (mode) {
-            case esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP:
-            case esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP:
-            case esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE:
-              return status.Zone1FlowTemperatureSetPoint;
-            break;
-            case esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP:
-            case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
-              return status.Zone1SetTemperature;
-            break;
-            default:
-              return NAN;
-        }        
+        return status.Zone1FlowTemperatureSetPoint;
       target_temp_func: |-
-        auto& status = id(ecodan_instance).get_status();
-        auto mode = status.HeatingCoolingMode;
-        switch (mode) {
-            case esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP:
-            case esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP:
-              id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::Zone::ZONE_1);
-            break;
-            case esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP:
-            case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
-              id(ecodan_instance).set_room_temperature(x, esphome::ecodan::Zone::ZONE_1);
-            break;                    
-            default:
-              break;
-        }
+        id(ecodan_instance).set_flow_target_temperature(x, esphome::ecodan::Zone::ZONE_1);
       current_temp_func: |-
         auto& status = id(ecodan_instance).get_status();
-        auto mode = status.HeatingCoolingMode;
-        switch (mode) {
-            case esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP:
-            case esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP:
-            case esphome::ecodan::Status::HpMode::HEAT_COMPENSATION_CURVE:
-              return status.Zone1FlowTemperatureSetPoint;
-            break;
-            case esphome::ecodan::Status::HpMode::COOL_ROOM_TEMP:
-            case esphome::ecodan::Status::HpMode::HEAT_ROOM_TEMP:
-              return status.Zone1RoomTemperature;
-            break;
-            default:
-              return NAN;
-        }
+        return status.Zone1FlowTemperatureSetPoint;
     heatpump_climate_room_z1:
       name: ${heatpump_climate_room_z1}
       id: heatpump_climate_room_z1
