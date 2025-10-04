@@ -224,8 +224,14 @@ script:
 
           if (status.Operation == esphome::ecodan::Status::OperationMode::OFF
             || status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON
+            || status.Operation == esphome::ecodan::Status::OperationMode::FROST_PROTECT
             || status.Operation == esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION) {
             ESP_LOGD("auto_adaptive", "No Heating/Cooling demand. Exiting.");
+            return;
+          }
+
+          if (status.DefrostActive || id(status_short_cycle_lockout).state) {
+            ESP_LOGI("auto_adaptive", "Lockout or Defrost is active. Exiting.");
             return;
           }
 
@@ -237,11 +243,6 @@ script:
 
           if (isnan(id(hp_feed_temp).state) || isnan(id(outside_temp).state)) {
             ESP_LOGW("auto_adaptive", "Sensor data unavailable. Exiting.");
-            return;
-          }
-
-          if (id(status_short_cycle_lockout).state || status.DefrostActive) {
-            ESP_LOGI("auto_adaptive", "Lockout or Defrost is active. Exiting.");
             return;
           }
 
@@ -259,7 +260,9 @@ script:
           float calculated_flows_cool[2] = {100.0f, 100.0f};
 
           esphome::ecodan::Zone all_zones[] = {esphome::ecodan::Zone::ZONE_1, esphome::ecodan::Zone::ZONE_2};
-          for (std::size_t i = 0; i < std::size(all_zones); i++) {
+          auto max_zones = status.has_2zones() ? std::size(all_zones) : 1;
+
+          for (std::size_t i = 0; i < max_zones; i++) {
               auto zone = all_zones[i];
               
               bool is_heating_active = status.is_auto_adaptive_heating(zone);

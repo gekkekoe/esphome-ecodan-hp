@@ -187,10 +187,14 @@ namespace ecodan
 
         bool has_independent_z2() const {
             if (IS_BIT_SET(DipSwitch3, 5) && !IS_BIT_SET(DipSwitch2, 6)) // SW3-6 True, SW2-7 False
-                return false;
+                return false; //z1, z2 -> same flow
             else if (IS_BIT_SET(DipSwitch2, 5) || IS_BIT_SET(DipSwitch2, 6)) // SW2-6 or SW2-7 True
-                return true;
+                return true; 
             return false;
+        }
+
+        bool has_2zones() const {
+            return IS_BIT_SET(DipSwitch2, 6);
         }
 
         CONTROLLER_FLAG get_svc_flags() const
