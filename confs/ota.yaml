@@ -16,10 +16,5 @@ update:
   - platform: http_request
     name: Firmware Update
     source: https://github.com/gekkekoe/esphome-ecodan-hp/releases/latest/download/manifest.json
-    on_error:
-      then:
-        - logger.log:
-            level: INFO
-            format: "Manifest not available, skipping OTA check"
 
 improv_serial:
