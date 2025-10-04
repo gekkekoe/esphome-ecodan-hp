@@ -44,7 +44,7 @@ views:
                       - 'off'
                       - heat
               - type: thermostat
-                entity: climate.ecodan_heatpump_zone_1_climate
+                entity: climate.ecodan_heatpump_zone_1_flow_temp
                 features:
                   - type: climate-hvac-modes
                     hvac_modes:
@@ -52,7 +52,7 @@ views:
                       - cool
                       - heat
               - type: thermostat
-                entity: climate.ecodan_heatpump_zone_1_temperature
+                entity: climate.ecodan_heatpump_zone_1_room_temp
                 features:
                   - type: climate-hvac-modes
                     hvac_modes:
