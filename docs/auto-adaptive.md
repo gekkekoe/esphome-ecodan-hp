@@ -101,8 +101,7 @@ Example Home Assistent automation:
   condition:
     - condition: template
       value_template:
-        "{{ trigger.from_state.attributes.current_temperature != trigger.to_state.attributes.current_temperature
-        }}"
+        "{{ trigger.from_state.attributes.current_temperature != trigger.to_state.attributes.current_temperature }}"
   action:
     - action: number.set_value
       target:
@@ -120,6 +119,24 @@ Restart HA, and the automation should be visible in Settings > Automations & sce
 
 ### Step 3: Set target temperatures (setpoint)
 If you are using an external thermostat, you need to adjust the Zone 1 and Zone 2 temperature climate entities to reflect the setpoint of that external thermostat. This probably does not change often and can be done manually once. If it does change often, you can use an automation similar to the one in the previous step to sync the setpoint.
+
+```yaml
+- id: SyncSetpointToAdaptiveController
+  alias: Sync Room Setpoint to Auto-Adaptive Controller
+  trigger:
+    - trigger: state
+      entity_id: climate.kantoor
+      attribute: temperature
+  condition:
+    - condition: template
+      value_template: "{{ trigger.from_state.attributes.temperature != trigger.to_state.attributes.temperature }}"
+  action:
+    - action: climate.set_temperature
+      target:
+        entity_id: climate.ecodan_heatpump_zone_1_room_temp
+      data:
+        temperature: "{{ (state_attr('climate.kantoor', 'temperature') * 2) | round(0) / 2.0 | float }}"
+```
 
 ### Step 4: Configure Initial Parameters
 

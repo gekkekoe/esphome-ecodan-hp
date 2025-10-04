@@ -21,12 +21,12 @@ views:
             cards:
               - type: entities
                 entities:
+                  - entity: switch.ecodan_heatpump_heatpump
+                    name: Heatpump
                   - entity: select.ecodan_heatpump_dhw_mode
                     name: DHW Mode
                   - entity: switch.ecodan_heatpump_force_dhw
                     name: Force DHW
-                  - entity: switch.ecodan_heatpump_heatpump
-                    name: Heatpump
                   - entity: switch.ecodan_heatpump_holiday_mode
                     name: Holiday Mode
                   - entity: select.ecodan_heatpump_selected_operating_mode
@@ -70,8 +70,6 @@ views:
             cards:
               - type: entities
                 entities:
-                  - entity: select.ecodan_heatpump_selected_operating_mode
-                    name: Selected operating mode
                   - entity: switch.ecodan_heatpump_server_control_enable_disable
                     name: Server control - enable/disable
                   - entity: switch.ecodan_heatpump_server_control_prohibit_dhw
