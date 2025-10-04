@@ -91,28 +91,29 @@ views:
               - type: entities
                 entities:
                   - entity: switch.ecodan_heatpump_auto_adaptive_control
-                    name: Control
-                  - entity: number.ecodan_heatpump_auto_adaptive_cooling_curve_slope
-                    name: Cooling Curve Slope
-                  - entity: number.ecodan_heatpump_auto_adaptive_heating_curve_slope
-                    name: Heating Curve Slope
+                    name: Enable/Disable
                   - entity: select.ecodan_heatpump_auto_adaptive_heating_system_type
                     name: Heating System Type
+                  - entity: >-
+                      select.ecodan_heatpump_auto_adaptive_room_temperature_source
+                    name: Room Temperature source
+                  - entity: number.ecodan_heatpump_auto_adaptive_setpoint_bias
+                    name: Setpoint Bias
+                  - entity: number.ecodan_heatpump_auto_adaptive_heating_curve_slope
+                    name: Heating Curve Slope
                   - entity: >-
                       number.ecodan_heatpump_auto_adaptive_max_heating_flow_temperature
                     name: Max. Heating Flow Temperature
                   - entity: >-
-                      number.ecodan_heatpump_auto_adaptive_min_cooling_flow_temperature
-                    name: Min. Cooling Flow Temperature
-                  - entity: >-
-                      select.ecodan_heatpump_auto_adaptive_room_temperature_source
-                    name: Room Temperature source
-                  - entity: >-
                       number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1
                     name: Room Feedback z1
+                  - entity: sensor.ecodan_heatpump_auto_adaptive_heating_offset
+                    name: z1 heating curve
+                  - entity: number.ecodan_heatpump_auto_adaptive_cooling_curve_slope
+                    name: Cooling Curve Slope
                   - entity: >-
-                      number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z2
-                    name: Room Feedback z2
+                      number.ecodan_heatpump_auto_adaptive_min_cooling_flow_temperature
+                    name: Min. Cooling Flow Temperature
                 show_header_toggle: false
                 state_color: true
                 title: Auto Adaptive
@@ -144,26 +145,17 @@ views:
               - entity: binary_sensor.ecodan_heatpump_short_cycle_lockout
             hours_to_show: 24
             logarithmic_scale: false
-          - chart_type: line
-            period: 5minute
-            type: statistics-graph
+          - type: history-graph
             entities:
               - sensor.ecodan_heatpump_feed_temp
               - sensor.ecodan_heatpump_return_temp
               - sensor.ecodan_heatpump_outside_temp
-            stat_types:
-              - mean
-            hide_legend: false
-            days_to_show: 1
-          - chart_type: line
-            period: 5minute
-            type: statistics-graph
+            hours_to_show: 6
+          - type: history-graph
             entities:
-              - sensor.ecodan_heatpump_compressor_frequency
-            stat_types:
-              - mean
-            hide_legend: true
-            days_to_show: 1
+              - entity: sensor.ecodan_heatpump_compressor_frequency
+            hours_to_show: 6
+          - type: energy-devices-detail-graph
           - show_name: true
             show_icon: true
             show_state: true
@@ -179,11 +171,20 @@ views:
               - entity: sensor.ecodan_heatpump_dhw_delivered
               - entity: sensor.ecodan_heatpump_dhw_cop
             columns: 3
+            state_color: false
     header:
       layout: responsive
       badges_position: bottom
       badges_wrap: wrap
     badges:
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.ecodan_heatpump_operation_mode
+        name: Operating Mode
+        show_entity_picture: false
+        state_content: state
       - type: entity
         show_name: true
         show_state: true
@@ -200,16 +201,32 @@ views:
         show_name: true
         show_state: true
         show_icon: true
+        entity: sensor.heatpump_usage_day
+        name: Daily
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
         entity: sensor.heatpump_cop
         name: COP
       - type: entity
         show_name: true
         show_state: true
         show_icon: true
-        entity: sensor.ecodan_heatpump_operation_mode
-        name: Operating Mode
-        show_entity_picture: false
-        state_content: state
+        entity: sensor.ecodan_heatpump_compressor_frequency
+        name: Frequency
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.ecodan_heatpump_feed_temp
+        name: 'Feed '
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.ecodan_heatpump_return_temp
+        name: Return
       - type: entity
         show_name: true
         show_state: true
@@ -220,8 +237,20 @@ views:
         show_name: true
         show_state: true
         show_icon: true
+        entity: sensor.ecodan_heatpump_fan_speed
+        name: Fan
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
         entity: binary_sensor.ecodan_heatpump_compressor
         name: Compressor
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: binary_sensor.ecodan_heatpump_water_pump_status
+        name: Water pump
       - type: entity
         show_name: true
         show_state: true
@@ -232,8 +261,20 @@ views:
         show_name: true
         show_state: true
         show_icon: true
+        entity: switch.ecodan_heatpump_auto_adaptive_control
+        name: Auto Adaptive
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
         entity: binary_sensor.ecodan_heatpump_defrost
         name: Defrost
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: binary_sensor.ecodan_heatpump_short_cycle_lockout
+        name: Lockout
       - type: entity
         show_name: true
         show_state: true
@@ -250,5 +291,22 @@ views:
         show_name: true
         show_state: true
         show_icon: true
-        entity: switch.ecodan_heatpump_auto_adaptive_control
-        name: Auto Adaptive
+        entity: sensor.solar_production_day
+        name: Daily Solar
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.ecodan_heatpump_esp_internal_temperature
+        name: CPU
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.ecodan_heatpump_esp_uptime
+        name: Uptime
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: sensor.ecodan_heatpump_wifi_signal_db

@@ -30,15 +30,20 @@ namespace ecodan
         void dump_config() override;    
     
         void register_sensor(sensor::Sensor *obj, const std::string& key) {
-            sensors[key] = obj;
+            if (obj != nullptr)
+                sensors[key] = obj;
         }
 
         void register_textSensor(text_sensor::TextSensor *obj, const std::string& key) {
-            textSensors[key] = obj;
+            if (obj != nullptr) 
+                textSensors[key] = obj;
         }
 
         void register_binarySensor(binary_sensor::BinarySensor *obj, const std::string& key) {
-            binarySensors[key] = obj;
+            if (obj != nullptr) {
+                obj->publish_state(false);
+                binarySensors[key] = obj;
+            }
         }
 
         void enable_request_code_sensors() {
