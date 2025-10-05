@@ -222,11 +222,10 @@ script:
           if (!id(auto_adaptive_control_enabled).state) return;
           auto& status = id(ecodan_instance).get_status();
 
-          if (status.Operation == esphome::ecodan::Status::OperationMode::OFF
-            || status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON
+          if (status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON
             || status.Operation == esphome::ecodan::Status::OperationMode::FROST_PROTECT
             || status.Operation == esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION) {
-            ESP_LOGD("auto_adaptive", "No Heating/Cooling demand. Exiting.");
+            ESP_LOGD("auto_adaptive", "No climate task. Exiting.");
             return;
           }
 
@@ -235,9 +234,16 @@ script:
             return;
           }
 
-          if ((status.HeatingCoolingMode != esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP && status.HeatingCoolingMode != esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP) &&
-              (status.HeatingCoolingModeZone2 != esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP && status.HeatingCoolingModeZone2 != esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP)) {
-            ESP_LOGD("auto_adaptive", "Not in fixed flow mode. Exiting.");
+          if (status.HeatingCoolingMode != esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP && 
+              status.HeatingCoolingMode != esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP) {
+            ESP_LOGD("auto_adaptive", "Zone 1 is not in a fixed flow mode. Exiting.");
+            return;
+          }
+
+          if (status.has_2zones() && 
+            (status.HeatingCoolingModeZone2 != esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP && 
+              status.HeatingCoolingModeZone2 != esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP)) {
+            ESP_LOGD("auto_adaptive", "Zone 2 is not in a fixed flow mode. Exiting.");
             return;
           }
 
