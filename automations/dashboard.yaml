@@ -187,26 +187,8 @@ views:
         show_name: true
         show_state: true
         show_icon: true
-        entity: sensor.kwh_meter_3_phase_active_power
-        name: Consumption
-      - type: entity
-        show_name: true
-        show_state: true
-        show_icon: true
         entity: sensor.ecodan_heatpump_estimated_output_power
         name: Output
-      - type: entity
-        show_name: true
-        show_state: true
-        show_icon: true
-        entity: sensor.heatpump_usage_day
-        name: Daily
-      - type: entity
-        show_name: true
-        show_state: true
-        show_icon: true
-        entity: sensor.heatpump_cop
-        name: COP
       - type: entity
         show_name: true
         show_state: true
@@ -285,12 +267,6 @@ views:
         show_icon: true
         entity: sensor.ecodan_heatpump_operating_runtime
         name: Runtime
-      - type: entity
-        show_name: true
-        show_state: true
-        show_icon: true
-        entity: sensor.solar_production_day
-        name: Daily Solar
       - type: entity
         show_name: true
         show_state: true
