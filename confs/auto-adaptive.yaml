@@ -222,11 +222,10 @@ script:
           if (!id(auto_adaptive_control_enabled).state) return;
           auto& status = id(ecodan_instance).get_status();
 
-          if (status.Operation == esphome::ecodan::Status::OperationMode::OFF
-            || status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON
+          if (status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON
             || status.Operation == esphome::ecodan::Status::OperationMode::FROST_PROTECT
             || status.Operation == esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION) {
-            ESP_LOGD("auto_adaptive", "No Heating/Cooling demand. Exiting.");
+            ESP_LOGD("auto_adaptive", "No climate task. Exiting.");
             return;
           }
 
