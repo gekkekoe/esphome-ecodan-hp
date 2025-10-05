@@ -328,24 +328,6 @@ sensor:
     flow_rate:
       id: flow_rate 
       name: ${flow_rate}      
-    cool_cop:
-      name: ${cool_cop}
-    cool_consumed:
-      name: ${cool_consumed}
-    cool_delivered:
-      name: ${cool_delivered}
-    heating_cop:
-      name: ${heating_cop}
-    heating_consumed:
-      name: ${heating_consumed}
-    heating_delivered:
-      name: ${heating_delivered}
-    dhw_cop:
-      name: ${dhw_cop}
-    dhw_consumed:
-      name: ${dhw_consumed}
-    dhw_delivered:
-      name: ${dhw_delivered}
     refrigerant_error_code:
       internal: true
       id: refrigerant_error_code

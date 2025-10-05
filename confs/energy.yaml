@@ -1,0 +1,182 @@
+globals:
+  - id: total_heating_consumed
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: total_heating_produced
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: total_cooling_consumed
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: total_cooling_produced
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: total_dhw_consumed
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: total_dhw_produced
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+    
+  - id: last_heating_consumed
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: last_heating_produced
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: last_cooling_consumed
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: last_cooling_produced
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: last_dhw_consumed
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: last_dhw_produced
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+
+sensor:
+  - platform: ecodan
+    cool_cop:
+      name: ${cool_cop}
+    heating_cop:
+      name: ${heating_cop}    
+    dhw_cop:
+      name: ${dhw_cop}
+
+    cool_consumed:
+      name: ${cool_consumed}
+      filters:
+        - filter_out: nan
+      on_value:
+        - lambda: |-
+            if (x != id(last_cooling_consumed)) {
+              id(total_cooling_consumed) += x;
+              id(last_cooling_consumed) = x;
+              id(sensor_cooling_consumed_total).publish_state(id(total_cooling_consumed));
+            }
+    cool_delivered:
+      name: ${cool_delivered}
+      filters:
+        - filter_out: nan
+      on_value:
+        - lambda: |-
+            if (x != id(last_cooling_produced)) {
+              id(total_cooling_produced) += x;
+              id(last_cooling_produced) = x;
+              id(sensor_cooling_produced_total).publish_state(id(total_cooling_produced));
+            }
+
+    heating_consumed:
+      name: ${heating_consumed}
+      filters:
+        - filter_out: nan
+      on_value:
+        - lambda: |-
+            if (x != id(last_heating_consumed)) {
+              id(total_heating_consumed) += x;
+              id(last_heating_consumed) = x;
+              id(sensor_heating_consumed_total).publish_state(id(total_heating_consumed));
+            }
+    heating_delivered:
+      name: ${heating_delivered}
+      filters:
+        - filter_out: nan
+      on_value:
+        - lambda: |-
+            if (x != id(last_heating_produced)) {
+              id(total_heating_produced) += x;
+              id(last_heating_produced) = x;
+              id(sensor_heating_produced_total).publish_state(id(total_heating_produced));
+            }
+
+    dhw_consumed:
+      name: ${dhw_consumed}
+      filters:
+        - filter_out: nan
+      on_value:
+        - lambda: |-
+            if (x != id(last_dhw_consumed)) {
+              id(total_dhw_consumed) += x;
+              id(last_dhw_consumed) = x;
+              id(sensor_dhw_consumed_total).publish_state(id(total_dhw_consumed));
+            }
+    dhw_delivered:
+      name: ${dhw_delivered}
+      filters:
+        - filter_out: nan
+      on_value:
+        - lambda: |-
+            if (x != id(last_dhw_produced)) {
+              id(total_dhw_produced) += x;
+              id(last_dhw_produced) = x;
+              id(sensor_dhw_produced_total).publish_state(id(total_dhw_produced));
+            }
+
+  - platform: template
+    name: ${total_increasing_heating_consumed}
+    id: sensor_heating_consumed_total
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    lambda: return id(total_heating_consumed);
+      
+  - platform: template
+    name: ${total_increasing_heating_delivered}
+    id: sensor_heating_produced_total
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    lambda: return id(total_heating_produced);
+      
+  - platform: template
+    name: ${total_increasing_cool_consumed}
+    id: sensor_cooling_consumed_total
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    lambda: return id(total_cooling_consumed);
+      
+  - platform: template
+    name: ${total_increasing_cool_delivered}
+    id: sensor_cooling_produced_total
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    lambda: return id(total_cooling_produced);
+      
+  - platform: template
+    name: ${total_increasing_dhw_consumed}
+    id: sensor_dhw_consumed_total
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    lambda: return id(total_dhw_consumed);
+      
+  - platform: template
+    name: ${total_increasing_dhw_delivered}
+    id: sensor_dhw_produced_total
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    lambda: return id(total_dhw_produced);
