@@ -44,6 +44,7 @@ api:
 #  substitutions: !include confs/ecodan-labels-en.yaml
 #  dbg: !include confs/debug.yaml
 #  wifi: !include confs/wifi.yaml
+#  energy: !include confs/energy.yaml
 #  #svc: !include confs/server-control-z1.yaml
 
 external_components:
@@ -58,6 +59,7 @@ packages:
     refresh: always
     files: [ 
             confs/base.yaml,            # required
+            confs/energy.yaml,            # required
             confs/short-cycle.yaml,     # recommended
             confs/auto-adaptive.yaml,    # recommended
             confs/request-codes.yaml,   # disable if your unit does not support request codes (service menu)
@@ -86,8 +88,8 @@ packages:
 # enable logger
 logger:
   baud_rate: 115200
-  # logs:
-  #   esp32.preferences: ERROR
+  #logs:
+  #   auto_adaptive: DEBUG
   #   sensor: ERROR
   #   text_sensor: ERROR
   #   binary_sensor: ERROR

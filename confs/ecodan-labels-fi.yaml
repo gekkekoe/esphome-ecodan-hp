@@ -148,3 +148,9 @@ substitutions:
   auto_adaptive_setpoint_bias: 'Automaattisesti mukautuva: Asetusarvon poikkeama'
   dynamic_learning_rate_sensor: 'Automaattisesti mukautuva: Dynaaminen oppimisnopeus'
   temperature_feedback: 'Automaattisesti mukautuva: Nykyisen huonelämpötilan palaute'
+  total_increasing_heating_consumed: Kokonaiskulutus Lämmitys
+  total_increasing_heating_delivered: Kokonaistuotto Lämmitys
+  total_increasing_cool_consumed: Kokonaiskulutus Jäähdytys
+  total_increasing_cool_delivered: Kokonaistuotto Jäähdytys
+  total_increasing_dhw_consumed: Kokonaiskulutus Lämmin Vesi
+  total_increasing_dhw_delivered: Kokonaistuotto Lämmin Vesi
