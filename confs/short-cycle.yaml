@@ -24,8 +24,10 @@ binary_sensor:
       on_state_change:
         then:
           - lambda: |-
-              auto& status = id(ecodan_instance).get_status();
+              if (id(lockout_duration).active_index().value_or(0) == 0)
+                return; // 0 duration == disabled
 
+              auto& status = id(ecodan_instance).get_status();
               if (!status.DefrostActive && x.has_value() && x_previous.has_value()) {
                 // OFF -> ON (ignore UNKNOWN -> ON)
                 if (!*x_previous && *x) {
