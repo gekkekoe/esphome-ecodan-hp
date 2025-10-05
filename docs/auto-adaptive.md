@@ -86,8 +86,8 @@ You can do this in two ways:
 
 Example REST API call to set the feedback temperature to 21.5°C:
 ```bash
-curl -X POST "http://<esp_ip>/number/temperature_feedback_z1/set?value=21.5"
-curl -X POST "http://<esp_ip>/number/temperature_feedback_z2/set?value=21.5" # only for 2 zones
+curl -X POST "http://esp_ip/number/auto-adaptive__current_room_temperature_feedback_z1/set?value=21.5" -d ""
+curl -X POST "http://esp_ip/number/auto-adaptive__current_room_temperature_feedback_z2/set?value=22.0" -d "" # only for 2 zones
 ```
 
 Example Home Assistent automation:
