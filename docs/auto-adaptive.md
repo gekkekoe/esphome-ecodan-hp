@@ -77,7 +77,7 @@ This guide assumes a common scenario where an external room thermostat (like a T
 
 ### Step 2: Set Up the Temperature Feedback Loop
 
-The Auto-Adaptive algorithm needs to know the **current temperature** being measured by your external thermostat. You must send this value back to the ESPHome controller.
+The Auto-Adaptive algorithm needs to know the **current temperature** being measured by your external thermostat. You must send this value back to the ESPHome controller. If you are using a mitsubishi wireless thermostat or [esphome-ecodan-remote-thermostat](https://github.com/gekkekoe/esphome-ecodan-remote-thermostat), you can skip the rest of this section and step 3.
 
 You can do this in two ways:
 
