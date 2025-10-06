@@ -136,6 +136,7 @@ If you are using an external thermostat, you need to adjust the Zone 1 and Zone 
         entity_id: climate.ecodan_heatpump_zone_1_room_temp
       data:
         temperature: "{{ state_attr('climate.kantoor', 'temperature') | float | round(1) }}"
+        #temperature: "{{ (state_attr('climate.kantoor', 'temperature') * 2) | round(0) / 2.0 | float }}" if rounding to nearest half is needed
 ```
 
 ### Step 4: Configure Initial Parameters
