@@ -1,0 +1,102 @@
+- alias: "HEATING: Set Night Heating Mode"
+  id: set_night_heating_mode
+  triggers:
+    - platform: time
+      at: "22:00:00"
+  variables:
+    tomorrow_threshold: 5
+    tomorrow_temp_sensor: sensor.buienradar_temperature_2d
+  actions:
+    - choose:
+        # IF the forecast is available AND tomorrow will be cold (below threshold)
+        - conditions:
+            - condition: template
+              value_template: >
+                {{ states(tomorrow_temp_sensor) not in ['unavailable', 'unknown'] and
+                   states(tomorrow_temp_sensor) | float(99) < tomorrow_threshold }}
+          # THEN, enable/keep the heating for the night.
+          sequence:
+            - if:
+                - condition: state
+                  entity_id: switch.ecodan_heatpump_server_control_enable_disable
+                  state: "off"
+              then:
+                - service: switch.turn_on
+                  target:
+                    entity_id: switch.ecodan_heatpump_server_control_enable_disable
+                - delay: "00:01:00"
+            - service: switch.turn_off
+              target:
+                entity_id: switch.ecodan_heatpump_server_control_zone_1_prohibit_heating
+      # OTHERWISE (if sensor is unavailable OR tomorrow is not a cold enough), disable heating.
+      default:
+        - if:
+            - condition: state
+              entity_id: switch.ecodan_heatpump_server_control_enable_disable
+              state: "off"
+          then:
+            - service: switch.turn_on
+              target:
+                entity_id: switch.ecodan_heatpump_server_control_enable_disable
+            - delay: "00:01:00"
+        - service: switch.turn_on
+          target:
+            entity_id: switch.ecodan_heatpump_server_control_zone_1_prohibit_heating
+  mode: single
+
+- alias: "HEATING: Set Day Heating Mode and Bias"
+  id: set_day_heating_mode_and_bias
+  triggers:
+    - platform: time
+      at: "07:00:00"
+  variables:
+    warm_day_threshold: 17
+    sunny_day_threshold: 14
+    bias_sensor: sensor.adaptive_setpoint_bias_today
+    max_temp_sensor: sensor.buienradar_temperature_1d
+    condition_sensor: sensor.buienradar_condition_1d
+  actions:
+    - choose:
+        # IF the forecast is available AND it will be a warm/sunny day...
+        - conditions:
+            - condition: template
+              value_template: >
+                {% set max_temp = states(max_temp_sensor) | float(0) %}
+                {% set condition = states(condition_sensor) %}
+                {{ states(max_temp_sensor) not in ['unavailable', 'unknown'] and
+                   states(condition_sensor) not in ['unavailable', 'unknown'] and
+                   (max_temp > warm_day_threshold or (max_temp > sunny_day_threshold and condition == 'sunny')) }}
+          # THEN, disable the heating for the day.
+          sequence:
+            - if:
+                - condition: state
+                  entity_id: switch.ecodan_heatpump_server_control_enable_disable
+                  state: "off"
+              then:
+                - service: switch.turn_on
+                  target:
+                    entity_id: switch.ecodan_heatpump_server_control_enable_disable
+                - delay: "00:01:00"
+            - service: switch.turn_on
+              target:
+                entity_id: switch.ecodan_heatpump_server_control_zone_1_prohibit_heating
+      # OTHERWISE (if sensor is unavailable OR it's a normal/cold day), enable heating.
+      default:
+        - if:
+            - condition: state
+              entity_id: switch.ecodan_heatpump_server_control_enable_disable
+              state: "off"
+          then:
+            - service: switch.turn_on
+              target:
+                entity_id: switch.ecodan_heatpump_server_control_enable_disable
+            - delay: "00:01:00"
+        - service: switch.turn_off
+          target:
+            entity_id: switch.ecodan_heatpump_server_control_zone_1_prohibit_heating
+        - service: number.set_value
+          target:
+            entity_id: number.ecodan_heatpump_auto_adaptive_setpoint_bias
+          data:
+            value: "{{ states(bias_sensor) | float(0) }}"
+  mode: single

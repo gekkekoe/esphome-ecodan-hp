@@ -78,3 +78,26 @@ sensor:
       {% set produced = states('sensor.monthly_dhw_produced') | default(0) | float %}
       {{ 0 if (consumed == 0 or produced == 0) else (produced / consumed) | float | round(2) }}
 
+  - name: "Adaptive Setpoint Bias Today"
+    unique_id: adaptive_setpoint_bias_today
+    device_class: temperature
+    unit_of_measurement: "°C"
+    state: >
+      {% set extreme_cold_temp = 7 %}
+      {% set extreme_sun_chance = 80 %}
+      {% set max_temp_sensor = 'sensor.buienradar_temperature_1d' %}
+      {% set sun_chance_sensor = 'sensor.buienradar_sunchance_1d' %}
+      {% if states(max_temp_sensor) not in ['unavailable', 'unknown'] and states(sun_chance_sensor) not in ['unavailable', 'unknown'] %}
+        {% set max_temp = states(max_temp_sensor) | float(15) %}
+        {% set sun_chance = states(sun_chance_sensor) | float(0) %}
+        {% if max_temp < extreme_cold_temp or sun_chance > extreme_sun_chance %}
+          {% set temp_factor = (15 - max_temp) * 0.1 %}
+          {% set sun_factor = (sun_chance / 100) * -1.5 %}
+          {% set result = temp_factor + sun_factor %}
+          {{ min(max(result, -2.5), 2.5) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
+      {% else %}
+        0
+      {% endif %}
