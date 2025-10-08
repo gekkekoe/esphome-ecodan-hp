@@ -148,6 +148,7 @@ substitutions:
   auto_adaptive_setpoint_bias: 'Autoadattivo: Bias del Setpoint'
   dynamic_learning_rate_sensor: 'Autoadattivo: Tasso di Apprendimento Dinamico'
   temperature_feedback: 'Autoadattivo: Feedback Temperatura Ambiente Attuale'
+  thermostat_overshoot_compensation: 'Autoadattivo: Compensazione Superamento Termostato'
   total_increasing_heating_consumed: Consumo Totale Riscaldamento
   total_increasing_heating_delivered: Energia Totale Prodotta Riscaldamento
   total_increasing_cool_consumed: Consumo Totale Raffrescamento

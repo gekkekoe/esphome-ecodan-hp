@@ -148,6 +148,7 @@ substitutions:
   auto_adaptive_setpoint_bias: 'Autoadaptiv: Börvärdes-bias'
   dynamic_learning_rate_sensor: 'Autoadaptiv: Dynamisk Inlärningshastighet'
   temperature_feedback: 'Autoadaptiv: Återkoppling Aktuell Rumstemperatur'
+  thermostat_overshoot_compensation: 'Autoadaptiv: Kompensation för Termostatöverskridande'
   total_increasing_heating_consumed: Totalförbrukning Värme
   total_increasing_heating_delivered: Total Levererad Värme
   total_increasing_cool_consumed: Totalförbrukning Kyla

@@ -121,6 +121,17 @@ number:
     min_value: -50
     max_value: 100
     step: 0.1
+  # compensate for thermostat overshoot
+  - platform: template
+    id: thermostat_overshoot_compensation
+    name: ${thermostat_overshoot_compensation}
+    unit_of_measurement: "°C"
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: 0.0
+    max_value: 2.0
+    step: 0.1
 
 # expose learned curve values
 sensor:
@@ -260,6 +271,8 @@ script:
           float* cooling_prev_errors[] = {&id(cooling_previous_temp_error_z1), &id(cooling_previous_temp_error_z2)};
 
           const float SATURATION_MARGIN = 2.0f;
+          const float MIN_HEAT_FLOW = 24.0f;
+          
           float actual_outside_temp = id(outside_temp).state;
 
           float calculated_flows_heat[2] = {0.0f, 0.0f};
@@ -297,6 +310,12 @@ script:
               float error = is_heating_active ? (room_target_temp - room_temp)
                 : (room_temp - room_target_temp); // Reversed for cooling
 
+              // Only apply for heating overshoots (when error is negative)
+              if (is_heating_active && error < 0) {
+                  error += id(thermostat_overshoot_compensation).state;
+                  if (error > 0) error = 0.0;
+              }
+
               float base_learning_rate;
               auto heating_type_index = id(heating_system_type).active_index().value_or(0);
               if (heating_type_index == 0) { // UFH
@@ -333,9 +352,9 @@ script:
                     calculated_flow = id(maximum_heating_flow_temp).state;
                   }
 
-                  if (calculated_flow < 25.0f) {
+                  if (calculated_flow < MIN_HEAT_FLOW) {
                     ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Min Limit), calculated_flow: %.1f", (i + 1), 25.0f, calculated_flow);
-                    calculated_flow = 25.0f;
+                    calculated_flow = MIN_HEAT_FLOW;
                   }
 
                   bool is_saturated = (requested_flow_temp - actual_flow_temp) > SATURATION_MARGIN;

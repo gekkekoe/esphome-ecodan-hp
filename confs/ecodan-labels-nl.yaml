@@ -148,6 +148,7 @@ substitutions:
   auto_adaptive_setpoint_bias: 'Auto-Adaptief: Setpoint Bias'
   dynamic_learning_rate_sensor: 'Auto-Adaptief: Dynamische Leersnelheid'
   temperature_feedback: 'Auto-Adaptief: Terugkoppeling Huidige Kamertemperatuur'
+  thermostat_overshoot_compensation: 'Auto-Adaptief: Thermostaat Overshoot Compensatie'
   total_increasing_heating_consumed: Totaal Verbruik Verwarming
   total_increasing_heating_delivered: Totaal Geleverd Verwarming
   total_increasing_cool_consumed: Totaal Verbruik Koeling
