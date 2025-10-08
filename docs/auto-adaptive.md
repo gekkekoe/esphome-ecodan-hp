@@ -38,6 +38,13 @@ This transforms your controller from a reactive system into a predictive one, en
 * **Solar Gain Compensation**: Applying a negative bias (e.g., `-0.7°C`) on a cold but sunny morning to prevent the system from overheating the house, letting the "free" energy from the sun do the work instead.
 
 ---
+## Predictive Short-Cycle Prevention
+
+This feature predicts imminent short cycles that can occur when the home's heat demand is lower than the heat pump's minimum power output.
+
+To mitigate this, the algorithm proactively adds a `+0.5°C` boost to the learned curve offset, forcing a higher feed temp. This action may cause a minor room temperature overshoot, which is then automatically corrected by the main auto-adaptive algorithm in subsequent learning cycles.
+
+---
 
 ## Configuration Parameters
 
