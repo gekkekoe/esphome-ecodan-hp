@@ -60,19 +60,16 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Setup esphome build env
+      - name: Install and Pin Dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
+          pip install "pydantic<2.12.0"
           pip install wheel
           pip install esphome==2025.7.5
 
-      - name: Build firmware
+      - name: Build Firmware and Upload Assets
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        shell: bash
         run: |
-          source venv/bin/activate
           esphome compile build.yaml
           cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.ota.bin $PREFIX.ota.bin
           cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.factory.bin $PREFIX.factory.bin
@@ -95,3 +92,4 @@ jobs:
               s/FILEFACTORY/$PREFIX.factory.bin/g" json/manifest.json > $MANIFEST.json
           cat $MANIFEST.json
           gh release upload ${{github.event.release.tag_name}} $MANIFEST.json
+
