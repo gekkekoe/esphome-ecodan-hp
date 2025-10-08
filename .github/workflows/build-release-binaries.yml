@@ -65,6 +65,11 @@ jobs:
           pip install wheel
           pip install esphome==2025.7.5
 
+      - name: Pin working Pydantic versions
+        run: |
+          source venv/bin/activate
+          pip install "pydantic==2.11.10" "pydantic-core==2.33.2"
+
       - name: Build firmware
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
