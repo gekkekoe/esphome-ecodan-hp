@@ -3,12 +3,17 @@ sensor:
   - name: "realtime_heatpump_cop"
     unique_id: "realtime_heatpump_cop"
     unit_of_measurement: ""
-    state: >-
-      {% set pout = states('sensor.heatpump_computed_power_output') | default(0) | float %}
-      {% set pin = states('sensor.kwh_meter_3_phase_active_power') | default(0) | float %}
-      {% set freq = states('sensor.ecodan_heatpump_compressor_frequency') | default(0) | float %}
-      {{ 0 if (pin == 0 or freq == 0) else ((1000*pout) / pin) | float | round(2) }}
-
+    state: >
+      {% set pout = states('sensor.ecodan_heatpump_estimated_output_power') | float(0) %}
+      {% set pin = states('sensor.kwh_meter_3_phase_active_power') | float(0) %}
+      {% set freq = states('sensor.ecodan_heatpump_compressor_frequency') | float(0) %}
+      {% set prev_cop = states('sensor.heatpump_cop') | float(0) %}
+      {% if freq == 0 or pin < 100 or pout == 0 %}
+        0
+      {% else %}
+        {% set cop = (1000 * pout) / pin %}
+        {{ prev_cop if (cop > 10 or cop < 0) else cop | round(2) }}
+      {% endif %}
 # compute condensation temp  example
   - name: "thermostat_condensation_room"
     unique_id: "thermostat_condensation_room"
