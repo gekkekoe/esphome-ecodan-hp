@@ -63,6 +63,7 @@ jobs:
           python -m venv venv
           source venv/bin/activate
           pip install wheel
+          pip install "pydantic<2.0" "pydantic-settings<2.0"
           pip install esphome==2025.7.5
 
       - name: Build firmware
