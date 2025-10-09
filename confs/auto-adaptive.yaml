@@ -344,7 +344,8 @@ script:
 
           const float SATURATION_MARGIN = 2.0f;
           const float MIN_HEAT_FLOW = 24.0f;
-          
+          const float KINK_POINT_TEMP = 5.0f; 
+
           float actual_outside_temp = id(outside_temp).state;
 
           float calculated_flows_heat[2] = {0.0f, 0.0f};
@@ -389,13 +390,26 @@ script:
               }
 
               float base_learning_rate;
+              float aggressiveness_factor;
               auto heating_type_index = id(heating_system_type).active_index().value_or(0);
               if (heating_type_index == 0) { // UFH
                   base_learning_rate = 0.03f;
+                  aggressiveness_factor = 1.8f;
               } else if (heating_type_index == 1) { // UFH + Radiators
                   base_learning_rate = 0.04f;
+                  aggressiveness_factor = 2.2f;
               } else { // Radiators
                   base_learning_rate = 0.05f;
+                  aggressiveness_factor = 2.5f;
+              }
+
+              float mild_weather_slope = id(heating_slope).state;
+              float current_slope = mild_weather_slope; // Start with the base slope
+
+              if (actual_outside_temp < KINK_POINT_TEMP) {
+                  // It's cold, apply an aggressiveness factor based on the system profile
+                  current_slope = mild_weather_slope * aggressiveness_factor;
+                  ESP_LOGD("auto_adaptive", "Z%d HEATING: Cold weather detected. Applying %.1fx factor to slope. New slope: %.2f", (i + 1), aggressiveness_factor, current_slope);
               }
 
               float learning_rate = base_learning_rate + (fabs(error) * 0.02f);
@@ -418,7 +432,7 @@ script:
                   float& offset = *heating_offsets[i];
                   float& prev_error = *heating_prev_errors[i];
                   
-                  float calculated_flow = (20.0f - actual_outside_temp) * id(heating_slope).state + offset;
+                  float calculated_flow = (20.0f - actual_outside_temp) * current_slope + offset;
                   if (calculated_flow > id(maximum_heating_flow_temp).state) {
                     ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit), calculated_flow: %.1f", (i + 1), id(maximum_heating_flow_temp).state, calculated_flow);
                     calculated_flow = id(maximum_heating_flow_temp).state;

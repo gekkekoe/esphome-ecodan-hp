@@ -54,7 +54,7 @@ All parameters are adjustable in real-time from the Home Assistant interface.
 | --------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`Auto-Adaptive: Control`** | **Enables or disables the entire Auto-Adaptive feature.** When disabled, the system will revert to using the standard fixed flow temperature setpoints. | **Default**: `On`                                                                                                                               |
 | **`Auto-Adaptive: Heating System Type`** | Tunes the algorithm's behavior to match your system's thermal inertia (response time). | **Default**: `Underfloor Heating`<br>• **UFH**: For slow, high-inertia systems.<br>• **UFH + Radiators**: For hybrid systems.<br>• **Radiators**: For fast, low-inertia systems. |
-| **`Auto-Adaptive: Heating Curve Slope`** | Determines how aggressively the flow temp rises as the outside temp drops.             | **Default**: `0.8`<br>• **Low (0.6-0.8)** for well-insulated homes with UFH.<br>• **High (1.2-1.6)** for older homes with radiators.          |
+| **`Auto-Adaptive: Heating Curve Slope`** | Determines how aggressively the flow temp rises as the outside temp drops.             | **Default**: `0.7`<br>• **Low (0.4-0.7)** for well-insulated homes with UFH.<br>• **High (0.8-1.2)** for older homes with radiators.          |
 | **`Auto-Adaptive: Cooling Curve Slope`** | Determines how aggressively the flow temp drops as the outside temp rises.             | **Default**: `1.2`<br>• **Low (0.8-1.2)** for homes with good sun protection.<br>• **High (1.8-2.5)** for homes with high solar gain.          |
 | **`Auto-Adaptive: Max. Heating Flow Temperature`**| Sets a hard safety limit for the flow temperature during heating to protect floors.      | **Default**: `38.0°C`                                                                                                                           |
 | **`Auto-Adaptive: Min. Cooling Flow Temperature`**| Sets a hard safety limit for the flow temperature during cooling to prevent condensation. | **Default**: `18.0°C`                                                                                                                           |
@@ -64,16 +64,6 @@ All parameters are adjustable in real-time from the Home Assistant interface.
 | **`Auto-Adaptive: Room Temperature source`** | Selects the source for the **current** room temperature. The **target** temperature is always read from the active Ecodan thermostat. | **Default**: `Room Thermostat`<br>• **Room Thermostat**: Uses the current temperature from the Ecodan thermostat.<br>• **Rest API**: Overrides the current temperature with an external sensor. E.g.:<br>`curl -X POST "http://<esp_ip>/number/temperature_feedback/set?value=21.5"`|
 
 ---
-
-## Fine-Tuning Initial Values in YAML
-
-While the system learns automatically, providing a good starting point in your YAML configuration is crucial for immediate efficiency. This is especially true for the **`heating_curve_offset`**, which is the baseline for the heating curve.
-
-| System Type                      | Recommended `initial_value` for `heating_curve_offset` |
-| -------------------------------- | -------------------------------------------------------- |
-| **Underfloor Heating** | `23.0` (More efficient for well-insulated homes)       |
-| **Underfloor Heating + Radiators** | `26.0` (A good intermediate value)                       |
-| **Radiators** | `30.0` (A common baseline for radiator systems)          |
 
 # Getting Started with Auto-Adaptive Control
 
