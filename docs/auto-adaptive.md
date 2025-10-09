@@ -143,7 +143,7 @@ In Home Assistant, navigate to your dashboard and set the initial parameters for
 
 
 1.  **Set the Heating System Profile**: Choose the option from the `Auto-Adaptive: Heating System Type` dropdown that best matches your home (`Underfloor Heating`, `Underfloor Heating + Radiators`, or `Radiators`).
-2.  **Set the Heating Curve Slope**: Adjust the `Auto-Adaptive: Heating Curve Slope` slider. A good starting point for underfloor heating is `0.7`-`0.8`, while radiators often need a steeper slope like `1.4`-`1.6`.
+2.  **Set the Heating Curve Slope**: Adjust the `Auto-Adaptive: Heating Curve Slope` slider. A good starting point for underfloor heating is `0.4`-`0.7`, while radiators often need a steeper slope like `0.8`-`1.2`.
 3.  **Set Safety Limits**: Adjust the `Auto-Adaptive: Max. Heating Flow Temperature` slider to a value that is safe for your floors (e.g., `38.0°C` for UFH). Do the same for the cooling limits.
 4.  **Set Thermostat Overshoot Compensation (optional)**: Adjust the `Auto-Adaptive: Thermostat Overshoot Compensation` slider to match the known behavior of your thermostat. For example, the official Mitsubishi wireless thermostat has an  overshoot of 1.0°C, so you would set this slider to 1.0.
 
