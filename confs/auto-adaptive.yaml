@@ -430,7 +430,7 @@ script:
                   }
 
                   bool is_saturated = (requested_flow_temp - actual_flow_temp) > SATURATION_MARGIN;
-                  if (is_saturated) {
+                  if (is_saturated && status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON) {
                       ESP_LOGW("auto_adaptive", "Z%d HEATING: HP Saturated (Req: %.1f, Act: %.1f). Learning paused.", (i + 1), requested_flow_temp, actual_flow_temp);
                   } else {
 
@@ -461,7 +461,7 @@ script:
                   }
                     
                   bool is_saturated = (actual_flow_temp - requested_flow_temp) > SATURATION_MARGIN;
-                  if (is_saturated) {
+                  if (is_saturated && status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON) {
                       ESP_LOGW("auto_adaptive", "Z%d COOLING: HP Saturated (Req: %.1f, Act: %.1f). Learning paused.", (i + 1), requested_flow_temp, actual_flow_temp);
                   } else {
                     float old_offset = offset;
