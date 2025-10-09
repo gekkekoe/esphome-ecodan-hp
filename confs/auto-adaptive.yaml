@@ -241,7 +241,8 @@ script:
           auto& status = id(ecodan_instance).get_status();
 
           if (status.DefrostActive || id(status_short_cycle_lockout).state || !id(status_compressor).state) {
-            ESP_LOGI("predictive_short_cycle", "No Compressor activity or Lockout/Defrost active. Exiting.");
+            //ESP_LOGI("predictive_short_cycle", "No Compressor activity or Lockout/Defrost active. Exiting.");
+            id(predictive_delta_start_time) = 0; // Reset the timer
             return;
           }
           
@@ -261,6 +262,7 @@ script:
 
           if (isnan(requested_flow) || isnan(actual_flow)) {
             ESP_LOGW("predictive_short_cycle", "Requested or Actual feed temperature unavailable. Exiting.");
+            id(predictive_delta_start_time) = 0; // Reset the timer
             return;
           }
 
