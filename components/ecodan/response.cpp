@@ -45,7 +45,7 @@ namespace ecodan
                     activeRequestCode = Status::REQUEST_CODE::NONE;
                 }
 
-                if (res[3] == 2) {
+                if (res[3] == 2 || res[3] == 1) {
                     switch(res_request_code) {
                         case Status::REQUEST_CODE::COMPRESSOR_STARTS:
                             status.RcCompressorStarts = res.get_uint16_v2(4) * 100;
