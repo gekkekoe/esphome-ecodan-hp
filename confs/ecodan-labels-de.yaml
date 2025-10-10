@@ -16,6 +16,8 @@ substitutions:
   cool_delivered: Kühlung Geliefert
   cool_flow_temperature: Kühl-Vorlauftemperatur
   cool_target_temperature: Kühl-Solltemperatur
+  floor_dry_up: Estrichaufheizung
+  cool_compensation_curve: Kühl-Kompensationskurve
   cooling: Raumkühlung
   daily_computed_output_power: Geschätzte tägliche Energieproduktion
   daily_repported_input_power: Gemeldeter täglicher Energieverbrauch

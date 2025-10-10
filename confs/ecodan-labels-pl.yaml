@@ -84,6 +84,8 @@ substitutions:
   heat_compensation_curve: Krzywa kompensacji grzania
   cool_target_temperature: Ustawiona temperatura chłodzenia
   cool_flow_temperature: Temperatura zasilania chłodzenia
+  floor_dry_up: Wygrzewanie Posadzki
+  cool_compensation_curve: Krzywa Kompensacji Chłodzenia
   operation_off: "Wyłączony"
   hotwater: Woda grzewcza
   heating: Ogrzewanie pomieszczeń

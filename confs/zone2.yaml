@@ -100,6 +100,8 @@ select:
       - ${heat_compensation_curve}
       - ${cool_target_temperature}
       - ${cool_flow_temperature}
+      - ${floor_dry_up}
+      - ${cool_compensation_curve}
     set_action:
       - lambda: |-
           auto index = id(heatpump_select_operating_mode_z2).index_of(x);

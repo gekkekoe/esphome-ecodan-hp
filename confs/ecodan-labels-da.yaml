@@ -84,6 +84,8 @@ substitutions:
   heat_compensation_curve: Varme kompensationskurve
   cool_target_temperature: Køle måltemperatur
   cool_flow_temperature: Køle fremledning temperatur
+  floor_dry_up: Gulvoptørring
+  cool_compensation_curve: Kølekompensationskurve
   operation_off: Fra
   hotwater: Brugsvand
   heating: Opvarmning

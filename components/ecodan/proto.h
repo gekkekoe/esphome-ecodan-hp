@@ -61,13 +61,6 @@ namespace ecodan
         BOTH
     };
 
-    enum class SetHpMode
-    {
-        TEMPERATURE_MODE,
-        FLOW_CONTROL_MODE,
-        COMPENSATION_CURVE_MODE
-    };
-
     enum class GetType : uint8_t
     {
         DATETIME_FIRMWARE = 0x01,

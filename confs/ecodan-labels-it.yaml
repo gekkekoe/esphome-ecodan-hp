@@ -84,6 +84,8 @@ substitutions:
   heat_compensation_curve: Risc. Curva Compensazione
   cool_target_temperature: Raff. T. Termost.
   cool_flow_temperature: Raff. T. Mandata Fissa
+  floor_dry_up: Asciugatura Massetto
+  cool_compensation_curve: Curva di Compensazione Raffrescamento
   operation_off: "Spento"
   hotwater: Acqua Calda
   heating: Riscaldamento

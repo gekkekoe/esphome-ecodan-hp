@@ -84,6 +84,8 @@ substitutions:
   heat_compensation_curve: Verwarmen Curve
   cool_target_temperature: Koelen Ruimte
   cool_flow_temperature: Koelen Flow
+  floor_dry_up: Opstookprotocol
+  cool_compensation_curve: Koelen Curve
   operation_off: "Uit"
   hotwater: SWW
   heating: Verwarmen

@@ -84,6 +84,8 @@ substitutions:
   heat_compensation_curve: Heat Compensation Curve
   cool_target_temperature: Cool Target Temperature
   cool_flow_temperature: Cool Flow Temperature
+  floor_dry_up: Floor Dry Up
+  cool_compensation_curve: Cool Compensation Curve
   operation_off: "Off"
   hotwater: Heating Water
   heating: Space Heating

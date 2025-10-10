@@ -84,6 +84,8 @@ substitutions:
   heat_compensation_curve: Courbe de compensation
   cool_target_temperature: Temp cible Clim
   cool_flow_temperature: Temp eau départ clim
+  floor_dry_up: Séchage de la Chape
+  cool_compensation_curve: Courbe de Compensation de Refroidissement
   operation_off: "Off"
   hotwater: Eau chaude
   heating: Chauffage

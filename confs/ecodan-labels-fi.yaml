@@ -84,6 +84,8 @@ substitutions:
   heat_compensation_curve: Lämmityksen kompensaatiokäyrä
   cool_target_temperature: Jäähdytyksen tavoitelämpötila
   cool_flow_temperature: Jäähdytyksen menolämpötila
+  floor_dry_up: Lattian kuivaus
+  cool_compensation_curve: Jäähdytyksen kompensointikäyrä
   operation_off: "Pois"
   hotwater: Käyttöveden lämmitys
   heating: Tilojen lämmitys

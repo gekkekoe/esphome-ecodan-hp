@@ -84,6 +84,8 @@ substitutions:
   heat_compensation_curve: Curva de Compensación de Calefacción
   cool_target_temperature: Temperatura Objetivo Refrigeración
   cool_flow_temperature: Temperatura de Flujo de Refrigeración
+  floor_dry_up: Secado de Suelo
+  cool_compensation_curve: Curva de Compensación de Refrigeración
   operation_off: Apagado
   hotwater: Agua Caliente
   heating: Calefacción
