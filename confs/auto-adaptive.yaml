@@ -281,7 +281,7 @@ script:
             return;
           }
 
-          const float PREDICTIVE_DELTA_THRESHOLD = 1.5f;
+          const float PREDICTIVE_DELTA_THRESHOLD = 1.0f;
           const uint32_t TRIGGER_DURATION_MS = 4 * 60000; // 4 minutes
           float delta = actual_flow - requested_flow;
 
