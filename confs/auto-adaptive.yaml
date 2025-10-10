@@ -85,6 +85,16 @@ number:
     max_value: 25.0
     step: 0.5
   - platform: template
+    id: minimum_heating_flow_temp
+    name: ${minimum_heating_flow_temp}
+    unit_of_measurement: "°C"
+    optimistic: true
+    restore_value: true
+    initial_value: 25.0
+    min_value: 24.0
+    max_value: 40.0
+    step: 0.5
+  - platform: template
     id: cooling_smart_start_temp
     unit_of_measurement: "°C"
     name: ${cooling_smart_start_temp}
@@ -251,6 +261,11 @@ script:
             return;
           }
 
+          if (status.Operation != esphome::ecodan::Status::OperationMode::HEAT_ON && status.Operation != esphome::ecodan::Status::OperationMode::COOL_ON) {
+            id(predictive_delta_start_time) = 0; // Reset the timer
+            return;  
+          }
+
           float requested_flow = status.Zone1FlowTemperatureSetPoint;
           if (status.has_2zones()) {
             requested_flow = fmax(status.Zone1FlowTemperatureSetPoint, status.Zone2FlowTemperatureSetPoint);
@@ -343,7 +358,8 @@ script:
           float* cooling_prev_errors[] = {&id(cooling_previous_temp_error_z1), &id(cooling_previous_temp_error_z2)};
 
           const float SATURATION_MARGIN = 2.0f;
-          const float MIN_HEAT_FLOW = 24.0f;
+          float user_defined_minimum_heating_flow_temp = id(minimum_heating_flow_temp).state;
+          const float MIN_HEAT_FLOW = !isnan(user_defined_minimum_heating_flow_temp) && user_defined_minimum_heating_flow_temp >= 24.0f ? user_defined_minimum_heating_flow_temp : 24.0f;
           const float KINK_POINT_TEMP = 5.0f; 
 
           float actual_outside_temp = id(outside_temp).state;

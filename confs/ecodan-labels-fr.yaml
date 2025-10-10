@@ -135,6 +135,7 @@ substitutions:
   heating_slope: 'Auto-Adaptatif: Pente de la Courbe de Chauffe'
   cooling_slope: 'Auto-Adaptatif: Pente de la Courbe de Refroidissement'
   maximum_heating_flow_temp: 'Auto-Adaptatif: Temp. Max. de Départ Chauffage'
+  minimum_heating_flow_temp: 'Auto-Adaptatif: Temp. Min. de Départ Chauffage'
   minimum_cooling_flow_temp: 'Auto-Adaptatif: Temp. Min. de Départ Refroidissement'
   temperature_feedback_source: 'Auto-Adaptatif: Source de Température Ambiante'
   temperature_feedback_option_room: "Thermostat d'Ambiance"

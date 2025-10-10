@@ -133,6 +133,7 @@ substitutions:
   heating_slope: 'Autoadaptiv: Helning Varmekurve'
   cooling_slope: 'Autoadaptiv: Helning Kjølekurve'
   maximum_heating_flow_temp: 'Autoadaptiv: Maks. Turtemperatur Varme'
+  minimum_heating_flow_temp: 'Autoadaptiv: Min. Turtemperatur Varme'
   minimum_cooling_flow_temp: 'Autoadaptiv: Min. Turtemperatur Kjøling'
   cooling_smart_start_temp: 'Autoadaptiv: Smart Start Temp Kjøling'
   temperature_feedback_source: 'Autoadaptiv: Kilde for Romtemperatur'

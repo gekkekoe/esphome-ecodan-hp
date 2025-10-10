@@ -134,6 +134,7 @@ substitutions:
   heating_slope: 'Autoadaptativo: Pendiente Curva de Calefacción'
   cooling_slope: 'Autoadaptativo: Pendiente Curva de Refrigeración'
   maximum_heating_flow_temp: 'Autoadaptativo: Temp. Máx. de Flujo Calefacción'
+  minimum_heating_flow_temp: 'Autoadaptativo: Temp. Mín. de Flujo Calefacción'
   minimum_cooling_flow_temp: 'Autoadaptativo: Temp. Mín. de Flujo Refrigeración'
   cooling_smart_start_temp: 'Autoadaptativo: Temp. de Inicio Inteligente Refrigeración'
   temperature_feedback_source: 'Autoadaptativo: Fuente de Temperatura Ambiente'

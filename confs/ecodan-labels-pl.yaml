@@ -133,6 +133,7 @@ substitutions:
   heating_slope: 'Autoadaptacja: Nachylenie Krzywej Grzewczej'
   cooling_slope: 'Autoadaptacja: Nachylenie Krzywej Chłodzenia'
   maximum_heating_flow_temp: 'Autoadaptacja: Maks. Temp. Zasilania Ogrzewanie'
+  minimum_heating_flow_temp: 'Autoadaptacja: Min. Temp. Zasilania Ogrzewanie'
   minimum_cooling_flow_temp: 'Autoadaptacja: Min. Temp. Zasilania Chłodzenie'
   cooling_smart_start_temp: 'Autoadaptacja: Inteligentna Temp. Startu Chłodzenia'
   temperature_feedback_source: 'Autoadaptacja: Źródło Temperatury w Pomieszczeniu'
