@@ -455,7 +455,7 @@ script:
                   }
 
                   if (calculated_flow < MIN_HEAT_FLOW) {
-                    ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Min Limit), calculated_flow: %.1f", (i + 1), 25.0f, calculated_flow);
+                    ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Min Limit), calculated_flow: %.1f", (i + 1), MIN_HEAT_FLOW, calculated_flow);
                     calculated_flow = MIN_HEAT_FLOW;
                   }
 
