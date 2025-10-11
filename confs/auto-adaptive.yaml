@@ -251,19 +251,19 @@ script:
           auto& status = id(ecodan_instance).get_status();
 
           if (status.DefrostActive || id(status_short_cycle_lockout).state || !id(status_compressor).state) {
-            ESP_LOGD("predictive_short_cycle", "No Compressor activity or Lockout/Defrost active. Exiting.");
+            //ESP_LOGD("predictive_short_cycle", "No Compressor activity or Lockout/Defrost active. Exiting.");
             id(predictive_delta_start_time) = 0; // Reset the timer
             return;
           }
           
           if (!status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && !status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2)) {
+            //ESP_LOGD("predictive_short_cycle", "Not in heating mode. Exiting.");
             id(predictive_delta_start_time) = 0; // Reset the timer
-            ESP_LOGD("predictive_short_cycle", "Not in heating mode. Exiting.");
             return;
           }
 
           if (status.Operation != esphome::ecodan::Status::OperationMode::HEAT_ON && status.Operation != esphome::ecodan::Status::OperationMode::COOL_ON) {
-            ESP_LOGD("predictive_short_cycle", "Not active heating. Exiting.");
+            //ESP_LOGD("predictive_short_cycle", "No active heating. Exiting.");
             (predictive_delta_start_time) = 0; // Reset the timer
             return;  
           }
