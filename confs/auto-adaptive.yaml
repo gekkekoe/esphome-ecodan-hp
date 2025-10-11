@@ -364,6 +364,16 @@ script:
               if (dynamic_error_margin_negative < -0.8f)
                 dynamic_error_margin_negative = -0.8f;
 
+              auto time = id(sntp_time).now();
+              if (time.is_valid()) {
+                  int current_hour = time.hour;
+                  // Widen dead zone for UFH profile during the night
+                  if (heating_type_index == 0 && (current_hour >= 22 || current_hour <= 6)) {
+                    dynamic_error_margin_positive += 0.4f;
+                    dynamic_error_margin_negative -= 0.4f;
+                  }
+              }
+
               ESP_LOGD("auto_adaptive", "Error: Current=%.1f, Dynamic+=%.1f, Dynamic-=%.1f, LR=%.3f", 
                 error, dynamic_error_margin_positive, dynamic_error_margin_negative, learning_rate);
 
