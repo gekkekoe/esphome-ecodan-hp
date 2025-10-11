@@ -31,6 +31,7 @@
                 title: Ecodan heatpump ceb1f0
               - type: thermostat
                 entity: climate.ecodan_heatpump_dhw_climate
+                name: DHW
                 features:
                   - type: climate-hvac-modes
                     hvac_modes:
@@ -38,6 +39,7 @@
                       - heat
               - type: thermostat
                 entity: climate.ecodan_heatpump_zone_1_flow_temp
+                name: Flow temperature
                 features:
                   - type: climate-hvac-modes
                     hvac_modes:
@@ -46,6 +48,7 @@
                       - heat
               - type: thermostat
                 entity: climate.ecodan_heatpump_zone_1_room_temp
+                name: Room temperature
                 features:
                   - type: climate-hvac-modes
                     hvac_modes:
@@ -133,16 +136,23 @@
           - type: history-graph
             entities:
               - entity: sensor.ecodan_heatpump_operation_mode
+                name: Operation mode
               - entity: binary_sensor.ecodan_heatpump_booster_heater
+                name: Booster heater
               - entity: binary_sensor.ecodan_heatpump_defrost
+                name: Defrost
               - entity: binary_sensor.ecodan_heatpump_short_cycle_lockout
+                name: Short cycle lockout
             hours_to_show: 6
             logarithmic_scale: false
           - type: history-graph
             entities:
-              - sensor.ecodan_heatpump_feed_temp
-              - sensor.ecodan_heatpump_return_temp
-              - sensor.ecodan_heatpump_outside_temp
+              - entity: sensor.ecodan_heatpump_feed_temp
+                name: Feed temp
+              - entity: sensor.ecodan_heatpump_return_temp
+                name: Return temp
+              - entity: sensor.ecodan_heatpump_outside_temp
+                name: Outside temp
             hours_to_show: 6
           - type: history-graph
             entities:
@@ -155,14 +165,23 @@
             type: glance
             entities:
               - entity: sensor.ecodan_heatpump_heating_consumed
+                name: Heating consumed
               - entity: sensor.ecodan_heatpump_heating_delivered
+                name: Heating delivered
               - entity: sensor.ecodan_heatpump_heating_cop
+                name: Heating COP
               - entity: sensor.ecodan_heatpump_cool_consumed
+                name: Cooling consumed
               - entity: sensor.ecodan_heatpump_cool_delivered
+                name: Cooling delivered
               - entity: sensor.ecodan_heatpump_cool_cop
+                name: Cooling COP
               - entity: sensor.ecodan_heatpump_dhw_consumed
+                name: DHW Consumed
               - entity: sensor.ecodan_heatpump_dhw_delivered
+                name: DHW Delivered
               - entity: sensor.ecodan_heatpump_dhw_cop
+                name: DHW COP
             columns: 3
             state_color: false
     header:
