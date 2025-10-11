@@ -131,6 +131,7 @@ substitutions:
   minimum_compressor_on_time: 'Kurzzyklus: Minimale Laufzeit'
   lockout_duration: 'Kurzzyklus: Sperrdauer (min)'
   short_cycle_mitigation_button: 'Kurzzyklus: Sperre abbrechen'
+  predictive_short_cycle_control_enabled: 'Kurzzyklus: Vorausschauende Verhinderung'
   auto_adaptive_control_enabled: 'Auto-Adaptiv: Steuerung'
   heating_slope: 'Auto-Adaptiv: Neigung Heizkurve'
   cooling_slope: 'Auto-Adaptiv: Neigung Kühlkurve'

@@ -38,10 +38,6 @@ globals:
     type: float
     restore_value: no
     initial_value: '0.0'
-  - id: predictive_delta_start_time
-    type: uint32_t
-    restore_value: no
-    initial_value: '0'
 
 number:
   # Slope settings
@@ -237,83 +233,8 @@ interval:
   - interval: ${update_interval_minutes}
     then:
       - script.execute: auto_adaptive_loop
-  - interval: 30s
-    then:
-      - script.execute: predictive_short_cycle_check
 
 script:
-  - id: predictive_short_cycle_check
-    mode: single
-    then:
-      - lambda: |-
-          if (!id(auto_adaptive_control_enabled).state) return;
-
-          auto& status = id(ecodan_instance).get_status();
-
-          if (status.DefrostActive || id(status_short_cycle_lockout).state || !id(status_compressor).state) {
-            //ESP_LOGD("predictive_short_cycle", "No Compressor activity or Lockout/Defrost active. Exiting.");
-            id(predictive_delta_start_time) = 0; // Reset the timer
-            return;
-          }
-          
-          if (!status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && !status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2)) {
-            //ESP_LOGD("predictive_short_cycle", "Not in heating mode. Exiting.");
-            id(predictive_delta_start_time) = 0; // Reset the timer
-            return;
-          }
-
-          if (status.Operation != esphome::ecodan::Status::OperationMode::HEAT_ON && status.Operation != esphome::ecodan::Status::OperationMode::COOL_ON) {
-            //ESP_LOGD("predictive_short_cycle", "No active heating. Exiting.");
-            (predictive_delta_start_time) = 0; // Reset the timer
-            return;  
-          }
-
-          float requested_flow = status.Zone1FlowTemperatureSetPoint;
-          if (status.has_2zones()) {
-            requested_flow = fmax(status.Zone1FlowTemperatureSetPoint, status.Zone2FlowTemperatureSetPoint);
-          }
-          
-          float actual_flow = status.has_2zones() 
-            ? fmax(status.Z1FeedTemperature, status.Z2FeedTemperature) 
-            : id(hp_feed_temp).state;
-
-          if (isnan(requested_flow) || isnan(actual_flow)) {
-            ESP_LOGW("predictive_short_cycle", "Requested or Actual feed temperature unavailable. Exiting.");
-            id(predictive_delta_start_time) = 0; // Reset the timer
-            return;
-          }
-
-          const float PREDICTIVE_DELTA_THRESHOLD = 1.0f;
-          const uint32_t TRIGGER_DURATION_MS = 4 * 60000; // 4 minutes
-          float delta = actual_flow - requested_flow;
-
-          if (delta >= PREDICTIVE_DELTA_THRESHOLD) {
-            if (id(predictive_delta_start_time) == 0) {
-              id(predictive_delta_start_time) = millis();
-              ESP_LOGD("predictive_short_cycle", "High Delta T detected (%.1f°C). Starting timer.", delta);
-            } else {
-              if ((millis() - id(predictive_delta_start_time)) >= TRIGGER_DURATION_MS) {
-                ESP_LOGW("predictive_short_cycle", "Short-cycle predicted! Increasing offset to force a longer cycle.");
-                
-                if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1)) {
-                  id(heating_curve_offset_z1) += 0.5f;
-                }
-                if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2)) {
-                  id(heating_curve_offset_z2) += 0.5f;
-                }
-                id(predictive_delta_start_time) = 0;
-
-                // apply new offsets to feed temp
-                id(auto_adaptive_loop).execute();
-              }
-            }
-          } else {
-            if (id(predictive_delta_start_time) != 0) {
-              ESP_LOGD("predictive_short_cycle", "High Delta T has disappeared. Resetting timer.");
-              id(predictive_delta_start_time) = 0;
-            }
-          }
-
   - id: auto_adaptive_loop
     # avoid multiple queues of this script, "restart" if current one needs to be cancelled
     mode: restart

@@ -132,6 +132,7 @@ substitutions:
   minimum_compressor_on_time: 'Lyhyt sykli: Minimi käyntiaika'
   lockout_duration: 'Lyhyt sykli: Lukitusaika (min)'
   short_cycle_mitigation_button: 'Lyhyt sykli: Peruuta lukitus'
+  predictive_short_cycle_control_enabled: 'Lyhyt sykli: Ennakoiva Esto'
   auto_adaptive_control_enabled: 'Automaattisesti mukautuva: Ohjaus'
   heating_slope: 'Automaattisesti mukautuva: Lämmityskäyrän jyrkkyys'
   cooling_slope: 'Automaattisesti mukautuva: Jäähdytyskäyrän jyrkkyys'

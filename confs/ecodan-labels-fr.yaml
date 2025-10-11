@@ -133,6 +133,7 @@ substitutions:
   cooling_smart_start_temp: 'Auto-Adaptatif: Temp. de Démarrage Intelligent Refroidissement'
   lockout_duration: 'Court-circuit: Durée du verrouillage (min)'
   short_cycle_mitigation_button: 'Court-circuit: Annuler le verrouillage'
+  predictive_short_cycle_control_enabled: 'Court-circuit: Prévention Prédictive'
   auto_adaptive_control_enabled: 'Auto-Adaptatif: Commande'
   heating_slope: 'Auto-Adaptatif: Pente de la Courbe de Chauffe'
   cooling_slope: 'Auto-Adaptatif: Pente de la Courbe de Refroidissement'

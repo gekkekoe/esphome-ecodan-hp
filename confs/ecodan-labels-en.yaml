@@ -133,6 +133,7 @@ substitutions:
   minimum_compressor_on_time: 'Short-Cycle: Minimum On-Time'
   lockout_duration: 'Short-Cycle: Lockout Duration (min)'
   short_cycle_mitigation_button: 'Short-Cycle: Cancel Lockout'
+  predictive_short_cycle_control_enabled: 'Short-Cycle: Predictive Prevention'
   # auto adaptive translations
   auto_adaptive_control_enabled: 'Auto-Adaptive: Control'
   heating_slope: 'Auto-Adaptive: Heating Curve Slope'

@@ -132,6 +132,7 @@ substitutions:
   minimum_compressor_on_time: 'Ciclo breve: Tempo minimo compressore'
   lockout_duration: 'Ciclo breve: Durata blocco (min)'
   short_cycle_mitigation_button: 'Ciclo breve: Annulla blocco'
+  predictive_short_cycle_control_enabled: 'Ciclo breve: Prevenzione Predittiva'
   auto_adaptive_control_enabled: 'Autoadattivo: Controllo'
   heating_slope: 'Autoadattivo: Pendenza Curva Climatica'
   cooling_slope: 'Autoadattivo: Pendenza Curva di Raffrescamento'

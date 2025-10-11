@@ -131,6 +131,7 @@ substitutions:
   minimum_compressor_on_time: 'Kort cyklus: Min driftstid'
   lockout_duration: 'Kort cyklus: Låstid (min)'
   short_cycle_mitigation_button: 'Kort cyklus: Ophæv lås'
+  predictive_short_cycle_control_enabled: 'Kort cyklus: Forebyggende Beskyttelse'
   auto_adaptive_control_enabled: 'Auto-Adaptiv: Styring'
   heating_slope: 'Auto-Adaptiv: Hældning Varmekurve'
   cooling_slope: 'Auto-Adaptiv: Hældning Kølekurve'

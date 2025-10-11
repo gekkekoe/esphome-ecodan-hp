@@ -131,6 +131,7 @@ substitutions:
   minimum_compressor_on_time: 'Krótki cykl: Minimalny czas pracy'
   lockout_duration: 'Krótki cykl: Czas blokady (min)'
   short_cycle_mitigation_button: 'Krótki cykl: Anuluj blokadę'
+  predictive_short_cycle_control_enabled: 'Krótki cykl: Prewencja Predykcyjna'
   auto_adaptive_control_enabled: 'Autoadaptacja: Sterowanie'
   heating_slope: 'Autoadaptacja: Nachylenie Krzywej Grzewczej'
   cooling_slope: 'Autoadaptacja: Nachylenie Krzywej Chłodzenia'
