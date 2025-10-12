@@ -29,32 +29,21 @@
                   - entity: switch.ecodan_heatpump_uart_logging
                     name: UART Logging
                 title: Ecodan heatpump ceb1f0
-              - type: thermostat
+              - type: tile
                 entity: climate.ecodan_heatpump_dhw_climate
                 name: DHW
                 features:
-                  - type: climate-hvac-modes
-                    hvac_modes:
-                      - 'off'
-                      - heat
-              - type: thermostat
+                  - type: target-temperature
+              - type: tile
                 entity: climate.ecodan_heatpump_zone_1_flow_temp
-                name: Flow temperature
+                name: Flow Temperature
                 features:
-                  - type: climate-hvac-modes
-                    hvac_modes:
-                      - 'off'
-                      - cool
-                      - heat
-              - type: thermostat
+                  - type: target-temperature
+              - type: tile
                 entity: climate.ecodan_heatpump_zone_1_room_temp
-                name: Room temperature
+                name: Room Temperature
                 features:
-                  - type: climate-hvac-modes
-                    hvac_modes:
-                      - 'off'
-                      - cool
-                      - heat
+                  - type: target-temperature
       - type: grid
         cards:
           - type: heading
@@ -99,6 +88,9 @@
                       number.ecodan_heatpump_auto_adaptive_max_heating_flow_temperature
                     name: Max. Heating Flow Temperature
                   - entity: >-
+                      number.ecodan_heatpump_auto_adaptive_min_heating_flow_temperature
+                    name: Min. Heating Flow Temperature
+                  - entity: >-
                       number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1
                     name: Room Feedback z1
                   - entity: sensor.ecodan_heatpump_auto_adaptive_heating_offset
@@ -125,6 +117,10 @@
                     name: Lockout Duration (min)
                   - entity: number.ecodan_heatpump_short_cycle_minimum_on_time
                     name: Minimum On-Time
+                  - entity: switch.ecodan_heatpump_short_cycle_predictive_prevention
+                    name: Predictive Short Cycle Prevention
+                  - entity: number.ecodan_heatpump_short_cycle_high_delta_duration
+                    name: High Delta T Detection Duration
                 show_header_toggle: false
                 state_color: true
                 title: Short Cycle
@@ -137,6 +133,8 @@
             entities:
               - entity: sensor.ecodan_heatpump_operation_mode
                 name: Operation mode
+              - entity: binary_sensor.ecodan_heatpump_compressor
+                name: Compressor
               - entity: binary_sensor.ecodan_heatpump_booster_heater
                 name: Booster heater
               - entity: binary_sensor.ecodan_heatpump_defrost
@@ -275,6 +273,12 @@
         show_icon: true
         entity: binary_sensor.ecodan_heatpump_short_cycle_lockout
         name: Lockout
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.ecodan_heatpump_dhw_current_temp
+        name: 'DHW '
       - type: entity
         show_name: true
         show_state: true
