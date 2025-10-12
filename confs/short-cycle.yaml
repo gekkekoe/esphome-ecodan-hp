@@ -101,7 +101,7 @@ script:
             return;
           }
 
-          if (status.Operation != esphome::ecodan::Status::OperationMode::HEAT_ON && status.Operation != esphome::ecodan::Status::OperationMode::COOL_ON) {
+          if (status.Operation != esphome::ecodan::Status::OperationMode::HEAT_ON) {
             //ESP_LOGD("predictive_short_cycle", "No active heating. Exiting.");
             (predictive_delta_start_time) = 0; // Reset the timer
             return;  
