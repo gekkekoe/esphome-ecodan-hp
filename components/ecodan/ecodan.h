@@ -93,8 +93,6 @@ namespace ecodan
     private:
         uart::UARTComponent *uart_ = nullptr;
         uart::UARTComponent *proxy_uart_ = nullptr;
-        Message res_buffer_;
-        Message proxy_buffer_;
         int rx_sync_fail_count = 0;
         uint8_t initialCount = 0;
 

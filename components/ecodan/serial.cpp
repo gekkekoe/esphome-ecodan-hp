@@ -22,21 +22,23 @@ namespace ecodan
     bool EcodanHeatpump::serial_rx(uart::UARTComponent *uart, Message& msg, bool count_sync_errors)
     {
         uint8_t data;
-        bool skipping = false;
+        bool unkown_packet = false;
 
         while (uart && uart->available() && uart->read_byte(&data)) {
             // Discard bytes until we see one that might reasonably be
             // the first byte of a packet, complaining only once.
             if (msg.get_write_offset() == 0 && data != HEADER_MAGIC_A1 && data != HEADER_MAGIC_A2) {
+                // also store unknown message, we can just forward it to master/slaves
+                unkown_packet = true;
+                msg.append_byte(data);
                 if (count_sync_errors)
-                    rx_sync_fail_count++;
-                if (!skipping) {
-                    ESP_LOGE(TAG, "Dropping serial data '%02X', header magic mismatch", data);
-                    skipping = true;
-                }
+                    rx_sync_fail_count++;                    
                 continue;
             }
-            skipping = false;
+
+            if (unkown_packet)
+                return false; // read unknown package
+
             if (count_sync_errors)
                 rx_sync_fail_count = 0;
 
