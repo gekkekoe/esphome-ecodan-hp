@@ -133,7 +133,6 @@ substitutions:
   lockout_duration: 'Kort cykel: Låstid (min)'
   short_cycle_mitigation_button: 'Kort cykel: Avbryt lås'
   predictive_short_cycle_control_enabled: 'Kort cykel: Förebyggande Skydd'
-  predictive_short_cycle_delta_threshold: 'Kort cykel: Hög Deltatröske'
   predictive_short_cycle_high_delta_time_window: 'Kort cykel: Hög Deltavaraktighet'
   auto_adaptive_control_enabled: 'Autoadaptiv: Styrning'
   heating_slope: 'Autoadaptiv: Lutning Värmekurva'

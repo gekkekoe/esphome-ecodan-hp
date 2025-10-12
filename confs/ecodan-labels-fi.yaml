@@ -133,7 +133,6 @@ substitutions:
   lockout_duration: 'Lyhyt sykli: Lukitusaika (min)'
   short_cycle_mitigation_button: 'Lyhyt sykli: Peruuta lukitus'
   predictive_short_cycle_control_enabled: 'Lyhyt sykli: Ennakoiva Esto'
-  predictive_short_cycle_delta_threshold: 'Lyhyt sykli: Korkean Deltan Kynnysarvo'
   predictive_short_cycle_high_delta_time_window: 'Lyhyt sykli: Korkean Deltan Kesto'
   auto_adaptive_control_enabled: 'Automaattisesti mukautuva: Ohjaus'
   heating_slope: 'Automaattisesti mukautuva: Lämmityskäyrän jyrkkyys'

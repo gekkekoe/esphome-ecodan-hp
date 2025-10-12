@@ -133,7 +133,6 @@ substitutions:
   lockout_duration: 'Kortcyclus: Blokkeertijd (min)'
   short_cycle_mitigation_button: 'Kortcyclus: Blokkering opheffen'
   predictive_short_cycle_control_enabled: 'Kortcyclus: Pendeldetectie'
-  predictive_short_cycle_delta_threshold: 'Kortcyclus: Hoge Delta Drempel'
   predictive_short_cycle_high_delta_time_window: 'Kortcyclus: Hoge Delta Duur'
   auto_adaptive_control_enabled: 'Auto-Adaptief: Regeling'
   heating_slope: 'Auto-Adaptief: Helling Stooklijn'

@@ -134,7 +134,6 @@ substitutions:
   lockout_duration: 'Court-circuit: Durée du verrouillage (min)'
   short_cycle_mitigation_button: 'Court-circuit: Annuler le verrouillage'
   predictive_short_cycle_control_enabled: 'Court-circuit: Prévention Prédictive'
-  predictive_short_cycle_delta_threshold: 'Court-circuit: Seuil Delta Élevé'
   predictive_short_cycle_high_delta_time_window: 'Court-circuit: Durée Delta Élevé'
   auto_adaptive_control_enabled: 'Auto-Adaptatif: Commande'
   heating_slope: 'Auto-Adaptatif: Pente de la Courbe de Chauffe'

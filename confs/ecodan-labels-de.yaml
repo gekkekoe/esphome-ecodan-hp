@@ -132,7 +132,6 @@ substitutions:
   lockout_duration: 'Kurzzyklus: Sperrdauer (min)'
   short_cycle_mitigation_button: 'Kurzzyklus: Sperre abbrechen'
   predictive_short_cycle_control_enabled: 'Kurzzyklus: Vorausschauende Verhinderung'
-  predictive_short_cycle_delta_threshold: 'Kurzzyklus: Hoher Delta-Schwellenwert'
   predictive_short_cycle_high_delta_time_window: 'Kurzzyklus: Hohe Delta-Dauer'
   auto_adaptive_control_enabled: 'Auto-Adaptiv: Steuerung'
   heating_slope: 'Auto-Adaptiv: Neigung Heizkurve'

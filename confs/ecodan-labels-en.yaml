@@ -134,7 +134,6 @@ substitutions:
   lockout_duration: 'Short-Cycle: Lockout Duration (min)'
   short_cycle_mitigation_button: 'Short-Cycle: Cancel Lockout'
   predictive_short_cycle_control_enabled: 'Short-Cycle: Predictive Prevention'
-  predictive_short_cycle_delta_threshold: 'Short-Cycle: High Delta Threshold'
   predictive_short_cycle_high_delta_time_window: 'Short-Cycle: High Delta Duration'
   # auto adaptive translations
   auto_adaptive_control_enabled: 'Auto-Adaptive: Control'
