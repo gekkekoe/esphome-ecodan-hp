@@ -60,6 +60,26 @@ number:
     min_value: 1
     max_value: 20
     step: 1
+  - platform: template
+    id: predictive_short_cycle_delta_threshold
+    name: ${predictive_short_cycle_delta_threshold}
+    unit_of_measurement: "°C"
+    optimistic: true
+    restore_value: true
+    initial_value: 1.0
+    min_value: 0.5
+    max_value: 1.5
+    step: 0.5
+  - platform: template
+    id: predictive_short_cycle_high_delta_time_window
+    name: ${predictive_short_cycle_high_delta_time_window}
+    unit_of_measurement: "min"
+    optimistic: true
+    restore_value: true
+    initial_value: 4.0
+    min_value: 1.0
+    max_value: 5.0
+    step: 0.5
 
 select:
   - platform: template
@@ -121,9 +141,10 @@ script:
             id(predictive_delta_start_time) = 0; // Reset the timer
             return;
           }
-
-          const float PREDICTIVE_DELTA_THRESHOLD = 1.0f;
-          const uint32_t TRIGGER_DURATION_MS = 4 * 60000; // 4 minutes
+          
+          const float PREDICTIVE_DELTA_THRESHOLD = isnan(id(predictive_short_cycle_delta_threshold).state) ? 1.0f : id(predictive_short_cycle_delta_threshold).state;
+          float user_defined_time_window = isnan(id(predictive_short_cycle_high_delta_time_window).state) ? 4.0f : id(predictive_short_cycle_high_delta_time_window).state;
+          const uint32_t TRIGGER_DURATION_MS = user_defined_time_window * 60000; 
           float delta = actual_flow - requested_flow;
           const float adjustment_factor = 0.5f;
 

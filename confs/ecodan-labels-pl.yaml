@@ -132,6 +132,8 @@ substitutions:
   lockout_duration: 'Krótki cykl: Czas blokady (min)'
   short_cycle_mitigation_button: 'Krótki cykl: Anuluj blokadę'
   predictive_short_cycle_control_enabled: 'Krótki cykl: Prewencja Predykcyjna'
+  predictive_short_cycle_delta_threshold: 'Krótki cykl: Wysoki Próg Delty'
+  predictive_short_cycle_high_delta_time_window: 'Krótki cykl: Czas Trwania Wysokiej Delty'
   auto_adaptive_control_enabled: 'Autoadaptacja: Sterowanie'
   heating_slope: 'Autoadaptacja: Nachylenie Krzywej Grzewczej'
   cooling_slope: 'Autoadaptacja: Nachylenie Krzywej Chłodzenia'

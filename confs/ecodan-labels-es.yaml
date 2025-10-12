@@ -133,6 +133,8 @@ substitutions:
   lockout_duration: 'Ciclo corto: Duración del bloqueo (min)'
   short_cycle_mitigation_button: 'Ciclo corto: Cancelar bloqueo'
   predictive_short_cycle_control_enabled: 'Ciclo corto: Prevención Predictiva'
+  predictive_short_cycle_delta_threshold: 'Ciclo corto: Umbral de Delta Alto'
+  predictive_short_cycle_high_delta_time_window: 'Ciclo corto: Duración de Delta Alto'
   auto_adaptive_control_enabled: 'Autoadaptativo: Control'
   heating_slope: 'Autoadaptativo: Pendiente Curva de Calefacción'
   cooling_slope: 'Autoadaptativo: Pendiente Curva de Refrigeración'
