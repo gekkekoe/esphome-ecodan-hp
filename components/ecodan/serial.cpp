@@ -21,53 +21,63 @@ namespace ecodan
 
     bool EcodanHeatpump::serial_rx(uart::UARTComponent *uart, Message& msg, bool count_sync_errors)
     {
-        uint8_t data;
-        bool skipping = false;
+        if (!uart || !uart->available())
+            return false;
 
-        while (uart && uart->available() && uart->read_byte(&data)) {
-            // Discard bytes until we see one that might reasonably be
-            // the first byte of a packet, complaining only once.
-            if (msg.get_write_offset() == 0 && data != HEADER_MAGIC_A1 && data != HEADER_MAGIC_A2) {
+        if (msg.get_write_offset() == 0) {
+            uint8_t first_byte;
+            uart->peek_byte(&first_byte);
+
+            if (first_byte != HEADER_MAGIC_A1 && first_byte != HEADER_MAGIC_A2) {
                 if (count_sync_errors)
                     rx_sync_fail_count++;
-                if (!skipping) {
-                    ESP_LOGE(TAG, "Dropping serial data '%02X', header magic mismatch", data);
-                    skipping = true;
+                ESP_LOGW(TAG, "Unsynchronized stream starting with: '%02X'.", first_byte);
+                
+                uint8_t data;
+                while (uart->available()) {
+                    uart->peek_byte(&first_byte);
+                    if (first_byte == HEADER_MAGIC_A1 || first_byte == HEADER_MAGIC_A2) {
+                        break; // Stop before the start of the next valid packet.
+                    }
+                    uart->read_byte(&data);
+                    msg.append_byte(data);
                 }
-                continue;
+                // Return false to let loop() know it has an unknown packet to forward.
+                return false;
             }
-            skipping = false;
-            if (count_sync_errors)
-                rx_sync_fail_count = 0;
-
-            // Add the byte to the packet.
-            msg.append_byte(data);
-
-            // If the header is now complete, check it for sanity.
-            if (msg.get_write_offset() == msg.header_size() && !msg.verify_header()) {
-                ESP_LOGI(TAG, "Serial port message appears invalid, skipping payload...");
-                msg = Message();
-                continue;
-            }
-
-            // If we don't yet have the full header, or if we do have the
-            // header but not yet the full payload, keep going.
-            if (msg.get_write_offset() <= msg.header_size() ||
-                msg.get_write_offset() < msg.size()) {
-                continue;
-            }
-
-            // Got full packet. Verify its checksum.
-            if (!msg.verify_checksum()) {
-                ESP_LOGI(TAG, "Serial port message checksum invalid");
-                msg = Message();
-                continue;
-            }
-
-            return true;
         }
 
-        return false;
+        uint8_t data;
+        while (uart->read_byte(&data)) {
+            if (count_sync_errors && msg.get_write_offset() == 0) {
+                // Reset error count only on the first valid byte of a new packet.
+                rx_sync_fail_count = 0;
+            }
+
+            msg.append_byte(data);
+            
+            // Once the header is complete, verify it.
+            if (msg.get_write_offset() == msg.header_size() && !msg.verify_header()) {
+                ESP_LOGW(TAG, "Invalid packet header. Discarding message.");
+                msg = Message();
+                return false;
+            }
+
+            // Once the full packet is received, verify its checksum.
+            if (msg.get_write_offset() == msg.size()) {
+                if (msg.verify_checksum()) {
+                    return true;
+                } else {
+                    ESP_LOGW(TAG, "Invalid packet checksum. Discarding message.");
+                    msg = Message();
+                    return false;
+                }
+            }
+        }
+
+        // Not enough data has arrived to complete the packet. Return false,
+        // but leave the partial data in the buffer for the next call.
+        return false;     
     }
 
 }

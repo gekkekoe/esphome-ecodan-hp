@@ -87,12 +87,16 @@ namespace ecodan
 
         if (proxy_uart_ && proxy_uart_->available() > 0) {
             proxy_ping();
-            if (serial_rx(proxy_uart_, proxy_buffer_, true))
+            static Message proxy_buffer_;
+
+            serial_rx(proxy_uart_, proxy_buffer_, true);
+            if (proxy_buffer_.get_write_offset() > 0)
             {
                 // forward cmds from slave to master
                 if (uart_)
-                    uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
-                proxy_buffer_ = Message();    
+                    uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.get_write_offset());
+                
+                proxy_buffer_ = Message();
             }
 
             // if we could not get the sync byte after 4*packet size attemp, we are probably using the wrong baud rate
@@ -110,15 +114,25 @@ namespace ecodan
             }
         }
 
-        if (serial_rx(uart_, res_buffer_))
+        static Message res_buffer_;
+        bool valid_rx = serial_rx(uart_, res_buffer_);
+
+        if (res_buffer_.get_write_offset() > 0)
         {
             last_response = std::chrono::steady_clock::now();
             if (proxy_available())
-                proxy_uart_->write_array(res_buffer_.buffer(), res_buffer_.size());
+                proxy_uart_->write_array(res_buffer_.buffer(), res_buffer_.get_write_offset());
             
             // interpret message
-            handle_response(res_buffer_);
-            res_buffer_ = Message();
+            if (valid_rx) {
+                handle_response(res_buffer_);
+                res_buffer_ = Message();
+            } 
+            else if (!res_buffer_.has_valid_sync_byte()) 
+            {
+                // partial packet with unknow sync don't need to be saved for next iteration
+                res_buffer_ = Message();
+            }
         }
 
         auto now = std::chrono::steady_clock::now();
@@ -128,7 +142,6 @@ namespace ecodan
             reset_connection();
             ESP_LOGW(TAG, "No reply received from the heatpump in the last 2 minutes, going to reconnect...");
         }
-    
     }
 
     void EcodanHeatpump::handle_loop()
