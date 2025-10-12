@@ -42,6 +42,12 @@ switch:
     id: predictive_short_cycle_control_enabled
     restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
+    turn_on_action:
+      - lambda: |-
+          id(predictive_short_cycle_total_adjusted) = 0.0f;
+    turn_off_action:
+      - lambda: |-
+         id(predictive_short_cycle_total_adjusted) = 0.0f;
 
 number:
   - platform: template
