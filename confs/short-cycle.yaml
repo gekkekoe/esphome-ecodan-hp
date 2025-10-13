@@ -220,6 +220,7 @@ script:
       - script.execute: restore_svc_state
 
   - id: restore_svc_state
+    mode: single
     then:
       - logger.log:
           level: INFO
@@ -236,6 +237,58 @@ script:
             id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
           }
 
+# compressor stop event handler
+  - id: on_compressor_stop
+    mode: single
+    then:
+      - lambda: |-
+          ESP_LOGD("predictive_short_cycle", "Running compressor stop logic...");
+          auto& status = id(ecodan_instance).get_status();
+
+          // if we had adjustment prior to the end-cycle, restore the flow temperatures
+          bool stand_alone_predictive_active = !id(auto_adaptive_control_enabled).state && id(predictive_short_cycle_control_enabled).state;
+          if (stand_alone_predictive_active && id(predictive_short_cycle_total_adjusted) > 0.0f) {  
+            ESP_LOGD("predictive_short_cycle", "Restoring flow setpoint after predictive boost.");
+          
+            // Subtract the total adjusted amount from the current setpoints
+            float adjustment = id(predictive_short_cycle_total_adjusted);
+            
+            float restored_flow_z1 = status.Zone1FlowTemperatureSetPoint - adjustment;
+            id(ecodan_instance).set_flow_target_temperature(restored_flow_z1, esphome::ecodan::Zone::ZONE_1);
+            
+            if (status.has_independent_z2()) {
+              float restored_flow_z2 = status.Zone2FlowTemperatureSetPoint - adjustment;
+              id(ecodan_instance).set_flow_target_temperature(restored_flow_z2, esphome::ecodan::Zone::ZONE_2);
+            }                      
+            // Reset the counter
+            id(predictive_short_cycle_total_adjusted) = 0.0f;
+          }
+
+          // exit if lockout is disabled
+          if (id(lockout_duration).active_index().value_or(0) == 0) {
+            id(compressor_start_time) = 0;
+            return; // 0 duration == disabled
+          }
+
+          if (id(compressor_start_time) == 0 || id(status_short_cycle_lockout).state)
+            return;
+
+          uint32_t min_duration_ms = id(minimum_compressor_on_time).state * 60000;
+          if (min_duration_ms == 0)
+            return;
+
+          if (status.is_heating(esphome::ecodan::Zone::ZONE_1) 
+            || status.is_cooling(esphome::ecodan::Zone::ZONE_1)
+            || status.is_heating(esphome::ecodan::Zone::ZONE_2) 
+            || status.is_cooling(esphome::ecodan::Zone::ZONE_2)) {
+
+              uint32_t run_duration_ms = millis() - id(compressor_start_time);
+              if (run_duration_ms < min_duration_ms) {
+                id(status_short_cycle_lockout).publish_state(true);
+                id(short_cycle_mitigation_script).execute();
+              }
+          }
+
 binary_sensor:
   - platform: ecodan
     status_short_cycle_lockout:
@@ -244,64 +297,23 @@ binary_sensor:
     status_compressor:
       id: status_compressor
       name: ${status_compressor}
-      on_state_change:
+      # OFF -> ON
+      on_press:
         then:
           - lambda: |-
               auto& status = id(ecodan_instance).get_status();
-              if (!status.DefrostActive && x.has_value() && x_previous.has_value()) {
-                // OFF -> ON (ignore UNKNOWN -> ON)
-                if (!*x_previous && *x) {
-                  ESP_LOGI(esphome::ecodan::TAG, "Compressor START detected");
-                  id(compressor_start_time) = millis();
-                }
-                // ON -> OFF
-                else if (*x_previous && !*x) {
-                  ESP_LOGI(esphome::ecodan::TAG, "Compressor STOP detected");
-
-                  // if we had adjustment prior to the end-cycle, restore the flow temperatures
-                  bool stand_alone_predictive_active = !id(auto_adaptive_control_enabled).state && id(predictive_short_cycle_control_enabled).state;
-                  if (stand_alone_predictive_active && id(predictive_short_cycle_total_adjusted) > 0.0f) {  
-                    ESP_LOGD("predictive_short_cycle", "Restoring flow setpoint after predictive boost.");
-                  
-                    // Subtract the total adjusted amount from the current setpoints
-                    float adjustment = id(predictive_short_cycle_total_adjusted);
-                    
-                    float restored_flow_z1 = status.Zone1FlowTemperatureSetPoint - adjustment;
-                    id(ecodan_instance).set_flow_target_temperature(restored_flow_z1, esphome::ecodan::Zone::ZONE_1);
-                    
-                    if (status.has_independent_z2()) {
-                      float restored_flow_z2 = status.Zone2FlowTemperatureSetPoint - adjustment;
-                      id(ecodan_instance).set_flow_target_temperature(restored_flow_z2, esphome::ecodan::Zone::ZONE_2);
-                    }                      
-                    // Reset the counter
-                    id(predictive_short_cycle_total_adjusted) = 0.0f;
-                  }
-
-                  // exit if lockout is disabled
-                  if (id(lockout_duration).active_index().value_or(0) == 0) {
-                    id(compressor_start_time) = 0;
-                    return; // 0 duration == disabled
-                  }
-
-                  if (id(compressor_start_time) == 0 || id(status_short_cycle_lockout).state)
-                    return;
-
-                  uint32_t min_duration_ms = id(minimum_compressor_on_time).state * 60000;
-                  if (min_duration_ms == 0)
-                    return;
-
-                  if (status.is_heating(esphome::ecodan::Zone::ZONE_1) 
-                    || status.is_cooling(esphome::ecodan::Zone::ZONE_1)
-                    || status.is_heating(esphome::ecodan::Zone::ZONE_2) 
-                    || status.is_cooling(esphome::ecodan::Zone::ZONE_2)) {
-
-                      uint32_t run_duration_ms = millis() - id(compressor_start_time);
-                      if (run_duration_ms < min_duration_ms) {
-                        id(status_short_cycle_lockout).publish_state(true);
-                        id(short_cycle_mitigation_script).execute();
-                      }
-                  }
-                }
+              if (!status.DefrostActive) {
+                ESP_LOGI(esphome::ecodan::TAG, "Compressor START detected");
+                id(compressor_start_time) = millis();
+              }
+      # ON -> OFF
+      on_release:
+        then:
+          - lambda: |-
+              ESP_LOGI(esphome::ecodan::TAG, "Compressor STOP detected");
+              auto& status = id(ecodan_instance).get_status();
+              if (!status.DefrostActive) {
+                id(on_compressor_stop).execute();
               } else {
                 id(compressor_start_time) = 0;
               }
