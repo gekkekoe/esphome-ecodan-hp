@@ -87,7 +87,7 @@ namespace ecodan
 
         if (proxy_uart_ && proxy_uart_->available() > 0) {
             proxy_ping();
-            static Message proxy_buffer_;
+            Message proxy_buffer_;
 
             serial_rx(proxy_uart_, proxy_buffer_, true);
             if (proxy_buffer_.get_write_offset() > 0)
@@ -95,8 +95,6 @@ namespace ecodan
                 // forward cmds from slave to master
                 if (uart_)
                     uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.get_write_offset());
-                
-                proxy_buffer_ = Message();
             }
 
             // if we could not get the sync byte after 4*packet size attemp, we are probably using the wrong baud rate
@@ -114,7 +112,7 @@ namespace ecodan
             }
         }
 
-        static Message res_buffer_;
+        Message res_buffer_;
         bool valid_rx = serial_rx(uart_, res_buffer_);
 
         if (res_buffer_.get_write_offset() > 0)
@@ -128,11 +126,11 @@ namespace ecodan
                 handle_response(res_buffer_);
                 res_buffer_ = Message();
             } 
-            else if (!res_buffer_.has_valid_sync_byte()) 
-            {
-                // partial packet with unknow sync don't need to be saved for next iteration
-                res_buffer_ = Message();
-            }
+            // else if (!res_buffer_.has_valid_sync_byte()) 
+            // {
+            //     // partial packet with unknow sync don't need to be saved for next iteration
+            //     res_buffer_ = Message();
+            // }
         }
 
         auto now = std::chrono::steady_clock::now();
