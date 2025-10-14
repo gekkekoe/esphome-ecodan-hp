@@ -98,22 +98,26 @@ script:
           if (!id(auto_adaptive_control_enabled).state && !id(predictive_short_cycle_control_enabled).state) return;
 
           auto& status = id(ecodan_instance).get_status();
+          auto start_time = id(predictive_delta_start_time);
 
           if (status.DefrostActive || id(status_short_cycle_lockout).state || !id(status_compressor).state) {
             //ESP_LOGD("predictive_short_cycle", "No Compressor activity or Lockout/Defrost active. Exiting.");
-            id(predictive_delta_start_time) = 0; // Reset the timer
+            if (start_time > 0)
+              id(predictive_delta_start_time) = 0; // Reset the timer
             return;
           }
           
           if (!status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && !status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2)) {
             //ESP_LOGD("predictive_short_cycle", "Not in heating mode. Exiting.");
-            id(predictive_delta_start_time) = 0; // Reset the timer
+            if (start_time > 0)
+              id(predictive_delta_start_time) = 0; // Reset the timer
             return;
           }
 
           if (status.Operation != esphome::ecodan::Status::OperationMode::HEAT_ON) {
             //ESP_LOGD("predictive_short_cycle", "No active heating. Exiting.");
-            (predictive_delta_start_time) = 0; // Reset the timer
+            if (start_time > 0)
+              id(predictive_delta_start_time) = 0; // Reset the timer
             return;  
           }
 
@@ -128,7 +132,8 @@ script:
 
           if (isnan(requested_flow) || isnan(actual_flow)) {
             ESP_LOGW("predictive_short_cycle", "Requested or Actual feed temperature unavailable. Exiting.");
-            id(predictive_delta_start_time) = 0; // Reset the timer
+            if (start_time > 0)
+              id(predictive_delta_start_time) = 0; // Reset the timer
             return;
           }
           
@@ -182,7 +187,7 @@ script:
               }
             }
           } else {
-            if (id(predictive_delta_start_time) != 0) {
+            if (start_time != 0) {
               ESP_LOGD("predictive_short_cycle", "High Delta T has disappeared. Resetting timer.");
               id(predictive_delta_start_time) = 0;
             }
