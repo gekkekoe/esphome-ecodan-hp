@@ -284,6 +284,7 @@ script:
 
               uint32_t run_duration_ms = millis() - id(compressor_start_time);
               if (run_duration_ms < min_duration_ms) {
+                id(compressor_start_time) = 0; 
                 id(status_short_cycle_lockout).publish_state(true);
                 id(short_cycle_mitigation_script).execute();
               }
