@@ -226,7 +226,6 @@ script:
           level: INFO
           format: "Executing restore states after lockout"
       - lambda: |-
-          id(status_short_cycle_lockout).publish_state(false);
           auto flag_before_lockout = id(ecodan_instance).get_svc_state_before_lockout();
 
           if (flag_before_lockout.has_value()) {
@@ -236,6 +235,7 @@ script:
           } else {
             id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
           }
+          id(status_short_cycle_lockout).publish_state(false);
 
 # compressor stop event handler
   - id: on_compressor_stop
