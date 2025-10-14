@@ -48,7 +48,7 @@ uart:
       number: GPIO7
       mode:
         output: true
-    baud_rate: 9600
+    baud_rate: 2400
     parity: EVEN
     stop_bits: 1
     debug:
