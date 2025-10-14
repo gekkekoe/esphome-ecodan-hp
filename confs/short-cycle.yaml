@@ -133,17 +133,23 @@ script:
           }
           
           const float PREDICTIVE_DELTA_THRESHOLD = 1.0f;
-          float user_defined_time_window = isnan(id(predictive_short_cycle_high_delta_time_window).state) ? 4.0f : id(predictive_short_cycle_high_delta_time_window).state;
-          const uint32_t TRIGGER_DURATION_MS = user_defined_time_window * 60000; 
+          float time_window_setting = id(predictive_short_cycle_high_delta_time_window).state;
+          if (isnan(time_window_setting) || time_window_setting < 1.0f || time_window_setting > 5.0f) {
+            ESP_LOGE("predictive_short_cycle", "Corrupt value for time_window: %.2f. Reverting to 4.0", time_window_setting);
+            time_window_setting = 4.0f; 
+          }
+          uint32_t trigger_duration_ms = time_window_setting * 60000UL; 
+
           float delta = actual_flow - requested_flow;
           const float adjustment_factor = 0.5f;
+
 
           if (delta >= PREDICTIVE_DELTA_THRESHOLD) {
             if (id(predictive_delta_start_time) == 0) {
               id(predictive_delta_start_time) = millis();
               ESP_LOGD("predictive_short_cycle", "High Delta T detected (%.1f°C). Starting timer.", delta);
             } else {
-              if ((millis() - id(predictive_delta_start_time)) >= TRIGGER_DURATION_MS) {
+              if ((millis() - id(predictive_delta_start_time)) >= trigger_duration_ms) {
                 ESP_LOGW("predictive_short_cycle", "Short-cycle predicted! Increasing offset to force a longer cycle.");
                 id(predictive_delta_start_time) = 0;
 
@@ -247,12 +253,12 @@ script:
 
           // if we had adjustment prior to the end-cycle, restore the flow temperatures
           bool stand_alone_predictive_active = !id(auto_adaptive_control_enabled).state && id(predictive_short_cycle_control_enabled).state;
-          if (stand_alone_predictive_active && id(predictive_short_cycle_total_adjusted) > 0.0f) {  
+          float adjustment = id(predictive_short_cycle_total_adjusted);
+
+          if (stand_alone_predictive_active && adjustment > 0.0f) {  
             ESP_LOGD("predictive_short_cycle", "Restoring flow setpoint after predictive boost.");
           
-            // Subtract the total adjusted amount from the current setpoints
-            float adjustment = id(predictive_short_cycle_total_adjusted);
-            
+            // Subtract the total adjusted amount from the current setpoints            
             float restored_flow_z1 = status.Zone1FlowTemperatureSetPoint - adjustment;
             id(ecodan_instance).set_flow_target_temperature(restored_flow_z1, esphome::ecodan::Zone::ZONE_1);
             
