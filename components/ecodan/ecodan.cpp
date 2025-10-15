@@ -86,55 +86,52 @@ namespace ecodan
         static auto last_response = std::chrono::steady_clock::now();
 
         if (proxy_uart_ && proxy_uart_->available() > 0) {
-            proxy_ping();
-            static Message proxy_buffer_;
-
-            serial_rx(proxy_uart_, proxy_buffer_, true);
-            if (proxy_buffer_.get_write_offset() > 0)
-            {
-                // forward cmds from slave to master
+            proxy_ping(); 
+            while (proxy_uart_->available() > 0) {
+                uint8_t byte;
+                proxy_uart_->read_byte(&byte);
                 if (uart_)
-                    uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.get_write_offset());
-                
-                proxy_buffer_ = Message();
-            }
-
-            // if we could not get the sync byte after 4*packet size attemp, we are probably using the wrong baud rate
-            if (rx_sync_fail_count > 4*16) {
-                //swap 9600 <-> 2400
-                int current_baud = proxy_uart_->get_baud_rate(); 
-                int new_baud =  current_baud == 2400 ? 9600 : 2400;
-                ESP_LOGE(TAG, "Could not get sync byte, swapping baud from '%d' to '%d' for slave...", current_baud, new_baud);
-                proxy_uart_->flush();
-                proxy_uart_->set_baud_rate(new_baud);
-                proxy_uart_->load_settings();
-                
-                // reset fail count
-                rx_sync_fail_count = 0;
+                    uart_->write_byte(byte);
             }
         }
 
-        static Message res_buffer_;
-        bool valid_rx = serial_rx(uart_, res_buffer_);
+        static Message rx_buffer_; 
 
-        if (res_buffer_.get_write_offset() > 0)
-        {
+        // consume all data and forward directly
+        if (uart_ && uart_->available() > 0) {
             last_response = std::chrono::steady_clock::now();
-            if (proxy_available())
-                proxy_uart_->write_array(res_buffer_.buffer(), res_buffer_.get_write_offset());
-            
-            // interpret message
-            if (valid_rx) {
-                handle_response(res_buffer_);
-                res_buffer_ = Message();
-            } 
-            else if (!res_buffer_.has_valid_sync_byte()) 
-            {
-                // partial packet with unknow sync don't need to be saved for next iteration
-                res_buffer_ = Message();
+            while (uart_->available() > 0) {
+                uint8_t current_byte;
+                uart_->read_byte(&current_byte);
+
+                // Immediately forward the raw byte to the proxy
+                if (proxy_available())
+                    proxy_uart_->write_byte(current_byte);
+
+                if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1) 
+                    continue;
+
+                rx_buffer_.append_byte(current_byte);
+
+                // Once the header is complete, verify it.
+                if (rx_buffer_.get_write_offset() == rx_buffer_.header_size() && !rx_buffer_.verify_header()) {
+                    ESP_LOGW(TAG, "Invalid packet header. Discarding message.");
+                    rx_buffer_ = Message();
+                    continue;
+                }
+
+                // Once the full packet is received, verify its checksum.
+                if (rx_buffer_.get_write_offset() == rx_buffer_.size()) {
+                    if (rx_buffer_.verify_checksum()) {
+                        handle_response(rx_buffer_);
+                    } else {
+                        ESP_LOGW(TAG, "Invalid packet checksum. Discarding message.");
+                    }
+                    rx_buffer_ = Message();
+                }
             }
         }
-
+        
         auto now = std::chrono::steady_clock::now();
         if (now - last_response > std::chrono::minutes(2))
         {
