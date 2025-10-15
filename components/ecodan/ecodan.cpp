@@ -99,14 +99,23 @@ namespace ecodan
 
         // consume all data and forward directly
         if (uart_ && uart_->available() > 0) {
-            last_response = std::chrono::steady_clock::now();
-            while (uart_->available() > 0) {
-                uint8_t current_byte;
-                uart_->read_byte(&current_byte);
+            static const size_t PROXY_BUFFER_SIZE = 128;
+            uint8_t proxy_buffer_[PROXY_BUFFER_SIZE];
 
-                // Immediately forward the raw byte to the proxy
-                if (proxy_available())
-                    proxy_uart_->write_byte(current_byte);
+            last_response = std::chrono::steady_clock::now();
+
+            size_t bytes_read = 0;
+            while (uart_->available() > 0 && bytes_read < PROXY_BUFFER_SIZE) {
+                uart_->read_byte(&proxy_buffer_[bytes_read]);
+                bytes_read++;
+            }
+
+            // send sequence at once to avoid tight handshake timing
+            if (proxy_available())
+                proxy_uart_->write_array(proxy_buffer_, bytes_read);
+
+            for (size_t i = 0; i < bytes_read; i++) {
+                uint8_t current_byte = proxy_buffer_[i];
 
                 if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1) 
                     continue;
