@@ -83,44 +83,79 @@ namespace ecodan
 
     void EcodanHeatpump::loop()
     {
+        if (proxy_uart_ && proxy_available() && this->handshake_state_ != ProxyHandshakeState::COMPLETED) {
+            handle_proxy_handshake(proxy_uart_);
+            return;
+        }
+
         static auto last_response = std::chrono::steady_clock::now();
+        static const size_t SERIAL_BUFFER_SIZE = 32;
+        static uint8_t serial_buffer_[SERIAL_BUFFER_SIZE];
 
+        size_t bytes_read = 0;
         if (proxy_uart_ && proxy_uart_->available() > 0) {
-            proxy_ping();
-            if (serial_rx(proxy_uart_, proxy_buffer_, true))
-            {
-                // forward cmds from slave to master
-                if (uart_)
-                    uart_->write_array(proxy_buffer_.buffer(), proxy_buffer_.size());
-                proxy_buffer_ = Message();    
+            proxy_ping(); 
+            while (proxy_uart_->available() > 0 && bytes_read < SERIAL_BUFFER_SIZE) {
+                proxy_uart_->read_byte(&serial_buffer_[bytes_read]);
+                bytes_read++;
             }
 
-            // if we could not get the sync byte after 4*packet size attemp, we are probably using the wrong baud rate
-            if (rx_sync_fail_count > 4*16) {
-                //swap 9600 <-> 2400
-                int current_baud = proxy_uart_->get_baud_rate(); 
-                int new_baud =  current_baud == 2400 ? 9600 : 2400;
-                ESP_LOGE(TAG, "Could not get sync byte, swapping baud from '%d' to '%d' for slave...", current_baud, new_baud);
-                proxy_uart_->flush();
-                proxy_uart_->set_baud_rate(new_baud);
-                proxy_uart_->load_settings();
-                
-                // reset fail count
-                rx_sync_fail_count = 0;
-            }
-        }
-
-        if (serial_rx(uart_, res_buffer_))
-        {
-            last_response = std::chrono::steady_clock::now();
-            if (proxy_available())
-                proxy_uart_->write_array(res_buffer_.buffer(), res_buffer_.size());
+            // buffer and send
+            if (uart_)
+                uart_->write_array(serial_buffer_, bytes_read);
             
-            // interpret message
-            handle_response(res_buffer_);
-            res_buffer_ = Message();
+            // detect if connection was reset redo handshake '0x63 0x00' seems to be the failed msg
+            if (bytes_read == 2 && serial_buffer_[0] == 0x6e && serial_buffer_[1] == 0x00) {
+                this->handshake_state_ = ProxyHandshakeState::NOT_COMPLETED;
+                ESP_LOGW(TAG, "Proxy disconnected, redo handshake...");
+                return;
+            }
         }
 
+        static Message rx_buffer_; 
+
+        // consume all data and forward directly
+        if (uart_ && uart_->available() > 0) {
+            last_response = std::chrono::steady_clock::now();
+
+            bytes_read = 0;
+            while (uart_->available() > 0 && bytes_read < SERIAL_BUFFER_SIZE) {
+                uart_->read_byte(&serial_buffer_[bytes_read]);
+                bytes_read++;
+            }
+
+            // buffer and send to proxy
+            if (proxy_available())
+                proxy_uart_->write_array(serial_buffer_, bytes_read);
+
+            // parse message from memory
+            for (size_t i = 0; i < bytes_read; i++) {
+                uint8_t current_byte = serial_buffer_[i];
+
+                if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1) 
+                    continue;
+
+                rx_buffer_.append_byte(current_byte);
+
+                // Once the header is complete, verify it.
+                if (rx_buffer_.get_write_offset() == rx_buffer_.header_size() && !rx_buffer_.verify_header()) {
+                    ESP_LOGW(TAG, "Invalid packet header. Discarding message.");
+                    rx_buffer_ = Message();
+                    continue;
+                }
+
+                // Once the full packet is received, verify its checksum.
+                if (rx_buffer_.get_write_offset() == rx_buffer_.size()) {
+                    if (rx_buffer_.verify_checksum()) {
+                        handle_response(rx_buffer_);
+                    } else {
+                        ESP_LOGW(TAG, "Invalid packet checksum. Discarding message.");
+                    }
+                    rx_buffer_ = Message();
+                }
+            }
+        }
+        
         auto now = std::chrono::steady_clock::now();
         if (now - last_response > std::chrono::minutes(2))
         {
@@ -128,7 +163,6 @@ namespace ecodan
             reset_connection();
             ESP_LOGW(TAG, "No reply received from the heatpump in the last 2 minutes, going to reconnect...");
         }
-    
     }
 
     void EcodanHeatpump::handle_loop()

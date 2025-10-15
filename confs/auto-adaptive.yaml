@@ -364,16 +364,6 @@ script:
               if (dynamic_error_margin_negative < -0.8f)
                 dynamic_error_margin_negative = -0.8f;
 
-              auto time = id(sntp_time).now();
-              if (time.is_valid()) {
-                  int current_hour = time.hour;
-                  // Widen dead zone for UFH profile during the night
-                  if (heating_type_index == 0 && (current_hour >= 22 || current_hour <= 6)) {
-                    dynamic_error_margin_positive += 0.4f;
-                    dynamic_error_margin_negative -= 0.4f;
-                  }
-              }
-
               ESP_LOGD("auto_adaptive", "Error: Current=%.1f, Dynamic+=%.1f, Dynamic-=%.1f, LR=%.3f", 
                 error, dynamic_error_margin_positive, dynamic_error_margin_negative, learning_rate);
 
@@ -381,10 +371,11 @@ script:
                   float& offset = *heating_offsets[i];
                   float& prev_error = *heating_prev_errors[i];
                   
+                  float max_flow_temp = id(maximum_heating_flow_temp).state;
                   float calculated_flow = (20.0f - actual_outside_temp) * current_slope + offset;
-                  if (calculated_flow > id(maximum_heating_flow_temp).state) {
-                    ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit), calculated_flow: %.1f", (i + 1), id(maximum_heating_flow_temp).state, calculated_flow);
-                    calculated_flow = id(maximum_heating_flow_temp).state;
+                  if (calculated_flow > max_flow_temp) {
+                    ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit), calculated_flow: %.1f", (i + 1), max_flow_temp, calculated_flow);
+                    calculated_flow = max_flow_temp;
                   }
 
                   if (calculated_flow < MIN_HEAT_FLOW) {
@@ -400,8 +391,24 @@ script:
                     float old_offset = offset;
                     if (error > dynamic_error_margin_positive && error >= prev_error) {
                       offset += learning_rate;
+
+                      float max_offset = max_flow_temp + 2.0f;
+                      if (offset > max_offset) {
+                          offset = max_offset;
+                          ESP_LOGW("auto_adaptive", "Z%d HEATING: Learned offset reached its dynamic limit of %.1f°C", (i + 1), max_offset);
+                      }
+
                       ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too cold (err: %.2f). Offset increased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                     } else if (error < dynamic_error_margin_negative) {
+
+                      if (offset < MIN_HEAT_FLOW) { 
+                          // decrease learning rate below min flow temp
+                          float downward_learning_factor = (offset - 15.0f) / (MIN_HEAT_FLOW - 15.0f);
+                          if (downward_learning_factor < 0.0f) 
+                            downward_learning_factor = 0.0f; // avoid negative
+                          ESP_LOGD("auto_adaptive", "Lage offset gedetecteerd. Remfactor voor leren: %.2f", downward_learning_factor);
+                          learning_rate *= downward_learning_factor;
+                      }
                       offset -= learning_rate;
                       ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too warm (err: %.2f). Offset decreased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                     }
