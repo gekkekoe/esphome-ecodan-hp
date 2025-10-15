@@ -83,6 +83,11 @@ namespace ecodan
 
     void EcodanHeatpump::loop()
     {
+        if (proxy_uart_ && proxy_available() && this->handshake_state_ != ProxyHandshakeState::COMPLETED) {
+            handle_proxy_handshake(proxy_uart_);
+            return;
+        }
+
         static auto last_response = std::chrono::steady_clock::now();
         static const size_t SERIAL_BUFFER_SIZE = 128;
         static uint8_t serial_buffer_[SERIAL_BUFFER_SIZE];
