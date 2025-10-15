@@ -83,15 +83,32 @@ namespace ecodan
 
     void EcodanHeatpump::loop()
     {
-        static auto last_response = std::chrono::steady_clock::now();
+        if (proxy_uart_ && proxy_available() && this->handshake_state_ != ProxyHandshakeState::COMPLETED) {
+            handle_proxy_handshake(proxy_uart_);
+            return;
+        }
 
+        static auto last_response = std::chrono::steady_clock::now();
+        static const size_t SERIAL_BUFFER_SIZE = 32;
+        static uint8_t serial_buffer_[SERIAL_BUFFER_SIZE];
+
+        size_t bytes_read = 0;
         if (proxy_uart_ && proxy_uart_->available() > 0) {
             proxy_ping(); 
-            while (proxy_uart_->available() > 0) {
-                uint8_t byte;
-                proxy_uart_->read_byte(&byte);
-                if (uart_)
-                    uart_->write_byte(byte);
+            while (proxy_uart_->available() > 0 && bytes_read < SERIAL_BUFFER_SIZE) {
+                proxy_uart_->read_byte(&serial_buffer_[bytes_read]);
+                bytes_read++;
+            }
+
+            // buffer and send
+            if (uart_)
+                uart_->write_array(serial_buffer_, bytes_read);
+            
+            // detect if connection was reset redo handshake '0x63 0x00' seems to be the failed msg
+            if (bytes_read == 2 && serial_buffer_[0] == 0x6e && serial_buffer_[1] == 0x00) {
+                this->handshake_state_ = ProxyHandshakeState::NOT_COMPLETED;
+                ESP_LOGW(TAG, "Proxy disconnected, redo handshake...");
+                return;
             }
         }
 
@@ -100,13 +117,20 @@ namespace ecodan
         // consume all data and forward directly
         if (uart_ && uart_->available() > 0) {
             last_response = std::chrono::steady_clock::now();
-            while (uart_->available() > 0) {
-                uint8_t current_byte;
-                uart_->read_byte(&current_byte);
 
-                // Immediately forward the raw byte to the proxy
-                if (proxy_available())
-                    proxy_uart_->write_byte(current_byte);
+            bytes_read = 0;
+            while (uart_->available() > 0 && bytes_read < SERIAL_BUFFER_SIZE) {
+                uart_->read_byte(&serial_buffer_[bytes_read]);
+                bytes_read++;
+            }
+
+            // buffer and send to proxy
+            if (proxy_available())
+                proxy_uart_->write_array(serial_buffer_, bytes_read);
+
+            // parse message from memory
+            for (size_t i = 0; i < bytes_read; i++) {
+                uint8_t current_byte = serial_buffer_[i];
 
                 if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1) 
                     continue;
