@@ -371,10 +371,11 @@ script:
                   float& offset = *heating_offsets[i];
                   float& prev_error = *heating_prev_errors[i];
                   
+                  float max_flow_temp = id(maximum_heating_flow_temp).state;
                   float calculated_flow = (20.0f - actual_outside_temp) * current_slope + offset;
-                  if (calculated_flow > id(maximum_heating_flow_temp).state) {
-                    ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit), calculated_flow: %.1f", (i + 1), id(maximum_heating_flow_temp).state, calculated_flow);
-                    calculated_flow = id(maximum_heating_flow_temp).state;
+                  if (calculated_flow > max_flow_temp) {
+                    ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit), calculated_flow: %.1f", (i + 1), max_flow_temp, calculated_flow);
+                    calculated_flow = max_flow_temp;
                   }
 
                   if (calculated_flow < MIN_HEAT_FLOW) {
@@ -391,7 +392,7 @@ script:
                     if (error > dynamic_error_margin_positive && error >= prev_error) {
                       offset += learning_rate;
 
-                      float max_offset = id(maximum_heating_flow_temp).state + 2.0f;
+                      float max_offset = max_flow_temp + 2.0f;
                       if (offset > max_offset) {
                           offset = max_offset;
                           ESP_LOGW("auto_adaptive", "Z%d HEATING: Learned offset reached its dynamic limit of %.1f°C", (i + 1), max_offset);
