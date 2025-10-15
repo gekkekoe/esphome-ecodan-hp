@@ -400,6 +400,15 @@ script:
 
                       ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too cold (err: %.2f). Offset increased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                     } else if (error < dynamic_error_margin_negative) {
+
+                      if (offset < MIN_HEAT_FLOW) { 
+                          // decrease learning rate below min flow temp
+                          float downward_learning_factor = (offset - 15.0f) / (MIN_HEAT_FLOW - 15.0f);
+                          if (downward_learning_factor < 0.0f) 
+                            downward_learning_factor = 0.0f; // avoid negative
+                          ESP_LOGD("auto_adaptive", "Lage offset gedetecteerd. Remfactor voor leren: %.2f", downward_learning_factor);
+                          learning_rate *= downward_learning_factor;
+                      }
                       offset -= learning_rate;
                       ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too warm (err: %.2f). Offset decreased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                     }
