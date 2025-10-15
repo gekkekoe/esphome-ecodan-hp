@@ -21,6 +21,11 @@ namespace ecodan
 {    
     static constexpr const char *TAG = "ecodan.component";   
 
+    enum class ProxyHandshakeState {
+        NOT_COMPLETED,
+        COMPLETED
+    };
+
     class EcodanHeatpump : public PollingComponent {
     public:        
         EcodanHeatpump() : PollingComponent() {}
@@ -93,7 +98,7 @@ namespace ecodan
     private:
         uart::UARTComponent *uart_ = nullptr;
         uart::UARTComponent *proxy_uart_ = nullptr;
-        int rx_sync_fail_count = 0;
+        ProxyHandshakeState handshake_state_ = ProxyHandshakeState::NOT_COMPLETED;
         uint8_t initialCount = 0;
 
         Status status;
@@ -109,13 +114,15 @@ namespace ecodan
         std::optional<CONTROLLER_FLAG> serverControlFlagBeforeLockout = {};
         std::queue<Message> cmdQueue;
 
-        bool serial_rx(uart::UARTComponent *uart, Message& msg, bool count_sync_errors = false);
+        bool serial_rx(uart::UARTComponent *uart, Message& msg);
         bool serial_tx(uart::UARTComponent *uart, Message& msg);
+        void handle_proxy_handshake(uart::UARTComponent *proxy_uart, uart::UARTComponent *uart);
         
         bool disconnect();
         void reset_connection() {
             connected = false;
             initialCount = 0;
+            handshake_state_ = ProxyHandshakeState::NOT_COMPLETED;
             disconnect();
         };
         bool initialCmdCompleted() { return initialCount == 3; };
