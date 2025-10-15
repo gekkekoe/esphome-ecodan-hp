@@ -390,6 +390,13 @@ script:
                     float old_offset = offset;
                     if (error > dynamic_error_margin_positive && error >= prev_error) {
                       offset += learning_rate;
+
+                      float max_offset = id(maximum_heating_flow_temp).state + 2.0f;
+                      if (offset > max_offset) {
+                          offset = max_offset;
+                          ESP_LOGW("auto_adaptive", "Z%d HEATING: Learned offset reached its dynamic limit of %.1f°C", (i + 1), max_offset);
+                      }
+
                       ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too cold (err: %.2f). Offset increased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                     } else if (error < dynamic_error_margin_negative) {
                       offset -= learning_rate;
