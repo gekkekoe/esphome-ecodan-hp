@@ -48,14 +48,14 @@ api:
 #  #svc: !include confs/server-control-z1.yaml
 
 external_components:
-  - source: github://gekkekoe/esphome-ecodan-hp@dev
+  - source: github://gekkekoe/esphome-ecodan-hp@main
     components: [ ecodan ]
     refresh: always
 
 packages:
   remote_package:
     url: https://github.com/gekkekoe/esphome-ecodan-hp/
-    ref: dev
+    ref: main
     refresh: always
     files: [ 
             confs/base.yaml,            # required
