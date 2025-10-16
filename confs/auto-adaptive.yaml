@@ -364,8 +364,8 @@ script:
               if (dynamic_error_margin_negative < -0.8f)
                 dynamic_error_margin_negative = -0.8f;
 
-              ESP_LOGD("auto_adaptive", "Error: Current=%.1f, Dynamic+=%.1f, Dynamic-=%.1f, LR=%.3f", 
-                error, dynamic_error_margin_positive, dynamic_error_margin_negative, learning_rate);
+              ESP_LOGD("auto_adaptive", "Error: Current=%.1f, Dead Zone=[%.1f, %.1f], LR=%.3f", 
+                error, dynamic_error_margin_negative, dynamic_error_margin_positive, learning_rate);
 
               if (is_heating_active) {
                   float& offset = *heating_offsets[i];
@@ -373,6 +373,8 @@ script:
                   
                   float max_flow_temp = id(maximum_heating_flow_temp).state;
                   float calculated_flow = (20.0f - actual_outside_temp) * current_slope + offset;
+                  ESP_LOGD("auto_adaptive", "Z%d HEATING: calculated_flow: %.1f", (i + 1), calculated_flow);
+
                   if (calculated_flow > max_flow_temp) {
                     ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit), calculated_flow: %.1f", (i + 1), max_flow_temp, calculated_flow);
                     calculated_flow = max_flow_temp;
@@ -421,6 +423,8 @@ script:
                   float& prev_error = *cooling_prev_errors[i];
                   
                   float calculated_flow = offset - (actual_outside_temp - 20.0f) * id(cooling_slope).state;
+                  ESP_LOGD("auto_adaptive", "Z%d COOLING: calculated_flow: %.1f", (i + 1), calculated_flow);
+
                   if (calculated_flow > id(cooling_smart_start_temp).state) {
                     calculated_flow = id(cooling_smart_start_temp).state;
                     ESP_LOGD("auto_adaptive", "Z%d COOLING: Using Smart Start Temp of %.1f°C", (i + 1), calculated_flow);

@@ -334,7 +334,7 @@ namespace ecodan
             buffer_[writeOffset_] = calculate_checksum();
         }
 
-        uint8_t get_write_offset()
+        uint8_t get_write_offset() const
         {
             return writeOffset_;
         }
@@ -348,6 +348,13 @@ namespace ecodan
                 return true;
             
             return false;
+        }
+
+        bool matches(const uint8_t* pattern, size_t length) const {
+            if (writeOffset_ != length) {
+                return false;
+            }
+            return memcmp(buffer_, pattern, length) == 0;
         }
 
         float get_float24(size_t index)
