@@ -104,10 +104,10 @@ namespace ecodan
             if (uart_)
                 uart_->write_array(serial_buffer_, bytes_read);
             
-            // detect if connection was reset redo handshake '0x63 0x00' seems to be the failed msg
+            // redo handshake '0x63 0x00' seems to be the failed msg
             if (bytes_read == 2 && serial_buffer_[0] == 0x6e && serial_buffer_[1] == 0x00) {
-                this->handshake_state_ = ProxyHandshakeState::NOT_COMPLETED;
                 ESP_LOGW(TAG, "Proxy disconnected, redo handshake...");
+                reset_connection();
                 return;
             }
         }
