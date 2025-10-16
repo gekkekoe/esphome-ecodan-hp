@@ -3,14 +3,14 @@
 namespace esphome {
 namespace ecodan 
 {
-    // const uint8_t connect_request[] = { 0xfc, 0x5a, 0x02, 0x7a, 0x02, 0xca, 0x01, 0x5d};
-    // const uint8_t connect_response[] = { 0xfc, 0x7a, 0x02, 0x7a, 0x01, 0x00, 0x09 };
+    const uint8_t connect_request[] = { 0xfc, 0x5a, 0x02, 0x7a, 0x02, 0xca, 0x01, 0x5d};
+    const uint8_t connect_response[] = { 0xfc, 0x7a, 0x02, 0x7a, 0x01, 0x00, 0x09 };
     const uint8_t first_request[] = { 0x02, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x02 };
     const uint8_t expected_first_response[] = { 0x02, 0xff, 0xff, 0x80, 0x00, 0x00, 0x0A, 0x01, 0x00, 0x40, 0x00, 0x00, 0x06, 0x02, 0x7a, 0x00, 0x00, 0xb5 };
     const uint8_t second_request[] = { 0x02, 0xff, 0xff, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00 };
     const uint8_t expected_second_response[] = { 0x02, 0xff, 0xff, 0x81, 0x00, 0x00, 0x00, 0x81 };
 
-    void EcodanHeatpump::handle_proxy_handshake(uart::UARTComponent *proxy_uart) {
+    void EcodanHeatpump::handle_proxy_handshake(uart::UARTComponent *proxy_uart, uart::UARTComponent *uart) {
         static uint8_t buffer[32];
         static size_t buffer_len = 0;
 
@@ -18,7 +18,7 @@ namespace ecodan
             uint8_t current_byte;
             proxy_uart->read_byte(&current_byte);
 
-            if (buffer_len == 0 && current_byte != HEADER_MAGIC_A2) 
+            if (buffer_len == 0 && current_byte != HEADER_MAGIC_A1 && current_byte != HEADER_MAGIC_A2) 
                 continue; // scan for magic
             
             if (buffer_len < sizeof(buffer)) {
@@ -40,6 +40,16 @@ namespace ecodan
             if (buffer_len == sizeof(second_request) && memcmp(buffer, second_request, sizeof(second_request)) == 0) {
                 ESP_LOGI(TAG, "Handshake: Second request detected, sending response. Handshake complete!");
                 proxy_uart->write_array(expected_second_response, sizeof(expected_second_response));
+                buffer_len = 0;
+                continue;
+            } 
+
+            if (buffer_len == sizeof(connect_request) && memcmp(buffer, connect_request, sizeof(connect_request)) == 0) {
+                ESP_LOGI(TAG, "Handshake: Connection complete!");
+                proxy_uart->write_array(connect_response, sizeof(connect_response));
+                if (uart)
+                    uart->write_array(connect_request, sizeof(connect_request));
+
                 buffer_len = 0;
                 this->handshake_state_ = ProxyHandshakeState::COMPLETED; 
                 return;

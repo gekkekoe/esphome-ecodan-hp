@@ -116,7 +116,8 @@ namespace ecodan
 
         bool serial_rx(uart::UARTComponent *uart, Message& msg);
         bool serial_tx(uart::UARTComponent *uart, Message& msg);
-        void handle_proxy_handshake(uart::UARTComponent *proxy_uart);
+        void handle_proxy_handshake(uart::UARTComponent *proxy_uart, uart::UARTComponent *uart);
+        bool needs_proxy_handshake() const { return handshake_state_ == ProxyHandshakeState::NOT_COMPLETED; }
         
         bool disconnect();
         void reset_connection() {
