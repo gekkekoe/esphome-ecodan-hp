@@ -84,10 +84,9 @@ namespace ecodan
     void EcodanHeatpump::loop()
     {
         if (proxy_uart_ && proxy_available() && this->handshake_state_ != ProxyHandshakeState::COMPLETED) {
-            handle_proxy_handshake(proxy_uart_);
+            handle_proxy_handshake(proxy_uart_, uart_);
             return;
         }
-
         static auto last_response = std::chrono::steady_clock::now();
         static const size_t SERIAL_BUFFER_SIZE = 32;
         static uint8_t serial_buffer_[SERIAL_BUFFER_SIZE];
@@ -103,7 +102,7 @@ namespace ecodan
             // buffer and send
             if (uart_)
                 uart_->write_array(serial_buffer_, bytes_read);
-            
+
             // redo handshake '0x63 0x00' seems to be the failed msg
             if (bytes_read == 2 && serial_buffer_[0] == 0x6e && serial_buffer_[1] == 0x00) {
                 ESP_LOGW(TAG, "Proxy disconnected, redo handshake...");
