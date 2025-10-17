@@ -1,14 +1,14 @@
 substitutions:
   status_three_way_valve: 3-tieventtiili
   status_three_way_valve_2: 3-tieventtiili 2
-  heatpump_climate_dhw: LKV ilmasto
+  heatpump_climate_dhw: LKV
   dhw_temp: LKV lämpötila
   dhw_secondary_temp: LKV toissijainen lämpötila
   status_dhw_forced: LKV pakotettu
   dhw_flow_temp_drop: LKV maksimilämpötilan pudotus
   status_prohibit_dhw: LKV esto
   dhw_flow_temp_target: LKV asetusarvo
-  status_dhw_eco: LKV Eco
+  status_dhw_eco: LKV eco
   esp_ip: ESP IP-osoite
   internal_esp_temperature: ESP:n sisäinen lämpötila
   esp_sidd: ESP SSID
@@ -32,8 +32,8 @@ substitutions:
   z1_flow_temp_target: Vyöhyke 1 L/J asetusarvo
   status_prohibit_cool_z1: Vyöhyke 1 jäähdytyksen esto
   status_prohibit_heating_z1: Vyöhyke 1 lämmityksen esto
-  heatpump_climate_z1: Vyöhyke 1 Menovesi
-  heatpump_climate_room_z1: Vyöhyke 1 Huonelämpötila
+  heatpump_climate_z1: Vyöhyke 1 menolämpötila
+  heatpump_climate_room_z1: Vyöhyke 1 huonelämpötila
   z1_room_temp_target: Vyöhyke 1 huoneen asetusarvo
   z1_room_temp: Vyöhyke 1 huonelämpötila
   heatpump_number_z2_set_flow_temperature: Vyöhyke 2 L/J asetusarvo
@@ -41,8 +41,8 @@ substitutions:
   status_prohibit_cool_z2: Vyöhyke 2 jäähdytyksen esto
   status_prohibit_heating_z2: Vyöhyke 2 lämmityksen esto
   heatpump_number_z2_set_room_temperature: Vyöhyke 2 huoneen asetusarvo
-  heatpump_climate_z2: Vyöhyke 2 Menovesi
-  heatpump_climate_room_z2: Vyöhyke 2 Huonelämpötila
+  heatpump_climate_z2: Vyöhyke 2 menolämpötila
+  heatpump_climate_room_z2: Vyöhyke 2 huonelämpötila
   z2_room_temp_target: Vyöhyke 2 huoneen asetusarvo
   z2_room_temp: Vyöhyke 2 huonelämpötila
   mixing_tank_temp: Sekoitussäiliön lämpötila
@@ -117,7 +117,7 @@ substitutions:
   status_multi_zone_zone2: Vyöhyke 2 käytössä
   fault_code_text: Vikakoodi
   refrigerant_error_code_text: Kylmäaineen vikakoodi
-  # refrigerant_code: Kylmäaine
+  refrigerant_code: Kylmäaine
   compressor_starts: Kompressorin käynnistykset yhteensä
   discharge_temp: Puristuslämpötila
   ou_liquid_pipe_temp: Ulkoyksikön nestelinjan lämpötila 1
@@ -134,7 +134,7 @@ substitutions:
   short_cycle_mitigation_button: 'Lyhytsykli: Peruuta lukitus'
   predictive_short_cycle_control_enabled: 'Lyhytsykli: Ennakoiva esto'
   predictive_short_cycle_high_delta_time_window: 'Lyhytsykli: Korkean delta-arvon aikaikkuna'
-  auto_adaptive_control_enabled: 'Mukautuva ohjaus: Ohjaus'
+  auto_adaptive_control_enabled: 'Mukautuva ohjaus'
   heating_slope: 'Mukautuva ohjaus: Lämmityskäyrän kaltevuus'
   cooling_slope: 'Mukautuva ohjaus: Jäähdytyskäyrän kaltevuus'
   maximum_heating_flow_temp: 'Mukautuva ohjaus: Lämmityksen enimmäismenovesilämpötila'
@@ -144,9 +144,9 @@ substitutions:
   temperature_feedback_source: 'Mukautuva ohjaus: Huonelämpötilan lähde'
   temperature_feedback_option_room: 'Huonetermostaatti'
   temperature_feedback_option_api: 'Home Assistant / REST API'
-  heating_system_type: 'Mukautuva ohjaus: Lämmitysjärjestelmän tyyppi'
+  heating_system_type: 'Mukautuva ohjaus: lämmitysjärjestelmän tyyppi'
   heating_system_type_option_ufh: 'Lattialämmitys'
-  heating_system_type_option_ufh_rad: 'Lattialämmitys + Patterit'
+  heating_system_type_option_ufh_rad: 'Lattialämmitys + patterit'
   heating_system_type_option_rad: 'Patterit'
   heating_offset_sensor: 'Mukautuva ohjaus: Lämmityksen siirtymä'
   cooling_offset_sensor: 'Mukautuva ohjaus: Jäähdytyksen siirtymä'
@@ -154,9 +154,9 @@ substitutions:
   dynamic_learning_rate_sensor: 'Mukautuva ohjaus: Dynaaminen oppimisnopeus'
   temperature_feedback: 'Mukautuva ohjaus: Huonelämpötilan palaute'
   thermostat_overshoot_compensation: 'Mukautuva ohjaus: Termostaatin ylityksen kompensointi'
-  total_increasing_heating_consumed: Kokonaiskulutus Lämmitys
-  total_increasing_heating_delivered: Kokonaistuotto Lämmitys
-  total_increasing_cool_consumed: Kokonaiskulutus Jäähdytys
-  total_increasing_cool_delivered: Kokonaistuotto Jäähdytys
-  total_increasing_dhw_consumed: Kokonaiskulutus Lämmin Vesi
-  total_increasing_dhw_delivered: Kokonaistuotto Lämmin Vesi
+  total_increasing_heating_consumed: Kokonaiskulutus lämmitys
+  total_increasing_heating_delivered: Kokonaistuotto lämmitys
+  total_increasing_cool_consumed: Kokonaiskulutus jäähdytys
+  total_increasing_cool_delivered: Kokonaistuotto jäähdytys
+  total_increasing_dhw_consumed: Kokonaiskulutus LKV
+  total_increasing_dhw_delivered: Kokonaistuotto LKV
