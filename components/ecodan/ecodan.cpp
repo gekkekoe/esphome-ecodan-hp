@@ -84,55 +84,43 @@ namespace ecodan
     void EcodanHeatpump::loop()
     {
         static auto last_response = std::chrono::steady_clock::now();
-        static const size_t SERIAL_BUFFER_SIZE = 32;
-        static uint8_t serial_buffer_[SERIAL_BUFFER_SIZE];
-
         // a valid handshake is required in proxy before communication
         if (proxy_uart_ && proxy_available() && needs_proxy_handshake()) {
             handle_proxy_handshake(proxy_uart_, uart_);
             return;
         }
 
-        // regular proxy slave data/cmd
-        size_t bytes_read = 0;
         if (proxy_uart_ && proxy_uart_->available() > 0) {
             proxy_ping(); 
-            while (proxy_uart_->available() > 0 && bytes_read < SERIAL_BUFFER_SIZE) {
-                proxy_uart_->read_byte(&serial_buffer_[bytes_read]);
-                bytes_read++;
-            }
+            while (proxy_uart_->available() > 0) {
+                uint8_t byte;
+                proxy_uart_->read_byte(&byte);
+                if (uart_)
+                    uart_->write_byte(byte);
 
-            // buffer and send
-            if (uart_)
-                uart_->write_array(serial_buffer_, bytes_read);
-
-            // redo handshake '0x63 0x00' seems to be the failed msg
-            if (bytes_read == 2 && serial_buffer_[0] == 0x6e && serial_buffer_[1] == 0x00) {
-                ESP_LOGW(TAG, "Proxy disconnected, redo handshake...");
-                reset_connection();
-                return;
+                // redo handshake '0x63 0x00' seems to be the failed msg
+                static uint8_t disconnect_buffer[2];
+                disconnect_buffer[0] = disconnect_buffer[1];
+                disconnect_buffer[1] = byte;
+                if (disconnect_buffer[0] == 0x6e && disconnect_buffer[1] == 0x00) {
+                    ESP_LOGW(TAG, "Proxy disconnected, re-initiating handshake...");
+                    reset_connection(); // reset_connection() moet handshake_state_ resetten
+                }
             }
         }
 
         static Message rx_buffer_; 
 
-        // communication with heatpump
+        // consume all data and forward directly
         if (uart_ && uart_->available() > 0) {
             last_response = std::chrono::steady_clock::now();
+            while (uart_->available() > 0) {
+                uint8_t current_byte;
+                uart_->read_byte(&current_byte);
 
-            bytes_read = 0;
-            while (uart_->available() > 0 && bytes_read < SERIAL_BUFFER_SIZE) {
-                uart_->read_byte(&serial_buffer_[bytes_read]);
-                bytes_read++;
-            }
-
-            // buffer and send to proxy
-            if (proxy_available())
-                proxy_uart_->write_array(serial_buffer_, bytes_read);
-
-            // parse message from memory
-            for (size_t i = 0; i < bytes_read; i++) {
-                uint8_t current_byte = serial_buffer_[i];
+                // Immediately forward the raw byte to the proxy
+                if (proxy_available())
+                    proxy_uart_->write_byte(current_byte);
 
                 if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1) 
                     continue;
