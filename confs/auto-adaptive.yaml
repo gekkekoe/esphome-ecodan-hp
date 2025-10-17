@@ -408,7 +408,7 @@ script:
                           float downward_learning_factor = (offset - 15.0f) / (MIN_HEAT_FLOW - 15.0f);
                           if (downward_learning_factor < 0.0f) 
                             downward_learning_factor = 0.0f; // avoid negative
-                          ESP_LOGD("auto_adaptive", "Lage offset gedetecteerd. Remfactor voor leren: %.2f", downward_learning_factor);
+                          ESP_LOGD("auto_adaptive", "Low offset detected. LR adjustment: %.2f", downward_learning_factor);
                           learning_rate *= downward_learning_factor;
                       }
                       offset -= learning_rate;
