@@ -143,7 +143,7 @@ substitutions:
   cooling_smart_start_temp: 'Autoadaptativo: Temp. de Inicio Inteligente Refrigeración'
   temperature_feedback_source: 'Autoadaptativo: Fuente de Temperatura Ambiente'
   temperature_feedback_option_room: 'Termostato de Ambiente'
-  temperature_feedback_option_api: 'API REST'
+  temperature_feedback_option_api: 'Home Assistant / REST API'
   heating_system_type: 'Autoadaptativo: Tipo de Sistema de Calefacción'
   heating_system_type_option_ufh: 'Suelo Radiante'
   heating_system_type_option_ufh_rad: 'Suelo Radiante + Radiadores'

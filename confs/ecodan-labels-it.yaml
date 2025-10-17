@@ -143,7 +143,7 @@ substitutions:
   cooling_smart_start_temp: 'Autoadattivo: Temp. di Avvio Intelligente Raffrescamento'
   temperature_feedback_source: 'Autoadattivo: Fonte Temperatura Ambiente'
   temperature_feedback_option_room: 'Termostato Ambiente'
-  temperature_feedback_option_api: 'API REST'
+  temperature_feedback_option_api: 'Home Assistant / REST API'
   heating_system_type: 'Autoadattivo: Tipo di Impianto'
   heating_system_type_option_ufh: 'Riscaldamento a Pavimento'
   heating_system_type_option_ufh_rad: 'Riscaldamento a Pavimento + Radiatori'
