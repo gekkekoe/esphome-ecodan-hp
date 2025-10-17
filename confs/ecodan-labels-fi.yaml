@@ -32,8 +32,8 @@ substitutions:
   z1_flow_temp_target: Vyöhyke 1 L/J asetusarvo
   status_prohibit_cool_z1: Vyöhyke 1 jäähdytyksen esto
   status_prohibit_heating_z1: Vyöhyke 1 lämmityksen esto
-  heatpump_climate_z1: Alue 1 Menovesi
-  heatpump_climate_room_z1: Alue 1 Huonelämpötila
+  heatpump_climate_z1: Vyöhyke 1 Menovesi
+  heatpump_climate_room_z1: Vyöhyke 1 Huonelämpötila
   z1_room_temp_target: Vyöhyke 1 huoneen asetusarvo
   z1_room_temp: Vyöhyke 1 huonelämpötila
   heatpump_number_z2_set_flow_temperature: Vyöhyke 2 L/J asetusarvo
@@ -41,8 +41,8 @@ substitutions:
   status_prohibit_cool_z2: Vyöhyke 2 jäähdytyksen esto
   status_prohibit_heating_z2: Vyöhyke 2 lämmityksen esto
   heatpump_number_z2_set_room_temperature: Vyöhyke 2 huoneen asetusarvo
-  heatpump_climate_z2: Alue 2 Menovesi
-  heatpump_climate_room_z2: Alue 2 Huonelämpötila
+  heatpump_climate_z2: Vyöhyke 2 Menovesi
+  heatpump_climate_room_z2: Vyöhyke 2 Huonelämpötila
   z2_room_temp_target: Vyöhyke 2 huoneen asetusarvo
   z2_room_temp: Vyöhyke 2 huonelämpötila
   mixing_tank_temp: Sekoitussäiliön lämpötila
@@ -55,11 +55,11 @@ substitutions:
   controller_firmware_text: Ohjaimen laiteohjelmisto
   controller_datetime_text: Ohjaimen päivämäärä
   cool_consumed: Jäähdytys kulutettu
-  cool_cop: Jäähdytyksen COP
+  cool_cop: Jäähdytyksen hyötysuhde
   cool_delivered: Jäähdytys tuotettu
   status_defrost: Sulatus
   dhw_consumed: LKV kulutettu
-  dhw_cop: LKV COP
+  dhw_cop: LKV hyötysuhde
   dhw_delivered: LKV tuotettu
   hp_feed_temp: Menolämpötila
   z1_feed_temp: Vyöhyke 1 menolämpötila
@@ -73,7 +73,7 @@ substitutions:
   boiler: Kattila
   energy_consumed_increasing: Kokonaisenergiankulutus
   heating_consumed: Lämmityksen kulutus
-  heating_cop: Lämmityksen COP
+  heating_cop: Lämmityksen hyötysuhde
   heating_delivered: Lämmityksen tuotanto
   status_holiday: Lomatoiminto
   status_immersion: Vastuslämmitin
@@ -86,7 +86,7 @@ substitutions:
   cool_flow_temperature: Jäähdytyksen menolämpötila
   floor_dry_up: Lattian kuivaus
   cool_compensation_curve: Jäähdytyksen kompensointikäyrä
-  operation_off: "Pois"
+  operation_off: "Pois päältä"
   hotwater: Käyttöveden lämmitys
   heating: Tilojen lämmitys
   cooling: Tilojen jäähdytys
@@ -96,7 +96,7 @@ substitutions:
   status_operation: Toimintatila
   output_power: Lähtöteho
   computed_output_power: Arvioitu lähtöteho
-  computed_cop: Arvioitu COP
+  computed_cop: Laskettu hyötysuhde
   daily_computed_output_power: Arvioitu päivittäinen tuotettu energia
   daily_repported_input_power: Raportoitu päivittäinen energiankulutus
   outside_temp: Ulkolämpötila
@@ -128,32 +128,32 @@ substitutions:
   super_heat_temp: Puristuksen ylikuumenemislämpötila
   sub_cool_temp: Alijäähdytyslämpötila
   fan_speed: Puhaltimen nopeus
-  status_short_cycle_lockout: 'Lyhyt sykli: Lukitus'
-  minimum_compressor_on_time: 'Lyhyt sykli: Minimi käyntiaika'
-  lockout_duration: 'Lyhyt sykli: Lukitusaika (min)'
-  short_cycle_mitigation_button: 'Lyhyt sykli: Peruuta lukitus'
-  predictive_short_cycle_control_enabled: 'Lyhyt sykli: Ennakoiva Esto'
-  predictive_short_cycle_high_delta_time_window: 'Lyhyt sykli: Korkean Deltan Kesto'
-  auto_adaptive_control_enabled: 'Automaattisesti mukautuva: Ohjaus'
-  heating_slope: 'Automaattisesti mukautuva: Lämmityskäyrän jyrkkyys'
-  cooling_slope: 'Automaattisesti mukautuva: Jäähdytyskäyrän jyrkkyys'
-  maximum_heating_flow_temp: 'Automaattisesti mukautuva: Enimmäismenoilman lämpötila (lämmitys)'
-  minimum_heating_flow_temp: 'Automaattisesti mukautuva: Vähimmäismenoilman lämpötila (lämmitys)'
-  minimum_cooling_flow_temp: 'Automaattisesti mukautuva: Vähimmäismenoilman lämpötila (jäähdytys)'
-  cooling_smart_start_temp: 'Automaattisesti mukautuva: Älykäs aloituslämpötila (jäähdytys)'
-  temperature_feedback_source: 'Automaattisesti mukautuva: Huonelämpötilan lähde'
+  status_short_cycle_lockout: 'Lyhytsykli: Lukitus'
+  minimum_compressor_on_time: 'Lyhytsykli: Vähimmäiskäyntiaika'
+  lockout_duration: 'Lyhytsykli: Lukitusaika (min)'
+  short_cycle_mitigation_button: 'Lyhytsykli: Peruuta lukitus'
+  predictive_short_cycle_control_enabled: 'Lyhytsykli: Ennakoiva esto'
+  predictive_short_cycle_high_delta_time_window: 'Lyhytsykli: Korkean delta-arvon aikaikkuna'
+  auto_adaptive_control_enabled: 'Automaattinen mukautus: Ohjaus'
+  heating_slope: 'Automaattinen mukautus: Lämmityskäyrän kaltevuus'
+  cooling_slope: 'Automaattinen mukautus: Jäähdytyskäyrän kaltevuus'
+  maximum_heating_flow_temp: 'Automaattinen mukautus: Lämmityksen enimmäismenovesilämpötila'
+  minimum_heating_flow_temp: 'Automaattinen mukautus: Lämmityksen vähimmäismenovesilämpötila'
+  minimum_cooling_flow_temp: 'Automaattinen mukautus: Jäähdytyksen vähimmäismenovesilämpötila'
+  cooling_smart_start_temp: 'Automaattinen mukautus: Jäähdytyksen älykäs aloituslämpötila'
+  temperature_feedback_source: 'Automaattinen mukautus: Huonelämpötilan lähde'
   temperature_feedback_option_room: 'Huonetermostaatti'
   temperature_feedback_option_api: 'Home Assistant / REST API'
-  heating_system_type: 'Automaattisesti mukautuva: Lämmitysjärjestelmän tyyppi'
+  heating_system_type: 'Automaattinen mukautus: Lämmitysjärjestelmän tyyppi'
   heating_system_type_option_ufh: 'Lattialämmitys'
   heating_system_type_option_ufh_rad: 'Lattialämmitys + Patterit'
   heating_system_type_option_rad: 'Patterit'
-  heating_offset_sensor: 'Automaattisesti mukautuva: Lämmityksen siirtymä'
-  cooling_offset_sensor: 'Automaattisesti mukautuva: Jäähdytyksen siirtymä'
-  auto_adaptive_setpoint_bias: 'Automaattisesti mukautuva: Asetusarvon poikkeama'
-  dynamic_learning_rate_sensor: 'Automaattisesti mukautuva: Dynaaminen oppimisnopeus'
-  temperature_feedback: 'Automaattisesti mukautuva: Nykyisen huonelämpötilan palaute'
-  thermostat_overshoot_compensation: 'Automaattisesti mukautuva: Termostaatin ylityksen kompensointi'
+  heating_offset_sensor: 'Automaattinen mukautus: Lämmityksen siirtymä'
+  cooling_offset_sensor: 'Automaattinen mukautus: Jäähdytyksen siirtymä'
+  auto_adaptive_setpoint_bias: 'Automaattinen mukautus: Asetusarvon poikkeama'
+  dynamic_learning_rate_sensor: 'Automaattinen mukautus: Dynaaminen oppimisnopeus'
+  temperature_feedback: 'Automaattinen mukautus: Huonelämpötilan palaute'
+  thermostat_overshoot_compensation: 'Automaattinen mukautus: Termostaatin ylityksen kompensointi'
   total_increasing_heating_consumed: Kokonaiskulutus Lämmitys
   total_increasing_heating_delivered: Kokonaistuotto Lämmitys
   total_increasing_cool_consumed: Kokonaiskulutus Jäähdytys
