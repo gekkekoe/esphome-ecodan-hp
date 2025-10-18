@@ -84,33 +84,11 @@ namespace ecodan
     void EcodanHeatpump::loop()
     {
         static auto last_response = std::chrono::steady_clock::now();
-        // a valid handshake is required in proxy before communication
-        if (proxy_uart_ && proxy_available() && needs_proxy_handshake()) {
-            handle_proxy_handshake(proxy_uart_, uart_);
-            return;
-        }
-
-        if (proxy_uart_ && proxy_uart_->available() > 0) {
-            proxy_ping(); 
-            while (proxy_uart_->available() > 0) {
-                uint8_t byte;
-                proxy_uart_->read_byte(&byte);
-                if (uart_)
-                    uart_->write_byte(byte);
-
-                // redo handshake '0x63 0x00' seems to be the failed msg
-                static uint8_t disconnect_buffer[2];
-                disconnect_buffer[0] = disconnect_buffer[1];
-                disconnect_buffer[1] = byte;
-                if (disconnect_buffer[0] == 0x6e && disconnect_buffer[1] == 0x00) {
-                    ESP_LOGW(TAG, "Proxy disconnected, re-initiating handshake...");
-                    reset_connection(); // reset_connection() moet handshake_state_ resetten
-                }
-            }
-        }
+        
+        if (proxy_available())
+            handle_proxy();
 
         static Message rx_buffer_; 
-
         // consume all data and forward directly
         if (uart_ && uart_->available() > 0) {
             last_response = std::chrono::steady_clock::now();

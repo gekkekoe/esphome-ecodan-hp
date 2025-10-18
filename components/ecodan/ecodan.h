@@ -19,12 +19,7 @@
 namespace esphome {
 namespace ecodan 
 {    
-    static constexpr const char *TAG = "ecodan.component";   
-
-    enum class ProxyHandshakeState {
-        NOT_COMPLETED,
-        COMPLETED
-    };
+    static constexpr const char *TAG = "ecodan.component";
 
     class EcodanHeatpump : public PollingComponent {
     public:        
@@ -98,7 +93,6 @@ namespace ecodan
     private:
         uart::UARTComponent *uart_ = nullptr;
         uart::UARTComponent *proxy_uart_ = nullptr;
-        ProxyHandshakeState handshake_state_ = ProxyHandshakeState::NOT_COMPLETED;
         uint8_t initialCount = 0;
 
         Status status;
@@ -116,16 +110,17 @@ namespace ecodan
 
         bool serial_rx(uart::UARTComponent *uart, Message& msg);
         bool serial_tx(uart::UARTComponent *uart, Message& msg);
-        void handle_proxy_handshake(uart::UARTComponent *proxy_uart, uart::UARTComponent *uart);
-        bool needs_proxy_handshake() const { return handshake_state_ == ProxyHandshakeState::NOT_COMPLETED; }
+        void handle_proxy();
         
         bool disconnect();
         void reset_connection() {
+            if (proxy_available())
+                return;
+
             connected = false;
             initialCount = 0;
-            handshake_state_ = ProxyHandshakeState::NOT_COMPLETED;
             disconnect();
-        };
+    };
         bool initialCmdCompleted() { return initialCount == 3; };
 
         bool dispatch_next_status_cmd();
