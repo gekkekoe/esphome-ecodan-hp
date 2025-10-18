@@ -343,6 +343,9 @@ namespace ecodan
 
     bool EcodanHeatpump::begin_connect()
     {
+        if (proxy_available())
+            return true;
+
         Message cmd{MsgType::CONNECT_CMD};
         uint8_t payload[2] = {0xCA, 0x01};
         cmd.write_payload(payload, sizeof(payload));
@@ -359,6 +362,9 @@ namespace ecodan
 
     bool EcodanHeatpump::disconnect()
     {
+        if (proxy_available())
+            return true;
+        
         Message cmd{MsgType::CONNECT_CMD};
         uint8_t payload[2] = {0xCA, 0x02};
         cmd.write_payload(payload, sizeof(payload));
