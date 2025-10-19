@@ -52,6 +52,8 @@ namespace ecodan
                 // Once the full packet is received, verify its checksum.
                 if (msg.get_write_offset() >= msg.size()) {
                     if (msg.verify_checksum()) {
+                        // if (uart_)
+                        //     uart_->write_array(msg.buffer(), msg.size());
                         if (msg.matches(first_request, sizeof(first_request))) {
                             ESP_LOGD(TAG, "Handshake: First request detected, sending response.");
                             proxy_uart_->write_array(expected_first_response, sizeof(expected_first_response));

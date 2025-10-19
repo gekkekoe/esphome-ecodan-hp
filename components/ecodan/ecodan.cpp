@@ -92,10 +92,12 @@ namespace ecodan
         // consume all data and forward directly
         if (uart_ && uart_->available() > 0) {
             last_response = std::chrono::steady_clock::now();
+            uint8_t current_byte;
             while (uart_->available() > 0) {
-                uint8_t current_byte;
                 uart_->read_byte(&current_byte);
-
+                if (proxy_available())
+                    proxy_uart_->write_byte(current_byte);
+                    
                 if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1) {                    
                     continue; // continue scan for magic
                 }
@@ -112,8 +114,15 @@ namespace ecodan
                 // Once the full packet is received, verify its checksum.
                 if (rx_buffer_.get_write_offset() >= rx_buffer_.size()) {
                     if (rx_buffer_.verify_checksum()) {
-                        if (proxy_available())
-                            proxy_uart_->write_array(rx_buffer_.buffer(), rx_buffer_.get_write_offset());
+                        if (proxy_available()) {
+                            // need to clear comm error 0x28 byte 11
+                            if (rx_buffer_[0] == 0x28 && rx_buffer_[11] == 1) {
+                                ESP_LOGI(TAG, "Intercepted 0x28, clearing error");
+                                rx_buffer_[11] = 0;
+                                rx_buffer_.set_checksum();
+                            }
+                            proxy_uart_->write_array(rx_buffer_.buffer(), rx_buffer_.size());
+                        }
                         handle_response(rx_buffer_);
                     } else {
                         ESP_LOGW(TAG, "Invalid packet checksum. Discarding message.");
