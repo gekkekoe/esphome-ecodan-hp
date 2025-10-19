@@ -96,11 +96,7 @@ namespace ecodan
                 uint8_t current_byte;
                 uart_->read_byte(&current_byte);
 
-                if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1) {
-                    // Forward unknown bytes
-                    if (proxy_available())
-                        proxy_uart_->write_byte(current_byte);
-                    
+                if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1) {                    
                     continue; // continue scan for magic
                 }
 
