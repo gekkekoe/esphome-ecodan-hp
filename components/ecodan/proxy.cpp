@@ -3,20 +3,34 @@
 namespace esphome {
 namespace ecodan 
 { 
-    static auto last_proxy_activity = std::chrono::steady_clock::now();
-    bool proxy_timedout() {
-        auto now = std::chrono::steady_clock::now();
-        return now - last_proxy_activity > std::chrono::minutes(2);
-    }
-
     void EcodanHeatpump::proxy_ping() {
-        last_proxy_activity = std::chrono::steady_clock::now();
+        this->last_proxy_activity_.store(std::chrono::steady_clock::now());
     } 
 
     bool EcodanHeatpump::proxy_available() {
-        return proxy_uart_ && !proxy_timedout();
-    }
+        auto now = std::chrono::steady_clock::now();
+        auto timeout = now - this->last_proxy_activity_.load() > std::chrono::minutes(2);
+        return proxy_uart_ && !timeout;
+    } 
 
+    void EcodanHeatpump::proxy_task() {
+        while (true) {
+            if (this->proxy_uart_ && this->uart_) {
+                if (this->proxy_uart_->available() > 0) {
+                    proxy_ping();
+                    
+                    uint8_t data;
+                    while (this->proxy_uart_->available() > 0) {
+                        this->proxy_uart_->read_byte(&data);
+                        this->uart_->write_byte(data);
+                    }
+                }
+            }
+            // yield
+            vTaskDelay(1); 
+        }
+    }    
+/*
     // proxy serial communicatioons
     const uint8_t connect_request[] = { 0xfc, 0x5a, 0x02, 0x7a, 0x02, 0xca, 0x01, 0x5d};
     const uint8_t connect_response[] = { 0xfc, 0x7a, 0x02, 0x7a, 0x01, 0x00, 0x09 };
@@ -78,5 +92,6 @@ namespace ecodan
             }
         }
     }
+    */
 } // namespace ecodan
 } // namespace esphome

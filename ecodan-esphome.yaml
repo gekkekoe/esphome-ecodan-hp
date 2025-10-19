@@ -87,7 +87,7 @@ packages:
 
 # enable logger
 logger:
-  baud_rate: 115200
+  baud_rate: 0
   #logs:
   #   auto_adaptive: DEBUG
   #   sensor: ERROR

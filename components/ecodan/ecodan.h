@@ -4,6 +4,7 @@
 #include <string>
 #include <chrono>
 #include <optional>
+#include <atomic>
 
 #include "esphome.h"
 #include "esphome/core/component.h"
@@ -12,6 +13,9 @@
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h" 
 
 #include "proto.h"
 #include "status.h"
@@ -108,9 +112,12 @@ namespace ecodan
         std::optional<CONTROLLER_FLAG> serverControlFlagBeforeLockout = {};
         std::queue<Message> cmdQueue;
 
+        std::atomic<std::chrono::steady_clock::time_point> last_proxy_activity_;
+        TaskHandle_t proxy_task_handle_ = nullptr;
+
         bool serial_rx(uart::UARTComponent *uart, Message& msg);
         bool serial_tx(uart::UARTComponent *uart, Message& msg);
-        void handle_proxy();
+        //void handle_proxy();
         
         bool disconnect();
         void reset_connection() {
@@ -120,7 +127,7 @@ namespace ecodan
             connected = false;
             initialCount = 0;
             disconnect();
-    };
+        };
         bool initialCmdCompleted() { return initialCount == 3; };
 
         bool dispatch_next_status_cmd();
@@ -135,6 +142,10 @@ namespace ecodan
 
         void proxy_ping();
         bool proxy_available();
+        void proxy_task();
+        static void proxy_task_trampoline(void *arg) {
+            static_cast<EcodanHeatpump*>(arg)->proxy_task();
+        };
     };
 
     class EcodanClimate : public climate::Climate, public PollingComponent  {

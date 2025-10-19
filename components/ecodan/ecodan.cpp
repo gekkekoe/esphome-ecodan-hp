@@ -5,6 +5,17 @@ namespace ecodan
 { 
     void EcodanHeatpump::setup() {
         heatpumpInitialized = initialize();
+        this->last_proxy_activity_ = std::chrono::steady_clock::now();
+
+        ESP_LOGD("main", "Starting high-priority proxy task...");    
+        xTaskCreate(
+            proxy_task_trampoline,
+            "proxy_task",             
+            4096,                     
+            this,                     
+            configMAX_PRIORITIES - 1, 
+            &this->proxy_task_handle_ 
+        );
     }
 
 
@@ -84,9 +95,6 @@ namespace ecodan
     void EcodanHeatpump::loop()
     {
         static auto last_response = std::chrono::steady_clock::now();
-        
-        if (proxy_available())
-            handle_proxy();
 
         static Message rx_buffer_; 
         // consume all data and forward directly
@@ -98,9 +106,8 @@ namespace ecodan
                 if (proxy_available())
                     proxy_uart_->write_byte(current_byte);
 
-                if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1) {                    
+                if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1)                
                     continue; // continue scan for magic
-                }
 
                 rx_buffer_.append_byte(current_byte);
 
@@ -114,15 +121,6 @@ namespace ecodan
                 // Once the full packet is received, verify its checksum.
                 if (rx_buffer_.get_write_offset() >= rx_buffer_.size()) {
                     if (rx_buffer_.verify_checksum()) {
-                        if (proxy_available()) {
-                            // need to clear comm error 0x28 byte 11
-                            if (rx_buffer_[0] == 0x28 && rx_buffer_[11] == 1) {
-                                ESP_LOGI(TAG, "Intercepted 0x28, clearing error");
-                                rx_buffer_[11] = 0;
-                                rx_buffer_.set_checksum();
-                                proxy_uart_->write_array(rx_buffer_.buffer(), rx_buffer_.size());
-                            }
-                        }
                         handle_response(rx_buffer_);
                     } else {
                         ESP_LOGW(TAG, "Invalid packet checksum. Discarding message.");
