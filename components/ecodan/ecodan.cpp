@@ -96,12 +96,13 @@ namespace ecodan
                 uint8_t current_byte;
                 uart_->read_byte(&current_byte);
 
-                // Immediately forward the raw byte to the proxy
-                if (proxy_available())
-                    proxy_uart_->write_byte(current_byte);
-
-                if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1) 
-                    continue;
+                if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1) {
+                    // Forward unknown bytes
+                    if (proxy_available())
+                        proxy_uart_->write_byte(current_byte);
+                    
+                    continue; // continue scan for magic
+                }
 
                 rx_buffer_.append_byte(current_byte);
 
@@ -113,8 +114,10 @@ namespace ecodan
                 }
 
                 // Once the full packet is received, verify its checksum.
-                if (rx_buffer_.get_write_offset() == rx_buffer_.size()) {
+                if (rx_buffer_.get_write_offset() >= rx_buffer_.size()) {
                     if (rx_buffer_.verify_checksum()) {
+                        if (proxy_available())
+                            proxy_uart_->write_array(rx_buffer_.buffer(), rx_buffer_.get_write_offset());
                         handle_response(rx_buffer_);
                     } else {
                         ESP_LOGW(TAG, "Invalid packet checksum. Discarding message.");
