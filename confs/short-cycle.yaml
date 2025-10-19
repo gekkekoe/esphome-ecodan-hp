@@ -281,7 +281,7 @@ script:
             return; // 0 duration == disabled
           }
 
-          if (id(compressor_start_time) == 0 || id(status_short_cycle_lockout).state)
+          if (id(compressor_start_time) == 0 || id(status_short_cycle_lockout).state || status.DefrostActive)
             return;
 
           uint32_t min_duration_ms = id(minimum_compressor_on_time).state * 60000;
@@ -323,9 +323,4 @@ binary_sensor:
         then:
           - lambda: |-
               ESP_LOGI(esphome::ecodan::TAG, "Compressor STOP detected");
-              auto& status = id(ecodan_instance).get_status();
-              if (!status.DefrostActive) {
-                id(on_compressor_stop).execute();
-              } else {
-                id(compressor_start_time) = 0;
-              }
+              id(on_compressor_stop).execute();
