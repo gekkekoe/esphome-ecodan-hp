@@ -321,8 +321,6 @@ namespace ecodan
 
     bool EcodanHeatpump::dispatch_next_cmd()
     {
-        if (!handle_active_request_codes())
-            return true;
 
         if (cmdQueue.empty())
         {
