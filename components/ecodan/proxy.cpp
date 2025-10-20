@@ -12,7 +12,7 @@ namespace ecodan
         auto timeout = now - this->last_proxy_activity_.load() > std::chrono::minutes(2);
         return proxy_uart_ && !timeout;
     } 
-/*
+
     // proxy serial communicatioons
     const uint8_t connect_request[] = { 0xfc, 0x5a, 0x02, 0x7a, 0x02, 0xca, 0x01, 0x5d};
     const uint8_t connect_response[] = { 0xfc, 0x7a, 0x02, 0x7a, 0x01, 0x00, 0x09 };
@@ -51,20 +51,20 @@ namespace ecodan
                         // if (uart_)
                         //     uart_->write_array(msg.buffer(), msg.size());
                         if (msg.matches(first_request, sizeof(first_request))) {
-                            ESP_LOGD(TAG, "Handshake: First request detected, sending response.");
                             proxy_uart_->write_array(expected_first_response, sizeof(expected_first_response));
+                            //ESP_LOGD(TAG, "Handshake: First request detected, sending response.");
                         }
                         else if (msg.matches(second_request, sizeof(second_request))) {
-                            ESP_LOGD(TAG, "Handshake: Second request detected, sending response. Handshake complete!");
                             proxy_uart_->write_array(expected_second_response, sizeof(expected_second_response));
+                            //ESP_LOGD(TAG, "Handshake: Second request detected, sending response. Handshake complete!");
                         }
                         else if (msg.matches(connect_request, sizeof(connect_request))) {
-                            ESP_LOGD(TAG, "Incoming connect request from proxy interface");
                             proxy_uart_->write_array(connect_response, sizeof(connect_response));
+                            //ESP_LOGD(TAG, "Incoming connect request from proxy interface");
                         }
                         else if (msg.matches(keep_alive_request, sizeof(keep_alive_request))) {
-                            ESP_LOGD(TAG, "keep alive request detected");
                             proxy_uart_->write_array(keep_alive_response, sizeof(keep_alive_response));
+                            //ESP_LOGD(TAG, "keep alive request detected");
                         }
                     } else {
                         ESP_LOGW(TAG, "Invalid packet checksum. Discarding message.");
@@ -74,6 +74,6 @@ namespace ecodan
             }
         }
     }
-    */
+    
 } // namespace ecodan
 } // namespace esphome
