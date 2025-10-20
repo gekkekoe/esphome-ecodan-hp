@@ -118,7 +118,7 @@ substitutions:
   fault_code_text: Codice di errore
   refrigerant_error_code_text: Liq. Refr. codice di errore
   # refrigerant_code: Refrigerante
-  compressor_starts: Démarrages cumulés du compresseur
+  compressor_starts: Avvii totali compressore
   discharge_temp: Temperatura di scarico
   ou_liquid_pipe_temp: Temperatura tubo liquido unità esterna 1
   ou_two_phase_pipe_temp: Unità esterna Temperatura tubo bifase
@@ -135,8 +135,8 @@ substitutions:
   predictive_short_cycle_control_enabled: 'Ciclo breve: Prevenzione Predittiva'
   predictive_short_cycle_high_delta_time_window: 'Ciclo breve: Durata Delta Elevato'
   auto_adaptive_control_enabled: 'Autoadattivo: Controllo'
-  heating_slope: 'Autoadattivo: Pendenza Curva Climatica'
-  cooling_slope: 'Autoadattivo: Pendenza Curva di Raffrescamento'
+  heating_slope: 'Autoadattivo: Pendenza Curva Climatica Riscaldamento'
+  cooling_slope: 'Autoadattivo: Pendenza Curva Climatica Raffrescamento'
   maximum_heating_flow_temp: 'Autoadattivo: Temp. Max. Mandata Riscaldamento'
   minimum_heating_flow_temp: 'Autoadattivo: Temp. Min. Mandata Riscaldamento'
   minimum_cooling_flow_temp: 'Autoadattivo: Temp. Min. Mandata Raffrescamento'
