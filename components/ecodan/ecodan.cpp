@@ -3,18 +3,30 @@
 namespace esphome {
 namespace ecodan 
 { 
+
+    EcodanHeatpump::EcodanHeatpump() : PollingComponent() {
+        // ring buffer for messages from the uart port
+        this->rx_message_queue_ = xQueueCreate(10, sizeof(Message));
+        if (this->rx_message_queue_ == nullptr) {
+            ESP_LOGE(TAG, "Could not create rx_message_queue");
+        }
+
+        // write mutex uart tx
+        this->uart_tx_mutex_ = xSemaphoreCreateMutex();
+        if (this->uart_tx_mutex_ == nullptr) {
+            ESP_LOGE(TAG, "Could not create uart_tx_mutex");
+        }
+    }
+
     void EcodanHeatpump::setup() {
         heatpumpInitialized = initialize();
         this->last_proxy_activity_ = std::chrono::steady_clock::now();
 
-        ESP_LOGD("main", "Starting high-priority proxy task...");    
+        // background serial io handler
         xTaskCreate(
-            proxy_task_trampoline,
-            "proxy_task",             
-            4096,                     
-            this,                     
-            configMAX_PRIORITIES - 1, 
-            &this->proxy_task_handle_ 
+            serial_io_task_trampoline,
+            "serial_io_task", 4096, this,
+            configMAX_PRIORITIES - 1, &this->serial_io_task_handle_
         );
     }
 
@@ -95,39 +107,12 @@ namespace ecodan
     void EcodanHeatpump::loop()
     {
         static auto last_response = std::chrono::steady_clock::now();
-
-        static Message rx_buffer_; 
-        // consume all data and forward directly
-        if (uart_ && uart_->available() > 0) {
+        
+        Message received_message;
+        // Get messages from queue
+        while (xQueueReceive(this->rx_message_queue_, &received_message, (TickType_t)0) == pdTRUE) {
             last_response = std::chrono::steady_clock::now();
-            uint8_t current_byte;
-            while (uart_->available() > 0) {
-                uart_->read_byte(&current_byte);
-                if (proxy_available())
-                    proxy_uart_->write_byte(current_byte);
-
-                if (rx_buffer_.get_write_offset() == 0 && current_byte != HEADER_MAGIC_A1)                
-                    continue; // continue scan for magic
-
-                rx_buffer_.append_byte(current_byte);
-
-                // Once the header is complete, verify it.
-                if (rx_buffer_.get_write_offset() == rx_buffer_.header_size() && !rx_buffer_.verify_header()) {
-                    ESP_LOGW(TAG, "Invalid packet header. Discarding message.");
-                    rx_buffer_ = Message();
-                    continue;
-                }
-
-                // Once the full packet is received, verify its checksum.
-                if (rx_buffer_.get_write_offset() >= rx_buffer_.size()) {
-                    if (rx_buffer_.verify_checksum()) {
-                        handle_response(rx_buffer_);
-                    } else {
-                        ESP_LOGW(TAG, "Invalid packet checksum. Discarding message.");
-                    }
-                    rx_buffer_ = Message();
-                }
-            }
+            handle_response(received_message);
         }
         
         auto now = std::chrono::steady_clock::now();

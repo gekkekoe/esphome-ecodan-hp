@@ -293,7 +293,7 @@ namespace ecodan
 
         cmdIndex = (cmdIndex + 1) % (!initialCmdCompleted() ? MAX_INITIAL_CMD_SIZE : MAX_STATUS_CMD_SIZE);
         auto& cmd = !initialCmdCompleted() ? initialCmdQueue[cmdIndex] : statusCmdQueue[cmdIndex];
-        if (!serial_tx(uart_, cmd))
+        if (!serial_tx(cmd))
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
             cmdIndex = 0;
@@ -307,7 +307,7 @@ namespace ecodan
     bool EcodanHeatpump::handle_active_request_codes() {
         if (activeRequestCode != Status::REQUEST_CODE::NONE) {
             Message svc_cmd{MsgType::GET_CMD, GetType::SERVICE_REQUEST_CODE, static_cast<int16_t>(activeRequestCode)};
-            if (!serial_tx(uart_, svc_cmd))
+            if (!serial_tx(svc_cmd))
             {
                 ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
                 reset_connection();
@@ -330,8 +330,7 @@ namespace ecodan
         }
         
         //ESP_LOGI(TAG, msg.debug_dump_packet().c_str());
-
-        if (!serial_tx(uart_, cmdQueue.front()))
+        if (!serial_tx(cmdQueue.front()))
         {
             ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
             reset_connection();
@@ -351,7 +350,7 @@ namespace ecodan
         cmd.write_payload(payload, sizeof(payload));
 
         ESP_LOGI(TAG, "Attempt to tx CONNECT_CMD!");
-        if (!serial_tx(uart_, cmd))
+        if (!serial_tx(cmd))
         {
             ESP_LOGI(TAG, "Failed to tx CONNECT_CMD!");
             return false;
@@ -364,13 +363,13 @@ namespace ecodan
     {
         if (proxy_available())
             return true;
-        
+
         Message cmd{MsgType::CONNECT_CMD};
         uint8_t payload[2] = {0xCA, 0x02};
         cmd.write_payload(payload, sizeof(payload));
 
         ESP_LOGI(TAG, "Attempt to tx DISCONNECT_CMD!");
-        if (!serial_tx(uart_, cmd))
+        if (!serial_tx(cmd))
         {
             ESP_LOGI(TAG, "Failed to tx DISCONNECT_CMD!");
             return false;

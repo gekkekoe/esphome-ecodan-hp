@@ -12,24 +12,6 @@ namespace ecodan
         auto timeout = now - this->last_proxy_activity_.load() > std::chrono::minutes(2);
         return proxy_uart_ && !timeout;
     } 
-
-    void EcodanHeatpump::proxy_task() {
-        while (true) {
-            if (this->proxy_uart_ && this->uart_) {
-                if (this->proxy_uart_->available() > 0) {
-                    proxy_ping();
-                    
-                    uint8_t data;
-                    while (this->proxy_uart_->available() > 0) {
-                        this->proxy_uart_->read_byte(&data);
-                        this->uart_->write_byte(data);
-                    }
-                }
-            }
-            // yield
-            vTaskDelay(1); 
-        }
-    }    
 /*
     // proxy serial communicatioons
     const uint8_t connect_request[] = { 0xfc, 0x5a, 0x02, 0x7a, 0x02, 0xca, 0x01, 0x5d};
