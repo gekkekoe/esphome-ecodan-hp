@@ -31,14 +31,6 @@ namespace ecodan
             if (buffer.verify_checksum()) {
                 if (is_proxy_message) { // proxy comm
 
-                    // proxy full packet only
-                    if (xSemaphoreTake(this->uart_tx_mutex_, (TickType_t)10) == pdTRUE) {
-                        this->uart_->write_array(buffer.buffer(), buffer.get_write_offset());
-                        xSemaphoreGive(this->uart_tx_mutex_);
-                    } else {
-                        ESP_LOGE(TAG, "Could not acquire uart_tx_mutex");
-                    }
-
                     // handle handshake cached
                     if (buffer.matches(first_request, sizeof(first_request))) {
                         ESP_LOGD(TAG, "Handshake: First request detected, sending response.");
@@ -51,11 +43,23 @@ namespace ecodan
                     else if (buffer.matches(connect_request, sizeof(connect_request))) {
                         ESP_LOGD(TAG, "Incoming connect request from proxy interface");
                         proxy_uart_->write_array(connect_response, sizeof(connect_response));
+                        if (xSemaphoreTake(this->uart_tx_mutex_, (TickType_t)10) == pdTRUE) {
+                            this->uart_->write_array(buffer.buffer(), buffer.get_write_offset());
+                            xSemaphoreGive(this->uart_tx_mutex_);
+                        }
                     }
                     else if (buffer.matches(keep_alive_request, sizeof(keep_alive_request))) {
                         ESP_LOGD(TAG, "keep alive request detected");
                         proxy_uart_->write_array(keep_alive_response, sizeof(keep_alive_response));
-                    } 
+                    } else {
+                        // proxy full packet only
+                        if (xSemaphoreTake(this->uart_tx_mutex_, (TickType_t)10) == pdTRUE) {
+                            this->uart_->write_array(buffer.buffer(), buffer.get_write_offset());
+                            xSemaphoreGive(this->uart_tx_mutex_);
+                        } else {
+                            ESP_LOGE(TAG, "Could not acquire uart_tx_mutex");
+                        }
+                    }
 
                 } else { // FTC comm
                     if (this->proxy_available()) {
