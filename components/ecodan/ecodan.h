@@ -14,6 +14,11 @@
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h" 
+#include "freertos/semphr.h"
+
 #include "proto.h"
 #include "status.h"
 
@@ -110,6 +115,9 @@ namespace ecodan
         std::queue<Message> cmdQueue;
 
         std::atomic<std::chrono::steady_clock::time_point> last_proxy_activity_;
+        TaskHandle_t serial_io_task_handle_ = nullptr;
+        QueueHandle_t rx_message_queue_ = nullptr;
+        SemaphoreHandle_t uart_tx_mutex_ = nullptr;
 
         bool serial_tx(Message& msg);
         
@@ -137,8 +145,11 @@ namespace ecodan
         void proxy_ping();
         bool proxy_available();
         void serial_io_task();
-        void handle_proxy();
         void process_serial_byte(uint8_t byte, Message& buffer, bool is_proxy_message);
+        
+        static void serial_io_task_trampoline(void *arg) {
+            static_cast<EcodanHeatpump*>(arg)->serial_io_task();
+        };
     };
 
     class EcodanClimate : public climate::Climate, public PollingComponent  {
