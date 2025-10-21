@@ -22,11 +22,15 @@ namespace ecodan
         heatpumpInitialized = initialize();
         this->last_proxy_activity_ = std::chrono::steady_clock::now();
 
+        int main_core_id = xPortGetCoreID();
+        int other_core_id = 1 - main_core_id;
+
         // background serial io handler
-        xTaskCreate(
+        xTaskCreatePinnedToCore(
             serial_io_task_trampoline,
             "serial_io_task", 4096, this,
-            configMAX_PRIORITIES - 1, &this->serial_io_task_handle_
+            configMAX_PRIORITIES - 1, &this->serial_io_task_handle_,
+            other_core_id // pin to other core than esphome
         );
     }
 
@@ -107,7 +111,7 @@ namespace ecodan
     void EcodanHeatpump::loop()
     {
         static auto last_response = std::chrono::steady_clock::now();
-        
+
         Message received_message;
         // Get messages from queue
         while (xQueueReceive(this->rx_message_queue_, &received_message, (TickType_t)0) == pdTRUE) {
