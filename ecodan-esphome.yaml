@@ -45,6 +45,7 @@ api:
 #  dbg: !include confs/debug.yaml
 #  wifi: !include confs/wifi.yaml
 #  energy: !include confs/energy.yaml
+#  cpu: !include confs/cpu-monitoring.yaml
 #  #svc: !include confs/server-control-z1.yaml
 
 external_components:
@@ -62,6 +63,7 @@ packages:
             confs/energy.yaml,            # required
             confs/short-cycle.yaml,     # recommended
             confs/auto-adaptive.yaml,    # recommended
+            confs/cpu-monitoring.yaml,    # recommended
             confs/request-codes.yaml,   # disable if your unit does not support request codes (service menu)
             confs/esp32s3.yaml,         # confs/esp32.yaml, for regular board
             #confs/esp32s3-led.yaml,    # atom s3 status leds
@@ -85,9 +87,19 @@ packages:
             confs/wifi.yaml
            ]
 
-# enable logger
+# logger:
+#   level: DEBUG
+#   baud_rate: 115200
+#   logs:
+#     ecodan.component: WARN
+#     auto_adaptive: DEBUG
+#     predictive_short_cycle: DEBUG
+#     uart_debug: DEBUG
+
+
 logger:
   baud_rate: 115200
+  # level: WARN
   #logs:
   #   auto_adaptive: DEBUG
   #   sensor: ERROR

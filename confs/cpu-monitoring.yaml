@@ -1,0 +1,103 @@
+globals:
+  - id: g_cpu_load_0
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: g_cpu_load_1
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: g_core_idle0_last
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  - id: g_core_idle1_last
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  - id: g_core_ticks_last
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+
+sensor:
+  - platform: template
+    name: CPU 0
+    id: cpu_load_core0
+    unit_of_measurement: "%"
+    accuracy_decimals: 1
+    state_class: measurement
+    entity_category: diagnostic
+    lambda: |-
+      return id(g_cpu_load_0);
+
+  - platform: template
+    name: CPU 1
+    id: cpu_load_core1
+    unit_of_measurement: "%"
+    accuracy_decimals: 1
+    state_class: measurement
+    entity_category: diagnostic
+    lambda: |-
+      return id(g_cpu_load_1);
+
+interval:
+  - interval: 2s
+    then:
+      - lambda: |-
+          #include "freertos/FreeRTOS.h"
+          #include "freertos/task.h"
+          
+          static uint32_t& last_total_runtime = id(g_core_ticks_last);
+          static uint32_t& last_idle0_runtime = id(g_core_idle0_last);
+          static uint32_t& last_idle1_runtime = id(g_core_idle1_last);
+          
+          TaskStatus_t *task_status_array;
+          volatile UBaseType_t task_count;
+          uint32_t total_runtime;
+          uint32_t idle0_runtime = 0;
+          uint32_t idle1_runtime = 0;
+          
+          task_count = uxTaskGetNumberOfTasks();
+          task_status_array = (TaskStatus_t *)pvPortMalloc(task_count * sizeof(TaskStatus_t));
+          
+          if (task_status_array != NULL) {
+            // Call the system state only ONCE
+            task_count = uxTaskGetSystemState(task_status_array, task_count, &total_runtime);
+            
+            // Find both IDLE tasks
+            for (UBaseType_t i = 0; i < task_count; i++) {
+              const char *task_name = pcTaskGetName(task_status_array[i].xHandle);
+              if (strcmp(task_name, "IDLE0") == 0 || strcmp(task_name, "IDLE") == 0) {
+                idle0_runtime = task_status_array[i].ulRunTimeCounter;
+              } else if (strcmp(task_name, "IDLE1") == 0) {
+                idle1_runtime = task_status_array[i].ulRunTimeCounter;
+              }
+            }
+            
+            vPortFree(task_status_array);
+            
+            // Only publish if we have a previous value to compare against
+            if (last_total_runtime > 0 && total_runtime > last_total_runtime) {
+              uint32_t total_diff = total_runtime - last_total_runtime;
+              
+              // Calculate and Publish Core 0
+              uint32_t idle0_diff = idle0_runtime - last_idle0_runtime;
+              float cpu_load_0 = 100.0f - ((float)idle0_diff / (float)total_diff * 100.0f);
+              if (cpu_load_0 < 0.0f) cpu_load_0 = 0.0f;
+              if (cpu_load_0 > 100.0f) cpu_load_0 = 100.0f;
+              id(cpu_load_core0).publish_state(cpu_load_0);
+
+              // Calculate and Publish Core 1
+              uint32_t idle1_diff = idle1_runtime - last_idle1_runtime;
+              float cpu_load_1 = 100.0f - ((float)idle1_diff / (float)total_diff * 100.0f);
+              if (cpu_load_1 < 0.0f) cpu_load_1 = 0.0f;
+              if (cpu_load_1 > 100.0f) cpu_load_1 = 100.0f;
+              id(cpu_load_core1).publish_state(cpu_load_1);
+            }
+            
+            // Store the current values for the next iteration
+            last_total_runtime = total_runtime;
+            last_idle0_runtime = idle0_runtime;
+            last_idle1_runtime = idle1_runtime;
+          }
