@@ -1,7 +1,6 @@
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  fast_connect: true
   power_save_mode: high
   reboot_timeout: 0s
   ap:
