@@ -201,7 +201,7 @@ namespace ecodan
 
     bool EcodanHeatpump::schedule_cmd(Message& cmd)
     {   
-        cmdQueue.emplace(std::move(cmd));
+        cmdQueue.emplace(QueuedCommand{std::move(cmd), 0, 0});
         return dispatch_next_cmd();
     }
 
@@ -305,18 +305,27 @@ namespace ecodan
     }
 
     bool EcodanHeatpump::handle_active_request_codes() {
+
+        const unsigned long REQUEST_RETRY_INTERVAL = 2*1000; 
+        static unsigned long last_svc_request_time = 0;
+
         if (activeRequestCode != Status::REQUEST_CODE::NONE) {
-            Message svc_cmd{MsgType::GET_CMD, GetType::SERVICE_REQUEST_CODE, static_cast<int16_t>(activeRequestCode)};
-            if (!serial_tx(svc_cmd))
-            {
-                ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
-                reset_connection();
-                return false;
+            unsigned long current_time = millis();
+            if (current_time - last_svc_request_time >= REQUEST_RETRY_INTERVAL) {
+                ESP_LOGD(TAG, "Sending active service request (code %d)...", activeRequestCode);
+                Message svc_cmd{MsgType::GET_CMD, GetType::SERVICE_REQUEST_CODE, static_cast<int16_t>(activeRequestCode)};
+                if (!serial_tx(svc_cmd))
+                {
+                    ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
+                    reset_connection();
+                    return false;
+                }
+                last_svc_request_time = current_time;
             }
+
             return false;
         }
-
-        return true;
+        return true; 
     }
 
     bool EcodanHeatpump::dispatch_next_cmd()
@@ -327,14 +336,31 @@ namespace ecodan
             return true;
         }
         
-        //ESP_LOGI(TAG, msg.debug_dump_packet().c_str());
-        if (!serial_tx(cmdQueue.front()))
-        {
-            ESP_LOGI(TAG, "Unable to dispatch status update request, flushing queued requests...");
+        QueuedCommand& pending_cmd = cmdQueue.front();
+        const unsigned long CMD_TIMEOUT_MS = 2*1000;
+        if (pending_cmd.last_sent_time != 0 && (millis() - pending_cmd.last_sent_time < CMD_TIMEOUT_MS)) {
+            return true;
+        }
+        
+        if (pending_cmd.last_sent_time != 0) {
+            ESP_LOGW(TAG, "Command timed out. Retrying (attempt %d/10)...", pending_cmd.retries + 1);
+        }
+
+        if (pending_cmd.retries >= 10) {
+            ESP_LOGE(TAG, "Command failed after 10 retries. Discarding.");
+            cmdQueue.pop();
+            return true;
+        }
+
+        if (!serial_tx(pending_cmd.message)) {
+            ESP_LOGE(TAG, "Failed to send command to serial.");
             reset_connection();
             return false;
         }
 
+        pending_cmd.retries++;
+        pending_cmd.last_sent_time = millis();
+        
         return true;
     }
 

@@ -27,6 +27,12 @@ namespace ecodan
 {    
     static constexpr const char *TAG = "ecodan.component";
 
+    struct QueuedCommand {
+        Message message;
+        int retries = 0;
+        unsigned long last_sent_time = 0; 
+    };
+
     class EcodanHeatpump : public PollingComponent {
     public:        
         EcodanHeatpump();
@@ -112,7 +118,7 @@ namespace ecodan
         Status::REQUEST_CODE activeRequestCode = Status::REQUEST_CODE::NONE;
 
         std::optional<CONTROLLER_FLAG> serverControlFlagBeforeLockout = {};
-        std::queue<Message> cmdQueue;
+        std::queue<QueuedCommand> cmdQueue;
 
         std::atomic<std::chrono::steady_clock::time_point> last_proxy_activity_;
         TaskHandle_t serial_io_task_handle_ = nullptr;
