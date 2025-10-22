@@ -1,8 +1,22 @@
+substitutions:
+  uart_rx_pin: 2
+  uart_tx_pin: 1
+  uart_proxy_rx_pin: 38
+  uart_proxy_tx_pin: 39
+
 esphome:
   name: ${name}
   friendly_name: ${friendlyName}
   platformio_options:
     board_build.flash_mode: dio
+  on_boot:
+    - priority: 1001
+      then:
+        - lambda: |-
+            gpio_reset_pin(static_cast<gpio_num_t>(${uart_rx_pin}));
+            gpio_reset_pin(static_cast<gpio_num_t>(${uart_tx_pin}));
+            gpio_reset_pin(static_cast<gpio_num_t>(${uart_proxy_rx_pin}));
+            gpio_reset_pin(static_cast<gpio_num_t>(${uart_proxy_tx_pin}));
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -22,12 +36,12 @@ esp32:
 uart:
   - id: uart_ecodan
     rx_pin:
-      number: GPIO2
+      number: GPIO${uart_rx_pin}
       mode:
         input: true
         pullup: true
     tx_pin:
-      number: GPIO1
+      number: GPIO${uart_tx_pin}
       mode:
         output: true
     baud_rate: 2400
@@ -43,12 +57,12 @@ uart:
 
   - id: uart_proxy
     rx_pin:
-      number: GPIO38
+      number: GPIO${uart_proxy_rx_pin}
       mode:
         input: true
         pullup: true
     tx_pin:
-      number: GPIO39
+      number: GPIO${uart_proxy_tx_pin}
       mode:
         output: true
     baud_rate: 2400

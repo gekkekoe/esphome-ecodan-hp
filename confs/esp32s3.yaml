@@ -1,9 +1,18 @@
+substitutions:
+  uart_rx_pin: 2
+  uart_tx_pin: 1
+
 esphome:
   name: ${name}
   friendly_name: ${friendlyName}
   platformio_options:
     board_build.flash_mode: dio
-
+  on_boot:
+    - priority: 1001
+      then:
+        - lambda: |-
+            gpio_reset_pin(static_cast<gpio_num_t>(${uart_rx_pin}));
+            gpio_reset_pin(static_cast<gpio_num_t>(${uart_tx_pin}));
 esp32:
   board: esp32-s3-devkitc-1
   flash_size: 8MB
@@ -22,12 +31,12 @@ esp32:
 uart:
   id: uart_ecodan
   rx_pin:
-    number: GPIO2
+    number: GPIO${uart_rx_pin}
     mode:
       input: true
       pullup: true
   tx_pin:
-    number: GPIO1
+    number: GPIO${uart_tx_pin}
     mode:
       output: true
   baud_rate: 2400
@@ -53,3 +62,4 @@ sensor:
     entity_category: diagnostic
     unit_of_measurement: "°C"
     device_class: temperature
+
