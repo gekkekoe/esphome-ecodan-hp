@@ -64,16 +64,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
         run: |
-          pip install wheel esphome==2025.7.5
-
+          # pip install wheel esphome==2025.7.5
           # Create a constraint file to force a pydantic version
           # This will be respected by the ESP-IDF's internal environment creation
-          echo "pydantic<2.12.0" > constraints.txt
+          # echo "pydantic<2.12.0" > constraints.txt
           
           # Export the constraint file's path as an environment variable
-          export PIP_CONSTRAINT="${{ github.workspace }}/constraints.txt"
+          # export PIP_CONSTRAINT="${{ github.workspace }}/constraints.txt"
 
           # Run the compile. The hidden environment will now use the correct pydantic
+          pip install wheel esphome
           esphome compile build.yaml
 
           cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.ota.bin $PREFIX.ota.bin

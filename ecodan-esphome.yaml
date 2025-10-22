@@ -124,3 +124,13 @@ ecodan:
 #  polling_interval_override: 1000
 # uncomment line below and adjust the heat constant if your system uses a water + glycol mixture
 #  specific_heat_constant_override: 3.9
+
+# https://github.com/esphome/esphome/issues/11038#issuecomment-3374955358
+# workaround for broken uarts in espidf 5.4.2
+esphome:
+  on_boot:
+    - priority: 1001
+      then:
+        - lambda: |-
+            gpio_reset_pin((gpio_num_t)17);
+            gpio_reset_pin((gpio_num_t)18);
