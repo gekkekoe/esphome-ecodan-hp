@@ -47,23 +47,24 @@ interval:
       - lambda: |-
           #include "freertos/FreeRTOS.h"
           #include "freertos/task.h"
-          
+          #include <vector>
+
           static uint32_t& last_total_runtime = id(g_core_ticks_last);
           static uint32_t& last_idle0_runtime = id(g_core_idle0_last);
           static uint32_t& last_idle1_runtime = id(g_core_idle1_last);
+          static std::vector<TaskStatus_t> task_status_array;
           
-          TaskStatus_t *task_status_array;
           volatile UBaseType_t task_count;
           uint32_t total_runtime;
           uint32_t idle0_runtime = 0;
           uint32_t idle1_runtime = 0;
           
           task_count = uxTaskGetNumberOfTasks();
-          task_status_array = (TaskStatus_t *)pvPortMalloc(task_count * sizeof(TaskStatus_t));
+          task_status_array.resize(task_count);
           
-          if (task_status_array != NULL) {
+          if (!task_status_array.empty()) {
             // Call the system state only ONCE
-            task_count = uxTaskGetSystemState(task_status_array, task_count, &total_runtime);
+            task_count = uxTaskGetSystemState(task_status_array.data(), task_count, &total_runtime);
             
             // Find both IDLE tasks
             for (UBaseType_t i = 0; i < task_count; i++) {
@@ -75,8 +76,6 @@ interval:
               }
             }
             
-            vPortFree(task_status_array);
-            
             // Only publish if we have a previous value to compare against
             if (last_total_runtime > 0 && total_runtime > last_total_runtime) {
               uint32_t total_diff = total_runtime - last_total_runtime;
@@ -86,6 +85,7 @@ interval:
               float cpu_load_0 = 100.0f - ((float)idle0_diff / (float)total_diff * 100.0f);
               if (cpu_load_0 < 0.0f) cpu_load_0 = 0.0f;
               if (cpu_load_0 > 100.0f) cpu_load_0 = 100.0f;
+              id(g_cpu_load_0) = cpu_load_0;
               id(cpu_load_core0).publish_state(cpu_load_0);
 
               // Calculate and Publish Core 1
@@ -93,6 +93,7 @@ interval:
               float cpu_load_1 = 100.0f - ((float)idle1_diff / (float)total_diff * 100.0f);
               if (cpu_load_1 < 0.0f) cpu_load_1 = 0.0f;
               if (cpu_load_1 > 100.0f) cpu_load_1 = 100.0f;
+              id(g_cpu_load_1) = cpu_load_1;
               id(cpu_load_core1).publish_state(cpu_load_1);
             }
             
