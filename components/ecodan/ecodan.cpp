@@ -117,7 +117,7 @@ namespace ecodan
         while (xQueueReceive(this->rx_message_queue_, &received_message, (TickType_t)0) == pdTRUE) {
             last_response = std::chrono::steady_clock::now();
             handle_response(received_message);
-            received_message = Message();
+            received_message.reset();
         }
         
         auto now = std::chrono::steady_clock::now();

@@ -306,7 +306,7 @@ namespace ecodan
 
     bool EcodanHeatpump::handle_active_request_codes() {
 
-        const unsigned long REQUEST_RETRY_INTERVAL = 2*1000; 
+        const unsigned long REQUEST_RETRY_INTERVAL = 1*1000; 
         static unsigned long last_svc_request_time = 0;
 
         if (activeRequestCode != Status::REQUEST_CODE::NONE) {

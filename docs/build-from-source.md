@@ -5,7 +5,7 @@
     python3 -m venv venv
     source venv/bin/activate
     pip3 install wheel
-    pip3 install esphome==2025.7.5
+    pip3 install esphome
     ```
 * Fill in `secrets.yaml` and copy the `ecodan-esphome.yaml` to your esphome folder and edit the values (*check GPO pins (uart: section), you might need to swap the pins in the config*)
 The secrets.yaml should at least contain the following entries:

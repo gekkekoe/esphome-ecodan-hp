@@ -41,7 +41,7 @@ namespace ecodan
                 // Once the header is complete, verify it.
                 if (msg.get_write_offset() == msg.header_size() && !msg.verify_header()) {
                     ESP_LOGW(TAG, "Invalid packet header. Discarding message.");
-                    msg = Message();
+                    msg.reset();
                     continue;
                 }
 
@@ -69,7 +69,7 @@ namespace ecodan
                     } else {
                         ESP_LOGW(TAG, "Invalid packet checksum. Discarding message.");
                     }
-                    msg = Message();
+                    msg.reset();
                 }
             }
         }
