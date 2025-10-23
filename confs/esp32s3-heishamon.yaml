@@ -13,10 +13,8 @@ esphome:
     - priority: 1001
       then:
         - lambda: |-
-            gpio_reset_pin(static_cast<gpio_num_t>(${uart_rx_pin}));
-            gpio_reset_pin(static_cast<gpio_num_t>(${uart_tx_pin}));
-            gpio_reset_pin(static_cast<gpio_num_t>(${uart_proxy_rx_pin}));
-            gpio_reset_pin(static_cast<gpio_num_t>(${uart_proxy_tx_pin}));
+            gpio_pullup_en(static_cast<gpio_num_t>(${uart_rx_pin}));
+            gpio_pullup_en(static_cast<gpio_num_t>(${uart_proxy_rx_pin}));
     
 # esp32:
 #   board: esp32-s3-devkitc-1
