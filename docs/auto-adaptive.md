@@ -92,21 +92,21 @@ Example Home Assistent automation:
 ```yaml
 - id: SyncTemperatureToAdaptiveController
   alias: Sync Room Temp to Auto-Adaptive Controller
+  description: "Ensures the heat pump's feedback value matches the kantoor current temp"
   trigger:
-    - trigger: state
-      entity_id: climate.kantoor # Replace with your main thermostat
-      attribute: current_temperature
-  condition:
-    - condition: template
-      value_template:
-        "{{ trigger.from_state.attributes.current_temperature != trigger.to_state.attributes.current_temperature }}"
+    - platform: template
+      value_template: >-
+        {{ state_attr('climate.kantoor', 'current_temperature') | float(0) !=
+          states('number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1') | float(0) }}
+  condition: []
   action:
-    - action: number.set_value
+    - service: number.set_value
       target:
-        entity_id: number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1 # also add z2 if you have 2 zones
+        entity_id: >-
+          number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1
       data:
-        value: "{{ state_attr('climate.kantoor', 'current_temperature') }}" # Replace with your main thermostat 
-
+        value: "{{ state_attr('climate.kantoor', 'current_temperature') | float(0) }}"
+  mode: single
 ```
 
 Put the automation in a file `automations.yaml` and include that file in the main home assistant `configuration.yaml`.
@@ -121,19 +121,20 @@ If you are using an external thermostat, you need to adjust the Zone 1 and Zone 
 ```yaml
 - id: SyncSetpointToAdaptiveController
   alias: Sync Room Setpoint to Auto-Adaptive Controller
+  description: Ensures the heat pump setpoint always matches the main setpoint
   trigger:
-    - trigger: state
-      entity_id: climate.kantoor
-      attribute: temperature
-  condition:
-    - condition: template
-      value_template: "{{ trigger.from_state.attributes.temperature != trigger.to_state.attributes.temperature }}"
+    - platform: template
+      value_template: >-
+        {{ state_attr('climate.kantoor', 'temperature') | float(0) | round(1) !=
+          state_attr('climate.ecodan_heatpump_zone_1_room_temp', 'temperature') | float(0) | round(1) }}
+  condition: []
   action:
-    - action: climate.set_temperature
+    - service: climate.set_temperature 
       target:
         entity_id: climate.ecodan_heatpump_zone_1_room_temp
       data:
-        temperature: "{{ state_attr('climate.kantoor', 'temperature') | float | round(1) }}"
+        temperature: "{{ state_attr('climate.kantoor', 'temperature') | float(0) | round(1) }}"
+  mode: single
         #temperature: "{{ (state_attr('climate.kantoor', 'temperature') * 2) | round(0) / 2.0 | float }}" if rounding to nearest half is needed
 ```
 

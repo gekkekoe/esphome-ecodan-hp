@@ -416,10 +416,11 @@ script:
                       offset -= learning_rate;
                       ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too warm (err: %.2f). Offset decreased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                     }
-                    else {
-                      if (status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON) {
-                        offset -= EFFICIENCY_PROBE_RATE;
-                        ESP_LOGD("auto_adaptive", "Z%d HEATING: Stable. Probing for efficiency. Offset slow-decay to %.2f", (i + 1), offset);
+                    else if (error >= dynamic_error_margin_negative && error <= dynamic_error_margin_positive) {
+                        // in dead zone
+                        if (status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON) {
+                          offset -= EFFICIENCY_PROBE_RATE;
+                          ESP_LOGD("auto_adaptive", "Z%d HEATING: Stable. Probing for efficiency. Offset slow-decay to %.2f", (i + 1), offset);
                       }
                     }
                     prev_error = error;
