@@ -143,7 +143,7 @@ substitutions:
   cooling_smart_start_temp: 'Autoadaptativo: Temp. de Inicio Inteligente Refrigeración'
   temperature_feedback_source: 'Autoadaptativo: Fuente de Temperatura Ambiente'
   temperature_feedback_option_room: 'Termostato de Ambiente'
-  temperature_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant / REST API'
   heating_system_type: 'Autoadaptativo: Tipo de Sistema de Calefacción'
   heating_system_type_option_ufh: 'Suelo Radiante'
   heating_system_type_option_ufh_rad: 'Suelo Radiante + Radiadores'
@@ -154,6 +154,9 @@ substitutions:
   dynamic_learning_rate_sensor: 'Autoadaptativo: Tasa de Aprendizaje Dinámica'
   temperature_feedback: 'Autoadaptativo: Feedback de Temperatura Ambiente Actual'
   thermostat_overshoot_compensation: 'Autoadaptativo: Compensación de Sobreimpulso del Termostato'
+  outside_temperature_feedback: 'Autoadaptativo: Temp. Exterior Externa'
+  outside_temperature_source: 'Autoadaptativo: Fuente de Temp. Exterior'
+  outside_temperature_option_internal: 'Sensor Interno'
   total_increasing_heating_consumed: Consumo Total Calefacción
   total_increasing_heating_delivered: Producción Total Calefacción
   total_increasing_cool_consumed: Consumo Total Refrigeración

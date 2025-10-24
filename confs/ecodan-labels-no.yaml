@@ -142,7 +142,7 @@ substitutions:
   cooling_smart_start_temp: 'Autoadaptiv: Smart Start Temp Kjøling'
   temperature_feedback_source: 'Autoadaptiv: Kilde for Romtemperatur'
   temperature_feedback_option_room: 'Romtermostat'
-  temperature_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant / REST API'
   heating_system_type: 'Autoadaptiv: Type Varmesystem'
   heating_system_type_option_ufh: 'Gulvvarme'
   heating_system_type_option_ufh_rad: 'Gulvvarme + Radiatorer'
@@ -153,6 +153,9 @@ substitutions:
   dynamic_learning_rate_sensor: 'Autoadaptiv: Dynamisk Læringsrate'
   temperature_feedback: 'Autoadaptiv: Tilbakemelding Nåværende Romtemperatur'
   thermostat_overshoot_compensation: 'Autoadaptiv: Kompensasjon for Termostat-overskyt'
+  outside_temperature_feedback: 'Autoadaptiv: Ekstern Utetemperatur'
+  outside_temperature_source: 'Autoadaptiv: Kilde for Utetemperatur'
+  outside_temperature_option_internal: 'Intern Sensor'
   total_increasing_heating_consumed: Totalt Forbruk Varme
   total_increasing_heating_delivered: Totalt Levert Varme
   total_increasing_cool_consumed: Totalt Forbruk Kjøling

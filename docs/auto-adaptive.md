@@ -138,17 +138,39 @@ If you are using an external thermostat, you need to adjust the Zone 1 and Zone 
         #temperature: "{{ (state_attr('climate.kantoor', 'temperature') * 2) | round(0) / 2.0 | float }}" if rounding to nearest half is needed
 ```
 
-### Step 4: Configure Initial Parameters
+### Step 4: Set Outside temperature source (Optional)
+If you want to use an external outside temperature sensor, then select the HA / REST API option.
+
+```yaml
+- id: SyncOutsideTemperatureToAdaptiveController
+  alias: "Sync Outside Temperature to Auto-Adaptive Controller"
+  description: ""
+  trigger:
+    - platform: template
+      value_template: >-
+        {{ states('sensor.buienradar_temperature') | float(0) !=
+          states('number.ecodan_heatpump_auto_adaptive_outside_temperature_feedback') | float(0) }}
+  condition: []
+  action:
+    - service: number.set_value
+      target:
+        entity_id: >-
+          number.ecodan_heatpump_auto_adaptive_outside_temperature_feedback
+      data:
+        value: "{{ states('sensor.buienradar_temperature') | float(0) }}"
+  mode: single
+```
+
+### Step 5: Configure Initial Parameters
 
 In Home Assistant, navigate to your dashboard and set the initial parameters for the controller on the **"Auto-Adaptive Settings"** tab.
-
 
 1.  **Set the Heating System Profile**: Choose the option from the `Auto-Adaptive: Heating System Type` dropdown that best matches your home (`Underfloor Heating`, `Underfloor Heating + Radiators`, or `Radiators`).
 2.  **Set the Heating Curve Slope**: Adjust the `Auto-Adaptive: Heating Curve Slope` slider. A good starting point for underfloor heating is `0.4`-`0.7`, while radiators often need a steeper slope like `0.8`-`1.2`.
 3.  **Set Safety Limits**: Adjust the `Auto-Adaptive: Max. Heating Flow Temperature` slider to a value that is safe for your floors (e.g., `38.0°C` for UFH). Do the same for the cooling limits.
 4.  **Set Thermostat Overshoot Compensation (optional)**: Adjust the `Auto-Adaptive: Thermostat Overshoot Compensation` slider to match the known behavior of your thermostat. For example, the official Mitsubishi wireless thermostat has an  overshoot of 1.0°C, so you would set this slider to 1.0.
 
-### Step 5: Activate the System
+### Step 6: Activate the System
 
 Now you are ready to let the algorithm take control.
 

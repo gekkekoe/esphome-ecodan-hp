@@ -143,7 +143,7 @@ substitutions:
   cooling_smart_start_temp: 'Mukautuva ohjaus: Jäähdytyksen älykäs aloituslämpötila'
   temperature_feedback_source: 'Mukautuva ohjaus: Huonelämpötilan lähde'
   temperature_feedback_option_room: 'Huonetermostaatti'
-  temperature_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant / REST API'
   heating_system_type: 'Mukautuva ohjaus: lämmitysjärjestelmän tyyppi'
   heating_system_type_option_ufh: 'Lattialämmitys'
   heating_system_type_option_ufh_rad: 'Lattialämmitys + patterit'
@@ -154,6 +154,9 @@ substitutions:
   dynamic_learning_rate_sensor: 'Mukautuva ohjaus: Dynaaminen oppimisnopeus'
   temperature_feedback: 'Mukautuva ohjaus: Huonelämpötilan palaute'
   thermostat_overshoot_compensation: 'Mukautuva ohjaus: Termostaatin ylityksen kompensointi'
+  outside_temperature_feedback: 'Automaattisesti mukautuva: Ulkolämpötilan Syöttö'
+  outside_temperature_source: 'Automaattisesti mukautuva: Ulkolämpötilan Lähde'
+  outside_temperature_option_internal: 'Sisäinen Anturi'
   total_increasing_heating_consumed: Lämmityksen kokonaiskulutus
   total_increasing_heating_delivered: Lämmityksen kokonaistuotto
   total_increasing_cool_consumed: Jäähdytyksen kokonaiskulutus
