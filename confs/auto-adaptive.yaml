@@ -386,6 +386,12 @@ script:
                   float calculated_flow = (20.0f - actual_outside_temp) * current_slope + offset;
                   ESP_LOGD("auto_adaptive", "Z%d HEATING: calculated_flow: %.1f", (i + 1), calculated_flow);
 
+                  float max_offset = max_flow_temp + 2.0f;
+                  if (offset > max_offset) {
+                      offset = max_offset;
+                      ESP_LOGW("auto_adaptive", "Z%d HEATING: Learned offset reached its dynamic limit of %.1f°C", (i + 1), max_offset);
+                  }
+
                   if (calculated_flow > max_flow_temp) {
                     ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit), calculated_flow: %.1f", (i + 1), max_flow_temp, calculated_flow);
                     calculated_flow = max_flow_temp;
@@ -406,12 +412,6 @@ script:
 
                     if (error > dynamic_error_margin_positive && error >= prev_error) {
                       offset += learning_rate;
-
-                      float max_offset = max_flow_temp + 2.0f;
-                      if (offset > max_offset) {
-                          offset = max_offset;
-                          ESP_LOGW("auto_adaptive", "Z%d HEATING: Learned offset reached its dynamic limit of %.1f°C", (i + 1), max_offset);
-                      }
 
                       ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too cold (err: %.2f). Offset increased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                     } else if (error < dynamic_error_margin_negative) {
