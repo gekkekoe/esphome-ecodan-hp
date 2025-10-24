@@ -131,6 +131,16 @@ number:
     min_value: -50
     max_value: 100
     step: 0.1
+  - platform: template
+    id: outside_temperature_feedback
+    name: ${outside_temperature_feedback}
+    unit_of_measurement: "°C"
+    optimistic: true
+    restore_value: true
+    initial_value: 10.0
+    min_value: -50
+    max_value: 100
+    step: 0.1
   # compensate for thermostat overshoot
   - platform: template
     id: thermostat_overshoot_compensation
@@ -193,8 +203,9 @@ select:
     restore_value: true
     options:
       - "${temperature_feedback_option_room}"
-      - "${temperature_feedback_option_api}"
+      - "${select_feedback_option_api}"
     initial_option: "${temperature_feedback_option_room}"
+
   - platform: template
     id: heating_system_type
     name: ${heating_system_type}
@@ -205,6 +216,16 @@ select:
       - "${heating_system_type_option_ufh_rad}"
       - "${heating_system_type_option_rad}"
     initial_option: "${heating_system_type_option_ufh}"
+
+  - platform: template
+    id: outside_temperature_source
+    name: ${outside_temperature_source}
+    optimistic: true
+    restore_value: true
+    options:
+      - "${outside_temperature_option_internal}"
+      - "${select_feedback_option_api}"
+    initial_option: "${outside_temperature_option_internal}"
 
 switch:
   - platform: template
@@ -297,6 +318,19 @@ script:
           const float KINK_POINT_TEMP = 5.0f; 
 
           float actual_outside_temp = id(outside_temp).state;
+          if (id(outside_temperature_source).active_index().value_or(0) == 1) {
+              actual_outside_temp = id(outside_temperature_feedback).state;
+          }
+
+          if (isnan(actual_outside_temp)) {
+              ESP_LOGW("auto_adaptive", "API outside temperature source is NAN. Exiting.");
+              return;
+          }
+
+          float overshoot_compensation = id(thermostat_overshoot_compensation).state;
+          if (isnan(overshoot_compensation))
+            overshoot_compensation = 0.0f;
+
 
           float calculated_flows_heat[2] = {0.0f, 0.0f};
           float calculated_flows_cool[2] = {100.0f, 100.0f};
@@ -328,8 +362,8 @@ script:
               }
               if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp)) continue;
 
-              ESP_LOGD("auto_adaptive", "Processing Zone %d: Room=%.1f, Target=%.1f, Outside=%.1f, Bias=%.1f", 
-                (i + 1), room_temp, room_target_temp, actual_outside_temp, setpoint_bias);
+              ESP_LOGD("auto_adaptive", "Processing Zone %d: Room=%.1f, Target=%.1f, Outside=%.1f, Bias=%.1f, overshoot=%.1f, heating: %d, cooling: %d",
+                (i + 1), room_temp, room_target_temp, actual_outside_temp, setpoint_bias, overshoot_compensation, is_heating_active, is_cooling_active);
               room_target_temp += setpoint_bias;
 
               float error = is_heating_mode ? (room_target_temp - room_temp)
@@ -337,7 +371,7 @@ script:
 
               // Only apply for heating overshoots (when error is negative)
               if (is_heating_mode && error < 0) {
-                  error += id(thermostat_overshoot_compensation).state;
+                  error += overshoot_compensation;
                   if (error > 0) error = 0.0;
               }
 

@@ -143,7 +143,7 @@ substitutions:
   cooling_smart_start_temp: 'Autoadaptiv: Smart Starttemp Kyla'
   temperature_feedback_source: 'Autoadaptiv: Källa för Rumstemperatur'
   temperature_feedback_option_room: 'Rumstermostat'
-  temperature_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant / REST API'
   heating_system_type: 'Autoadaptiv: Typ av Värmesystem'
   heating_system_type_option_ufh: 'Golvvärme'
   heating_system_type_option_ufh_rad: 'Golvvärme + Radiatorer'
@@ -154,6 +154,9 @@ substitutions:
   dynamic_learning_rate_sensor: 'Autoadaptiv: Dynamisk Inlärningshastighet'
   temperature_feedback: 'Autoadaptiv: Återkoppling Aktuell Rumstemperatur'
   thermostat_overshoot_compensation: 'Autoadaptiv: Kompensation för Termostatöverskridande'
+  outside_temperature_feedback: 'Autoadaptiv: Extern Utemperaturs-återkoppling'
+  outside_temperature_source: 'Autoadaptiv: Källa för Utemperatur'
+  outside_temperature_option_internal: 'Intern Sensor'
   total_increasing_heating_consumed: Totalförbrukning Värme
   total_increasing_heating_delivered: Total Levererad Värme
   total_increasing_cool_consumed: Totalförbrukning Kyla
