@@ -7,11 +7,6 @@ esphome:
   friendly_name: ${friendlyName}
   platformio_options:
     board_build.flash_mode: dio
-  on_boot:
-    - priority: 1001
-      then:
-        - lambda: |-
-            gpio_pullup_en(static_cast<gpio_num_t>(${uart_rx_pin}));
 
 esp32:
   board: esp32dev
