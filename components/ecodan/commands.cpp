@@ -341,15 +341,14 @@ namespace ecodan
         if (pending_cmd.last_sent_time != 0 && (millis() - pending_cmd.last_sent_time < CMD_TIMEOUT_MS)) {
             return true;
         }
-        
-        if (pending_cmd.last_sent_time != 0) {
-            ESP_LOGW(TAG, "Command timed out. Retrying (attempt %d/10)...", pending_cmd.retries + 1);
-        }
-
         if (pending_cmd.retries >= 10) {
             ESP_LOGE(TAG, "Command failed after 10 retries. Discarding.");
             cmdQueue.pop();
             return true;
+        }
+
+        if (pending_cmd.last_sent_time != 0) {
+            ESP_LOGW(TAG, "Command timed out. Retrying (attempt %d/10)...", pending_cmd.retries + 1);
         }
 
         if (!serial_tx(pending_cmd.message)) {
