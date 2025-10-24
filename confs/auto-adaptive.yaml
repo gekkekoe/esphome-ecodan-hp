@@ -307,10 +307,12 @@ script:
           for (std::size_t i = 0; i < max_zones; i++) {
               auto zone = all_zones[i];
               
-              bool is_heating_active = status.is_auto_adaptive_heating(zone);
-              bool is_cooling_active = status.has_cooling() && status.is_auto_adaptive_cooling(zone);
+              bool is_heating_mode = status.is_auto_adaptive_heating(zone);
+              bool is_heating_active = status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
+              bool is_cooling_mode = status.has_cooling() && status.is_auto_adaptive_cooling(zone);
+              bool is_cooling_active = status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON;
                   
-              if (!is_heating_active && !is_cooling_active) continue;
+              if (!is_heating_mode && !is_cooling_mode) continue;
 
               float setpoint_bias = id(auto_adaptive_setpoint_bias).state;
               if (isnan(setpoint_bias))
@@ -330,11 +332,11 @@ script:
                 (i + 1), room_temp, room_target_temp, actual_outside_temp, setpoint_bias);
               room_target_temp += setpoint_bias;
 
-              float error = is_heating_active ? (room_target_temp - room_temp)
+              float error = is_heating_mode ? (room_target_temp - room_temp)
                 : (room_temp - room_target_temp); // Reversed for cooling
 
               // Only apply for heating overshoots (when error is negative)
-              if (is_heating_active && error < 0) {
+              if (is_heating_mode && error < 0) {
                   error += id(thermostat_overshoot_compensation).state;
                   if (error > 0) error = 0.0;
               }
@@ -378,7 +380,7 @@ script:
               ESP_LOGD("auto_adaptive", "Error: Current=%.1f, Dead Zone=[%.1f, %.1f], LR=%.3f", 
                 error, dynamic_error_margin_negative, dynamic_error_margin_positive, learning_rate);
 
-              if (is_heating_active) {
+              if (is_heating_mode) {
                   float& offset = *heating_offsets[i];
                   float& prev_error = *heating_prev_errors[i];
                   
@@ -403,7 +405,7 @@ script:
                   }
 
                   bool is_saturated = (requested_flow_temp - actual_flow_temp) > SATURATION_MARGIN;
-                  if (is_saturated && status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON) {
+                  if (is_saturated && is_heating_active) {
                       ESP_LOGW("auto_adaptive", "Z%d HEATING: HP Saturated (Req: %.1f, Act: %.1f). Learning paused.", (i + 1), requested_flow_temp, actual_flow_temp);
                   } else {
                     // probe rate to find an more effficient offset during in dead zone    
@@ -415,21 +417,25 @@ script:
 
                       ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too cold (err: %.2f). Offset increased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                     } else if (error < dynamic_error_margin_negative) {
-
-                      if (offset < MIN_HEAT_FLOW) { 
-                          // decrease learning rate below min flow temp
-                          float downward_learning_factor = (offset - 15.0f) / (MIN_HEAT_FLOW - 15.0f);
-                          if (downward_learning_factor < 0.0f) 
-                            downward_learning_factor = 0.0f; // avoid negative
-                          ESP_LOGD("auto_adaptive", "Low offset detected. LR adjustment: %.2f", downward_learning_factor);
-                          learning_rate *= downward_learning_factor;
+                      if (is_heating_active) {
+                          ESP_LOGW("auto_adaptive", "Z%d HEATING: Room is too warm (err: %.2f), but HP is still heating.", (i + 1), error);
+                          ESP_LOGW("auto_adaptive", "This is a misconfiguration (overshoot? / feedback not working?). Learning is paused to prevent offset drift.");
+                      } else {
+                        if (offset < MIN_HEAT_FLOW) { 
+                            // decrease learning rate below min flow temp
+                            float downward_learning_factor = (offset - 15.0f) / (MIN_HEAT_FLOW - 15.0f);
+                            if (downward_learning_factor < 0.0f) 
+                              downward_learning_factor = 0.0f; // avoid negative
+                            ESP_LOGD("auto_adaptive", "Low offset detected. LR adjustment: %.2f", downward_learning_factor);
+                            learning_rate *= downward_learning_factor;
+                        }
+                        offset -= learning_rate;
+                        ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too warm (err: %.2f). Offset decreased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                       }
-                      offset -= learning_rate;
-                      ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too warm (err: %.2f). Offset decreased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                     }
                     else if (error >= dynamic_error_margin_negative && error <= dynamic_error_margin_positive) {
                         // in dead zone
-                        if (status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON) {
+                        if (is_heating_active) {
                           offset -= EFFICIENCY_PROBE_RATE;
                           ESP_LOGD("auto_adaptive", "Z%d HEATING: Stable. Probing for efficiency. Offset slow-decay to %.2f", (i + 1), offset);
                       }
@@ -438,7 +444,7 @@ script:
                   }                  
                   calculated_flows_heat[i] = round(calculated_flow * 2) / 2.0f;
 
-              } else if (is_cooling_active) {
+              } else if (is_cooling_mode) {
                   float& offset = *cooling_offsets[i];
                   float& prev_error = *cooling_prev_errors[i];
                   
@@ -455,7 +461,7 @@ script:
                   }
                     
                   bool is_saturated = (actual_flow_temp - requested_flow_temp) > SATURATION_MARGIN;
-                  if (is_saturated && status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON) {
+                  if (is_saturated && is_cooling_active) {
                       ESP_LOGW("auto_adaptive", "Z%d COOLING: HP Saturated (Req: %.1f, Act: %.1f). Learning paused.", (i + 1), requested_flow_temp, actual_flow_temp);
                   } else {
                     float old_offset = offset;
