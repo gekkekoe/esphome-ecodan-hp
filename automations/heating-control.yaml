@@ -94,9 +94,9 @@
         - service: switch.turn_off
           target:
             entity_id: switch.ecodan_heatpump_server_control_zone_1_prohibit_heating
-        - service: number.set_value
-          target:
-            entity_id: number.ecodan_heatpump_auto_adaptive_setpoint_bias
-          data:
-            value: "{{ states(bias_sensor) | float(0) }}"
+        # - service: number.set_value
+        #   target:
+        #     entity_id: number.ecodan_heatpump_auto_adaptive_setpoint_bias
+        #   data:
+        #     value: "{{ states(bias_sensor) | float(0) }}"
   mode: single

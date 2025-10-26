@@ -143,19 +143,29 @@ If you want to use an external outside temperature sensor, then select the HA / 
 
 ```yaml
 - id: SyncOutsideTemperatureToAdaptiveController
-  alias: Sync Outside Temperature to Auto-Adaptive Controller
-  description: ""
-  trigger_variables:
-      source_temp: >-
-        {% set buienradar = states('sensor.buienradar_temperature') %}
-        {% set ecodan = states('sensor.ecodan_heatpump_outside_temp') %}
-        {% set source = buienradar if buienradar not in ['unknown', 'unavailable'] else ecodan %}
-        {{ source | float(0) | round(1) }}
+  alias: 'Sync Outside Temperature to Auto-Adaptive Controller'
+  description: ''
+  # trigger on change of these sensors
   triggers:
-    - value_template: |-
-        {{ source_temp | float(0) | round(1) != states('number.ecodan_heatpump_auto_adaptive_outside_temperature_feedback') | float(0) }}
-      trigger: template
-  conditions: []
+    - entity_id: sensor.buienradar_temperature
+      trigger: state
+    - entity_id: sensor.ecodan_heatpump_outside_temp
+      trigger: state
+    - entity_id: number.ecodan_heatpump_auto_adaptive_outside_temperature_feedback
+      trigger: state
+  variables:
+    source_temp: >-
+      {% set buienradar = states('sensor.buienradar_temperature') %} 
+      {% set ecodan = states('sensor.ecodan_heatpump_outside_temp') %} 
+      {% set source = buienradar if buienradar not in ['unknown', 'unavailable', 'none'] else ecodan %} 
+      {{ source | float(0) | round(1) }}
+    destination_temp: >-
+      {{
+      states('number.ecodan_heatpump_auto_adaptive_outside_temperature_feedback')
+      | float(0) | round(1) }}
+  conditions:
+    - condition: template
+      value_template: "{{ source_temp != destination_temp }}"
   actions:
     - target:
         entity_id: number.ecodan_heatpump_auto_adaptive_outside_temperature_feedback
