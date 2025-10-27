@@ -95,7 +95,7 @@ script:
     mode: single
     then:
       - lambda: |-
-          if (!id(auto_adaptive_control_enabled).state && !id(predictive_short_cycle_control_enabled).state) return;
+          if (!id(predictive_short_cycle_control_enabled).state) return;
 
           auto& status = id(ecodan_instance).get_status();
           auto start_time = id(predictive_delta_start_time);
