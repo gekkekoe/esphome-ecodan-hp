@@ -1,0 +1,29 @@
+sensor:
+    # detailed homewizard usage
+    - name: "Heatpump Power Idle"
+      unique_id: heatpump_power_idle
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: "{{ states('sensor.kwh_meter_3_phase_active_power') | float(0) if states('sensor.ecodan_heatpump_operation_mode') not in ['Heating Water', 'Legionella Prevention', 'Space Heating', 'Space Cooling', 'Frost Protection'] else 0 }}"
+
+    - name: "Heatpump Power DHW"
+      unique_id: heatpump_power_dhw
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: "{{ states('sensor.kwh_meter_3_phase_active_power') | float(0) if is_state('sensor.ecodan_heatpump_operation_mode', ['Heating Water', 'Legionella Prevention']) else 0 }}"
+
+    - name: "Heatpump Power Heating"
+      unique_id: heatpump_power_heating
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: "{{ states('sensor.kwh_meter_3_phase_active_power') | float(0) if is_state('sensor.ecodan_heatpump_operation_mode', ['Space Heating', 'Frost Protection']) else 0 }}"
+
+    - name: "Heatpump Power Cooling"
+      unique_id: heatpump_power_cooling
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: "{{ states('sensor.kwh_meter_3_phase_active_power') | float(0) if is_state('sensor.ecodan_heatpump_operation_mode', 'Space Cooling') else 0 }}"
