@@ -211,7 +211,7 @@ namespace ecodan
             
             char result[1024];
 
-            snprintf(result, 1024, "%02X, %02X, %02X, %02X, %02X : %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X [%02X]",
+            snprintf(result, 1024, "[%02X %02X %02X %02X %02X] %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X [%02X]",
                     buffer_[0], buffer_[1], buffer_[2], buffer_[3], buffer_[4],
                     buffer_[5], buffer_[6], buffer_[7], buffer_[8], buffer_[9],
                     buffer_[10], buffer_[11], buffer_[12], buffer_[13], buffer_[14],
@@ -371,19 +371,26 @@ namespace ecodan
             return (value - 40.0f) / 2;
         }
 
+        // 10k NTC-sensor (type B=3950K)
         float get_float8_v3(size_t index)
         {
             uint8_t byteValue = payload()[index]; 
             float value = (float)byteValue;
-            if (value <= 75.0f) {
-                return (value * 0.77f) - 41.4f;
+            if (value <= 68.0f) {
+                return (value * 0.7525f) - 40.28f;
+            }
+            else if (value <= 75.0f) {
+                return (value * 0.69f) - 36.03f;
+            }
+            else if (value <= 86.0f) {
+                return (value * 0.60909f) - 29.9618f;
             }
             else if (value <= 93.0f) {
-                return (value * 0.54f) - 23.97f;
+                return (value * 0.54714f) - 24.621f;
             }
-            
-            // value > 93.0f
-            return (value * 0.074275f) + 19.344f;
+            else {
+                return (value * 0.074275f) + 19.344f;
+            }
         }
 
         uint16_t get_u16(size_t index)

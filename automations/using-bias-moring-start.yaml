@@ -8,21 +8,21 @@
     - condition: state
       entity_id: switch.ecodan_heatpump_auto_adaptive_control
       state: "on"
-    - condition: time
-      after: "07:00:00"
-      before: "12:00:00"
   actions:
     - target:
         entity_id: number.ecodan_heatpump_auto_adaptive_setpoint_bias
       data:
         value: >-
-          {% set target_temp_raw = state_attr('climate.kantoor', 'temperature') %}
-          {% set room_temp_raw = states('number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1') %}  
+          {% set is_morning_startup = now().hour >= 7 and now().hour < 10 %} {%
+          set target_temp_raw = state_attr('climate.kantoor', 'temperature') %} {%
+          set room_temp_raw =
+          states('number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1')%}  
 
-          {% set target_temp = target_temp_raw | float(none) %} 
-          {% set room_temp = room_temp_raw | float(none) %}
+          {% set target_temp = target_temp_raw | float(none) %}   {% set room_temp
+          = room_temp_raw | float(none) %}
 
-          {% if target_temp != none and room_temp != none %}
+          {% if target_temp != none and room_temp != none and is_morning_startup
+          %}
             {% set error = target_temp - room_temp %}
             {{ (0.3 - error) | round(1) if error > 0.3 else 0.0 }}
           {% else %}
