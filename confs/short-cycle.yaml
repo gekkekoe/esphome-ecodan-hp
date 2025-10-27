@@ -224,7 +224,7 @@ script:
           flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
           id(ecodan_instance).set_controller_mode(flag, true);
           
-      - delay: !lambda "return atoi(id(lockout_duration).state.c_str()) * 60 * 1000;"
+      - delay: !lambda "return atoi(id(lockout_duration).state.c_str()) * 60000UL;"
       - logger.log:
           level: INFO
           format: "Lockout period over. Restoring operations."
@@ -284,7 +284,7 @@ script:
           if (id(compressor_start_time) == 0 || id(status_short_cycle_lockout).state || status.DefrostActive)
             return;
 
-          uint32_t min_duration_ms = id(minimum_compressor_on_time).state * 60000;
+          uint32_t min_duration_ms = id(minimum_compressor_on_time).state * 60000UL;
           if (min_duration_ms == 0)
             return;
 
