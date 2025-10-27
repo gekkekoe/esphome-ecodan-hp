@@ -153,6 +153,35 @@ number:
     max_value: 5.0
     step: 0.1
 
+  # !!!! TEMP allowing edit, down rely on this, will be removed
+  - platform: template
+    name: 'Auto-Adaptive:  Manual Offset Z1'
+    id: auto_adaptive_manual_offset_z1
+    lambda: 'return id(heating_curve_offset_z1);'
+    update_interval: 10s
+    min_value: 22.0
+    max_value: 30.0
+    step: 0.05
+    unit_of_measurement: '°C'
+    set_action:
+      - lambda: |-
+          id(heating_curve_offset_z1) = x;
+          id(heating_offset_sensor_z1).publish_state(x);
+
+  - platform: template
+    name: 'Auto-Adaptive: Manual Offset Z2'
+    id: auto_adaptive_manual_offset_z2
+    lambda: 'return id(heating_curve_offset_z2);'
+    update_interval: 10s
+    min_value: 22.0
+    max_value: 30.0
+    step: 0.05
+    unit_of_measurement: '°C'
+    set_action:
+      - lambda: |-
+          id(heating_curve_offset_z2) = x;
+          id(heating_offset_sensor_z2).publish_state(x);
+
 # expose learned curve values
 sensor:
   - platform: template
@@ -249,17 +278,15 @@ switch:
 #     on_press:
 #       then:
 #         - script.execute: auto_adaptive_loop
-
-button:
-  - platform: template
-    name: 'Auto-Adaptive: Reset Heating Offset to defaults'
-    id: run_auto_adaptive_reset_offset
-    icon: "mdi:play-circle"
-    on_press:
-      then:
-        - lambda: |-
-            id(heating_curve_offset_z1) = 27.0;
-            id(heating_curve_offset_z2) = 27.0;
+#   - platform: template
+#     name: 'Auto-Adaptive: Reset Heating Offset to defaults'
+#     id: run_auto_adaptive_reset_offset
+#     icon: "mdi:play-circle"
+#     on_press:
+#       then:
+#         - lambda: |-
+#             id(heating_curve_offset_z1) = 27.0;
+#             id(heating_curve_offset_z2) = 27.0;
 
 interval:
   - interval: ${update_interval_minutes}
@@ -451,21 +478,16 @@ script:
 
                       ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too cold (err: %.2f). Offset increased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                     } else if (error < dynamic_error_margin_negative) {
-                      if (is_heating_active) {
-                          ESP_LOGW("auto_adaptive", "Z%d HEATING: Room is too warm (err: %.2f), but HP is still heating.", (i + 1), error);
-                          ESP_LOGW("auto_adaptive", "This is a misconfiguration (overshoot? / feedback not working?). Learning is paused to prevent offset drift.");
-                      } else {
-                        if (offset < MIN_HEAT_FLOW) { 
-                            // decrease learning rate below min flow temp
-                            float downward_learning_factor = (offset - 15.0f) / (MIN_HEAT_FLOW - 15.0f);
-                            if (downward_learning_factor < 0.0f) 
-                              downward_learning_factor = 0.0f; // avoid negative
-                            ESP_LOGD("auto_adaptive", "Low offset detected. LR adjustment: %.2f", downward_learning_factor);
-                            learning_rate *= downward_learning_factor;
-                        }
-                        offset -= learning_rate;
-                        ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too warm (err: %.2f). Offset decreased from %.2f to %.2f", (i + 1), error, old_offset, offset);
+                      if (offset < MIN_HEAT_FLOW) { 
+                          // decrease learning rate below min flow temp
+                          float downward_learning_factor = (offset - 15.0f) / (MIN_HEAT_FLOW - 15.0f);
+                          if (downward_learning_factor < 0.0f) 
+                            downward_learning_factor = 0.0f; // avoid negative
+                          ESP_LOGD("auto_adaptive", "Low offset detected. LR adjustment: %.2f", downward_learning_factor);
+                          learning_rate *= downward_learning_factor;
                       }
+                      offset -= learning_rate;
+                      ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too warm (err: %.2f). Offset decreased from %.2f to %.2f", (i + 1), error, old_offset, offset);
                     }
                     else if (error >= dynamic_error_margin_negative && error <= dynamic_error_margin_positive) {
                         // in dead zone
