@@ -213,10 +213,17 @@ namespace ecodan
             break;
         case GetType::TEMPERATURE_STATE_D:
             status.MixingTankTemperature = res.get_float16(1);
-            status.HpRefrigerantCondensingTemperature = res.get_float16_signed(4);
+            if (res[4] == 0x0f && res[5] == 0xd9) {
+                // stuck at 40.57 -> read condensing temp at byte 6
+                status.HpRefrigerantCondensingTemperature = res.get_float8_v3(6);
+            }
+            else {
+                status.HpRefrigerantCondensingTemperature = res.get_float16_signed(4);
+            }
             publish_state("mixing_tank_temp", status.MixingTankTemperature);
             publish_state("hp_refrigerant_condensing_temp", status.HpRefrigerantCondensingTemperature);
-            //ESP_LOGE(TAG, "0x0f offset 6: \t%f (v1), \t%f (v2), \t%f (v3)", res.get_float8(6), res.get_float8_v2(6), res.get_float8_v3(6));
+            //ESP_LOGE(TAG, "0x0f offset 4+5: \t%f, offset 6: \t%f", res.get_float16_signed(4), res.get_float8_v3(6));
+            //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
  
             // detect if unit reports extended 0x0f messages
             if (!status.ReportsExtendedOutdoorUnitThermistors) {

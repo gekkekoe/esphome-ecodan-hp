@@ -373,8 +373,17 @@ namespace ecodan
 
         float get_float8_v3(size_t index)
         {
-            float value = payload()[index];
-            return (value - 128.0f) / 2;
+            uint8_t byteValue = payload()[index]; 
+            float value = (float)byteValue;
+            if (value <= 75.0f) {
+                return (value * 0.77f) - 41.4f;
+            }
+            else if (value <= 93.0f) {
+                return (value * 0.54f) - 23.97f;
+            }
+            
+            // value > 93.0f
+            return (value * 0.074275f) + 19.344f;
         }
 
         uint16_t get_u16(size_t index)
