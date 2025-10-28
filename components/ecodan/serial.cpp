@@ -61,8 +61,10 @@ namespace ecodan
 
                 } else { // FTC comm
                     if (this->proxy_available()) {
-                        if (buffer[0] == 0x28) {
-                            // 0x28 seems to be timing specific, they need to be spammed, else melcloud adapter disconnects
+                        if (buffer[0] == 0x28 && buffer[11] == 0x01) {
+                            // 0x28 seems to be timing specific, they need to be spammed with byte 11 (error flag? cleared), else melcloud adapter disconnects
+                            buffer[11] = 0x00;
+                            buffer.set_checksum();
                             this->proxy_uart_->flush();
                             this->proxy_uart_->write_array(buffer.buffer(), buffer.get_write_offset());
                         }
