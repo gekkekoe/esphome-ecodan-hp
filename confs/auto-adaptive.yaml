@@ -364,6 +364,7 @@ script:
 
           esphome::ecodan::Zone all_zones[] = {esphome::ecodan::Zone::ZONE_1, esphome::ecodan::Zone::ZONE_2};
           auto max_zones = status.has_2zones() ? std::size(all_zones) : 1;
+          auto multizone_status = status.MultiZoneStatus;
 
           for (std::size_t i = 0; i < max_zones; i++) {
               auto zone = all_zones[i];
@@ -372,6 +373,17 @@ script:
               bool is_heating_active = status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
               bool is_cooling_mode = status.has_cooling() && status.is_auto_adaptive_cooling(zone);
               bool is_cooling_active = status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON;
+
+              // we need to check if the zone is actually operating
+              // 0 = idle, 1 = both, 2 = z1, 3 = z2
+              if (is_heating_active && status.has_independent_z2()) {
+                if (i == 0 && (multizone_status == 0 || multizone_status == 3)) {
+                  is_heating_active = false;
+                }
+                else if (i == 1 && (multizone_status == 0 || multizone_status == 2)) {
+                  is_heating_active = false;
+                }
+              }
                   
               if (!is_heating_mode && !is_cooling_mode) continue;
 
