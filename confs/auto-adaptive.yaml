@@ -482,7 +482,7 @@ script:
                       ESP_LOGW("auto_adaptive", "Z%d HEATING: HP Saturated (Req: %.1f, Act: %.1f). Learning paused.", (i + 1), requested_flow_temp, actual_flow_temp);
                   } else {
                     // probe rate to find an more effficient offset when in dead zone    
-                    const float EFFICIENCY_PROBE_RATE = 0.03f;
+                    const float EFFICIENCY_PROBE_RATE = 0.02f;
                     float old_offset = offset;
 
                     if (error > dynamic_error_margin_positive && error >= prev_error) {
