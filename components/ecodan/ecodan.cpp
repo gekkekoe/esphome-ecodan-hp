@@ -121,7 +121,7 @@ namespace ecodan
         }
         
         auto now = std::chrono::steady_clock::now();
-        if (now - last_response > std::chrono::minutes(2))
+        if (now - last_response > std::chrono::seconds(90))
         {
             last_response = now;
             reset_connection();
