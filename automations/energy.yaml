@@ -27,3 +27,7 @@ sensor:
       device_class: power
       state_class: measurement
       state: "{{ states('sensor.kwh_meter_3_phase_active_power') | float(0) if is_state('sensor.ecodan_heatpump_operation_mode', 'Space Cooling') else 0 }}"
+
+# to create increasing sensors to be used in HA energy dashboard use
+# Settings > Devices & services, click helpers, then Create Helper, choose integral
+# fill in: Name, metric prefix: k, input sensor: one of the sensors above, integration method: Left Riemann sum and hit submit
