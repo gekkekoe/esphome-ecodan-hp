@@ -102,6 +102,12 @@ namespace ecodan
         SERVICE_REQUEST_CODE = 0xA3
     };
 
+    struct InterpolationSegment {
+        uint8_t max_byte;
+        float scale;
+        float offset;
+    };
+
     template <class T>
     inline T operator &(const T& lhs, const T& rhs)
     {
@@ -374,23 +380,32 @@ namespace ecodan
         // 10k NTC-sensor (type B=3950K)
         float get_float8_v3(size_t index)
         {
+            static const InterpolationSegment NTC_TABLE[] = {
+                // max_byte, scale,         offset
+                {  0x40,    0.79f,       -42.68f     }, // (64)
+                {  0x44,    0.7525f,     -40.28f     }, // (68)
+                {  0x4B,    0.69f,       -36.03f     }, // (75)
+                {  0x56,    0.60909f,    -29.9618f   }, // (86)
+                {  0x5D,    0.54714f,    -24.621f    }, // (93)
+                {  0x6A,    0.49308f,    -19.606f    }, // (106)
+                {  0x73,    0.44556f,    -14.545f    }, // (115)
+                {  0x80,    0.40923f,    -10.395f    }, // (128)
+                {  0x8B,    0.37364f,    -5.748f     }, // (139)
+                {  0x9B,    0.34313f,    -1.503f     }, // (155)
+                {  0xB4,    0.306f,      4.187f      }  // (180)
+            };
+            static const size_t NTC_TABLE_SIZE = sizeof(NTC_TABLE) / sizeof(NTC_TABLE[0]);
+
             uint8_t byteValue = payload()[index]; 
+            for (size_t i = 0; i < NTC_TABLE_SIZE; ++i) {
+                if (byteValue <= NTC_TABLE[i].max_byte) {
+                    float value = (float)byteValue;
+                    return (value * NTC_TABLE[i].scale) + NTC_TABLE[i].offset;
+                }
+            }
+            const auto& lastSegment = NTC_TABLE[NTC_TABLE_SIZE - 1];
             float value = (float)byteValue;
-            if (value <= 68.0f) {
-                return (value * 0.7525f) - 40.28f;
-            }
-            else if (value <= 75.0f) {
-                return (value * 0.69f) - 36.03f;
-            }
-            else if (value <= 86.0f) {
-                return (value * 0.60909f) - 29.9618f;
-            }
-            else if (value <= 93.0f) {
-                return (value * 0.54714f) - 24.621f;
-            }
-            else {
-                return (value * 0.074275f) + 19.344f;
-            }
+            return (value * lastSegment.scale) + lastSegment.offset;
         }
 
         uint16_t get_u16(size_t index)
