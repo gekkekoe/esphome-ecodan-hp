@@ -309,18 +309,37 @@ binary_sensor:
     status_compressor:
       id: status_compressor
       name: ${status_compressor}
-      # OFF -> ON
-      on_press:
+      on_state_change:
         then:
           - lambda: |-
-              auto& status = id(ecodan_instance).get_status();
-              if (!status.DefrostActive) {
-                ESP_LOGI(esphome::ecodan::TAG, "Compressor START detected");
-                id(compressor_start_time) = millis();
+              // don't act on unknown -> on/off transitions
+              if (x.has_value() && x_previous.has_value()) {
+                // OFF -> ON
+                if (!*x_previous && *x) {
+                  auto& status = id(ecodan_instance).get_status();
+                  if (!status.DefrostActive) {
+                    ESP_LOGI(esphome::ecodan::TAG, "Compressor START detected");
+                    id(compressor_start_time) = millis();
+                  }
+                }
+                // ON -> OFF
+                else if (*x_previous && !*x) {
+                  ESP_LOGI(esphome::ecodan::TAG, "Compressor STOP detected");
+                  id(on_compressor_stop).execute();
+                }
               }
-      # ON -> OFF
-      on_release:
-        then:
-          - lambda: |-
-              ESP_LOGI(esphome::ecodan::TAG, "Compressor STOP detected");
-              id(on_compressor_stop).execute();
+      # # OFF -> ON
+      # on_press:
+      #   then:
+      #     - lambda: |-
+      #         auto& status = id(ecodan_instance).get_status();
+      #         if (!status.DefrostActive) {
+      #           ESP_LOGI(esphome::ecodan::TAG, "Compressor START detected");
+      #           id(compressor_start_time) = millis();
+      #         }
+      # # ON -> OFF
+      # on_release:
+      #   then:
+      #     - lambda: |-
+      #         ESP_LOGI(esphome::ecodan::TAG, "Compressor STOP detected");
+      #         id(on_compressor_stop).execute();
