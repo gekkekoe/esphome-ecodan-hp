@@ -102,6 +102,8 @@ namespace ecodan
                 status.ControllerDateTime.tm_hour = res[4];
                 status.ControllerDateTime.tm_min = res[5];
                 status.ControllerDateTime.tm_sec = res[6];                    
+                status.ControllerDateTime.tm_isdst = -1; 
+                mktime(&status.ControllerDateTime);
 
                 char firmware[6];
                 snprintf(firmware, 6, "%02X.%02X", res[7], res[8]);
@@ -222,7 +224,11 @@ namespace ecodan
             }
             publish_state("mixing_tank_temp", status.MixingTankTemperature);
             publish_state("hp_refrigerant_condensing_temp", status.HpRefrigerantCondensingTemperature);
-            //ESP_LOGE(TAG, "0x0f offset 4+5: \t%f, offset 6: \t%f", res.get_float16_signed(4), res.get_float8_v3(6));
+            // static float last_temp = 0.0f;
+            // if (last_temp != status.HpRefrigerantCondensingTemperature) {
+            //     last_temp = status.HpRefrigerantCondensingTemperature;
+            //     ESP_LOGW(TAG, "0x0f offset 4+5: \t0x%02X = %f, offset 6: \t%f", res[6], res.get_float16_signed(4), res.get_float8_v3(6));
+            // }
             //ESP_LOGW(TAG, res.debug_dump_packet().c_str());
  
             // detect if unit reports extended 0x0f messages

@@ -347,18 +347,19 @@ sensor:
           static float partial_sum = 0.0;
           static uint16_t last_day_of_year = 0;
 
-          auto t = id(sntp_time).now();
-          if (!t.is_valid())
+          auto& status = id(ecodan_instance).get_status();
+          int controller_day = status.day_of_year();
+          if (controller_day == -1) 
             return {};
 
           if (last_value == 0) {
             last_value = x;
-            last_day_of_year = t.day_of_year;
+            last_day_of_year = controller_day;
             return partial_sum;
           }
 
-          if (t.day_of_year != last_day_of_year) {
-            last_day_of_year = t.day_of_year;
+          if (controller_day != last_day_of_year) {
+            last_day_of_year = controller_day;
             partial_sum = 0.0f;
           }
 

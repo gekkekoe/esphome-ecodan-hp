@@ -180,6 +180,13 @@ namespace ecodan
         float RcSubCoolTemp;
         uint16_t RcFanSpeedRpm;
 
+        int day_of_year() const {
+            if (ControllerDateTime.tm_year < 100)
+                return -1;
+
+            return ControllerDateTime.tm_yday;
+        }
+
         bool has_cooling() const {
             // SW2-4
             return IS_BIT_SET(DipSwitch2, 3);
