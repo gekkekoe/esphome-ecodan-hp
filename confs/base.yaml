@@ -454,18 +454,46 @@ sensor:
     entity_category: diagnostic
     update_interval: 5s
 
-  - platform: total_daily_energy
-    name: ${daily_computed_output_power}
-    power_id: computed_output_power
-    unit_of_measurement: 'kWh'
-    state_class: total
-    device_class: energy
-    accuracy_decimals: 3
+  # helper class to reset daily counter
+  - platform: template
+    id: heatpump_day_of_year
+    icon: "mdi:calendar-today"
+    internal: true
+    update_interval: 60s 
+    lambda: |-
+      auto& status = id(ecodan_instance).get_status();
+      int day = status.day_of_year();
+      
+      if (day < 0) {
+        return NAN; 
+      } else {
+        return (float)day;
+      }
+    on_value:
+      then:
+        - if:
+            condition:
+              lambda: |-
+                if (isnan(x) || isnan(id(heatpump_day_of_year).state))
+                  return false;
+                
+                // only reset integration for real day transitions
+                if (x != id(heatpump_day_of_year).state)
+                  return true;
+                return false;
+            then:
+              - sensor.integration.reset: daily_computed_output_power
 
-# Enable time component to reset energy at midnight
-time:
-  - platform: sntp
-    id: sntp_time
+  - platform: integration
+    id: daily_computed_output_power 
+    name: ${daily_computed_output_power}
+    sensor: computed_output_power
+    unit_of_measurement: 'kWh'
+    accuracy_decimals: 3
+    device_class: energy
+    state_class: total_increasing 
+    time_unit: h
+    restore: true
 
 binary_sensor:
   - platform: ecodan
