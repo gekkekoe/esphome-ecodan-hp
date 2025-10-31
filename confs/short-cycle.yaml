@@ -159,12 +159,24 @@ script:
                 id(predictive_delta_start_time) = 0;
 
                 // in Auto Adaptive, increase offset
-                if (id(auto_adaptive_control_enabled).state ) {
-                  if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1)) {
-                    id(heating_curve_offset_z1) += 0.5f;
+                if (id(auto_adaptive_control_enabled).state) {
+                  if (status.has_independent_z2()) {
+                    // 0 = idle, 1 = both, 2 = z1, 3 = z2
+                    auto multizone_status = status.MultiZoneStatus;
+                    if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && (multizone_status == 1 || multizone_status == 2)) {
+                      id(heating_curve_offset_z1) += 0.5f;
+                    }
+                    else if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) && (multizone_status == 1 || multizone_status == 3)) {
+                      id(heating_curve_offset_z2) += 0.5f;
+                    }
                   }
-                  if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2)) {
-                    id(heating_curve_offset_z2) += 0.5f;
+                  else {
+                    if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1)) {
+                      id(heating_curve_offset_z1) += 0.5f;
+                    }
+                    if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2)) {
+                      id(heating_curve_offset_z2) += 0.5f;
+                    }
                   }
 
                   // apply new offsets to feed temp
