@@ -1,3 +1,31 @@
+globals:
+# delta_energy_consumed_increasing
+  - id: _delta_energy_consumed_increasing_daily_input_last_value
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: _delta_energy_consumed_increasing_daily_input_partial_sum
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: _delta_energy_consumed_increasing_daily_input_last_day
+    type: int
+    restore_value: yes
+    initial_value: '-1' 
+  # computed_cop
+  - id: _computed_cop_production_sum
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: _computed_cop_last_input_value
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: _computed_cop_valid_production
+    type: bool
+    restore_value: yes
+    initial_value: 'false'
+
 ####################
 # heatpump commands
 
@@ -343,14 +371,15 @@ sensor:
     state_class: total_increasing
     filters:
       - lambda: |-
-          static float last_value = 0.0;
-          static float partial_sum = 0.0;
-          static uint16_t last_day_of_year = 0;
+          auto& last_value = id(_delta_energy_consumed_increasing_daily_input_last_value);
+          auto& partial_sum = id(_delta_energy_consumed_increasing_daily_input_partial_sum);
+          auto& last_day_of_year = id(_delta_energy_consumed_increasing_daily_input_last_day);
 
           auto& status = id(ecodan_instance).get_status();
           int controller_day = status.day_of_year();
+
           if (controller_day == -1) 
-            return {};
+            return partial_sum;
 
           if (last_value == 0) {
             last_value = x;
@@ -377,9 +406,9 @@ sensor:
       auto status = id(ecodan_instance).get_status();
 
       // sample every 10s      
-      static float production = 0.0f;
-      static float last_input_value = 0.0f;
-      static bool valid_production = false;
+      auto& production = id(_computed_cop_production_sum);
+      auto& last_input_value = id(_computed_cop_last_input_value);
+      auto& valid_production = id(_computed_cop_valid_production);
       
       if (status.CompressorFrequency == 0.0f) {
         // only calculate COP when comnpressor is active
