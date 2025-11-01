@@ -25,7 +25,6 @@ globals:
     type: bool
     restore_value: yes
     initial_value: 'false'
-
 ####################
 # heatpump commands
 
@@ -454,35 +453,32 @@ sensor:
     entity_category: diagnostic
     update_interval: 5s
 
-  # helper class to reset daily counter
+  # helper class to reset daily counter _day_of_year
   - platform: template
     id: heatpump_day_of_year
+    #name: debug day of year
     icon: "mdi:calendar-today"
     internal: true
     update_interval: 60s 
     lambda: |-
       auto& status = id(ecodan_instance).get_status();
-      int day = status.day_of_year();
-      
-      if (day < 0) {
-        return NAN; 
-      } else {
-        return (float)day;
+      int controller_day = status.day_of_year();
+
+      if (controller_day == -1) {
+        return NAN;
       }
-    on_value:
-      then:
-        - if:
-            condition:
-              lambda: |-
-                if (isnan(x) || isnan(id(heatpump_day_of_year).state))
-                  return false;
-                
-                // only reset integration for real day transitions
-                if (x != id(heatpump_day_of_year).state)
-                  return true;
-                return false;
-            then:
-              - sensor.integration.reset: daily_computed_output_power
+
+      float previous_day_float = id(heatpump_day_of_year).state;
+      if (isnan(previous_day_float)) {
+        return (float)controller_day; 
+      }
+
+      int previous_day = (int)previous_day_float;
+      if (controller_day != previous_day) {
+        ESP_LOGD("ecodan.component", "Day transition detected (%d -> %d). Resetting integration sensor.", previous_day, controller_day);        
+        id(daily_computed_output_power).reset(); 
+      }
+      return (float)controller_day;
 
   - platform: integration
     id: daily_computed_output_power 
