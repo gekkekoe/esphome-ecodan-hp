@@ -392,7 +392,8 @@ namespace ecodan
                 {  0x80,    0.40923f,    -10.395f    }, // (128)
                 {  0x8B,    0.37364f,    -5.748f     }, // (139)
                 {  0x9B,    0.34313f,    -1.503f     }, // (155)
-                {  0xB4,    0.306f,      4.187f      }  // (180)
+                {  0xB4,    0.306f,      4.187f      }, // (180)
+                {  0xB7,    0.28667f,    7.67f       }  // (183)
             };
             static const size_t NTC_TABLE_SIZE = sizeof(NTC_TABLE) / sizeof(NTC_TABLE[0]);
 
