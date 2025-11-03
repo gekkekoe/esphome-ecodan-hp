@@ -157,6 +157,9 @@ substitutions:
   outside_temperature_feedback: 'Auto-Adaptatif: Retour Température Extérieure'
   outside_temperature_source: 'Auto-Adaptatif: Source Température Extérieure'
   outside_temperature_option_internal: 'Capteur Interne'
+  heating_control_strategy: 'Auto-Adaptatif: Stratégie de Chauffage'
+  heating_control_strategy_option_curve: 'Courbe Auto-Apprentissage'
+  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Consommation Totale Chauffage
   total_increasing_heating_delivered: Production Totale Chauffage
   total_increasing_cool_consumed: Consommation Totale Refroidissement

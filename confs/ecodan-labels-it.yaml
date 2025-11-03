@@ -157,6 +157,9 @@ substitutions:
   outside_temperature_feedback: 'Autoadattivo: Feedback Temperatura Esterna'
   outside_temperature_source: 'Autoadattivo: Fonte Temperatura Esterna'
   outside_temperature_option_internal: 'Sensore Interno'
+  heating_control_strategy: 'Autoadattivo: Strategia di Riscaldamento'
+  heating_control_strategy_option_curve: 'Curva di Autoapprendimento'
+  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Consumo Totale Riscaldamento
   total_increasing_heating_delivered: Energia Totale Prodotta Riscaldamento
   total_increasing_cool_consumed: Consumo Totale Raffrescamento

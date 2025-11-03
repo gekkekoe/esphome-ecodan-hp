@@ -157,6 +157,9 @@ substitutions:
   outside_temperature_feedback: 'Automaattisesti mukautuva: Ulkolämpötilan Syöttö'
   outside_temperature_source: 'Automaattisesti mukautuva: Ulkolämpötilan Lähde'
   outside_temperature_option_internal: 'Sisäinen Anturi'
+  heating_control_strategy: 'Automaattisesti mukautuva: Lämmitysstrategia'
+  heating_control_strategy_option_curve: 'Itseoppiva Käyrä'
+  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Lämmityksen kokonaiskulutus
   total_increasing_heating_delivered: Lämmityksen kokonaistuotto
   total_increasing_cool_consumed: Jäähdytyksen kokonaiskulutus

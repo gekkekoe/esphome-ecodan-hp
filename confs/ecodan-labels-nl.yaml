@@ -157,6 +157,9 @@ substitutions:
   outside_temperature_feedback: 'Auto-Adaptief: Externe Buitentemperatuur'
   outside_temperature_source: 'Auto-Adaptief: Bron Buitentemperatuur'
   outside_temperature_option_internal: 'Interne Sensor'
+  heating_control_strategy: 'Auto-Adaptief: Verwarmingsstrategie'
+  heating_control_strategy_option_curve: 'Zelflerende Stooklijn'
+  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Totaal Verbruik Verwarming
   total_increasing_heating_delivered: Totaal Geleverd Verwarming
   total_increasing_cool_consumed: Totaal Verbruik Koeling

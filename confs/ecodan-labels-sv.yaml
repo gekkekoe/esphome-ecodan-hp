@@ -157,6 +157,9 @@ substitutions:
   outside_temperature_feedback: 'Autoadaptiv: Extern Utemperaturs-återkoppling'
   outside_temperature_source: 'Autoadaptiv: Källa för Utemperatur'
   outside_temperature_option_internal: 'Intern Sensor'
+  heating_control_strategy: 'Autoadaptiv: Värmestrategi'
+  heating_control_strategy_option_curve: 'Självlärande Kurva'
+  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Totalförbrukning Värme
   total_increasing_heating_delivered: Total Levererad Värme
   total_increasing_cool_consumed: Totalförbrukning Kyla

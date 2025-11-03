@@ -156,6 +156,9 @@ substitutions:
   outside_temperature_feedback: 'Autoadaptacja: Zewnętrzna Temp. Zewnętrzna'
   outside_temperature_source: 'Autoadaptacja: Źródło Temp. Zewnętrznej'
   outside_temperature_option_internal: 'Czujnik Wewnętrzny'
+  heating_control_strategy: 'Autoadaptacja: Strategia Grzewcza'
+  heating_control_strategy_option_curve: 'Krzywa Samoucząca się'
+  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Całkowite Zużycie Ogrzewanie
   total_increasing_heating_delivered: Całkowita Produkcja Ogrzewanie
   total_increasing_cool_consumed: Całkowite Zużycie Chłodzenie

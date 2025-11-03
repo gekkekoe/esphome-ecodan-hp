@@ -156,6 +156,9 @@ substitutions:
   outside_temperature_feedback: 'Autoadaptiv: Ekstern Utetemperatur'
   outside_temperature_source: 'Autoadaptiv: Kilde for Utetemperatur'
   outside_temperature_option_internal: 'Intern Sensor'
+  heating_control_strategy: 'Autoadaptiv: Varmestrategi'
+  heating_control_strategy_option_curve: 'Selvlærende Kurve'
+  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Totalt Forbruk Varme
   total_increasing_heating_delivered: Totalt Levert Varme
   total_increasing_cool_consumed: Totalt Forbruk Kjøling

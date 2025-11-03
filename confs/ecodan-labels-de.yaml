@@ -156,6 +156,9 @@ substitutions:
   outside_temperature_feedback: 'Auto-Adaptiv: Externe Außentemperatur'
   outside_temperature_source: 'Auto-Adaptiv: Quelle Außentemperatur'
   outside_temperature_option_internal: 'Interner Sensor'
+  heating_control_strategy: 'Auto-Adaptiv: Heizstrategie'
+  heating_control_strategy_option_curve: 'Selbstlernende Heizkurve'
+  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Gesamtverbrauch Heizen
   total_increasing_heating_delivered: Gesamtertrag Heizen
   total_increasing_cool_consumed: Gesamtverbrauch Kühlen

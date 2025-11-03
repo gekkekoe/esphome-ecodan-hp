@@ -159,6 +159,11 @@ substitutions:
   outside_temperature_feedback: "Auto-Adaptive: Outside Temperature Feedback"
   outside_temperature_source: "Auto-Adaptive: Outside Temperature Source"
   outside_temperature_option_internal: "Internal Sensor"
+  # delta T control settings
+  heating_control_strategy: 'Auto-Adaptive: Heating Strategy'
+  heating_control_strategy_option_curve: 'Self-Learning Curve'
+  heating_control_strategy_option_delta_t: 'Delta T'
+
   # total increasing energy totals
   total_increasing_heating_consumed: Total Heating Consumed
   total_increasing_heating_delivered: Total Heating Delivered

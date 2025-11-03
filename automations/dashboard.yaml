@@ -41,6 +41,10 @@
               - entity: sensor.ecodan_heatpump_auto_adaptive_heating_offset
                 name: Heating Offset
             hours_to_show: 24
+            visibility:
+              - condition: state
+                entity: select.ecodan_heatpump_auto_adaptive_heating_strategy
+                state: Self-Learning Curve
           - type: energy-devices-detail-graph
           - show_name: true
             show_icon: true
@@ -72,48 +76,69 @@
           - type: heading
             heading_style: title
             heading: Advanced Controls
-          - type: grid
-            square: false
+          - square: false
+            type: grid
             columns: 1
             cards:
               - type: entities
                 entities:
                   - entity: switch.ecodan_heatpump_auto_adaptive_control
                     name: Enable/Disable
+                  - entity: select.ecodan_heatpump_auto_adaptive_heating_strategy
+                    name: Heating Strategy
                   - entity: select.ecodan_heatpump_auto_adaptive_heating_system_type
                     name: Heating System Type
-                  - entity: >-
-                      select.ecodan_heatpump_auto_adaptive_room_temperature_source
-                    name: Room Temperature source
                   - entity: number.ecodan_heatpump_auto_adaptive_setpoint_bias
                     name: Setpoint Bias
-                  - entity: number.ecodan_heatpump_auto_adaptive_heating_curve_slope
-                    name: Heating Curve Slope
                   - entity: >-
                       number.ecodan_heatpump_auto_adaptive_max_heating_flow_temperature
                     name: Max. Heating Flow Temperature
                   - entity: >-
                       number.ecodan_heatpump_auto_adaptive_min_heating_flow_temperature
                     name: Min. Heating Flow Temperature
+                show_header_toggle: false
+                state_color: true
+                title: Auto Adaptive
+              - type: entities
+                entities:
+                  - entity: >-
+                      select.ecodan_heatpump_auto_adaptive_room_temperature_source
+                    name: Room Temperature source
                   - entity: >-
                       number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1
                     name: Room Feedback z1
-                  - entity: sensor.ecodan_heatpump_auto_adaptive_heating_offset
-                    name: z1 heating curve
                   - entity: >-
                       select.ecodan_heatpump_auto_adaptive_outside_temperature_source
                     name: Outside Temperature Source
                   - entity: >-
                       number.ecodan_heatpump_auto_adaptive_outside_temperature_feedback
                     name: Outside Temperature Feedback
-                  - entity: number.ecodan_heatpump_auto_adaptive_cooling_curve_slope
-                    name: Cooling Curve Slope
-                  - entity: >-
-                      number.ecodan_heatpump_auto_adaptive_min_cooling_flow_temperature
-                    name: Min. Cooling Flow Temperature
-                show_header_toggle: false
-                state_color: true
-                title: Auto Adaptive
+                title: 'Auto Adaptive: Feedback Settings'
+              - type: conditional
+                conditions:
+                  - entity: select.ecodan_heatpump_auto_adaptive_heating_strategy
+                    state: Self-Learning Curve
+                card:
+                  type: entities
+                  entities:
+                    - entity: number.ecodan_heatpump_auto_adaptive_heating_curve_slope
+                      name: Heating Curve Slope
+                    - entity: sensor.ecodan_heatpump_auto_adaptive_heating_offset
+                      name: z1 heating curve
+                  title: 'Auto Adaptive: Self-Learning Curve'
+              - type: conditional
+                conditions:
+                  - entity: select.ecodan_heatpump_selected_operating_mode
+                    state: Cool Flow Temperature
+                card:
+                  type: entities
+                  entities:
+                    - entity: number.ecodan_heatpump_auto_adaptive_cooling_curve_slope
+                      name: Cooling Curve Slope
+                    - entity: >-
+                        number.ecodan_heatpump_auto_adaptive_min_cooling_flow_temperature
+                      name: Min. Cooling Flow Temperature
+                  title: 'Auto Adaptive: Cooling'
           - type: grid
             square: false
             columns: 1

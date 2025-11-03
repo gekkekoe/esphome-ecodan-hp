@@ -255,6 +255,16 @@ select:
       - "${outside_temperature_option_internal}"
       - "${select_feedback_option_api}"
     initial_option: "${outside_temperature_option_internal}"
+  
+  - platform: template
+    id: heating_control_strategy
+    name: ${heating_control_strategy}
+    options:
+      - "${heating_control_strategy_option_curve}"
+      - "${heating_control_strategy_option_delta_t}"
+    initial_option: "${heating_control_strategy_option_curve}"
+    optimistic: true
+    restore_value: true
 
 switch:
   - platform: template
@@ -414,6 +424,8 @@ script:
                   if (error > 0) error = 0.0;
               }
 
+              auto strategy_index = id(heating_control_strategy).active_index().value_or(0);
+
               float base_learning_rate;
               float aggressiveness_factor;
               auto heating_type_index = id(heating_system_type).active_index().value_or(0);
@@ -450,23 +462,90 @@ script:
               if (dynamic_error_margin_negative < -0.8f)
                 dynamic_error_margin_negative = -0.8f;
 
-              ESP_LOGD("auto_adaptive", "Error: Current=%.1f, Dead Zone=[%.1f, %.1f], LR=%.3f", 
-                error, dynamic_error_margin_negative, dynamic_error_margin_positive, learning_rate);
-
               if (is_heating_mode) {
                   float& offset = *heating_offsets[i];
                   float& prev_error = *heating_prev_errors[i];
                   
                   float max_flow_temp = id(maximum_heating_flow_temp).state;
-                  float calculated_flow = (20.0f - actual_outside_temp) * current_slope + offset;
-                  ESP_LOGD("auto_adaptive", "Z%d HEATING: calculated_flow: %.1f", (i + 1), calculated_flow);
-
                   float max_offset = max_flow_temp + 2.0f;
                   if (offset > max_offset) {
                       offset = max_offset;
                       ESP_LOGW("auto_adaptive", "Z%d HEATING: Learned offset reached its dynamic limit of %.1f°C", (i + 1), max_offset);
                   }
 
+                  float calculated_flow = NAN;
+                  if (strategy_index == 0) {
+                    // Self learning curve
+                    ESP_LOGD("auto_adaptive", "Error: Current=%.1f, Dead Zone=[%.1f, %.1f], LR=%.3f", 
+                      error, dynamic_error_margin_negative, dynamic_error_margin_positive, learning_rate);
+
+                    calculated_flow = (20.0f - actual_outside_temp) * current_slope + offset;
+                    ESP_LOGD("auto_adaptive", "Z%d HEATING: calculated_flow: %.1f", (i + 1), calculated_flow);
+
+                    bool is_saturated = (requested_flow_temp - actual_flow_temp) > SATURATION_MARGIN;
+                    if (is_saturated && is_heating_active) {
+                        ESP_LOGW("auto_adaptive", "Z%d HEATING: HP Saturated (Req: %.1f, Act: %.1f). Learning paused.", (i + 1), requested_flow_temp, actual_flow_temp);
+                    } else {
+                      // probe rate to find an more effficient offset when in dead zone    
+                      const float EFFICIENCY_PROBE_RATE = 0.02f;
+                      float old_offset = offset;
+
+                      if (error > dynamic_error_margin_positive && error >= prev_error) {
+                        offset += learning_rate;
+
+                        ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too cold (err: %.2f). Offset increased from %.2f to %.2f", (i + 1), error, old_offset, offset);
+                      } else if (error < dynamic_error_margin_negative) {
+                        if (offset < MIN_HEAT_FLOW) { 
+                            // decrease learning rate below min flow temp
+                            float downward_learning_factor = (offset - 15.0f) / (MIN_HEAT_FLOW - 15.0f);
+                            if (downward_learning_factor < 0.0f) 
+                              downward_learning_factor = 0.0f; // avoid negative
+                            ESP_LOGD("auto_adaptive", "Low offset detected. LR adjustment: %.2f", downward_learning_factor);
+                            learning_rate *= downward_learning_factor;
+                        }
+                        offset -= learning_rate;
+                        ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too warm (err: %.2f). Offset decreased from %.2f to %.2f", (i + 1), error, old_offset, offset);
+                      }
+                      else if (error >= dynamic_error_margin_negative && error <= dynamic_error_margin_positive) {
+                          // in dead zone
+                          if (is_heating_active) {
+                            offset -= EFFICIENCY_PROBE_RATE;
+                            ESP_LOGD("auto_adaptive", "Z%d HEATING: Stable. Probing for efficiency. Offset slow-decay to %.2f", (i + 1), offset);
+                        }
+                      }
+                      prev_error = error;
+                    }                  
+                  }
+                  else {
+                    // Delta T control
+                    float return_temp = id(hp_return_temp).state;
+                    if (isnan(return_temp)) {
+                        ESP_LOGE("auto_adaptive", "Z%d HEATING (Delta T): FAILED, hp_return_temp is NAN. Reverting to %.2f°C.", (i + 1), MIN_HEAT_FLOW);
+                        calculated_flow = MIN_HEAT_FLOW;
+                    } else {
+                        float min_delta_t, max_delta_t;
+                        if (heating_type_index == 2) { // radiatora
+                            min_delta_t = 5.0f;
+                            max_delta_t = 10.0f;
+                        } else if (heating_type_index == 1) { // Hybrid
+                            min_delta_t = 4.0f;
+                            max_delta_t = 8.0f;
+                        } else { // UFH
+                            min_delta_t = 2.5f;
+                            max_delta_t = 6.0f;
+                        }
+
+                        // Force error range to [0-1]
+                        float error_clamped = std::clamp(error, 0.0f, 1.0f);
+                        // interpolate using quadratic error (slow at the beginning, fast at the end)
+                        float target_delta_t = min_delta_t + (error_clamped * error_clamped) * (max_delta_t - min_delta_t);
+                        calculated_flow = return_temp + target_delta_t;
+                        ESP_LOGD("auto_adaptive", "Z%d HEATING (Delta T): calculated_flow: %.1f°C (Return %.1f + Scaled  delta T %.1f, error^2: %.2f)", 
+                                  (i + 1), calculated_flow, return_temp, target_delta_t, error_clamped * error_clamped);
+                    }
+                  }
+
+                  // apply limits to both algorithms
                   if (calculated_flow > max_flow_temp) {
                     ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit), calculated_flow: %.1f", (i + 1), max_flow_temp, calculated_flow);
                     calculated_flow = max_flow_temp;
@@ -477,40 +556,7 @@ script:
                     calculated_flow = MIN_HEAT_FLOW;
                   }
 
-                  bool is_saturated = (requested_flow_temp - actual_flow_temp) > SATURATION_MARGIN;
-                  if (is_saturated && is_heating_active) {
-                      ESP_LOGW("auto_adaptive", "Z%d HEATING: HP Saturated (Req: %.1f, Act: %.1f). Learning paused.", (i + 1), requested_flow_temp, actual_flow_temp);
-                  } else {
-                    // probe rate to find an more effficient offset when in dead zone    
-                    const float EFFICIENCY_PROBE_RATE = 0.02f;
-                    float old_offset = offset;
-
-                    if (error > dynamic_error_margin_positive && error >= prev_error) {
-                      offset += learning_rate;
-
-                      ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too cold (err: %.2f). Offset increased from %.2f to %.2f", (i + 1), error, old_offset, offset);
-                    } else if (error < dynamic_error_margin_negative) {
-                      if (offset < MIN_HEAT_FLOW) { 
-                          // decrease learning rate below min flow temp
-                          float downward_learning_factor = (offset - 15.0f) / (MIN_HEAT_FLOW - 15.0f);
-                          if (downward_learning_factor < 0.0f) 
-                            downward_learning_factor = 0.0f; // avoid negative
-                          ESP_LOGD("auto_adaptive", "Low offset detected. LR adjustment: %.2f", downward_learning_factor);
-                          learning_rate *= downward_learning_factor;
-                      }
-                      offset -= learning_rate;
-                      ESP_LOGI("auto_adaptive", "Z%d HEATING: Room too warm (err: %.2f). Offset decreased from %.2f to %.2f", (i + 1), error, old_offset, offset);
-                    }
-                    else if (error >= dynamic_error_margin_negative && error <= dynamic_error_margin_positive) {
-                        // in dead zone
-                        if (is_heating_active) {
-                          offset -= EFFICIENCY_PROBE_RATE;
-                          ESP_LOGD("auto_adaptive", "Z%d HEATING: Stable. Probing for efficiency. Offset slow-decay to %.2f", (i + 1), offset);
-                      }
-                    }
-                    prev_error = error;
-                  }                  
-                  calculated_flows_heat[i] = round(calculated_flow * 2) / 2.0f;
+                  calculated_flows_heat[i] = floor(calculated_flow * 2) / 2.0f;
 
               } else if (is_cooling_mode) {
                   float& offset = *cooling_offsets[i];
@@ -543,7 +589,7 @@ script:
                     prev_error = error;
                   }
                   
-                  calculated_flows_cool[i] = round(calculated_flow * 2) / 2.0f;
+                  calculated_flows_cool[i] = floor(calculated_flow * 2) / 2.0f;
               }
           }
 
@@ -552,20 +598,20 @@ script:
 
           if (status.has_independent_z2()) {
               if (is_heating_demand) {
-                  if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1)) {
+                  if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && status.Zone1FlowTemperatureSetPoint != calculated_flows_heat[0]) {
                     ESP_LOGD("auto_adaptive", "CMD: Set Z1 Heat Flow -> %.1f°C", calculated_flows_heat[0]);
                     id(ecodan_instance).set_flow_target_temperature(calculated_flows_heat[0], esphome::ecodan::Zone::ZONE_1);
                   }
-                  if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2)) {
+                  if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) && status.Zone2FlowTemperatureSetPoint != calculated_flows_heat[1]) {
                     ESP_LOGD("auto_adaptive", "CMD: Set Z2 Heat Flow -> %.1f°C", calculated_flows_heat[1]);
                     id(ecodan_instance).set_flow_target_temperature(calculated_flows_heat[1], esphome::ecodan::Zone::ZONE_2);
                   }
               } else if (is_cooling_demand) {
-                  if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1)) {
+                  if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) && status.Zone1FlowTemperatureSetPoint != calculated_flows_cool[0]) {
                     ESP_LOGD("auto_adaptive", "CMD: Set Z1 Cool Flow -> %.1f°C", calculated_flows_cool[0]);
                     id(ecodan_instance).set_flow_target_temperature(calculated_flows_cool[0], esphome::ecodan::Zone::ZONE_1);
                   }
-                  if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2)) {
+                  if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2) && status.Zone2FlowTemperatureSetPoint != calculated_flows_cool[1]) {
                     ESP_LOGD("auto_adaptive", "CMD: Set Z2 Cool Flow -> %.1f°C", calculated_flows_cool[1]);
                     id(ecodan_instance).set_flow_target_temperature(calculated_flows_cool[1], esphome::ecodan::Zone::ZONE_2);
                   }
@@ -573,11 +619,15 @@ script:
           } else {
               if (is_heating_demand) {
                   float final_flow = fmax(calculated_flows_heat[0], calculated_flows_heat[1]);
-                  ESP_LOGD("auto_adaptive", "CMD: Set Dependent Heat Flow -> %.1f°C (max of Z1:%.1f, Z2:%.1f)", final_flow, calculated_flows_heat[0], calculated_flows_heat[1]);
-                  id(ecodan_instance).set_flow_target_temperature(final_flow, esphome::ecodan::Zone::ZONE_1);
+                  if (status.Zone1FlowTemperatureSetPoint != final_flow) {
+                    ESP_LOGD("auto_adaptive", "CMD: Set Dependent Heat Flow -> %.1f°C (max of Z1:%.1f, Z2:%.1f)", final_flow, calculated_flows_heat[0], calculated_flows_heat[1]);
+                    id(ecodan_instance).set_flow_target_temperature(final_flow, esphome::ecodan::Zone::ZONE_1);
+                  }
               } else if (is_cooling_demand) {
                   float final_flow = fmin(calculated_flows_cool[0], calculated_flows_cool[1]);
-                  ESP_LOGD("auto_adaptive", "CMD: Set Dependent Cool Flow -> %.1f°C (min of Z1:%.1f, Z2:%.1f)", final_flow, calculated_flows_cool[0], calculated_flows_cool[1]);
-                  id(ecodan_instance).set_flow_target_temperature(final_flow, esphome::ecodan::Zone::ZONE_1);
+                  if (status.Zone1FlowTemperatureSetPoint != final_flow) {
+                    ESP_LOGD("auto_adaptive", "CMD: Set Dependent Cool Flow -> %.1f°C (min of Z1:%.1f, Z2:%.1f)", final_flow, calculated_flows_cool[0], calculated_flows_cool[1]);
+                    id(ecodan_instance).set_flow_target_temperature(final_flow, esphome::ecodan::Zone::ZONE_1);
+                  }
               }
           }

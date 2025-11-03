@@ -9,3 +9,4 @@ firmware.bin
 components/ecodan/__pycache__/*
 secrets.yaml
 .python-version
+*.DS_Store
