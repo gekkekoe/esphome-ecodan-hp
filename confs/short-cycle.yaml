@@ -12,6 +12,11 @@ globals:
     type: float
     restore_value: yes
     initial_value: '0.0'
+  # store last defrost time
+  - id: _last_defrost_time
+    type: uint32_t
+    restore_value: no 
+    initial_value: '-1'
 
 button:
   - platform: template
@@ -102,6 +107,11 @@ script:
 
           if (status.DefrostActive || id(status_short_cycle_lockout).state || !id(status_compressor).state) {
             //ESP_LOGD("predictive_short_cycle", "No Compressor activity or Lockout/Defrost active. Exiting.");
+            if (status.DefrostActive) {
+              ESP_LOGD("predictive_short_cycle", "Defrost detected, updating timestamp.");
+              id(_last_defrost_time) = millis();
+            }
+
             if (start_time > 0)
               id(predictive_delta_start_time) = 0; // Reset the timer
             return;

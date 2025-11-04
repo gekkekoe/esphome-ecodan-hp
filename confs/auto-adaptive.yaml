@@ -535,13 +535,33 @@ script:
                             max_delta_t = 6.0f;
                         }
 
-                        // Force error range to [0-1]
-                        float error_clamped = std::clamp(error, 0.0f, 1.0f);
-                        // interpolate using quadratic error (slow at the beginning, fast at the end)
-                        float target_delta_t = min_delta_t + (error_clamped * error_clamped) * (max_delta_t - min_delta_t);
-                        calculated_flow = return_temp + target_delta_t;
-                        ESP_LOGD("auto_adaptive", "Z%d HEATING (Delta T): calculated_flow: %.1f°C (Return %.1f + Scaled  delta T %.1f, error^2: %.2f)", 
-                                  (i + 1), calculated_flow, return_temp, target_delta_t, error_clamped * error_clamped);
+                        // detect and handle defrosts
+                        const float DEFROST_RISK_MIN_TEMP = -2.0f;
+                        const float DEFROST_RISK_MAX_TEMP = 3.0f;
+                        const uint32_t DEFROST_MEMORY_MS = 1 * 3600000UL; // 1 hour
+
+                        bool is_defrost_weather = false;
+                        if (actual_outside_temp >= DEFROST_RISK_MIN_TEMP && actual_outside_temp <= DEFROST_RISK_MAX_TEMP) {
+                            uint32_t last_defrost = id(_last_defrost_time);
+                            if (last_defrost > 0 && (millis() - last_defrost) < DEFROST_MEMORY_MS) {
+                                is_defrost_weather = true;
+                            }
+                        }
+
+                        if (is_defrost_weather) {
+                            // defrost weather detected, force to min delta T for the next hour
+                            calculated_flow = return_temp + min_delta_t;
+                            ESP_LOGW("auto_adaptive", "Z%d HEATING (Delta T): Defrost risk detected. Forcing minimum delta T (%.1f°C). Flow set to %.1f°C",
+                                     (i + 1), min_delta_t, calculated_flow);
+                        } else {
+                          // Force error range to [0-1]
+                          float error_clamped = std::clamp(error, 0.0f, 1.0f);
+                          // interpolate using quadratic error (slow at the beginning, fast at the end)
+                          float target_delta_t = min_delta_t + (error_clamped * error_clamped) * (max_delta_t - min_delta_t);
+                          calculated_flow = return_temp + target_delta_t;
+                          ESP_LOGD("auto_adaptive", "Z%d HEATING (Delta T): calculated_flow: %.1f°C (Return %.1f + Scaled  delta T %.1f, error^2: %.2f)", 
+                                    (i + 1), calculated_flow, return_temp, target_delta_t, error_clamped * error_clamped);
+                        }
                     }
                   }
 
