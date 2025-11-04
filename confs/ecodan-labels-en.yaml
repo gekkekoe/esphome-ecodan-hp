@@ -137,8 +137,6 @@ substitutions:
   predictive_short_cycle_high_delta_time_window: 'Short-Cycle: High Delta Duration'
   # auto adaptive translations
   auto_adaptive_control_enabled: 'Auto-Adaptive: Control'
-  heating_slope: 'Auto-Adaptive: Heating Curve Slope'
-  cooling_slope: 'Auto-Adaptive: Cooling Curve Slope'
   maximum_heating_flow_temp: 'Auto-Adaptive: Max. Heating Flow Temperature'
   minimum_heating_flow_temp: 'Auto-Adaptive: Min. Heating Flow Temperature'
   minimum_cooling_flow_temp: 'Auto-Adaptive: Min. Cooling Flow Temperature'
@@ -150,19 +148,9 @@ substitutions:
   heating_system_type_option_ufh: 'Underfloor Heating'
   heating_system_type_option_ufh_rad: 'Underfloor Heating + Radiators'
   heating_system_type_option_rad: 'Radiators'
-  heating_offset_sensor: 'Auto-Adaptive: Heating Offset'
-  cooling_offset_sensor: 'Auto-Adaptive: Cooling Offset'
   auto_adaptive_setpoint_bias: 'Auto-Adaptive: Setpoint Bias'
-  dynamic_learning_rate_sensor: 'Auto-Adaptive: Dynamic Learning Rate'
   temperature_feedback: 'Auto-Adaptive: Current Room Temperature Feedback'
   thermostat_overshoot_compensation: 'Auto-Adaptive: Thermostat Overshoot Compensation'
-  outside_temperature_feedback: "Auto-Adaptive: Outside Temperature Feedback"
-  outside_temperature_source: "Auto-Adaptive: Outside Temperature Source"
-  outside_temperature_option_internal: "Internal Sensor"
-  # delta T control settings
-  heating_control_strategy: 'Auto-Adaptive: Heating Strategy'
-  heating_control_strategy_option_curve: 'Self-Learning Curve'
-  heating_control_strategy_option_delta_t: 'Delta T'
 
   # total increasing energy totals
   total_increasing_heating_consumed: Total Heating Consumed

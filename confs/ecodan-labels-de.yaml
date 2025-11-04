@@ -134,8 +134,6 @@ substitutions:
   predictive_short_cycle_control_enabled: 'Kurzzyklus: Vorausschauende Verhinderung'
   predictive_short_cycle_high_delta_time_window: 'Kurzzyklus: Hohe Delta-Dauer'
   auto_adaptive_control_enabled: 'Auto-Adaptiv: Steuerung'
-  heating_slope: 'Auto-Adaptiv: Neigung Heizkurve'
-  cooling_slope: 'Auto-Adaptiv: Neigung Kühlkurve'
   maximum_heating_flow_temp: 'Auto-Adaptiv: Max. Vorlauftemperatur Heizen'
   minimum_heating_flow_temp: 'Auto-Adaptiv: Min. Vorlauftemperatur Heizen'
   minimum_cooling_flow_temp: 'Auto-Adaptiv: Min. Vorlauftemperatur Kühlen'
@@ -147,18 +145,9 @@ substitutions:
   heating_system_type_option_ufh: 'Fußbodenheizung'
   heating_system_type_option_ufh_rad: 'Fußbodenheizung + Heizkörper'
   heating_system_type_option_rad: 'Heizkörper'
-  heating_offset_sensor: 'Auto-Adaptiv: Offset Heizen'
-  cooling_offset_sensor: 'Auto-Adaptiv: Offset Kühlen'
   auto_adaptive_setpoint_bias: 'Auto-Adaptiv: Sollwert-Bias'
-  dynamic_learning_rate_sensor: 'Auto-Adaptiv: Dynamische Lernrate'
   temperature_feedback: 'Auto-Adaptiv: Rückmeldung Aktuelle Raumtemperatur'
   thermostat_overshoot_compensation: 'Auto-Adaptiv: Thermostat-Überschwingungskompensation'
-  outside_temperature_feedback: 'Auto-Adaptiv: Externe Außentemperatur'
-  outside_temperature_source: 'Auto-Adaptiv: Quelle Außentemperatur'
-  outside_temperature_option_internal: 'Interner Sensor'
-  heating_control_strategy: 'Auto-Adaptiv: Heizstrategie'
-  heating_control_strategy_option_curve: 'Selbstlernende Heizkurve'
-  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Gesamtverbrauch Heizen
   total_increasing_heating_delivered: Gesamtertrag Heizen
   total_increasing_cool_consumed: Gesamtverbrauch Kühlen

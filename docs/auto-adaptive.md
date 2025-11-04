@@ -1,24 +1,89 @@
 # Auto-Adaptive Control
 
-The **Auto-Adaptive Control** feature transforms your Ecodan heat pump into a smart, self-learning system. It intelligently adjusts the heat pump's operation to match the unique thermal properties of your home, maximizing both comfort and energy efficiency.
+The **Auto-Adaptive Control** feature transforms your Ecodan heat pump into a smart, self-steering system. It intelligently adjusts the heat pump's operation to match the unique thermal properties of your home, maximizing both comfort and energy efficiency.
 
-When enabled, this feature continuously monitors the room temperature and compares it to the setpoint. It then fine-tunes the heat pump's flow temperature to correct any persistent errors, ensuring your home is always perfectly comfortable using the minimum amount of energy.
+Instead of a static heating curve (based on weather), this controller uses a **load-compensated** strategy. It calculates the flow temperature based on the *real-time heat demand* of the house.
 
-The system is designed to be highly robust and accounts for real-world scenarios such as:
-* **System Saturation**: It pauses the learning process if the heat pump is already running at 100% capacity.
-* **Defrost Cycles**: It intelligently ignores temperature data during defrost cycles to avoid drawing incorrect conclusions.
-* **Short-Cycling**: It works alongside the **Short-Cycle Mitigation** feature to ensure stable operation.
+## Heating Strategy: Delta-T Control
+
+This is the core of the Auto-Adaptive controller. It calculates the target flow temperature based on the **real-time heat demand** of your house, which it measures using the `return_temp` sensor.
+
+### How It Works
+
+The strategy follows these steps:
+
+1.  **Select Profile**: It uses the `heating_system_type` setting to select one of three hard-coded ΔT profiles (UFH, Hybrid, or Radiators).
+2.  **Calculate Error**: It calculates the `error` (deviation from the setpoint). This is crucial: it automatically includes your **`setpoint_bias`** and **`thermostat_overshoot_compensation`**.
+3.  **Scale Error (Non-Linear)**: The `error` is clamped between `0.0` (no error) and `1.0` (large error). It is then scaled **non-linearly** (`error_factor = error * error`). This makes the controller very gentle at small errors but increasingly aggressive as the error grows.
+4.  **Calculate Target ΔT**: It uses this `error_factor` to interpolate between the profile's `min_delta_t` (for efficiency) and `max_delta_t` (for power).
+    `target_delta_t = min_delta_t + (error_factor * (max_delta_t - min_delta_t))`
+5.  **Calculate Target Flow**: The final target flow is calculated based on the real-time return temperature.
+    `Calculated Flow = return_temp + target_delta_t`
+6.  **Rounding (Conservative)**: The final value is rounded **down** (floored) to the nearest 0.5°C to match the heat pump's resolution. This ensures the controller is never more aggressive than intended, which provides a more stable and gentle ramp-up.
+    `Final Flow = floor(Calculated Flow * 2) / 2.0`
+
+### Example calculated flow temperature for 22c return temperature
+
+These tables show what the final target flow temperature will be based on the system type and the `error`.
+
+#### Profile 1: UFH (Underfloor Heating)
+* **Return Temp:** 22.0°C
+* **Min ΔT:** 2.5°C
+* **Max ΔT:** 6.0°C
+
+| Error | Error Factor (error^2) | Target ΔT | Calculated Flow | Final Flow (Floored) |
+| :--- | :--- | :--- | :--- | :--- |
+| 0.0 | 0.00 | 2.50°C | 24.50°C | **24.5°C** |
+| 0.1 | 0.01 | 2.54°C | 24.54°C | **24.5°C** |
+| 0.2 | 0.04 | 2.64°C | 24.64°C | **24.5°C** |
+| 0.3 | 0.09 | 2.82°C | 24.82°C | **24.5°C** |
+| 0.4 | 0.16 | 3.06°C | 25.06°C | **25.0°C** |
+| 0.5 | 0.25 | 3.38°C | 25.38°C | **25.0°C** |
+| 0.6 | 0.36 | 3.76°C | 25.76°C | **25.5°C** |
+| 0.7 | 0.49 | 4.22°C | 26.22°C | **26.0°C** |
+| 0.8 | 0.64 | 4.74°C | 26.74°C | **26.5°C** |
+| 0.9 | 0.81 | 5.34°C | 27.34°C | **27.0°C** |
+| 1.0 | 1.00 | 6.00°C | 28.00°C | **28.0°C** |
+
+#### Profile 2: Hybrid (UFH + Radiators)
+* **Return Temp:** 22.0°C
+* **Min ΔT:** 4.0°C
+* **Max ΔT:** 8.0°C
+
+| Error | Error Factor (error^2) | Target ΔT | Calculated Flow | Final Flow (Floored) |
+| :--- | :--- | :--- | :--- | :--- |
+| 0.0 | 0.00 | 4.00°C | 26.00°C | **26.0°C** |
+| 0.1 | 0.01 | 4.04°C | 26.04°C | **26.0°C** |
+| 0.2 | 0.04 | 4.16°C | 26.16°C | **26.0°C** |
+| 0.3 | 0.09 | 4.36°C | 26.36°C | **26.0°C** |
+| 0.4 | 0.16 | 4.64°C | 26.64°C | **26.5°C** |
+| 0.5 | 0.25 | 5.00°C | 27.00°C | **27.0°C** |
+| 0.6 | 0.36 | 5.44°C | 27.44°C | **27.0°C** |
+| 0.7 | 0.49 | 5.96°C | 27.96°C | **27.5°C** |
+| 0.8 | 0.64 | 6.56°C | 28.56°C | **28.5°C** |
+| 0.9 | 0.81 | 7.24°C | 29.24°C | **29.0°C** |
+| 1.0 | 1.00 | 8.00°C | 30.00°C | **30.0°C** |
+
+#### Profile 3: Radiators
+* **Return Temp:** 22.0°C
+* **Min ΔT:** 5.0°C
+* **Max ΔT:** 10.0°C
+
+| Error | Error Factor (error^2) | Target ΔT | Calculated Flow | Final Flow (Floored) |
+| :--- | :--- | :--- | :--- | :--- |
+| 0.0 | 0.00 | 5.00°C | 27.00°C | **27.0°C** |
+| 0.1 | 0.01 | 5.05°C | 27.05°C | **27.0°C** |
+| 0.2 | 0.04 | 5.20°C | 27.20°C | **27.0°C** |
+| 0.3 | 0.09 | 5.45°C | 27.45°C | **27.0°C** |
+| 0.4 | 0.16 | 5.80°C | 27.80°C | **27.5°C** |
+| 0.5 | 0.25 | 6.25°C | 28.25°C | **28.0°C** |
+| 0.6 | 0.36 | 6.80°C | 28.80°C | **28.5°C** |
+| 0.7 | 0.49 | 7.45°C | 29.45°C | **29.0°C** |
+| 0.8 | 0.64 | 8.20°C | 30.20°C | **30.0°C** |
+| 0.9 | 0.81 | 9.05°C | 31.05°C | **31.0°C** |
+| 1.0 | 1.00 | 10.00°C | 32.00°C | **32.0°C** |
 
 ---
-
-## Persistent Learning
-
-A significant advantage of this system is that all learned parameters, specifically the crucial **`heating_curve_offset`** and **`cooling_curve_offset`**, are automatically saved to the ESP32's flash memory.
-
-Unlike the native Mitsubishi auto-adaptive function, which can lose its learned data after a power cycle, this implementation ensures that a reboot or power outage **does not cost time to re-learn**. The system immediately resumes operation with its last known optimal settings, ensuring continuous efficiency.
-
----
-
 ## Important Note on Operating Mode
 
 For this feature to function correctly, the heat pump must be set to a **Fixed Flow Temperature** mode for both heating and cooling. The Auto-Adaptive algorithm takes over the role of the built-in heating curve by dynamically adjusting this fixed setpoint.
@@ -54,8 +119,6 @@ All parameters are adjustable in real-time from the Home Assistant interface.
 | --------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`Auto-Adaptive: Control`** | **Enables or disables the entire Auto-Adaptive feature.** When disabled, the system will revert to using the standard fixed flow temperature setpoints. | **Default**: `On`                                                                                                                               |
 | **`Auto-Adaptive: Heating System Type`** | Tunes the algorithm's behavior to match your system's thermal inertia (response time). | **Default**: `Underfloor Heating`<br>• **UFH**: For slow, high-inertia systems.<br>• **UFH + Radiators**: For hybrid systems.<br>• **Radiators**: For fast, low-inertia systems. |
-| **`Auto-Adaptive: Heating Curve Slope`** | Determines how aggressively the flow temp rises as the outside temp drops.             | **Default**: `0.7`<br>• **Low (0.4-0.7)** for well-insulated homes with UFH.<br>• **High (0.8-1.2)** for older homes with radiators.          |
-| **`Auto-Adaptive: Cooling Curve Slope`** | Determines how aggressively the flow temp drops as the outside temp rises.             | **Default**: `1.2`<br>• **Low (0.8-1.2)** for homes with good sun protection.<br>• **High (1.8-2.5)** for homes with high solar gain.          |
 | **`Auto-Adaptive: Max. Heating Flow Temperature`**| Sets a hard safety limit for the flow temperature during heating to protect floors.      | **Default**: `38.0°C`                                                                                                                           |
 | **`Auto-Adaptive: Min. Cooling Flow Temperature`**| Sets a hard safety limit for the flow temperature during cooling to prevent condensation. | **Default**: `18.0°C`                                                                                                                           |
 | **`Auto-Adaptive: Cooling Smart Start Temp`** | Sets an "efficiency ceiling" for cooling. The system will never start cooling with a flow temperature *higher* than this value, preventing inefficient cycles on mild days. | **Default**: `19.0°C`<br>Must be ≥ `Min. Cooling Flow Temperature`. |
@@ -138,69 +201,20 @@ If you are using an external thermostat, you need to adjust the Zone 1 and Zone 
         #temperature: "{{ (state_attr('climate.kantoor', 'temperature') * 2) | round(0) / 2.0 | float }}" if rounding to nearest half is needed
 ```
 
-### Step 4: Set Outside temperature source (Optional)
-If you want to use an external outside temperature sensor, then select the HA / REST API option.
-
-```yaml
-- id: SyncOutsideTemperatureToAdaptiveController
-  alias: 'Sync Outside Temperature to Auto-Adaptive Controller'
-  description: ''
-  # trigger on change of these sensors
-  triggers:
-    - entity_id: sensor.buienradar_temperature
-      trigger: state
-    - entity_id: sensor.ecodan_heatpump_outside_temp
-      trigger: state
-    - entity_id: number.ecodan_heatpump_auto_adaptive_outside_temperature_feedback
-      trigger: state
-  variables:
-    source_temp: >-
-      {% set buienradar = states('sensor.buienradar_temperature') %} 
-      {% set ecodan = states('sensor.ecodan_heatpump_outside_temp') %} 
-      {% set source = buienradar if buienradar not in ['unknown', 'unavailable', 'none'] else ecodan %} 
-      {{ source | float(0) | round(1) }}
-    destination_temp: >-
-      {{
-      states('number.ecodan_heatpump_auto_adaptive_outside_temperature_feedback')
-      | float(0) | round(1) }}
-  conditions:
-    - condition: template
-      value_template: "{{ source_temp != destination_temp }}"
-  actions:
-    - target:
-        entity_id: number.ecodan_heatpump_auto_adaptive_outside_temperature_feedback
-      data:
-        value: "{{ source_temp }}"
-      action: number.set_value
-  mode: single
-```
-
-### Step 5: Configure Initial Parameters
+### Step 4: Configure Initial Parameters
 
 In Home Assistant, navigate to your dashboard and set the initial parameters for the controller on the **"Auto-Adaptive Settings"** tab.
 
 1.  **Set the Heating System Profile**: Choose the option from the `Auto-Adaptive: Heating System Type` dropdown that best matches your home (`Underfloor Heating`, `Underfloor Heating + Radiators`, or `Radiators`).
-2.  **Set the Heating Curve Slope**: Adjust the `Auto-Adaptive: Heating Curve Slope` slider. A good starting point for underfloor heating is `0.4`-`0.7`, while radiators often need a steeper slope like `0.8`-`1.2`.
-3.  **Set Safety Limits**: Adjust the `Auto-Adaptive: Max. Heating Flow Temperature` slider to a value that is safe for your floors (e.g., `38.0°C` for UFH). Do the same for the cooling limits.
-4.  **Set Thermostat Overshoot Compensation (optional)**: Adjust the `Auto-Adaptive: Thermostat Overshoot Compensation` slider to match the known behavior of your thermostat. For example, the official Mitsubishi wireless thermostat has an  overshoot of 1.0°C, so you would set this slider to 1.0.
+2.  **Set Safety Limits**: Adjust the `Auto-Adaptive: Max. Heating Flow Temperature` slider to a value that is safe for your floors (e.g., `38.0°C` for UFH). Do the same for the cooling limits.
+3.  **Set Thermostat Overshoot Compensation (optional)**: Adjust the `Auto-Adaptive: Thermostat Overshoot Compensation` slider to match the known behavior of your thermostat. For example, the official Mitsubishi wireless thermostat has an  overshoot of 1.0°C, so you would set this slider to 1.0.
 
-### Step 6: Activate the System
+### Step 5: Activate the System
 
 Now you are ready to let the algorithm take control.
 
 1.  **Set Heat Pump to Fixed Flow Mode**: On your main Mitsubishi thermostat or control panel, ensure that the active zone(s) are set to **Fixed Flow Temperature** mode for heating (and cooling, if applicable). This is critical, as it allows the ESPHome controller to have full control. Set a start fixed flow temperature (only needed for the first usage).
 2.  **Enable Auto-Adaptive Control**: In Home Assistant, turn **ON** the `Auto-Adaptive: Control` switch.
-
----
-
-## Monitoring Operation
-
-Once enabled, the system is now active. The algorithm will run every 10 minutes to calculate and set a new optimal flow temperature.
-
-You can monitor the learning process by viewing the history of these key sensors in Home Assistant:
-
-* **`Auto-Adaptive: Heating Offset (Z1/Z2)`**: This is the most important sensor to watch. You will see this value slowly change over hours and days as the system fine-tunes itself. If it's trending down, the system is learning to be more efficient. If it's trending up, it's learning to be more powerful.
-* **`Auto-Adaptive: Dynamic Learning Rate`**: This sensor shows how aggressively the system is currently learning. A higher value means it is reacting to a larger temperature error, while a value near zero means the room temperature is stable and close to the target.
 
 ---
 
