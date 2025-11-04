@@ -1,6 +1,6 @@
 ## Heating Strategy: Delta-T (ΔT) Control
 
-This is an advanced, alternative control strategy that you can select instead of the default 'Auto-Adaptive Curve'.
+This is an advanced, alternative control strategy that you can select instead of the default `Self-Learning Curve`.
 
 The key difference is that this strategy is **load-compensated** (reactive) rather than **weather-compensated** (predictive). It calculates the target flow temperature based on the **real-time heat demand** of your house, which it measures using the `return_temp` sensor.
 
@@ -14,7 +14,7 @@ The key difference is that this strategy is **load-compensated** (reactive) rath
 The strategy follows these steps:
 
 1.  **Select Profile:** It uses the `heating_system_type` setting to select one of three hard-coded ΔT profiles (UFH, Hybrid, or Radiators).
-2.  **Calculate Error:** It calculates the `error` exactly as the main algorithm does. This is the crucial part: it automatically includes your **`setpoint_bias`** and **`thermostat_overshoot_compensation`**. A "slow morning start" (using a negative bias) will therefore result in a very small `error`, leading to a very gentle ΔT.
+2.  **Calculate Error:** It calculates the `error` exactly as the main algorithm does. This is the crucial part: it automatically includes your **`setpoint_bias`** and **`thermostat_overshoot_compensation`**.
 3.  **Scale Error (Non-Linear):** The `error` is clamped between `0.0` (no error) and `1.0` (large error). It is then scaled **non-linearly** (`error_factor = error * error`). This makes the controller very gentle at small errors but increasingly aggressive as the error grows.
 4.  **Calculate Target ΔT:** It uses this `error_factor` to interpolate between the profile's `min_delta_t` (for efficiency) and `max_delta_t` (for power).
     `target_delta_t = min_delta_t + (error_factor * (max_delta_t - min_delta_t))`
@@ -22,6 +22,13 @@ The strategy follows these steps:
     `Calculated Flow = return_temp + target_delta_t`
 6.  **Rounding (Conservative):** The final value is rounded **down** (floored) to the nearest 0.5°C to match the heat pump's resolution. This ensures the controller is never more aggressive than intended, which provides a more stable and gentle ramp-up.
     `Final Flow = floor(Calculated Flow * 2) / 2.0`
+
+### Getting started
+- Set min/max flow temperature
+- Select the correct heating system system. Look at the tables below to see what works best for your system.
+- Select Delta T as heating strategy
+
+That's it, it should tune the feed temp based on the error and delta T profile.
 
 ### Example Calculations
 
