@@ -135,8 +135,6 @@ substitutions:
   predictive_short_cycle_control_enabled: 'Kortcyclus: Pendeldetectie'
   predictive_short_cycle_high_delta_time_window: 'Kortcyclus: Hoge Delta Duur'
   auto_adaptive_control_enabled: 'Auto-Adaptief: Regeling'
-  heating_slope: 'Auto-Adaptief: Helling Stooklijn'
-  cooling_slope: 'Auto-Adaptief: Helling Koelcurve'
   maximum_heating_flow_temp: 'Auto-Adaptief: Max. Aanvoertemperatuur Verw.'
   minimum_heating_flow_temp: 'Auto-Adaptief: Min. Aanvoertemperatuur Verw.'
   minimum_cooling_flow_temp: 'Auto-Adaptief: Min. Aanvoertemperatuur Koelen'
@@ -148,18 +146,9 @@ substitutions:
   heating_system_type_option_ufh: 'Vloerverwarming'
   heating_system_type_option_ufh_rad: 'Vloerverwarming + Radiatoren'
   heating_system_type_option_rad: 'Radiatoren'
-  heating_offset_sensor: 'Auto-Adaptief: Offset Verwarming'
-  cooling_offset_sensor: 'Auto-Adaptief: Offset Koeling'
   auto_adaptive_setpoint_bias: 'Auto-Adaptief: Setpoint Bias'
-  dynamic_learning_rate_sensor: 'Auto-Adaptief: Dynamische Leersnelheid'
   temperature_feedback: 'Auto-Adaptief: Terugkoppeling Huidige Kamertemperatuur'
   thermostat_overshoot_compensation: 'Auto-Adaptief: Thermostaat Overshoot Compensatie'
-  outside_temperature_feedback: 'Auto-Adaptief: Externe Buitentemperatuur'
-  outside_temperature_source: 'Auto-Adaptief: Bron Buitentemperatuur'
-  outside_temperature_option_internal: 'Interne Sensor'
-  heating_control_strategy: 'Auto-Adaptief: Verwarmingsstrategie'
-  heating_control_strategy_option_curve: 'Zelflerende Stooklijn'
-  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Totaal Verbruik Verwarming
   total_increasing_heating_delivered: Totaal Geleverd Verwarming
   total_increasing_cool_consumed: Totaal Verbruik Koeling

@@ -134,8 +134,6 @@ substitutions:
   predictive_short_cycle_control_enabled: 'Krótki cykl: Prewencja Predykcyjna'
   predictive_short_cycle_high_delta_time_window: 'Krótki cykl: Czas Trwania Wysokiej Delty'
   auto_adaptive_control_enabled: 'Autoadaptacja: Sterowanie'
-  heating_slope: 'Autoadaptacja: Nachylenie Krzywej Grzewczej'
-  cooling_slope: 'Autoadaptacja: Nachylenie Krzywej Chłodzenia'
   maximum_heating_flow_temp: 'Autoadaptacja: Maks. Temp. Zasilania Ogrzewanie'
   minimum_heating_flow_temp: 'Autoadaptacja: Min. Temp. Zasilania Ogrzewanie'
   minimum_cooling_flow_temp: 'Autoadaptacja: Min. Temp. Zasilania Chłodzenie'
@@ -147,18 +145,9 @@ substitutions:
   heating_system_type_option_ufh: 'Ogrzewanie Podłogowe'
   heating_system_type_option_ufh_rad: 'Ogrzewanie Podłogowe + Grzejniki'
   heating_system_type_option_rad: 'Grzejniki'
-  heating_offset_sensor: 'Autoadaptacja: Przesunięcie Ogrzewanie'
-  cooling_offset_sensor: 'Autoadaptacja: Przesunięcie Chłodzenie'
   auto_adaptive_setpoint_bias: 'Autoadaptacja: Przesunięcie Wartości Zadanej'
-  dynamic_learning_rate_sensor: 'Autoadaptacja: Dynamiczne Tempo Uczenia się'
   temperature_feedback: 'Autoadaptacja: Sprzężenie Zwrotne Aktualnej Temperatury'
   thermostat_overshoot_compensation: 'Autoadaptacja: Kompensacja Przekroczenia Termostatu'
-  outside_temperature_feedback: 'Autoadaptacja: Zewnętrzna Temp. Zewnętrzna'
-  outside_temperature_source: 'Autoadaptacja: Źródło Temp. Zewnętrznej'
-  outside_temperature_option_internal: 'Czujnik Wewnętrzny'
-  heating_control_strategy: 'Autoadaptacja: Strategia Grzewcza'
-  heating_control_strategy_option_curve: 'Krzywa Samoucząca się'
-  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Całkowite Zużycie Ogrzewanie
   total_increasing_heating_delivered: Całkowita Produkcja Ogrzewanie
   total_increasing_cool_consumed: Całkowite Zużycie Chłodzenie
