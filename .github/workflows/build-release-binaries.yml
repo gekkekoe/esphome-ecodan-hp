@@ -78,8 +78,8 @@ jobs:
 
           cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.ota.bin $PREFIX.ota.bin
           cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.factory.bin $PREFIX.factory.bin
-          gh release upload ${{github.event.release.tag_name}} $PREFIX.ota.bin
-          gh release upload ${{github.event.release.tag_name}} $PREFIX.factory.bin
+          gh release upload --clobber ${{github.event.release.tag_name}} $PREFIX.ota.bin
+          gh release upload --clobber ${{github.event.release.tag_name}} $PREFIX.factory.bin
 
       - name: Create manifest.json for firmware
         env:
@@ -96,5 +96,5 @@ jobs:
               s/FILEOTA/$PREFIX.ota.bin/g; \
               s/FILEFACTORY/$PREFIX.factory.bin/g" json/manifest.json > $MANIFEST.json
           cat $MANIFEST.json
-          gh release upload ${{github.event.release.tag_name}} $MANIFEST.json
+          gh release upload --clobber ${{github.event.release.tag_name}} $MANIFEST.json
 
