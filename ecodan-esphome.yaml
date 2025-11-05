@@ -94,6 +94,7 @@ logger:
     ecodan.component: WARN
     auto_adaptive: DEBUG
     predictive_short_cycle: DEBUG
+    short_cycle_mitigation: DEBUG
 #     uart_debug: DEBUG
 
 
