@@ -21,84 +21,84 @@ api:
 # esphome:
 #   name_add_mac_suffix: true
 
-# external_components:
-# - source:
-#     type: local
-#     path: components
-#   components: [ ecodan ]
-
-# packages:
-#  base: !include confs/base.yaml # required
-#  shortcycle: !include confs/short-cycle.yaml
-#  adaptive: !include confs/auto-adaptive.yaml
-#  req: !include confs/request-codes.yaml 
-#  esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
-#  led_status: !include confs/esp32s3-led.yaml
-#  zone1: !include confs/zone1.yaml
-#  svc_z1: !include confs/server-control-z1.yaml
-# # disable if you don't want to use zone 2
-# # zone2: !include confs/zone2.yaml
-# # svc_z2: !include confs/server-control-z2.yaml
-# # change language labels to -en for English or -nl for Dutch
-# # substitutions: !include confs/ecodan-labels-nl.yaml
-#  substitutions: !include confs/ecodan-labels-en.yaml
-#  dbg: !include confs/debug.yaml
-#  wifi: !include confs/wifi.yaml
-#  energy: !include confs/energy.yaml
-#  cpu: !include confs/cpu-monitoring.yaml
-#  #svc: !include confs/server-control-z1.yaml
-
 external_components:
-  - source: github://gekkekoe/esphome-ecodan-hp@main
-    components: [ ecodan ]
-    refresh: always
+- source:
+    type: local
+    path: components
+  components: [ ecodan ]
 
 packages:
-  remote_package:
-    url: https://github.com/gekkekoe/esphome-ecodan-hp/
-    ref: main
-    refresh: always
-    files: [ 
-            confs/base.yaml,            # required
-            confs/energy.yaml,            # required
-            confs/short-cycle.yaml,     # recommended
-            confs/auto-adaptive.yaml,    # recommended
-            confs/cpu-monitoring.yaml,    # recommended
-            confs/request-codes.yaml,   # disable if your unit does not support request codes (service menu)
-            confs/esp32s3.yaml,         # confs/esp32.yaml, for regular board
-            #confs/esp32s3-led.yaml,    # atom s3 status leds
-            confs/zone1.yaml,
-            confs/server-control-z1.yaml,
-            ## enable if you want to use zone 2
-            #confs/zone2.yaml,
-            #confs/server-control-z2.yaml,
-            ## enable label language files
-            confs/ecodan-labels-en.yaml,  # English
-            # confs/ecodan-labels-nl.yaml,  # Dutch
-            # confs/ecodan-labels-it.yaml,  # Italian
-            # confs/ecodan-labels-fr.yaml,  # French
-            # confs/ecodan-labels-de.yaml,  # German
-            # confs/ecodan-labels-fi.yaml,  # Finnish
-            # confs/ecodan-labels-no.yaml,  # Norwegian
-            # confs/ecodan-labels-sv.yaml,  # Swedish
-            # confs/ecodan-labels-da.yaml,  # Danish
-            # confs/ecodan-labels-pl.yaml,  # Polish
-            confs/debug.yaml,
-            confs/wifi.yaml
-           ]
+ base: !include confs/base.yaml # required
+ shortcycle: !include confs/short-cycle.yaml
+ adaptive: !include confs/auto-adaptive.yaml
+ req: !include confs/request-codes.yaml 
+ esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
+ led_status: !include confs/esp32s3-led.yaml
+ zone1: !include confs/zone1.yaml
+ svc_z1: !include confs/server-control-z1.yaml
+# disable if you don't want to use zone 2
+# zone2: !include confs/zone2.yaml
+# svc_z2: !include confs/server-control-z2.yaml
+# change language labels to -en for English or -nl for Dutch
+# substitutions: !include confs/ecodan-labels-nl.yaml
+ substitutions: !include confs/ecodan-labels-en.yaml
+ dbg: !include confs/debug.yaml
+ wifi: !include confs/wifi.yaml
+ energy: !include confs/energy.yaml
+ cpu: !include confs/cpu-monitoring.yaml
+ #svc: !include confs/server-control-z1.yaml
 
-# logger:
-#   level: DEBUG
-#   baud_rate: 115200
-#   logs:
-#     ecodan.component: WARN
-#     auto_adaptive: DEBUG
-#     predictive_short_cycle: DEBUG
+# external_components:
+#   - source: github://gekkekoe/esphome-ecodan-hp@main
+#     components: [ ecodan ]
+#     refresh: always
+
+# packages:
+#   remote_package:
+#     url: https://github.com/gekkekoe/esphome-ecodan-hp/
+#     ref: main
+#     refresh: always
+#     files: [ 
+#             confs/base.yaml,            # required
+#             confs/energy.yaml,            # required
+#             confs/short-cycle.yaml,     # recommended
+#             confs/auto-adaptive.yaml,    # recommended
+#             confs/cpu-monitoring.yaml,    # recommended
+#             confs/request-codes.yaml,   # disable if your unit does not support request codes (service menu)
+#             confs/esp32s3.yaml,         # confs/esp32.yaml, for regular board
+#             #confs/esp32s3-led.yaml,    # atom s3 status leds
+#             confs/zone1.yaml,
+#             confs/server-control-z1.yaml,
+#             ## enable if you want to use zone 2
+#             #confs/zone2.yaml,
+#             #confs/server-control-z2.yaml,
+#             ## enable label language files
+#             confs/ecodan-labels-en.yaml,  # English
+#             # confs/ecodan-labels-nl.yaml,  # Dutch
+#             # confs/ecodan-labels-it.yaml,  # Italian
+#             # confs/ecodan-labels-fr.yaml,  # French
+#             # confs/ecodan-labels-de.yaml,  # German
+#             # confs/ecodan-labels-fi.yaml,  # Finnish
+#             # confs/ecodan-labels-no.yaml,  # Norwegian
+#             # confs/ecodan-labels-sv.yaml,  # Swedish
+#             # confs/ecodan-labels-da.yaml,  # Danish
+#             # confs/ecodan-labels-pl.yaml,  # Polish
+#             confs/debug.yaml,
+#             confs/wifi.yaml
+#            ]
+
+logger:
+  level: DEBUG
+  baud_rate: 115200
+  logs:
+    ecodan.component: WARN
+    auto_adaptive: DEBUG
+    predictive_short_cycle: DEBUG
 #     uart_debug: DEBUG
 
 
-logger:
-  baud_rate: 115200
+# logger:
+#   baud_rate: 115200
   # level: WARN
   #logs:
   #   auto_adaptive: DEBUG
