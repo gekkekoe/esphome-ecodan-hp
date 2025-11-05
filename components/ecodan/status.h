@@ -187,6 +187,14 @@ namespace ecodan
             return ControllerDateTime.tm_yday;
         }
 
+        const time_t timestamp() const {
+            if (ControllerDateTime.tm_year < 100)
+                return -1;
+            struct tm dt = ControllerDateTime; 
+            dt.tm_isdst = -1; 
+            return mktime(&dt);
+        }
+
         bool has_cooling() const {
             // SW2-4
             return IS_BIT_SET(DipSwitch2, 3);
