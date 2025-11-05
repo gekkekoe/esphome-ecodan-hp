@@ -17,6 +17,10 @@ globals:
     type: uint32_t
     restore_value: no 
     initial_value: '-1'
+  - id: lockout_expiration_timestamp
+    type: uint32_t
+    restore_value: yes
+    initial_value: '0'
 
 button:
   - platform: template
@@ -93,6 +97,7 @@ select:
 interval:
   - interval: 30s
     then:
+      - script.execute: check_lockout_expiration
       - script.execute: predictive_short_cycle_check
 
 script:
@@ -235,6 +240,12 @@ script:
       - lambda: |-
           auto& status = id(ecodan_instance).get_status();
           auto flag = status.get_svc_flags();
+          time_t current_timestamp = status.timestamp(); 
+
+          if (current_timestamp == -1) {
+            ESP_LOGW("short_cycle_mitigation", "Cannot start lockout: Ecodan controller time is not valid!");
+            return; 
+          }
 
           // we are already in svc, need to backup the old flags for restore.
           if (status.ServerControl)
@@ -254,12 +265,12 @@ script:
           
           flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
           id(ecodan_instance).set_controller_mode(flag, true);
-          
-      - delay: !lambda "return atoi(id(lockout_duration).state.c_str()) * 60000UL;"
-      - logger.log:
-          level: INFO
-          format: "Lockout period over. Restoring operations."
-      - script.execute: restore_svc_state
+  
+          uint32_t duration_s = atoi(id(lockout_duration).state.c_str()) * 60UL;
+          if (duration_s > 0) {
+            id(lockout_expiration_timestamp) = (uint32_t)(current_timestamp + duration_s);
+            ESP_LOGI("short_cycle_mitigation", "Lockout active. Expiration timestamp set to: %u", id(lockout_expiration_timestamp));
+          }
 
   - id: restore_svc_state
     mode: single
@@ -278,6 +289,37 @@ script:
             id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
           }
           id(status_short_cycle_lockout).publish_state(false);
+
+  - id: check_lockout_expiration
+    mode: single
+    then:
+      - lambda: |-
+          uint32_t expiration = id(lockout_expiration_timestamp);
+          
+          if (expiration == 0)
+            return;
+
+          auto& status = id(ecodan_instance).get_status();
+          time_t current_time_signed = status.timestamp(); 
+
+          if (current_time_signed == -1) {
+            ESP_LOGW("short_cycle_mitigation", "Cannot check lockout: Ecodan time is not valid. Retrying in 30s.");
+            return; 
+          }
+
+          uint32_t current_time = (uint32_t)current_time_signed;
+
+          if (current_time >= expiration) {
+            // expired
+            ESP_LOGI("short_cycle_mitigation", "Lockout period has expired (Ecodan Time: %u, Expiration: %u). Restoring operations.", current_time, expiration);
+            id(lockout_expiration_timestamp) = 0; 
+            id(restore_svc_state).execute();
+          } else {
+            if (!id(status_short_cycle_lockout).state) {
+               ESP_LOGI("short_cycle_mitigation", "Booted during active lockout. Re-enabling lockout sensor. (Ecodan Time: %u, Expiration: %u)", current_time, expiration);
+               id(status_short_cycle_lockout).publish_state(true);
+            }
+          }
 
 # compressor stop event handler
   - id: on_compressor_stop
