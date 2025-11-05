@@ -335,6 +335,10 @@ binary_sensor:
                     ESP_LOGI(esphome::ecodan::TAG, "Compressor START detected");
                     id(compressor_start_time) = millis();
                   }
+                  if (id(auto_adaptive_control_enabled).state) {
+                    ESP_LOGD("auto_adaptive", "Compressor start: triggering auto-adaptive loop.");
+                    id(auto_adaptive_loop).execute();
+                  }
                 }
                 // ON -> OFF
                 else if (*x_previous && !*x) {
