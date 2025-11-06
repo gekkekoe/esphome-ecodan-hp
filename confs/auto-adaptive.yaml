@@ -177,26 +177,27 @@ script:
 
           float actual_outside_temp = id(outside_temp).state;
 
-          if (isnan(actual_outside_temp)) {
-              ESP_LOGW("auto_adaptive", "API outside temperature source is NAN. Exiting.");
+          if (isnan(actual_outside_temp))
               return;
-          }
 
           float overshoot_compensation = id(thermostat_overshoot_compensation).state;
           if (isnan(overshoot_compensation))
             overshoot_compensation = 0.0f;
 
           auto heating_type_index = id(heating_system_type).active_index().value_or(0);
-          float min_delta_t, max_delta_t;
+          float min_delta_t, max_delta_t, max_error_range;
           if (heating_type_index == 2) { // radiatora
               min_delta_t = 5.0f;
               max_delta_t = 10.0f;
+              max_error_range = 2.5f;
           } else if (heating_type_index == 1) { // Hybrid
               min_delta_t = 4.0f;
               max_delta_t = 8.0f;
+              max_error_range = 2.0f;
           } else { // UFH
               min_delta_t = 2.5f;
               max_delta_t = 6.0f;
+              max_error_range = 1.5f;
           }
 
           float calculated_flows_heat[2] = {0.0f, 0.0f};
@@ -256,6 +257,12 @@ script:
               }
 
               float calculated_flow = NAN;
+              float error_positive = fmax(error, 0.0f);
+              float error_normalized = error_positive / max_error_range;
+              float error_clamped_normalized = fmin(error_normalized, 1.0f);
+              float error_factor = error_clamped_normalized * error_clamped_normalized;
+              float target_delta_t = min_delta_t + error_factor * (max_delta_t - min_delta_t);
+
               if (is_heating_mode) {
                 if (isnan(actual_return_temp)) {
                     ESP_LOGE("auto_adaptive", "Z%d HEATING (Delta T): FAILED, actual_return_temp is NAN. Reverting to %.2f°C.", (i + 1), MIN_HEAT_FLOW);
@@ -275,18 +282,15 @@ script:
                     }
 
                     if (is_defrost_weather) {
-                        // defrost weather detected, force to min delta T for the next hour
-                        calculated_flow = actual_return_temp + min_delta_t;
-                        ESP_LOGW("auto_adaptive", "Z%d HEATING (Delta T): Defrost risk detected. Forcing minimum delta T (%.1f°C). Flow set to %.1f°C",
-                                  (i + 1), min_delta_t, calculated_flow);
+                      // defrost weather detected, force to min delta T for the next hour
+                      calculated_flow = actual_return_temp + min_delta_t;
+                      ESP_LOGW("auto_adaptive", "Z%d HEATING (Delta T): Defrost risk detected. Forcing minimum delta T (%.1f°C). Flow set to %.1f°C",
+                                (i + 1), min_delta_t, calculated_flow);
                     } else {
-                      // Force error range to [0-1]
-                      float error_clamped = std::clamp(error, 0.0f, 1.0f);
-                      // interpolate using quadratic error (slow at the beginning, fast at the end)
-                      float target_delta_t = min_delta_t + (error_clamped * error_clamped) * (max_delta_t - min_delta_t);
+                      // interpolate using quadratic error
                       calculated_flow = actual_return_temp + target_delta_t;
                       ESP_LOGD("auto_adaptive", "Z%d HEATING (Delta T): calculated_flow: %.1f°C (Return %.1f + Scaled  delta T %.1f, error^2: %.2f)", 
-                                (i + 1), calculated_flow, actual_return_temp, target_delta_t, error_clamped * error_clamped);
+                                (i + 1), calculated_flow, actual_return_temp, target_delta_t, error_factor);
                     }
                 }
 
@@ -307,18 +311,14 @@ script:
                 ESP_LOGD("auto_adaptive", "Using 'Delta-T Control' strategy for cooling.");
                 
                 if (isnan(actual_return_temp)) {
-                    ESP_LOGE("auto_adaptive", "Z%d COOLING (Delta T): FAILED, actual_return_temp is NAN. Reverting to smart start temp.");
-                    calculated_flow = id(cooling_smart_start_temp).state; // Failsafe
+                  ESP_LOGE("auto_adaptive", "Z%d COOLING (Delta T): FAILED, actual_return_temp is NAN. Reverting to smart start temp.");
+                  calculated_flow = id(cooling_smart_start_temp).state; // Failsafe
                 } else {
-                    float error_clamped = std::clamp(error, 0.0f, 1.0f);
-                    float error_factor = error_clamped * error_clamped;
-                    float target_delta_t = min_delta_t + error_factor * (max_delta_t - min_delta_t);
-                    
-                    // inverse of the heating
-                    calculated_flow = actual_return_temp - target_delta_t;
-                    
-                    ESP_LOGD("auto_adaptive", "Z%d COOLING (Delta T): calc: %.1f°C (Return %.1f - Scaled delta T %.1f)", 
-                              (i + 1), calculated_flow, actual_return_temp, target_delta_t);
+                  // inverse of the heating
+                  calculated_flow = actual_return_temp - target_delta_t;
+                  
+                  ESP_LOGD("auto_adaptive", "Z%d COOLING (Delta T): calc: %.1f°C (Return %.1f - Scaled delta T %.1f)", 
+                            (i + 1), calculated_flow, actual_return_temp, target_delta_t);
                 }
                 if (calculated_flow > id(cooling_smart_start_temp).state) {
                   calculated_flow = id(cooling_smart_start_temp).state;
