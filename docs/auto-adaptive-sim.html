@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delta-T Flow Calculator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        .controls, .output {
+            flex: 1;
+            min-width: 300px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .controls h2, .output h2 {
+            margin-top: 0;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        .control-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        select, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: right;
+        }
+        th {
+            background-color: #f9f9f9;
+            text-align: left;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #fdfdfd;
+        }
+        td:first-child {
+            font-weight: 500;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Delta-T (ΔT) Flow Calculator</h1>
+
+    <div class="container">
+        <div class="controls">
+            <h2>Settings</h2>
+            
+            <div class="control-group">
+                <label for="systemType">1. Choose System Type (Sets defaults)</label>
+                <select id="systemType">
+                    <option value="ufh">Underfloor Heating (UFH)</option>
+                    <option value="hybrid">Hybrid (UFH + Radiators)</option>
+                    <option value="radiators">Radiators</option>
+                </select>
+            </div>
+
+            <hr style="border: 0; border-top: 1px dashed #ccc; margin: 20px 0;">
+
+            <div class="control-group">
+                <label for="returnTemp">2. Current Return Temp (°C)</label>
+                <input type="number" id="returnTemp" value="22.0" step="0.5">
+            </div>
+
+            <div class="control-group">
+                <label for="minDeltaT">3. Min Delta T (°C) (Secondary)</label>
+                <input type="number" id="minDeltaT" step="0.1">
+            </div>
+
+            <div class="control-group">
+                <label for="maxDeltaT">4. Max Delta T (°C) (Secondary)</label>
+                <input type="number" id="maxDeltaT" step="0.1">
+            </div>
+
+            <div class="control-group">
+                <label for="maxError">5. Max Error Range (°C) (Secondary)</label>
+                <input type="number" id="maxError" step="0.1">
+            </div>
+        </div>
+
+        <div class="output">
+            <h2>Results</h2>
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Error</th>
+                        <th>Error Factor (err²)</th>
+                        <th>Target ΔT</th>
+                        <th>Final Flow (°C)</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const systemTypeSelect = document.getElementById('systemType');
+            const returnTempInput = document.getElementById('returnTemp');
+            const minDeltaInput = document.getElementById('minDeltaT');
+            const maxDeltaInput = document.getElementById('maxDeltaT');
+            const maxErrorInput = document.getElementById('maxError');
+            const resultsBody = document.getElementById('resultsBody');
+
+            const profiles = {
+                'ufh': { minDelta: 2.5, maxDelta: 6.0, maxError: 1.5 },
+                'hybrid': { minDelta: 4.0, maxDelta: 8.0, maxError: 2.0 },
+                'radiators': { minDelta: 5.0, maxDelta: 10.0, maxError: 2.5 }
+            };
+
+            function setProfileDefaults() {
+                const selectedProfile = profiles[systemTypeSelect.value];
+                minDeltaInput.value = selectedProfile.minDelta;
+                maxDeltaInput.value = selectedProfile.maxDelta;
+                maxErrorInput.value = selectedProfile.maxError;
+                
+                updateTable();
+            }
+
+            function updateTable() {
+                const returnTemp = parseFloat(returnTempInput.value);
+                const minDeltaT = parseFloat(minDeltaInput.value);
+                const maxDeltaT = parseFloat(maxDeltaInput.value);
+                const maxError = parseFloat(maxErrorInput.value);
+
+                resultsBody.innerHTML = '';
+
+                for (let i = 0; i <= 25; i++) {
+                    const error = i / 10.0;
+
+                    const error_positive = Math.max(error, 0.0);
+                    const error_normalized = error_positive / maxError;
+                    const error_clamped_normalized = Math.min(error_normalized, 1.0);
+                    const error_factor = error_clamped_normalized * error_clamped_normalized;
+                    const target_delta_t = minDeltaT + (error_factor * (maxDeltaT - minDeltaT));
+                    const calculated_flow = returnTemp + target_delta_t;
+                    const final_flow = Math.floor(calculated_flow * 2) / 2.0;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${error.toFixed(1)}°C</td>
+                        <td>${error_factor.toFixed(2)} (${(error_factor * 100).toFixed(0)}%)</td>
+                        <td>${target_delta_t.toFixed(2)}°C</td>
+                        <td><b>${final_flow.toFixed(1)}°C</b></td>
+                    `;
+                    resultsBody.appendChild(row);
+                }
+            }
+
+            systemTypeSelect.addEventListener('change', setProfileDefaults);
+
+            returnTempInput.addEventListener('input', updateTable);
+            minDeltaInput.addEventListener('input', updateTable);
+            maxDeltaInput.addEventListener('input', updateTable);
+            maxErrorInput.addEventListener('input', updateTable);
+
+            systemTypeSelect.dispatchEvent(new Event('change'));
+        });
+    </script>
+
+</body>
+</html>
