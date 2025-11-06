@@ -567,8 +567,20 @@ script:
                           // interpolate using quadratic error
                           float target_delta_t = min_delta_t + (error_factor * (max_delta_t - min_delta_t));
                           calculated_flow = actual_return_temp + target_delta_t;
-                          ESP_LOGD("auto_adaptive", "Z%d HEATING (Delta T): calculated_flow: %.1f°C (Return %.1f + Scaled  delta T %.1f, error^2: %.2f)", 
-                                    (i + 1), calculated_flow, actual_return_temp, target_delta_t, error_clamped_normalized * error_clamped_normalized);
+
+                          float short_cycle_prevention_adjustment = id(predictive_short_cycle_total_adjusted);
+                          if (short_cycle_prevention_adjustment > 0.0f) {
+                            if ((actual_flow_temp - calculated_flow) >= 1.0f) {
+                              calculated_flow += short_cycle_prevention_adjustment;
+                            }
+                            else {
+                              // reset boost, calculated_flow is outside risky zone
+                              id(predictive_short_cycle_total_adjusted) = 0;
+                            }
+                          }
+
+                          ESP_LOGD("auto_adaptive", "Z%d HEATING (Delta T): calculated_flow: %.1f°C (Return %.1f + Scaled  delta T %.1f, error^2: %.2f, boost: %.1f)", 
+                                    (i + 1), calculated_flow, actual_return_temp, target_delta_t, error_clamped_normalized * error_clamped_normalized, short_cycle_prevention_adjustment);
                         }
                     }
                   }
