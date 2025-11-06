@@ -20,12 +20,12 @@
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 20px auto;
         }
         .controls, .output {
             flex: 1;
-            min-width: 300px;
+            min-width: 400px;
             background-color: #ffffff;
             border-radius: 8px;
             padding: 25px;
@@ -70,9 +70,17 @@
         tr:nth-child(even) {
             background-color: #fdfdfd;
         }
-        td:first-child {
+        td:first-child, td:nth-child(2) {
             font-weight: 500;
             text-align: left;
+        }
+        .note {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 15px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -94,24 +102,36 @@
             </div>
 
             <hr style="border: 0; border-top: 1px dashed #ccc; margin: 20px 0;">
+            
+            <div class="control-group">
+                <label for="targetTemp">2. Target Room Temp (°C)</label>
+                <input type="number" id="targetTemp" value="20.0" step="0.1">
+            </div>
 
             <div class="control-group">
-                <label for="returnTemp">2. Current Return Temp (°C)</label>
+                <label for="returnTemp">3. Current Return Temp (°C)</label>
                 <input type="number" id="returnTemp" value="22.0" step="0.5">
             </div>
 
             <div class="control-group">
-                <label for="minDeltaT">3. Min Delta T (°C) (Secondary)</label>
+                <label for="bias">4. Setpoint Bias (°C)</label>
+                <input type="number" id="bias" value="0.0" step="0.1">
+            </div>
+
+            <hr style="border: 0; border-top: 1px dashed #ccc; margin: 20px 0;">
+
+            <div class="control-group">
+                <label for="minDeltaT">5. Min Delta T (°C) (Secondary)</label>
                 <input type="number" id="minDeltaT" step="0.1">
             </div>
 
             <div class="control-group">
-                <label for="maxDeltaT">4. Max Delta T (°C) (Secondary)</label>
+                <label for="maxDeltaT">6. Max Delta T (°C) (Secondary)</label>
                 <input type="number" id="maxDeltaT" step="0.1">
             </div>
 
             <div class="control-group">
-                <label for="maxError">5. Max Error Range (°C) (Secondary)</label>
+                <label for="maxError">7. Max Error Range (°C) (Secondary)</label>
                 <input type="number" id="maxError" step="0.1">
             </div>
         </div>
@@ -122,6 +142,7 @@
                 <thead>
                     <tr>
                         <th>Error</th>
+                        <th>Room Temp (°C)</th>
                         <th>Error Factor (err²)</th>
                         <th>Target ΔT</th>
                         <th>Final Flow (°C)</th>
@@ -130,6 +151,9 @@
                 <tbody id="resultsBody">
                 </tbody>
             </table>
+            <div class="note">
+                <strong>Note:</strong> The "Room Temp" column shows the temperature that causes the corresponding "Error", calculated as `(Target + Bias) - Error`.
+            </div>
         </div>
     </div>
 
@@ -137,6 +161,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             const systemTypeSelect = document.getElementById('systemType');
             const returnTempInput = document.getElementById('returnTemp');
+            const targetTempInput = document.getElementById('targetTemp');
+            const biasInput = document.getElementById('bias');
             const minDeltaInput = document.getElementById('minDeltaT');
             const maxDeltaInput = document.getElementById('maxDeltaT');
             const maxErrorInput = document.getElementById('maxError');
@@ -159,14 +185,20 @@
 
             function updateTable() {
                 const returnTemp = parseFloat(returnTempInput.value);
+                const targetTemp = parseFloat(targetTempInput.value);
+                const bias = parseFloat(biasInput.value);
                 const minDeltaT = parseFloat(minDeltaInput.value);
                 const maxDeltaT = parseFloat(maxDeltaInput.value);
                 const maxError = parseFloat(maxErrorInput.value);
+                
+                const effectiveTarget = targetTemp + bias;
 
                 resultsBody.innerHTML = '';
 
                 for (let i = 0; i <= 25; i++) {
                     const error = i / 10.0;
+                    
+                    const roomTemp = effectiveTarget - error;
 
                     const error_positive = Math.max(error, 0.0);
                     const error_normalized = error_positive / maxError;
@@ -179,6 +211,7 @@
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${error.toFixed(1)}°C</td>
+                        <td>${roomTemp.toFixed(1)}°C</td>
                         <td>${error_factor.toFixed(2)} (${(error_factor * 100).toFixed(0)}%)</td>
                         <td>${target_delta_t.toFixed(2)}°C</td>
                         <td><b>${final_flow.toFixed(1)}°C</b></td>
@@ -188,11 +221,11 @@
             }
 
             systemTypeSelect.addEventListener('change', setProfileDefaults);
-
-            returnTempInput.addEventListener('input', updateTable);
-            minDeltaInput.addEventListener('input', updateTable);
-            maxDeltaInput.addEventListener('input', updateTable);
-            maxErrorInput.addEventListener('input', updateTable);
+            
+            const allInputs = [returnTempInput, targetTempInput, biasInput, minDeltaInput, maxDeltaInput, maxErrorInput];
+            allInputs.forEach(input => {
+                input.addEventListener('input', updateTable);
+            });
 
             systemTypeSelect.dispatchEvent(new Event('change'));
         });
