@@ -288,6 +288,8 @@ script:
           } else {
             id(ecodan_instance).set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
           }
+          // reset timer manually
+          id(lockout_expiration_timestamp) = 0;
           id(status_short_cycle_lockout).publish_state(false);
 
   - id: check_lockout_expiration
@@ -311,8 +313,7 @@ script:
 
           if (current_time >= expiration) {
             // expired
-            ESP_LOGI("short_cycle_mitigation", "Lockout period has expired (Ecodan Time: %u, Expiration: %u). Restoring operations.", current_time, expiration);
-            id(lockout_expiration_timestamp) = 0; 
+            ESP_LOGI("short_cycle_mitigation", "Lockout period has expired (Ecodan Time: %u, Expiration: %u). Restoring operations.", current_time, expiration); 
             id(restore_svc_state).execute();
           } else {
             if (!id(status_short_cycle_lockout).state) {
