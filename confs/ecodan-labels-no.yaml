@@ -165,3 +165,6 @@ substitutions:
   total_increasing_cool_delivered: Totalt Levert Kjøling
   total_increasing_dhw_consumed: Totalt Forbruk Varmtvann
   total_increasing_dhw_delivered: Totalt Levert Varmtvann
+  pump_speed: 'Pumpehastighet'
+  pump_feedback: 'Pumpeforbruk'
+  pump_feedback_status: 'Status Pumpe-tilbakemelding'

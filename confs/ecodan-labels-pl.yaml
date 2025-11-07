@@ -165,3 +165,6 @@ substitutions:
   total_increasing_cool_delivered: Całkowita Produkcja Chłodzenie
   total_increasing_dhw_consumed: Całkowite Zużycie CWU
   total_increasing_dhw_delivered: Całkowita Produkcja CWU
+  pump_speed: 'Prędkość Pompy'
+  pump_feedback: 'Zużycie Pompy'
+  pump_feedback_status: 'Status Informacji Zwrotnej Pompy'

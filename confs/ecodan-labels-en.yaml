@@ -171,3 +171,8 @@ substitutions:
   total_increasing_cool_delivered: Total Cool Delivered
   total_increasing_dhw_consumed: Total DHW Consumed
   total_increasing_dhw_delivered: Total DHW Delivered
+
+  # pump details
+  pump_speed: Pump Speed
+  pump_feedback: Pump Consumption
+  pump_feedback_status: Pump Feedback Status
