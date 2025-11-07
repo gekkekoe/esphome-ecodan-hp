@@ -125,6 +125,12 @@ namespace ecodan
     {
         return static_cast<T>(static_cast<uint8_t>(lhs) ^ static_cast<uint8_t>(rhs));
     }
+    
+    template <class T>
+    inline T operator ~(const T& lhs)
+    {
+        return static_cast<T>(~static_cast<uint8_t>(lhs));
+    }
 
     template <class T>
     inline T& operator |=(T& lhs, const T& rhs)
