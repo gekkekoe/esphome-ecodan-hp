@@ -104,6 +104,7 @@ select:
     restore_value: true
     options:
       - "${heating_system_type_option_ufh}"
+      - "${heating_system_type_option_ufh} *"
       - "${heating_system_type_option_ufh_rad}"
       - "${heating_system_type_option_rad}"
     initial_option: "${heating_system_type_option_ufh}"
@@ -186,16 +187,20 @@ script:
 
           auto heating_type_index = id(heating_system_type).active_index().value_or(0);
           float min_delta_t, max_delta_t, max_error_range;
-          if (heating_type_index == 2) { // radiatora
+          if (heating_type_index == 3) { // radiatora
               min_delta_t = 5.0f;
               max_delta_t = 10.0f;
               max_error_range = 2.5f;
-          } else if (heating_type_index == 1) { // Hybrid
+          } else if (heating_type_index == 2) { // Hybrid
               min_delta_t = 4.0f;
               max_delta_t = 8.0f;
               max_error_range = 2.0f;
-          } else { // UFH
+          } else if (heating_type_index == 1) { // UFH lite
               min_delta_t = 2.5f;
+              max_delta_t = 5.0f;
+              max_error_range = 1.0f;
+          } else { // UFH
+              min_delta_t = 2.25f;
               max_delta_t = 6.0f;
               max_error_range = 1.5f;
           }
