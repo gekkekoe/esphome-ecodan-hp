@@ -155,3 +155,6 @@ substitutions:
   total_increasing_cool_delivered: Producción Total Refrigeración
   total_increasing_dhw_consumed: Consumo Total ACS
   total_increasing_dhw_delivered: Producción Total ACS
+  pump_speed: 'Velocidad de la Bomba'
+  pump_feedback: 'Consumo de la Bomba'
+  pump_feedback_status: 'Estado Retroalimentación Bomba'

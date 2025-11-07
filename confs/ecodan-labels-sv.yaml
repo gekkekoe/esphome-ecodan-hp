@@ -155,3 +155,6 @@ substitutions:
   total_increasing_cool_delivered: Total Levererad Kyla
   total_increasing_dhw_consumed: Totalförbrukning Varmvatten
   total_increasing_dhw_delivered: Total Levererat Varmvatten
+  pump_speed: 'Pumphastighet'
+  pump_feedback: 'Pumpförbrukning'
+  pump_feedback_status: 'Status Pumpåterkoppling'

@@ -155,3 +155,6 @@ substitutions:
   total_increasing_cool_delivered: Totaal Geleverd Koeling
   total_increasing_dhw_consumed: Totaal Verbruik Tapwater
   total_increasing_dhw_delivered: Totaal Geleverd Tapwater
+  pump_speed: 'Pompsnelheid'
+  pump_feedback: 'Pompverbruik'
+  pump_feedback_status: 'Status Pompfeedback'

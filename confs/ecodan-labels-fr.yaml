@@ -155,3 +155,6 @@ substitutions:
   total_increasing_cool_delivered: Production Totale Refroidissement
   total_increasing_dhw_consumed: Consommation Totale ECS
   total_increasing_dhw_delivered: Production Totale ECS
+  pump_speed: 'Vitesse de la Pompe'
+  pump_feedback: 'Consommation de la Pompe'
+  pump_feedback_status: 'État Retour Pompe'

@@ -155,3 +155,6 @@ substitutions:
   total_increasing_cool_delivered: Jäähdytyksen kokonaistuotto
   total_increasing_dhw_consumed: LKV kokonaiskulutus
   total_increasing_dhw_delivered: LKV kokonaistuotto
+  pump_speed: 'Pumpun Nopeus'
+  pump_feedback: 'Pumpun Kulutus'
+  pump_feedback_status: 'Pumpun Palautteen Tila'

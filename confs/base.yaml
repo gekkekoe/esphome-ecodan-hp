@@ -182,6 +182,25 @@ text_sensor:
           default: return std::string("Unknown");
       }
 
+  - platform: template
+    id: pump_feedback_status
+    name: ${pump_feedback_status}
+    lambda: |-
+      auto value = id(ecodan_instance).get_status().PumpFeedback;
+      if (value >= 0 && value < 70) { // 0-69
+        return std::string("Active");;
+      } else if (value > 73 && value < 77) { // 74-76
+        return std::string("Warning");
+      } else if (value > 83 && value < 87) { // 84-86
+        return std::string("Electrical error");
+      } else if (value > 88 && value < 92) { // 89-91
+        return std::string("Blocked error");
+      } else if (value <= 93 || value >= 97) { 
+        return std::string("-");
+      } else { 
+        return std::string("Standby");
+      }
+
   # - platform: template
   #   id: refrigerant_code
   #   name: ${refrigerant_code}
@@ -359,6 +378,12 @@ sensor:
     refrigerant_error_code:
       internal: true
       id: refrigerant_error_code
+    pump_speed:
+      id: pump_speed
+      name: ${pump_speed}
+    pump_feedback:
+      id: pump_feedback
+      name: ${pump_feedback}
     energy_consumed_increasing:
       internal: true
       id: energy_consumed_increasing
