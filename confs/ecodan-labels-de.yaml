@@ -165,3 +165,6 @@ substitutions:
   total_increasing_cool_delivered: Gesamtertrag Kühlen
   total_increasing_dhw_consumed: Gesamtverbrauch Warmwasser
   total_increasing_dhw_delivered: Gesamtertrag Warmwasser
+  pump_speed: 'Pumpengeschwindigkeit'
+  pump_feedback: 'Pumpenverbrauch'
+  pump_feedback_status: 'Status Pumpen-Feedback'

@@ -166,3 +166,6 @@ substitutions:
   total_increasing_cool_delivered: Energia Totale Prodotta Raffrescamento
   total_increasing_dhw_consumed: Consumo Totale ACS
   total_increasing_dhw_delivered: Energia Totale Prodotta ACS
+  pump_speed: 'Velocità Pompa'
+  pump_feedback: 'Consumo Pompa'
+  pump_feedback_status: 'Stato Feedback Pompa'

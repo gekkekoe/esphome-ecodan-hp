@@ -18,6 +18,7 @@ from esphome.const import (
     UNIT_HERTZ,
     UNIT_REVOLUTIONS_PER_MINUTE,
     UNIT_HOUR,
+    UNIT_WATT,
     UNIT_KILOWATT,
     UNIT_KILOWATT_HOURS,
 )
@@ -380,6 +381,18 @@ CONFIG_SCHEMA = cv.Schema(
             accuracy_decimals=0,
             device_class=DEVICE_CLASS_FREQUENCY,
             state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        cv.Optional("pump_speed"): sensor.sensor_schema(
+            icon="mdi:gauge",
+            state_class=STATE_CLASS_MEASUREMENT
+        ),
+        cv.Optional("pump_feedback"): sensor.sensor_schema(
+            icon="mdi:meter-electric",
+            accuracy_decimals=0,
+            unit_of_measurement=UNIT_WATT,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     }
 ).extend(cv.COMPONENT_SCHEMA)

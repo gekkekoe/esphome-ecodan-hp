@@ -53,6 +53,9 @@ namespace ecodan
 
         float Runtime;
         bool WaterPumpActive;
+        uint8_t PumpPWM;
+        uint8_t PumpFeedback;
+        
         bool WaterPump2Active;
         bool WaterPump3Active;
         bool ThreeWayValveActive;

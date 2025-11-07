@@ -284,6 +284,7 @@ namespace ecodan
             //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
             break;
         case GetType::PUMP_STATUS:
+        {
             // byte 1 = pump running on/off
             // byte 4 = pump 2
             // byte 5 = pump 3
@@ -292,12 +293,38 @@ namespace ecodan
             // byte 10 - Mixing valve step         
             // byte 11 - Mixing valve status
             status.WaterPumpActive = res[1] != 0;
+            status.PumpPWM = res[2];
+            status.PumpFeedback = res[3];
             status.ThreeWayValveActive = res[6] != 0;
             status.WaterPump2Active = res[4] != 0;
             status.ThreeWayValve2Active = res[7] != 0;         
             status.WaterPump3Active = res[5] != 0;       
             status.MixingValveStep = res[10];   
             status.MixingValveStatus = res[11];   
+            float mapped_pump_speed = 0.0f;
+            switch (status.PumpPWM) {
+                case 52:
+                    mapped_pump_speed = 1;
+                    break;
+                case 41:
+                    mapped_pump_speed = 2;
+                    break;
+                case 31:
+                    mapped_pump_speed = 3;
+                    break;
+                case 20:
+                    mapped_pump_speed = 4;
+                    break;
+                case 0:
+                    mapped_pump_speed = 5;
+                    break;
+                case 100:
+                default:
+                    mapped_pump_speed = 0;
+                break;
+            }
+            publish_state("pump_speed", static_cast<float>(mapped_pump_speed));
+            publish_state("pump_feedback", static_cast<float>(status.PumpFeedback == 100 ? 0 : status.PumpFeedback));
             publish_state("status_water_pump", status.WaterPumpActive);
             publish_state("status_three_way_valve", status.ThreeWayValveActive);
             publish_state("status_water_pump_2", status.WaterPump2Active);
@@ -306,6 +333,7 @@ namespace ecodan
             publish_state("status_mixing_valve", static_cast<float>(status.MixingValveStatus));
             publish_state("mixing_valve_step", static_cast<float>(status.MixingValveStep));
             //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
+        }
             break;              
         case GetType::FLOW_RATE:
             // booster = 2, 
