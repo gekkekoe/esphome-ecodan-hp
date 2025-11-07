@@ -392,7 +392,6 @@ CONFIG_SCHEMA = cv.Schema(
             unit_of_measurement=UNIT_WATT,
             device_class=DEVICE_CLASS_POWER,
             state_class=STATE_CLASS_MEASUREMENT,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     }
 ).extend(cv.COMPONENT_SCHEMA)
