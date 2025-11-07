@@ -324,7 +324,7 @@ namespace ecodan
                 break;
             }
             publish_state("pump_speed", static_cast<float>(mapped_pump_speed));
-            publish_state("pump_feedback", static_cast<float>(status.PumpFeedback == 100 ? 0 : status.PumpFeedback));
+            publish_state("pump_feedback", static_cast<float>((status.PumpFeedback == 100 | status.PumpFeedback == 255) ? 0 : status.PumpFeedback));
             publish_state("status_water_pump", status.WaterPumpActive);
             publish_state("status_three_way_valve", status.ThreeWayValveActive);
             publish_state("status_water_pump_2", status.WaterPump2Active);
