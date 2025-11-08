@@ -303,8 +303,8 @@ script:
                           id(predictive_short_cycle_total_adjusted) = 0;
                         }
                       }
-                      ESP_LOGD("auto_adaptive", "Z%d HEATING (Delta T): calculated_flow: %.1f°C (Return %.1f + Scaled  delta T %.1f, error^2: %.2f, boost: %.1f)", 
-                                (i + 1), calculated_flow, actual_return_temp, target_delta_t, error_factor, short_cycle_prevention_adjustment);
+                      ESP_LOGD("auto_adaptive", "Z%d HEATING (Delta T): calculated_flow: %.1f°C (Return %.1f + Scaled  delta T %.1f, error factor: %.2f (lineair: %d), boost: %.1f)", 
+                                (i + 1), calculated_flow, actual_return_temp, target_delta_t, error_factor, use_linear_error, short_cycle_prevention_adjustment);
                     }
                 }
 
