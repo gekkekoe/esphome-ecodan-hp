@@ -102,10 +102,12 @@
             <div class="control-group">
                 <label for="systemType">1. Choose System Type (Sets defaults)</label>
                 <select id="systemType">
-                    <option value="ufh">Underfloor Heating (UFH)</option>
-                    <option value="ufh* (lite)">Underfloor Heating* (UFH lite)</option>
-                    <option value="hybrid">Hybrid (UFH + Radiators)</option>
-                    <option value="radiators">Radiators</option>
+                    <option value="UFH (Gentle / Quadratic)">UFH (Gentle / Quadratic)</option>
+                    <option value="UFH * (Responsive / Linear)">UFH * (Responsive / Linear)</option>
+                    <option value="Hybrid (Gentle / Quadratic)">Hybrid (Gentle / Quadratic)</option>
+                    <option value="Hybrid * (Responsive / Linear)">Hybrid * (Responsive / Linear)</option>
+                    <option value="Radiators (Gentle / Quadratic)">Radiators (Gentle / Quadratic)</option>
+                    <option value="Radiators * (Responsive / Linear)">Radiators * (Responsive / Linear)</option>
                 </select>
             </div>
 
@@ -156,7 +158,7 @@
                     <tr>
                         <th>Error</th>
                         <th>Room Temp (°C)</th>
-                        <th>Error Factor (err²)</th>
+                        <th>Error Factor (Curve)</th>
                         <th>Return Temp (°C)</th>
                         <th>Target ΔT</th>
                         <th>Calculated Flow (°C)</th>
@@ -185,10 +187,12 @@
             const resultsBody = document.getElementById('resultsBody');
 
             const profiles = {
-                'ufh': { minDelta: 2.25, maxDelta: 6.0, maxError: 1.5 },
-                'ufh* (lite)': { minDelta: 2.5, maxDelta: 5.0, maxError: 1.0 },
-                'hybrid': { minDelta: 4.0, maxDelta: 8.0, maxError: 2.0 },
-                'radiators': { minDelta: 5.0, maxDelta: 10.0, maxError: 2.5 }
+                'UFH (Gentle / Quadratic)':         { minDelta: 2.25, maxDelta: 6.0, maxError: 1.5 },
+                'UFH * (Responsive / Linear)':      { minDelta: 2.25, maxDelta: 6.0, maxError: 1.5 },
+                'Hybrid (Gentle / Quadratic)':      { minDelta: 3.0, maxDelta: 8.0, maxError: 2.0 },
+                'Hybrid * (Responsive / Linear)':   { minDelta: 3.0, maxDelta: 8.0, maxError: 2.0 },
+                'Radiators (Gentle / Quadratic)':   { minDelta: 4.0, maxDelta: 10.0, maxError: 2.5 },
+                'Radiators * (Responsive / Linear)':{ minDelta: 4.0, maxDelta: 10.0, maxError: 2.5 }
             };
 
             function setProfileDefaults() {
@@ -201,6 +205,7 @@
             }
 
             function updateTable() {
+                const systemValue = systemTypeSelect.value;
                 const returnTemp = parseFloat(returnTempInput.value);
                 const targetTemp = parseFloat(targetTempInput.value);
                 const currentTemp = parseFloat(currentTempInput.value);
@@ -216,7 +221,7 @@
 
                 resultsBody.innerHTML = '';
 
-                for (let i = 0; i <= 25; i++) {
+                for (let i = 0; i <= 30; i++) {
                     const error = i / 10.0;
                     
                     const roomTemp = effectiveTarget - error;
@@ -224,7 +229,16 @@
                     const error_positive = Math.max(error, 0.0);
                     const error_normalized = error_positive / maxError;
                     const error_clamped_normalized = Math.min(error_normalized, 1.0);
-                    const error_factor = error_clamped_normalized * error_clamped_normalized;
+                    
+                    let error_factor;
+                    let curve_type = "Quad";
+                    if (systemValue.includes('*')) {
+                        error_factor = error_clamped_normalized;
+                        curve_type = "Linear";
+                    } else {
+                        error_factor = error_clamped_normalized * error_clamped_normalized;
+                    }
+                    
                     const target_delta_t = minDeltaT + (error_factor * (maxDeltaT - minDeltaT));
                     const calculated_flow = returnTemp + target_delta_t;
                     const final_flow = Math.floor(calculated_flow * 2) / 2.0;
@@ -239,7 +253,7 @@
                     row.innerHTML = `
                         <td>${errorStr}°C</td>
                         <td>${roomTemp.toFixed(1)}°C</td>
-                        <td>${error_factor.toFixed(2)} (${(error_factor * 100).toFixed(0)}%)</td>
+                        <td>${error_factor.toFixed(2)} (${curve_type})</td>
                         <td>${returnTemp.toFixed(1)}°C</td>
                         <td>${target_delta_t.toFixed(2)}°C</td>
                         <td>${calculated_flow.toFixed(2)}°C</td>
