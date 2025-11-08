@@ -52,6 +52,11 @@
             box-sizing: border-box;
             font-size: 1rem;
         }
+        input[readonly] {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+            color: #555;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -129,24 +134,35 @@
             </div>
 
             <div class="control-group">
-                <label for="bias">5. Setpoint Bias (°C)</label>
+                <label for="outsideTemp">5. Current Outside Temp (°C)</label>
+                <select id="outsideTemp">
+                    <option value="15">15°C (Mild)</option>
+                    <option value="10" selected>10°C</option>
+                    <option value="5">5°C</option>
+                    <option value="0">0°C</option>
+                    <option value="-5">-5°C (Cold)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="bias">6. Setpoint Bias (°C)</label>
                 <input type="number" id="bias" value="0.0" step="0.1">
             </div>
 
             <hr style="border: 0; border-top: 1px dashed #ccc; margin: 20px 0;">
 
             <div class="control-group">
-                <label for="minDeltaT">6. Min Delta T (°C) (Secondary)</label>
-                <input type="number" id="minDeltaT" step="0.1">
+                <label for="minDeltaT">7. Dynamic Min Delta T (°C) (Calculated)</label>
+                <input type="number" id="minDeltaT" step="0.1" readonly>
             </div>
 
             <div class="control-group">
-                <label for="maxDeltaT">7. Max Delta T (°C) (Secondary)</label>
+                <label for="maxDeltaT">8. Max Delta T (°C) (Profile default)</label>
                 <input type="number" id="maxDeltaT" step="0.1">
             </div>
 
             <div class="control-group">
-                <label for="maxError">8. Max Error Range (°C) (Secondary)</label>
+                <label for="maxError">9. Max Error Range (°C) (Profile default)</label>
                 <input type="number" id="maxError" step="0.1">
             </div>
         </div>
@@ -180,6 +196,7 @@
             const returnTempInput = document.getElementById('returnTemp');
             const targetTempInput = document.getElementById('targetTemp');
             const currentTempInput = document.getElementById('currentTemp');
+            const outsideTempInput = document.getElementById('outsideTemp');
             const biasInput = document.getElementById('bias');
             const minDeltaInput = document.getElementById('minDeltaT');
             const maxDeltaInput = document.getElementById('maxDeltaT');
@@ -187,17 +204,19 @@
             const resultsBody = document.getElementById('resultsBody');
 
             const profiles = {
-                'UFH (Gentle / Quadratic)':         { minDelta: 2.25, maxDelta: 6.0, maxError: 1.5 },
-                'UFH * (Responsive / Linear)':      { minDelta: 2.25, maxDelta: 6.0, maxError: 1.5 },
-                'Hybrid (Gentle / Quadratic)':      { minDelta: 3.0, maxDelta: 8.0, maxError: 2.0 },
-                'Hybrid * (Responsive / Linear)':   { minDelta: 3.0, maxDelta: 8.0, maxError: 2.0 },
-                'Radiators (Gentle / Quadratic)':   { minDelta: 4.0, maxDelta: 10.0, maxError: 2.5 },
-                'Radiators * (Responsive / Linear)':{ minDelta: 4.0, maxDelta: 10.0, maxError: 2.5 }
+                'UFH (Gentle / Quadratic)':         { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.0, maxError: 1.5 },
+                'UFH * (Responsive / Linear)':      { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.0, maxError: 1.5 },
+                'Hybrid (Gentle / Quadratic)':      { min_delta_base: 3.0, min_delta_cold: 5.0, maxDelta: 8.0, maxError: 2.0 },
+                'Hybrid * (Responsive / Linear)':   { min_delta_base: 3.0, min_delta_cold: 5.0, maxDelta: 8.0, maxError: 2.0 },
+                'Radiators (Gentle / Quadratic)':   { min_delta_base: 4.0, min_delta_cold: 6.0, maxDelta: 10.0, maxError: 2.5 },
+                'Radiators * (Responsive / Linear)':{ min_delta_base: 4.0, min_delta_cold: 6.0, maxDelta: 10.0, maxError: 2.5 }
             };
+            
+            const MILD_WEATHER_TEMP = 15.0;
+            const COLD_WEATHER_TEMP = -5.0;
 
             function setProfileDefaults() {
                 const selectedProfile = profiles[systemTypeSelect.value];
-                minDeltaInput.value = selectedProfile.minDelta;
                 maxDeltaInput.value = selectedProfile.maxDelta;
                 maxErrorInput.value = selectedProfile.maxError;
                 
@@ -209,8 +228,10 @@
                 const returnTemp = parseFloat(returnTempInput.value);
                 const targetTemp = parseFloat(targetTempInput.value);
                 const currentTemp = parseFloat(currentTempInput.value);
+                const outsideTemp = parseFloat(outsideTempInput.value);
                 const bias = parseFloat(biasInput.value);
-                const minDeltaT = parseFloat(minDeltaInput.value);
+                
+                const selectedProfile = profiles[systemValue];
                 const maxDeltaT = parseFloat(maxDeltaInput.value);
                 const maxError = parseFloat(maxErrorInput.value);
                 
@@ -218,6 +239,13 @@
                 
                 const actualError = effectiveTarget - currentTemp;
                 const closestError = (Math.round(actualError * 10) / 10.0).toFixed(1);
+
+                const clamped_outside_temp = Math.max(COLD_WEATHER_TEMP, Math.min(outsideTemp, MILD_WEATHER_TEMP));
+                const linear_cold_factor = (MILD_WEATHER_TEMP - clamped_outside_temp) / (MILD_WEATHER_TEMP - COLD_WEATHER_TEMP);
+                const cold_factor = linear_cold_factor * linear_cold_factor;
+                
+                const dynamic_min_delta = selectedProfile.min_delta_base + (cold_factor * (selectedProfile.min_delta_cold - selectedProfile.min_delta_base));
+                minDeltaInput.value = dynamic_min_delta.toFixed(2);
 
                 resultsBody.innerHTML = '';
 
@@ -239,7 +267,7 @@
                         error_factor = error_clamped_normalized * error_clamped_normalized;
                     }
                     
-                    const target_delta_t = minDeltaT + (error_factor * (maxDeltaT - minDeltaT));
+                    const target_delta_t = dynamic_min_delta + (error_factor * (maxDeltaT - dynamic_min_delta));
                     const calculated_flow = returnTemp + target_delta_t;
                     const final_flow = Math.floor(calculated_flow * 2) / 2.0;
 
@@ -264,8 +292,9 @@
             }
 
             systemTypeSelect.addEventListener('change', setProfileDefaults);
+            outsideTempInput.addEventListener('change', updateTable);
             
-            const allInputs = [returnTempInput, targetTempInput, currentTempInput, biasInput, minDeltaInput, maxDeltaInput, maxErrorInput];
+            const allInputs = [returnTempInput, targetTempInput, currentTempInput, biasInput, maxDeltaInput, maxErrorInput];
             allInputs.forEach(input => {
                 input.addEventListener('input', updateTable);
             });
