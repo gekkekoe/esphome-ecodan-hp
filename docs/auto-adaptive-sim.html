@@ -103,6 +103,7 @@
                 <label for="systemType">1. Choose System Type (Sets defaults)</label>
                 <select id="systemType">
                     <option value="ufh">Underfloor Heating (UFH)</option>
+                    <option value="ufh* (lite)">Underfloor Heating* (UFH lite)</option>
                     <option value="hybrid">Hybrid (UFH + Radiators)</option>
                     <option value="radiators">Radiators</option>
                 </select>
@@ -184,7 +185,8 @@
             const resultsBody = document.getElementById('resultsBody');
 
             const profiles = {
-                'ufh': { minDelta: 2.5, maxDelta: 6.0, maxError: 1.5 },
+                'ufh': { minDelta: 2.25, maxDelta: 6.0, maxError: 1.5 },
+                'ufh* (lite)': { minDelta: 2.5, maxDelta: 5.0, maxError: 1.0 },
                 'hybrid': { minDelta: 4.0, maxDelta: 8.0, maxError: 2.0 },
                 'radiators': { minDelta: 5.0, maxDelta: 10.0, maxError: 2.5 }
             };
