@@ -278,7 +278,7 @@ script:
               float error_factor = use_linear_error ? error_clamped_normalized : error_clamped_normalized * error_clamped_normalized;
               float target_delta_t = dynamic_min_delta_t + error_factor * (max_delta_t - dynamic_min_delta_t);
 
-              if (is_heating_mode) {
+              if (is_heating_mode && is_heating_active) {
                 if (isnan(actual_return_temp)) {
                     ESP_LOGE("auto_adaptive", "Z%d HEATING (Delta T): FAILED, actual_return_temp is NAN. Reverting to %.2f°C.", (i + 1), MIN_HEAT_FLOW);
                     calculated_flow = MIN_HEAT_FLOW;
@@ -332,7 +332,7 @@ script:
 
                 calculated_flows_heat[i] = floor(calculated_flow * 2) / 2.0f;
 
-              } else if (is_cooling_mode) {
+              } else if (is_cooling_mode && is_cooling_active) {
                 ESP_LOGD("auto_adaptive", "Using 'Delta-T Control' strategy for cooling.");
                 
                 if (isnan(actual_return_temp)) {
