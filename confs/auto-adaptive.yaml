@@ -74,17 +74,6 @@ number:
     min_value: -50
     max_value: 100
     step: 0.1
-  # compensate for thermostat overshoot
-  - platform: template
-    id: thermostat_overshoot_compensation
-    name: ${thermostat_overshoot_compensation}
-    unit_of_measurement: "°C"
-    optimistic: true
-    restore_value: true
-    initial_value: 0.0
-    min_value: 0.0
-    max_value: 5.0
-    step: 0.1
 
 select:
   - platform: template
@@ -183,10 +172,6 @@ script:
           if (isnan(actual_outside_temp))
               return;
 
-          float overshoot_compensation = id(thermostat_overshoot_compensation).state;
-          if (isnan(overshoot_compensation))
-            overshoot_compensation = 0.0f;
-
           auto heating_type_index = id(heating_system_type).active_index().value_or(0);
           float base_min_delta_t, max_delta_t, max_error_range, min_delta_cold_limit;
 
@@ -257,18 +242,12 @@ script:
               }
               if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp)) continue;
 
-              ESP_LOGD("auto_adaptive", "Processing Zone %d: Room=%.1f, Target=%.1f, Outside=%.1f, cold factor=%.2f, Bias=%.1f, overshoot=%.1f, heating: %d, cooling: %d",
-                (i + 1), room_temp, room_target_temp, actual_outside_temp, cold_factor, setpoint_bias, overshoot_compensation, is_heating_active, is_cooling_active);
+              ESP_LOGD("auto_adaptive", "Processing Zone %d: Room=%.1f, Target=%.1f, Outside=%.1f, cold factor=%.2f, Bias=%.1f, heating: %d, cooling: %d",
+                (i + 1), room_temp, room_target_temp, actual_outside_temp, cold_factor, setpoint_bias, is_heating_active, is_cooling_active);
               room_target_temp += setpoint_bias;
 
               float error = is_heating_mode ? (room_target_temp - room_temp)
                 : (room_temp - room_target_temp); // Reversed for cooling
-
-              // Only apply for heating overshoots (when error is negative)
-              if (is_heating_mode && error < 0) {
-                  error += overshoot_compensation;
-                  if (error > 0) error = 0.0;
-              }
 
               bool use_linear_error = (heating_type_index % 2 != 0);
               float calculated_flow = NAN;
