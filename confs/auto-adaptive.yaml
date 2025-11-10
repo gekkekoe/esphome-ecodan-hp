@@ -290,6 +290,9 @@ script:
 
                       float short_cycle_prevention_adjustment = id(predictive_short_cycle_total_adjusted);
                       if (short_cycle_prevention_adjustment > 0.0f) {
+                        ESP_LOGD("auto_adaptive", "Z%d HEATING (boost adjustment): boost: %.1f°C, calcluated_flow: %.2f°C, actual_flow: %.2f°C",
+                                (i + 1), short_cycle_prevention_adjustment, calculated_flow, actual_flow_temp);
+
                         if ((actual_flow_temp - calculated_flow) >= 1.0f) {
                           calculated_flow += short_cycle_prevention_adjustment;
                         }

@@ -79,8 +79,6 @@
                     name: Heating System Type
                   - entity: number.ecodan_heatpump_auto_adaptive_setpoint_bias
                     name: Setpoint Bias
-                  - entity: number.ecodan_heatpump_auto_adaptive_thermostat_overshoot_compensation
-                    name: Overshoot Compensation
                   - entity: >-
                       number.ecodan_heatpump_auto_adaptive_max_heating_flow_temperature
                     name: Max. Heating Flow Temperature
