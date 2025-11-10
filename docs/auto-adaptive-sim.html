@@ -107,11 +107,11 @@
             <div class="control-group">
                 <label for="systemType">1. Choose System Type (Sets defaults)</label>
                 <select id="systemType">
-                    <option value="UFH (Gentle / Quadratic)">UFH (Gentle / Quadratic)</option>
+                    <option value="UFH (Gentle / Smoothstep)">UFH (Gentle / Smoothstep)</option>
                     <option value="UFH * (Responsive / Linear)">UFH * (Responsive / Linear)</option>
-                    <option value="Hybrid (Gentle / Quadratic)">Hybrid (Gentle / Quadratic)</option>
+                    <option value="Hybrid (Gentle / Smoothstep)">Hybrid (Gentle / Smoothstep)</option>
                     <option value="Hybrid * (Responsive / Linear)">Hybrid * (Responsive / Linear)</option>
-                    <option value="Radiators (Gentle / Quadratic)">Radiators (Gentle / Quadratic)</option>
+                    <option value="Radiators (Gentle / Smoothstep)">Radiators (Gentle / Smoothstep)</option>
                     <option value="Radiators * (Responsive / Linear)">Radiators * (Responsive / Linear)</option>
                 </select>
             </div>
@@ -204,11 +204,11 @@
             const resultsBody = document.getElementById('resultsBody');
 
             const profiles = {
-                'UFH (Gentle / Quadratic)':         { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.0, maxError: 1.75 },
+                'UFH (Gentle / Smoothstep)':        { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.0, maxError: 1.75 },
                 'UFH * (Responsive / Linear)':      { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.0, maxError: 1.75 },
-                'Hybrid (Gentle / Quadratic)':      { min_delta_base: 3.0, min_delta_cold: 5.0, maxDelta: 8.0, maxError: 1.25 },
+                'Hybrid (Gentle / Smoothstep)':     { min_delta_base: 3.0, min_delta_cold: 5.0, maxDelta: 8.0, maxError: 1.25 },
                 'Hybrid * (Responsive / Linear)':   { min_delta_base: 3.0, min_delta_cold: 5.0, maxDelta: 8.0, maxError: 1.25 },
-                'Radiators (Gentle / Quadratic)':   { min_delta_base: 4.0, min_delta_cold: 6.0, maxDelta: 10.0, maxError: 1.0 },
+                'Radiators (Gentle / Smoothstep)':  { min_delta_base: 4.0, min_delta_cold: 6.0, maxDelta: 10.0, maxError: 1.0 },
                 'Radiators * (Responsive / Linear)':{ min_delta_base: 4.0, min_delta_cold: 6.0, maxDelta: 10.0, maxError: 1.0 }
             };
             
@@ -232,6 +232,7 @@
                 const bias = parseFloat(biasInput.value);
                 
                 const selectedProfile = profiles[systemValue];
+                
                 const maxDeltaT = parseFloat(maxDeltaInput.value);
                 const maxError = parseFloat(maxErrorInput.value);
                 
@@ -259,12 +260,13 @@
                     const error_clamped_normalized = Math.min(error_normalized, 1.0);
                     
                     let error_factor;
-                    let curve_type = "Quad";
+                    let curve_type = "Smooth";
                     if (systemValue.includes('*')) {
                         error_factor = error_clamped_normalized;
                         curve_type = "Linear";
                     } else {
-                        error_factor = error_clamped_normalized * error_clamped_normalized;
+                        const x = error_clamped_normalized;
+                        error_factor = (3.0 * x * x) - (2.0 * x * x * x);
                     }
                     
                     const target_delta_t = dynamic_min_delta + (error_factor * (maxDeltaT - dynamic_min_delta));

@@ -179,17 +179,17 @@ script:
               base_min_delta_t = 2.25f;
               min_delta_cold_limit = 4.0f;
               max_delta_t = 6.0f; 
-              max_error_range = 1.75f;
+              max_error_range = 2.25f;
           } else if (heating_type_index <= 3) { 
               base_min_delta_t = 3.0f;
               min_delta_cold_limit = 5.0f;
               max_delta_t = 8.0f; 
-              max_error_range = 1.25f;
+              max_error_range = 2.0f;
           } else { 
               base_min_delta_t = 4.0f;
               min_delta_cold_limit = 6.0f;
               max_delta_t = 10.0f; 
-              max_error_range = 1.0f;
+              max_error_range = 1.5f;
           }
 
           const float MILD_WEATHER_TEMP = 15.0f;
@@ -253,8 +253,8 @@ script:
               float calculated_flow = NAN;
               float error_positive = fmax(error, 0.0f);
               float error_normalized = error_positive / max_error_range;
-              float error_clamped_normalized = fmin(error_normalized, 1.0f);
-              float error_factor = use_linear_error ? error_clamped_normalized : error_clamped_normalized * error_clamped_normalized;
+              float x = fmin(error_normalized, 1.0f);
+              float error_factor = use_linear_error ? x : (3.0 * x * x) - (2.0 * x * x * x);
               float target_delta_t = dynamic_min_delta_t + error_factor * (max_delta_t - dynamic_min_delta_t);
 
               if (is_heating_mode && is_heating_active) {
