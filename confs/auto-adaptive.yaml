@@ -299,11 +299,16 @@ script:
                     if (is_defrost_weather) {
                       // defrost weather detected, force to min delta T for the next hour
                       calculated_flow = actual_return_temp + base_min_delta_t;
-                      ESP_LOGW("auto_adaptive", "Z%d HEATING (Delta T): Defrost risk detected. Forcing minimum delta T (%.1f°C). Flow set to %.1f°C",
+                      // rounding
+                      calculated_flow = floor(calculated_flow * 2) / 2.0f;
+                      ESP_LOGW("auto_adaptive", "Z%d HEATING (Delta T): Defrost risk detected. Forcing minimum delta T (%.1f°C). Flow set to %.2f°C",
                                 (i + 1), base_min_delta_t, calculated_flow);
                     } else {
                       // interpolate using quadratic error
                       calculated_flow = actual_return_temp + target_delta_t;
+                      // rounding
+                      calculated_flow = floor(calculated_flow * 2) / 2.0f;
+
                       float short_cycle_prevention_adjustment = id(predictive_short_cycle_total_adjusted);
                       if (short_cycle_prevention_adjustment > 0.0f) {
                         if ((actual_flow_temp - calculated_flow) >= 1.0f) {
@@ -312,9 +317,10 @@ script:
                         else {
                           // reset boost, calculated_flow is outside risky zone
                           id(predictive_short_cycle_total_adjusted) = 0;
+                          short_cycle_prevention_adjustment = 0;
                         }
                       }
-                      ESP_LOGD("auto_adaptive", "Z%d HEATING (Delta T): calculated_flow: %.1f°C (Return %.1f + Scaled  delta T %.1f, error factor: %.2f (lineair: %d), boost: %.1f)", 
+                      ESP_LOGD("auto_adaptive", "Z%d HEATING (Delta T): calculated_flow: %.2f°C (Return %.1f + Scaled  delta T %.2f, error factor: %.2f (lineair: %d), boost: %.1f)", 
                                 (i + 1), calculated_flow, actual_return_temp, target_delta_t, error_factor, use_linear_error, short_cycle_prevention_adjustment);
                     }
                 }
@@ -330,7 +336,7 @@ script:
                   calculated_flow = MIN_HEAT_FLOW;
                 }
 
-                calculated_flows_heat[i] = floor(calculated_flow * 2) / 2.0f;
+                calculated_flows_heat[i] = calculated_flow;
 
               } else if (is_cooling_mode && is_cooling_active) {
                 ESP_LOGD("auto_adaptive", "Using 'Delta-T Control' strategy for cooling.");
