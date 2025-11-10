@@ -157,3 +157,4 @@ substitutions:
   pump_speed: 'Prędkość Pompy'
   pump_feedback: 'Zużycie Pompy'
   pump_feedback_status: 'Status Informacji Zwrotnej Pompy'
+  master_thermostat: 'Główny Czujnik Pokojowy'

@@ -158,3 +158,4 @@ substitutions:
   pump_speed: 'Pompsnelheid'
   pump_feedback: 'Pompverbruik'
   pump_feedback_status: 'Status Pompfeedback'
+  master_thermostat: 'Hoofd-Ruimtesensor'

@@ -158,3 +158,4 @@ substitutions:
   pump_speed: 'Velocidad de la Bomba'
   pump_feedback: 'Consumo de la Bomba'
   pump_feedback_status: 'Estado Retroalimentación Bomba'
+  master_thermostat: 'Sensor de Habitación Principal'

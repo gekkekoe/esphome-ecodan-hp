@@ -164,3 +164,6 @@ substitutions:
   pump_speed: Pump Speed
   pump_feedback: Pump Consumption
   pump_feedback_status: Pump Feedback Status
+
+  # master thermostats
+  master_thermostat: Master Room Sensor
