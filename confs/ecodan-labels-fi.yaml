@@ -158,3 +158,4 @@ substitutions:
   pump_speed: 'Pumpun Nopeus'
   pump_feedback: 'Pumpun Kulutus'
   pump_feedback_status: 'Pumpun Palautteen Tila'
+  master_thermostat: 'Päähuoneen Anturi'

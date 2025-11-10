@@ -183,6 +183,10 @@ namespace ecodan
         float RcSubCoolTemp;
         uint16_t RcFanSpeedRpm;
 
+        // Configured thermostat
+        uint8_t MasterZone1 = 0x0;
+        uint8_t MasterZone2 = 0x0;
+
         int day_of_year() const {
             if (ControllerDateTime.tm_year < 100)
                 return -1;

@@ -158,3 +158,4 @@ substitutions:
   pump_speed: 'Vitesse de la Pompe'
   pump_feedback: 'Consommation de la Pompe'
   pump_feedback_status: 'État Retour Pompe'
+  master_thermostat: 'Capteur de Pièce Maître'

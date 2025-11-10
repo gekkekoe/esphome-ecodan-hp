@@ -158,3 +158,4 @@ substitutions:
   pump_speed: 'Velocità Pompa'
   pump_feedback: 'Consumo Pompa'
   pump_feedback_status: 'Stato Feedback Pompa'
+  master_thermostat: 'Sensore Ambiente Master'

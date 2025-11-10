@@ -157,3 +157,4 @@ substitutions:
   pump_speed: 'Pumpehastighed'
   pump_feedback: 'Pumpeforbrug'
   pump_feedback_status: 'Status Pumpefeedback'
+  master_thermostat: 'Hovedrumføler'
