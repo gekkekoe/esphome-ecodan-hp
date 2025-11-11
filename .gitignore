@@ -2,6 +2,7 @@
 .pio
 .esphome
 venv
+build.yaml
 Firmware.bin
 sdkconfig.esp32dev
 CMakeLists.txt
