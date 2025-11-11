@@ -308,6 +308,13 @@ script:
                 }
 
                 // apply limits 
+                const float MAX_FEED_BELOW = 1.5f;
+                if ((actual_flow_temp - calculated_flow) >= MAX_FEED_BELOW) {
+                  ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.2f°C to prevent compressor stop! (delta %.2f below actual feed temp), calculated_flow: %.2f", 
+                    (i + 1), actual_flow_temp - MAX_FEED_BELOW, MAX_FEED_BELOW, calculated_flow);
+                  calculated_flow = actual_flow_temp - MAX_FEED_BELOW;
+                }
+
                 if (calculated_flow > max_flow_temp) {
                   ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit), calculated_flow: %.1f", (i + 1), max_flow_temp, calculated_flow);
                   calculated_flow = max_flow_temp;
