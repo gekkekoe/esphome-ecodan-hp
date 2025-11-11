@@ -148,7 +148,6 @@ substitutions:
   heating_system_type_option_rad: 'Radiatorer'
   auto_adaptive_setpoint_bias: 'Auto-Adaptiv: Setpunkt Bias'
   temperature_feedback: 'Auto-Adaptiv: Tilbagemelding Nuværende Rumtemperatur'
-  thermostat_overshoot_compensation: 'Auto-Adaptiv: Kompensation for Termostat-overskridelse'
   total_increasing_heating_consumed: Total Forbrugt Varme
   total_increasing_heating_delivered: Total Leveret Varme
   total_increasing_cool_consumed: Total Forbrugt Køling

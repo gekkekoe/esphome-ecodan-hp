@@ -151,7 +151,6 @@ substitutions:
   heating_system_type_option_rad: 'Radiators'
   auto_adaptive_setpoint_bias: 'Auto-Adaptive: Setpoint Bias'
   temperature_feedback: 'Auto-Adaptive: Current Room Temperature Feedback'
-  thermostat_overshoot_compensation: 'Auto-Adaptive: Thermostat Overshoot Compensation'
 
   # total increasing energy totals
   total_increasing_heating_consumed: Total Heating Consumed

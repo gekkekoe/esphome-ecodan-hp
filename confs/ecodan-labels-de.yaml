@@ -148,7 +148,6 @@ substitutions:
   heating_system_type_option_rad: 'Heizkörper'
   auto_adaptive_setpoint_bias: 'Auto-Adaptiv: Sollwert-Bias'
   temperature_feedback: 'Auto-Adaptiv: Rückmeldung Aktuelle Raumtemperatur'
-  thermostat_overshoot_compensation: 'Auto-Adaptiv: Thermostat-Überschwingungskompensation'
   total_increasing_heating_consumed: Gesamtverbrauch Heizen
   total_increasing_heating_delivered: Gesamtertrag Heizen
   total_increasing_cool_consumed: Gesamtverbrauch Kühlen
