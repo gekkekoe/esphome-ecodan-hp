@@ -17,12 +17,12 @@ The strategy follows these steps:
 1.  **Select Profile**: It uses the `heating_system_type` setting to select one of six profiles. This choice determines three key variables:
     * `min_delta_t` / `max_delta_t`: The stable operating range.
     * `max_error_range`: The "sensitivity" of the controller.
-2.  **Calculate Error**: It calculates the `error` (deviation from the setpoint). It automatically includes your **`setpoint_bias`** and **`thermostat_overshoot_compensation`**.
-3.  **Scale Error (Quadratic vs. Linear)**: This is the most important step. Based on your profile choice, the error is scaled in one of two ways:
-    * **Gentle (Quadratic):** `error_factor = error * error`. This is very gentle at small errors and is ideal for slow, high-inertia systems like Underfloor Heating (UFH) to prevent overshoot.
+2.  **Calculate Error**: It calculates the `error` (deviation from the setpoint). It automatically includes your **`setpoint_bias`**.
+3.  **Scale Error (Smoothstep vs. Linear)**: This is the most important step. Based on your profile choice (with or without a `*`), the error is scaled in one of two ways:
+    * **Gentle (Smoothstep):** Uses an S-curve formula (`6x⁵ - 15x⁴ + 10x³`). This is gentle at small errors (preventing overshoot) but accelerates quickly in the mid-range to provide power, before gently easing into the maximum. This is ideal for high-inertia systems like Underfloor Heating (UFH).
     * **Responsive (Linear):** `error_factor = error`. This reacts proportionally and is ideal for fast, low-inertia systems like Radiators or Hybrid systems where a quicker comfort response is desired.
-4.  **Calculate Target ΔT**: It uses this `error_factor` to interpolate between the profile's `min_delta_t` (for efficiency) and `max_delta_t` (for power).
-    `target_delta_t = min_delta_t + (error_factor * (max_delta_t - min_delta_t))`
+4.  **Calculate Target ΔT**: It uses this `error_factor` to interpolate between the profile's (dynamically calculated) `min_delta_t` and `max_delta_t`.
+    `target_delta_t = dynamic_min_delta_t + (error_factor * (max_delta_t - dynamic_min_delta_t))`
 5.  **Calculate Target Flow**: The final target flow is calculated based on the real-time return temperature.
     `Calculated Flow = return_temp + target_delta_t`
 6.  **Apply Boost (if active)**: The controller checks if the **Predictive Short-Cycle Prevention** is active. If it is, the calculated boost (e.g., +0.5°C) is added to the `Calculated Flow` *before* limits are applied.
@@ -30,21 +30,21 @@ The strategy follows these steps:
 
 ### Understanding the Profiles (Simulator)
 
- You can now use the **[Auto-Adaptive Simulator](https://gekkekoe.github.io/esphome-ecodan-hp/auto-adaptive-sim.html)** to interactively test the settings.
+You can use the **[Auto-Adaptive Simulator](https://gekkekoe.github.io/esphome-ecodan-hp/auto-adaptive-sim.html)** to interactively test the settings.
 
-The simulator allows you to change all inputs (Return Temp, Room Temp, etc.) and instantly see how the algorithm will calculate the final flow temperature.
+The simulator allows you to change all inputs (Return Temp, Room Temp, etc.) and instantly see how the algorithm will calculate the final flow temperature using both the **Linear** and **Smoothstep** curves.
 
 ### How to Choose Your Profile
 
 The `Heating System Type` selector gives you six options, letting you choose both your physical system type and its "aggressiveness".
 
-* **UFH (Gentle / Quadratic):** For standard underfloor heating. Uses the gentle `error * error` curve to maximize stability and prevent overshoot. **This is the recommended default.**
+* **UFH (Gentle / Smoothstep):** For standard underfloor heating. Uses the gentle S-curve to maximize stability and prevent overshoot, while still being responsive during heat-up. **This is the recommended default.**
 * **UFH \* (Responsive / Linear):** For UFH systems that feel too slow to respond. Uses the more aggressive `linear` curve.
 
-* **Hybrid (Gentle / Quadratic):** For mixed systems. Treats the system gently, like UFH, to prevent the fast radiators from causing overshoot.
+* **Hybrid (Gentle / Smoothstep):** For mixed systems. Treats the system gently, like UFH, to prevent the fast radiators from causing overshoot.
 * **Hybrid \* (Responsive / Linear):** For mixed systems where you want to prioritize the *fast comfort* of the radiators. This is a more aggressive, responsive setting.
 
-* **Radiators (Gentle / Quadratic):** For radiator-only systems with high thermal mass (e.g., old cast-iron radiators) where a gentle approach is still desired.
+* **Radiators (Gentle / Smoothstep):** For radiator-only systems with high thermal mass (e.g., old cast-iron radiators) where a gentle S-curve approach is still desired.
 * **Radiators \* (Responsive / Linear):** For standard, low-inertia radiators. This profile is the most responsive to changes in temperature.
 
 ---

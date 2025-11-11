@@ -266,7 +266,7 @@
                         curve_type = "Linear";
                     } else {
                         const x = error_clamped_normalized;
-                        error_factor = (3.0 * x * x) - (2.0 * x * x * x);
+                        error_factor = x * x * x * (x * (6.0 * x - 15.0) + 10.0);
                     }
                     
                     const target_delta_t = dynamic_min_delta + (error_factor * (maxDeltaT - dynamic_min_delta));
