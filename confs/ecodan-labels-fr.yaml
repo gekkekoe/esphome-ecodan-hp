@@ -136,8 +136,6 @@ substitutions:
   predictive_short_cycle_control_enabled: 'Court-circuit: Prévention Prédictive'
   predictive_short_cycle_high_delta_time_window: 'Court-circuit: Durée Delta Élevé'
   auto_adaptive_control_enabled: 'Auto-Adaptatif: Commande'
-  heating_slope: 'Auto-Adaptatif: Pente de la Courbe de Chauffe'
-  cooling_slope: 'Auto-Adaptatif: Pente de la Courbe de Refroidissement'
   maximum_heating_flow_temp: 'Auto-Adaptatif: Temp. Max. de Départ Chauffage'
   minimum_heating_flow_temp: 'Auto-Adaptatif: Temp. Min. de Départ Chauffage'
   minimum_cooling_flow_temp: 'Auto-Adaptatif: Temp. Min. de Départ Refroidissement'
@@ -148,18 +146,9 @@ substitutions:
   heating_system_type_option_ufh: 'Chauffage au Sol'
   heating_system_type_option_ufh_rad: 'Chauffage au Sol + Radiateurs'
   heating_system_type_option_rad: 'Radiateurs'
-  heating_offset_sensor: 'Auto-Adaptatif: Décalage Chauffage'
-  cooling_offset_sensor: 'Auto-Adaptatif: Décalage Refroidissement'
   auto_adaptive_setpoint_bias: 'Auto-Adaptatif: Bias de Consigne'
-  dynamic_learning_rate_sensor: "Auto-Adaptatif: Taux d'Apprentissage Dynamique"
   temperature_feedback: 'Auto-Adaptatif: Retour de Température Ambiante Actuelle'
   thermostat_overshoot_compensation: 'Auto-Adaptatif: Compensation de Dépassement du Thermostat'
-  outside_temperature_feedback: 'Auto-Adaptatif: Retour Température Extérieure'
-  outside_temperature_source: 'Auto-Adaptatif: Source Température Extérieure'
-  outside_temperature_option_internal: 'Capteur Interne'
-  heating_control_strategy: 'Auto-Adaptatif: Stratégie de Chauffage'
-  heating_control_strategy_option_curve: 'Courbe Auto-Apprentissage'
-  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Consommation Totale Chauffage
   total_increasing_heating_delivered: Production Totale Chauffage
   total_increasing_cool_consumed: Consommation Totale Refroidissement
@@ -169,3 +158,4 @@ substitutions:
   pump_speed: 'Vitesse de la Pompe'
   pump_feedback: 'Consommation de la Pompe'
   pump_feedback_status: 'État Retour Pompe'
+  master_thermostat: 'Capteur de Pièce Maître'

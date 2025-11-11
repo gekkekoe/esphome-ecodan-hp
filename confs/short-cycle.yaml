@@ -170,47 +170,31 @@ script:
               ESP_LOGD("predictive_short_cycle", "High Delta T detected (%.1f°C). Starting timer.", delta);
             } else {
               if ((millis() - id(predictive_delta_start_time)) >= trigger_duration_ms) {
-                ESP_LOGW("predictive_short_cycle", "Short-cycle predicted! Increasing offset to force a longer cycle.");
+                ESP_LOGW("predictive_short_cycle", "Short-cycle predicted! Increasing Feed temps to force a longer cycle.");
                 id(predictive_delta_start_time) = 0;
 
-                // in Auto Adaptive, increase offset
+                // in Auto Adaptive, increase feed temp
                 if (id(auto_adaptive_control_enabled).state) {
                   // when using delta T, we need to boost the feed temp directly
-                  auto strategy_index = id(heating_control_strategy).active_index().value_or(0);
 
                   bool was_boosted = false;
                   // 0 = idle, 1 = both, 2 = z1, 3 = z2
                   auto multizone_status = status.MultiZoneStatus;
                   if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && (!status.has_independent_z2() || (status.has_independent_z2() && (multizone_status == 1 || multizone_status == 2)))) {
-                    if (strategy_index == 0) {
-                      id(heating_curve_offset_z1) += adjustment_factor;
-                    } else {
-                      float adjusted_flow_z1 = status.Zone1FlowTemperatureSetPoint + adjustment_factor;
-                      ESP_LOGD("predictive_short_cycle", "(Delta T) CMD: Increase Z1 Heat Flow to -> %.1f°C", adjusted_flow_z1);
-                      id(ecodan_instance).set_flow_target_temperature(adjusted_flow_z1, esphome::ecodan::Zone::ZONE_1);
-                    }
+                    float adjusted_flow_z1 = status.Zone1FlowTemperatureSetPoint + adjustment_factor;
+                    ESP_LOGD("predictive_short_cycle", "(Delta T) CMD: Increase Z1 Heat Flow to -> %.1f°C", adjusted_flow_z1);
+                    id(ecodan_instance).set_flow_target_temperature(adjusted_flow_z1, esphome::ecodan::Zone::ZONE_1);
                     was_boosted = true;
                   }
                   if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) && (!status.has_independent_z2() || (status.has_independent_z2() && (multizone_status == 1 || multizone_status == 3)))) {
-                    if (strategy_index == 0) {
-                      id(heating_curve_offset_z2) += adjustment_factor;
-                    } else {
-                      float adjusted_flow_z2 = status.Zone2FlowTemperatureSetPoint + adjustment_factor;
-                      ESP_LOGD("predictive_short_cycle", "(Delta T) CMD: Increase Z2 Heat Flow to -> %.1f°C", adjusted_flow_z2);
-                      id(ecodan_instance).set_flow_target_temperature(adjusted_flow_z2, esphome::ecodan::Zone::ZONE_2);
-                    }
+                    float adjusted_flow_z2 = status.Zone2FlowTemperatureSetPoint + adjustment_factor;
+                    ESP_LOGD("predictive_short_cycle", "(Delta T) CMD: Increase Z2 Heat Flow to -> %.1f°C", adjusted_flow_z2);
+                    id(ecodan_instance).set_flow_target_temperature(adjusted_flow_z2, esphome::ecodan::Zone::ZONE_2);
                     was_boosted = true;
                   }
-
-                  // handle was_boosted event
-                  if (was_boosted) {
-                    if (strategy_index == 0) {
-                      id(auto_adaptive_loop).execute();
-                    }
-                    else {
-                      id(predictive_short_cycle_total_adjusted) += adjustment_factor;
-                    }
-                  }
+                  // set boost adjustment, to be used in auto adaptive loop
+                  if (was_boosted) 
+                    id(predictive_short_cycle_total_adjusted) += adjustment_factor;
 
                 } else if (id(predictive_short_cycle_control_enabled).state) {
                   // in fixed flow mode increase setpoint directly and save for restore
@@ -289,6 +273,13 @@ script:
 
           if (flag_before_lockout.has_value()) {
             auto flag = *flag_before_lockout;
+
+            // dhw could have changed during lockout, use the current bit
+            auto& status = id(ecodan_instance).get_status();
+            auto current_flag = status.get_svc_flags();
+            auto dhw_mask = esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW;
+            flag = (flag & ~dhw_mask) | (current_flag & dhw_mask);
+
             flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
             id(ecodan_instance).set_controller_mode(flag, true);
           } else {
@@ -412,18 +403,3 @@ binary_sensor:
                   id(on_compressor_stop).execute();
                 }
               }
-      # # OFF -> ON
-      # on_press:
-      #   then:
-      #     - lambda: |-
-      #         auto& status = id(ecodan_instance).get_status();
-      #         if (!status.DefrostActive) {
-      #           ESP_LOGI(esphome::ecodan::TAG, "Compressor START detected");
-      #           id(compressor_start_time) = millis();
-      #         }
-      # # ON -> OFF
-      # on_release:
-      #   then:
-      #     - lambda: |-
-      #         ESP_LOGI(esphome::ecodan::TAG, "Compressor STOP detected");
-      #         id(on_compressor_stop).execute();

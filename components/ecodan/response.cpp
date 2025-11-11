@@ -111,6 +111,8 @@ namespace ecodan
             }
             break;               
         case GetType::DEFROST_STATE:
+            status.MasterZone1 = res[1];
+            status.MasterZone2 = res[2];
             status.DefrostActive = res[3] != 0;
             publish_state("status_defrost", status.DefrostActive);
             break;

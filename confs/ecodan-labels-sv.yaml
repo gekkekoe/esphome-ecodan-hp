@@ -135,8 +135,6 @@ substitutions:
   predictive_short_cycle_control_enabled: 'Kort cykel: Förebyggande Skydd'
   predictive_short_cycle_high_delta_time_window: 'Kort cykel: Hög Deltavaraktighet'
   auto_adaptive_control_enabled: 'Autoadaptiv: Styrning'
-  heating_slope: 'Autoadaptiv: Lutning Värmekurva'
-  cooling_slope: 'Autoadaptiv: Lutning Kylkurva'
   maximum_heating_flow_temp: 'Autoadaptiv: Max. Framledningstemp. Värme'
   minimum_heating_flow_temp: 'Autoadaptiv: Min. Framledningstemp. Värme'
   minimum_cooling_flow_temp: 'Autoadaptiv: Min. Framledningstemp. Kyla'
@@ -148,18 +146,9 @@ substitutions:
   heating_system_type_option_ufh: 'Golvvärme'
   heating_system_type_option_ufh_rad: 'Golvvärme + Radiatorer'
   heating_system_type_option_rad: 'Radiatorer'
-  heating_offset_sensor: 'Autoadaptiv: Förskjutning Värme'
-  cooling_offset_sensor: 'Autoadaptiv: Förskjutning Kyla'
   auto_adaptive_setpoint_bias: 'Autoadaptiv: Börvärdes-bias'
-  dynamic_learning_rate_sensor: 'Autoadaptiv: Dynamisk Inlärningshastighet'
   temperature_feedback: 'Autoadaptiv: Återkoppling Aktuell Rumstemperatur'
   thermostat_overshoot_compensation: 'Autoadaptiv: Kompensation för Termostatöverskridande'
-  outside_temperature_feedback: 'Autoadaptiv: Extern Utemperaturs-återkoppling'
-  outside_temperature_source: 'Autoadaptiv: Källa för Utemperatur'
-  outside_temperature_option_internal: 'Intern Sensor'
-  heating_control_strategy: 'Autoadaptiv: Värmestrategi'
-  heating_control_strategy_option_curve: 'Självlärande Kurva'
-  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Totalförbrukning Värme
   total_increasing_heating_delivered: Total Levererad Värme
   total_increasing_cool_consumed: Totalförbrukning Kyla
@@ -169,3 +158,4 @@ substitutions:
   pump_speed: 'Pumphastighet'
   pump_feedback: 'Pumpförbrukning'
   pump_feedback_status: 'Status Pumpåterkoppling'
+  master_thermostat: 'Huvudrumsgivare'

@@ -135,8 +135,6 @@ substitutions:
   predictive_short_cycle_control_enabled: 'Ciclo corto: Prevención Predictiva'
   predictive_short_cycle_high_delta_time_window: 'Ciclo corto: Duración de Delta Alto'
   auto_adaptive_control_enabled: 'Autoadaptativo: Control'
-  heating_slope: 'Autoadaptativo: Pendiente Curva de Calefacción'
-  cooling_slope: 'Autoadaptativo: Pendiente Curva de Refrigeración'
   maximum_heating_flow_temp: 'Autoadaptativo: Temp. Máx. de Flujo Calefacción'
   minimum_heating_flow_temp: 'Autoadaptativo: Temp. Mín. de Flujo Calefacción'
   minimum_cooling_flow_temp: 'Autoadaptativo: Temp. Mín. de Flujo Refrigeración'
@@ -148,18 +146,9 @@ substitutions:
   heating_system_type_option_ufh: 'Suelo Radiante'
   heating_system_type_option_ufh_rad: 'Suelo Radiante + Radiadores'
   heating_system_type_option_rad: 'Radiadores'
-  heating_offset_sensor: 'Autoadaptativo: Desplazamiento Calefacción'
-  cooling_offset_sensor: 'Autoadaptativo: Desplazamiento Refrigeración'
   auto_adaptive_setpoint_bias: 'Autoadaptativo: Bias de Consigna'
-  dynamic_learning_rate_sensor: 'Autoadaptativo: Tasa de Aprendizaje Dinámica'
   temperature_feedback: 'Autoadaptativo: Feedback de Temperatura Ambiente Actual'
   thermostat_overshoot_compensation: 'Autoadaptativo: Compensación de Sobreimpulso del Termostato'
-  outside_temperature_feedback: 'Autoadaptativo: Temp. Exterior Externa'
-  outside_temperature_source: 'Autoadaptativo: Fuente de Temp. Exterior'
-  outside_temperature_option_internal: 'Sensor Interno'
-  heating_control_strategy: 'Autoadaptativo: Estrategia de Calefacción'
-  heating_control_strategy_option_curve: 'Curva Auto-Aprendizaje'
-  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Consumo Total Calefacción
   total_increasing_heating_delivered: Producción Total Calefacción
   total_increasing_cool_consumed: Consumo Total Refrigeración
@@ -169,3 +158,4 @@ substitutions:
   pump_speed: 'Velocidad de la Bomba'
   pump_feedback: 'Consumo de la Bomba'
   pump_feedback_status: 'Estado Retroalimentación Bomba'
+  master_thermostat: 'Sensor de Habitación Principal'

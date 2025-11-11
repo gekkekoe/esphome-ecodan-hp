@@ -135,8 +135,6 @@ substitutions:
   predictive_short_cycle_control_enabled: 'Ciclo breve: Prevenzione Predittiva'
   predictive_short_cycle_high_delta_time_window: 'Ciclo breve: Durata Delta Elevato'
   auto_adaptive_control_enabled: 'Autoadattivo: Controllo'
-  heating_slope: 'Autoadattivo: Pendenza Curva Climatica Riscaldamento'
-  cooling_slope: 'Autoadattivo: Pendenza Curva Climatica Raffrescamento'
   maximum_heating_flow_temp: 'Autoadattivo: Temp. Max. Mandata Riscaldamento'
   minimum_heating_flow_temp: 'Autoadattivo: Temp. Min. Mandata Riscaldamento'
   minimum_cooling_flow_temp: 'Autoadattivo: Temp. Min. Mandata Raffrescamento'
@@ -148,18 +146,9 @@ substitutions:
   heating_system_type_option_ufh: 'Riscaldamento a Pavimento'
   heating_system_type_option_ufh_rad: 'Riscaldamento a Pavimento + Radiatori'
   heating_system_type_option_rad: 'Radiatori'
-  heating_offset_sensor: 'Autoadattivo: Offset Riscaldamento'
-  cooling_offset_sensor: 'Autoadattivo: Offset Raffrescamento'
   auto_adaptive_setpoint_bias: 'Autoadattivo: Bias del Setpoint'
-  dynamic_learning_rate_sensor: 'Autoadattivo: Tasso di Apprendimento Dinamico'
   temperature_feedback: 'Autoadattivo: Feedback Temperatura Ambiente Attuale'
   thermostat_overshoot_compensation: 'Autoadattivo: Compensazione Superamento Termostato'
-  outside_temperature_feedback: 'Autoadattivo: Feedback Temperatura Esterna'
-  outside_temperature_source: 'Autoadattivo: Fonte Temperatura Esterna'
-  outside_temperature_option_internal: 'Sensore Interno'
-  heating_control_strategy: 'Autoadattivo: Strategia di Riscaldamento'
-  heating_control_strategy_option_curve: 'Curva di Autoapprendimento'
-  heating_control_strategy_option_delta_t: 'Delta T'
   total_increasing_heating_consumed: Consumo Totale Riscaldamento
   total_increasing_heating_delivered: Energia Totale Prodotta Riscaldamento
   total_increasing_cool_consumed: Consumo Totale Raffrescamento
@@ -169,3 +158,4 @@ substitutions:
   pump_speed: 'Velocità Pompa'
   pump_feedback: 'Consumo Pompa'
   pump_feedback_status: 'Stato Feedback Pompa'
+  master_thermostat: 'Sensore Ambiente Master'

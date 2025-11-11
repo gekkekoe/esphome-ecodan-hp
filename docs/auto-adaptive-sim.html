@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delta-T Flow Calculator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 20px auto;
+        }
+        .controls, .output {
+            flex: 1;
+            min-width: 400px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .controls h2, .output h2 {
+            margin-top: 0;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        .control-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        select, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        input[readonly] {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+            color: #555;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: right;
+        }
+        th {
+            background-color: #f9f9f9;
+            text-align: left;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #fdfdfd;
+        }
+        tr.highlight {
+            background-color: #fff9c4 !important; 
+            font-weight: 600;
+        }
+        td:first-child, td:nth-child(2) {
+            font-weight: 500;
+            text-align: left;
+        }
+        tr.highlight td {
+            font-weight: 700;
+        }
+        .note {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 15px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Delta-T (ΔT) Flow Calculator</h1>
+
+    <div class="container">
+        <div class="controls">
+            <h2>Settings</h2>
+            
+            <div class="control-group">
+                <label for="systemType">1. Choose System Type (Sets defaults)</label>
+                <select id="systemType">
+                    <option value="UFH (Gentle / Smoothstep)">UFH (Gentle / Smoothstep)</option>
+                    <option value="UFH * (Responsive / Linear)">UFH * (Responsive / Linear)</option>
+                    <option value="Hybrid (Gentle / Smoothstep)">Hybrid (Gentle / Smoothstep)</option>
+                    <option value="Hybrid * (Responsive / Linear)">Hybrid * (Responsive / Linear)</option>
+                    <option value="Radiators (Gentle / Smoothstep)">Radiators (Gentle / Smoothstep)</option>
+                    <option value="Radiators * (Responsive / Linear)">Radiators * (Responsive / Linear)</option>
+                </select>
+            </div>
+
+            <hr style="border: 0; border-top: 1px dashed #ccc; margin: 20px 0;">
+            
+            <div class="control-group">
+                <label for="targetTemp">2. Target Room Temp (°C)</label>
+                <input type="number" id="targetTemp" value="20.0" step="0.1">
+            </div>
+
+            <div class="control-group">
+                <label for="currentTemp">3. Current Room Temp (°C)</label>
+                <input type="number" id="currentTemp" value="19.5" step="0.1">
+            </div>
+
+            <div class="control-group">
+                <label for="returnTemp">4. Current Return Temp (°C)</label>
+                <input type="number" id="returnTemp" value="22.0" step="0.5">
+            </div>
+
+            <div class="control-group">
+                <label for="outsideTemp">5. Current Outside Temp (°C)</label>
+                <select id="outsideTemp">
+                    <option value="15">15°C (Mild)</option>
+                    <option value="10" selected>10°C</option>
+                    <option value="5">5°C</option>
+                    <option value="0">0°C</option>
+                    <option value="-5">-5°C (Cold)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="bias">6. Setpoint Bias (°C)</label>
+                <input type="number" id="bias" value="0.0" step="0.1">
+            </div>
+
+            <hr style="border: 0; border-top: 1px dashed #ccc; margin: 20px 0;">
+
+            <div class="control-group">
+                <label for="minDeltaT">7. Dynamic Min Delta T (°C) (Calculated)</label>
+                <input type="number" id="minDeltaT" step="0.1" readonly>
+            </div>
+
+            <div class="control-group">
+                <label for="maxDeltaT">8. Max Delta T (°C) (Profile default)</label>
+                <input type="number" id="maxDeltaT" step="0.1">
+            </div>
+
+            <div class="control-group">
+                <label for="maxError">9. Max Error Range (°C) (Profile default)</label>
+                <input type="number" id="maxError" step="0.1">
+            </div>
+        </div>
+
+        <div class="output">
+            <h2>Results</h2>
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Error</th>
+                        <th>Room Temp (°C)</th>
+                        <th>Error Factor (Curve)</th>
+                        <th>Return Temp (°C)</th>
+                        <th>Target ΔT</th>
+                        <th>Calculated Flow (°C)</th>
+                        <th>Final Flow (°C)</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                </tbody>
+            </table>
+            <div class="note">
+                <strong>Note:</strong> The "Room Temp" column shows the temperature that causes the corresponding "Error", calculated as `(Target + Bias) - Error`. The highlighted row matches your current error.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const systemTypeSelect = document.getElementById('systemType');
+            const returnTempInput = document.getElementById('returnTemp');
+            const targetTempInput = document.getElementById('targetTemp');
+            const currentTempInput = document.getElementById('currentTemp');
+            const outsideTempInput = document.getElementById('outsideTemp');
+            const biasInput = document.getElementById('bias');
+            const minDeltaInput = document.getElementById('minDeltaT');
+            const maxDeltaInput = document.getElementById('maxDeltaT');
+            const maxErrorInput = document.getElementById('maxError');
+            const resultsBody = document.getElementById('resultsBody');
+
+            const profiles = {
+                'UFH (Gentle / Smoothstep)':        { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.0, maxError: 2.25 },
+                'UFH * (Responsive / Linear)':      { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.0, maxError: 2.25 },
+                'Hybrid (Gentle / Smoothstep)':     { min_delta_base: 3.0, min_delta_cold: 5.0, maxDelta: 8.0, maxError: 2.0 },
+                'Hybrid * (Responsive / Linear)':   { min_delta_base: 3.0, min_delta_cold: 5.0, maxDelta: 8.0, maxError: 2.0 },
+                'Radiators (Gentle / Smoothstep)':  { min_delta_base: 4.0, min_delta_cold: 6.0, maxDelta: 10.0, maxError: 1.5 },
+                'Radiators * (Responsive / Linear)':{ min_delta_base: 4.0, min_delta_cold: 6.0, maxDelta: 10.0, maxError: 1.5 }
+            };
+            
+            const MILD_WEATHER_TEMP = 15.0;
+            const COLD_WEATHER_TEMP = -5.0;
+
+            function setProfileDefaults() {
+                const selectedProfile = profiles[systemTypeSelect.value];
+                maxDeltaInput.value = selectedProfile.maxDelta;
+                maxErrorInput.value = selectedProfile.maxError;
+                
+                updateTable();
+            }
+
+            function updateTable() {
+                const systemValue = systemTypeSelect.value;
+                const returnTemp = parseFloat(returnTempInput.value);
+                const targetTemp = parseFloat(targetTempInput.value);
+                const currentTemp = parseFloat(currentTempInput.value);
+                const outsideTemp = parseFloat(outsideTempInput.value);
+                const bias = parseFloat(biasInput.value);
+                
+                const selectedProfile = profiles[systemValue];
+                
+                const maxDeltaT = parseFloat(maxDeltaInput.value);
+                const maxError = parseFloat(maxErrorInput.value);
+                
+                const effectiveTarget = targetTemp + bias;
+                
+                const actualError = effectiveTarget - currentTemp;
+                const closestError = (Math.round(actualError * 10) / 10.0).toFixed(1);
+
+                const clamped_outside_temp = Math.max(COLD_WEATHER_TEMP, Math.min(outsideTemp, MILD_WEATHER_TEMP));
+                const linear_cold_factor = (MILD_WEATHER_TEMP - clamped_outside_temp) / (MILD_WEATHER_TEMP - COLD_WEATHER_TEMP);
+                const cold_factor = linear_cold_factor * linear_cold_factor;
+                
+                const dynamic_min_delta = selectedProfile.min_delta_base + (cold_factor * (selectedProfile.min_delta_cold - selectedProfile.min_delta_base));
+                minDeltaInput.value = dynamic_min_delta.toFixed(2);
+
+                resultsBody.innerHTML = '';
+
+                for (let i = 0; i <= 30; i++) {
+                    const error = i / 10.0;
+                    
+                    const roomTemp = effectiveTarget - error;
+
+                    const error_positive = Math.max(error, 0.0);
+                    const error_normalized = error_positive / maxError;
+                    const error_clamped_normalized = Math.min(error_normalized, 1.0);
+                    
+                    let error_factor;
+                    let curve_type = "Smooth";
+                    if (systemValue.includes('*')) {
+                        error_factor = error_clamped_normalized;
+                        curve_type = "Linear";
+                    } else {
+                        const x = error_clamped_normalized;
+                        error_factor = x * x * x * (x * (6.0 * x - 15.0) + 10.0);
+                    }
+                    
+                    const target_delta_t = dynamic_min_delta + (error_factor * (maxDeltaT - dynamic_min_delta));
+                    const calculated_flow = returnTemp + target_delta_t;
+                    const final_flow = Math.floor(calculated_flow * 2) / 2.0;
+
+                    const row = document.createElement('tr');
+                    
+                    const errorStr = error.toFixed(1);
+                    if (errorStr === closestError) {
+                        row.classList.add('highlight');
+                    }
+                    
+                    row.innerHTML = `
+                        <td>${errorStr}°C</td>
+                        <td>${roomTemp.toFixed(1)}°C</td>
+                        <td>${error_factor.toFixed(2)} (${curve_type})</td>
+                        <td>${returnTemp.toFixed(1)}°C</td>
+                        <td>${target_delta_t.toFixed(2)}°C</td>
+                        <td>${calculated_flow.toFixed(2)}°C</td>
+                        <td><b>${final_flow.toFixed(1)}°C</b></td>
+                    `;
+                    resultsBody.appendChild(row);
+                }
+            }
+
+            systemTypeSelect.addEventListener('change', setProfileDefaults);
+            outsideTempInput.addEventListener('change', updateTable);
+            
+            const allInputs = [returnTempInput, targetTempInput, currentTempInput, biasInput, maxDeltaInput, maxErrorInput];
+            allInputs.forEach(input => {
+                input.addEventListener('input', updateTable);
+            });
+
+            systemTypeSelect.dispatchEvent(new Event('change'));
+        });
+    </script>
+
+</body>
+</html>
