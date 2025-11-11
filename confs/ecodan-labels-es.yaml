@@ -134,6 +134,7 @@ substitutions:
   short_cycle_mitigation_button: 'Ciclo corto: Cancelar bloqueo'
   predictive_short_cycle_control_enabled: 'Ciclo corto: Prevención Predictiva'
   predictive_short_cycle_high_delta_time_window: 'Ciclo corto: Duración de Delta Alto'
+  status_predictive_boost_active: 'Ciclo corto: Impulso Predictivo Activo'
   auto_adaptive_control_enabled: 'Autoadaptativo: Control'
   maximum_heating_flow_temp: 'Autoadaptativo: Temp. Máx. de Flujo Calefacción'
   minimum_heating_flow_temp: 'Autoadaptativo: Temp. Mín. de Flujo Calefacción'

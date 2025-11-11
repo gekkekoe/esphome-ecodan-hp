@@ -133,6 +133,7 @@ substitutions:
   short_cycle_mitigation_button: 'Kort syklus: Opphev lås'
   predictive_short_cycle_control_enabled: 'Kort syklus: Forebyggende Beskyttelse'
   predictive_short_cycle_high_delta_time_window: 'Kort syklus: Høy Delta Varighet'
+  status_predictive_boost_active: 'Kort syklus: Forutsigende Boost Aktiv'
   auto_adaptive_control_enabled: 'Autoadaptiv: Kontroll'
   maximum_heating_flow_temp: 'Autoadaptiv: Maks. Turtemperatur Varme'
   minimum_heating_flow_temp: 'Autoadaptiv: Min. Turtemperatur Varme'

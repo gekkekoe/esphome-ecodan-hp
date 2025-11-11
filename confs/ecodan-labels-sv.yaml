@@ -134,6 +134,7 @@ substitutions:
   short_cycle_mitigation_button: 'Kort cykel: Avbryt lås'
   predictive_short_cycle_control_enabled: 'Kort cykel: Förebyggande Skydd'
   predictive_short_cycle_high_delta_time_window: 'Kort cykel: Hög Deltavaraktighet'
+  status_predictive_boost_active: 'Kort cykel: Prediktiv Boost Aktiv'
   auto_adaptive_control_enabled: 'Autoadaptiv: Styrning'
   maximum_heating_flow_temp: 'Autoadaptiv: Max. Framledningstemp. Värme'
   minimum_heating_flow_temp: 'Autoadaptiv: Min. Framledningstemp. Värme'

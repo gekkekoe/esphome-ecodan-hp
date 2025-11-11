@@ -99,6 +99,8 @@ interval:
     then:
       - script.execute: check_lockout_expiration
       - script.execute: predictive_short_cycle_check
+      - lambda: |-
+          id(status_predictive_boost_active).publish_state(id(predictive_short_cycle_total_adjusted) > 0.0f);
 
 script:
   - id: predictive_short_cycle_check
@@ -373,6 +375,11 @@ script:
           }
 
 binary_sensor:
+  - platform: template
+    id: status_predictive_boost_active
+    name: ${status_predictive_boost_active}
+    lambda: |-
+      return (id(predictive_short_cycle_total_adjusted) > 0.0f);
   - platform: ecodan
     status_short_cycle_lockout:
       id: status_short_cycle_lockout

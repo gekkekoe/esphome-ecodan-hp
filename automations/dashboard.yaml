@@ -20,6 +20,8 @@
                 name: Defrost
               - entity: binary_sensor.ecodan_heatpump_short_cycle_lockout
                 name: Short cycle lockout
+              - entity: binary_sensor.ecodan_heatpump_boost
+                name: Predictive Boost Active
             hours_to_show: 6
             logarithmic_scale: false
           - type: history-graph

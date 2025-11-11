@@ -134,6 +134,7 @@ substitutions:
   short_cycle_mitigation_button: 'Lyhytsykli: Peruuta lukitus'
   predictive_short_cycle_control_enabled: 'Lyhytsykli: Ennakoiva esto'
   predictive_short_cycle_high_delta_time_window: 'Lyhytsykli: Korkean delta-arvon aikaikkuna'
+  status_predictive_boost_active: 'Lyhytsykli: Ennakoiva Tehostus Aktiivinen'
   auto_adaptive_control_enabled: 'Mukautuva ohjaus'
   maximum_heating_flow_temp: 'Mukautuva ohjaus: Lämmityksen enimmäismenovesilämpötila'
   minimum_heating_flow_temp: 'Mukautuva ohjaus: Lämmityksen vähimmäismenovesilämpötila'
