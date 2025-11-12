@@ -254,7 +254,8 @@ script:
               float error_positive = fmax(error, 0.0f);
               float error_normalized = error_positive / max_error_range;
               float x = fmin(error_normalized, 1.0f);
-              float error_factor = use_linear_error ? x : x * x * x * (x * (6.0f * x - 15.0f) + 10.0f);
+              //float error_factor = use_linear_error ? x : x * x * x * (x * (6.0f * x - 15.0f) + 10.0f);
+              float error_factor = use_linear_error ? x : x * x * (3.0f - 2.0f * x);
               float target_delta_t = dynamic_min_delta_t + error_factor * (max_delta_t - dynamic_min_delta_t);
 
               if (is_heating_mode && is_heating_active) {

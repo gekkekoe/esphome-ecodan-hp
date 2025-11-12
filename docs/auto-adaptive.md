@@ -19,7 +19,7 @@ The strategy follows these steps:
     * `max_error_range`: The "sensitivity" of the controller.
 2.  **Calculate Error**: It calculates the `error` (deviation from the setpoint). It automatically includes your **`setpoint_bias`**.
 3.  **Scale Error (Smoothstep vs. Linear)**: This is the most important step. Based on your profile choice (with or without a `*`), the error is scaled in one of two ways:
-    * **Gentle (Smoothstep):** Uses an S-curve formula (`6x⁵ - 15x⁴ + 10x³`). This is gentle at small errors (preventing overshoot) but accelerates quickly in the mid-range to provide power, before gently easing into the maximum. This is ideal for high-inertia systems like Underfloor Heating (UFH).
+    * **Gentle (Smoothstep):** Uses an S-curve formula. This is gentle at small errors (preventing overshoot) but accelerates quickly in the mid-range to provide power, before gently easing into the maximum. This is ideal for high-inertia systems like Underfloor Heating (UFH).
     * **Responsive (Linear):** `error_factor = error`. This reacts proportionally and is ideal for fast, low-inertia systems like Radiators or Hybrid systems where a quicker comfort response is desired.
 4.  **Calculate Target ΔT**: It uses this `error_factor` to interpolate between the profile's (dynamically calculated) `min_delta_t` and `max_delta_t`.
     `target_delta_t = dynamic_min_delta_t + (error_factor * (max_delta_t - dynamic_min_delta_t))`
