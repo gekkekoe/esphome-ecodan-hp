@@ -216,7 +216,7 @@ script:
 
               // we need to check if the zone is actually operating
               // 0 = idle, 1 = both, 2 = z1, 3 = z2
-              if (is_heating_active && status.has_independent_z2()) {
+              if (is_heating_active && status.has_2zones() && status.has_independent_z2()) {
                 if (i == 0 && (multizone_status == 0 || multizone_status == 3)) {
                   is_heating_active = false;
                 }
