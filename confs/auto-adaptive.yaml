@@ -206,6 +206,16 @@ script:
           auto max_zones = status.has_2zones() ? std::size(all_zones) : 1;
           auto multizone_status = status.MultiZoneStatus;
 
+          // if pump2 (z1) and pump3 (z2) are running, then its a multizone and we need to always set setpoint for all zones
+          bool multizone_circulation_pump_active = false;
+          if (status.has_2zones() && status.has_independent_z2()) {
+            ESP_LOGD("auto_adaptive", "Water circulation pump 2: %d, Water circulation pump 3: %d",
+              status.WaterPump2Active, status.WaterPump3Active);
+
+            if (status.WaterPump2Active || status.WaterPump3Active)
+              multizone_circulation_pump_active = true;
+          }
+
           for (std::size_t i = 0; i < max_zones; i++) {
               auto zone = all_zones[i];
               
@@ -223,6 +233,9 @@ script:
                 else if (i == 1 && (multizone_status == 0 || multizone_status == 2)) {
                   is_heating_active = false;
                 }
+                
+                if (multizone_circulation_pump_active)
+                  is_heating_active = true;
               }
                   
               if (!is_heating_mode && !is_cooling_mode) continue;
