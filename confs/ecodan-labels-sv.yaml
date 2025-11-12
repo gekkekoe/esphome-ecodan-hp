@@ -149,7 +149,6 @@ substitutions:
   heating_system_type_option_rad: 'Radiatorer'
   auto_adaptive_setpoint_bias: 'Autoadaptiv: Börvärdes-bias'
   temperature_feedback: 'Autoadaptiv: Återkoppling Aktuell Rumstemperatur'
-  thermostat_overshoot_compensation: 'Autoadaptiv: Kompensation för Termostatöverskridande'
   total_increasing_heating_consumed: Totalförbrukning Värme
   total_increasing_heating_delivered: Total Levererad Värme
   total_increasing_cool_consumed: Totalförbrukning Kyla

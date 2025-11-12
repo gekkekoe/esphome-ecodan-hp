@@ -265,13 +265,16 @@ script:
                     // detect and handle defrosts
                     const float DEFROST_RISK_MIN_TEMP = -2.0f;
                     const float DEFROST_RISK_MAX_TEMP = 3.0f;
-                    const uint32_t DEFROST_MEMORY_MS = 1 * 3600000UL; // 1 hour
+                    const uint32_t DEFROST_MEMORY_S = 1 * 3600UL;
 
                     bool is_defrost_weather = false;
                     if (actual_outside_temp >= DEFROST_RISK_MIN_TEMP && actual_outside_temp <= DEFROST_RISK_MAX_TEMP) {
                         uint32_t last_defrost = id(_last_defrost_time);
-                        if (last_defrost > 0 && (millis() - last_defrost) < DEFROST_MEMORY_MS) {
-                            is_defrost_weather = true;
+                        time_t current_time = status.timestamp(); 
+                        if (last_defrost > 0 && current_time > 0) { 
+                            if ((current_time - last_defrost) < DEFROST_MEMORY_S) {
+                                is_defrost_weather = true;
+                            }
                         }
                     }
 

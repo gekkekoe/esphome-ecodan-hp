@@ -174,7 +174,6 @@ In Home Assistant, navigate to your dashboard and set the initial parameters for
 
 1.  **Set the Heating System Profile**: Choose the option from the `Auto-Adaptive: Heating System Type` dropdown that best matches your home (e.g., `UFH (Gentle / Quadratic)`). See the section "How to Choose Your Profile" above.
 2.  **Set Safety Limits**: Adjust the `Auto-Adaptive: Max. Heating Flow Temperature` slider to a value that is safe for your floors (e.g., `38.0°C` for UFH). Do the same for the cooling limits.
-3.  **Set Thermostat Overshoot Compensation (optional)**: Adjust the `Auto-Adaptive: Thermostat Overshoot Compensation` slider to match the known behavior of your thermostat.
 
 ### Step 5: Activate the System
 

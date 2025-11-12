@@ -15,7 +15,7 @@ globals:
   # store last defrost time
   - id: _last_defrost_time
     type: uint32_t
-    restore_value: no 
+    restore_value: yes
     initial_value: '-1'
   - id: lockout_expiration_timestamp
     type: uint32_t
@@ -116,7 +116,7 @@ script:
             //ESP_LOGD("predictive_short_cycle", "No Compressor activity or Lockout/Defrost active. Exiting.");
             if (status.DefrostActive) {
               ESP_LOGD("predictive_short_cycle", "Defrost detected, updating timestamp.");
-              id(_last_defrost_time) = millis();
+              id(_last_defrost_time) = status.timestamp();
             }
 
             if (start_time > 0)
