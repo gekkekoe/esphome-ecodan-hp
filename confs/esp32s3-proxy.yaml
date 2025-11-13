@@ -57,7 +57,7 @@ uart:
       number: GPIO${uart_proxy_tx_pin}
       mode:
         output: true
-    baud_rate: 2400
+    baud_rate: 9600
     parity: EVEN
     stop_bits: 1
     # debug:

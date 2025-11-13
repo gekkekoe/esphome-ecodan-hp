@@ -99,7 +99,7 @@ namespace ecodan
                 proxy_uart_->get_data_bits() != 8 ||
                 proxy_uart_->get_parity() != uart::UART_CONFIG_PARITY_EVEN) {
                 ESP_LOGI(TAG, "Proxy UART not configured for 2400/9600 8E1. This may not work...");
-            }            
+            }
         }
         else if (!is_connected()){
             begin_connect();
@@ -131,23 +131,28 @@ namespace ecodan
 
     void EcodanHeatpump::handle_loop()
     {        
-        if (!is_connected() && uart_ && !uart_->available())
+        if (!is_connected() && uart_)
         {
-            static auto last_attempt = std::chrono::steady_clock::now();
-            auto now = std::chrono::steady_clock::now();
-            if (now - last_attempt > std::chrono::seconds(5))
-            {
-                last_attempt = now;
-                if (!begin_connect())
+            if (proxy_available()) {
+                // re-use previous connect
+                dispatch_next_cmd();
+            }
+            else {
+                static auto last_attempt = std::chrono::steady_clock::now();
+                auto now = std::chrono::steady_clock::now();
+                if (now - last_attempt > std::chrono::seconds(5))
                 {
-                    ESP_LOGI(TAG, "Failed to start heatpump connection proceedure...");
-                }
-            }    
+                    last_attempt = now;
+                    if (!begin_connect())
+                    {
+                        ESP_LOGI(TAG, "Failed to start heatpump connection proceedure...");
+                    }
+                }    
+            }
         }
         else if (is_connected())
         {
             dispatch_next_cmd();
-
             if (!dispatch_next_status_cmd())
             {
                 ESP_LOGI(TAG, "Failed to begin heatpump status update!");

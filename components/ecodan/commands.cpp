@@ -330,14 +330,13 @@ namespace ecodan
 
     bool EcodanHeatpump::dispatch_next_cmd()
     {
-
         if (cmdQueue.empty())
         {
             return true;
         }
         
         QueuedCommand& pending_cmd = cmdQueue.front();
-        const unsigned long CMD_TIMEOUT_MS = 2*1000;
+        const unsigned long CMD_TIMEOUT_MS = 1000;
         if (pending_cmd.last_sent_time != 0 && (millis() - pending_cmd.last_sent_time < CMD_TIMEOUT_MS)) {
             return true;
         }
@@ -348,7 +347,7 @@ namespace ecodan
         }
 
         if (pending_cmd.last_sent_time != 0) {
-            ESP_LOGW(TAG, "Command timed out. Retrying (attempt %d/10)...", pending_cmd.retries + 1);
+            ESP_LOGW(TAG, "Command timed out. Retrying (attempt %d/10)...[%d]", pending_cmd.retries + 1, cmdQueue.size());
         }
 
         if (!serial_tx(pending_cmd.message)) {
