@@ -191,6 +191,15 @@ public:
     id(lockout_expiration_timestamp) = this->state_.lockout_expiration_timestamp;
     ESP_LOGI("optimizer", "State saved to NVS globals.");
   }
+
+  void reset_predictive_boost() {
+    this->state_.predictive_short_cycle_total_adjusted = 0.0f;
+    this->update_boost_sensor(); 
+  }
+
+  bool is_predictive_boost_active() {
+    return (this->state_.predictive_short_cycle_total_adjusted > 0.0f);
+  }
   
   void run_auto_adaptive_loop() {
     if (!id(auto_adaptive_control_enabled).state) return;
@@ -579,7 +588,7 @@ public:
   }
 
   void update_boost_sensor() {
-    id(status_predictive_boost_active).publish_state(this->state_.predictive_short_cycle_total_adjusted > 0.0f);
+    id(status_predictive_boost_active).publish_state(this->is_predictive_boost_active());
   }
 };
 
