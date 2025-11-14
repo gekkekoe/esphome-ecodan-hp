@@ -18,7 +18,9 @@ api:
 #    key: !secret heatpump_encryption_key
 
 # uncomment if you have multiple esp running
-# esphome:
+esphome:
+  includes:
+    - optimizer/optimizer.h
 #   name_add_mac_suffix: true
 
 # external_components:

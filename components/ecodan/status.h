@@ -10,7 +10,7 @@ namespace ecodan
     {
         bool Initialized = false;
 
-        bool DefrostActive;
+        bool DefrostActive{false};
         bool DhwForcedActive;        
         bool BoosterActive;
         bool Booster2Active;
