@@ -133,6 +133,7 @@ substitutions:
   short_cycle_mitigation_button: 'Kurzzyklus: Sperre abbrechen'
   predictive_short_cycle_control_enabled: 'Kurzzyklus: Vorausschauende Verhinderung'
   predictive_short_cycle_high_delta_time_window: 'Kurzzyklus: Hohe Delta-Dauer'
+  predictive_short_cycle_high_delta_threshold: 'Kurzzyklus: Hohe Delta-Schwelle'
   status_predictive_boost_active: 'Kurzzyklus: Vorausschauender Boost Aktiv'
   auto_adaptive_control_enabled: 'Auto-Adaptiv: Steuerung'
   maximum_heating_flow_temp: 'Auto-Adaptiv: Max. Vorlauftemperatur Heizen'

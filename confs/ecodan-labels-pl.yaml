@@ -133,6 +133,7 @@ substitutions:
   short_cycle_mitigation_button: 'Krótki cykl: Anuluj blokadę'
   predictive_short_cycle_control_enabled: 'Krótki cykl: Prewencja Predykcyjna'
   predictive_short_cycle_high_delta_time_window: 'Krótki cykl: Czas Trwania Wysokiej Delty'
+  predictive_short_cycle_high_delta_threshold: 'Krótki cykl: Wysoki Próg Delty'
   status_predictive_boost_active: 'Krótki cykl: Wzmocnienie Predykcyjne Aktywne'
   auto_adaptive_control_enabled: 'Autoadaptacja: Sterowanie'
   maximum_heating_flow_temp: 'Autoadaptacja: Maks. Temp. Zasilania Ogrzewanie'

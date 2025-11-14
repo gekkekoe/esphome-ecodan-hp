@@ -135,6 +135,7 @@ substitutions:
   short_cycle_mitigation_button: 'Court-circuit: Annuler le verrouillage'
   predictive_short_cycle_control_enabled: 'Court-circuit: Prévention Prédictive'
   predictive_short_cycle_high_delta_time_window: 'Court-circuit: Durée Delta Élevé'
+  predictive_short_cycle_high_delta_threshold: 'Court-circuit: Seuil Delta Élevé'
   status_predictive_boost_active: 'Court-circuit: Boost Prédictif Actif'
   auto_adaptive_control_enabled: 'Auto-Adaptatif: Commande'
   maximum_heating_flow_temp: 'Auto-Adaptatif: Temp. Max. de Départ Chauffage'
