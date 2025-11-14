@@ -34,6 +34,7 @@ esphome:
             state.cooling_smart_start_temp = id(cooling_smart_start_temp);
             state.minimum_compressor_on_time = id(minimum_compressor_on_time);
             state.predictive_short_cycle_high_delta_time_window = id(predictive_short_cycle_high_delta_time_window);
+            state.predictive_short_cycle_high_delta_threshold = id(predictive_short_cycle_high_delta_threshold);
 
             state.lockout_expiration_timestamp = &id(lockout_expiration_timestamp);
             
@@ -169,6 +170,16 @@ number:
     initial_value: 4.0
     min_value: 1.0
     max_value: 5.0
+    step: 0.5
+  - platform: template
+    id: predictive_short_cycle_high_delta_threshold
+    name: ${predictive_short_cycle_high_delta_threshold}
+    unit_of_measurement: "°C"
+    optimistic: true
+    restore_value: true
+    initial_value: 1.0
+    min_value: 1.0
+    max_value: 3.0
     step: 0.5
 
 select:

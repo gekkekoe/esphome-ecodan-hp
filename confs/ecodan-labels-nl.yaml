@@ -134,6 +134,7 @@ substitutions:
   short_cycle_mitigation_button: 'Kortcyclus: Blokkering opheffen'
   predictive_short_cycle_control_enabled: 'Kortcyclus: Pendeldetectie'
   predictive_short_cycle_high_delta_time_window: 'Kortcyclus: Hoge Delta Duur'
+  predictive_short_cycle_high_delta_threshold: 'Kortcyclus: Drempelwaarde Hoge Delta'
   status_predictive_boost_active: 'Kortcyclus: Voorspellende Boost Actief'
   auto_adaptive_control_enabled: 'Auto-Adaptief: Regeling'
   maximum_heating_flow_temp: 'Auto-Adaptief: Max. Aanvoertemperatuur Verw.'
