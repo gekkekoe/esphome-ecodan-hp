@@ -16,15 +16,6 @@ substitutions:
 
 globals:
   # short cycle vars
-  - id: predictive_delta_start_time
-    type: uint32_t
-    restore_value: no
-    initial_value: '0'
-  # For short-cycle detection
-  - id: compressor_start_time
-    type: uint32_t
-    restore_value: no
-    initial_value: '0'
   - id: predictive_short_cycle_total_adjusted
     type: float
     restore_value: yes
@@ -40,26 +31,16 @@ globals:
     initial_value: '0'
 
 number:
-  # Safety limits
+  # Safety limits z1
   - platform: template
     id: maximum_heating_flow_temp
     name: ${maximum_heating_flow_temp}
     unit_of_measurement: "°C"
     optimistic: true
     restore_value: true
-    initial_value: 38.0
+    initial_value: 35.0
     min_value: 25.0
     max_value: 55.0
-    step: 0.5
-  - platform: template
-    id: minimum_cooling_flow_temp
-    name: ${minimum_cooling_flow_temp}
-    unit_of_measurement: "°C"
-    optimistic: true
-    restore_value: true
-    initial_value: 18.0
-    min_value: 10.0
-    max_value: 25.0
     step: 0.5
   - platform: template
     id: minimum_heating_flow_temp
@@ -71,6 +52,39 @@ number:
     min_value: 24.0
     max_value: 40.0
     step: 0.5
+
+  - platform: template
+    id: maximum_heating_flow_temp_z2
+    name: ${maximum_heating_flow_temp} z2
+    unit_of_measurement: "°C"
+    optimistic: true
+    restore_value: true
+    initial_value: 35.0
+    min_value: 25.0
+    max_value: 55.0
+    step: 0.5
+  - platform: template
+    id: minimum_heating_flow_temp_z2
+    name: ${minimum_heating_flow_temp} z2
+    unit_of_measurement: "°C"
+    optimistic: true
+    restore_value: true
+    initial_value: 25.0
+    min_value: 24.0
+    max_value: 40.0
+    step: 0.5
+  
+  # cooling vars
+  - platform: template
+    id: minimum_cooling_flow_temp
+    name: ${minimum_cooling_flow_temp}
+    unit_of_measurement: "°C"
+    optimistic: true
+    restore_value: true
+    initial_value: 18.0
+    min_value: 10.0
+    max_value: 25.0
+    step: 0.5
   - platform: template
     id: cooling_smart_start_temp
     unit_of_measurement: "°C"
@@ -81,6 +95,7 @@ number:
     min_value: 16.0
     max_value: 22.0
     step: 0.5
+  # general
   - platform: template
     id: auto_adaptive_setpoint_bias
     unit_of_measurement: "°C"

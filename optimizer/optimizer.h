@@ -18,6 +18,165 @@ private:
   uint32_t predictive_delta_start_time_ = 0;
   uint32_t compressor_start_time_ = 0;
 
+  void process_adaptive_zone_(
+      std::size_t i,
+      const ecodan::Status &status,
+      float base_min_delta_t, 
+      float max_delta_t, 
+      float max_error_range, 
+      float dynamic_min_delta_t,
+      float actual_outside_temp,
+      float zone_max_flow_temp, 
+      float zone_min_flow_temp, 
+      float &out_flow_heat,
+      float &out_flow_cool
+  ) {
+    auto zone = (i == 0) ? esphome::ecodan::Zone::ZONE_1 : esphome::ecodan::Zone::ZONE_2;
+    auto heating_type_index = id(heating_system_type).active_index().value_or(0);
+    
+    bool is_heating_mode = status.is_auto_adaptive_heating(zone);
+    bool is_heating_active = status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
+    bool is_cooling_mode = status.has_cooling() && status.is_auto_adaptive_cooling(zone);
+    bool is_cooling_active = status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON;
+
+    if (is_heating_active && status.has_2zones() && status.has_independent_z2()) {
+      auto multizone_status = status.MultiZoneStatus;
+      bool multizone_circulation_pump_active = (status.WaterPump2Active || status.WaterPump3Active);
+
+      if (i == 0 && (multizone_status == 0 || multizone_status == 3)) {
+        is_heating_active = false;
+      }
+      else if (i == 1 && (multizone_status == 0 || multizone_status == 2)) {
+        is_heating_active = false;
+      }
+      
+      if (multizone_circulation_pump_active)
+        is_heating_active = true;
+    }
+        
+    if (!is_heating_mode && !is_cooling_mode) return;
+
+    float setpoint_bias = id(auto_adaptive_setpoint_bias).state;
+    if (isnan(setpoint_bias))
+      setpoint_bias = 0.0f;
+
+    float room_temp = (i == 0) ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
+    float room_target_temp = (i == 0) ? status.Zone1SetTemperature : status.Zone2SetTemperature;
+    float requested_flow_temp = (i == 0) ? status.Zone1FlowTemperatureSetPoint : status.Zone2FlowTemperatureSetPoint;
+    float actual_flow_temp = status.has_independent_z2() ? ((i == 0) ? status.Z1FeedTemperature : status.Z2FeedTemperature) : id(hp_feed_temp).state;
+    float actual_return_temp = status.has_independent_z2() ? ((i == 0) ? status.Z1ReturnTemperature : status.Z2ReturnTemperature) : id(hp_return_temp).state;
+    
+    if (id(temperature_feedback_source).active_index().value_or(0) == 1) {
+        room_temp = (i == 0) ? id(temperature_feedback_z1).state : id(temperature_feedback_z2).state;
+    }
+    if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp)) return;
+
+    ESP_LOGD("auto_adaptive", "Processing Zone %d: Room=%.1f, Target=%.1f, Outside=%.1f, cold factor=%.2f, Bias=%.1f, heating: %d, cooling: %d",
+      (i + 1), room_temp, room_target_temp, actual_outside_temp, (base_min_delta_t + (dynamic_min_delta_t - base_min_delta_t)), setpoint_bias, is_heating_active, is_cooling_active);
+    room_target_temp += setpoint_bias;
+
+    float error = is_heating_mode ? (room_target_temp - room_temp)
+      : (room_temp - room_target_temp);
+
+    bool use_linear_error = (heating_type_index % 2 != 0);
+    float calculated_flow = NAN;
+    float error_positive = fmax(error, 0.0f);
+    float error_normalized = error_positive / max_error_range;
+    float x = fmin(error_normalized, 1.0f);
+    float error_factor = use_linear_error ? x : x * x * (3.0f - 2.0f * x);
+    float target_delta_t = dynamic_min_delta_t + error_factor * (max_delta_t - dynamic_min_delta_t);
+
+    if (is_heating_mode && is_heating_active) {
+      if (isnan(actual_return_temp)) {
+          ESP_LOGE("auto_adaptive", "Z%d HEATING (Delta T): FAILED, actual_return_temp is NAN. Reverting to %.2f°C.", (i + 1), zone_min_flow_temp);
+          calculated_flow = zone_min_flow_temp;
+      } else {
+          const float DEFROST_RISK_MIN_TEMP = -2.0f;
+          const float DEFROST_RISK_MAX_TEMP = 3.0f;
+          const uint32_t DEFROST_MEMORY_S = 1 * 3600UL;
+
+          bool is_defrost_weather = false;
+          if (actual_outside_temp >= DEFROST_RISK_MIN_TEMP && actual_outside_temp <= DEFROST_RISK_MAX_TEMP) {
+              uint32_t last_defrost = this->state_.last_defrost_time;
+              time_t current_time = status.timestamp(); 
+              if (last_defrost > 0 && current_time > 0) { 
+                  if ((current_time - last_defrost) < DEFROST_MEMORY_S) {
+                      is_defrost_weather = true;
+                  }
+              }
+          }
+
+          if (is_defrost_weather) {
+            calculated_flow = actual_return_temp + base_min_delta_t;
+            calculated_flow = floor(calculated_flow * 2) / 2.0f;
+            ESP_LOGW("auto_adaptive", "Z%d HEATING (Delta T): Defrost risk detected. Forcing minimum delta T (%.1f°C). Flow set to %.2f°C",
+                      (i + 1), base_min_delta_t, calculated_flow);
+          } else {
+            calculated_flow = actual_return_temp + target_delta_t;
+            calculated_flow = floor(calculated_flow * 2) / 2.0f;
+
+            float short_cycle_prevention_adjustment = this->state_.predictive_short_cycle_total_adjusted;
+            if (short_cycle_prevention_adjustment > 0.0f) {
+              ESP_LOGD("auto_adaptive", "Z%d HEATING (boost adjustment): boost: %.1f°C, calcluated_flow: %.2f°C, actual_flow: %.2f°C",
+                      (i + 1), short_cycle_prevention_adjustment, calculated_flow, actual_flow_temp);
+
+              if ((actual_flow_temp - calculated_flow) >= 1.0f) {
+                calculated_flow += short_cycle_prevention_adjustment;
+              }
+              else {
+                this->state_.predictive_short_cycle_total_adjusted = 0;
+                short_cycle_prevention_adjustment = 0;
+              }
+            }
+            ESP_LOGD("auto_adaptive", "Z%d HEATING (Delta T): calculated_flow: %.2f°C (Return %.1f + Scaled  delta T %.2f, error factor: %.2f (lineair: %d), boost: %.1f)", 
+                      (i + 1), calculated_flow, actual_return_temp, target_delta_t, error_factor, use_linear_error, short_cycle_prevention_adjustment);
+          }
+      }
+
+      const float MAX_FEED_STEP_DOWN = 1.5f;
+      if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN) {
+        ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.2f°C to prevent compressor stop! (Delta %.2f°C below actual feed temp), original calc: %.2f°C", 
+          (i + 1), actual_flow_temp - MAX_FEED_STEP_DOWN, (actual_flow_temp - calculated_flow), calculated_flow);
+        
+        calculated_flow = actual_flow_temp - MAX_FEED_STEP_DOWN;
+      }
+
+      if (calculated_flow > zone_max_flow_temp) {
+        ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Zone Safety Limit), calculated_flow: %.1f", (i + 1), zone_max_flow_temp, calculated_flow);
+        calculated_flow = zone_max_flow_temp;
+      }
+
+      if (calculated_flow < zone_min_flow_temp) {
+        ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Zone Min Limit), calculated_flow: %.1f", (i + 1), zone_min_flow_temp, calculated_flow);
+        calculated_flow = zone_min_flow_temp;
+      }
+
+      out_flow_heat = calculated_flow;
+
+    } else if (is_cooling_mode && is_cooling_active) {
+      ESP_LOGD("auto_adaptive", "Using 'Delta-T Control' strategy for cooling.");
+      
+      if (isnan(actual_return_temp)) {
+        ESP_LOGE("auto_adaptive", "Z%d COOLING (Delta T): FAILED, actual_return_temp is NAN. Reverting to smart start temp.");
+        calculated_flow = id(cooling_smart_start_temp).state;
+      } else {
+        calculated_flow = actual_return_temp - target_delta_t;
+        
+        ESP_LOGD("auto_adaptive", "Z%d COOLING (Delta T): calc: %.1f°C (Return %.1f - Scaled delta T %.1f)", 
+                  (i + 1), calculated_flow, actual_return_temp, target_delta_t);
+      }
+      if (calculated_flow > id(cooling_smart_start_temp).state) {
+        calculated_flow = id(cooling_smart_start_temp).state;
+        ESP_LOGD("auto_adaptive", "Z%d COOLING: Using Smart Start Temp of %.1f°C", (i + 1), calculated_flow);
+      }
+      if (calculated_flow < id(minimum_cooling_flow_temp).state) {
+        calculated_flow = id(minimum_cooling_flow_temp).state;
+        ESP_LOGW("auto_adaptive", "Z%d COOLING: Flow limited to %.1f°C (Condensation Limit)", (i + 1), calculated_flow);
+      }
+      out_flow_cool = floor(calculated_flow * 2) / 2.0f;
+    }
+  }
+
 public:
   void load_state() {
     this->state_.predictive_short_cycle_total_adjusted = id(predictive_short_cycle_total_adjusted);
@@ -69,11 +228,6 @@ public:
 
     ESP_LOGD("auto_adaptive", "Starting auto-adaptive cycle, z2 independent: %d, has_cooling: %d", status.has_independent_z2(), status.has_cooling());
 
-    const float SATURATION_MARGIN = 2.0f;
-    float user_defined_minimum_heating_flow_temp = id(minimum_heating_flow_temp).state;
-    const float MIN_HEAT_FLOW = !isnan(user_defined_minimum_heating_flow_temp) && user_defined_minimum_heating_flow_temp >= 24.0f ? user_defined_minimum_heating_flow_temp : 24.0f;
-    float max_flow_temp = id(maximum_heating_flow_temp).state;
-
     float actual_outside_temp = id(outside_temp).state;
 
     if (isnan(actual_outside_temp))
@@ -109,162 +263,29 @@ public:
     float calculated_flows_heat[2] = {0.0f, 0.0f};
     float calculated_flows_cool[2] = {100.0f, 100.0f};
 
-    esphome::ecodan::Zone all_zones[] = {esphome::ecodan::Zone::ZONE_1, esphome::ecodan::Zone::ZONE_2};
-    auto max_zones = status.has_2zones() ? std::size(all_zones) : 1;
-    auto multizone_status = status.MultiZoneStatus;
-
-    bool multizone_circulation_pump_active = false;
-    if (status.has_2zones() && status.has_independent_z2()) {
-      ESP_LOGD("auto_adaptive", "Water circulation pump 2: %d, Water circulation pump 3: %d",
-        status.WaterPump2Active, status.WaterPump3Active);
-
-      if (status.WaterPump2Active || status.WaterPump3Active)
-        multizone_circulation_pump_active = true;
-    }
+    auto max_zones = status.has_2zones() ? 2 : 1;
+    
+    float max_flow_z1 = id(maximum_heating_flow_temp).state;
+    float min_flow_z1 = id(minimum_heating_flow_temp).state;
+    float max_flow_z2 = status.has_2zones() ? id(maximum_heating_flow_temp_z2).state : max_flow_z1;
+    float min_flow_z2 = status.has_2zones() ? id(minimum_heating_flow_temp_z2).state : min_flow_z1;
 
     for (std::size_t i = 0; i < max_zones; i++) {
-        auto zone = all_zones[i];
-        
-        bool is_heating_mode = status.is_auto_adaptive_heating(zone);
-        bool is_heating_active = status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
-        bool is_cooling_mode = status.has_cooling() && status.is_auto_adaptive_cooling(zone);
-        bool is_cooling_active = status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON;
-
-        if (is_heating_active && status.has_2zones() && status.has_independent_z2()) {
-          if (i == 0 && (multizone_status == 0 || multizone_status == 3)) {
-            is_heating_active = false;
-          }
-          else if (i == 1 && (multizone_status == 0 || multizone_status == 2)) {
-            is_heating_active = false;
-          }
-          
-          if (multizone_circulation_pump_active)
-            is_heating_active = true;
-        }
-            
-        if (!is_heating_mode && !is_cooling_mode) continue;
-
-        float setpoint_bias = id(auto_adaptive_setpoint_bias).state;
-        if (isnan(setpoint_bias))
-          setpoint_bias = 0.0f;
-
-        float room_temp = (i == 0) ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
-        float room_target_temp = (i == 0) ? status.Zone1SetTemperature : status.Zone2SetTemperature;
-        float requested_flow_temp = (i == 0) ? status.Zone1FlowTemperatureSetPoint : status.Zone2FlowTemperatureSetPoint;
-        float actual_flow_temp = status.has_independent_z2() ? ((i == 0) ? status.Z1FeedTemperature : status.Z2FeedTemperature) : id(hp_feed_temp).state;
-        float actual_return_temp = status.has_independent_z2() ? ((i == 0) ? status.Z1ReturnTemperature : status.Z2ReturnTemperature) : id(hp_return_temp).state;
-        
-        if (id(temperature_feedback_source).active_index().value_or(0) == 1) {
-            room_temp = (i == 0) ? id(temperature_feedback_z1).state : id(temperature_feedback_z2).state;
-        }
-        if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp)) continue;
-
-        ESP_LOGD("auto_adaptive", "Processing Zone %d: Room=%.1f, Target=%.1f, Outside=%.1f, cold factor=%.2f, Bias=%.1f, heating: %d, cooling: %d",
-          (i + 1), room_temp, room_target_temp, actual_outside_temp, cold_factor, setpoint_bias, is_heating_active, is_cooling_active);
-        room_target_temp += setpoint_bias;
-
-        float error = is_heating_mode ? (room_target_temp - room_temp)
-          : (room_temp - room_target_temp);
-
-        bool use_linear_error = (heating_type_index % 2 != 0);
-        float calculated_flow = NAN;
-        float error_positive = fmax(error, 0.0f);
-        float error_normalized = error_positive / max_error_range;
-        float x = fmin(error_normalized, 1.0f);
-        float error_factor = use_linear_error ? x : x * x * (3.0f - 2.0f * x);
-        float target_delta_t = dynamic_min_delta_t + error_factor * (max_delta_t - dynamic_min_delta_t);
-
-        if (is_heating_mode && is_heating_active) {
-          if (isnan(actual_return_temp)) {
-              ESP_LOGE("auto_adaptive", "Z%d HEATING (Delta T): FAILED, actual_return_temp is NAN. Reverting to %.2f°C.", (i + 1), MIN_HEAT_FLOW);
-              calculated_flow = MIN_HEAT_FLOW;
-          } else {
-              const float DEFROST_RISK_MIN_TEMP = -2.0f;
-              const float DEFROST_RISK_MAX_TEMP = 3.0f;
-              const uint32_t DEFROST_MEMORY_S = 1 * 3600UL;
-
-              bool is_defrost_weather = false;
-              if (actual_outside_temp >= DEFROST_RISK_MIN_TEMP && actual_outside_temp <= DEFROST_RISK_MAX_TEMP) {
-                  uint32_t last_defrost = this->state_.last_defrost_time;
-                  time_t current_time = status.timestamp(); 
-                  if (last_defrost > 0 && current_time > 0) { 
-                      if ((current_time - last_defrost) < DEFROST_MEMORY_S) {
-                          is_defrost_weather = true;
-                      }
-                  }
-              }
-
-              if (is_defrost_weather) {
-                calculated_flow = actual_return_temp + base_min_delta_t;
-                calculated_flow = floor(calculated_flow * 2) / 2.0f;
-                ESP_LOGW("auto_adaptive", "Z%d HEATING (Delta T): Defrost risk detected. Forcing minimum delta T (%.1f°C). Flow set to %.2f°C",
-                          (i + 1), base_min_delta_t, calculated_flow);
-              } else {
-                calculated_flow = actual_return_temp + target_delta_t;
-                calculated_flow = floor(calculated_flow * 2) / 2.0f;
-
-                float short_cycle_prevention_adjustment = this->state_.predictive_short_cycle_total_adjusted;
-                if (short_cycle_prevention_adjustment > 0.0f) {
-                  ESP_LOGD("auto_adaptive", "Z%d HEATING (boost adjustment): boost: %.1f°C, calcluated_flow: %.2f°C, actual_flow: %.2f°C",
-                          (i + 1), short_cycle_prevention_adjustment, calculated_flow, actual_flow_temp);
-
-                  if ((actual_flow_temp - calculated_flow) >= 1.0f) {
-                    calculated_flow += short_cycle_prevention_adjustment;
-                  }
-                  else {
-                    this->state_.predictive_short_cycle_total_adjusted = 0;
-                    short_cycle_prevention_adjustment = 0;
-                  }
-                }
-                ESP_LOGD("auto_adaptive", "Z%d HEATING (Delta T): calculated_flow: %.2f°C (Return %.1f + Scaled  delta T %.2f, error factor: %.2f (lineair: %d), boost: %.1f)", 
-                          (i + 1), calculated_flow, actual_return_temp, target_delta_t, error_factor, use_linear_error, short_cycle_prevention_adjustment);
-              }
-          }
-
-          const float MAX_FEED_STEP_DOWN = 1.5f;
-          if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN) {
-            ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.2f°C to prevent compressor stop! (Delta %.2f°C below actual feed temp), original calc: %.2f°C", 
-              (i + 1), actual_flow_temp - MAX_FEED_STEP_DOWN, (actual_flow_temp - calculated_flow), calculated_flow);
-            
-            calculated_flow = actual_flow_temp - MAX_FEED_STEP_DOWN;
-          }
-
-          if (calculated_flow > max_flow_temp) {
-            ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Safety Limit), calculated_flow: %.1f", (i + 1), max_flow_temp, calculated_flow);
-            calculated_flow = max_flow_temp;
-          }
-
-          if (calculated_flow < MIN_HEAT_FLOW) {
-            ESP_LOGW("auto_adaptive", "Z%d HEATING: Flow limited to %.1f°C (Min Limit), calculated_flow: %.1f", (i + 1), MIN_HEAT_FLOW, calculated_flow);
-            calculated_flow = MIN_HEAT_FLOW;
-          }
-
-          calculated_flows_heat[i] = calculated_flow;
-
-        } else if (is_cooling_mode && is_cooling_active) {
-          ESP_LOGD("auto_adaptive", "Using 'Delta-T Control' strategy for cooling.");
-          
-          if (isnan(actual_return_temp)) {
-            ESP_LOGE("auto_adaptive", "Z%d COOLING (Delta T): FAILED, actual_return_temp is NAN. Reverting to smart start temp.");
-            calculated_flow = id(cooling_smart_start_temp).state;
-          } else {
-            calculated_flow = actual_return_temp - target_delta_t;
-            
-            ESP_LOGD("auto_adaptive", "Z%d COOLING (Delta T): calc: %.1f°C (Return %.1f - Scaled delta T %.1f)", 
-                      (i + 1), calculated_flow, actual_return_temp, target_delta_t);
-          }
-          if (calculated_flow > id(cooling_smart_start_temp).state) {
-            calculated_flow = id(cooling_smart_start_temp).state;
-            ESP_LOGD("auto_adaptive", "Z%d COOLING: Using Smart Start Temp of %.1f°C", (i + 1), calculated_flow);
-          }
-          if (calculated_flow < id(minimum_cooling_flow_temp).state) {
-            calculated_flow = id(minimum_cooling_flow_temp).state;
-            ESP_LOGW("auto_adaptive", "Z%d COOLING: Flow limited to %.1f°C (Condensation Limit)", (i + 1), calculated_flow);
-          }
-          calculated_flows_cool[i] = floor(calculated_flow * 2) / 2.0f;
-        }
+        this->process_adaptive_zone_(
+            i,
+            status,
+            base_min_delta_t,
+            max_delta_t,
+            max_error_range,
+            dynamic_min_delta_t,
+            actual_outside_temp,
+            (i == 0) ? max_flow_z1 : max_flow_z2,
+            (i == 0) ? min_flow_z1 : min_flow_z2,
+            calculated_flows_heat[i],
+            calculated_flows_cool[i]
+        );
     }
-
+    
     bool is_heating_demand = calculated_flows_heat[0] > 0.0f || calculated_flows_heat[1] > 0.0f;
     bool is_cooling_demand = calculated_flows_cool[0] < 100.0f || calculated_flows_cool[1] < 100.0f;
 
