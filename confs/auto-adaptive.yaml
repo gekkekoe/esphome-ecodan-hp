@@ -4,12 +4,8 @@ esphome:
   on_boot:
       priority: -100.0
       then:
-        - lambda: optimizer.load_state();
         - lambda: optimizer.update_boost_sensor();
         - lambda: optimizer.check_lockout_expiration();
-  on_shutdown:
-      then:
-        - lambda: optimizer.save_state();
 
 substitutions:
   update_interval_minutes: "10min"
@@ -28,6 +24,15 @@ globals:
   - id: lockout_expiration_timestamp
     type: uint32_t
     restore_value: yes
+    initial_value: '0'
+  - id: predictive_delta_start_time
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  # For short-cycle detection
+  - id: compressor_start_time
+    type: uint32_t
+    restore_value: no
     initial_value: '0'
 
 number:
@@ -203,9 +208,11 @@ switch:
     turn_on_action:
       - lambda: |-
           id(predictive_short_cycle_total_adjusted) = 0.0f;
+          optimizer.update_boost_sensor();
     turn_off_action:
       - lambda: |-
          id(predictive_short_cycle_total_adjusted) = 0.0f;
+         optimizer.update_boost_sensor();
 
 binary_sensor:
   - platform: template
