@@ -11,6 +11,7 @@ private:
   uint32_t predictive_delta_start_time_ = 0;
   uint32_t compressor_start_time_ = 0;
   uint32_t last_defrost_time_ = (uint32_t)-1;
+  float predictive_short_cycle_total_adjusted_ = 0.0f;
 
   void process_adaptive_zone_(
       std::size_t i,
@@ -109,7 +110,7 @@ private:
             calculated_flow = actual_return_temp + target_delta_t;
             calculated_flow = floor(calculated_flow * 2) / 2.0f;
 
-            float short_cycle_prevention_adjustment = id(predictive_short_cycle_total_adjusted);
+            float short_cycle_prevention_adjustment = this->predictive_short_cycle_total_adjusted_;
             if (short_cycle_prevention_adjustment > 0.0f) {
               ESP_LOGD("auto_adaptive", "Z%d HEATING (boost adjustment): boost: %.1f°C, calcluated_flow: %.2f°C, actual_flow: %.2f°C",
                       (i + 1), short_cycle_prevention_adjustment, calculated_flow, actual_flow_temp);
@@ -118,7 +119,7 @@ private:
                 calculated_flow += short_cycle_prevention_adjustment;
               }
               else {
-                id(predictive_short_cycle_total_adjusted) = 0.0f;
+                this->predictive_short_cycle_total_adjusted_ = 0.0f;
                 short_cycle_prevention_adjustment = 0;
               }
             }
@@ -172,6 +173,14 @@ private:
   }
 
 public:
+  bool get_predictive_boost_state() {
+    return this->predictive_short_cycle_total_adjusted_ > 0.0f;
+  }
+
+  void reset_predictive_boost() {
+    this->predictive_short_cycle_total_adjusted_ = 0.0f;
+    this->update_boost_sensor();
+  }
   
   void run_auto_adaptive_loop() {
     if (!id(auto_adaptive_control_enabled).state) return;
@@ -402,10 +411,10 @@ public:
               was_boosted = true;
             }
             if (was_boosted) 
-              id(predictive_short_cycle_total_adjusted) += adjustment_factor;
+              this->predictive_short_cycle_total_adjusted_ += adjustment_factor;
 
           } else if (id(predictive_short_cycle_control_enabled).state) {
-            id(predictive_short_cycle_total_adjusted) += adjustment_factor;
+            this->predictive_short_cycle_total_adjusted_ += adjustment_factor;
             
             float adjusted_flow_z1 = status.Zone1FlowTemperatureSetPoint + adjustment_factor;
             ESP_LOGD("predictive_short_cycle", "CMD: Increase Z1 Heat Flow to -> %.1f°C", adjusted_flow_z1);
@@ -514,7 +523,7 @@ public:
     auto& status = id(ecodan_instance).get_status();
 
     bool stand_alone_predictive_active = !id(auto_adaptive_control_enabled).state && id(predictive_short_cycle_control_enabled).state;
-    float adjustment = id(predictive_short_cycle_total_adjusted);
+    float adjustment = this->predictive_short_cycle_total_adjusted_;
 
     if (stand_alone_predictive_active && adjustment > 0.0f) {  
       ESP_LOGD("predictive_short_cycle", "Restoring flow setpoint after predictive boost.");
@@ -526,7 +535,7 @@ public:
         float restored_flow_z2 = status.Zone2FlowTemperatureSetPoint - adjustment;
         id(ecodan_instance).set_flow_target_temperature(restored_flow_z2, esphome::ecodan::Zone::ZONE_2);
       }                      
-      id(predictive_short_cycle_total_adjusted) = 0.0f;
+      this->predictive_short_cycle_total_adjusted_ = 0.0f;
     }
 
     if (id(lockout_duration).active_index().value_or(0) == 0) {
@@ -574,7 +583,7 @@ public:
   }
 
   void update_boost_sensor() {
-    id(status_predictive_boost_active).publish_state(id(predictive_short_cycle_total_adjusted) > 0.0f);
+    id(status_predictive_boost_active).publish_state(this->get_predictive_boost_state());
   }
 };
 

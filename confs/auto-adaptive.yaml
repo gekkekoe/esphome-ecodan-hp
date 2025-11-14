@@ -11,11 +11,6 @@ substitutions:
   update_interval_minutes: "10min"
 
 globals:
-  # short cycle vars
-  - id: predictive_short_cycle_total_adjusted
-    type: float
-    restore_value: yes
-    initial_value: '0.0'
   - id: lockout_expiration_timestamp
     type: uint32_t
     restore_value: yes
@@ -192,20 +187,16 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
     turn_on_action:
-      - lambda: |-
-          id(predictive_short_cycle_total_adjusted) = 0.0f;
-          optimizer.update_boost_sensor();
+      - lambda: optimizer.reset_predictive_boost();
     turn_off_action:
-      - lambda: |-
-         id(predictive_short_cycle_total_adjusted) = 0.0f;
-         optimizer.update_boost_sensor();
+      - lambda: optimizer.reset_predictive_boost();
 
 binary_sensor:
   - platform: template
     id: status_predictive_boost_active
     name: ${status_predictive_boost_active}
     lambda: |-
-      return (id(predictive_short_cycle_total_adjusted) > 0.0f);
+      return optimizer.get_predictive_boost_state();
   - platform: ecodan
     status_short_cycle_lockout:
       id: status_short_cycle_lockout
