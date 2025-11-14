@@ -27,7 +27,7 @@ esphome:
 # - source:
 #     type: local
 #     path: components
-#   components: [ ecodan ]
+#   components: [ ecodan, optimizer ]
 
 # packages:
 #  base: !include confs/base.yaml # required
@@ -51,7 +51,7 @@ esphome:
 
 external_components:
   - source: github://gekkekoe/esphome-ecodan-hp@main
-    components: [ ecodan ]
+    components: [ ecodan, optimizer ]
     refresh: always
 
 packages:

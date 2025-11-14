@@ -1,23 +1,63 @@
 esphome:
-  includes:
-    - optimizer/optimizer.h
   on_boot:
-      priority: -100.0
+      priority: 600
       then:
-        - lambda: optimizer.update_boost_sensor();
-        - lambda: optimizer.check_lockout_expiration();
+        - lambda: |-
+            using namespace esphome::optimizer;
+            OptimizerState state;
+            
+            state.ecodan_instance = id(ecodan_instance);
+
+            state.auto_adaptive_control_enabled = id(auto_adaptive_control_enabled);
+            state.predictive_short_cycle_control_enabled = id(predictive_short_cycle_control_enabled);
+
+            state.status_short_cycle_lockout = id(status_short_cycle_lockout);
+            state.status_compressor = id(status_compressor);
+            state.status_predictive_boost_active = id(status_predictive_boost_active);
+
+            state.hp_feed_temp = id(hp_feed_temp);
+            state.hp_return_temp = id(hp_return_temp);
+            state.outside_temp = id(outside_temp);
+
+            state.heating_system_type = id(heating_system_type);
+            state.temperature_feedback_source = id(temperature_feedback_source);
+            state.lockout_duration = id(lockout_duration);
+
+            state.auto_adaptive_setpoint_bias = id(auto_adaptive_setpoint_bias);
+            state.temperature_feedback_z1 = id(temperature_feedback_z1);
+            state.temperature_feedback_z2 = id(temperature_feedback_z2);
+            state.maximum_heating_flow_temp = id(maximum_heating_flow_temp);
+            state.minimum_heating_flow_temp = id(minimum_heating_flow_temp);
+            state.maximum_heating_flow_temp_z2 = id(maximum_heating_flow_temp_z2);
+            state.minimum_heating_flow_temp_z2 = id(minimum_heating_flow_temp_z2);
+            state.minimum_cooling_flow_temp = id(minimum_cooling_flow_temp);
+            state.cooling_smart_start_temp = id(cooling_smart_start_temp);
+            state.minimum_compressor_on_time = id(minimum_compressor_on_time);
+            state.predictive_short_cycle_high_delta_time_window = id(predictive_short_cycle_high_delta_time_window);
+
+            state.lockout_expiration_timestamp = &id(lockout_expiration_timestamp);
+            
+            // instantiate optimizer
+            id(optimizer_ptr) = new esphome::optimizer::Optimizer(state);
+            
+        - lambda: id(optimizer_ptr)->update_boost_sensor();
+        - lambda: id(optimizer_ptr)->check_lockout_expiration();
+
+# needed to trigger codegen
+optimizer:
 
 substitutions:
   update_interval_minutes: "10min"
 
 globals:
+  - id: optimizer_ptr
+    type: esphome::optimizer::Optimizer*
   - id: lockout_expiration_timestamp
     type: uint32_t
     restore_value: yes
     initial_value: '0'
 
 number:
-  # Safety limits z1
   - platform: template
     id: maximum_heating_flow_temp
     name: ${maximum_heating_flow_temp}
@@ -60,7 +100,6 @@ number:
     max_value: 40.0
     step: 0.5
   
-  # cooling vars
   - platform: template
     id: minimum_cooling_flow_temp
     name: ${minimum_cooling_flow_temp}
@@ -81,7 +120,6 @@ number:
     min_value: 16.0
     max_value: 22.0
     step: 0.5
-  # general
   - platform: template
     id: auto_adaptive_setpoint_bias
     unit_of_measurement: "°C"
@@ -92,7 +130,6 @@ number:
     min_value: -2.5
     max_value: 2.5
     step: 0.1
-  # Temperature feedback via api
   - platform: template
     id: temperature_feedback_z1
     name: ${temperature_feedback} z1
@@ -114,9 +151,7 @@ number:
     max_value: 100
     step: 0.1
 
-    #short cycle vars
   - platform: template
-    # Short-cycle protection
     id: minimum_compressor_on_time
     name: ${minimum_compressor_on_time}
     optimistic: true
@@ -187,16 +222,16 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
     turn_on_action:
-      - lambda: optimizer.reset_predictive_boost();
+      - lambda: if (id(optimizer_ptr) != nullptr) id(optimizer_ptr)->reset_predictive_boost();
     turn_off_action:
-      - lambda: optimizer.reset_predictive_boost();
+      - lambda: if (id(optimizer_ptr) != nullptr) id(optimizer_ptr)->reset_predictive_boost();
 
 binary_sensor:
   - platform: template
     id: status_predictive_boost_active
     name: ${status_predictive_boost_active}
     lambda: |-
-      return optimizer.get_predictive_boost_state();
+      return (id(optimizer_ptr) == nullptr) ? false : id(optimizer_ptr)->get_predictive_boost_state();
   - platform: ecodan
     status_short_cycle_lockout:
       id: status_short_cycle_lockout
@@ -207,8 +242,8 @@ binary_sensor:
       on_state_change:
         then:
           - lambda: |-
-              if (x.has_value() && x_previous.has_value()) {
-                optimizer.on_compressor_state_change(x.value(), x_previous.value());
+              if (x.has_value() && x_previous.has_value() && id(optimizer_ptr) != nullptr) {
+                id(optimizer_ptr)->on_compressor_state_change(x.value(), x_previous.value());
               }
 
 button:
@@ -219,15 +254,15 @@ button:
       - logger.log:
           level: INFO
           format: "Lockout script cancelled by button"
-      - lambda: optimizer.restore_svc_state();
-
+      - lambda: id(optimizer_ptr)->restore_svc_state();
   # - platform: template
   #   name: 'Auto-Adaptive: Run'
   #   id: run_auto_adaptive_cycle
   #   icon: "mdi:play-circle"
   #   on_press:
   #     then:
-  #       - script.execute: auto_adaptive_loop
+  #     - lambda: |-
+  #         id(optimizer_ptr)->run_auto_adaptive_loop();
 
   # - platform: template
   #   name: "Short-Cycle: Start Compressor (Simulated)"
@@ -240,13 +275,12 @@ button:
   #   on_press:
   #     - lambda: |-
   #         id(status_compressor).publish_state(false);
-
 interval:
   - interval: ${update_interval_minutes}
     then:
-      - lambda: optimizer.run_auto_adaptive_loop();
+      - lambda: id(optimizer_ptr)->run_auto_adaptive_loop();
   - interval: 30s
     then:
-      - lambda: optimizer.check_lockout_expiration();
-      - lambda: optimizer.predictive_short_cycle_check();
-      - lambda: optimizer.update_boost_sensor();
+      - lambda: id(optimizer_ptr)->check_lockout_expiration();
+      - lambda: id(optimizer_ptr)->predictive_short_cycle_check();
+      - lambda: id(optimizer_ptr)->update_boost_sensor();

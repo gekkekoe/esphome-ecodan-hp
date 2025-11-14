@@ -8,6 +8,7 @@ sdkconfig.esp32dev
 CMakeLists.txt
 firmware.bin
 components/ecodan/__pycache__/*
+components/optimizer/__pycache__/*
 secrets.yaml
 .python-version
 *.DS_Store
