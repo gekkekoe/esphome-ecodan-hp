@@ -1,5 +1,43 @@
+esphome:
+  includes:
+    - optimizer/optimizer.h
+  on_boot:
+      priority: -100.0
+      then:
+        - lambda: optimizer.load_state();
+        - lambda: optimizer.update_boost_sensor();
+        - lambda: optimizer.check_lockout_expiration();
+  on_shutdown:
+      then:
+        - lambda: optimizer.save_state();
+
 substitutions:
   update_interval_minutes: "10min"
+
+globals:
+  # short cycle vars
+  - id: predictive_delta_start_time
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  # For short-cycle detection
+  - id: compressor_start_time
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  - id: predictive_short_cycle_total_adjusted
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  # store last defrost time
+  - id: last_defrost_time
+    type: uint32_t
+    restore_value: yes
+    initial_value: '-1'
+  - id: lockout_expiration_timestamp
+    type: uint32_t
+    restore_value: yes
+    initial_value: '0'
 
 number:
   # Safety limits
@@ -75,6 +113,28 @@ number:
     max_value: 100
     step: 0.1
 
+    #short cycle vars
+  - platform: template
+    # Short-cycle protection
+    id: minimum_compressor_on_time
+    name: ${minimum_compressor_on_time}
+    optimistic: true
+    restore_value: true
+    initial_value: 5 # minutes
+    min_value: 1
+    max_value: 20
+    step: 1
+  - platform: template
+    id: predictive_short_cycle_high_delta_time_window
+    name: ${predictive_short_cycle_high_delta_time_window}
+    unit_of_measurement: "min"
+    optimistic: true
+    restore_value: true
+    initial_value: 4.0
+    min_value: 1.0
+    max_value: 5.0
+    step: 0.5
+
 select:
   - platform: template
     id: temperature_feedback_source
@@ -99,6 +159,19 @@ select:
       - "${heating_system_type_option_rad}" 
       - "${heating_system_type_option_rad} *"
     initial_option: "${heating_system_type_option_ufh}"
+
+  - platform: template
+    id: lockout_duration
+    name: ${lockout_duration}
+    optimistic: true
+    restore_value: true
+    options:
+      - "0"
+      - "15"
+      - "30"
+      - "45"
+      - "60"
+    initial_option: "0"
   
 switch:
   - platform: template
@@ -107,16 +180,74 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
 
-# button:
-#   - platform: template
-#     name: 'Auto-Adaptive: Run'
-#     id: run_auto_adaptive_cycle
-#     icon: "mdi:play-circle"
-#     on_press:
-#       then:
-#         - script.execute: auto_adaptive_loop
+  - platform: template
+    name: ${predictive_short_cycle_control_enabled}
+    id: predictive_short_cycle_control_enabled
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          id(predictive_short_cycle_total_adjusted) = 0.0f;
+    turn_off_action:
+      - lambda: |-
+         id(predictive_short_cycle_total_adjusted) = 0.0f;
+
+binary_sensor:
+  - platform: template
+    id: status_predictive_boost_active
+    name: ${status_predictive_boost_active}
+    lambda: |-
+      return (id(predictive_short_cycle_total_adjusted) > 0.0f);
+  - platform: ecodan
+    status_short_cycle_lockout:
+      id: status_short_cycle_lockout
+      name: ${status_short_cycle_lockout}
+    status_compressor:
+      id: status_compressor
+      name: ${status_compressor}
+      on_state_change:
+        then:
+          - lambda: |-
+              if (x.has_value() && x_previous.has_value()) {
+                optimizer.on_compressor_state_change(x.value(), x_previous.value());
+              }
+
+button:
+  - platform: template
+    id: short_cycle_mitigation_button
+    name: ${short_cycle_mitigation_button}
+    on_press:
+      - logger.log:
+          level: INFO
+          format: "Lockout script cancelled by button"
+      - lambda: optimizer.restore_svc_state();
+
+  # - platform: template
+  #   name: 'Auto-Adaptive: Run'
+  #   id: run_auto_adaptive_cycle
+  #   icon: "mdi:play-circle"
+  #   on_press:
+  #     then:
+  #       - script.execute: auto_adaptive_loop
+
+  # - platform: template
+  #   name: "Short-Cycle: Start Compressor (Simulated)"
+  #   on_press:
+  #     - lambda: |-
+  #         id(status_compressor).publish_state(true);
+
+  # - platform: template
+  #   name: "Short-Cycle: Stop Compressor (Simulated)"
+  #   on_press:
+  #     - lambda: |-
+  #         id(status_compressor).publish_state(false);
 
 interval:
   - interval: ${update_interval_minutes}
     then:
-      - lambda: run_auto_adaptive_loop();
+      - lambda: optimizer.run_auto_adaptive_loop();
+  - interval: 30s
+    then:
+      - lambda: optimizer.check_lockout_expiration();
+      - lambda: optimizer.predictive_short_cycle_check();
+      - lambda: optimizer.update_boost_sensor();
