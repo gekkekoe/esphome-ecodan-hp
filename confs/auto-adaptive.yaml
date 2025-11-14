@@ -16,23 +16,9 @@ globals:
     type: float
     restore_value: yes
     initial_value: '0.0'
-  # store last defrost time
-  - id: last_defrost_time
-    type: uint32_t
-    restore_value: yes
-    initial_value: '-1'
   - id: lockout_expiration_timestamp
     type: uint32_t
     restore_value: yes
-    initial_value: '0'
-  - id: predictive_delta_start_time
-    type: uint32_t
-    restore_value: no
-    initial_value: '0'
-  # For short-cycle detection
-  - id: compressor_start_time
-    type: uint32_t
-    restore_value: no
     initial_value: '0'
 
 number:

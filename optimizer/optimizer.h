@@ -8,6 +8,10 @@ using namespace esphome::ecodan;
 
 class Optimizer {
 private:
+  uint32_t predictive_delta_start_time_ = 0;
+  uint32_t compressor_start_time_ = 0;
+  uint32_t last_defrost_time_ = (uint32_t)-1;
+
   void process_adaptive_zone_(
       std::size_t i,
       const ecodan::Status &status,
@@ -87,7 +91,7 @@ private:
 
           bool is_defrost_weather = false;
           if (actual_outside_temp >= DEFROST_RISK_MIN_TEMP && actual_outside_temp <= DEFROST_RISK_MAX_TEMP) {
-              uint32_t last_defrost = id(last_defrost_time);
+              uint32_t last_defrost = this->last_defrost_time_;
               time_t current_time = status.timestamp(); 
               if (last_defrost > 0 && current_time > 0) { 
                   if ((current_time - last_defrost) < DEFROST_MEMORY_S) {
@@ -321,28 +325,28 @@ public:
     if (!id(predictive_short_cycle_control_enabled).state) return;
 
     auto& status = id(ecodan_instance).get_status();
-    auto start_time = id(predictive_delta_start_time);
+    auto start_time = this->predictive_delta_start_time_;
 
     if (status.DefrostActive || id(status_short_cycle_lockout).state || !id(status_compressor).state) {
       if (status.DefrostActive) {
         ESP_LOGD("predictive_short_cycle", "Defrost detected, updating timestamp.");
-        id(last_defrost_time) = status.timestamp();
+        this->last_defrost_time_ = status.timestamp();
       }
 
       if (start_time > 0)
-        id(predictive_delta_start_time) = 0;
+        this->predictive_delta_start_time_ = 0;
       return;
     }
     
     if (!status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && !status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2)) {
       if (start_time > 0)
-        id(predictive_delta_start_time) = 0;
+        this->predictive_delta_start_time_ = 0;
       return;
     }
 
     if (status.Operation != esphome::ecodan::Status::OperationMode::HEAT_ON) {
       if (start_time > 0)
-        id(predictive_delta_start_time) = 0;
+        this->predictive_delta_start_time_ = 0;
       return;  
     }
 
@@ -358,7 +362,7 @@ public:
     if (isnan(requested_flow) || isnan(actual_flow)) {
       ESP_LOGW("predictive_short_cycle", "Requested or Actual feed temperature unavailable. Exiting.");
       if (start_time > 0)
-        id(predictive_delta_start_time) = 0;
+        this->predictive_delta_start_time_ = 0;
       return;
     }
     
@@ -374,13 +378,13 @@ public:
     const float adjustment_factor = 0.5f;
 
     if (delta >= PREDICTIVE_DELTA_THRESHOLD) {
-      if (id(predictive_delta_start_time) == 0) {
-        id(predictive_delta_start_time) = millis();
+      if (this->predictive_delta_start_time_ == 0) {
+        this->predictive_delta_start_time_ = millis();
         ESP_LOGD("predictive_short_cycle", "High Delta T detected (%.1f°C). Starting timer.", delta);
       } else {
-        if ((millis() - id(predictive_delta_start_time)) >= trigger_duration_ms) {
+        if ((millis() - this->predictive_delta_start_time_) >= trigger_duration_ms) {
           ESP_LOGW("predictive_short_cycle", "Short-cycle predicted! Increasing Feed temps to force a longer cycle.");
-          id(predictive_delta_start_time) = 0;
+          this->predictive_delta_start_time_ = 0;
 
           if (id(auto_adaptive_control_enabled).state) {
             bool was_boosted = false;
@@ -418,7 +422,7 @@ public:
     } else {
       if (start_time != 0) {
         ESP_LOGD("predictive_short_cycle", "High Delta T has disappeared. Resetting timer.");
-        id(predictive_delta_start_time) = 0;
+        this->predictive_delta_start_time_ = 0;
       }
     }
   }
@@ -526,11 +530,11 @@ public:
     }
 
     if (id(lockout_duration).active_index().value_or(0) == 0) {
-      id(compressor_start_time) = 0;
+      this->compressor_start_time_ = 0;
       return;
     }
 
-    if (id(compressor_start_time) == 0 || id(status_short_cycle_lockout).state || status.DefrostActive)
+    if (this->compressor_start_time_ == 0 || id(status_short_cycle_lockout).state || status.DefrostActive)
       return;
 
     uint32_t min_duration_ms = id(minimum_compressor_on_time).state * 60000UL;
@@ -542,9 +546,9 @@ public:
       || status.is_heating(esphome::ecodan::Zone::ZONE_2) 
       || status.is_cooling(esphome::ecodan::Zone::ZONE_2)) {
 
-        uint32_t run_duration_ms = millis() - id(compressor_start_time);
+        uint32_t run_duration_ms = millis() - this->compressor_start_time_;
         if (run_duration_ms < min_duration_ms) {
-          id(compressor_start_time) = 0; 
+          this->compressor_start_time_ = 0; 
           id(status_short_cycle_lockout).publish_state(true);
           this->start_lockout();
         }
@@ -560,7 +564,7 @@ public:
       auto& status = id(ecodan_instance).get_status();
       if (!status.DefrostActive) {
         ESP_LOGI(esphome::ecodan::TAG, "Compressor START detected");
-        id(compressor_start_time) = millis();
+        this->compressor_start_time_ = millis();
       }
       if (id(auto_adaptive_control_enabled).state) {
         ESP_LOGD("auto_adaptive", "Compressor start: triggering auto-adaptive loop.");
