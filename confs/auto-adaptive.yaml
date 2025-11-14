@@ -5,7 +5,7 @@ esphome:
       priority: -100.0
       then:
         - lambda: optimizer.load_state();
-        - lambda: optimizer.update_boost_sensor();
+        - lambda: id(status_predictive_boost_active).publish_state(id(predictive_short_cycle_total_adjusted) > 0.0f);
         - lambda: optimizer.check_lockout_expiration();
   on_shutdown:
       then:
@@ -265,4 +265,4 @@ interval:
     then:
       - lambda: optimizer.check_lockout_expiration();
       - lambda: optimizer.predictive_short_cycle_check();
-      - lambda: optimizer.update_boost_sensor();
+      - lambda: id(status_predictive_boost_active).publish_state(id(predictive_short_cycle_total_adjusted) > 0.0f);

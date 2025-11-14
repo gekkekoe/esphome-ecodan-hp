@@ -577,10 +577,6 @@ public:
       }
     }
   }
-
-  void update_boost_sensor() {
-    id(status_predictive_boost_active).publish_state(this->state_.predictive_short_cycle_total_adjusted > 0.0f);
-  }
 };
 
 Optimizer optimizer;
