@@ -16,6 +16,9 @@ namespace esphome
   namespace optimizer
   {
 
+    static constexpr const char *OPTIMIZER_TAG = "auto_adaptive";
+    static constexpr const char *OPTIMIZER_CYCLE_TAG = "short_cycle";
+
     struct OptimizerState
     {
       esphome::ecodan::EcodanHeatpump *ecodan_instance;
@@ -76,6 +79,8 @@ namespace esphome
       
       float round_nearest(float input) { return floor(input * 10.0f) / 10.0f; }
       float round_nearest_half(float input) { return floor(input * 2.0) / 2.0f; }
+      bool is_system_hands_off(const ecodan::Status &status);
+      float clamp_flow_temp(float calculated_flow, float min_temp, float max_temp);
 
     public:
       Optimizer(OptimizerState state);
