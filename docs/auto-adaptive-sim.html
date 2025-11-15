@@ -272,7 +272,8 @@
                     
                     const target_delta_t = dynamic_min_delta + (error_factor * (maxDeltaT - dynamic_min_delta));
                     const calculated_flow = returnTemp + target_delta_t;
-                    const final_flow = Math.floor(calculated_flow * 2) / 2.0;
+                    //const final_flow = Math.floor(calculated_flow * 2) / 2.0;
+                    const final_flow = Math.floor(calculated_flow * 10) / 10.0;
 
                     const row = document.createElement('tr');
                     

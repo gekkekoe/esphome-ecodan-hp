@@ -82,8 +82,8 @@ namespace esphome
             if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp))
                 return;
 
-            ESP_LOGD("auto_adaptive", "Processing Zone %d: Room=%.1f, Target=%.1f, Outside=%.1f, cold factor=%.2f, Bias=%.1f, heating: %d, cooling: %d",
-                     (i + 1), room_temp, room_target_temp, actual_outside_temp, (base_min_delta_t + (dynamic_min_delta_t - base_min_delta_t)), setpoint_bias, is_heating_active, is_cooling_active);
+            ESP_LOGD("auto_adaptive", "Processing Zone %d: Room=%.1f, Target=%.1f, Outside=%.1f, Bias=%.1f, heating: %d, cooling: %d",
+                     (i + 1), room_temp, room_target_temp, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active);
             room_target_temp += setpoint_bias;
 
             float error = is_heating_mode ? (room_target_temp - room_temp)
@@ -127,14 +127,14 @@ namespace esphome
                     if (is_defrost_weather)
                     {
                         calculated_flow = actual_return_temp + base_min_delta_t;
-                        calculated_flow = floor(calculated_flow * 2) / 2.0f;
+                        calculated_flow = this->round_nearest(calculated_flow);
                         ESP_LOGW("auto_adaptive", "Z%d HEATING (Delta T): Defrost risk detected. Forcing minimum delta T (%.1f°C). Flow set to %.2f°C",
                                  (i + 1), base_min_delta_t, calculated_flow);
                     }
                     else
                     {
                         calculated_flow = actual_return_temp + target_delta_t;
-                        calculated_flow = floor(calculated_flow * 2) / 2.0f;
+                        calculated_flow = this->round_nearest(calculated_flow);
 
                         float short_cycle_prevention_adjustment = this->predictive_short_cycle_total_adjusted_;
                         if (short_cycle_prevention_adjustment > 0.0f)
@@ -206,7 +206,7 @@ namespace esphome
                     calculated_flow = this->state_.minimum_cooling_flow_temp->state;
                     ESP_LOGW("auto_adaptive", "Z%d COOLING: Flow limited to %.1f°C (Condensation Limit)", (i + 1), calculated_flow);
                 }
-                out_flow_cool = floor(calculated_flow * 2) / 2.0f;
+                out_flow_cool = this->round_nearest_half(calculated_flow);
             }
         }
 
@@ -249,8 +249,6 @@ namespace esphome
                 return;
             }
 
-            ESP_LOGD("auto_adaptive", "Starting auto-adaptive cycle, z2 independent: %d, has_cooling: %d", status.has_independent_z2(), status.has_cooling());
-
             float actual_outside_temp = this->state_.outside_temp->state;
 
             if (isnan(actual_outside_temp))
@@ -287,6 +285,9 @@ namespace esphome
             float linear_cold_factor = (MILD_WEATHER_TEMP - clamped_outside_temp) / (MILD_WEATHER_TEMP - COLD_WEATHER_TEMP);
             float cold_factor = linear_cold_factor * linear_cold_factor;
             float dynamic_min_delta_t = base_min_delta_t + (cold_factor * (min_delta_cold_limit - base_min_delta_t));
+
+            ESP_LOGD("auto_adaptive", "[*] Starting auto-adaptive cycle, z2 independent: %d, has_cooling: %d, cold factor: %.2f, min delta T: %.2f, max delta T: %.2f", 
+                status.has_independent_z2(), status.has_cooling(), cold_factor, dynamic_min_delta_t, max_delta_t);
 
             float calculated_flows_heat[2] = {0.0f, 0.0f};
             float calculated_flows_cool[2] = {100.0f, 100.0f};

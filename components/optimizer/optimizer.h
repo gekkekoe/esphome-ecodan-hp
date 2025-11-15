@@ -73,6 +73,9 @@ namespace esphome
           float zone_min_flow_temp,
           float &out_flow_heat,
           float &out_flow_cool);
+      
+      float round_nearest(float input) { return floor(input * 10.0f) / 10.0f; }
+      float round_nearest_half(float input) { return floor(input * 2.0) / 2.0f; }
 
     public:
       Optimizer(OptimizerState state);
