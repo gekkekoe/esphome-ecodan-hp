@@ -148,20 +148,20 @@ namespace esphome
                 {
                     const float DEFROST_RISK_MIN_TEMP = -2.0f;
                     const float DEFROST_RISK_MAX_TEMP = 3.0f;
-                    const uint32_t DEFROST_MEMORY_S = 1 * 3600UL;
+                    const uint32_t DEFROST_MEMORY_MS = 1 * 3600 * 1000UL;
 
                     bool is_defrost_weather = false;
                     if (actual_outside_temp >= DEFROST_RISK_MIN_TEMP && actual_outside_temp <= DEFROST_RISK_MAX_TEMP)
                     {
                         uint32_t last_defrost = this->last_defrost_time_;
-                        time_t current_time = status.timestamp();
-                        if (last_defrost > 0 && current_time > 0)
+                        uint32_t current_ms = millis();
+                        if (last_defrost > 0)
                         {
-                            if ((current_time - last_defrost) < DEFROST_MEMORY_S)
+                            if ((current_ms - last_defrost) < DEFROST_MEMORY_MS)
                             {
                                 is_defrost_weather = true;
                             }
-                            ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost handling: %d, last_defrost_ts: %d, current_ts: %s", is_defrost_weather, last_defrost, current_time);
+                            ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost handling: %d, last_defrost_ts: %d, current_ts: %d", is_defrost_weather, last_defrost, current_ms);
                         }
                     }
 
@@ -421,7 +421,7 @@ namespace esphome
                 if (status.DefrostActive)
                 {
                     ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost detected, updating timestamp.");
-                    this->last_defrost_time_ = status.timestamp();
+                    this->last_defrost_time_ = millis();
                 }
 
                 if (start_time > 0)
