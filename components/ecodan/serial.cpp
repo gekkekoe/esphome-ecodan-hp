@@ -50,15 +50,15 @@ namespace ecodan
                         proxy_uart_->write_array(expected_second_response, sizeof(expected_second_response));
                         //ESP_LOGD(TAG, "Handshake: Second request detected, sending response. Handshake complete!");
                     }
-                    // else if (buffer.matches(connect_request, sizeof(connect_request))) {
-                    //     proxy_uart_->write_array(connect_response, sizeof(connect_response));
-                    //     this->connected = true;
-                    //     //ESP_LOGD(TAG, "Incoming connect request from proxy interface");
-                    // }
-                    // else if (buffer.matches(keep_alive_request, sizeof(keep_alive_request))) {
-                    //     proxy_uart_->write_array(keep_alive_response, sizeof(keep_alive_response));
-                    //     //ESP_LOGD(TAG, "keep alive request detected");
-                    // } 
+                    else if (buffer.matches(connect_request, sizeof(connect_request))) {
+                        proxy_uart_->write_array(connect_response, sizeof(connect_response));
+                        this->connected = true;
+                        //ESP_LOGD(TAG, "Incoming connect request from proxy interface");
+                    }
+                    else if (buffer.matches(keep_alive_request, sizeof(keep_alive_request))) {
+                        proxy_uart_->write_array(keep_alive_response, sizeof(keep_alive_response));
+                        //ESP_LOGD(TAG, "keep alive request detected");
+                    } 
 
                 } else { // FTC comm
                     // if (this->proxy_available()) {
