@@ -161,7 +161,7 @@ namespace esphome
                             {
                                 is_defrost_weather = true;
                             }
-                            ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost handling: %d, last_defrost_ts: %d, current_ts: %s", is_defrost_weather, last_defrost, current_time);
+                            ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost handling: %d, last_defrost_ts: %d, current_ts: %d", is_defrost_weather, last_defrost, current_time);
                         }
                     }
 

@@ -61,7 +61,7 @@ namespace esphome
 
       uint32_t predictive_delta_start_time_ = 0;
       uint32_t compressor_start_time_ = 0;
-      uint32_t last_defrost_time_ = (uint32_t)-1;
+      uint32_t last_defrost_time_ = 0;
       float predictive_short_cycle_total_adjusted_ = 0.0f;
 
       void process_adaptive_zone_(
