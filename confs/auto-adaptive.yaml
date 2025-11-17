@@ -1,3 +1,7 @@
+substitutions:
+  update_interval_minutes: "10min"
+  z2_feed_assignment: "state.z2_feed_temp = nullptr;"
+
 esphome:
   on_boot:
       priority: 600
@@ -13,12 +17,11 @@ esphome:
             state.defrost_risk_handling_enabled = id(defrost_risk_handling_enabled);
 
             state.status_short_cycle_lockout = id(status_short_cycle_lockout);
-            state.status_compressor = id(status_compressor);
             state.status_predictive_boost_active = id(status_predictive_boost_active);
 
             state.hp_feed_temp = id(hp_feed_temp);
-            state.hp_return_temp = id(hp_return_temp);
-            state.outside_temp = id(outside_temp);
+            state.z1_feed_temp = id(z1_feed_temp);
+            ${z2_feed_assignment}
 
             state.heating_system_type = id(heating_system_type);
             state.temperature_feedback_source = id(temperature_feedback_source);
@@ -47,9 +50,6 @@ esphome:
 
 # needed to trigger codegen
 optimizer:
-
-substitutions:
-  update_interval_minutes: "10min"
 
 globals:
   - id: optimizer_ptr
