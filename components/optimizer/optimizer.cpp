@@ -179,7 +179,7 @@ namespace esphome
                         calculated_flow = actual_return_temp + target_delta_t;
                         calculated_flow = this->round_nearest(calculated_flow);
 
-                        // if there was a boost adjustment, check if it's still needed an clear if needed
+                        // if there was a boost adjustment, check if it's still needed and clear if needed
                         float short_cycle_prevention_adjustment = this->predictive_short_cycle_total_adjusted_;
                         if (short_cycle_prevention_adjustment > 0.0f)
                         {
@@ -202,7 +202,7 @@ namespace esphome
                 }
 
                 // step down limit to avoid compressor halt (it seems to be triggered when delta actual_flow_temp - calculated_flow >= 2.0)
-                const float MAX_FEED_STEP_DOWN = 1.5f;
+                const float MAX_FEED_STEP_DOWN = 1.0f;
                 if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
                 {
                     ESP_LOGW(OPTIMIZER_TAG, "Z%d HEATING: Flow limited to %.2f°C to prevent compressor stop! (Delta %.2f°C below actual feed temp), original calc: %.2f°C",
