@@ -150,6 +150,7 @@ substitutions:
   heating_system_type_option_rad: 'Patterit'
   auto_adaptive_setpoint_bias: 'Mukautuva ohjaus: Asetusarvon poikkeama'
   temperature_feedback: 'Mukautuva ohjaus: Huonelämpötilan palaute'
+  defrost_risk_handling_enabled: 'Mukautuva ohjaus: Sulatuksen Vähentäminen'
   total_increasing_heating_consumed: Lämmityksen kokonaiskulutus
   total_increasing_heating_delivered: Lämmityksen kokonaistuotto
   total_increasing_cool_consumed: Jäähdytyksen kokonaiskulutus

@@ -10,6 +10,7 @@ esphome:
 
             state.auto_adaptive_control_enabled = id(auto_adaptive_control_enabled);
             state.predictive_short_cycle_control_enabled = id(predictive_short_cycle_control_enabled);
+            state.defrost_risk_handling_enabled = id(defrost_risk_handling_enabled);
 
             state.status_short_cycle_lockout = id(status_short_cycle_lockout);
             state.status_compressor = id(status_compressor);
@@ -236,6 +237,12 @@ switch:
       - lambda: if (id(optimizer_ptr) != nullptr) id(optimizer_ptr)->reset_predictive_boost();
     turn_off_action:
       - lambda: if (id(optimizer_ptr) != nullptr) id(optimizer_ptr)->reset_predictive_boost();
+
+  - platform: template
+    name: ${defrost_risk_handling_enabled}
+    id: defrost_risk_handling_enabled
+    restore_mode: RESTORE_DEFAULT_ON 
+    optimistic: true
 
 binary_sensor:
   - platform: template

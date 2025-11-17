@@ -149,6 +149,7 @@ substitutions:
   heating_system_type_option_rad: 'Grzejniki'
   auto_adaptive_setpoint_bias: 'Autoadaptacja: Przesunięcie Wartości Zadanej'
   temperature_feedback: 'Autoadaptacja: Sprzężenie Zwrotne Aktualnej Temperatury'
+  defrost_risk_handling_enabled: 'Autoadaptacja: Redukcja Odszraniania'
   total_increasing_heating_consumed: Całkowite Zużycie Ogrzewanie
   total_increasing_heating_delivered: Całkowita Produkcja Ogrzewanie
   total_increasing_cool_consumed: Całkowite Zużycie Chłodzenie

@@ -150,6 +150,7 @@ substitutions:
   heating_system_type_option_rad: 'Radiateurs'
   auto_adaptive_setpoint_bias: 'Auto-Adaptatif: Bias de Consigne'
   temperature_feedback: 'Auto-Adaptatif: Retour de Température Ambiante Actuelle'
+  defrost_risk_handling_enabled: 'Auto-Adaptatif: Atténuation Dégivrage'
   total_increasing_heating_consumed: Consommation Totale Chauffage
   total_increasing_heating_delivered: Production Totale Chauffage
   total_increasing_cool_consumed: Consommation Totale Refroidissement

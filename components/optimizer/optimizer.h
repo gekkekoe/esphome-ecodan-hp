@@ -25,6 +25,7 @@ namespace esphome
 
       esphome::switch_::Switch *auto_adaptive_control_enabled;
       esphome::switch_::Switch *predictive_short_cycle_control_enabled;
+      esphome::switch_::Switch *defrost_risk_handling_enabled;
 
       esphome::binary_sensor::BinarySensor *status_short_cycle_lockout;
       esphome::binary_sensor::BinarySensor *status_compressor;

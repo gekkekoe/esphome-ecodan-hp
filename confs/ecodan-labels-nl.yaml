@@ -150,6 +150,7 @@ substitutions:
   heating_system_type_option_rad: 'Radiatoren'
   auto_adaptive_setpoint_bias: 'Auto-Adaptief: Setpoint Bias'
   temperature_feedback: 'Auto-Adaptief: Terugkoppeling Huidige Kamertemperatuur'
+  defrost_risk_handling_enabled: 'Auto-Adaptief: Defrosts Beperken'
   total_increasing_heating_consumed: Totaal Verbruik Verwarming
   total_increasing_heating_delivered: Totaal Geleverd Verwarming
   total_increasing_cool_consumed: Totaal Verbruik Koeling

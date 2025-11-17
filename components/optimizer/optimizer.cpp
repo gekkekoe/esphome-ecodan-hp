@@ -149,6 +149,7 @@ namespace esphome
                     const float DEFROST_RISK_MIN_TEMP = -2.0f;
                     const float DEFROST_RISK_MAX_TEMP = 3.0f;
                     const uint32_t DEFROST_MEMORY_MS = 1 * 3600 * 1000UL;
+                    bool defrost_handling_enabled = this->state_.defrost_risk_handling_enabled->state;
 
                     bool is_defrost_weather = false;
                     if (actual_outside_temp >= DEFROST_RISK_MIN_TEMP && actual_outside_temp <= DEFROST_RISK_MAX_TEMP)
@@ -161,11 +162,12 @@ namespace esphome
                             {
                                 is_defrost_weather = true;
                             }
-                            ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost handling: %d, last_defrost_ts: %d, current_ts: %d", is_defrost_weather, last_defrost, current_ms);
+                            ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost handling enabled: %d, defrost conditions: %d, last_defrost_ts: %d, current_ts: %d", 
+                                defrost_handling_enabled, is_defrost_weather, last_defrost, current_ms);
                         }
                     }
 
-                    if (is_defrost_weather)
+                    if (is_defrost_weather && defrost_handling_enabled)
                     {
                         calculated_flow = actual_return_temp + base_min_delta_t;
                         calculated_flow = this->round_nearest(calculated_flow);

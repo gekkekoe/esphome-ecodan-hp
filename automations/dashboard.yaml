@@ -77,6 +77,8 @@
                 entities:
                   - entity: switch.ecodan_heatpump_auto_adaptive_control
                     name: Enable/Disable
+                  - entity: switch.ecodan_heatpump_auto_adaptive_defrost_mitigation
+                    name: Defrost Mitigation
                   - entity: select.ecodan_heatpump_auto_adaptive_heating_system_type
                     name: Heating System Type
                   - entity: number.ecodan_heatpump_auto_adaptive_setpoint_bias
