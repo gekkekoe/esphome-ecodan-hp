@@ -311,7 +311,7 @@ namespace esphome
                                 short_cycle_prevention_adjustment = 0;
                             }
                         }
-                        ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING (Delta T): calculated_flow: %.2f°C (Return: %.1f, Scaled  delta T: %.2f, error factor: %.2f, lineair: %d, boost: %.1f)",
+                        ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING (Delta T): calculated_flow: %.2f°C (Return: %.1f, Scaled  delta T: %.2f, error factor: %.2f, linear: %d, boost: %.1f)",
                                  (i + 1), calculated_flow, actual_return_temp, target_delta_t, error_factor, use_linear_error, short_cycle_prevention_adjustment);
                     }
                 }
@@ -518,16 +518,23 @@ namespace esphome
                 return;
 
             auto &status = this->state_.ecodan_instance->get_status();
+
+            static bool was_defrosting = false;
+            if (status.DefrostActive) 
+            {
+                was_defrosting = true;
+            }
+            else if (was_defrosting) 
+            {
+                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost cycle finished. Updating last_defrost timestamp");
+                this->last_defrost_time_ = millis();
+                was_defrosting = false;
+            }
+
             auto start_time = this->predictive_delta_start_time_;
 
             if (this->is_system_hands_off(status) || !status.CompressorOn)
             {
-                if (status.DefrostActive)
-                {
-                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost detected, updating timestamp.");
-                    this->last_defrost_time_ = millis();
-                }
-
                 if (start_time > 0)
                     this->predictive_delta_start_time_ = 0;
                 return;
