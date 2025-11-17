@@ -11,23 +11,42 @@ namespace esphome
         using namespace esphome::ecodan;
 
         Optimizer::Optimizer(OptimizerState state) : state_(state) {
+
+            auto update_if_changed = [](float &storage, float new_val) -> bool {
+                if (std::isnan(new_val)) return false; 
+                if (std::isnan(storage) || std::abs(storage - new_val) > 0.01f) {
+                    storage = new_val;
+                    return true;
+                }
+                return false;
+            };
+
             if (this->state_.hp_feed_temp != nullptr) {
-                this->state_.hp_feed_temp->add_on_state_callback([this](float x) {
-                    this->on_feed_temp_change(x, OptimizerZone::SINGLE);
+                this->state_.hp_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
+                    if (update_if_changed(this->last_hp_feed_temp_, x)) {
+                        this->on_feed_temp_change(x, OptimizerZone::SINGLE);
+                    }
                 });
             } 
+
             if (this->state_.z1_feed_temp != nullptr) {
-                this->state_.z1_feed_temp->add_on_state_callback([this](float x) {
-                    this->on_feed_temp_change(x, OptimizerZone::ZONE_1);
+                this->state_.z1_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
+                    if (update_if_changed(this->last_z1_feed_temp_, x)) {
+                        this->on_feed_temp_change(x, OptimizerZone::ZONE_1);
+                    }
                 });
             } 
+
             if (this->state_.z2_feed_temp != nullptr) {
-                this->state_.z2_feed_temp->add_on_state_callback([this](float x) {
-                    this->on_feed_temp_change(x, OptimizerZone::ZONE_2);
+                this->state_.z2_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
+                    if (update_if_changed(this->last_z2_feed_temp_, x)) {
+                        this->on_feed_temp_change(x, OptimizerZone::ZONE_2);
+                    }
                 });
-            }   
+            }
         }
 
+        // callbacks to monitor step down, need to keep within 1.0C else compressor will halt
         void Optimizer::on_feed_temp_change(float new_temp, OptimizerZone zone) {            
             if (std::isnan(new_temp) || !this->state_.auto_adaptive_control_enabled->state)
                 return;
@@ -115,7 +134,6 @@ namespace esphome
         }
 
         float Optimizer::enforce_step_down(float actual_flow_temp, float calculated_flow) {
-            // callbacks to monitor step down, need to keep within 1.0C else compressor will halt
             const float MAX_FEED_STEP_DOWN = 1.0f;
             if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
             {

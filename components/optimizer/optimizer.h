@@ -71,6 +71,11 @@ namespace esphome
       uint32_t last_defrost_time_ = 0;
       float predictive_short_cycle_total_adjusted_ = 0.0f;
 
+      // save last callback state, to only invoke callback on actual change
+      float last_hp_feed_temp_ = NAN;
+      float last_z1_feed_temp_ = NAN;
+      float last_z2_feed_temp_ = NAN;
+
       void process_adaptive_zone_(
           std::size_t i,
           const ecodan::Status &status,
