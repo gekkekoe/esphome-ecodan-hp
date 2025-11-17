@@ -10,7 +10,124 @@ namespace esphome
 
         using namespace esphome::ecodan;
 
-        Optimizer::Optimizer(OptimizerState state) : state_(state) {}
+        Optimizer::Optimizer(OptimizerState state) : state_(state) {
+            if (this->state_.hp_feed_temp != nullptr) {
+                this->state_.hp_feed_temp->add_on_state_callback([this](float x) {
+                    this->on_feed_temp_change(x, OptimizerZone::SINGLE);
+                });
+            } 
+            if (this->state_.z1_feed_temp != nullptr) {
+                this->state_.z1_feed_temp->add_on_state_callback([this](float x) {
+                    this->on_feed_temp_change(x, OptimizerZone::ZONE_1);
+                });
+            } 
+            if (this->state_.z2_feed_temp != nullptr) {
+                this->state_.z2_feed_temp->add_on_state_callback([this](float x) {
+                    this->on_feed_temp_change(x, OptimizerZone::ZONE_2);
+                });
+            }   
+        }
+
+        void Optimizer::on_feed_temp_change(float new_temp, OptimizerZone zone) {            
+            if (std::isnan(new_temp) || !this->state_.auto_adaptive_control_enabled->state)
+                return;
+
+            auto &status = this->state_.ecodan_instance->get_status();
+
+            if (status.has_independent_z2()) 
+            {
+                if (zone == OptimizerZone::SINGLE) {
+                    return;
+                }
+            } 
+            else 
+            {
+                if (zone != OptimizerZone::SINGLE) {
+                    return;
+                }
+            }
+
+            if (this->is_system_hands_off(status))
+                return;
+
+            float actual_flow_temp = new_temp;
+            float calculated_flow = zone == OptimizerZone::ZONE_2 ? status.Zone2FlowTemperatureSetPoint : status.Zone1FlowTemperatureSetPoint;
+
+            float adjusted_flow = enforce_step_down(actual_flow_temp, calculated_flow);
+            if (adjusted_flow != calculated_flow)
+            {
+                set_flow_temp(adjusted_flow, zone);
+            }
+        }
+
+        bool Optimizer::set_flow_temp(float flow, OptimizerZone zone) {
+            auto &status = this->state_.ecodan_instance->get_status();
+            
+            if (status.has_independent_z2())
+            {
+                if (status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON) {
+                    if (zone == OptimizerZone::ZONE_1 && status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && status.Zone1FlowTemperatureSetPoint != flow)
+                    {
+                        ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z1 Heat Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
+                        this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_1);
+                        return true;
+                    }
+                    if (zone == OptimizerZone::ZONE_2 && status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) && status.Zone2FlowTemperatureSetPoint != flow)
+                    {
+                        ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z2 Heat Flow -> %.1f°C (%.1f°C)", flow, status.Zone2FlowTemperatureSetPoint);
+                        this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_2);
+                        return true;
+                    }
+                }
+                else if (status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON) {
+                    if (zone == OptimizerZone::ZONE_1 && status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) && status.Zone1FlowTemperatureSetPoint != flow)
+                    {
+                        ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z1 Cool Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
+                        this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_1);
+                        return true;
+                    }
+                    if (zone == OptimizerZone::ZONE_2 && status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2) && status.Zone2FlowTemperatureSetPoint != flow)
+                    {
+                        ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z2 Cool Flow -> %.1f°C (%.1f°C)", flow, status.Zone2FlowTemperatureSetPoint);
+                        this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_2);
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                if (status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON) { 
+                    if (status.HeatingCoolingMode == esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP && status.Zone1FlowTemperatureSetPoint != flow)
+                    {
+                        ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Dependent Heat Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
+                        this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_1);
+                        return true;
+                    }
+                }
+                else if (status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON) {
+                    if (status.HeatingCoolingMode == esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP && status.Zone1FlowTemperatureSetPoint != flow)
+                    {
+                        ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Dependent Cool Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
+                        this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_1);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        float Optimizer::enforce_step_down(float actual_flow_temp, float calculated_flow) {
+            // callbacks to monitor step down, need to keep within 1.0C else compressor will halt
+            const float MAX_FEED_STEP_DOWN = 1.0f;
+            if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
+            {
+                ESP_LOGW(OPTIMIZER_TAG, "Flow limited to %.2f°C to prevent compressor stop! (Delta %.2f°C below actual feed temp), original calc: %.2f°C",
+                        actual_flow_temp - MAX_FEED_STEP_DOWN, (actual_flow_temp - calculated_flow), calculated_flow);
+
+                return actual_flow_temp - MAX_FEED_STEP_DOWN;
+            }
+            return calculated_flow;
+        }
 
         bool Optimizer::get_predictive_boost_state()
         {
@@ -112,8 +229,8 @@ namespace esphome
             float room_temp = (i == 0) ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
             float room_target_temp = (i == 0) ? status.Zone1SetTemperature : status.Zone2SetTemperature;
             float requested_flow_temp = (i == 0) ? status.Zone1FlowTemperatureSetPoint : status.Zone2FlowTemperatureSetPoint;
-            float actual_flow_temp = status.has_independent_z2() ? ((i == 0) ? status.Z1FeedTemperature : status.Z2FeedTemperature) : this->state_.hp_feed_temp->state;
-            float actual_return_temp = status.has_independent_z2() ? ((i == 0) ? status.Z1ReturnTemperature : status.Z2ReturnTemperature) : this->state_.hp_return_temp->state;
+            float actual_flow_temp = status.has_independent_z2() ? ((i == 0) ? status.Z1FeedTemperature : status.Z2FeedTemperature) : status.HpFeedTemperature;
+            float actual_return_temp = status.has_independent_z2() ? ((i == 0) ? status.Z1ReturnTemperature : status.Z2ReturnTemperature) : status.HpReturnTemperature;
 
             if (this->state_.temperature_feedback_source->active_index().value_or(0) == 1)
             {
@@ -202,14 +319,7 @@ namespace esphome
                 }
 
                 // step down limit to avoid compressor halt (it seems to be triggered when delta actual_flow_temp - calculated_flow >= 2.0)
-                const float MAX_FEED_STEP_DOWN = 1.0f;
-                if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
-                {
-                    ESP_LOGW(OPTIMIZER_TAG, "Z%d HEATING: Flow limited to %.2f°C to prevent compressor stop! (Delta %.2f°C below actual feed temp), original calc: %.2f°C",
-                             (i + 1), actual_flow_temp - MAX_FEED_STEP_DOWN, (actual_flow_temp - calculated_flow), calculated_flow);
-
-                    calculated_flow = actual_flow_temp - MAX_FEED_STEP_DOWN;
-                }
+                calculated_flow = enforce_step_down(actual_flow_temp, calculated_flow);
                 calculated_flow = this->clamp_flow_temp(calculated_flow, zone_min_flow_temp, zone_max_flow_temp);
                 out_flow_heat = calculated_flow;
             }
@@ -263,13 +373,13 @@ namespace esphome
                 return;
             }
 
-            if (isnan(this->state_.hp_feed_temp->state) || isnan(this->state_.outside_temp->state))
+            if (isnan(this->state_.hp_feed_temp->state) || isnan(status.OutsideTemperature))
             {
                 ESP_LOGW(OPTIMIZER_TAG, "Sensor data unavailable. Exiting.");
                 return;
             }
 
-            float actual_outside_temp = this->state_.outside_temp->state;
+            float actual_outside_temp = status.OutsideTemperature;
 
             if (isnan(actual_outside_temp))
                 return;
@@ -364,26 +474,22 @@ namespace esphome
                 {
                     if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && status.Zone1FlowTemperatureSetPoint != calculated_flows_heat[0])
                     {
-                        ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z1 Heat Flow -> %.1f°C", calculated_flows_heat[0]);
-                        this->state_.ecodan_instance->set_flow_target_temperature(calculated_flows_heat[0], esphome::ecodan::Zone::ZONE_1);
+                        set_flow_temp(calculated_flows_heat[0], OptimizerZone::ZONE_1);
                     }
                     if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) && status.Zone2FlowTemperatureSetPoint != calculated_flows_heat[1])
                     {
-                        ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z2 Heat Flow -> %.1f°C", calculated_flows_heat[1]);
-                        this->state_.ecodan_instance->set_flow_target_temperature(calculated_flows_heat[1], esphome::ecodan::Zone::ZONE_2);
+                        set_flow_temp(calculated_flows_heat[1], OptimizerZone::ZONE_2);
                     }
                 }
                 else if (is_cooling_demand)
                 {
                     if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) && status.Zone1FlowTemperatureSetPoint != calculated_flows_cool[0])
                     {
-                        ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z1 Cool Flow -> %.1f°C", calculated_flows_cool[0]);
-                        this->state_.ecodan_instance->set_flow_target_temperature(calculated_flows_cool[0], esphome::ecodan::Zone::ZONE_1);
+                        set_flow_temp(calculated_flows_cool[0], OptimizerZone::ZONE_1);
                     }
                     if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2) && status.Zone2FlowTemperatureSetPoint != calculated_flows_cool[1])
                     {
-                        ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z2 Cool Flow -> %.1f°C", calculated_flows_cool[1]);
-                        this->state_.ecodan_instance->set_flow_target_temperature(calculated_flows_cool[1], esphome::ecodan::Zone::ZONE_2);
+                        set_flow_temp(calculated_flows_cool[1], OptimizerZone::ZONE_2);
                     }
                 }
             }
@@ -394,8 +500,7 @@ namespace esphome
                     float final_flow = fmax(calculated_flows_heat[0], calculated_flows_heat[1]);
                     if (status.Zone1FlowTemperatureSetPoint != final_flow)
                     {
-                        ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Dependent Heat Flow -> %.1f°C (max of Z1:%.1f, Z2:%.1f)", final_flow, calculated_flows_heat[0], calculated_flows_heat[1]);
-                        this->state_.ecodan_instance->set_flow_target_temperature(final_flow, esphome::ecodan::Zone::ZONE_1);
+                        set_flow_temp(final_flow, OptimizerZone::SINGLE);
                     }
                 }
                 else if (is_cooling_demand)
@@ -403,8 +508,7 @@ namespace esphome
                     float final_flow = fmin(calculated_flows_cool[0], calculated_flows_cool[1]);
                     if (status.Zone1FlowTemperatureSetPoint != final_flow)
                     {
-                        ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Dependent Cool Flow -> %.1f°C (min of Z1:%.1f, Z2:%.1f)", final_flow, calculated_flows_cool[0], calculated_flows_cool[1]);
-                        this->state_.ecodan_instance->set_flow_target_temperature(final_flow, esphome::ecodan::Zone::ZONE_1);
+                        set_flow_temp(final_flow, OptimizerZone::SINGLE);
                     }
                 }
             }
@@ -418,7 +522,7 @@ namespace esphome
             auto &status = this->state_.ecodan_instance->get_status();
             auto start_time = this->predictive_delta_start_time_;
 
-            if (this->is_system_hands_off(status) || !this->state_.status_compressor->state)
+            if (this->is_system_hands_off(status) || !status.CompressorOn)
             {
                 if (status.DefrostActive)
                 {

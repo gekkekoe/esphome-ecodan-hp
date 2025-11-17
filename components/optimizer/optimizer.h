@@ -19,6 +19,13 @@ namespace esphome
     static constexpr const char *OPTIMIZER_TAG = "auto_adaptive";
     static constexpr const char *OPTIMIZER_CYCLE_TAG = "short_cycle";
 
+    enum class OptimizerZone : uint8_t
+    {
+        ZONE_1 = 1,
+        ZONE_2 = 2,
+        SINGLE = 0
+    };
+
     struct OptimizerState
     {
       esphome::ecodan::EcodanHeatpump *ecodan_instance;
@@ -28,12 +35,11 @@ namespace esphome
       esphome::switch_::Switch *defrost_risk_handling_enabled;
 
       esphome::binary_sensor::BinarySensor *status_short_cycle_lockout;
-      esphome::binary_sensor::BinarySensor *status_compressor;
       esphome::binary_sensor::BinarySensor *status_predictive_boost_active;
 
       esphome::sensor::Sensor *hp_feed_temp;
-      esphome::sensor::Sensor *hp_return_temp;
-      esphome::sensor::Sensor *outside_temp;
+      esphome::sensor::Sensor *z1_feed_temp;
+      esphome::sensor::Sensor *z2_feed_temp;
 
       esphome::select::Select *heating_system_type;
       esphome::select::Select *temperature_feedback_source;
@@ -82,6 +88,11 @@ namespace esphome
       float round_nearest_half(float input) { return floor(input * 2.0) / 2.0f; }
       bool is_system_hands_off(const ecodan::Status &status);
       float clamp_flow_temp(float calculated_flow, float min_temp, float max_temp);
+      float enforce_step_down(float actual_flow_temp, float calculated_flow);
+      bool set_flow_temp(float flow, OptimizerZone zone);
+
+      // callback handlers for important events
+      void on_feed_temp_change(float new_temp, OptimizerZone zone);
 
     public:
       Optimizer(OptimizerState state);
