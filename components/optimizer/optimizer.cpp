@@ -784,7 +784,8 @@ namespace esphome
             bool stand_alone_predictive_active = !this->state_.auto_adaptive_control_enabled->state && this->state_.predictive_short_cycle_control_enabled->state;
             float adjustment = this->predictive_short_cycle_total_adjusted_;
 
-            if (stand_alone_predictive_active && adjustment > 0.0f)
+            // don't restore feed temp when defrost is active
+            if (!status.DefrostActive && stand_alone_predictive_active && adjustment > 0.0f)
             {
                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Restoring flow setpoint after predictive boost.");
 
