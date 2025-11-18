@@ -93,6 +93,7 @@ namespace esphome
       float round_nearest(float input) { return floor(input * 10.0f) / 10.0f; }
       float round_nearest_half(float input) { return floor(input * 2.0) / 2.0f; }
       bool is_system_hands_off(const ecodan::Status &status);
+      bool is_dhw_active(const ecodan::Status &status);
       float clamp_flow_temp(float calculated_flow, float min_temp, float max_temp);
       float enforce_step_down(float actual_flow_temp, float calculated_flow);
       bool set_flow_temp(float flow, OptimizerZone zone);

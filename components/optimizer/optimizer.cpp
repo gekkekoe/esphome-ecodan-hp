@@ -66,12 +66,16 @@ namespace esphome
                 }
             }
 
-            if (this->is_system_hands_off(status))
-                return;
-
             float actual_flow_temp = new_temp;
             float calculated_flow = zone == OptimizerZone::ZONE_2 ? status.Zone2FlowTemperatureSetPoint : status.Zone1FlowTemperatureSetPoint;
 
+            if (this->is_dhw_active(status)) {
+                // 1c from setppoint, also set flow temp else, compressor will stop when switching modes
+                if ((status.DhwFlowTemperatureSetPoint - actual_flow_temp) > 1)
+                    return;
+            } else if (this->is_system_hands_off(status))
+                return;
+    
             float adjusted_flow = enforce_step_down(actual_flow_temp, calculated_flow);
             if (adjusted_flow != calculated_flow)
             {
@@ -137,7 +141,7 @@ namespace esphome
             const float MAX_FEED_STEP_DOWN = 1.0f;
             if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
             {
-                ESP_LOGW(OPTIMIZER_TAG, "Flow limited to %.2f°C to prevent compressor stop! (Delta %.2f°C below actual feed temp), original calc: %.2f°C",
+                ESP_LOGW(OPTIMIZER_TAG, "Flow adjust: %.2f°C to prevent compressor stop! (setpoint: %.2f°C is %.2f°C below actual feed temp)",
                         actual_flow_temp - MAX_FEED_STEP_DOWN, (actual_flow_temp - calculated_flow), calculated_flow);
 
                 return actual_flow_temp - MAX_FEED_STEP_DOWN;
@@ -168,11 +172,21 @@ namespace esphome
                 //ESP_LOGD(OPTIMIZER_TAG, "System is in Lockout");
                 return true;
             }
+            
             if (status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON ||
                 status.Operation == esphome::ecodan::Status::OperationMode::FROST_PROTECT ||
                 status.Operation == esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION)
             {
                 //ESP_LOGD(OPTIMIZER_TAG, "System is busy (DHW, Frost, etc.)");
+                return true;
+            }
+            return false;
+        }
+
+        bool Optimizer::is_dhw_active(const ecodan::Status &status) {
+            if (status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON ||
+                status.Operation == esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION)
+            {
                 return true;
             }
             return false;
