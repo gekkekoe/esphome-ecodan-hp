@@ -198,10 +198,11 @@ namespace esphome
         void Optimizer::process_adaptive_zone_(
             std::size_t i,
             const ecodan::Status &status,
+            float cold_factor,
+            float min_delta_cold_limit,
             float base_min_delta_t,
             float max_delta_t,
             float max_error_range,
-            float dynamic_min_delta_t,
             float actual_outside_temp,
             float zone_max_flow_temp,
             float zone_min_flow_temp,
@@ -255,8 +256,8 @@ namespace esphome
             if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp))
                 return;
 
-            ESP_LOGD(OPTIMIZER_TAG, "Processing Zone %d: Room=%.1f, Target=%.1f, Actual Feedtemp: %.1f, Outside=%.1f, Bias=%.1f, heating: %d, cooling: %d",
-                     (i + 1), room_temp, room_target_temp, actual_flow_temp, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active);
+            ESP_LOGD(OPTIMIZER_TAG, "Processing Zone %d: Room=%.1f, Target=%.1f, Actual Feedtemp: %.1f, Return temp: %.1f, Outside=%.1f, Bias=%.1f, heating: %d, cooling: %d",
+                     (i + 1), room_temp, room_target_temp, actual_flow_temp, actual_return_temp, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active);
             room_target_temp += setpoint_bias;
 
             float error = is_heating_mode ? (room_target_temp - room_temp)
@@ -268,7 +269,17 @@ namespace esphome
             float error_normalized = error_positive / max_error_range;
             float x = fmin(error_normalized, 1.0f);
             float error_factor = use_linear_error ? x : x * x * (3.0f - 2.0f * x);
+
+            float saturation_limit = 0.5f; // If we are nearing setpoint, scale down cold factor
+            float demand_factor = std::clamp(error_positive / saturation_limit, 0.0f, 1.0f);
+            float effective_cold_factor = cold_factor * demand_factor;
+            
+            // apply cold factor
+            float dynamic_min_delta_t = base_min_delta_t + (effective_cold_factor * (min_delta_cold_limit - base_min_delta_t));
             float target_delta_t = dynamic_min_delta_t + error_factor * (max_delta_t - dynamic_min_delta_t);
+
+            ESP_LOGD(OPTIMIZER_TAG, "Effective delta T: %.2f, Effective cold factor: %.2f, dynamic min delta T: %.2f, max delta T: %.2f, error factor: %.2f, linear profile: %d", 
+                target_delta_t, effective_cold_factor, dynamic_min_delta_t, max_delta_t, error_factor, use_linear_error);
 
             if (is_heating_mode && is_heating_active)
             {
@@ -329,8 +340,8 @@ namespace esphome
                                 short_cycle_prevention_adjustment = 0;
                             }
                         }
-                        ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING (Delta T): calculated_flow: %.2f°C (Return: %.1f, Scaled  delta T: %.2f, error factor: %.2f, linear: %d, boost: %.1f)",
-                                 (i + 1), calculated_flow, actual_return_temp, target_delta_t, error_factor, use_linear_error, short_cycle_prevention_adjustment);
+                        ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING (Delta T): calculated_flow: %.2f°C (boost: %.1f)",
+                                 (i + 1), calculated_flow, short_cycle_prevention_adjustment);
                     }
                 }
 
@@ -433,10 +444,9 @@ namespace esphome
             float clamped_outside_temp = std::clamp(actual_outside_temp, COLD_WEATHER_TEMP, MILD_WEATHER_TEMP);
             float linear_cold_factor = (MILD_WEATHER_TEMP - clamped_outside_temp) / (MILD_WEATHER_TEMP - COLD_WEATHER_TEMP);
             float cold_factor = linear_cold_factor * linear_cold_factor;
-            float dynamic_min_delta_t = base_min_delta_t + (cold_factor * (min_delta_cold_limit - base_min_delta_t));
 
             ESP_LOGD(OPTIMIZER_TAG, "[*] Starting auto-adaptive cycle, z2 independent: %d, has_cooling: %d, cold factor: %.2f, min delta T: %.2f, max delta T: %.2f", 
-                status.has_independent_z2(), status.has_cooling(), cold_factor, dynamic_min_delta_t, max_delta_t);
+                status.has_independent_z2(), status.has_cooling(), cold_factor, max_delta_t, max_delta_t);
 
             float calculated_flows_heat[2] = {0.0f, 0.0f};
             float calculated_flows_cool[2] = {100.0f, 100.0f};
@@ -470,10 +480,11 @@ namespace esphome
                 this->process_adaptive_zone_(
                     i,
                     status,
+                    cold_factor,
+                    min_delta_cold_limit,
                     base_min_delta_t,
                     max_delta_t,
                     max_error_range,
-                    dynamic_min_delta_t,
                     actual_outside_temp,
                     (i == 0) ? max_flow_z1 : max_flow_z2,
                     (i == 0) ? min_flow_z1 : min_flow_z2,
