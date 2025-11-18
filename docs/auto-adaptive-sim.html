@@ -20,7 +20,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 20px auto;
         }
         .controls, .output {
@@ -61,10 +61,11 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            font-size: 0.9rem;
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 10px;
+            padding: 8px;
             text-align: right;
         }
         th {
@@ -78,13 +79,11 @@
         tr.highlight {
             background-color: #fff9c4 !important; 
             font-weight: 600;
+            border: 2px solid #fbc02d;
         }
         td:first-child, td:nth-child(2) {
             font-weight: 500;
             text-align: left;
-        }
-        tr.highlight td {
-            font-weight: 700;
         }
         .note {
             font-size: 0.9rem;
@@ -93,6 +92,10 @@
             background-color: #f9f9f9;
             padding: 10px;
             border-radius: 5px;
+        }
+        .fade-effect {
+            color: #e65100;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -105,7 +108,7 @@
             <h2>Settings</h2>
             
             <div class="control-group">
-                <label for="systemType">1. Choose System Type (Sets defaults)</label>
+                <label for="systemType">1. Choose System Type</label>
                 <select id="systemType">
                     <option value="UFH (Gentle / Smoothstep)">UFH (Gentle / Smoothstep)</option>
                     <option value="UFH * (Responsive / Linear)">UFH * (Responsive / Linear)</option>
@@ -137,10 +140,10 @@
                 <label for="outsideTemp">5. Current Outside Temp (°C)</label>
                 <select id="outsideTemp">
                     <option value="15">15°C (Mild)</option>
-                    <option value="10" selected>10°C</option>
+                    <option value="10">10°C</option>
                     <option value="5">5°C</option>
                     <option value="0">0°C</option>
-                    <option value="-5">-5°C (Cold)</option>
+                    <option value="-5" selected>-5°C (Cold)</option>
                 </select>
             </div>
 
@@ -152,17 +155,17 @@
             <hr style="border: 0; border-top: 1px dashed #ccc; margin: 20px 0;">
 
             <div class="control-group">
-                <label for="minDeltaT">7. Dynamic Min Delta T (°C) (Calculated)</label>
-                <input type="number" id="minDeltaT" step="0.1" readonly>
+                <label for="coldFactorBase">7. Cold Factor</label>
+                <input type="text" id="coldFactorBase" readonly>
             </div>
-
+            
             <div class="control-group">
-                <label for="maxDeltaT">8. Max Delta T (°C) (Profile default)</label>
+                <label for="maxDeltaT">8. Max Delta T (°C)</label>
                 <input type="number" id="maxDeltaT" step="0.1">
             </div>
 
             <div class="control-group">
-                <label for="maxError">9. Max Error Range (°C) (Profile default)</label>
+                <label for="maxError">9. Max Error Range (°C)</label>
                 <input type="number" id="maxError" step="0.1">
             </div>
         </div>
@@ -173,20 +176,18 @@
                 <thead>
                     <tr>
                         <th>Error</th>
-                        <th>Room Temp (°C)</th>
-                        <th>Error Factor (Curve)</th>
-                        <th>Return Temp (°C)</th>
+                        <th>Room Temp</th>
+                        <th>Demand Factor</th>
+                        <th>Dyn Min ΔT</th>
+                        <th>Error Factor</th>
                         <th>Target ΔT</th>
-                        <th>Calculated Flow (°C)</th>
-                        <th>Final Flow (°C)</th>
+                        <th>Calc Flow</th>
+                        <th>Final Flow</th>
                     </tr>
                 </thead>
                 <tbody id="resultsBody">
                 </tbody>
             </table>
-            <div class="note">
-                <strong>Note:</strong> The "Room Temp" column shows the temperature that causes the corresponding "Error", calculated as `(Target + Bias) - Error`. The highlighted row matches your current error.
-            </div>
         </div>
     </div>
 
@@ -198,7 +199,7 @@
             const currentTempInput = document.getElementById('currentTemp');
             const outsideTempInput = document.getElementById('outsideTemp');
             const biasInput = document.getElementById('bias');
-            const minDeltaInput = document.getElementById('minDeltaT');
+            const coldFactorDisplay = document.getElementById('coldFactorBase');
             const maxDeltaInput = document.getElementById('maxDeltaT');
             const maxErrorInput = document.getElementById('maxError');
             const resultsBody = document.getElementById('resultsBody');
@@ -214,6 +215,7 @@
             
             const MILD_WEATHER_TEMP = 15.0;
             const COLD_WEATHER_TEMP = -5.0;
+            const SATURATION_LIMIT = 0.5;
 
             function setProfileDefaults() {
                 const selectedProfile = profiles[systemTypeSelect.value];
@@ -245,34 +247,34 @@
                 const linear_cold_factor = (MILD_WEATHER_TEMP - clamped_outside_temp) / (MILD_WEATHER_TEMP - COLD_WEATHER_TEMP);
                 const cold_factor = linear_cold_factor * linear_cold_factor;
                 
-                const dynamic_min_delta = selectedProfile.min_delta_base + (cold_factor * (selectedProfile.min_delta_cold - selectedProfile.min_delta_base));
-                minDeltaInput.value = dynamic_min_delta.toFixed(2);
+                coldFactorDisplay.value = cold_factor.toFixed(2) + " (Based on " + outsideTemp + "°C)";
 
                 resultsBody.innerHTML = '';
 
                 for (let i = 0; i <= 30; i++) {
                     const error = i / 10.0;
-                    
                     const roomTemp = effectiveTarget - error;
-
                     const error_positive = Math.max(error, 0.0);
+
+                    const demand_factor = Math.min(Math.max(error_positive / SATURATION_LIMIT, 0.0), 1.0);
+                    const effective_cold_factor = cold_factor * demand_factor;
+
+                    const dynamic_min_delta = selectedProfile.min_delta_base + (effective_cold_factor * (selectedProfile.min_delta_cold - selectedProfile.min_delta_base));
+
                     const error_normalized = error_positive / maxError;
                     const error_clamped_normalized = Math.min(error_normalized, 1.0);
                     
                     let error_factor;
-                    let curve_type = "Smooth";
                     if (systemValue.includes('*')) {
                         error_factor = error_clamped_normalized;
-                        curve_type = "Linear";
                     } else {
                         const x = error_clamped_normalized;
-                        //error_factor = x * x * x * (x * (6.0 * x - 15.0) + 10.0);
                         error_factor = x * x * (3.0 - 2.0 * x);
                     }
                     
                     const target_delta_t = dynamic_min_delta + (error_factor * (maxDeltaT - dynamic_min_delta));
+                    
                     const calculated_flow = returnTemp + target_delta_t;
-                    //const final_flow = Math.floor(calculated_flow * 2) / 2.0;
                     const final_flow = Math.floor(calculated_flow * 10) / 10.0;
 
                     const row = document.createElement('tr');
@@ -281,12 +283,23 @@
                     if (errorStr === closestError) {
                         row.classList.add('highlight');
                     }
+
+                    let demandStyle = "";
+                    if (demand_factor < 1.0) {
+                        demandStyle = "color: #e65100; font-weight: bold;";
+                    }
+
+                    let dynMinStyle = "";
+                    if (dynamic_min_delta < (selectedProfile.min_delta_base + (cold_factor * (selectedProfile.min_delta_cold - selectedProfile.min_delta_base)) - 0.01)) {
+                         dynMinStyle = "color: #2e7d32; font-weight: bold;";
+                    }
                     
                     row.innerHTML = `
                         <td>${errorStr}°C</td>
                         <td>${roomTemp.toFixed(1)}°C</td>
-                        <td>${error_factor.toFixed(2)} (${curve_type})</td>
-                        <td>${returnTemp.toFixed(1)}°C</td>
+                        <td style="${demandStyle}">${(demand_factor * 100).toFixed(0)}%</td>
+                        <td style="${dynMinStyle}">${dynamic_min_delta.toFixed(2)}°C</td>
+                        <td>${error_factor.toFixed(2)}</td>
                         <td>${target_delta_t.toFixed(2)}°C</td>
                         <td>${calculated_flow.toFixed(2)}°C</td>
                         <td><b>${final_flow.toFixed(1)}°C</b></td>
