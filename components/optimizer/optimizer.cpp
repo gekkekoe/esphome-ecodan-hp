@@ -48,7 +48,7 @@ namespace esphome
 
         // callbacks to monitor step down, need to keep within 1.0C else compressor will halt
         void Optimizer::on_feed_temp_change(float new_temp, OptimizerZone zone) {            
-            if (std::isnan(new_temp) || !this->state_.auto_adaptive_control_enabled->state)
+            if (std::isnan(new_temp) || (!this->state_.auto_adaptive_control_enabled->state && !this->state_.predictive_short_cycle_control_enabled->state))
                 return;
 
             auto &status = this->state_.ecodan_instance->get_status();
