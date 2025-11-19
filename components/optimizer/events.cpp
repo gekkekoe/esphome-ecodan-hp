@@ -10,8 +10,11 @@ namespace esphome
         using namespace esphome::ecodan;
         // callbacks to monitor step down, need to keep within 1.0C else compressor will halt
         void Optimizer::on_feed_temp_change(float new_temp, OptimizerZone zone) {            
-            if (std::isnan(new_temp) || (!this->state_.auto_adaptive_control_enabled->state && !this->state_.predictive_short_cycle_control_enabled->state))
+            if (std::isnan(new_temp) 
+                || this->state_.status_short_cycle_lockout->state
+                || (!this->state_.auto_adaptive_control_enabled->state && !this->state_.predictive_short_cycle_control_enabled->state)) {
                 return;
+            }
 
             auto &status = this->state_.ecodan_instance->get_status();
 
@@ -35,8 +38,7 @@ namespace esphome
                 // 1c from setppoint, also set flow temp else, compressor will stop when switching modes
                 if ((status.DhwFlowTemperatureSetPoint - actual_flow_temp) > 1)
                     return;
-            } else if (this->is_system_hands_off(status))
-                return;
+            }
     
             float adjusted_flow = enforce_step_down(actual_flow_temp, calculated_flow);
             if (adjusted_flow != calculated_flow)

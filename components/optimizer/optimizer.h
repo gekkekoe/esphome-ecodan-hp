@@ -90,7 +90,7 @@ namespace esphome
           float &out_flow_heat,
           float &out_flow_cool);
       
-      float round_nearest(float input) { return floor(input * 10.0f) / 10.0f; }
+      float round_nearest(float input) { return round(input * 10.0f) / 10.0f; }
       float round_nearest_half(float input) { return floor(input * 2.0) / 2.0f; }
       bool is_system_hands_off(const ecodan::Status &status);
       bool is_dhw_active(const ecodan::Status &status);
