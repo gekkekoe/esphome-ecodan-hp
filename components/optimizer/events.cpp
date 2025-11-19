@@ -111,6 +111,18 @@ namespace esphome
             return calculated_flow;
         }
 
+        void Optimizer::on_operation_mode_change(uint8_t new_mode, uint8_t previous_mode)
+        {
+            if (new_mode == previous_mode) 
+                return;
+
+            auto heating_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::HEAT_ON);
+            if (new_mode == heating_mode && previous_mode != heating_mode && this->state_.auto_adaptive_control_enabled->state) {
+                ESP_LOGD(OPTIMIZER_TAG, "Operation Mode Changed to heating: %d -> %d", previous_mode, new_mode);
+                this->run_auto_adaptive_loop();
+            }
+        }
+
         void Optimizer::on_compressor_stop()
         {
             ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Running compressor stop logic...");

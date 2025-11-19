@@ -365,7 +365,9 @@ namespace ecodan
 
             publish_state("status_power", status.Power == Status::PowerMode::ON);
             publish_state("status_dhw_eco", status.HotWaterMode == Status::DhwMode::ECO);
-            //publish_state("status_operation", static_cast<float>(status.Operation));
+            publish_state("status_operation", static_cast<float>(status.Operation));
+            // publish numeric operation mode for callbacks
+            publish_state("operation_mode", static_cast<float>(status.Operation));
             publish_state("status_heating_cooling", static_cast<float>(status.HeatingCoolingMode));
             publish_state("status_heating_cooling_z2", static_cast<float>(status.HeatingCoolingModeZone2));
 

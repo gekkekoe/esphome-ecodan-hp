@@ -12,36 +12,46 @@ namespace esphome
 
         Optimizer::Optimizer(OptimizerState state) : state_(state) {
 
-            auto update_if_changed = [](float &storage, float new_val) -> bool {
-                if (std::isnan(new_val)) return false; 
+            auto update_if_changed = [](float &storage, float new_val, auto callback) {
+                if (std::isnan(new_val)) return; 
                 if (std::isnan(storage) || std::abs(storage - new_val) > 0.01f) {
+                    // store new value first then invoke callback
+                    auto previous = storage;
                     storage = new_val;
-                    return true;
-                }
-                return false;
-            };
 
+                    callback(new_val, previous);
+                }
+            };
+            
             if (this->state_.hp_feed_temp != nullptr) {
                 this->state_.hp_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
-                    if (update_if_changed(this->last_hp_feed_temp_, x)) {
-                        this->on_feed_temp_change(x, OptimizerZone::SINGLE);
-                    }
+                    update_if_changed(this->last_hp_feed_temp_, x, [this](float new_v, float old_v) {
+                        this->on_feed_temp_change(new_v, OptimizerZone::SINGLE);
+                    });
                 });
             } 
 
             if (this->state_.z1_feed_temp != nullptr) {
                 this->state_.z1_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
-                    if (update_if_changed(this->last_z1_feed_temp_, x)) {
-                        this->on_feed_temp_change(x, OptimizerZone::ZONE_1);
-                    }
+                    update_if_changed(this->last_z1_feed_temp_, x, [this](float new_v, float old_v) {
+                        this->on_feed_temp_change(new_v, OptimizerZone::ZONE_1);
+                    });
                 });
             } 
 
             if (this->state_.z2_feed_temp != nullptr) {
                 this->state_.z2_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
-                    if (update_if_changed(this->last_z2_feed_temp_, x)) {
-                        this->on_feed_temp_change(x, OptimizerZone::ZONE_2);
-                    }
+                    update_if_changed(this->last_z2_feed_temp_, x, [this](float new_v, float old_v) {
+                        this->on_feed_temp_change(new_v, OptimizerZone::ZONE_2);
+                    });
+                });
+            }
+
+            if (this->state_.operation_mode != nullptr) { 
+                this->state_.operation_mode->add_on_state_callback([this, update_if_changed](float x) {
+                    update_if_changed(this->last_operation_mode_, x, [this](float new_v, float old_v) {
+                        this->on_operation_mode_change(static_cast<uint8_t>(new_v), static_cast<uint8_t>(old_v));
+                    });
                 });
             }
         }

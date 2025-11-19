@@ -40,6 +40,7 @@ namespace esphome
       esphome::sensor::Sensor *hp_feed_temp;
       esphome::sensor::Sensor *z1_feed_temp;
       esphome::sensor::Sensor *z2_feed_temp;
+      esphome::sensor::Sensor *operation_mode;
 
       esphome::select::Select *heating_system_type;
       esphome::select::Select *temperature_feedback_source;
@@ -76,6 +77,9 @@ namespace esphome
       float last_z1_feed_temp_ = NAN;
       float last_z2_feed_temp_ = NAN;
 
+      // cast to uint8 when actually using
+      float last_operation_mode_ = 0;
+
       void process_adaptive_zone_(
           std::size_t i,
           const ecodan::Status &status,
@@ -100,6 +104,7 @@ namespace esphome
 
       // callback handlers for important events
       void on_feed_temp_change(float actual_flow_temp, OptimizerZone zone);
+      void on_operation_mode_change(uint8_t new_mode, uint8_t previous_mode);
 
     public:
       Optimizer(OptimizerState state);

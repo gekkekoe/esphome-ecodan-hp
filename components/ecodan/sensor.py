@@ -393,6 +393,8 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_POWER,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
+        cv.Optional("operation_mode"): sensor.sensor_schema(
+        ),
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
