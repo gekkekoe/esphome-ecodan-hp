@@ -172,9 +172,14 @@ namespace ecodan
     climate::ClimateTraits EcodanClimate::traits() {
         auto traits = climate::ClimateTraits();
         // The capabilities of the climate device
-        traits.set_supports_two_point_target_temperature(false);
-        traits.set_supports_current_temperature(get_current_temp != nullptr);
-        traits.set_supports_action(true);
+        auto flag = esphome::climate::CLIMATE_SUPPORTS_ACTION;
+        if (get_current_temp != nullptr)
+            flag = flag | esphome::climate::CLIMATE_SUPPORTS_CURRENT_TEMPERATURE;
+
+        traits.add_feature_flags(flag);
+        //traits.set_supports_two_point_target_temperature(false);
+        //traits.set_supports_current_temperature(get_current_temp != nullptr);
+        //traits.set_supports_action(true);
         
         if (this->dhw_climate_mode) {
 
