@@ -99,7 +99,7 @@ namespace esphome
       bool set_flow_temp(float flow, OptimizerZone zone);
 
       // callback handlers for important events
-      void on_feed_temp_change(float new_temp, OptimizerZone zone);
+      void on_feed_temp_change(float actual_flow_temp, OptimizerZone zone);
 
     public:
       Optimizer(OptimizerState state);
