@@ -95,9 +95,6 @@ namespace esphome
                     is_heating_active = true;
             }
 
-            if (!is_heating_mode && !is_cooling_mode)
-                return;
-
             float setpoint_bias = this->state_.auto_adaptive_setpoint_bias->state;
             if (isnan(setpoint_bias))
                 setpoint_bias = 0.0f;
@@ -107,6 +104,12 @@ namespace esphome
             float requested_flow_temp = (i == 0) ? status.Zone1FlowTemperatureSetPoint : status.Zone2FlowTemperatureSetPoint;
             float actual_flow_temp = status.has_independent_z2() ? ((i == 0) ? status.Z1FeedTemperature : status.Z2FeedTemperature) : status.HpFeedTemperature;
             float actual_return_temp = status.has_independent_z2() ? ((i == 0) ? status.Z1ReturnTemperature : status.Z2ReturnTemperature) : status.HpReturnTemperature;
+            
+            ESP_LOGD(OPTIMIZER_TAG, "Processing Zone %d: Room=%.1f, Target=%.1f, Actual Feedtemp: %.1f, Return temp: %.1f, Outside=%.1f, Bias=%.1f, heating: %d, cooling: %d",
+                     (i + 1), room_temp, room_target_temp, actual_flow_temp, actual_return_temp, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active);
+
+            if (!is_heating_mode && !is_cooling_mode)
+                return;
 
             if (this->state_.temperature_feedback_source->active_index().value_or(0) == 1)
             {
@@ -115,8 +118,6 @@ namespace esphome
             if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp))
                 return;
 
-            ESP_LOGD(OPTIMIZER_TAG, "Processing Zone %d: Room=%.1f, Target=%.1f, Actual Feedtemp: %.1f, Return temp: %.1f, Outside=%.1f, Bias=%.1f, heating: %d, cooling: %d",
-                     (i + 1), room_temp, room_target_temp, actual_flow_temp, actual_return_temp, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active);
             room_target_temp += setpoint_bias;
 
             float error = is_heating_mode ? (room_target_temp - room_temp)
