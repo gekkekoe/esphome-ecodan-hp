@@ -153,7 +153,7 @@ namespace esphome
                 {
                     const float DEFROST_RISK_MIN_TEMP = -2.0f;
                     const float DEFROST_RISK_MAX_TEMP = 3.0f;
-                    const uint32_t DEFROST_MEMORY_MS = 1 * 3600 * 1000UL;
+                    const uint32_t DEFROST_MEMORY_MS = 30 * 60 * 1000UL;
                     bool defrost_handling_enabled = this->state_.defrost_risk_handling_enabled->state;
 
                     bool is_defrost_weather = false;

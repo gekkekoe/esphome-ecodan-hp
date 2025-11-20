@@ -242,7 +242,7 @@ switch:
   - platform: template
     name: ${defrost_risk_handling_enabled}
     id: defrost_risk_handling_enabled
-    restore_mode: RESTORE_DEFAULT_ON 
+    restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
 
 binary_sensor:
