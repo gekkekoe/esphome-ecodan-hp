@@ -212,7 +212,7 @@ namespace ecodan
 
     void EcodanClimate::get_current_limits(float &min_limit, float &max_limit) {
         if (this->dhw_climate_mode) {
-            auto& status = this->get_status();
+            //auto& status = this->get_status();
             min_limit = 40; max_limit = 60;
         } 
         else if(this->thermostat_climate_mode) {
