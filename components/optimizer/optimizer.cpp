@@ -78,11 +78,9 @@ namespace esphome
             bool is_cooling_mode = status.has_cooling() && status.is_auto_adaptive_cooling(zone);
             bool is_cooling_active = status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON;
 
-            if (is_heating_active && status.has_2zones() && status.has_independent_z2())
+            if (is_heating_active && status.has_2zones())
             {
                 auto multizone_status = status.MultiZoneStatus;
-                bool multizone_circulation_pump_active = (status.WaterPump2Active || status.WaterPump3Active);
-
                 if (i == 0 && (multizone_status == 0 || multizone_status == 3))
                 {
                     is_heating_active = false;
@@ -93,7 +91,7 @@ namespace esphome
                 }
 
                 // for z2 with z1/z2 circulation pump and mixing tank, demand translate into pump being active
-                if (multizone_circulation_pump_active)
+                if (status.has_independent_z2() && (status.WaterPump2Active || status.WaterPump3Active))
                     is_heating_active = true;
             }
 
