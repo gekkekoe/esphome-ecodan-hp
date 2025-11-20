@@ -175,6 +175,12 @@ namespace esphome
 
         void Optimizer::on_compressor_state_change(bool x, bool x_previous)
         {
+            if (millis() < 60000) 
+            {
+                ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Compressor detected ON at boot. Ignoring start-timer (run duration unknown).");
+                return;
+            }
+
             if (x_previous && !x)
             {
                 ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Compressor STOP detected");
