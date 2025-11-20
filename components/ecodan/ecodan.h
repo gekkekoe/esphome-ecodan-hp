@@ -185,6 +185,7 @@ namespace ecodan
 
         void refresh();
         void validate_target_temperature();
+        void get_current_limits(float &min_limit, float &max_limit);
         std::chrono::time_point<std::chrono::steady_clock> last_update;
     };    
 
