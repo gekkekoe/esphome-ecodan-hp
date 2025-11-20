@@ -104,7 +104,7 @@ namespace esphome
             if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
             {
                 ESP_LOGW(OPTIMIZER_TAG, "Flow adjust: %.2f°C to prevent compressor stop! (setpoint: %.2f°C is %.2f°C below actual feed temp)",
-                        actual_flow_temp - MAX_FEED_STEP_DOWN, (actual_flow_temp - calculated_flow), calculated_flow);
+                        actual_flow_temp - MAX_FEED_STEP_DOWN, calculated_flow, (actual_flow_temp - calculated_flow));
 
                 return actual_flow_temp - MAX_FEED_STEP_DOWN;
             }
@@ -175,6 +175,12 @@ namespace esphome
 
         void Optimizer::on_compressor_state_change(bool x, bool x_previous)
         {
+            if (millis() < 60000) 
+            {
+                ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Compressor detected ON at boot. Ignoring start-timer (run duration unknown).");
+                return;
+            }
+
             if (x_previous && !x)
             {
                 ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Compressor STOP detected");
