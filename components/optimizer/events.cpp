@@ -34,10 +34,16 @@ namespace esphome
             float calculated_flow = zone == OptimizerZone::ZONE_2 ? status.Zone2FlowTemperatureSetPoint : status.Zone1FlowTemperatureSetPoint;
             float adjusted_flow = actual_flow_temp;
 
-            if (this->is_dhw_active(status) && status.DhwFlowTemperatureSetPoint > actual_flow_temp)
-                return;
-            else 
+            if (this->is_dhw_active(status)) {
+                if (status.DhwFlowTemperatureSetPoint > actual_flow_temp)
+                    return;
+
+                // add small amount above current actual flow temp
+                adjusted_flow += 0.5f;
+            }
+            else {
                 adjusted_flow = enforce_step_down(actual_flow_temp, calculated_flow);
+            }
     
             if (adjusted_flow != calculated_flow)
             {
