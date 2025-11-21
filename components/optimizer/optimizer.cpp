@@ -54,6 +54,21 @@ namespace esphome
                     });
                 });
             }
+
+            if (this->state_.status_compressor != nullptr) { 
+                this->state_.status_compressor->add_on_state_callback([this, update_if_changed](float x) {
+                    update_if_changed(this->last_compressor_status_, x, [this](float new_v, float old_v) {
+                        this->on_compressor_state_change(static_cast<bool>(new_v), static_cast<bool>(old_v));
+                    });
+                });
+            }
+            if (this->state_.status_defrost != nullptr) { 
+                this->state_.status_defrost->add_on_state_callback([this, update_if_changed](float x) {
+                    update_if_changed(this->last_defrost_status_, x, [this](float new_v, float old_v) {
+                        this->on_defrost_state_change(static_cast<bool>(new_v), static_cast<bool>(old_v));
+                    });
+                });
+            }
         }
 
         void Optimizer::process_adaptive_zone_(
@@ -104,7 +119,7 @@ namespace esphome
             float requested_flow_temp = (i == 0) ? status.Zone1FlowTemperatureSetPoint : status.Zone2FlowTemperatureSetPoint;
             float actual_flow_temp = status.has_independent_z2() ? ((i == 0) ? status.Z1FeedTemperature : status.Z2FeedTemperature) : status.HpFeedTemperature;
             float actual_return_temp = status.has_independent_z2() ? ((i == 0) ? status.Z1ReturnTemperature : status.Z2ReturnTemperature) : status.HpReturnTemperature;
-            
+
             ESP_LOGD(OPTIMIZER_TAG, "Processing Zone %d: Room=%.1f, Target=%.1f, Actual Feedtemp: %.1f, Return temp: %.1f, Outside=%.1f, Bias=%.1f, heating: %d, cooling: %d",
                      (i + 1), room_temp, room_target_temp, actual_flow_temp, actual_return_temp, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active);
 

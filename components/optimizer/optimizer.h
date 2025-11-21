@@ -36,6 +36,8 @@ namespace esphome
 
       esphome::binary_sensor::BinarySensor *status_short_cycle_lockout;
       esphome::binary_sensor::BinarySensor *status_predictive_boost_active;
+      esphome::binary_sensor::BinarySensor *status_compressor;
+      esphome::binary_sensor::BinarySensor *status_defrost;
 
       esphome::sensor::Sensor *hp_feed_temp;
       esphome::sensor::Sensor *z1_feed_temp;
@@ -80,6 +82,10 @@ namespace esphome
       // cast to uint8 when actually using
       float last_operation_mode_ = 0;
 
+      // cast to bool
+      float last_defrost_status_ = 0;
+      float last_compressor_status_ = 0;
+
       void process_adaptive_zone_(
           std::size_t i,
           const ecodan::Status &status,
@@ -118,6 +124,7 @@ namespace esphome
       void check_lockout_expiration();
       void on_compressor_stop();
       void on_compressor_state_change(bool x, bool x_previous);
+      void on_defrost_state_change(bool x, bool x_previous);
       void update_boost_sensor();
     };
 

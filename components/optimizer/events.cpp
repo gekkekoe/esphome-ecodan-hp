@@ -99,7 +99,8 @@ namespace esphome
             return false;
         }
 
-        float Optimizer::enforce_step_down(float actual_flow_temp, float calculated_flow) {
+        float Optimizer::enforce_step_down(float actual_flow_temp, float calculated_flow) 
+        {
             const float MAX_FEED_STEP_DOWN = 1.0f;
             if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
             {
@@ -109,18 +110,6 @@ namespace esphome
                 return actual_flow_temp - MAX_FEED_STEP_DOWN;
             }
             return calculated_flow;
-        }
-
-        void Optimizer::on_operation_mode_change(uint8_t new_mode, uint8_t previous_mode)
-        {
-            if (new_mode == previous_mode) 
-                return;
-
-            auto heating_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::HEAT_ON);
-            if (new_mode == heating_mode && previous_mode != heating_mode && this->state_.auto_adaptive_control_enabled->state) {
-                ESP_LOGD(OPTIMIZER_TAG, "Operation Mode Changed to heating: %d -> %d", previous_mode, new_mode);
-                this->run_auto_adaptive_loop();
-            }
         }
 
         void Optimizer::on_compressor_stop()
@@ -172,14 +161,32 @@ namespace esphome
                 }
             }
         }
+        
+        void Optimizer::on_operation_mode_change(uint8_t new_mode, uint8_t previous_mode)
+        {
+            if (new_mode == previous_mode) 
+                return;
+
+            auto heating_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::HEAT_ON);
+            if (new_mode == heating_mode && previous_mode != heating_mode && this->state_.auto_adaptive_control_enabled->state) {
+                ESP_LOGD(OPTIMIZER_TAG, "Operation Mode Changed to heating: %d -> %d", previous_mode, new_mode);
+                this->run_auto_adaptive_loop();
+            }
+        }
+
+        void Optimizer::on_defrost_state_change(bool x, bool x_previous) 
+        {      
+            if (x_previous && !x)
+            {
+                ESP_LOGD(OPTIMIZER_TAG, "Defrost stop: triggering auto-adaptive loop.");
+                this->run_auto_adaptive_loop();
+            }
+        }
 
         void Optimizer::on_compressor_state_change(bool x, bool x_previous)
         {
             if (millis() < 60000) 
-            {
-                ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Compressor detected ON at boot. Ignoring start-timer (run duration unknown).");
                 return;
-            }
 
             if (x_previous && !x)
             {
