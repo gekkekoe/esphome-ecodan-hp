@@ -22,15 +22,21 @@ namespace ecodan
         heatpumpInitialized = initialize();
         this->last_proxy_activity_ = std::chrono::steady_clock::now();
 
+        BaseType_t task_core_id;
+#if CONFIG_FREERTOS_UNICORE
+        task_core_id = 0;
+        ESP_LOGI(TAG, "Setup: Single Core detected. Serial task pinned to Core 0.");
+#else
         int main_core_id = xPortGetCoreID();
-        int other_core_id = 1 - main_core_id;
-
+        task_core_id = 1 - main_core_id;
+        ESP_LOGI(TAG, "Setup: Dual Core detected. Main running on Core %d. Serial task pinned to Core %d.", main_core_id, task_core_id);
+#endif
         // background serial io handler
         xTaskCreatePinnedToCore(
             serial_io_task_trampoline,
             "serial_io_task", 4096, this,
             configMAX_PRIORITIES - 1, &this->serial_io_task_handle_,
-            other_core_id // pin to other core than esphome
+            task_core_id // pin to other core than esphome if available
         );
     }
 
