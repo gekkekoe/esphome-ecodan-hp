@@ -205,8 +205,8 @@
             const resultsBody = document.getElementById('resultsBody');
 
             const profiles = {
-                'UFH (Gentle / Smoothstep)':        { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.0, maxError: 2.25 },
-                'UFH * (Responsive / Linear)':      { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.0, maxError: 2.25 },
+                'UFH (Gentle / Smoothstep)':        { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.5, maxError: 2.0 },
+                'UFH * (Responsive / Linear)':      { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.5, maxError: 2.0 },
                 'Hybrid (Gentle / Smoothstep)':     { min_delta_base: 3.0, min_delta_cold: 5.0, maxDelta: 8.0, maxError: 2.0 },
                 'Hybrid * (Responsive / Linear)':   { min_delta_base: 3.0, min_delta_cold: 5.0, maxDelta: 8.0, maxError: 2.0 },
                 'Radiators (Gentle / Smoothstep)':  { min_delta_base: 4.0, min_delta_cold: 6.0, maxDelta: 10.0, maxError: 1.5 },
@@ -215,7 +215,7 @@
             
             const MILD_WEATHER_TEMP = 15.0;
             const COLD_WEATHER_TEMP = -5.0;
-            const SATURATION_LIMIT = 0.5;
+            const SATURATION_LIMIT = 0.4;
 
             function setProfileDefaults() {
                 const selectedProfile = profiles[systemTypeSelect.value];

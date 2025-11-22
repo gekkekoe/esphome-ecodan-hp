@@ -145,7 +145,7 @@ namespace esphome
             float x = fmin(error_normalized, 1.0f);
             float error_factor = use_linear_error ? x : x * x * (3.0f - 2.0f * x);
 
-            float saturation_limit = 0.5f; // If we are nearing setpoint, scale down cold factor
+            float saturation_limit = 0.4f; // If we are nearing setpoint, scale down cold factor
             float demand_factor = std::clamp(error_positive / saturation_limit, 0.0f, 1.0f);
             float effective_cold_factor = cold_factor * demand_factor;
             
@@ -295,8 +295,8 @@ namespace esphome
                 // UFH
                 base_min_delta_t = 2.25f;
                 min_delta_cold_limit = 4.0f;
-                max_delta_t = 6.0f;
-                max_error_range = 2.25f;
+                max_delta_t = 6.5f;
+                max_error_range = 2.0f;
             }
             else if (heating_type_index <= 3)
             {
