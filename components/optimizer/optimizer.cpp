@@ -318,8 +318,7 @@ namespace esphome
             const float MILD_WEATHER_TEMP = 15.0f;
             const float COLD_WEATHER_TEMP = -5.0f;
             float clamped_outside_temp = std::clamp(actual_outside_temp, COLD_WEATHER_TEMP, MILD_WEATHER_TEMP);
-            float linear_cold_factor = (MILD_WEATHER_TEMP - clamped_outside_temp) / (MILD_WEATHER_TEMP - COLD_WEATHER_TEMP);
-            float cold_factor = linear_cold_factor * linear_cold_factor;
+            float cold_factor = (MILD_WEATHER_TEMP - clamped_outside_temp) / (MILD_WEATHER_TEMP - COLD_WEATHER_TEMP);
 
             ESP_LOGD(OPTIMIZER_TAG, "[*] Starting auto-adaptive cycle, z2 independent: %d, has_cooling: %d, cold factor: %.2f, min delta T: %.2f, max delta T: %.2f", 
                 status.has_independent_z2(), status.has_cooling(), cold_factor, max_delta_t, max_delta_t);

@@ -245,7 +245,8 @@
 
                 const clamped_outside_temp = Math.max(COLD_WEATHER_TEMP, Math.min(outsideTemp, MILD_WEATHER_TEMP));
                 const linear_cold_factor = (MILD_WEATHER_TEMP - clamped_outside_temp) / (MILD_WEATHER_TEMP - COLD_WEATHER_TEMP);
-                const cold_factor = linear_cold_factor * linear_cold_factor;
+                //const cold_factor = linear_cold_factor * linear_cold_factor;
+                const cold_factor = linear_cold_factor;
                 
                 coldFactorDisplay.value = cold_factor.toFixed(2) + " (Based on " + outsideTemp + "°C)";
 
