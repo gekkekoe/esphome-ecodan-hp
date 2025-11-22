@@ -1,5 +1,5 @@
 substitutions:
-  update_interval_minutes: "10min"
+  update_interval_minutes: "5min"
   z2_feed_assignment: "state.z2_feed_temp = nullptr;"
 
 esphome:
