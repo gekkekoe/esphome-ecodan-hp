@@ -85,18 +85,6 @@
             font-weight: 500;
             text-align: left;
         }
-        .note {
-            font-size: 0.9rem;
-            color: #555;
-            margin-top: 15px;
-            background-color: #f9f9f9;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .fade-effect {
-            color: #e65100;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
@@ -152,20 +140,25 @@
                 <input type="number" id="bias" value="0.0" step="0.1">
             </div>
 
+            <div class="control-group">
+                <label for="flowRate">7. Flow Rate (L/m)</label>
+                <input type="number" id="flowRate" value="21.0" step="0.5">
+            </div>
+
             <hr style="border: 0; border-top: 1px dashed #ccc; margin: 20px 0;">
 
             <div class="control-group">
-                <label for="coldFactorBase">7. Cold Factor</label>
+                <label for="coldFactorBase">8. Cold Factor</label>
                 <input type="text" id="coldFactorBase" readonly>
             </div>
             
             <div class="control-group">
-                <label for="maxDeltaT">8. Max Delta T (°C)</label>
+                <label for="maxDeltaT">9. Max Delta T (°C)</label>
                 <input type="number" id="maxDeltaT" step="0.1">
             </div>
 
             <div class="control-group">
-                <label for="maxError">9. Max Error Range (°C)</label>
+                <label for="maxError">10. Max Error Range (°C)</label>
                 <input type="number" id="maxError" step="0.1">
             </div>
         </div>
@@ -177,12 +170,11 @@
                     <tr>
                         <th>Error</th>
                         <th>Room Temp</th>
-                        <th>Demand Factor</th>
                         <th>Dyn Min ΔT</th>
                         <th>Error Factor</th>
                         <th>Target ΔT</th>
                         <th>Calc Flow</th>
-                        <th>Final Flow</th>
+                        <th>Output (kW)</th>
                     </tr>
                 </thead>
                 <tbody id="resultsBody">
@@ -199,6 +191,7 @@
             const currentTempInput = document.getElementById('currentTemp');
             const outsideTempInput = document.getElementById('outsideTemp');
             const biasInput = document.getElementById('bias');
+            const flowRateInput = document.getElementById('flowRate');
             const coldFactorDisplay = document.getElementById('coldFactorBase');
             const maxDeltaInput = document.getElementById('maxDeltaT');
             const maxErrorInput = document.getElementById('maxError');
@@ -215,13 +208,11 @@
             
             const MILD_WEATHER_TEMP = 15.0;
             const COLD_WEATHER_TEMP = -5.0;
-            const SATURATION_LIMIT = 0.4;
 
             function setProfileDefaults() {
                 const selectedProfile = profiles[systemTypeSelect.value];
                 maxDeltaInput.value = selectedProfile.maxDelta;
                 maxErrorInput.value = selectedProfile.maxError;
-                
                 updateTable();
             }
 
@@ -232,20 +223,18 @@
                 const currentTemp = parseFloat(currentTempInput.value);
                 const outsideTemp = parseFloat(outsideTempInput.value);
                 const bias = parseFloat(biasInput.value);
+                const flowRate = parseFloat(flowRateInput.value);
                 
                 const selectedProfile = profiles[systemValue];
-                
                 const maxDeltaT = parseFloat(maxDeltaInput.value);
                 const maxError = parseFloat(maxErrorInput.value);
                 
                 const effectiveTarget = targetTemp + bias;
-                
                 const actualError = effectiveTarget - currentTemp;
                 const closestError = (Math.round(actualError * 10) / 10.0).toFixed(1);
 
                 const clamped_outside_temp = Math.max(COLD_WEATHER_TEMP, Math.min(outsideTemp, MILD_WEATHER_TEMP));
                 const linear_cold_factor = (MILD_WEATHER_TEMP - clamped_outside_temp) / (MILD_WEATHER_TEMP - COLD_WEATHER_TEMP);
-                //const cold_factor = linear_cold_factor * linear_cold_factor;
                 const cold_factor = linear_cold_factor;
                 
                 coldFactorDisplay.value = cold_factor.toFixed(2) + " (Based on " + outsideTemp + "°C)";
@@ -257,10 +246,7 @@
                     const roomTemp = effectiveTarget - error;
                     const error_positive = Math.max(error, 0.0);
 
-                    const demand_factor = Math.min(Math.max(error_positive / SATURATION_LIMIT, 0.0), 1.0);
-                    const effective_cold_factor = cold_factor * demand_factor;
-
-                    const dynamic_min_delta = selectedProfile.min_delta_base + (effective_cold_factor * (selectedProfile.min_delta_cold - selectedProfile.min_delta_base));
+                    const dynamic_min_delta = selectedProfile.min_delta_base + (cold_factor * (selectedProfile.min_delta_cold - selectedProfile.min_delta_base));
 
                     const error_normalized = error_positive / maxError;
                     const error_clamped_normalized = Math.min(error_normalized, 1.0);
@@ -276,34 +262,30 @@
                     const target_delta_t = dynamic_min_delta + (error_factor * (maxDeltaT - dynamic_min_delta));
                     
                     const calculated_flow = returnTemp + target_delta_t;
-                    const final_flow = Math.floor(calculated_flow * 10) / 10.0;
+                    const final_flow = Math.round(calculated_flow * 10) / 10.0;
+
+                    const powerKw = ((flowRate/60.0) * target_delta_t * 4.186).toFixed(2);
 
                     const row = document.createElement('tr');
-                    
                     const errorStr = error.toFixed(1);
+                    
                     if (errorStr === closestError) {
                         row.classList.add('highlight');
                     }
 
-                    let demandStyle = "";
-                    if (demand_factor < 1.0) {
-                        demandStyle = "color: #e65100; font-weight: bold;";
-                    }
-
                     let dynMinStyle = "";
-                    if (dynamic_min_delta < (selectedProfile.min_delta_base + (cold_factor * (selectedProfile.min_delta_cold - selectedProfile.min_delta_base)) - 0.01)) {
+                    if (dynamic_min_delta > (selectedProfile.min_delta_base + 0.01)) {
                          dynMinStyle = "color: #2e7d32; font-weight: bold;";
                     }
                     
                     row.innerHTML = `
                         <td>${errorStr}°C</td>
                         <td>${roomTemp.toFixed(1)}°C</td>
-                        <td style="${demandStyle}">${(demand_factor * 100).toFixed(0)}%</td>
                         <td style="${dynMinStyle}">${dynamic_min_delta.toFixed(2)}°C</td>
                         <td>${error_factor.toFixed(2)}</td>
                         <td>${target_delta_t.toFixed(2)}°C</td>
-                        <td>${calculated_flow.toFixed(2)}°C</td>
-                        <td><b>${final_flow.toFixed(1)}°C</b></td>
+                        <td>${final_flow.toFixed(1)}°C</td>
+                        <td><b>${powerKw} kW</b></td>
                     `;
                     resultsBody.appendChild(row);
                 }
@@ -312,7 +294,7 @@
             systemTypeSelect.addEventListener('change', setProfileDefaults);
             outsideTempInput.addEventListener('change', updateTable);
             
-            const allInputs = [returnTempInput, targetTempInput, currentTempInput, biasInput, maxDeltaInput, maxErrorInput];
+            const allInputs = [returnTempInput, targetTempInput, currentTempInput, biasInput, maxDeltaInput, maxErrorInput, flowRateInput];
             allInputs.forEach(input => {
                 input.addEventListener('input', updateTable);
             });

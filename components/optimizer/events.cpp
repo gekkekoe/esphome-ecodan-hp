@@ -18,6 +18,10 @@ namespace esphome
 
             auto &status = this->state_.ecodan_instance->get_status();
 
+            // temp disable trailing during dhw
+            if (this->is_dhw_active(status))
+                return;
+
             if (status.has_independent_z2()) 
             {
                 if (zone == OptimizerZone::SINGLE) {

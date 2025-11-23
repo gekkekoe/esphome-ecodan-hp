@@ -144,17 +144,13 @@ namespace esphome
             float error_normalized = error_positive / max_error_range;
             float x = fmin(error_normalized, 1.0f);
             float error_factor = use_linear_error ? x : x * x * (3.0f - 2.0f * x);
-
-            float saturation_limit = 0.4f; // If we are nearing setpoint, scale down cold factor
-            float demand_factor = std::clamp(error_positive / saturation_limit, 0.0f, 1.0f);
-            float effective_cold_factor = cold_factor * demand_factor;
             
             // apply cold factor
-            float dynamic_min_delta_t = base_min_delta_t + (effective_cold_factor * (min_delta_cold_limit - base_min_delta_t));
+            float dynamic_min_delta_t = base_min_delta_t + (cold_factor * (min_delta_cold_limit - base_min_delta_t));
             float target_delta_t = dynamic_min_delta_t + error_factor * (max_delta_t - dynamic_min_delta_t);
 
-            ESP_LOGD(OPTIMIZER_TAG, "Effective delta T: %.2f, Effective cold factor: %.2f, dynamic min delta T: %.2f, max delta T: %.2f, error factor: %.2f, linear profile: %d", 
-                target_delta_t, effective_cold_factor, dynamic_min_delta_t, max_delta_t, error_factor, use_linear_error);
+            ESP_LOGD(OPTIMIZER_TAG, "Effective delta T: %.2f, cold factor: %.2f, dynamic min delta T: %.2f, max delta T: %.2f, error factor: %.2f, linear profile: %d", 
+                target_delta_t, cold_factor, dynamic_min_delta_t, max_delta_t, error_factor, use_linear_error);
 
             if (is_heating_mode && is_heating_active)
             {
@@ -167,7 +163,7 @@ namespace esphome
                 {
                     const float DEFROST_RISK_MIN_TEMP = -2.0f;
                     const float DEFROST_RISK_MAX_TEMP = 3.0f;
-                    const uint32_t DEFROST_MEMORY_MS = 10 * 60 * 1000UL;
+                    const uint32_t DEFROST_MEMORY_MS = 15 * 60 * 1000UL;
                     bool defrost_handling_enabled = this->state_.defrost_risk_handling_enabled->state;
 
                     bool is_defrost_weather = false;

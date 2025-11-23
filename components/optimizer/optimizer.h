@@ -80,7 +80,7 @@ namespace esphome
       float last_z2_feed_temp_ = NAN;
 
       // cast to uint8 when actually using
-      float last_operation_mode_ = 0;
+      float last_operation_mode_ = NAN;
 
       // cast to bool
       float last_defrost_status_ = 0;
