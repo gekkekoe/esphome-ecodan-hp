@@ -69,6 +69,9 @@ namespace esphome
     private:
       OptimizerState state_;
 
+      // store last dhw end to trail feed temp
+      uint32_t dhw_post_run_expiration_ = 0;
+
       uint32_t predictive_delta_start_time_ = 0;
       uint32_t compressor_start_time_ = 0;
       uint32_t last_defrost_time_ = 0;

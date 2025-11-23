@@ -18,10 +18,6 @@ namespace esphome
 
             auto &status = this->state_.ecodan_instance->get_status();
 
-            // temp disable trailing during dhw
-            if (this->is_dhw_active(status))
-                return;
-
             if (status.has_independent_z2()) 
             {
                 if (zone == OptimizerZone::SINGLE) {
@@ -38,7 +34,12 @@ namespace esphome
             float calculated_flow = zone == OptimizerZone::ZONE_2 ? status.Zone2FlowTemperatureSetPoint : status.Zone1FlowTemperatureSetPoint;
             float adjusted_flow = actual_flow_temp;
 
-            if (this->is_dhw_active(status)) {
+            time_t current_timestamp = status.timestamp();
+            bool is_post_dhw_window = (current_timestamp > 0 
+                                    && this->dhw_post_run_expiration_ > 0 
+                                    && current_timestamp < this->dhw_post_run_expiration_);
+
+            if (this->is_dhw_active(status) || (status.CompressorOn && is_post_dhw_window)) {
                 if (status.DhwFlowTemperatureSetPoint > actual_flow_temp)
                     return;
 
@@ -180,6 +181,17 @@ namespace esphome
             auto heating_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::HEAT_ON);
             if (new_mode == heating_mode && previous_mode != heating_mode && this->state_.auto_adaptive_control_enabled->state) {
                 ESP_LOGD(OPTIMIZER_TAG, "Operation Mode Changed to heating: %d -> %d", previous_mode, new_mode);
+
+                // after DHW, store monitor experation time to monitor actual feed temp / setpoint
+                if (previous_mode == static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::DHW_ON)) {
+                    auto &status = this->state_.ecodan_instance->get_status();
+                    time_t current_timestamp = status.timestamp();
+                    if (current_timestamp > 0) {
+                        const uint32_t after_dhw_monitoring_duration_s = 5 * 60UL;
+                        this->dhw_post_run_expiration_ = (uint32_t)(current_timestamp + after_dhw_monitoring_duration_s);
+                        ESP_LOGD(OPTIMIZER_TAG, "DHW ended, setting monitor expiration to: %d", this->dhw_post_run_expiration_);
+                    }
+                }
                 this->run_auto_adaptive_loop();
             }
         }

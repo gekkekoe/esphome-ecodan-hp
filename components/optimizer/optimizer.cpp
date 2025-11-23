@@ -149,8 +149,8 @@ namespace esphome
             float dynamic_min_delta_t = base_min_delta_t + (cold_factor * (min_delta_cold_limit - base_min_delta_t));
             float target_delta_t = dynamic_min_delta_t + error_factor * (max_delta_t - dynamic_min_delta_t);
 
-            ESP_LOGD(OPTIMIZER_TAG, "Effective delta T: %.2f, cold factor: %.2f, dynamic min delta T: %.2f, max delta T: %.2f, error factor: %.2f, linear profile: %d", 
-                target_delta_t, cold_factor, dynamic_min_delta_t, max_delta_t, error_factor, use_linear_error);
+            ESP_LOGD(OPTIMIZER_TAG, "Effective delta T: %.2f, cold factor: %.2f, dynamic min delta T: %.2f, error factor: %.2f, linear profile: %d", 
+                target_delta_t, cold_factor, dynamic_min_delta_t, error_factor, use_linear_error);
 
             if (is_heating_mode && is_heating_active)
             {
@@ -177,7 +177,7 @@ namespace esphome
                             {
                                 is_defrost_weather = true;
                             }
-                            ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost handling enabled: %d, defrost conditions: %d, last_defrost_ts: %d, current_ts: %d", 
+                            ESP_LOGD(OPTIMIZER_TAG, "Defrost handling enabled: %d, defrost conditions: %d, last_defrost_ts: %d, current_ts: %d", 
                                 defrost_handling_enabled, is_defrost_weather, last_defrost, current_ms);
                         }
                     }
@@ -216,9 +216,10 @@ namespace esphome
                     }
                 }
 
-                // step down limit to avoid compressor halt (it seems to be triggered when delta actual_flow_temp - calculated_flow >= 2.0)
-                calculated_flow = enforce_step_down(actual_flow_temp, calculated_flow);
                 calculated_flow = this->clamp_flow_temp(calculated_flow, zone_min_flow_temp, zone_max_flow_temp);
+                // step down limit to avoid compressor halt (it seems to be triggered when delta actual_flow_temp - calculated_flow >= 2.0)
+                // we need to step down AFTER clamping, since dhw could just have finished
+                calculated_flow = enforce_step_down(actual_flow_temp, calculated_flow);
                 out_flow_heat = calculated_flow;
             }
             else if (is_cooling_mode && is_cooling_active)
@@ -317,7 +318,7 @@ namespace esphome
             float cold_factor = (MILD_WEATHER_TEMP - clamped_outside_temp) / (MILD_WEATHER_TEMP - COLD_WEATHER_TEMP);
 
             ESP_LOGD(OPTIMIZER_TAG, "[*] Starting auto-adaptive cycle, z2 independent: %d, has_cooling: %d, cold factor: %.2f, min delta T: %.2f, max delta T: %.2f", 
-                status.has_independent_z2(), status.has_cooling(), cold_factor, max_delta_t, max_delta_t);
+                status.has_independent_z2(), status.has_cooling(), cold_factor, base_min_delta_t, max_delta_t);
 
             float calculated_flows_heat[2] = {0.0f, 0.0f};
             float calculated_flows_cool[2] = {100.0f, 100.0f};
