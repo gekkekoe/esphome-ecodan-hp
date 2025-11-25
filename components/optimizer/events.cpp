@@ -39,12 +39,15 @@ namespace esphome
                                     && this->dhw_post_run_expiration_ > 0 
                                     && current_timestamp < this->dhw_post_run_expiration_);
 
-            if (this->is_dhw_active(status) || is_post_dhw_window) {
-                if (this->is_dhw_active(status) && status.DhwFlowTemperatureSetPoint > actual_flow_temp)
+
+            if (this->is_dhw_active(status)) {
+                if (status.DhwFlowTemperatureSetPoint > actual_flow_temp)
                     return;
-                // during last part of dhw or first part of heating we need to add a small value to ensure that compressor does not stop
+
+                // adjust during first part of heating
                 adjusted_flow += 0.5f;
-                
+            }
+            else if (is_post_dhw_window) {
                 if (!this->is_heating_active(status)) {
                     // no demand, restore saved setpoint
                     float restore_val = (zone == OptimizerZone::ZONE_2) ? this->dhw_old_z2_setpoint_ : this->dhw_old_z1_setpoint_;
@@ -61,7 +64,11 @@ namespace esphome
                         }
                     }
                 }
-            }
+                else {
+                    // also add 0.5 during post dhw while heating
+                    adjusted_flow += 0.5f;
+                }
+            }                
             else {
                 adjusted_flow = enforce_step_down(actual_flow_temp, current_flow_setpoint);
             }
