@@ -340,7 +340,7 @@ namespace ecodan
         if (pending_cmd.last_sent_time != 0 && (millis() - pending_cmd.last_sent_time < CMD_TIMEOUT_MS)) {
             return true;
         }
-        if (pending_cmd.retries >= 10) {
+        if (pending_cmd.retries >= 30) {
             ESP_LOGE(TAG, "Command failed after 10 retries. Discarding.");
             cmdQueue.pop();
             return true;
