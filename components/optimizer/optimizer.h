@@ -71,6 +71,8 @@ namespace esphome
 
       // store last dhw end to trail feed temp
       uint32_t dhw_post_run_expiration_ = 0;
+      float dhw_old_z1_setpoint_ = NAN;
+      float dhw_old_z2_setpoint_ = NAN;
 
       uint32_t predictive_delta_start_time_ = 0;
       uint32_t compressor_start_time_ = 0;
@@ -107,6 +109,7 @@ namespace esphome
       float round_nearest_half(float input) { return floor(input * 2.0) / 2.0f; }
       bool is_system_hands_off(const ecodan::Status &status);
       bool is_dhw_active(const ecodan::Status &status);
+      bool is_heating_active(const ecodan::Status &status);
       float clamp_flow_temp(float calculated_flow, float min_temp, float max_temp);
       float enforce_step_down(float actual_flow_temp, float calculated_flow);
       bool set_flow_temp(float flow, OptimizerZone zone);

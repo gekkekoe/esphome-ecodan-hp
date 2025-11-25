@@ -31,7 +31,7 @@ namespace esphome
                 }
             }
 
-            float calculated_flow = zone == OptimizerZone::ZONE_2 ? status.Zone2FlowTemperatureSetPoint : status.Zone1FlowTemperatureSetPoint;
+            float current_flow_setpoint = (zone == OptimizerZone::ZONE_2) ? status.Zone2FlowTemperatureSetPoint : status.Zone1FlowTemperatureSetPoint;
             float adjusted_flow = actual_flow_temp;
 
             time_t current_timestamp = status.timestamp();
@@ -39,18 +39,34 @@ namespace esphome
                                     && this->dhw_post_run_expiration_ > 0 
                                     && current_timestamp < this->dhw_post_run_expiration_);
 
-            if (this->is_dhw_active(status) || (status.CompressorOn && is_post_dhw_window)) {
-                if (status.DhwFlowTemperatureSetPoint > actual_flow_temp)
+            if (this->is_dhw_active(status) || is_post_dhw_window) {
+                if (this->is_dhw_active(status) && status.DhwFlowTemperatureSetPoint > actual_flow_temp)
                     return;
-
-                // add small amount above current actual flow temp
+                // during last part of dhw or first part of heating we need to add a small value to ensure that compressor does not stop
                 adjusted_flow += 0.5f;
+                
+                if (!this->is_heating_active(status)) {
+                    // no demand, restore saved setpoint
+                    float restore_val = (zone == OptimizerZone::ZONE_2) ? this->dhw_old_z2_setpoint_ : this->dhw_old_z1_setpoint_;
+                    
+                    if (!std::isnan(restore_val)) {
+                        adjusted_flow = restore_val;
+                        
+                        // Also stop timer
+                        if (is_post_dhw_window) {
+                            this->dhw_post_run_expiration_ = 0; 
+                            this->dhw_old_z1_setpoint_ = NAN;
+                            this->dhw_old_z2_setpoint_ = NAN;
+                            ESP_LOGD(OPTIMIZER_TAG, "Post-DHW: Heat demand gone. Restoring original setpoint %.1f and clearing timer.", adjusted_flow);
+                        }
+                    }
+                }
             }
             else {
-                adjusted_flow = enforce_step_down(actual_flow_temp, calculated_flow);
+                adjusted_flow = enforce_step_down(actual_flow_temp, current_flow_setpoint);
             }
     
-            if (adjusted_flow != calculated_flow)
+            if (adjusted_flow != current_flow_setpoint)
             {
                 set_flow_temp(adjusted_flow, zone);
             }
@@ -179,12 +195,22 @@ namespace esphome
                 return;
 
             auto heating_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::HEAT_ON);
+            auto dhw_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::DHW_ON);
+            auto &status = this->state_.ecodan_instance->get_status();
+
+            if (new_mode == dhw_mode && previous_mode == heating_mode) {
+                this->dhw_old_z1_setpoint_ = status.Zone1FlowTemperatureSetPoint;
+                this->dhw_old_z2_setpoint_ = status.Zone2FlowTemperatureSetPoint;
+
+                ESP_LOGD(OPTIMIZER_TAG, "Switching to DHW. Saved heating setpoints: Z1=%.1f, Z2=%.1f", 
+                    this->dhw_old_z1_setpoint_, this->dhw_old_z2_setpoint_);
+            }
+
             if (new_mode == heating_mode && previous_mode != heating_mode && this->state_.auto_adaptive_control_enabled->state) {
                 ESP_LOGD(OPTIMIZER_TAG, "Operation Mode Changed to heating: %d -> %d", previous_mode, new_mode);
 
                 // after DHW, store monitor experation time to monitor actual feed temp / setpoint
                 if (previous_mode == static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::DHW_ON)) {
-                    auto &status = this->state_.ecodan_instance->get_status();
                     time_t current_timestamp = status.timestamp();
                     if (current_timestamp > 0) {
                         const uint32_t after_dhw_monitoring_duration_s = 5 * 60UL;
@@ -193,6 +219,10 @@ namespace esphome
                     }
                 }
                 this->run_auto_adaptive_loop();
+            }
+
+            if (new_mode != heating_mode) {
+                 this->reset_predictive_boost();
             }
         }
 

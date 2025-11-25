@@ -41,6 +41,10 @@ namespace esphome
             return false;
         }
         
+        bool Optimizer::is_heating_active(const ecodan::Status &status) {
+            return status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
+        }
+
         float Optimizer::clamp_flow_temp(float calculated_flow, float min_temp, float max_temp)
         {
             if (calculated_flow > max_temp)
