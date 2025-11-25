@@ -163,31 +163,38 @@ namespace esphome
                 {
                     const float DEFROST_RISK_MIN_TEMP = -2.0f;
                     const float DEFROST_RISK_MAX_TEMP = 3.0f;
-                    const uint32_t DEFROST_MEMORY_MS = 15 * 60 * 1000UL;
+                    const uint32_t DEFROST_MEMORY_MS = 45 * 60 * 1000UL;
                     bool defrost_handling_enabled = this->state_.defrost_risk_handling_enabled->state;
-
                     bool is_defrost_weather = false;
+                    uint32_t current_ms = millis();
+
                     if (actual_outside_temp >= DEFROST_RISK_MIN_TEMP && actual_outside_temp <= DEFROST_RISK_MAX_TEMP)
                     {
-                        uint32_t last_defrost = this->last_defrost_time_;
-                        uint32_t current_ms = millis();
+                        uint32_t last_defrost = this->last_defrost_time_;    
                         if (last_defrost > 0)
                         {
                             if ((current_ms - last_defrost) < DEFROST_MEMORY_MS)
                             {
                                 is_defrost_weather = true;
                             }
-                            ESP_LOGD(OPTIMIZER_TAG, "Defrost handling enabled: %d, defrost conditions: %d, last_defrost_ts: %d, current_ts: %d", 
-                                defrost_handling_enabled, is_defrost_weather, last_defrost, current_ms);
+                            ESP_LOGD(OPTIMIZER_TAG, "Defrost logic: enabled=%d, active=%d, time_since=%u ms", 
+                                defrost_handling_enabled, is_defrost_weather, (current_ms - last_defrost));
                         }
                     }
 
                     if (is_defrost_weather && defrost_handling_enabled)
                     {
-                        calculated_flow = actual_return_temp + base_min_delta_t;
+                        uint32_t elapsed_ms = current_ms - this->last_defrost_time_;
+                        float recovery_ratio = (float)elapsed_ms / (float)DEFROST_MEMORY_MS;
+
+                        recovery_ratio = std::clamp(recovery_ratio, 0.0f, 1.0f);
+                        float delta_gap = fmax(target_delta_t - base_min_delta_t, 0.0f);
+                        float ramped_delta_t = base_min_delta_t + (delta_gap * recovery_ratio);
+
+                        calculated_flow = actual_return_temp + ramped_delta_t;
                         calculated_flow = this->round_nearest(calculated_flow);
-                        ESP_LOGW(OPTIMIZER_TAG, "Z%d HEATING (Delta T): Defrost risk detected. Forcing minimum delta T (%.1f°C). Flow set to %.2f°C",
-                                 (i + 1), base_min_delta_t, calculated_flow);
+                        ESP_LOGW(OPTIMIZER_TAG, "Z%d Defrost Recovery: %.0f%% done. Ramp Delta: %.2f (Min: %.2f, Target: %.2f). Flow: %.2f",
+                                 (i + 1), (recovery_ratio * 100.0f), ramped_delta_t, base_min_delta_t, target_delta_t, calculated_flow);
                     }
                     else
                     {

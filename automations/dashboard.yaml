@@ -38,6 +38,7 @@
               - entity: sensor.ecodan_heatpump_compressor_frequency
                 name: Compressor Frequency
             hours_to_show: 6
+          - type: energy-devices-graph
           - type: energy-devices-detail-graph
           - show_name: true
             show_icon: true
