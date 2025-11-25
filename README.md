@@ -20,7 +20,7 @@ The remote thermostat protocol CNRF is supported by [esphome-ecodan-remote-therm
 | Auto Adaptive Control | Automatically adjust flow temps to maintain room temp. (Self learning and fine tuning) [Documentation](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/docs/auto-adaptive.md) |
 
 
-\* <sup><i>These features are not available in proxy, since we are observing only the ESP metrics</i></sup>
+\* <sup><i>These features are not available in proxy, since we are observing only. Newer FTC7 will report the `Outdoor unit thermistors`.</i></sup>
 
 # Available Languages
 Select the language in the `ecodan-esphome.yaml` file.  
