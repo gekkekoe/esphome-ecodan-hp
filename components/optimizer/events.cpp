@@ -136,12 +136,13 @@ namespace esphome
         float Optimizer::enforce_step_down(float actual_flow_temp, float calculated_flow) 
         {
             const float MAX_FEED_STEP_DOWN = 1.0f;
+            const float MAX_FEED_STEP_DOWN_ADJUSTMENT = 0.5f;
             if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
             {
                 ESP_LOGW(OPTIMIZER_TAG, "Flow adjust: %.2f°C to prevent compressor stop! (setpoint: %.2f°C is %.2f°C below actual feed temp)",
-                        actual_flow_temp - MAX_FEED_STEP_DOWN, calculated_flow, (actual_flow_temp - calculated_flow));
+                        actual_flow_temp - MAX_FEED_STEP_DOWN_ADJUSTMENT, calculated_flow, (actual_flow_temp - calculated_flow));
 
-                return actual_flow_temp - MAX_FEED_STEP_DOWN;
+                return actual_flow_temp - MAX_FEED_STEP_DOWN_ADJUSTMENT;
             }
             return calculated_flow;
         }

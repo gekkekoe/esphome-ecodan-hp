@@ -3,6 +3,7 @@
 .esphome
 venv
 build.yaml
+proxy.yaml
 Firmware.bin
 sdkconfig.esp32dev
 CMakeLists.txt
