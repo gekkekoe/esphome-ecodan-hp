@@ -199,6 +199,11 @@ namespace esphome
                     else
                     {
                         calculated_flow = actual_return_temp + target_delta_t;
+                        if (error < 0.0f) {
+                            calculated_flow = actual_return_temp + base_min_delta_t;
+                            ESP_LOGD(OPTIMIZER_TAG, "Z%d Setpoint reached (Error %.1f). Reverting to Base Delta T (%.1f).", 
+                                (i+1), error, base_min_delta_t);
+                        }
                         calculated_flow = this->round_nearest(calculated_flow);
 
                         // if there was a boost adjustment, check if it's still needed and clear if needed
@@ -297,7 +302,7 @@ namespace esphome
             if (heating_type_index <= 1)
             {
                 // UFH
-                base_min_delta_t = 2.25f;
+                base_min_delta_t = 2.0f;
                 min_delta_cold_limit = 4.0f;
                 max_delta_t = 6.5f;
                 max_error_range = 2.0f;

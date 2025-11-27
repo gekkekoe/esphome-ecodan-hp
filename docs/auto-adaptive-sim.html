@@ -198,8 +198,8 @@
             const resultsBody = document.getElementById('resultsBody');
 
             const profiles = {
-                'UFH (Gentle / Smoothstep)':        { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.5, maxError: 2.0 },
-                'UFH * (Responsive / Linear)':      { min_delta_base: 2.25, min_delta_cold: 4.0, maxDelta: 6.5, maxError: 2.0 },
+                'UFH (Gentle / Smoothstep)':        { min_delta_base: 2.0, min_delta_cold: 4.0, maxDelta: 6.5, maxError: 2.0 },
+                'UFH * (Responsive / Linear)':      { min_delta_base: 2.0, min_delta_cold: 4.0, maxDelta: 6.5, maxError: 2.0 },
                 'Hybrid (Gentle / Smoothstep)':     { min_delta_base: 3.0, min_delta_cold: 5.0, maxDelta: 8.0, maxError: 2.0 },
                 'Hybrid * (Responsive / Linear)':   { min_delta_base: 3.0, min_delta_cold: 5.0, maxDelta: 8.0, maxError: 2.0 },
                 'Radiators (Gentle / Smoothstep)':  { min_delta_base: 4.0, min_delta_cold: 6.0, maxDelta: 10.0, maxError: 1.5 },
@@ -241,7 +241,7 @@
 
                 resultsBody.innerHTML = '';
 
-                for (let i = 0; i <= 30; i++) {
+                for (let i = -1; i <= 30; i++) {
                     const error = i / 10.0;
                     const roomTemp = effectiveTarget - error;
                     const error_positive = Math.max(error, 0.0);
@@ -259,7 +259,7 @@
                         error_factor = x * x * (3.0 - 2.0 * x);
                     }
                     
-                    const target_delta_t = dynamic_min_delta + (error_factor * (maxDeltaT - dynamic_min_delta));
+                    const target_delta_t = (error < 0) ? selectedProfile.min_delta_base : (dynamic_min_delta + (error_factor * (maxDeltaT - dynamic_min_delta)));
                     
                     const calculated_flow = returnTemp + target_delta_t;
                     const final_flow = Math.round(calculated_flow * 10) / 10.0;
