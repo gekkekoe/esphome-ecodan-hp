@@ -41,11 +41,12 @@ Select the language in the `ecodan-esphome.yaml` file.
 
 If you want to contribute a translation: copy the file `ecodan-labels-en.yaml` to `ecodan-labels-xx.yaml` (replace `xx` with your language code), fill in all the labels, and submit a pull request.
 
-# Links
+# Getting Started
 * [Recommended hardware](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/docs/hardware.md)
 * [Recommended hardware for proxy setup](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/docs/proxy.md)
 * [Install from prebuilt binaries](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/docs/install-from-bin.md)
 * [Build from source](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/docs/build-from-source.md)
+* [How to setup auto adaptive](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/docs/auto-adaptive.md#getting-started-with-auto-adaptive-control)
 
 # Result
 Here's how it's connected inside the heatpump:
