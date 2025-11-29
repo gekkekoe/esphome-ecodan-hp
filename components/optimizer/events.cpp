@@ -35,10 +35,7 @@ namespace esphome
             float adjusted_flow = actual_flow_temp;
 
             time_t current_timestamp = status.timestamp();
-            bool is_post_dhw_window = (current_timestamp > 0 
-                                    && this->dhw_post_run_expiration_ > 0 
-                                    && current_timestamp < this->dhw_post_run_expiration_);
-
+            bool post_dhw_window = this->is_post_dhw_window(status);
 
             if (this->is_dhw_active(status)) {
                 if (status.DhwFlowTemperatureSetPoint > actual_flow_temp)
@@ -46,8 +43,15 @@ namespace esphome
 
                 // adjust during first part of heating
                 adjusted_flow += 0.5f;
+                // Each time we adjust for dhw, set the post dhw timer expiration
+                time_t current_timestamp = status.timestamp();
+                if (current_timestamp > 0) {
+                    const uint32_t after_dhw_monitoring_duration_s = 5 * 60UL;
+                    this->dhw_post_run_expiration_ = (uint32_t)(current_timestamp + after_dhw_monitoring_duration_s);
+                    ESP_LOGD(OPTIMIZER_TAG, "Setting monitor expiration to: %d", this->dhw_post_run_expiration_);
+                }
             }
-            else if (is_post_dhw_window) {
+            else if (post_dhw_window) {
                 if (!this->is_heating_active(status)) {
                     // no demand, restore saved setpoint
                     float restore_val = (zone == OptimizerZone::ZONE_2) ? this->dhw_old_z2_setpoint_ : this->dhw_old_z1_setpoint_;
@@ -56,12 +60,10 @@ namespace esphome
                         adjusted_flow = restore_val;
                         
                         // Also stop timer
-                        if (is_post_dhw_window) {
-                            this->dhw_post_run_expiration_ = 0; 
-                            this->dhw_old_z1_setpoint_ = NAN;
-                            this->dhw_old_z2_setpoint_ = NAN;
-                            ESP_LOGD(OPTIMIZER_TAG, "Post-DHW: Heat demand gone. Restoring original setpoint %.1f and clearing timer.", adjusted_flow);
-                        }
+                        this->dhw_post_run_expiration_ = 0; 
+                        this->dhw_old_z1_setpoint_ = NAN;
+                        this->dhw_old_z2_setpoint_ = NAN;
+                        ESP_LOGD(OPTIMIZER_TAG, "Post-DHW: Heat demand gone. Restoring original setpoint %.1f and clearing timer.", adjusted_flow);
                     }
                 }
                 else {
@@ -216,16 +218,6 @@ namespace esphome
 
             if (new_mode == heating_mode && previous_mode != heating_mode && this->state_.auto_adaptive_control_enabled->state) {
                 ESP_LOGD(OPTIMIZER_TAG, "Operation Mode Changed to heating: %d -> %d", previous_mode, new_mode);
-
-                // after DHW, store monitor experation time to monitor actual feed temp / setpoint
-                if (previous_mode == static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::DHW_ON)) {
-                    time_t current_timestamp = status.timestamp();
-                    if (current_timestamp > 0) {
-                        const uint32_t after_dhw_monitoring_duration_s = 5 * 60UL;
-                        this->dhw_post_run_expiration_ = (uint32_t)(current_timestamp + after_dhw_monitoring_duration_s);
-                        ESP_LOGD(OPTIMIZER_TAG, "DHW ended, setting monitor expiration to: %d", this->dhw_post_run_expiration_);
-                    }
-                }
                 this->run_auto_adaptive_loop();
             }
 

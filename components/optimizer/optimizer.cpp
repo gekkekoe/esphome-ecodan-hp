@@ -228,10 +228,17 @@ namespace esphome
                     }
                 }
 
-                calculated_flow = this->clamp_flow_temp(calculated_flow, zone_min_flow_temp, zone_max_flow_temp);
-                // step down limit to avoid compressor halt (it seems to be triggered when delta actual_flow_temp - calculated_flow >= 2.0)
-                // we need to step down AFTER clamping, since dhw could just have finished
-                calculated_flow = enforce_step_down(actual_flow_temp, calculated_flow);
+                if (this->is_post_dhw_window(status)) {
+                    calculated_flow = this->clamp_flow_temp(calculated_flow, zone_min_flow_temp, zone_max_flow_temp);
+                    // step down limit to avoid compressor halt (it seems to be triggered when delta actual_flow_temp - calculated_flow >= 2.0)
+                    // we need to step down AFTER clamping, since dhw could just have finished
+                    calculated_flow = enforce_step_down(actual_flow_temp, calculated_flow);
+                }
+                else {
+                    calculated_flow = enforce_step_down(actual_flow_temp, calculated_flow);
+                    calculated_flow = this->clamp_flow_temp(calculated_flow, zone_min_flow_temp, zone_max_flow_temp);
+                }
+
                 out_flow_heat = calculated_flow;
             }
             else if (is_cooling_mode && is_cooling_active)

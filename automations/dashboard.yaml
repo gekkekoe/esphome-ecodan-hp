@@ -32,6 +32,8 @@
                 name: Return temp
               - entity: sensor.ecodan_heatpump_zone_1_h_c_setpoint_value
                 name: Flow set-point
+              - entity: sensor.ecodan_heatpump_refrigerant_condensing_temp
+                name: Condensing temp
             hours_to_show: 6
           - type: history-graph
             entities:

@@ -8,7 +8,14 @@ namespace esphome
     namespace optimizer
     {
         using namespace esphome::ecodan;
-        
+
+        bool Optimizer::is_post_dhw_window(const ecodan::Status &status) {
+            time_t current_timestamp = status.timestamp();
+            return (current_timestamp > 0 
+                                    && this->dhw_post_run_expiration_ > 0 
+                                    && current_timestamp < this->dhw_post_run_expiration_);
+        }
+
         bool Optimizer::is_system_hands_off(const ecodan::Status &status)
         {
             if (status.DefrostActive)
