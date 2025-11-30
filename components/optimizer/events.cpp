@@ -45,7 +45,7 @@ namespace esphome
                 adjusted_flow += 0.5f;
                 // Each time we adjust for dhw, set the post dhw timer expiration
                 time_t current_timestamp = status.timestamp();
-                if (current_timestamp > 0) {
+                if (status.CompressorOn && current_timestamp > 0) {
                     const uint32_t after_dhw_monitoring_duration_s = 5 * 60UL;
                     this->dhw_post_run_expiration_ = (uint32_t)(current_timestamp + after_dhw_monitoring_duration_s);
                     ESP_LOGD(OPTIMIZER_TAG, "Setting monitor expiration to: %d", this->dhw_post_run_expiration_);
