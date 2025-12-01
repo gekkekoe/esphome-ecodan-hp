@@ -127,8 +127,8 @@ Example Home Assistent automation:
   trigger:
     - platform: template
       value_template: >-
-        {{ state_attr('climate.kantoor', 'current_temperature') | float(0) !=
-          states('number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1') | float(0) }}
+        "{{ state_attr('climate.kantoor', 'current_temperature') | float(0) !=
+          states('number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1') | float(0) }}"
   condition: []
   action:
     - service: number.set_value
@@ -156,8 +156,8 @@ If you are using an external thermostat, you need to adjust the Zone 1 and Zone 
   trigger:
     - platform: template
       value_template: >-
-        {{ state_attr('climate.kantoor', 'temperature') | float(0) | round(1) !=
-          state_attr('climate.ecodan_heatpump_zone_1_room_temp', 'temperature') | float(0) | round(1) }}
+        "{{ state_attr('climate.kantoor', 'temperature') | float(0) | round(1) !=
+          state_attr('climate.ecodan_heatpump_zone_1_room_temp', 'temperature') | float(0) | round(1) }"
   condition: []
   action:
     - service: climate.set_temperature 
