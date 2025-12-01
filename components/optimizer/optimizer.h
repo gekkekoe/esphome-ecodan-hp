@@ -94,6 +94,7 @@ namespace esphome
       void process_adaptive_zone_(
           std::size_t i,
           const ecodan::Status &status,
+          float defrost_memory_ms,
           float cold_factor,
           float min_delta_cold_limit,
           float base_min_delta_t,

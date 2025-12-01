@@ -74,6 +74,7 @@ namespace esphome
         void Optimizer::process_adaptive_zone_(
             std::size_t i,
             const ecodan::Status &status,
+            float defrost_memory_ms,
             float cold_factor,
             float min_delta_cold_limit,
             float base_min_delta_t,
@@ -163,7 +164,6 @@ namespace esphome
                 {
                     const float DEFROST_RISK_MIN_TEMP = -2.0f;
                     const float DEFROST_RISK_MAX_TEMP = 3.0f;
-                    const uint32_t DEFROST_MEMORY_MS = 45 * 60 * 1000UL;
                     bool defrost_handling_enabled = this->state_.defrost_risk_handling_enabled->state;
                     bool is_defrost_weather = false;
                     uint32_t current_ms = millis();
@@ -173,7 +173,7 @@ namespace esphome
                         uint32_t last_defrost = this->last_defrost_time_;    
                         if (last_defrost > 0)
                         {
-                            if ((current_ms - last_defrost) < DEFROST_MEMORY_MS)
+                            if ((current_ms - last_defrost) < defrost_memory_ms)
                             {
                                 is_defrost_weather = true;
                             }
@@ -185,7 +185,7 @@ namespace esphome
                     if (is_defrost_weather && defrost_handling_enabled)
                     {
                         uint32_t elapsed_ms = current_ms - this->last_defrost_time_;
-                        float recovery_ratio = (float)elapsed_ms / (float)DEFROST_MEMORY_MS;
+                        float recovery_ratio = (float)elapsed_ms / (float)defrost_memory_ms;
 
                         recovery_ratio = std::clamp(recovery_ratio, 0.0f, 1.0f);
                         float delta_gap = fmax(target_delta_t - base_min_delta_t, 0.0f);
@@ -304,7 +304,7 @@ namespace esphome
                 return;
 
             auto heating_type_index = this->state_.heating_system_type->active_index().value_or(0);
-            float base_min_delta_t, max_delta_t, max_error_range, min_delta_cold_limit;
+            float base_min_delta_t, max_delta_t, max_error_range, min_delta_cold_limit, defrost_memory_ms;
 
             if (heating_type_index <= 1)
             {
@@ -313,6 +313,7 @@ namespace esphome
                 min_delta_cold_limit = 4.0f;
                 max_delta_t = 6.5f;
                 max_error_range = 2.0f;
+                defrost_memory_ms = 35 * 60 * 1000UL;
             }
             else if (heating_type_index <= 3)
             {
@@ -321,6 +322,7 @@ namespace esphome
                 min_delta_cold_limit = 5.0f;
                 max_delta_t = 8.0f;
                 max_error_range = 2.0f;
+                defrost_memory_ms = 25 * 60 * 1000UL;
             }
             else
             {
@@ -329,6 +331,7 @@ namespace esphome
                 min_delta_cold_limit = 6.0f;
                 max_delta_t = 10.0f;
                 max_error_range = 1.5f;
+                defrost_memory_ms = 15 * 60 * 1000UL;
             }
 
             const float MILD_WEATHER_TEMP = 15.0f;
@@ -371,6 +374,7 @@ namespace esphome
                 this->process_adaptive_zone_(
                     i,
                     status,
+                    defrost_memory_ms,
                     cold_factor,
                     min_delta_cold_limit,
                     base_min_delta_t,
