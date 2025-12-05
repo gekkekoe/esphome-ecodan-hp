@@ -515,7 +515,7 @@ sensor:
     unit_of_measurement: 'kWh'
     accuracy_decimals: 3
     device_class: energy
-    state_class: total_increasing 
+    state_class: total 
     time_unit: h
     restore: true
 
