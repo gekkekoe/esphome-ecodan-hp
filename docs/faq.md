@@ -24,6 +24,7 @@ Short cycling occurs when the heat pump turns on and off frequently (e.g., runni
     * The heatpump cycles if the following equation is false: `Output heatpump (kW) <= flow rate / 60 * (feed temp - return temp) * 4.18`
     * Increase flow rate to increase output (via pump speed setting)
     * Increase delta T (via feed temp) to increase output
+    * Increase the receiving side by opening more/all circuits. Ensure that the largest circuit is always open. Don't allow small circuits to request demand on their own.
 * **Mitigation in this Integration:** The firmware includes **"Short Cycle Mitigation"** and **"Auto Adaptive"** features:
     * It monitors the "Delta" (difference) between the requested flow temp and actual flow temp.
     * If it detects a "High Delta" (rapid rise in temp), it predicts a short cycle is about to happen.
