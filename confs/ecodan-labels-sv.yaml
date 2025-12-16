@@ -151,6 +151,7 @@ substitutions:
   auto_adaptive_setpoint_bias: 'Autoadaptiv: Börvärdes-bias'
   temperature_feedback: 'Autoadaptiv: Återkoppling Aktuell Rumstemperatur'
   defrost_risk_handling_enabled: 'Autoadaptiv: Avfrostningsreducering'
+  smart_boost_enabled: 'Autoadaptiv: Smart Boost'
   total_increasing_heating_consumed: Totalförbrukning Värme
   total_increasing_heating_delivered: Total Levererad Värme
   total_increasing_cool_consumed: Totalförbrukning Kyla

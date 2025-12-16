@@ -33,6 +33,7 @@ namespace esphome
       esphome::switch_::Switch *auto_adaptive_control_enabled;
       esphome::switch_::Switch *predictive_short_cycle_control_enabled;
       esphome::switch_::Switch *defrost_risk_handling_enabled;
+      esphome::switch_::Switch *smart_boost_enabled;
 
       esphome::binary_sensor::BinarySensor *status_short_cycle_lockout;
       esphome::binary_sensor::BinarySensor *status_predictive_boost_active;
@@ -91,6 +92,10 @@ namespace esphome
       float last_defrost_status_ = 0;
       float last_compressor_status_ = 0;
 
+      // smart boost vars
+      uint32_t stagnation_start_time_ = 0;
+      float last_error_ = 0.0f;
+
       void process_adaptive_zone_(
           std::size_t i,
           const ecodan::Status &status,
@@ -115,6 +120,9 @@ namespace esphome
       float clamp_flow_temp(float calculated_flow, float min_temp, float max_temp);
       float enforce_step_down(float actual_flow_temp, float calculated_flow);
       bool set_flow_temp(float flow, OptimizerZone zone);
+
+      // smart boost
+      float calculate_smart_boost(int profile, float error);
 
       // callback handlers for important events
       void on_feed_temp_change(float actual_flow_temp, OptimizerZone zone);

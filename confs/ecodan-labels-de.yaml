@@ -150,6 +150,7 @@ substitutions:
   auto_adaptive_setpoint_bias: 'Auto-Adaptiv: Sollwert-Bias'
   temperature_feedback: 'Auto-Adaptiv: Rückmeldung Aktuelle Raumtemperatur'
   defrost_risk_handling_enabled: 'Auto-Adaptiv: Abtau-Reduzierung'
+  smart_boost_enabled: 'Auto-Adaptiv: Intelligenter Boost'
   total_increasing_heating_consumed: Gesamtverbrauch Heizen
   total_increasing_heating_delivered: Gesamtertrag Heizen
   total_increasing_cool_consumed: Gesamtverbrauch Kühlen

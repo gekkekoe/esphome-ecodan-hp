@@ -150,6 +150,7 @@ substitutions:
   auto_adaptive_setpoint_bias: 'Autoadaptiv: Settpunkt-bias'
   temperature_feedback: 'Autoadaptiv: Tilbakemelding Nåværende Romtemperatur'
   defrost_risk_handling_enabled: 'Autoadaptiv: Avrimingsreduksjon'
+  smart_boost_enabled: 'Autoadaptiv: Smart Boost'
   total_increasing_heating_consumed: Totalt Forbruk Varme
   total_increasing_heating_delivered: Totalt Levert Varme
   total_increasing_cool_consumed: Totalt Forbruk Kjøling

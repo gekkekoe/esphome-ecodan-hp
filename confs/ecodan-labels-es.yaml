@@ -151,6 +151,7 @@ substitutions:
   auto_adaptive_setpoint_bias: 'Autoadaptativo: Bias de Consigna'
   temperature_feedback: 'Autoadaptativo: Feedback de Temperatura Ambiente Actual'
   defrost_risk_handling_enabled: 'Autoadaptativo: Mitigación de Desescarche'
+  smart_boost_enabled: 'Autoadaptativo: Boost Inteligente'
   total_increasing_heating_consumed: Consumo Total Calefacción
   total_increasing_heating_delivered: Producción Total Calefacción
   total_increasing_cool_consumed: Consumo Total Refrigeración

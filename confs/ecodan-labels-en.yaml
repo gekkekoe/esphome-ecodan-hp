@@ -153,6 +153,7 @@ substitutions:
   auto_adaptive_setpoint_bias: 'Auto-Adaptive: Setpoint Bias'
   temperature_feedback: 'Auto-Adaptive: Current Room Temperature Feedback'
   defrost_risk_handling_enabled: 'Auto-Adaptive: Defrost Mitigation'
+  smart_boost_enabled: 'Auto-Adaptive: Smart Boost'
 
   # total increasing energy totals
   total_increasing_heating_consumed: Total Heating Consumed
