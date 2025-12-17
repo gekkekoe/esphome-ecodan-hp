@@ -78,6 +78,33 @@ When it detects a high-risk situation (actual flow temperature rising too far ab
 
 ---
 
+## Smart Boost Logic
+
+The Auto-Adaptive algorithm includes a "Smart Boost" feature designed to eliminate steady-state errors. In situations where the room temperature stabilizes slightly below the setpoint (stagnation) and fails to bridge the final gap, this logic automatically increases the calculated heat output.
+
+### How it works
+
+The system continuously monitors the temperature error (`Target` - `Current`). If the error exceeds 0.1°C and does not decrease compared to the previous measurement, the system identifies this as stagnation.
+
+After a predefined wait time (depending on the system type), a boost multiplier is applied to the calculated Delta T. If the stagnation persists, this multiplier increases in steps over time. This effectively increases the flow temperature to force the room temperature to the setpoint.
+
+**Reset Condition:**
+To prevent temperature overshoot, the boost factor is immediately reset to 1.0 (disabled) as soon as the temperature error decreases (i.e., the room temperature starts rising).
+
+### System Profiles
+
+The timing and aggressiveness of the Smart Boost logic are automatically configured based on the selected **Heating System Type**. This accounts for the significant difference in thermal mass and response time between floor heating (concrete mass) and radiators.
+
+| System Type | Initial Wait Time | Step Interval | Max Boost Limit | Behavior |
+| :--- | :--- | :--- | :--- | :--- |
+| **Floor Heating** | 60 minutes | 30 minutes | +50% (1.5x) | Conservative timing to allow for slow thermal transfer in concrete floors. |
+| **Radiators** | 20 minutes | 10 minutes | +150% (2.5x) | Faster reaction times suited for low-mass, high-temperature systems. |
+| **Hybrid/Other** | 45 minutes | 20 minutes | +100% (2.0x) | Balanced approach for mixed systems. |
+
+
+
+---
+
 ## Configuration Parameters
 
 All parameters are adjustable in real-time from the Home Assistant interface.
