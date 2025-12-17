@@ -220,10 +220,6 @@ namespace esphome
                 ESP_LOGD(OPTIMIZER_TAG, "Operation Mode Changed to heating: %d -> %d", previous_mode, new_mode);
                 this->run_auto_adaptive_loop();
             }
-
-            if (new_mode != heating_mode) {
-                 this->reset_predictive_boost();
-            }
         }
 
         void Optimizer::on_defrost_state_change(bool x, bool x_previous) 
