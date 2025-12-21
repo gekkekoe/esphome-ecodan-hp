@@ -95,6 +95,7 @@ namespace esphome
       // smart boost vars
       uint32_t stagnation_start_time_ = 0;
       float last_error_ = 0.0f;
+      float current_stagnation_boost_ = 1.0f;
 
       void process_adaptive_zone_(
           std::size_t i,
