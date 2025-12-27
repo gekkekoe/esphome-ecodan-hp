@@ -38,3 +38,9 @@ In **Proxy Mode**, the ESP32 acts as a "Man-in-the-Middle" or passive listener b
 
 * **Passive Observer:** The ESP will not ask (poll) the heat pump for data because doing so would collide with the signals from the main controller (MelCloud). It will only "listen" to the conversation that is already happening.
 * **Missing Packets:** If the MelCloud adapter doesn't ask for a specific piece of data (e.g., "Outdoor Unit Thermistors" or "Energy Consumption"), the heat pump never sends it, and therefore the ESP never sees it.
+
+## 4. Why are some sensors unavailable on my unit?
+
+Outdoor unit sensors are not always available by default. Retrieving them requires service calls which take a long time (~5s) and block other communications. Therefore, I only query a limited set of sensors: `COMPRESSOR_STARTS`, `TH4_DISCHARGE_TEMP`, `TH3_LIQUID_PIPE1_TEMP`, `DISCHARGE_SUPERHEAT`, and `FAN_SPEED`.
+
+Newer FTC7+ systems can also report `TH6_2_PHASE_PIPE_TEMP`, `TH32_SUCTION_PIPE_TEMP`, `TH8_HEAT_SINK_TEMP`, and `SUB_COOL` without requiring service calls. These will be automatically exposed if available.
