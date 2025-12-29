@@ -210,7 +210,7 @@ namespace ecodan
         bool has_independent_z2() const {
             if (IS_BIT_SET(DipSwitch3, 5) && !IS_BIT_SET(DipSwitch2, 6)) // SW3-6 True, SW2-7 False
                 return false; //z1, z2 -> same flow
-            else if (IS_BIT_SET(DipSwitch2, 5) || IS_BIT_SET(DipSwitch2, 6)) // SW2-6 or SW2-7 True
+            else if (IS_BIT_SET(DipSwitch2, 5) && IS_BIT_SET(DipSwitch2, 6)) // SW2-6 or SW2-7 True
                 return true; // z1, z2 -> independent flows
             return false;
         }
@@ -218,7 +218,7 @@ namespace ecodan
         bool has_2zones() const {
             if (IS_BIT_SET(DipSwitch3, 5) && !IS_BIT_SET(DipSwitch2, 6)) // SW3-6 True, SW2-7 False
                 return true; // z1, z2 -> same flow
-            if (IS_BIT_SET(DipSwitch2, 5) || IS_BIT_SET(DipSwitch2, 6)) // SW2-6 or SW2-7 True
+            if (IS_BIT_SET(DipSwitch2, 5) && IS_BIT_SET(DipSwitch2, 6)) // SW2-6 or SW2-7 True
                 return true; // z1, z2 -> independent flows
             
             return false;
