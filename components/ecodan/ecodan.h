@@ -106,6 +106,7 @@ namespace ecodan
         uart::UARTComponent *uart_ = nullptr;
         uart::UARTComponent *proxy_uart_ = nullptr;
         uint8_t initialCount = 0;
+        bool slave_detected_ = false;
 
         Status status;
         float temperatureStep = 0.5f;

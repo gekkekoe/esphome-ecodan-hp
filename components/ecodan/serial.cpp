@@ -17,8 +17,12 @@ namespace ecodan
 
         if (buffer.get_write_offset() == 0) {
             bool skip_byte = is_proxy_message ? (byte != HEADER_MAGIC_A1 && byte != HEADER_MAGIC_A2) : (byte != HEADER_MAGIC_A1);
-            if (skip_byte)
+            if (skip_byte) {
                 return;
+            }
+            else if (is_proxy_message && !this->slave_detected_) {
+                this->slave_detected_ = true;
+            }
         }
 
         buffer.append_byte(byte);

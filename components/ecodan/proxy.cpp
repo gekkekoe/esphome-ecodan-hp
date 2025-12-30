@@ -10,7 +10,7 @@ namespace ecodan
     bool EcodanHeatpump::proxy_available() {
         auto now = std::chrono::steady_clock::now();
         auto timeout = now - this->last_proxy_activity_.load() > std::chrono::seconds(60);
-        return proxy_uart_ && !timeout;
+        return this->proxy_uart_ && this->slave_detected_ && !timeout;
     } 
     
 } // namespace ecodan
