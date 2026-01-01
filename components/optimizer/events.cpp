@@ -18,7 +18,7 @@ namespace esphome
 
             auto &status = this->state_.ecodan_instance->get_status();
 
-            if (status.has_independent_z2()) 
+            if (status.has_independent_zone_temps()) 
             {
                 if (zone == OptimizerZone::SINGLE) {
                     return;
@@ -84,7 +84,7 @@ namespace esphome
         bool Optimizer::set_flow_temp(float flow, OptimizerZone zone) {
             auto &status = this->state_.ecodan_instance->get_status();
             
-            if (status.has_independent_z2())
+            if (status.has_independent_zone_temps())
             {
                 if (zone == OptimizerZone::ZONE_1) {
                     if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && status.Zone1FlowTemperatureSetPoint != flow)
@@ -165,7 +165,7 @@ namespace esphome
                 float restored_flow_z1 = status.Zone1FlowTemperatureSetPoint - adjustment;
                 this->state_.ecodan_instance->set_flow_target_temperature(restored_flow_z1, esphome::ecodan::Zone::ZONE_1);
 
-                if (status.has_independent_z2())
+                if (status.has_independent_zone_temps())
                 {
                     float restored_flow_z2 = status.Zone2FlowTemperatureSetPoint - adjustment;
                     this->state_.ecodan_instance->set_flow_target_temperature(restored_flow_z2, esphome::ecodan::Zone::ZONE_2);

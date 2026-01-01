@@ -207,6 +207,20 @@ namespace ecodan
             return IS_BIT_SET(DipSwitch2, 3);
         }
 
+        bool use_zone_specific_temps() const {
+            return has_mixing_tank() || has_independent_zone_temps();
+        }
+
+        bool has_mixing_tank() const {
+            // SW2-6
+            return IS_BIT_SET(DipSwitch2, 5);
+        }
+
+        bool has_independent_zone_temps() const {
+            //  SW2-7 is only valid active when SW3-6 is off
+            return IS_BIT_SET(DipSwitch2, 6) && !IS_BIT_SET(DipSwitch3, 5);
+        }
+
         bool has_independent_z2() const {
             if (IS_BIT_SET(DipSwitch3, 5) && !IS_BIT_SET(DipSwitch2, 6)) // SW3-6 True, SW2-7 False
                 return false; //z1, z2 -> same flow
