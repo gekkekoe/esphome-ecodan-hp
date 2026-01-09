@@ -161,3 +161,7 @@ substitutions:
   pump_feedback: 'Zużycie Pompy'
   pump_feedback_status: 'Status Informacji Zwrotnej Pompy'
   master_thermostat: 'Główny Czujnik Pokojowy'
+
+  solver_kwh_meter_feedback_source: "Źródło licznika energii"
+  solver_kwh_meter_option_internal: "Wewnętrzny licznik energii"
+  solver_kwh_meter_feedback: "Sprzężenie zwrotne licznika"

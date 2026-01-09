@@ -162,3 +162,7 @@ substitutions:
   pump_feedback: 'Consumo de la Bomba'
   pump_feedback_status: 'Estado Retroalimentación Bomba'
   master_thermostat: 'Sensor de Habitación Principal'
+
+  solver_kwh_meter_feedback_source: "Fuente del medidor"
+  solver_kwh_meter_option_internal: "Medidor interno"
+  solver_kwh_meter_feedback: "Retroalimentación kWh"

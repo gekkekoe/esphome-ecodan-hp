@@ -248,6 +248,7 @@ namespace esphome
                 {
                     ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Compressor START detected");
                     this->compressor_start_time_ = millis();
+                    this->last_check_ms_ = this->compressor_start_time_;
                 }
                 if (this->state_.auto_adaptive_control_enabled->state)
                 {

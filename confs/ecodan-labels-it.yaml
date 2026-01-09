@@ -162,3 +162,7 @@ substitutions:
   pump_feedback: 'Consumo Pompa'
   pump_feedback_status: 'Stato Feedback Pompa'
   master_thermostat: 'Sensore Ambiente Master'
+
+  solver_kwh_meter_feedback_source: "Fonte contatore"
+  solver_kwh_meter_option_internal: "Contatore interno"
+  solver_kwh_meter_feedback: "Feedback contatore kWh"

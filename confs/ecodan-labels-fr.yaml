@@ -162,3 +162,7 @@ substitutions:
   pump_feedback: 'Consommation de la Pompe'
   pump_feedback_status: 'État Retour Pompe'
   master_thermostat: 'Capteur de Pièce Maître'
+
+  solver_kwh_meter_feedback_source: "Source du compteur"
+  solver_kwh_meter_option_internal: "Compteur interne"
+  solver_kwh_meter_feedback: "Retour compteur kWh"

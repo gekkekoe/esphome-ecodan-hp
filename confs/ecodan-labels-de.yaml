@@ -161,3 +161,7 @@ substitutions:
   pump_feedback: 'Pumpenverbrauch'
   pump_feedback_status: 'Status Pumpen-Feedback'
   master_thermostat: 'Master-Raumsensor'
+
+  solver_kwh_meter_feedback_source: Energy Meter Source
+  solver_kwh_meter_option_internal: Internal Energy Meter
+  solver_kwh_meter_feedback: kWh meter feedback

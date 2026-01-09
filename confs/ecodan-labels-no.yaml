@@ -161,3 +161,7 @@ substitutions:
   pump_feedback: 'Pumpeforbruk'
   pump_feedback_status: 'Status Pumpe-tilbakemelding'
   master_thermostat: 'Hovedromsensor'
+
+  solver_kwh_meter_feedback_source: "Energimåler kilde"
+  solver_kwh_meter_option_internal: "Intern energimåler"
+  solver_kwh_meter_feedback: "kWh-måler tilbakemelding"

@@ -44,10 +44,15 @@ namespace esphome
       esphome::sensor::Sensor *z1_feed_temp;
       esphome::sensor::Sensor *z2_feed_temp;
       esphome::sensor::Sensor *operation_mode;
+  
+      esphome::sensor::Sensor *daily_heating_produced;
+      esphome::sensor::Sensor *daily_heating_consumed;
+      esphome::number::Number *solver_kwh_meter_feedback;
 
       esphome::select::Select *heating_system_type;
       esphome::select::Select *temperature_feedback_source;
       esphome::select::Select *lockout_duration;
+      esphome::select::Select *solver_kwh_meter_feedback_source;
 
       esphome::number::Number *auto_adaptive_setpoint_bias;
       esphome::number::Number *temperature_feedback_z1;
@@ -62,7 +67,15 @@ namespace esphome
       esphome::number::Number *predictive_short_cycle_high_delta_time_window;
       esphome::number::Number *predictive_short_cycle_high_delta_threshold;
 
-      uint32_t *lockout_expiration_timestamp;
+      // stats vars
+      float &learned_heat_loss_global;
+      float &learned_base_cop_global;
+      float &learned_thermal_output_global;
+      float &learned_elec_power_global;
+
+      float &daily_runtime_global; 
+
+      uint32_t &lockout_expiration_timestamp;
     };
 
     class Optimizer
@@ -97,6 +110,17 @@ namespace esphome
       float last_error_ = 0.0f;
       float current_stagnation_boost_ = 1.0f;
 
+      // Learning state variables
+      float daily_temp_sum_ = 0.0f;
+      int daily_temp_count_ = 0;
+      int last_processed_day_ = -1;
+      // helpers to track runtime
+      uint32_t last_check_ms_ = 0;
+
+      // Energy snapshots for delta calculation
+      float last_total_heating_produced_ = 0.0f;
+      float last_total_heating_consumed_ = 0.0f;
+
       void process_adaptive_zone_(
           std::size_t i,
           const ecodan::Status &status,
@@ -129,6 +153,9 @@ namespace esphome
       void on_feed_temp_change(float actual_flow_temp, OptimizerZone zone);
       void on_operation_mode_change(uint8_t new_mode, uint8_t previous_mode);
 
+      // stats
+      void update_learning_model(int day_of_year);
+
     public:
       Optimizer(OptimizerState state);
 
@@ -143,6 +170,8 @@ namespace esphome
       void on_compressor_state_change(bool x, bool x_previous);
       void on_defrost_state_change(bool x, bool x_previous);
       void update_boost_sensor();
+
+      void update_heat_model();
     };
 
     // dummy, can remain empty

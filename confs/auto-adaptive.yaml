@@ -1,3 +1,38 @@
+globals:
+  - id: optimizer_ptr
+    type: esphome::optimizer::Optimizer*
+
+  - id: lockout_expiration_timestamp
+    type: uint32_t
+    restore_value: yes
+    initial_value: '0'
+
+  - id: g_learned_heat_loss
+    type: float
+    restore_value: yes
+    initial_value: '0.2'   # Default House Factor (kW/K)
+
+  - id: g_learned_base_cop
+    type: float
+    restore_value: yes
+    initial_value: '5'   # Default COP at 7C
+
+  - id: g_learned_thermal_output
+    type: float
+    restore_value: yes
+    initial_value: '6.0'   # Default Output (kW)
+
+  - id: g_learned_elec_power
+    type: float
+    restore_value: yes
+    initial_value: '1.5'   # Default Input Power (kW)
+
+  - id: daily_compressor_runtime_minutes
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+
+
 substitutions:
   update_interval_minutes: "5min"
   z2_feed_assignment: "state.z2_feed_temp = nullptr;"
@@ -8,8 +43,15 @@ esphome:
       then:
         - lambda: |-
             using namespace esphome::optimizer;
-            OptimizerState state;
-            
+            OptimizerState state = {
+                .learned_heat_loss_global = id(g_learned_heat_loss),
+                .learned_base_cop_global = id(g_learned_base_cop),
+                .learned_thermal_output_global = id(g_learned_thermal_output),
+                .learned_elec_power_global = id(g_learned_elec_power),
+                .daily_runtime_global = id(daily_compressor_runtime_minutes),
+                .lockout_expiration_timestamp = id(lockout_expiration_timestamp)
+            };
+
             state.ecodan_instance = id(ecodan_instance);
 
             state.auto_adaptive_control_enabled = id(auto_adaptive_control_enabled);
@@ -44,8 +86,10 @@ esphome:
             state.predictive_short_cycle_high_delta_time_window = id(predictive_short_cycle_high_delta_time_window);
             state.predictive_short_cycle_high_delta_threshold = id(predictive_short_cycle_high_delta_threshold);
 
-            state.lockout_expiration_timestamp = &id(lockout_expiration_timestamp);
-            
+            state.solver_kwh_meter_feedback_source = id(solver_kwh_meter_feedback_source);
+            state.solver_kwh_meter_feedback = id(solver_kwh_meter_feedback); 
+            state.daily_heating_produced = id(daily_computed_output_power);
+            state.daily_heating_consumed = id(delta_energy_consumed_increasing);
             // instantiate optimizer
             id(optimizer_ptr) = new esphome::optimizer::Optimizer(state);
             
@@ -54,14 +98,6 @@ esphome:
 
 # needed to trigger codegen
 optimizer:
-
-globals:
-  - id: optimizer_ptr
-    type: esphome::optimizer::Optimizer*
-  - id: lockout_expiration_timestamp
-    type: uint32_t
-    restore_value: yes
-    initial_value: '0'
 
 number:
   - platform: template
@@ -186,6 +222,17 @@ number:
     min_value: 1.0
     max_value: 3.0
     step: 0.5
+  - platform: template
+    id: solver_kwh_meter_feedback
+    name: ${solver_kwh_meter_feedback}
+    unit_of_measurement: "kWh"
+    optimistic: true
+    restore_value: true
+    initial_value: 0
+    min_value: 0.0
+    max_value: 9999
+    step: 0.001
+    mode: box
 
 select:
   - platform: template
@@ -224,6 +271,16 @@ select:
       - "45"
       - "60"
     initial_option: "0"
+
+  - platform: template
+    id: solver_kwh_meter_feedback_source
+    name: ${solver_kwh_meter_feedback_source}
+    optimistic: true
+    restore_value: true
+    options:
+      - "${solver_kwh_meter_option_internal}"
+      - "${select_feedback_option_api}"
+    initial_option: "${solver_kwh_meter_option_internal}"
   
 switch:
   - platform: template
@@ -303,3 +360,4 @@ interval:
       - lambda: id(optimizer_ptr)->check_lockout_expiration();
       - lambda: id(optimizer_ptr)->predictive_short_cycle_check();
       - lambda: id(optimizer_ptr)->update_boost_sensor();
+      - lambda: id(optimizer_ptr)->update_heat_model();

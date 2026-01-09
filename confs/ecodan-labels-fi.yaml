@@ -162,3 +162,7 @@ substitutions:
   pump_feedback: 'Pumpun Kulutus'
   pump_feedback_status: 'Pumpun Palautteen Tila'
   master_thermostat: 'Päähuoneen Anturi'
+
+  solver_kwh_meter_feedback_source: "Energiamittarin lähde"
+  solver_kwh_meter_option_internal: "Sisäinen energiamittari"
+  solver_kwh_meter_feedback: "kWh-mittarin palaute"

@@ -162,3 +162,7 @@ substitutions:
   pump_feedback: 'Pumpförbrukning'
   pump_feedback_status: 'Status Pumpåterkoppling'
   master_thermostat: 'Huvudrumsgivare'
+
+  solver_kwh_meter_feedback_source: "Källa för energimätare"
+  solver_kwh_meter_option_internal: "Intern energimätare"
+  solver_kwh_meter_feedback: "kWh-mätare återkoppling"

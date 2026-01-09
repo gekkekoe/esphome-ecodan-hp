@@ -161,3 +161,7 @@ substitutions:
   pump_feedback: 'Pumpeforbrug'
   pump_feedback_status: 'Status Pumpefeedback'
   master_thermostat: 'Hovedrumføler'
+
+  solver_kwh_meter_feedback_source: Energy Meter Source
+  solver_kwh_meter_option_internal: Internal Energy Meter
+  solver_kwh_meter_feedback: kWh meter feedback

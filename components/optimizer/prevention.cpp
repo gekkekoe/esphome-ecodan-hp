@@ -180,7 +180,7 @@ namespace esphome
             {
                 this->state_.ecodan_instance->set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
             }
-            *(this->state_.lockout_expiration_timestamp) = 0;
+            this->state_.lockout_expiration_timestamp = 0;
             this->state_.status_short_cycle_lockout->publish_state(false);
         }
 
@@ -217,14 +217,14 @@ namespace esphome
             uint32_t duration_s = atoi(this->state_.lockout_duration->current_option()) * 60UL;
             if (duration_s > 0)
             {
-                *(this->state_.lockout_expiration_timestamp) = (uint32_t)(current_timestamp + duration_s);
-                ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Lockout active. Expiration timestamp set to: %u", *(this->state_.lockout_expiration_timestamp));
+                this->state_.lockout_expiration_timestamp = (uint32_t)(current_timestamp + duration_s);
+                ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Lockout active. Expiration timestamp set to: %u", this->state_.lockout_expiration_timestamp);
             }
         }
 
         void Optimizer::check_lockout_expiration()
         {
-            uint32_t expiration = *(this->state_.lockout_expiration_timestamp);
+            uint32_t expiration = this->state_.lockout_expiration_timestamp;
 
             if (expiration == 0)
                 return;

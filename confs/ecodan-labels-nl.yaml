@@ -162,3 +162,7 @@ substitutions:
   pump_feedback: 'Pompverbruik'
   pump_feedback_status: 'Status Pompfeedback'
   master_thermostat: 'Hoofd-Ruimtesensor'
+
+  solver_kwh_meter_feedback_source: "Bron energiemeter"
+  solver_kwh_meter_option_internal: "Interne energiemeter"
+  solver_kwh_meter_feedback: "kWh-meter terugkoppeling"
