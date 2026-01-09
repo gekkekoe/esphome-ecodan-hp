@@ -134,9 +134,11 @@ This guide assumes a common scenario where an external room thermostat (like a T
 
 The Auto-Adaptive algorithm needs to know the **current temperature** being measured by your external thermostat. You must send this value back to the ESPHome controller.
 
-**If you are using a Mitsubishi wireless thermostat or [esphome-ecodan-remote-thermostat](https://github.com/gekkekoe/esphome-ecodan-remote-thermostat), you can skip the rest of this section and step 3.**
+**If you are using a Mitsubishi wireless thermostat, MRC or [esphome-ecodan-remote-thermostat](https://github.com/gekkekoe/esphome-ecodan-remote-thermostat), you can skip the rest of this section and step 3.**
 
-You can do this in two ways:
+For systems with only a MRC (and no other thermostats), you will need to add a stop condition. The heatpump will never stop otherise. Use server control prohibit to turn off heating when setpoint has been reached.
+
+There are two options to perform **current temperature** feedback:
 
 * **Via Home Assistant UI**: Create an automation in Home Assistant that copies the temperature from your thermostat's sensor to the `number.ecodan_heatpump_temperature_feedback_z1` entity.
 * **Via REST API**: Use an external system or script to post the temperature directly.
