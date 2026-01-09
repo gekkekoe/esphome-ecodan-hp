@@ -185,7 +185,7 @@ namespace esphome
                 }
 
                 // for z2 with z1/z2 circulation pump and mixing tank, demand translate into pump being active
-                if (status.use_zone_specific_temps() && (status.WaterPump2Active || status.WaterPump3Active))
+                if (status.has_independent_zone_temps() && (status.WaterPump2Active || status.WaterPump3Active))
                     is_heating_active = true;
             }
 
@@ -196,8 +196,8 @@ namespace esphome
             float room_temp = (i == 0) ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
             float room_target_temp = (i == 0) ? status.Zone1SetTemperature : status.Zone2SetTemperature;
             float requested_flow_temp = (i == 0) ? status.Zone1FlowTemperatureSetPoint : status.Zone2FlowTemperatureSetPoint;
-            float actual_flow_temp = status.use_zone_specific_temps() ? ((i == 0) ? status.Z1FeedTemperature : status.Z2FeedTemperature) : status.HpFeedTemperature;
-            float actual_return_temp = status.use_zone_specific_temps() ? ((i == 0) ? status.Z1ReturnTemperature : status.Z2ReturnTemperature) : status.HpReturnTemperature;
+            float actual_flow_temp = status.has_independent_zone_temps() ? ((i == 0) ? status.Z1FeedTemperature : status.Z2FeedTemperature) : status.HpFeedTemperature;
+            float actual_return_temp = status.has_independent_zone_temps() ? ((i == 0) ? status.Z1ReturnTemperature : status.Z2ReturnTemperature) : status.HpReturnTemperature;
 
             if (!is_heating_mode && !is_cooling_mode)
                 return;
