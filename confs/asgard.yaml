@@ -89,6 +89,7 @@ sensor:
     entity_category: diagnostic
     unit_of_measurement: "°C"
     device_class: temperature
+    accuracy_decimals: 1
 
   # single
   - platform: dallas_temp
@@ -102,8 +103,11 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     id: relay_1
     name: Relay 1
+
   - platform: gpio
     pin: GPIO41
     restore_mode: RESTORE_DEFAULT_OFF
     id: relay_2
     name: Relay 2
+
+<<: !include asgard-led.yaml

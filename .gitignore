@@ -4,6 +4,7 @@
 venv
 build.yaml
 proxy.yaml
+asgard.yaml
 Firmware.bin
 sdkconfig.esp32dev
 CMakeLists.txt
