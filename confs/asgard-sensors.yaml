@@ -1,3 +1,4 @@
+
 one_wire:
   - platform: gpio
     pin: GPIO02
@@ -32,16 +33,28 @@ sensor:
     accuracy_decimals: 1
     unit_of_measurement: "°C"
 
-# relay
-switch:
-  - platform: gpio
-    pin: GPIO40
-    restore_mode: RESTORE_DEFAULT_OFF
-    id: relay_1
-    name: Relay 1
+number:
+  # 1. Hysteresis (Deadband)
+  - platform: template
+    name: "Asgard Hysteresis"
+    id: thermostat_hysteresis
+    icon: "mdi:arrow-expand-vertical"
+    unit_of_measurement: "°C"
+    min_value: 0.1
+    max_value: 2.0
+    step: 0.1
+    restore_value: true
+    initial_value: 0.5
+    optimistic: true
+    on_value:
+      then:
+        - lambda: |-
+            id(virtual_climate_z1).set_heat_deadband(x);
+            id(virtual_climate_z1).set_heat_overrun(x);
+            id(virtual_climate_z1).set_cool_deadband(x);
+            id(virtual_climate_z1).set_cool_overrun(x);
 
-  - platform: gpio
-    pin: GPIO41
-    restore_mode: RESTORE_DEFAULT_OFF
-    id: relay_2
-    name: Relay 2
+            $z2_prefix} id(virtual_climate_z2).set_heat_deadband(x);
+            $z2_prefix} id(virtual_climate_z2).set_heat_overrun(x);
+            $z2_prefix} id(virtual_climate_z2).set_cool_deadband(x);
+            $z2_prefix} id(virtual_climate_z2).set_cool_overrun(x);

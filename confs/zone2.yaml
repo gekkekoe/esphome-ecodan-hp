@@ -2,6 +2,7 @@ substitutions:
   zone_identifier_z1: "2"
   # z2 conditional callback assignment link
   z2_feed_assignment: "state.z2_feed_temp = id(z2_feed_temp);"
+  z2_prefix: ""
 
 binary_sensor:
   - platform: ecodan

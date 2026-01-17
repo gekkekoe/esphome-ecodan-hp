@@ -1,0 +1,90 @@
+number:
+  - platform: template
+    id: asgard_vt_input_${zone_identifier}
+    name: "Virtual Thermostat Input ${zone_identifier}" 
+    unit_of_measurement: "°C"
+    optimistic: true
+    restore_value: true
+    initial_value: 20.0
+    min_value: -10
+    max_value: 40
+    step: 0.1
+    on_value:
+      then:
+        - component.update: asgard_vt_feedback_${zone_identifier}
+
+sensor:
+  - platform: template
+    id: asgard_vt_feedback_${zone_identifier}
+    internal: true 
+    unit_of_measurement: "°C"
+    lambda: |-
+      return id(asgard_vt_input_${zone_identifier}).state;
+    update_interval: 60s
+
+switch:
+  - platform: gpio
+    pin: ${gpio}
+    id: asgard_relay_${zone_identifier}
+    name: "Hardware Relay ${zone_identifier}"
+    internal: true 
+
+  - platform: template
+    name: "Manual Relay ${zone_identifier}"
+    id: asgard_manual_relay_${zone_identifier}
+    icon: "mdi:toggle-switch"
+    lambda: 'return id(asgard_relay_${zone_identifier}).state;'
+    turn_on_action:
+      - if:
+          condition:
+            lambda: 'return id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF;'
+          then:
+            - switch.turn_on: asgard_relay_${zone_identifier}
+          else:
+            - logger.log: "Action denied: Turn off Thermostat Zone ${zone_identifier} first!"
+            - switch.turn_off: asgard_manual_relay_${zone_identifier}
+    turn_off_action:
+      - if:
+          condition:
+             lambda: 'return id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF;'
+          then:
+            - switch.turn_off: asgard_relay_${zone_identifier}
+
+  - platform: template
+    id: demand_switch_${zone_identifier}
+    internal: true
+    lambda: 'return id(asgard_relay_${zone_identifier}).state;'
+    turn_on_action:
+      - switch.turn_on: asgard_relay_${zone_identifier}
+    turn_off_action:
+      - switch.turn_off: asgard_relay_${zone_identifier}
+
+climate:
+  - platform: thermostat
+    name: "Virtual Thermostat ${zone_identifier}"
+    id: virtual_climate_${zone_identifier}
+    sensor: asgard_vt_feedback_${zone_identifier}
+    
+    visual:
+      min_temperature: 10
+      max_temperature: 30
+      temperature_step: 0.1
+    
+    heat_deadband: 0.5
+    heat_overrun: 0.5
+    cool_deadband: 0.5
+    cool_overrun: 0.5
+    
+    heat_action:
+      - switch.turn_on: demand_switch_${zone_identifier}
+    cool_action:
+      - switch.turn_on: demand_switch_${zone_identifier}
+    idle_action:
+      - switch.turn_off: demand_switch_${zone_identifier}
+
+    # enfore min runtime of 15m, or user supplied
+    min_heating_run_time: 15min
+    min_cooling_run_time: 15min
+    min_idle_time: 0s        
+    min_heating_off_time: 0s 
+    min_cooling_off_time: 0s
