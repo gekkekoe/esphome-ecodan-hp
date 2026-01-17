@@ -1,0 +1,47 @@
+one_wire:
+  - platform: gpio
+    pin: GPIO02
+    id: dallas_bus
+
+sensor:
+  - platform: internal_temperature
+    name: ${internal_esp_temperature}
+    entity_category: diagnostic
+    unit_of_measurement: "°C"
+    device_class: temperature
+    accuracy_decimals: 1
+
+# dallas temp sensors
+  - platform: dallas_temp
+    id: DS18B20_0
+    index: 0
+    name: "DS18B20 1"
+    update_interval: 60s
+    resolution: 12
+  - platform: dallas_temp
+    id: DS18B20_1
+    index: 1
+    name: "DS18B20 2"
+    update_interval: 60s
+    resolution: 12
+
+  - platform: template
+    name: "DS18B20 Delta T"
+    lambda: |-
+      return abs(id(DS18B20_0).state - id(DS18B20_1).state);
+    accuracy_decimals: 1
+    unit_of_measurement: "°C"
+
+# relay
+switch:
+  - platform: gpio
+    pin: GPIO40
+    restore_mode: RESTORE_DEFAULT_OFF
+    id: relay_1
+    name: Relay 1
+
+  - platform: gpio
+    pin: GPIO41
+    restore_mode: RESTORE_DEFAULT_OFF
+    id: relay_2
+    name: Relay 2

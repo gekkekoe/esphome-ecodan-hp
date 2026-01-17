@@ -78,36 +78,5 @@ button:
     id: restart_button
     name: ${restart_button}
 
-one_wire:
-  - platform: gpio
-    pin: GPIO02
-    id: dallas_bus
-
-sensor:
-  - platform: internal_temperature
-    name: ${internal_esp_temperature}
-    entity_category: diagnostic
-    unit_of_measurement: "°C"
-    device_class: temperature
-    accuracy_decimals: 1
-
-  # single
-  - platform: dallas_temp
-    name: temperature
-    update_interval: 120s
-
-# relay
-switch:
-  - platform: gpio
-    pin: GPIO40
-    restore_mode: RESTORE_DEFAULT_OFF
-    id: relay_1
-    name: Relay 1
-
-  - platform: gpio
-    pin: GPIO41
-    restore_mode: RESTORE_DEFAULT_OFF
-    id: relay_2
-    name: Relay 2
-
 <<: !include asgard-led.yaml
+<<: !include asgard-sensors.yaml
