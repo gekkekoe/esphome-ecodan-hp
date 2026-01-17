@@ -12,7 +12,7 @@ esphome:
 
 esp32:
   board: esp32-s3-devkitc-1
-  flash_size: 8MB
+  flash_size: 16MB
   cpu_frequency: 240MHz
   framework:
     type: esp-idf
