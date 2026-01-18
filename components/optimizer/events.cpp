@@ -70,7 +70,11 @@ namespace esphome
                     // also add 0.5 during post dhw while heating
                     adjusted_flow += 0.5f;
                 }
-            }                
+            }
+            else if (status.has_independent_zone_temps()) {
+                // don't enforce step down for buffer tank systems
+                ESP_LOGD(OPTIMIZER_TAG, "Skipping enforce step down for independent zone temp systems");
+            }        
             else {
                 adjusted_flow = enforce_step_down(actual_flow_temp, current_flow_setpoint);
             }
