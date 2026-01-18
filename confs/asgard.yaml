@@ -80,3 +80,7 @@ button:
 
 <<: !include asgard-led.yaml
 <<: !include asgard-sensors.yaml
+
+packages:
+ thermostat-room-0: !include { file: asgard-thermostat.yaml, vars: { zone_identifier: "z1", gpio: "GPIO40" } }
+ ${z2_yaml_prefix} thermostat-room-1: !include { file: asgard-thermostat.yaml, vars: { zone_identifier: "z2", gpio: "GPIO41" } }

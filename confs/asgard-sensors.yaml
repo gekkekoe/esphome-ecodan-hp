@@ -54,7 +54,7 @@ number:
             id(virtual_climate_z1).set_cool_deadband(x);
             id(virtual_climate_z1).set_cool_overrun(x);
 
-            $z2_prefix} id(virtual_climate_z2).set_heat_deadband(x);
-            $z2_prefix} id(virtual_climate_z2).set_heat_overrun(x);
-            $z2_prefix} id(virtual_climate_z2).set_cool_deadband(x);
-            $z2_prefix} id(virtual_climate_z2).set_cool_overrun(x);
+            ${z2_cpp_prefix} id(virtual_climate_z2).set_heat_deadband(x);
+            ${z2_cpp_prefix} id(virtual_climate_z2).set_heat_overrun(x);
+            ${z2_cpp_prefix} id(virtual_climate_z2).set_cool_deadband(x);
+            ${z2_cpp_prefix} id(virtual_climate_z2).set_cool_overrun(x);
