@@ -202,10 +202,27 @@ namespace esphome
             if (!is_heating_mode && !is_cooling_mode)
                 return;
 
-            if (this->state_.temperature_feedback_source->active_index().value_or(0) == 1)
-            {
-                room_temp = (i == 0) ? this->state_.temperature_feedback_z1->state : this->state_.temperature_feedback_z2->state;
+            auto temp_feedback_source = this->state_.temperature_feedback_source->active_index().value_or(0);
+
+            switch (temp_feedback_source) {
+                case 1:
+                        room_temp = (i == 0) ? this->state_.temperature_feedback_z1->state : this->state_.temperature_feedback_z2->state;
+                    break;
+                case 2: 
+                    {
+                        auto vt_current_temp = (i == 0) ? this->state_.asgard_vt_z1->current_temperature : this->state_.asgard_vt_z2->current_temperature;
+                        if (!isnan(vt_current_temp))
+                            room_temp = vt_current_temp;
+
+                        auto vt_target_temp = (i == 0) ? this->state_.asgard_vt_z1->target_temperature : this->state_.asgard_vt_z2->target_temperature;
+                        if (!isnan(vt_target_temp))
+                            room_target_temp = vt_target_temp;
+                    }
+                    break;
+                default: // 0, room thermostat
+                    break;
             }
+
             if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp))
                 return;
 

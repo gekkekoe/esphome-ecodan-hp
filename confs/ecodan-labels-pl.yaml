@@ -143,6 +143,7 @@ substitutions:
   temperature_feedback_source: 'Autoadaptacja: Źródło Temperatury w Pomieszczeniu'
   temperature_feedback_option_room: 'Termostat Pokojowy'
   select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_asgard_vt: 'Wirtualny Termostat Asgard'
   heating_system_type: 'Autoadaptacja: Typ Systemu Grzewczego'
   heating_system_type_option_ufh: 'Ogrzewanie Podłogowe'
   heating_system_type_option_ufh_rad: 'Ogrzewanie Podłogowe + Grzejniki'

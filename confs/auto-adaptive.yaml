@@ -36,6 +36,8 @@ globals:
 substitutions:
   update_interval_minutes: "5min"
   z2_feed_assignment: "state.z2_feed_temp = nullptr;"
+  asgard_z1_assignment: ""
+  asgard_z2_assignment: ""
 
 esphome:
   on_boot:
@@ -66,6 +68,9 @@ esphome:
             state.hp_feed_temp = id(hp_feed_temp);
             state.z1_feed_temp = id(z1_feed_temp);
             ${z2_feed_assignment}
+
+            ${asgard_z1_assignment}
+            ${asgard_z2_assignment}
 
             state.heating_system_type = id(heating_system_type);
             state.temperature_feedback_source = id(temperature_feedback_source);
@@ -243,6 +248,7 @@ select:
     options:
       - "${temperature_feedback_option_room}"
       - "${select_feedback_option_api}"
+      - "${select_feedback_option_asgard_vt}"
     initial_option: "${temperature_feedback_option_room}"
 
   - platform: template

@@ -144,6 +144,7 @@ substitutions:
   temperature_feedback_source: 'Auto-Adaptatif: Source de Température Ambiante'
   temperature_feedback_option_room: "Thermostat d'Ambiance"
   select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_asgard_vt: 'Thermostat Virtuel Asgard'
   heating_system_type: 'Auto-Adaptatif: Type de Système de Chauffage'
   heating_system_type_option_ufh: 'Chauffage au Sol'
   heating_system_type_option_ufh_rad: 'Chauffage au Sol + Radiateurs'

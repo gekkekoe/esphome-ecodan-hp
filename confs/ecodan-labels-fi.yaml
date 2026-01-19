@@ -144,6 +144,7 @@ substitutions:
   temperature_feedback_source: 'Mukautuva ohjaus: Huonelämpötilan lähde'
   temperature_feedback_option_room: 'Huonetermostaatti'
   select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_asgard_vt: 'Asgard Virtuaalinen Termostaatti'
   heating_system_type: 'Mukautuva ohjaus: lämmitysjärjestelmän tyyppi'
   heating_system_type_option_ufh: 'Lattialämmitys'
   heating_system_type_option_ufh_rad: 'Lattialämmitys + patterit'

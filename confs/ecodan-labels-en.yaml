@@ -146,6 +146,7 @@ substitutions:
   temperature_feedback_source: 'Auto-Adaptive: Room Temperature source'
   temperature_feedback_option_room: 'Room Thermostat'
   select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_asgard_vt: 'Asgard Virtual Thermostat'
   heating_system_type: 'Auto-Adaptive: Heating System Type'
   heating_system_type_option_ufh: 'Underfloor Heating'
   heating_system_type_option_ufh_rad: 'Underfloor Heating + Radiators'

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "esphome.h"
+#include "esphome/components/thermostat/thermostat_climate.h"
 
 // forward declare EcodanHeatpump
 namespace esphome
@@ -47,8 +48,8 @@ namespace esphome
   
       esphome::sensor::Sensor *daily_heating_produced;
       esphome::sensor::Sensor *daily_heating_consumed;
-      esphome::number::Number *solver_kwh_meter_feedback;
 
+      esphome::number::Number *solver_kwh_meter_feedback;
       esphome::select::Select *heating_system_type;
       esphome::select::Select *temperature_feedback_source;
       esphome::select::Select *lockout_duration;
@@ -66,6 +67,9 @@ namespace esphome
       esphome::number::Number *minimum_compressor_on_time;
       esphome::number::Number *predictive_short_cycle_high_delta_time_window;
       esphome::number::Number *predictive_short_cycle_high_delta_threshold;
+
+      esphome::thermostat::ThermostatClimate *asgard_vt_z1;
+      esphome::thermostat::ThermostatClimate *asgard_vt_z2;
 
       // stats vars
       float &learned_heat_loss_global;

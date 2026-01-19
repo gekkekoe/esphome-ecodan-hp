@@ -1,4 +1,3 @@
-
 one_wire:
   - platform: gpio
     pin: GPIO02
@@ -49,12 +48,12 @@ number:
     on_value:
       then:
         - lambda: |-
-            id(virtual_climate_z1).set_heat_deadband(x);
+            id(virtual_climate_z1).set_heat_deadband(0);
             id(virtual_climate_z1).set_heat_overrun(x);
-            id(virtual_climate_z1).set_cool_deadband(x);
+            id(virtual_climate_z1).set_cool_deadband(0);
             id(virtual_climate_z1).set_cool_overrun(x);
 
-            ${z2_cpp_prefix} id(virtual_climate_z2).set_heat_deadband(x);
+            ${z2_cpp_prefix} id(virtual_climate_z2).set_heat_deadband(0);
             ${z2_cpp_prefix} id(virtual_climate_z2).set_heat_overrun(x);
-            ${z2_cpp_prefix} id(virtual_climate_z2).set_cool_deadband(x);
+            ${z2_cpp_prefix} id(virtual_climate_z2).set_cool_deadband(0);
             ${z2_cpp_prefix} id(virtual_climate_z2).set_cool_overrun(x);
