@@ -60,9 +60,10 @@ switch:
       - switch.turn_off: asgard_relay_${zone_identifier}
 
 climate:
-  - platform: thermostat
+  - platform: ecodan
     name: "Virtual Thermostat ${zone_identifier}"
     id: virtual_climate_${zone_identifier}
+    variant: virtual
     sensor: asgard_vt_feedback_${zone_identifier}
     
     visual:
