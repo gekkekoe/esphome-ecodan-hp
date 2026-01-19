@@ -70,13 +70,9 @@ namespace esphome
                     // also add 0.5 during post dhw while heating
                     adjusted_flow += 0.5f;
                 }
-            }
-            else if (status.has_independent_zone_temps()) {
-                // don't enforce step down for buffer tank systems
-                ESP_LOGD(OPTIMIZER_TAG, "Skipping enforce step down for independent zone temp systems");
-            }        
+            }   
             else {
-                adjusted_flow = enforce_step_down(actual_flow_temp, current_flow_setpoint);
+                adjusted_flow = enforce_step_down(status, actual_flow_temp, current_flow_setpoint);
             }
     
             if (adjusted_flow != current_flow_setpoint)
@@ -139,11 +135,14 @@ namespace esphome
             return false;
         }
 
-        float Optimizer::enforce_step_down(float actual_flow_temp, float calculated_flow) 
+        float Optimizer::enforce_step_down(const ecodan::Status &status, float actual_flow_temp, float calculated_flow) 
         {
             const float MAX_FEED_STEP_DOWN = 1.0f;
             const float MAX_FEED_STEP_DOWN_ADJUSTMENT = 0.5f;
-            if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
+            if (status.has_independent_zone_temps()) {
+                ESP_LOGD(OPTIMIZER_TAG, "Skipping enforce step down for independent zone temp systems");
+            }
+            else if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
             {
                 ESP_LOGW(OPTIMIZER_TAG, "Flow adjust: %.2f°C to prevent compressor stop! (setpoint: %.2f°C is %.2f°C below actual feed temp)",
                         actual_flow_temp - MAX_FEED_STEP_DOWN_ADJUSTMENT, calculated_flow, (actual_flow_temp - calculated_flow));

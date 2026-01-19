@@ -143,7 +143,7 @@ namespace esphome
       bool is_post_dhw_window(const ecodan::Status &status);
       bool is_heating_active(const ecodan::Status &status);
       float clamp_flow_temp(float calculated_flow, float min_temp, float max_temp);
-      float enforce_step_down(float actual_flow_temp, float calculated_flow);
+      float enforce_step_down(const ecodan::Status &status, float actual_flow_temp, float calculated_flow);
       bool set_flow_temp(float flow, OptimizerZone zone);
 
       // smart boost
