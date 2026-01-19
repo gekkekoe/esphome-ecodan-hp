@@ -1,4 +1,4 @@
-# 🧪 Temperature sync configuration
+# Temperature sync configuration
 
 ## 1. Sync Room Temperature
 This blueprint links an external temperature sensor to the Ecodan Virtual Thermostat.

@@ -17,7 +17,7 @@ blueprint:
           domain: [climate, sensor]
     
     target_input:
-      name: Ecodan Number Input
+      name: Target feedback (number) field
       description: The ESPHome 'number' entity for the Virtual Thermostat input (e.g., number.ecodan_heatpump_virtual_thermostat_input_z1).
       selector:
         entity:
