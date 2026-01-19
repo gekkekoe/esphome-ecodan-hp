@@ -2,7 +2,6 @@ substitutions:
   zone_identifier_z1: "0"
   z2_cpp_prefix: "//"
   z2_yaml_prefix: "#"
-  asgard_z1_assignment: "state.asgard_vt_z1 = id(virtual_climate_z1);"
 
 binary_sensor:
   - platform: ecodan

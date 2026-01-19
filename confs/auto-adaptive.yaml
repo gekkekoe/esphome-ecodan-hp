@@ -32,12 +32,9 @@ globals:
     restore_value: yes
     initial_value: '0.0'
 
-
 substitutions:
   update_interval_minutes: "5min"
-  z2_feed_assignment: "state.z2_feed_temp = nullptr;"
-  asgard_z1_assignment: ""
-  asgard_z2_assignment: ""
+  asgard_prefix: "//"
 
 esphome:
   on_boot:
@@ -67,10 +64,9 @@ esphome:
             state.operation_mode = id(operation_mode);
             state.hp_feed_temp = id(hp_feed_temp);
             state.z1_feed_temp = id(z1_feed_temp);
-            ${z2_feed_assignment}
-
-            ${asgard_z1_assignment}
-            ${asgard_z2_assignment}
+            ${z2_cpp_prefix} state.z2_feed_temp = id(z2_feed_temp);
+            ${asgard_prefix} state.asgard_vt_z1 = id(virtual_climate_z1);
+            ${asgard_prefix} ${z2_cpp_prefix} state.asgard_vt_z2 = id(virtual_climate_z2);
 
             state.heating_system_type = id(heating_system_type);
             state.temperature_feedback_source = id(temperature_feedback_source);

@@ -206,15 +206,28 @@ namespace esphome
 
             switch (temp_feedback_source) {
                 case 1:
-                        room_temp = (i == 0) ? this->state_.temperature_feedback_z1->state : this->state_.temperature_feedback_z2->state;
+                        room_temp = (i == 0) ? 
+                            (this->state_.temperature_feedback_z1 != nullptr ? this->state_.temperature_feedback_z1->state : room_temp) 
+                            : (this->state_.temperature_feedback_z2 != nullptr ? this->state_.temperature_feedback_z2->state : room_temp);
                     break;
                 case 2: 
                     {
-                        auto vt_current_temp = (i == 0) ? this->state_.asgard_vt_z1->current_temperature : this->state_.asgard_vt_z2->current_temperature;
+                        float vt_current_temp = NAN, vt_target_temp = NAN;
+                        if (i == 0) {
+                            if (this->state_.asgard_vt_z1 != nullptr) {
+                                vt_current_temp = this->state_.asgard_vt_z1->current_temperature;
+                                vt_target_temp = this->state_.asgard_vt_z1->target_temperature;
+                            }
+                        } else {
+                            if (this->state_.asgard_vt_z2 != nullptr) {
+                                vt_current_temp = this->state_.asgard_vt_z2->current_temperature;
+                                vt_target_temp = this->state_.asgard_vt_z2->target_temperature;
+                            }   
+                        }
+
                         if (!isnan(vt_current_temp))
                             room_temp = vt_current_temp;
 
-                        auto vt_target_temp = (i == 0) ? this->state_.asgard_vt_z1->target_temperature : this->state_.asgard_vt_z2->target_temperature;
                         if (!isnan(vt_target_temp))
                             room_target_temp = vt_target_temp;
                     }
@@ -226,8 +239,8 @@ namespace esphome
             if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp))
                 return;
 
-            ESP_LOGD(OPTIMIZER_TAG, "Processing Zone %d: Room=%.1f, Target=%.1f, Actual Feedtemp: %.1f, Return temp: %.1f, Outside: %.1f, Bias: %.1f, heating: %d, cooling: %d",
-                     (i + 1), room_temp, room_target_temp, actual_flow_temp, actual_return_temp, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active);
+            ESP_LOGD(OPTIMIZER_TAG, "Processing Zone %d: climate source: %d, Room=%.1f, Target=%.1f, Actual Feedtemp: %.1f, Return temp: %.1f, Outside: %.1f, Bias: %.1f, heating: %d, cooling: %d",
+                     (i + 1), temp_feedback_source, room_temp, room_target_temp, actual_flow_temp, actual_return_temp, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active);
  
             room_target_temp += setpoint_bias;
 

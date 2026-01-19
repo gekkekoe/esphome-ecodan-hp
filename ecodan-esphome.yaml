@@ -62,6 +62,7 @@ packages:
             confs/energy.yaml,            # required
             confs/cpu-monitoring.yaml,    # recommended
             confs/request-codes.yaml,   # disable if your unit does not support request codes (service menu)
+            confs/auto-adaptive.yaml,    # recommended, define before board def
             confs/esp32s3.yaml,         # confs/esp32.yaml, for regular board
             confs/zone1.yaml,
             confs/server-control-z1.yaml,
@@ -81,7 +82,6 @@ packages:
             # confs/ecodan-labels-pl.yaml,  # Polish
             confs/debug.yaml,
             confs/wifi.yaml,
-            confs/auto-adaptive.yaml,    # recommended
            ]
 
 logger:

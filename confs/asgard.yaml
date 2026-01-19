@@ -3,6 +3,8 @@ substitutions:
   uart_tx_pin: 39
   uart_proxy_rx_pin: 8
   uart_proxy_tx_pin: 7
+  # enable asgard prefixes
+  asgard_prefix: ""
 
 esphome:
   name: ${name}

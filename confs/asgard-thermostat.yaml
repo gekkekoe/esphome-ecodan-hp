@@ -2,6 +2,7 @@ number:
   - platform: template
     id: asgard_vt_input_${zone_identifier}
     name: "Virtual Thermostat Input ${zone_identifier}" 
+    device_class: temperature
     unit_of_measurement: "°C"
     optimistic: true
     restore_value: true
