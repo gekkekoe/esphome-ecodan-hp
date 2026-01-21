@@ -22,7 +22,7 @@ blueprint:
       selector:
         entity:
           domain: number
-          device_class: temperature
+          # device_class: temperature
 
 variables:
   source: !input source_entity
