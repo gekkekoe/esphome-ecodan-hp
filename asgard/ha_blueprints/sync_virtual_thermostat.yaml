@@ -48,5 +48,6 @@ action:
       entity_id: !input target_input
     data:
       value: "{{ current_temp }}"
+  - delay: "00:01:00"
 
 mode: single
