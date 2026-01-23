@@ -214,7 +214,8 @@ namespace esphome
             flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
             this->state_.ecodan_instance->set_controller_mode(flag, true);
 
-            uint32_t duration_s = atoi(this->state_.lockout_duration->current_option()) * 60UL;
+            auto val = esphome::parse_number<int>(this->state_.lockout_duration->current_option());
+            uint32_t duration_s = (val.has_value() ? *val : 0) * 60UL;
             if (duration_s > 0)
             {
                 this->state_.lockout_expiration_timestamp = (uint32_t)(current_timestamp + duration_s);
