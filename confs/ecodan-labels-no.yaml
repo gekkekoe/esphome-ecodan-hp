@@ -166,3 +166,5 @@ substitutions:
   solver_kwh_meter_feedback_source: "Energimåler kilde"
   solver_kwh_meter_option_internal: "Intern energimåler"
   solver_kwh_meter_feedback: "kWh-måler tilbakemelding"
+
+  asgard_vt_temp_sensor_source: 'Kilde Virtuell Termostat'

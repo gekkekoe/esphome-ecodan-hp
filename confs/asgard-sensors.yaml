@@ -1,3 +1,34 @@
+globals:
+  - id: gl_temp_feed
+    type: float
+    initial_value: 'NAN'
+  - id: gl_ow_temp_return
+    type: float
+    initial_value: 'NAN'
+  - id: gl_temp_z1
+    type: float
+    initial_value: 'NAN'
+  - id: gl_temp_z2
+    type: float
+    initial_value: 'NAN'
+
+  - id: idx_feed
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: idx_return
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: idx_z1
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: idx_z2
+    type: int
+    restore_value: true
+    initial_value: '0'
+
 one_wire:
   - platform: gpio
     pin: GPIO02
@@ -13,24 +44,232 @@ sensor:
 
 # dallas temp sensors
   - platform: dallas_temp
-    id: DS18B20_0
     index: 0
-    name: "DS18B20 1"
+    id: ow_raw_0
+    name: "DS18x20 Sensor 0"
     update_interval: 60s
     resolution: 12
+
   - platform: dallas_temp
-    id: DS18B20_1
     index: 1
-    name: "DS18B20 2"
+    id: ow_raw_1
+    name: "DS18x20 Sensor 1"
+    update_interval: 60s
+    resolution: 12
+
+  - platform: dallas_temp
+    index: 2
+    id: ow_raw_2
+    name: "DS18x20 Sensor 2"
+    update_interval: 60s
+    resolution: 12
+
+  - platform: dallas_temp
+    index: 3
+    id: ow_raw_3
+    name: "DS18x20 Sensor 3"
     update_interval: 60s
     resolution: 12
 
   - platform: template
-    name: "DS18B20 Delta T"
+    name: "DS18x20 Feed temp"
+    id: ow_temp_feed
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: 1s  
     lambda: |-
-      return abs(id(DS18B20_0).state - id(DS18B20_1).state);
+      int idx = id(idx_feed);
+      if (idx == 1) return id(ow_raw_0).state;
+      if (idx == 2) return id(ow_raw_1).state;
+      if (idx == 3) return id(ow_raw_2).state;
+      if (idx == 4) return id(ow_raw_3).state;
+      return NAN;
+    on_value:
+      then:
+        - globals.set:
+            id: gl_temp_feed
+            value: !lambda 'return x;'
+
+  - platform: template
+    name: "DS18x20 Return Temp"
+    id: ow_temp_return
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: 1s
+    lambda: |-
+      int idx = id(idx_return);
+      if (idx == 1) return id(ow_raw_0).state;
+      if (idx == 2) return id(ow_raw_1).state;
+      if (idx == 3) return id(ow_raw_2).state;
+      if (idx == 4) return id(ow_raw_3).state;
+      return NAN;
+    on_value:
+      then:
+        - globals.set:
+            id: gl_ow_temp_return
+            value: !lambda 'return x;'
+
+  - platform: template
+    name: "DS18x20 Virtual Thermostat input z1"
+    id: ow_temp_z1
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: 1s
+    lambda: |-
+      int idx = id(idx_z1);
+      if (idx == 1) return id(ow_raw_0).state;
+      if (idx == 2) return id(ow_raw_1).state;
+      if (idx == 3) return id(ow_raw_2).state;
+      if (idx == 4) return id(ow_raw_3).state;
+      return NAN;
+    on_value:
+      then:
+        - globals.set:
+            id: gl_temp_z1
+            value: !lambda 'return x;'
+
+  - platform: template
+    name: "DS18x20 Virtual Thermostat input z2"
+    id: ow_temp_z2
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: 1s
+    lambda: |-
+      int idx = id(idx_z2);
+      if (idx == 1) return id(ow_raw_0).state;
+      if (idx == 2) return id(ow_raw_1).state;
+      if (idx == 3) return id(ow_raw_2).state;
+      if (idx == 4) return id(ow_raw_3).state;
+      return NAN;
+    on_value:
+      then:
+        - globals.set:
+            id: gl_temp_z2
+            value: !lambda 'return x;'
+
+  # --- DELTA T ---
+  - platform: template
+    id: DS18x20_delta_t
+    name: "DS18x20 Delta T"
+    lambda: |-
+      if (isnan(id(ow_temp_feed).state) || isnan(id(ow_temp_return).state)) return NAN;
+      return id(ow_temp_feed).state - id(ow_temp_return).state;
     accuracy_decimals: 1
     unit_of_measurement: "°C"
+    update_interval: 1s
+
+select:  
+  # --- FEED SELECT ---
+  - platform: template
+    name: "DS18x20 Select Feed Sensor"
+    id: ow_sel_feed
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    options: ["None", "DS18x20 - 0", "DS18x20 - 1", "DS18x20 - 2", "DS18x20 - 3"]
+    set_action:
+      - lambda: |-
+          int new_idx = id(ow_sel_feed).index_of(x).value_or(0);
+          id(idx_feed) = new_idx;
+
+          if (new_idx == 0) return;
+
+          if (id(idx_return) == new_idx) { 
+            id(idx_return) = 0; 
+            id(ow_sel_return).publish_state("None"); 
+          }
+          if (id(idx_z1) == new_idx) { 
+            id(idx_z1) = 0; 
+            id(ow_sel_z1).publish_state("None"); 
+          }
+          if (id(idx_z2) == new_idx) { 
+            id(idx_z2) = 0; 
+            id(ow_sel_z2).publish_state("None"); 
+          }
+
+  # --- RETURN SELECT ---
+  - platform: template
+    name: "DS18x20 Select Return Sensor"
+    id: ow_sel_return
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    options: ["None", "DS18x20 - 0", "DS18x20 - 1", "DS18x20 - 2", "DS18x20 - 3"]
+    set_action:
+      - lambda: |-
+          int new_idx = id(ow_sel_return).index_of(x).value_or(0);
+          id(idx_return) = new_idx;
+
+          if (new_idx == 0) return;
+
+          if (id(idx_feed) == new_idx) { 
+            id(idx_feed) = 0; 
+            id(ow_sel_feed).publish_state("None"); 
+          }
+          if (id(idx_z1) == new_idx) { 
+            id(idx_z1) = 0; 
+            id(ow_sel_z1).publish_state("None"); 
+          }
+          if (id(idx_z2) == new_idx) { 
+            id(idx_z2) = 0; 
+            id(ow_sel_z2).publish_state("None"); 
+          }
+
+  # --- Virtual Thermostat ZONE 1 SELECT ---
+  - platform: template
+    name: "DS18x20 Select z1 Sensor"
+    id: ow_sel_z1
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    options: ["None", "DS18x20 - 0", "DS18x20 - 1", "DS18x20 - 2", "DS18x20 - 3"]
+    set_action:
+      - lambda: |-
+          int new_idx = id(ow_sel_z1).index_of(x).value_or(0);
+          id(idx_z1) = new_idx;
+
+          if (new_idx == 0) return;
+
+          if (id(idx_feed) == new_idx) { 
+            id(idx_feed) = 0; 
+            id(ow_sel_feed).publish_state("None"); 
+          }
+          if (id(idx_return) == new_idx) { 
+            id(idx_return) = 0; 
+            id(ow_sel_return).publish_state("None"); 
+          }
+          if (id(idx_z2) == new_idx) { 
+            id(idx_z2) = 0; 
+            id(ow_sel_z2).publish_state("None"); 
+          }
+
+  # --- Virtual Thermostat ZONE 2 SELECT ---
+  - platform: template
+    name: "DS18x20 Select z2 Sensor"
+    id: ow_sel_z2
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    options: ["None", "DS18x20 - 0", "DS18x20 - 1", "DS18x20 - 2", "DS18x20 - 3"]
+    set_action:
+      - lambda: |-
+          int new_idx = id(ow_sel_z2).index_of(x).value_or(0);
+          id(idx_z2) = new_idx;
+
+          if (new_idx == 0) return;
+
+          if (id(idx_feed) == new_idx) { 
+            id(idx_feed) = 0; 
+            id(ow_sel_feed).publish_state("None"); 
+          }
+          if (id(idx_return) == new_idx) { 
+            id(idx_return) = 0; 
+            id(ow_sel_return).publish_state("None"); 
+          }
+          if (id(idx_z1) == new_idx) { 
+            id(idx_z1) = 0; 
+            id(ow_sel_z1).publish_state("None"); 
+          }
 
 number:
   # 1. Hysteresis (Deadband)

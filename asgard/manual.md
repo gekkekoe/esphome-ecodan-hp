@@ -30,7 +30,7 @@ The Asgard PCB features a **pass-through (slave) port**, allowing you to retain 
 > * **Final Check:** Every single unit is **personally flashed, inspected, and tested** by the developer before it is packed and shipped to you.
 
 > [!IMPORTANT]
-> **DIY Project - No Commercial Warranty**
+> **DIY Project/Development PCB - No Commercial Warranty**
 > Please understand that this hardware is provided as a **Do-It-Yourself (DIY) kit**.
 > * It does not come with a standard commercial warranty or 24/7 support.
 > * Installation and use are entirely at your own risk.

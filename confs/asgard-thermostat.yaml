@@ -12,16 +12,46 @@ number:
     step: 0.1
     on_value:
       then:
-        - component.update: asgard_vt_feedback_${zone_identifier}
+        - if:
+            condition:
+              lambda: |-
+                auto idx = id(asgard_vt_temp_sensor_source_${zone_identifier}).active_index().value_or(0);
+                return idx == 0;
+            then:
+              - component.update: asgard_vt_feedback_${zone_identifier}
 
 sensor:
   - platform: template
     id: asgard_vt_feedback_${zone_identifier}
     internal: true 
     unit_of_measurement: "°C"
-    lambda: |-
-      return id(asgard_vt_input_${zone_identifier}).state;
     update_interval: 60s
+    lambda: |-
+      auto idx = id(asgard_vt_temp_sensor_source_${zone_identifier}).active_index().value_or(0);
+      
+      if (idx == 0) {
+        return id(asgard_vt_input_${zone_identifier}).state;
+      }
+      
+      // Index 1: OneWire Sensor
+      if (idx == 1) {
+        return id(gl_temp_${zone_identifier});
+      }
+      return NAN;
+
+select:
+  - platform: template
+    id: asgard_vt_temp_sensor_source_${zone_identifier}
+    name: "${asgard_vt_temp_sensor_source} ${zone_identifier}"
+    optimistic: true
+    restore_value: true
+    options:
+      - "Virtual Thermostat Input ${zone_identifier}" 
+      - "DS18x20 ${zone_identifier}"
+    initial_option: "Virtual Thermostat Input ${zone_identifier}" 
+    set_action:
+      then:
+        - component.update: asgard_vt_feedback_${zone_identifier}
 
 switch:
   - platform: gpio

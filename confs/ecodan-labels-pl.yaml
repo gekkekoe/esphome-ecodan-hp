@@ -166,3 +166,5 @@ substitutions:
   solver_kwh_meter_feedback_source: "Źródło licznika energii"
   solver_kwh_meter_option_internal: "Wewnętrzny licznik energii"
   solver_kwh_meter_feedback: "Sprzężenie zwrotne licznika"
+
+  asgard_vt_temp_sensor_source: 'Źródło Wirtualnego Termostatu'

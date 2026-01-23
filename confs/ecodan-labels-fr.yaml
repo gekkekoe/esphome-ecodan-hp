@@ -167,3 +167,5 @@ substitutions:
   solver_kwh_meter_feedback_source: "Source du compteur"
   solver_kwh_meter_option_internal: "Compteur interne"
   solver_kwh_meter_feedback: "Retour compteur kWh"
+
+  asgard_vt_temp_sensor_source: 'Source Thermostat Virtuel'

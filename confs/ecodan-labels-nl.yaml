@@ -167,3 +167,5 @@ substitutions:
   solver_kwh_meter_feedback_source: "Bron energiemeter"
   solver_kwh_meter_option_internal: "Interne energiemeter"
   solver_kwh_meter_feedback: "kWh-meter terugkoppeling"
+
+  asgard_vt_temp_sensor_source: 'Bron Virtuele Thermostaat'

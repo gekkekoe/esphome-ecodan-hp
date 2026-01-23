@@ -167,3 +167,5 @@ substitutions:
   solver_kwh_meter_feedback_source: "Energiamittarin lähde"
   solver_kwh_meter_option_internal: "Sisäinen energiamittari"
   solver_kwh_meter_feedback: "kWh-mittarin palaute"
+
+  asgard_vt_temp_sensor_source: 'Virtuaalisen Termostaatin Lähde'
