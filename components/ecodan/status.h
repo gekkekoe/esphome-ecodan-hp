@@ -40,7 +40,7 @@ namespace ecodan
         float Z1ReturnTemperature{NAN};
         float Z2FeedTemperature{NAN};
         float Z2ReturnTemperature{NAN};
-        float MixingTankTemperature;
+        float MixingTankTemperature{NAN};
         float HpRefrigerantLiquidTemperature;
         float HpRefrigerantCondensingTemperature;
         float DhwTemperature{NAN};
