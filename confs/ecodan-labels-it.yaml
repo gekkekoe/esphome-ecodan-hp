@@ -29,15 +29,15 @@ substitutions:
   heatpump_switch_holiday: Modalità Vacanza
   wifi_signal_proc: WiFi Segnale %
   wifi_signal_db: WiFi Segnale dB
-  z1_flow_temp_target: Z1 C/F T. Mandata
+  z1_flow_temp_target: Z1 C⁄F T. Mandata
   status_prohibit_cool_z1: Z1 Raff. Proibito
   status_prohibit_heating_z1: Z1 Risc. Proibito
   heatpump_climate_z1: Zona 1 Temp. Mandata
   heatpump_climate_room_z1: Zona 1 Temp. Ambiente
   z1_room_temp_target: Z1 T. Ambiente Desiderata
   z1_room_temp: Z1 T. Ambiente
-  heatpump_number_z2_set_flow_temperature: Z2 C/F Mandata
-  z2_flow_temp_target: Z2 C/F T. Mandata
+  heatpump_number_z2_set_flow_temperature: Z2 C⁄F Mandata
+  z2_flow_temp_target: Z2 C⁄F T. Mandata
   status_prohibit_cool_z2: Z2 Raff. Proibito
   status_prohibit_heating_z2: Z2 Risc. Proibito
   heatpump_number_z2_set_room_temperature: Z2 T. Ambiente
@@ -105,8 +105,8 @@ substitutions:
   hp_return_temp: T. Ritorno Liq. Refr.
   z1_return_temp: Z1 T. Ritorno Liq. Refr.
   z2_return_temp: Z2 T. Ritorno Liq. Refr.
-  status_water_pump: Pompa Circolazione
-  status_water_pump_2: Pompa Circolazione 2
+  status_water_pump: Pompa Circolazione int
+  status_water_pump_2: Pompa Circolazione ext
   status_water_pump_3: Pompa Circolazione 3
   status_mixing_valve: Mixing Valvola Status
   mixing_valve_step: Mixing Valvola Step
@@ -143,7 +143,7 @@ substitutions:
   cooling_smart_start_temp: 'Autoadattivo: Temp. di Avvio Intelligente Raffrescamento'
   temperature_feedback_source: 'Autoadattivo: Fonte Temperatura Ambiente'
   temperature_feedback_option_room: 'Termostato Ambiente'
-  select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant ⁄ REST API'
   select_feedback_option_asgard_vt: 'Termostato Virtuale Asgard'
   heating_system_type: 'Autoadattivo: Tipo di Impianto'
   heating_system_type_option_ufh: 'Riscaldamento a Pavimento'
