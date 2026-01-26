@@ -142,7 +142,7 @@ namespace esphome
             if (status.has_independent_zone_temps()) {
                 // new flow should be > mixing tank return (FTC5 or lower) or THW10 (FTC6+)
                 auto mixingTankTemp = status.has_mixing_tank() ? status.MixingTankTemperature : status.HpReturnTemperature;
-                if (calculated_flow <= mixingTankTemp) {
+                if (calculated_flow < mixingTankTemp) {
                     ESP_LOGW(OPTIMIZER_TAG, "Flow adjust (Mixing Tank): %.2f°C to prevent compressor stop! (setpoint: %.2f°C is %.2f°C below actual Mixing Tank temp)",
                          mixingTankTemp + 0.5, calculated_flow, (mixingTankTemp - calculated_flow));
                     calculated_flow = mixingTankTemp + 0.5;
