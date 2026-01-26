@@ -63,12 +63,12 @@ namespace esphome
             }
 
             float requested_flow = status.Zone1FlowTemperatureSetPoint;
-            if (status.has_2zones())
+            if (status.has_independent_zone_temps())
             {
                 requested_flow = fmax(status.Zone1FlowTemperatureSetPoint, status.Zone2FlowTemperatureSetPoint);
             }
 
-            float actual_flow = status.has_2zones()
+            float actual_flow = status.has_independent_zone_temps()
                                     ? fmax(status.Z1FeedTemperature, status.Z2FeedTemperature)
                                     : this->state_.hp_feed_temp->state;
 

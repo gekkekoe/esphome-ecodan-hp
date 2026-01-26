@@ -183,6 +183,11 @@ namespace esphome
       void update_boost_sensor();
 
       void update_heat_model();
+      float get_room_current_temp(OptimizerZone zone);
+      float get_room_target_temp(OptimizerZone zone);
+      float get_feed_temp(OptimizerZone zone);
+      float get_return_temp(OptimizerZone zone);
+      float get_flow_setpoint(OptimizerZone zone);
     };
 
     // dummy, can remain empty

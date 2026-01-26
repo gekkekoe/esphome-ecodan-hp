@@ -77,6 +77,76 @@ namespace esphome
             }
         }
 
+        float Optimizer::get_feed_temp(OptimizerZone zone) {
+            auto &status = this->state_.ecodan_instance->get_status();
+            if (status.has_independent_zone_temps())
+                return (zone == OptimizerZone::ZONE_2) ? status.Z2FeedTemperature : status.Z1FeedTemperature;        
+            return status.HpFeedTemperature;
+        }
+
+        float Optimizer::get_return_temp(OptimizerZone zone) {
+            auto &status = this->state_.ecodan_instance->get_status();
+            if (status.has_independent_zone_temps())
+                return (zone == OptimizerZone::ZONE_2) ? status.Z2ReturnTemperature : status.Z1ReturnTemperature;        
+            return status.HpReturnTemperature;
+        }
+
+
+        float Optimizer::get_flow_setpoint(OptimizerZone zone) {
+            auto &status = this->state_.ecodan_instance->get_status();
+            if (status.has_independent_zone_temps())
+                return (zone == OptimizerZone::ZONE_2) ? status.Zone2FlowTemperatureSetPoint : status.Zone1FlowTemperatureSetPoint;        
+            return status.Zone1FlowTemperatureSetPoint;
+        }
+
+        float Optimizer::get_room_current_temp(OptimizerZone zone) {
+            auto &status = this->state_.ecodan_instance->get_status();
+            auto temp_feedback_source = this->state_.temperature_feedback_source->active_index().value_or(0);
+
+            auto current_temp = NAN;
+
+            if (zone == OptimizerZone::ZONE_1) {
+                if (temp_feedback_source == 2 && this->state_.asgard_vt_z1 != nullptr) {
+                    current_temp = this->state_.asgard_vt_z1->current_temperature;
+                } else if (temp_feedback_source == 1 && this->state_.temperature_feedback_z1 != nullptr) {
+                    current_temp = this->state_.temperature_feedback_z1->state;
+                }
+            } else {
+                if (temp_feedback_source == 2 && this->state_.asgard_vt_z2 != nullptr) {
+                    current_temp = this->state_.asgard_vt_z2->current_temperature;
+                } else if (temp_feedback_source == 1 && this->state_.temperature_feedback_z2 != nullptr) {
+                    current_temp = this->state_.temperature_feedback_z2->state;
+                }
+            }
+
+            if (isnan(current_temp))
+                current_temp = (zone == OptimizerZone::ZONE_1) ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
+
+            return current_temp;
+        }
+
+        float Optimizer::get_room_target_temp(OptimizerZone zone) {
+            auto &status = this->state_.ecodan_instance->get_status();
+            auto temp_feedback_source = this->state_.temperature_feedback_source->active_index().value_or(0);
+
+            auto target_temp = NAN;
+
+            if (zone == OptimizerZone::ZONE_1) {
+                if (temp_feedback_source == 2 && this->state_.asgard_vt_z1 != nullptr) {
+                    target_temp = this->state_.asgard_vt_z1->target_temperature;
+                } 
+            } else {
+                if (temp_feedback_source == 2 && this->state_.asgard_vt_z2 != nullptr) {
+                    target_temp = this->state_.asgard_vt_z2->target_temperature;
+                } 
+            }
+
+            if (isnan(target_temp))
+                target_temp = (zone == OptimizerZone::ZONE_1) ? status.Zone1SetTemperature : status.Zone2SetTemperature;
+
+            return target_temp;
+        }
+
         float Optimizer::calculate_smart_boost(int profile, float error) {
 
             if (!this->state_.smart_boost_enabled->state) {
@@ -199,52 +269,19 @@ namespace esphome
             if (isnan(setpoint_bias))
                 setpoint_bias = 0.0f;
 
-            float room_temp = (i == 0) ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
-            float room_target_temp = (i == 0) ? status.Zone1SetTemperature : status.Zone2SetTemperature;
-            float requested_flow_temp = (i == 0) ? status.Zone1FlowTemperatureSetPoint : status.Zone2FlowTemperatureSetPoint;
-            float actual_flow_temp = status.has_independent_zone_temps() ? ((i == 0) ? status.Z1FeedTemperature : status.Z2FeedTemperature) : status.HpFeedTemperature;
-            float actual_return_temp = status.has_independent_zone_temps() ? ((i == 0) ? status.Z1ReturnTemperature : status.Z2ReturnTemperature) : status.HpReturnTemperature;
+            float room_temp = this->get_room_current_temp((i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
+            float room_target_temp = this->get_room_target_temp((i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
+            float requested_flow_temp = this->get_flow_setpoint((i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
+            float actual_flow_temp = this->get_feed_temp((i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
+            float actual_return_temp = this->get_return_temp((i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
 
             if (!is_heating_mode && !is_cooling_mode)
                 return;
 
-            auto temp_feedback_source = this->state_.temperature_feedback_source->active_index().value_or(0);
-
-            switch (temp_feedback_source) {
-                case 1:
-                        room_temp = (i == 0) ? 
-                            (this->state_.temperature_feedback_z1 != nullptr ? this->state_.temperature_feedback_z1->state : room_temp) 
-                            : (this->state_.temperature_feedback_z2 != nullptr ? this->state_.temperature_feedback_z2->state : room_temp);
-                    break;
-                case 2: 
-                    {
-                        float vt_current_temp = NAN, vt_target_temp = NAN;
-                        if (i == 0) {
-                            if (this->state_.asgard_vt_z1 != nullptr) {
-                                vt_current_temp = this->state_.asgard_vt_z1->current_temperature;
-                                vt_target_temp = this->state_.asgard_vt_z1->target_temperature;
-                            }
-                        } else {
-                            if (this->state_.asgard_vt_z2 != nullptr) {
-                                vt_current_temp = this->state_.asgard_vt_z2->current_temperature;
-                                vt_target_temp = this->state_.asgard_vt_z2->target_temperature;
-                            }   
-                        }
-
-                        if (!isnan(vt_current_temp))
-                            room_temp = vt_current_temp;
-
-                        if (!isnan(vt_target_temp))
-                            room_target_temp = vt_target_temp;
-                    }
-                    break;
-                default: // 0, room thermostat
-                    break;
-            }
-
             if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp))
                 return;
 
+            auto temp_feedback_source = this->state_.temperature_feedback_source->active_index().value_or(0);
             ESP_LOGD(OPTIMIZER_TAG, "Processing Zone %d: climate source: %d, Room=%.1f, Target=%.1f, Actual Feedtemp: %.1f, Return temp: %.1f, Outside: %.1f, Bias: %.1f, heating: %d, cooling: %d",
                      (i + 1), temp_feedback_source, room_temp, room_target_temp, actual_flow_temp, actual_return_temp, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active);
  
