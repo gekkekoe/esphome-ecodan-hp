@@ -110,42 +110,36 @@ namespace esphome
                     {
                         ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Short-cycle predicted! Increasing Feed temps to force a longer cycle.");
                         this->predictive_delta_start_time_ = 0;
+                        // if in AA or stand alone
+                        if (this->state_.auto_adaptive_control_enabled->state || this->state_.predictive_short_cycle_control_enabled->state) {
 
-                        if (this->state_.auto_adaptive_control_enabled->state)
-                        {
                             bool was_boosted = false;
                             auto multizone_status = status.MultiZoneStatus;
-                            if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && (!status.has_independent_zone_temps() || (status.has_independent_zone_temps() && (multizone_status == 1 || multizone_status == 2))))
-                            {
+
+                            bool is_heating_z1 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) 
+                                || status.is_heating(esphome::ecodan::Zone::ZONE_1)
+                                || (status.has_2zones() && (multizone_status == 1 || multizone_status == 2));
+                            
+                            if (is_heating_z1) {
                                 float adjusted_flow_z1 = status.Zone1FlowTemperatureSetPoint + adjustment_factor;
                                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Increase Z1 Heat Flow to -> %.1f°C", adjusted_flow_z1);
                                 this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow_z1, esphome::ecodan::Zone::ZONE_1);
                                 was_boosted = true;
                             }
-                            if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) && (!status.has_independent_zone_temps() || (status.has_independent_zone_temps() && (multizone_status == 1 || multizone_status == 3))))
-                            {
+
+                            bool is_heating_z2 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) 
+                                || status.is_heating(esphome::ecodan::Zone::ZONE_2)
+                                || (status.has_2zones() && (multizone_status == 1 || multizone_status == 3));
+                            
+                            if (status.has_2zones() && is_heating_z2) {
                                 float adjusted_flow_z2 = status.Zone2FlowTemperatureSetPoint + adjustment_factor;
                                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Increase Z2 Heat Flow to -> %.1f°C", adjusted_flow_z2);
                                 this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow_z2, esphome::ecodan::Zone::ZONE_2);
                                 was_boosted = true;
                             }
+
                             if (was_boosted)
                                 this->predictive_short_cycle_total_adjusted_ += adjustment_factor;
-                        }
-                        else if (this->state_.predictive_short_cycle_control_enabled->state)
-                        {
-                            this->predictive_short_cycle_total_adjusted_ += adjustment_factor;
-
-                            float adjusted_flow_z1 = status.Zone1FlowTemperatureSetPoint + adjustment_factor;
-                            ESP_LOGD(OPTIMIZER_CYCLE_TAG, "CMD: Increase Z1 Heat Flow to -> %.1f°C", adjusted_flow_z1);
-                            this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow_z1, esphome::ecodan::Zone::ZONE_1);
-
-                            if (status.has_2zones())
-                            {
-                                float adjusted_flow_z2 = status.Zone2FlowTemperatureSetPoint + adjustment_factor;
-                                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "CMD: Increase Z2 Heat Flow to -> %.1f°C", adjusted_flow_z2);
-                                this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow_z2, esphome::ecodan::Zone::ZONE_2);
-                            }
                         }
                     }
                 }

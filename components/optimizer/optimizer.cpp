@@ -150,6 +150,28 @@ namespace esphome
             return target_temp;
         }
 
+        FlowLimits Optimizer::get_flow_limits(OptimizerZone zone) {
+            float min_flow, max_flow;
+            if (zone == OptimizerZone::ZONE_2) {
+                max_flow = this->state_.maximum_heating_flow_temp_z2->state;
+                min_flow = this->state_.minimum_heating_flow_temp_z2->state;
+                if (min_flow > max_flow)
+                {
+                    min_flow = max_flow;
+                }
+            }
+            else {
+                max_flow = this->state_.maximum_heating_flow_temp->state;
+                min_flow = this->state_.minimum_heating_flow_temp->state;
+                if (min_flow > max_flow)
+                {
+                    min_flow = max_flow;
+                }   
+            }
+
+            return {min_flow, max_flow};
+        }
+
         float Optimizer::calculate_smart_boost(int profile, float error) {
 
             if (!this->state_.smart_boost_enabled->state) {

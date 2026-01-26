@@ -27,6 +27,11 @@ namespace esphome
         SINGLE = 0
     };
 
+    struct FlowLimits {
+      float min;
+      float max;
+    };
+
     struct OptimizerState
     {
       esphome::ecodan::EcodanHeatpump *ecodan_instance;
@@ -125,9 +130,6 @@ namespace esphome
       float last_total_heating_produced_ = 0.0f;
       float last_total_heating_consumed_ = 0.0f;
 
-      // Last flow set cmd, We don't want to react on our own set events
-      uint32_t last_flow_set_command_time_{0};
-
       void process_adaptive_zone_(
           std::size_t i,
           const ecodan::Status &status,
@@ -163,10 +165,6 @@ namespace esphome
       // stats
       void update_learning_model(int day_of_year);
 
-      void set_last_flow_adjust_time() {
-        this->last_flow_set_command_time_ = millis();
-      };
-
     public:
       Optimizer(OptimizerState state);
 
@@ -188,6 +186,7 @@ namespace esphome
       float get_feed_temp(OptimizerZone zone);
       float get_return_temp(OptimizerZone zone);
       float get_flow_setpoint(OptimizerZone zone);
+      FlowLimits get_flow_limits(OptimizerZone zone);
     };
 
     // dummy, can remain empty
