@@ -21,7 +21,7 @@ namespace esphome
                     storage = new_val;
 
                     if (is_flow_event && (millis() - this->last_flow_set_command_time_ < 2 * 60 * 1000)) {
-                        ESP_LOGD(OPTIMIZER_TAG, "Change event ignored: cooling down from own action.");
+                        ESP_LOGD(OPTIMIZER_TAG, "Change event (%.2f -> %.2f) ignored: cooling down from own action.", previous, new_val);
                         return;
                     }
 
