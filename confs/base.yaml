@@ -1,3 +1,6 @@
+preferences:
+  flash_write_interval: 30min
+
 globals:
 # delta_energy_consumed_increasing
   - id: _delta_energy_consumed_increasing_daily_input_last_value
