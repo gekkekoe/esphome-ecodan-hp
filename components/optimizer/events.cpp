@@ -141,8 +141,13 @@ namespace esphome
             const float MAX_FEED_STEP_DOWN_ADJUSTMENT = 0.5f;
             if (status.has_independent_zone_temps()) {
                 // new flow should be > mixing tank return (FTC5 or lower) or THW10 (FTC6+)
-                auto mixingTankTemp = status.has_mixing_tank() ? status.MixingTankTemperature : status.HpReturnTemperature;
-                if (calculated_flow <= mixingTankTemp) {
+                auto mixingTankTemp = status.MixingTankTemperature;
+                if (mixingTankTemp == 25.0f)
+                    mixingTankTemp = status.BoilerReturnTemperature;
+                else if (mixingTankTemp == 25.0f)
+                    mixingTankTemp = status.HpReturnTemperature;
+
+                if (calculated_flow < mixingTankTemp) {
                     ESP_LOGW(OPTIMIZER_TAG, "Flow adjust (Mixing Tank): %.2f°C to prevent compressor stop! (setpoint: %.2f°C is %.2f°C below actual Mixing Tank temp)",
                          mixingTankTemp + 0.5, calculated_flow, (mixingTankTemp - calculated_flow));
                     calculated_flow = mixingTankTemp + 0.5;
