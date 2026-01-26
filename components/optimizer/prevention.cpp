@@ -102,6 +102,8 @@ namespace esphome
                 if (this->predictive_delta_start_time_ == 0)
                 {
                     this->predictive_delta_start_time_ = millis();
+                    this->pcp_old_z1_setpoint_ = NAN;
+                    this->pcp_old_z2_setpoint_ = NAN;
                     ESP_LOGD(OPTIMIZER_CYCLE_TAG, "High Delta T detected (%.1f°C). Starting timer.", delta);
                 }
                 else
@@ -121,7 +123,12 @@ namespace esphome
                                 || (status.has_2zones() && (multizone_status == 1 || multizone_status == 2));
                             
                             if (is_heating_z1) {
+                                if (isnan(this->pcp_old_z1_setpoint_))
+                                    this->pcp_old_z1_setpoint_ = status.Zone1FlowTemperatureSetPoint;
+
+                                auto limits = this->get_flow_limits(OptimizerZone::ZONE_1);
                                 float adjusted_flow_z1 = status.Zone1FlowTemperatureSetPoint + adjustment_factor;
+                                adjusted_flow_z1 = this->clamp_flow_temp(adjusted_flow_z1, limits.min, limits.max);
                                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Increase Z1 Heat Flow to -> %.1f°C", adjusted_flow_z1);
                                 this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow_z1, esphome::ecodan::Zone::ZONE_1);
                                 was_boosted = true;
@@ -132,7 +139,12 @@ namespace esphome
                                 || (status.has_2zones() && (multizone_status == 1 || multizone_status == 3));
                             
                             if (status.has_2zones() && is_heating_z2) {
+                                if (isnan(this->pcp_old_z2_setpoint_))
+                                    this->pcp_old_z2_setpoint_ = status.Zone2FlowTemperatureSetPoint;
+
+                                auto limits = this->get_flow_limits(OptimizerZone::ZONE_1);
                                 float adjusted_flow_z2 = status.Zone2FlowTemperatureSetPoint + adjustment_factor;
+                                adjusted_flow_z2 = this->clamp_flow_temp(adjusted_flow_z2, limits.min, limits.max);
                                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Increase Z2 Heat Flow to -> %.1f°C", adjusted_flow_z2);
                                 this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow_z2, esphome::ecodan::Zone::ZONE_2);
                                 was_boosted = true;

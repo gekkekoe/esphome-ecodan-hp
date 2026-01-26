@@ -32,12 +32,6 @@ namespace esphome
                 this->daily_temp_count_++;
             }
 
-            // 2. Detect Day Change
-            if (status.timestamp() == -1) {
-                // No valid day yet.
-                return;
-            }
-
             int current_day = status.ControllerDateTime.tm_yday;
             
             // Initialize on boot (prevent jump)

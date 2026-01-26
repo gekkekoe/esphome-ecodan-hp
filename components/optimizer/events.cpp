@@ -163,15 +163,15 @@ namespace esphome
             {
                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Restoring flow setpoint after predictive boost.");
 
-                float restored_flow_z1 = status.Zone1FlowTemperatureSetPoint - adjustment;
-                this->state_.ecodan_instance->set_flow_target_temperature(restored_flow_z1, esphome::ecodan::Zone::ZONE_1);
+                if (!isnan(this->pcp_old_z1_setpoint_))
+                    this->state_.ecodan_instance->set_flow_target_temperature(this->pcp_old_z1_setpoint_, esphome::ecodan::Zone::ZONE_1);
 
-                if (status.has_independent_zone_temps())
-                {
-                    float restored_flow_z2 = status.Zone2FlowTemperatureSetPoint - adjustment;
-                    this->state_.ecodan_instance->set_flow_target_temperature(restored_flow_z2, esphome::ecodan::Zone::ZONE_2);
-                }
+                if (status.has_2zones() && !isnan(this->pcp_old_z2_setpoint_))
+                    this->state_.ecodan_instance->set_flow_target_temperature(this->pcp_old_z2_setpoint_, esphome::ecodan::Zone::ZONE_2);
+
                 this->predictive_short_cycle_total_adjusted_ = 0.0f;
+                this->pcp_old_z1_setpoint_ = NAN;
+                this->pcp_old_z2_setpoint_ = NAN;
             }
 
             if (this->state_.lockout_duration->active_index().value_or(0) == 0)

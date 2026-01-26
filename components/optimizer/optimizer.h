@@ -95,6 +95,10 @@ namespace esphome
       float dhw_old_z1_setpoint_ = NAN;
       float dhw_old_z2_setpoint_ = NAN;
 
+      // predictive prevention restore points
+      float pcp_old_z1_setpoint_ = NAN;
+      float pcp_old_z2_setpoint_ = NAN;
+
       uint32_t predictive_delta_start_time_ = 0;
       uint32_t compressor_start_time_ = 0;
       uint32_t last_defrost_time_ = 0;
