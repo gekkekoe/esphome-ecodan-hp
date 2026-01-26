@@ -21,7 +21,7 @@ namespace esphome
                 bool is_heating_active = status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
 
                 if (is_running && is_heating_active) {
-                    this->state_.daily_runtime_global += minutes_passed;
+                    this->daily_runtime_global += minutes_passed;
                 }
             }
             this->last_check_ms_ = now;
@@ -33,6 +33,11 @@ namespace esphome
             }
 
             // 2. Detect Day Change
+            if (status.timestamp() == -1) {
+                // No valid day yet.
+                return;
+            }
+
             int current_day = status.ControllerDateTime.tm_yday;
             
             // Initialize on boot (prevent jump)
@@ -54,7 +59,7 @@ namespace esphome
                 this->daily_temp_count_ = 0;
                 
                 // Reset daily runtime counter via global
-                this->state_.daily_runtime_global = 0;
+                this->daily_runtime_global = 0;
             }
 
             // set latest snapshot
@@ -75,7 +80,7 @@ namespace esphome
             float avg_temp_day = this->daily_temp_sum_ / this->daily_temp_count_;
             
             // Retrieve runtime (minutes -> hours)
-            float runtime_hours = this->state_.daily_runtime_global / 60.0f;
+            float runtime_hours = this->daily_runtime_global / 60.0f;
             
             float heat_produced_kwh = this->last_total_heating_produced_;
             float elec_consumed_kwh = this->last_total_heating_consumed_;

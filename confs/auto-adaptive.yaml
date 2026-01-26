@@ -47,7 +47,6 @@ esphome:
                 .learned_base_cop_global = id(g_learned_base_cop),
                 .learned_thermal_output_global = id(g_learned_thermal_output),
                 .learned_elec_power_global = id(g_learned_elec_power),
-                .daily_runtime_global = id(daily_compressor_runtime_minutes),
                 .lockout_expiration_timestamp = id(lockout_expiration_timestamp)
             };
 
@@ -91,6 +90,7 @@ esphome:
             state.solver_kwh_meter_feedback = id(solver_kwh_meter_feedback); 
             state.daily_heating_produced = id(daily_computed_output_power);
             state.daily_heating_consumed = id(delta_energy_consumed_increasing);
+
             // instantiate optimizer
             id(optimizer_ptr) = new esphome::optimizer::Optimizer(state);
             

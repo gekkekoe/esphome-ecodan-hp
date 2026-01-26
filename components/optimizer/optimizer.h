@@ -71,13 +71,11 @@ namespace esphome
       esphome::thermostat::ThermostatClimate *asgard_vt_z1;
       esphome::thermostat::ThermostatClimate *asgard_vt_z2;
 
-      // stats vars
+      // stats vars calculated daily
       float &learned_heat_loss_global;
       float &learned_base_cop_global;
       float &learned_thermal_output_global;
       float &learned_elec_power_global;
-
-      float &daily_runtime_global; 
 
       uint32_t &lockout_expiration_timestamp;
     };
@@ -118,6 +116,8 @@ namespace esphome
       float daily_temp_sum_ = 0.0f;
       int daily_temp_count_ = 0;
       int last_processed_day_ = -1;
+
+      float daily_runtime_global = 0; 
       // helpers to track runtime
       uint32_t last_check_ms_ = 0;
 
