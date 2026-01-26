@@ -24,7 +24,7 @@ namespace esphome
         {
             if (!this->state_.predictive_short_cycle_control_enabled->state)
                 return;
-
+            
             auto &status = this->state_.ecodan_instance->get_status();
 
             static bool was_defrosting = false;
@@ -63,7 +63,7 @@ namespace esphome
             }
 
             float requested_flow = status.Zone1FlowTemperatureSetPoint;
-            if (status.has_independent_zone_temps())
+            if (status.has_2zones())
             {
                 requested_flow = fmax(status.Zone1FlowTemperatureSetPoint, status.Zone2FlowTemperatureSetPoint);
             }
@@ -140,7 +140,7 @@ namespace esphome
                             ESP_LOGD(OPTIMIZER_CYCLE_TAG, "CMD: Increase Z1 Heat Flow to -> %.1f°C", adjusted_flow_z1);
                             this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow_z1, esphome::ecodan::Zone::ZONE_1);
 
-                            if (status.has_independent_zone_temps())
+                            if (status.has_2zones())
                             {
                                 float adjusted_flow_z2 = status.Zone2FlowTemperatureSetPoint + adjustment_factor;
                                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "CMD: Increase Z2 Heat Flow to -> %.1f°C", adjusted_flow_z2);
