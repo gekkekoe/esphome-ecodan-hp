@@ -142,7 +142,7 @@ namespace esphome
                                 if (isnan(this->pcp_old_z2_setpoint_))
                                     this->pcp_old_z2_setpoint_ = status.Zone2FlowTemperatureSetPoint;
 
-                                auto limits = this->get_flow_limits(OptimizerZone::ZONE_1);
+                                auto limits = this->get_flow_limits(OptimizerZone::ZONE_2);
                                 float adjusted_flow_z2 = status.Zone2FlowTemperatureSetPoint + adjustment_factor;
                                 adjusted_flow_z2 = this->clamp_flow_temp(adjusted_flow_z2, limits.min, limits.max);
                                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Increase Z2 Heat Flow to -> %.1f°C", adjusted_flow_z2);
