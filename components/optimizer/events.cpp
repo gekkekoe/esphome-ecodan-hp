@@ -91,12 +91,14 @@ namespace esphome
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z1 Heat Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_1);
+                        this->set_last_flow_adjust_time();
                         return true;
                     }
                     else if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) && status.Zone1FlowTemperatureSetPoint != flow)
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z1 Cool Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_1);
+                        this->set_last_flow_adjust_time();
                         return true;
                     }
 
@@ -105,13 +107,15 @@ namespace esphome
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z2 Heat Flow -> %.1f°C (%.1f°C)", flow, status.Zone2FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_2);
+                        this->set_last_flow_adjust_time();
                         return true;
                     }
                     else if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2) && status.Zone2FlowTemperatureSetPoint != flow)
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z2 Cool Flow -> %.1f°C (%.1f°C)", flow, status.Zone2FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_2);
-                        return true;
+                        this->set_last_flow_adjust_time();
+                       return true;
                     }
                 }
             }
@@ -122,12 +126,14 @@ namespace esphome
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Dependent Heat Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_1);
+                        this->set_last_flow_adjust_time();
                         return true;
                     }
                     else if (status.HeatingCoolingMode == esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP)
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Dependent Cool Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_1);
+                        this->set_last_flow_adjust_time();
                         return true;
                     }
                 }
@@ -139,21 +145,8 @@ namespace esphome
         {
             const float MAX_FEED_STEP_DOWN = 1.0f;
             const float MAX_FEED_STEP_DOWN_ADJUSTMENT = 0.5f;
-            if (status.has_independent_zone_temps()) {
-                // new flow should be > mixing tank return (FTC5 or lower) or THW10 (FTC6+)
-                auto mixingTankTemp = status.MixingTankTemperature;
-                if (mixingTankTemp == 25.0f)
-                    mixingTankTemp = status.BoilerReturnTemperature;
-                else if (mixingTankTemp == 25.0f)
-                    mixingTankTemp = status.HpReturnTemperature;
-
-                if (calculated_flow < mixingTankTemp) {
-                    ESP_LOGW(OPTIMIZER_TAG, "Flow adjust (Mixing Tank): %.2f°C to prevent compressor stop! (setpoint: %.2f°C is %.2f°C below actual Mixing Tank temp)",
-                         mixingTankTemp + 0.5, calculated_flow, (mixingTankTemp - calculated_flow));
-                    calculated_flow = mixingTankTemp + 0.5;
-                }
-            }
-            else if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
+            
+            if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
             {
                 ESP_LOGW(OPTIMIZER_TAG, "Flow adjust: %.2f°C to prevent compressor stop! (setpoint: %.2f°C is %.2f°C below actual feed temp)",
                         actual_flow_temp - MAX_FEED_STEP_DOWN_ADJUSTMENT, calculated_flow, (actual_flow_temp - calculated_flow));
