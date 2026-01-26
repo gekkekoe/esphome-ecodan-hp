@@ -29,15 +29,15 @@ substitutions:
   heatpump_switch_holiday: Mode vacances
   wifi_signal_proc: Signal Wifi %
   wifi_signal_db: Signal Wifi dB
-  z1_flow_temp_target: Temp cible Zone 1 C/F
+  z1_flow_temp_target: Temp cible Zone 1
   status_prohibit_cool_z1: Zone 1 Clim Interdite
   status_prohibit_heating_z1: Zone 1 Chauffage Interdit
   heatpump_climate_z1: Zone 1 Temp. Départ
   heatpump_climate_room_z1: Zone 1 Temp. Ambiante
   z1_room_temp_target: Z1 Temp cible pièce
   z1_room_temp: Z1 Temp pièce
-  heatpump_number_z2_set_flow_temperature: Temp cible Zone 2 C/F
-  z2_flow_temp_target: Temp cible Zone 2 C/F
+  heatpump_number_z2_set_flow_temperature: Temp cible Zone 2
+  z2_flow_temp_target: Temp cible Zone 2
   status_prohibit_cool_z2: Zone 2 Clim Interdite
   status_prohibit_heating_z2: Zone 2 Chauffage Interdit
   heatpump_number_z2_set_room_temperature: Z2 Temp cible pièce

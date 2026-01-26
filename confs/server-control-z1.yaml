@@ -105,7 +105,7 @@
 
   switch:
   - platform: template
-    name: server control - enable/disable
+    name: server control
     id: heatpump_switch_server_control_mode
     restore_mode: DISABLED
     optimistic: true

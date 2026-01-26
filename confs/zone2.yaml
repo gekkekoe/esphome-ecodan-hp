@@ -76,7 +76,7 @@ sensor:
 
     status_heating_cooling_z2:
       id: status_heating_cooling_z2
-      name: H/C status z2
+      name: HC status z2
       internal: true
       on_value:
         if:

@@ -118,12 +118,12 @@ substitutions:
   wifi_signal_db: WiFi-Signal dB
   wifi_signal_proc: WiFi-Signal %
   z1_feed_temp: Z1 Vorlauftemperatur
-  z1_flow_temp_target: Zone 1 Heizen/Kühlen Sollwert
+  z1_flow_temp_target: Zone 1 Sollwert
   z1_return_temp: Z1 Rücklauftemperatur
   z1_room_temp: Zone 1 Raumtemperatur
   z1_room_temp_target: Zone 1 Raum-Sollwert
   z2_feed_temp: Z2 Vorlauftemperatur
-  z2_flow_temp_target: Zone 2 Heizen/Kühlen Sollwert
+  z2_flow_temp_target: Zone 2 Sollwert
   z2_return_temp: Z2 Rücklauftemperatur
   z2_room_temp: Zone 2 Raumtemperatur
   z2_room_temp_target: Zone 2 Raum-Sollwert

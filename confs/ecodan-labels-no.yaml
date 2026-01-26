@@ -29,14 +29,14 @@ substitutions:
   heatpump_switch_holiday: Ferie-modus kontroll
   wifi_signal_proc: WiFi-signal %
   wifi_signal_db: WiFi-signal dB
-  z1_flow_temp_target: Sone 1 H/C innstilt verdi
+  z1_flow_temp_target: Sone 1 innstilt verdi
   status_prohibit_cool_z1: Sone 1 kjøling forbudt
   status_prohibit_heating_z1: Sone 1 oppvarming forbudt
   heatpump_climate_z1: Sone 1 Turtemp
   heatpump_climate_room_z1: Sone 1 Romtemp
   z1_room_temp_target: Sone 1 rominnstilling
   z1_room_temp: Sone 1 romtemperatur
-  heatpump_number_z2_set_flow_temperature: Sone 2 H/C innstilling
+  heatpump_number_z2_set_flow_temperature: Sone 2 innstilling
   z2_flow_temp_target: Sone 2 H/C innstilt verdi
   status_prohibit_cool_z2: Sone 2 kjøling forbudt
   status_prohibit_heating_z2: Sone 2 oppvarming forbudt

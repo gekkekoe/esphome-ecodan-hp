@@ -29,14 +29,14 @@ substitutions:
   heatpump_switch_holiday: Modalità Vacanza
   wifi_signal_proc: WiFi Segnale %
   wifi_signal_db: WiFi Segnale dB
-  z1_flow_temp_target: Z1 C/F T. Mandata
+  z1_flow_temp_target: Z1 T. Mandata
   status_prohibit_cool_z1: Z1 Raff. Proibito
   status_prohibit_heating_z1: Z1 Risc. Proibito
   heatpump_climate_z1: Zona 1 Temp. Mandata
   heatpump_climate_room_z1: Zona 1 Temp. Ambiente
   z1_room_temp_target: Z1 T. Ambiente Desiderata
   z1_room_temp: Z1 T. Ambiente
-  heatpump_number_z2_set_flow_temperature: Z2 C/F Mandata
+  heatpump_number_z2_set_flow_temperature: Z2 Mandata
   z2_flow_temp_target: Z2 C/F T. Mandata
   status_prohibit_cool_z2: Z2 Raff. Proibito
   status_prohibit_heating_z2: Z2 Risc. Proibito

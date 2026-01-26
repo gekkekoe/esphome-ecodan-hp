@@ -154,8 +154,8 @@
             cards:
               - type: entities
                 entities:
-                  - entity: switch.ecodan_heatpump_server_control_enable_disable
-                    name: Server control - enable/disable
+                  - entity: switch.ecodan_heatpump_server_control
+                    name: Server control
                   - entity: switch.ecodan_heatpump_server_control_prohibit_dhw
                     name: Server control - prohibit DHW
                   - entity: >-
