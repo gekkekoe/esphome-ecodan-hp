@@ -99,10 +99,10 @@ namespace esphome
       float pcp_old_z1_setpoint_ = NAN;
       float pcp_old_z2_setpoint_ = NAN;
 
-      uint32_t predictive_delta_start_time_ = 0;
+      uint32_t predictive_delta_start_time_z1_ = 0;
+      uint32_t predictive_delta_start_time_z2_ = 0;
       uint32_t compressor_start_time_ = 0;
       uint32_t last_defrost_time_ = 0;
-      float predictive_short_cycle_total_adjusted_ = 0.0f;
 
       // save last callback state, to only invoke callback on actual change
       float last_hp_feed_temp_ = NAN;
@@ -158,6 +158,8 @@ namespace esphome
       float clamp_flow_temp(float calculated_flow, float min_temp, float max_temp);
       float enforce_step_down(const ecodan::Status &status, float actual_flow_temp, float calculated_flow);
       bool set_flow_temp(float flow, OptimizerZone zone);
+
+      void predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone);
 
       // smart boost
       float calculate_smart_boost(int profile, float error);
