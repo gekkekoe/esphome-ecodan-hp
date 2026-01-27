@@ -156,22 +156,21 @@ namespace esphome
             auto &status = this->state_.ecodan_instance->get_status();
 
             bool stand_alone_predictive_active = !this->state_.auto_adaptive_control_enabled->state && this->state_.predictive_short_cycle_control_enabled->state;
-            float adjustment = this->predictive_short_cycle_total_adjusted_;
 
             // don't restore feed temp when defrost is active
-            if (!status.DefrostActive && stand_alone_predictive_active && adjustment > 0.0f)
+            if (!status.DefrostActive && stand_alone_predictive_active && (!isnan(this->pcp_old_z1_setpoint_) || !isnan(this->pcp_old_z2_setpoint_)))
             {
                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Restoring flow setpoint after predictive boost.");
 
-                if (!isnan(this->pcp_old_z1_setpoint_))
+                if (!isnan(this->pcp_old_z1_setpoint_)) {
                     this->state_.ecodan_instance->set_flow_target_temperature(this->pcp_old_z1_setpoint_, esphome::ecodan::Zone::ZONE_1);
+                    this->pcp_old_z1_setpoint_ = NAN;
+                }
 
-                if (status.has_2zones() && !isnan(this->pcp_old_z2_setpoint_))
+                if (status.has_2zones() && !isnan(this->pcp_old_z2_setpoint_)) {
                     this->state_.ecodan_instance->set_flow_target_temperature(this->pcp_old_z2_setpoint_, esphome::ecodan::Zone::ZONE_2);
-
-                this->predictive_short_cycle_total_adjusted_ = 0.0f;
-                this->pcp_old_z1_setpoint_ = NAN;
-                this->pcp_old_z2_setpoint_ = NAN;
+                    this->pcp_old_z2_setpoint_ = NAN;
+                }
             }
 
             if (this->state_.lockout_duration->active_index().value_or(0) == 0)
