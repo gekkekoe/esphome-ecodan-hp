@@ -11,72 +11,40 @@ namespace esphome
 
         bool Optimizer::get_predictive_boost_state()
         {
-            return this->predictive_short_cycle_total_adjusted_ > 0.0f;
+            return (!isnan(this->pcp_old_z1_setpoint_) && this->pcp_old_z1_setpoint_ > 0.0f) 
+                || (!isnan(this->pcp_old_z2_setpoint_) && this->pcp_old_z2_setpoint_ > 0.0f);
         }
 
         void Optimizer::reset_predictive_boost()
         {
-            this->predictive_short_cycle_total_adjusted_ = 0.0f;
+            this->pcp_old_z1_setpoint_ = NAN;
+            this->pcp_old_z2_setpoint_ = NAN;
             this->update_boost_sensor();
         }
 
-        void Optimizer::predictive_short_cycle_check()
-        {
-            if (!this->state_.predictive_short_cycle_control_enabled->state)
-                return;
-            
-            auto &status = this->state_.ecodan_instance->get_status();
+        void Optimizer::predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone) {
 
-            static bool was_defrosting = false;
-            if (status.DefrostActive) 
-            {
-                was_defrosting = true;
-            }
-            else if (was_defrosting) 
-            {
-                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost cycle finished. Updating last_defrost timestamp");
-                this->last_defrost_time_ = millis();
-                was_defrosting = false;
-            }
+            auto &mapped_delta_start_time_ = (zone == OptimizerZone::ZONE_2) ? this->predictive_delta_start_time_z2_ : this->predictive_delta_start_time_z1_;
+            auto &mapped_pcp_old_flow_setpoint_ = (zone == OptimizerZone::ZONE_2) ? this->pcp_old_z2_setpoint_ : this->pcp_old_z1_setpoint_;
+            auto ecodan_zone = (zone == OptimizerZone::ZONE_2) ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1;
 
-            auto start_time = this->predictive_delta_start_time_;
-
+            auto start_time = mapped_delta_start_time_;
             if (this->is_system_hands_off(status) || !status.CompressorOn)
             {
                 if (start_time > 0)
-                    this->predictive_delta_start_time_ = 0;
+                    mapped_delta_start_time_ = 0;
                 return;
             }
 
-            if (!status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && !status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2))
-            {
-                if (start_time > 0)
-                    this->predictive_delta_start_time_ = 0;
-                return;
-            }
-
-            if (status.Operation != esphome::ecodan::Status::OperationMode::HEAT_ON)
-            {
-                if (start_time > 0)
-                    this->predictive_delta_start_time_ = 0;
-                return;
-            }
-
-            float requested_flow = status.Zone1FlowTemperatureSetPoint;
-            if (status.has_2zones())
-            {
-                requested_flow = fmax(status.Zone1FlowTemperatureSetPoint, status.Zone2FlowTemperatureSetPoint);
-            }
-
-            float actual_flow = status.has_independent_zone_temps()
-                                    ? fmax(status.Z1FeedTemperature, status.Z2FeedTemperature)
-                                    : this->state_.hp_feed_temp->state;
+            float requested_flow = this->get_flow_setpoint(zone);
+            float actual_flow = this->get_feed_temp(zone);
+            //ESP_LOGD(OPTIMIZER_CYCLE_TAG, "PCP: Zone: %d: actual flow (%.1f°C), requested flow (%.1f°C)", static_cast<uint8_t>(zone), actual_flow, requested_flow);
 
             if (isnan(requested_flow) || isnan(actual_flow))
             {
                 ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Requested or Actual feed temperature unavailable. Exiting.");
                 if (start_time > 0)
-                    this->predictive_delta_start_time_ = 0;
+                    mapped_delta_start_time_ = 0;
                 return;
             }
 
@@ -99,71 +67,72 @@ namespace esphome
 
             if (delta >= predictive_short_cycle_high_delta_threshold)
             {
-                if (this->predictive_delta_start_time_ == 0)
+                if (mapped_delta_start_time_ == 0)
                 {
-                    this->predictive_delta_start_time_ = millis();
-                    this->pcp_old_z1_setpoint_ = NAN;
-                    this->pcp_old_z2_setpoint_ = NAN;
-                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "High Delta T detected (%.1f°C). Starting timer.", delta);
+                    mapped_delta_start_time_ = millis();
+                    mapped_pcp_old_flow_setpoint_ = NAN;
+                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Zone: %d: High Delta T detected (%.1f°C). Starting timer.", static_cast<uint8_t>(zone), delta);
                 }
-                else
+                else if (((millis() - mapped_delta_start_time_) >= trigger_duration_ms))
                 {
-                    if ((millis() - this->predictive_delta_start_time_) >= trigger_duration_ms)
-                    {
-                        ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Short-cycle predicted! Increasing Feed temps to force a longer cycle.");
-                        this->predictive_delta_start_time_ = 0;
-                        // if in AA or stand alone
-                        if (this->state_.auto_adaptive_control_enabled->state || this->state_.predictive_short_cycle_control_enabled->state) {
+                    ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Short-cycle predicted! Increasing Feed temps to force a longer cycle. Current saved Z%d setpoin: %.1f°", static_cast<uint8_t>(zone), mapped_pcp_old_flow_setpoint_);
+                    mapped_delta_start_time_ = 0;
 
-                            bool was_boosted = false;
-                            auto multizone_status = status.MultiZoneStatus;
-
-                            bool is_heating_z1 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) 
-                                || status.is_heating(esphome::ecodan::Zone::ZONE_1)
-                                || (status.has_2zones() && (multizone_status == 1 || multizone_status == 2));
-                            
-                            if (is_heating_z1) {
-                                if (isnan(this->pcp_old_z1_setpoint_))
-                                    this->pcp_old_z1_setpoint_ = status.Zone1FlowTemperatureSetPoint;
-
-                                auto limits = this->get_flow_limits(OptimizerZone::ZONE_1);
-                                float adjusted_flow_z1 = status.Zone1FlowTemperatureSetPoint + adjustment_factor;
-                                adjusted_flow_z1 = this->clamp_flow_temp(adjusted_flow_z1, limits.min, limits.max);
-                                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Increase Z1 Heat Flow to -> %.1f°C", adjusted_flow_z1);
-                                this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow_z1, esphome::ecodan::Zone::ZONE_1);
-                                was_boosted = true;
-                            }
-
-                            bool is_heating_z2 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) 
-                                || status.is_heating(esphome::ecodan::Zone::ZONE_2)
-                                || (status.has_2zones() && (multizone_status == 1 || multizone_status == 3));
-                            
-                            if (status.has_2zones() && is_heating_z2) {
-                                if (isnan(this->pcp_old_z2_setpoint_))
-                                    this->pcp_old_z2_setpoint_ = status.Zone2FlowTemperatureSetPoint;
-
-                                auto limits = this->get_flow_limits(OptimizerZone::ZONE_2);
-                                float adjusted_flow_z2 = status.Zone2FlowTemperatureSetPoint + adjustment_factor;
-                                adjusted_flow_z2 = this->clamp_flow_temp(adjusted_flow_z2, limits.min, limits.max);
-                                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Increase Z2 Heat Flow to -> %.1f°C", adjusted_flow_z2);
-                                this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow_z2, esphome::ecodan::Zone::ZONE_2);
-                                was_boosted = true;
-                            }
-
-                            if (was_boosted)
-                                this->predictive_short_cycle_total_adjusted_ += adjustment_factor;
-                        }
+                    if (isnan(mapped_pcp_old_flow_setpoint_)) {
+                        mapped_pcp_old_flow_setpoint_ = this->get_flow_setpoint(zone);
+                        ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Updating Z%d Saved setpont to:  %.1f", static_cast<uint8_t>(zone), mapped_pcp_old_flow_setpoint_);
                     }
+
+                    auto limits = this->get_flow_limits(zone);
+                    float adjusted_flow = this->get_flow_setpoint(zone) + adjustment_factor;
+                    adjusted_flow = this->clamp_flow_temp(adjusted_flow, limits.min, limits.max);
+                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Increase Z%d Heat Flow to -> %.1f°C", static_cast<uint8_t>(zone), adjusted_flow);
+                    this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow, ecodan_zone);
                 }
             }
             else
             {
                 if (start_time != 0)
                 {
-                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "High Delta T has disappeared. Resetting timer.");
-                    this->predictive_delta_start_time_ = 0;
+                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Zone: %d: High Delta T has disappeared. Resetting timer.", static_cast<uint8_t>(zone));
+                    mapped_delta_start_time_ = 0;
                 }
             }
+
+        }
+
+        void Optimizer::predictive_short_cycle_check()
+        {
+            if (!this->state_.predictive_short_cycle_control_enabled->state)
+                return;
+            
+            auto &status = this->state_.ecodan_instance->get_status();
+
+            static bool was_defrosting = false;
+            if (status.DefrostActive) 
+            {
+                was_defrosting = true;
+            }
+            else if (was_defrosting) 
+            {
+                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost cycle finished. Updating last_defrost timestamp");
+                this->last_defrost_time_ = millis();
+                was_defrosting = false;
+            }
+
+            auto multizone_status = status.MultiZoneStatus;
+            bool is_heating_z1 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) 
+                || status.is_heating(esphome::ecodan::Zone::ZONE_1)
+                || (status.has_2zones() && (multizone_status == 1 || multizone_status == 2));
+
+            bool is_heating_z2 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) 
+                || status.is_heating(esphome::ecodan::Zone::ZONE_2)
+                || (status.has_2zones() && (multizone_status == 1 || multizone_status == 3));
+
+            if (is_heating_z1)
+                this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_1);
+            if (status.has_2zones() && is_heating_z2)
+                this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_2);
         }
 
         void Optimizer::restore_svc_state()

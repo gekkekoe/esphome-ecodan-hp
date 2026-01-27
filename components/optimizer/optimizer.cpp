@@ -80,98 +80,6 @@ namespace esphome
             }
         }
 
-        float Optimizer::get_feed_temp(OptimizerZone zone) {
-            auto &status = this->state_.ecodan_instance->get_status();
-            if (status.has_independent_zone_temps())
-                return (zone == OptimizerZone::ZONE_2) ? status.Z2FeedTemperature : status.Z1FeedTemperature;        
-            return status.HpFeedTemperature;
-        }
-
-        float Optimizer::get_return_temp(OptimizerZone zone) {
-            auto &status = this->state_.ecodan_instance->get_status();
-            if (status.has_independent_zone_temps())
-                return (zone == OptimizerZone::ZONE_2) ? status.Z2ReturnTemperature : status.Z1ReturnTemperature;        
-            return status.HpReturnTemperature;
-        }
-
-
-        float Optimizer::get_flow_setpoint(OptimizerZone zone) {
-            auto &status = this->state_.ecodan_instance->get_status();
-            if (status.has_independent_zone_temps())
-                return (zone == OptimizerZone::ZONE_2) ? status.Zone2FlowTemperatureSetPoint : status.Zone1FlowTemperatureSetPoint;        
-            return status.Zone1FlowTemperatureSetPoint;
-        }
-
-        float Optimizer::get_room_current_temp(OptimizerZone zone) {
-            auto &status = this->state_.ecodan_instance->get_status();
-            auto temp_feedback_source = this->state_.temperature_feedback_source->active_index().value_or(0);
-
-            auto current_temp = NAN;
-
-            if (zone == OptimizerZone::ZONE_1) {
-                if (temp_feedback_source == 2 && this->state_.asgard_vt_z1 != nullptr) {
-                    current_temp = this->state_.asgard_vt_z1->current_temperature;
-                } else if (temp_feedback_source == 1 && this->state_.temperature_feedback_z1 != nullptr) {
-                    current_temp = this->state_.temperature_feedback_z1->state;
-                }
-            } else {
-                if (temp_feedback_source == 2 && this->state_.asgard_vt_z2 != nullptr) {
-                    current_temp = this->state_.asgard_vt_z2->current_temperature;
-                } else if (temp_feedback_source == 1 && this->state_.temperature_feedback_z2 != nullptr) {
-                    current_temp = this->state_.temperature_feedback_z2->state;
-                }
-            }
-
-            if (isnan(current_temp))
-                current_temp = (zone == OptimizerZone::ZONE_1) ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
-
-            return current_temp;
-        }
-
-        float Optimizer::get_room_target_temp(OptimizerZone zone) {
-            auto &status = this->state_.ecodan_instance->get_status();
-            auto temp_feedback_source = this->state_.temperature_feedback_source->active_index().value_or(0);
-
-            auto target_temp = NAN;
-
-            if (zone == OptimizerZone::ZONE_1) {
-                if (temp_feedback_source == 2 && this->state_.asgard_vt_z1 != nullptr) {
-                    target_temp = this->state_.asgard_vt_z1->target_temperature;
-                } 
-            } else {
-                if (temp_feedback_source == 2 && this->state_.asgard_vt_z2 != nullptr) {
-                    target_temp = this->state_.asgard_vt_z2->target_temperature;
-                } 
-            }
-
-            if (isnan(target_temp))
-                target_temp = (zone == OptimizerZone::ZONE_1) ? status.Zone1SetTemperature : status.Zone2SetTemperature;
-
-            return target_temp;
-        }
-
-        FlowLimits Optimizer::get_flow_limits(OptimizerZone zone) {
-            float min_flow, max_flow;
-            if (zone == OptimizerZone::ZONE_2) {
-                max_flow = this->state_.maximum_heating_flow_temp_z2->state;
-                min_flow = this->state_.minimum_heating_flow_temp_z2->state;
-                if (min_flow > max_flow)
-                {
-                    min_flow = max_flow;
-                }
-            }
-            else {
-                max_flow = this->state_.maximum_heating_flow_temp->state;
-                min_flow = this->state_.minimum_heating_flow_temp->state;
-                if (min_flow > max_flow)
-                {
-                    min_flow = max_flow;
-                }   
-            }
-
-            return {min_flow, max_flow};
-        }
-
         float Optimizer::calculate_smart_boost(int profile, float error) {
 
             if (!this->state_.smart_boost_enabled->state) {
@@ -384,8 +292,11 @@ namespace esphome
                         calculated_flow = this->round_nearest(calculated_flow);
 
                         // if there was a boost adjustment, check if it's still needed and clear if needed
-                        float short_cycle_prevention_adjustment = this->predictive_short_cycle_total_adjusted_;
-                        if (short_cycle_prevention_adjustment > 0.0f)
+                        auto &mapped_pcp_old_flow_setpoint_ = (zone == esphome::ecodan::Zone::ZONE_2) ? this->pcp_old_z2_setpoint_ : this->pcp_old_z1_setpoint_;
+                        auto optimizer_zone = (zone == esphome::ecodan::Zone::ZONE_2) ? OptimizerZone::ZONE_2 : OptimizerZone::ZONE_1;
+                        auto short_cycle_prevention_adjustment = isnan(mapped_pcp_old_flow_setpoint_) ? 0.0f : this->get_flow_setpoint(optimizer_zone) - mapped_pcp_old_flow_setpoint_;
+
+                        if (mapped_pcp_old_flow_setpoint_ > 0.0f)
                         {
                             ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING (boost adjustment): boost: %.1f°C, calcluated_flow: %.2f°C, actual_flow: %.2f°C",
                                      (i + 1), short_cycle_prevention_adjustment, calculated_flow, actual_flow_temp);
@@ -396,8 +307,7 @@ namespace esphome
                             }
                             else
                             {
-                                this->predictive_short_cycle_total_adjusted_ = 0.0f;
-                                short_cycle_prevention_adjustment = 0;
+                                mapped_pcp_old_flow_setpoint_ = NAN;
                             }
                         }
                         ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING (Delta T): calculated_flow: %.2f°C (boost: %.1f)",
