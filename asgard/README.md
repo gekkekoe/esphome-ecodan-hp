@@ -4,6 +4,43 @@ Welcome to the manual for the Asgard PCB for Ecodan heatpumps. This board allows
 
 ---
 
+## Ordering & Availability
+The **Asgard PCB** will be available for direct purchase here very soon.
+
+* **Product:** Asgard PCB in 3d printed casing + Connector cable
+* **Price:** € 65,- (including VAT)
+* **Delivery:** Shipped within 3 business days from The Netherlands (When in stock)
+
+> [!NOTE] *The secure payment link will be added to this section once the payment system is live.*
+
+### Shipping & Returns policy
+* **Shipping costs:** Calculated at checkout (Available for NL & EU). UK buyers please contact me by email.
+* **Returns:** You have the right (EU only) to cancel your order up to 14 days after receipt without giving any reason (right of withdrawal), provided the product is unused and undamaged. The consumer bears the direct cost of returning the goods.
+* **Contact:** Do you have questions about an order? Please email: `asgard at iloki dot nl`. For questions about the product, please post them in the [Github section](https://github.com/gekkekoe/esphome-ecodan-hp/discussions/categories/asgard-q-a).
+
+
+## Quality Assurance & Warranty
+
+> [!NOTE]
+> **Professional Assembly & Personal Testing**
+> * **PCB:** The circuit board is professionally manufactured and assembled in a specialized **PCBA factory**.
+> * **Cables:** I use professionally manufactured and tested cables to ensure reliability.
+> * **Final Check:** Every single unit is **personally flashed, inspected, and tested** by the developer before it is packed and shipped to you.
+
+> [!IMPORTANT]
+> **Warranty & Liability**
+> While this hardware is professionally built, it is sold as a **Do-It-Yourself (DIY) component**.
+> 
+> * **Limited Warranty:** I provide a **1-year warranty** against manufacturing defects.
+> * **Exclusions:** The warranty is **VOID** if failure is caused by user error, such as:
+>   * Improper wiring (e.g. short circuits, high voltage on data pins).
+>   * Physical modification or soldering by the user.
+>   * Water damage or incorrect placement inside the heat pump.
+>   * **Accidental damage (e.g. dropping the unit, cracking the 3D printed casing).**
+> * **Liability:** Installation is entirely at your own risk. The seller is **not responsible** for any damage to your heat pump, property, or consequential damages resulting from the use or installation of this interface.
+
+---
+
 ## Compatibility
 
 ### Device Type
@@ -17,40 +54,6 @@ The Asgard PCB features a **pass-through (slave) port**, allowing you to retain 
     * **Procon** Modbus interfaces.
 * **Not Supported via Slave Port:**
     * The **PAC-WF010-E**, will **not work** when proxied through the Asgard PCB. These must be disconnected to use this interface.
-
----
-
-
-## Quality Assurance & DIY Disclaimer
-
-> [!NOTE]
-> **Professional Assembly & Personal Testing**
-> * **PCB:** The circuit board is professionally manufactured and assembled in a specialized **PCBA factory**.
-> * **Cables:** I use professionally manufactured and tested cables (no manual crimping) to ensure reliability.
-> * **Final Check:** Every single unit is **personally flashed, inspected, and tested** by the developer before it is packed and shipped to you.
-
-> [!IMPORTANT]
-> **DIY Project/Development PCB - No Commercial Warranty**
-> Please understand that this hardware is provided as a **Do-It-Yourself (DIY) kit**.
-> * It does not come with a standard commercial warranty or 24/7 support.
-> * Installation and use are entirely at your own risk.
-> * The developers are not liable for any damage to your heat pump, the interface PCB, or any personal injury resulting from installation or use.
-
----
-
-## ⚠️ Safety Warnings
-
-> [!DANGER]
-> **HIGH VOLTAGE WARNING (230V)**
-> The internal unit of your heat pump (Hydrobox/Cylinder Unit) operates on mains voltage.
-> * **ALWAYS switch off the power** at the fuse box/breaker panel before opening the casing.
-> * Wait at least 5 minutes after switching off power to allow internal capacitors to discharge.
-> * Always verify that the power is off using a multimeter.
-
-> [!CAUTION]
-> **Manufacturer Warranty**
-> Installing third-party hardware inside your heat pump may void the manufacturer's warranty (Mitsubishi Electric). Proceed with caution and common sense. Ensure you ground yourself to prevent Electrostatic Discharge (ESD) when handling the PCB.
-
 ---
 
 ## Contents
@@ -84,6 +87,21 @@ Please check if your package contains:
 6.  **Relay Port Header:** (Optional) Connect to IN1/IN6 to use with virtual thermostat.
     - **R1:** Relay 1 input (2 inputs, bidirectional)
     - **R2:** Relay 2 input (2 inputs, bidirectional)
+
+---
+
+## ⚠️ Safety Warnings
+
+> [!DANGER]
+> **HIGH VOLTAGE WARNING (230V)**
+> The internal unit of your heat pump (Hydrobox/Cylinder Unit) operates on mains voltage.
+> * **ALWAYS switch off the power** at the fuse box/breaker panel before opening the casing.
+> * Wait at least 5 minutes after switching off power to allow internal capacitors to discharge.
+> * Always verify that the power is off using a multimeter.
+
+> [!CAUTION]
+> **Manufacturer Warranty**
+> Installing third-party hardware inside your heat pump may void the manufacturer's warranty (Mitsubishi Electric). Proceed with caution and common sense. Ensure you ground yourself to prevent Electrostatic Discharge (ESD) when handling the PCB.
 
 ---
 
