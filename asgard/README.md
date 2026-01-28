@@ -169,14 +169,14 @@ By default, the unit ships with **English** firmware configured for a **Single Z
 
 If you have a 2-zone setup or prefer a different language (e.g., nl, de, fr, da, es, fi, it, no, pl, sv), you can easily update the firmware wirelessly (OTA):
 
-1.  Download the correct firmware binary (`.bin` file) from the [Releases Page](https://github.com/gekkekoe/esphome-ecodan-hp/releases) on GitHub.
+1.  Download the correct OTA Asgard variant firmware binary (example: `asgard-z2-nl-*.ota.bin` for nl and 2 zones) from the [Releases Page](https://github.com/gekkekoe/esphome-ecodan-hp/releases) on GitHub.
 2.  Find the IP address of your Asgard device in Home Assistant (or your router).
 3.  Open a web browser and go to `http://<YOUR_DEVICE_IP>`.
 4.  Scroll to the bottom to the **OTA Update** section.
 5.  Upload the `.bin` file you downloaded. The device will update and restart automatically.
 
 ### Recovery
-You can reset the firmware to factory via the usb-c port. 
+You can reset the firmware to factory (example: `asgard-z1-en-*.factory.bin` English single zone) via the usb-c port. 
 1. Download the latest **factory** binary from [Releases Page](https://github.com/gekkekoe/esphome-ecodan-hp/releases)
 2. Follow the (install) procedure to remove the Asgard PCB from the Ecodan unit. Only unplug the unit when the power (circuit breaker) is off
 3. Plug the Asgard PCB in a computer with an usb-c port.

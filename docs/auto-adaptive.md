@@ -71,7 +71,7 @@ This transforms your controller from a reactive system into a predictive one, en
 
 This feature predicts imminent short cycles that can occur when the home's heat demand is lower than the heat pump's minimum power output.
 
-When it detects a high-risk situation (actual flow temperature rising too far above the requested flow), it proactively applies a **+0.5°C boost**.
+When it detects a high-risk situation (actual flow temperature rising too far (>= 1.5c) above the requested flow), it proactively applies a **+0.5°C boost**. The high-risk condition is controlled by `High Delta Duration` (the minimum high-risk duration before the systems is applying the boost) and `High Delta Threshold` (the temp difference the system should monitor).
 
 * **In Auto-Adaptive Mode:** This boost is stored in the `predictive_short_cycle_total_adjusted` variable. The main `auto_adaptive_loop` sees this boost and adds it to its own calculation. The loop is also responsible for resetting the boost to 0 when the risk is gone.
 * **In Standalone Mode:** The boost is applied directly to the flow setpoint and added to the `predictive_short_cycle_total_adjusted` variable. It remains active for the entire compressor cycle and is reset by the `on_compressor_stop` script.
