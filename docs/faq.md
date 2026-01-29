@@ -44,3 +44,7 @@ In **Proxy Mode**, the ESP32 acts as a "Man-in-the-Middle" or passive listener b
 Outdoor unit sensors are not always available by default. Retrieving them requires service calls which take a long time (~5s) and block other communications. Therefore, I only query a limited set of sensors: `COMPRESSOR_STARTS`, `TH4_DISCHARGE_TEMP`, `TH3_LIQUID_PIPE1_TEMP`, `DISCHARGE_SUPERHEAT`, and `FAN_SPEED`.
 
 Newer FTC7+ systems can also report `TH6_2_PHASE_PIPE_TEMP`, `TH32_SUCTION_PIPE_TEMP`, `TH8_HEAT_SINK_TEMP`, and `SUB_COOL` without requiring service calls. These will be automatically exposed if available.
+
+## 5. How can I monitor logs?
+
+Download/save the [logviewer.html](https://raw.githubusercontent.com/gekkekoe/esphome-ecodan-hp/refs/heads/main/docs/logviewer.html) to your computer locally. Open `logviewer.html` with a browser and connect to the ESP ip. It should stream logging and you will be able to save it to a file.
