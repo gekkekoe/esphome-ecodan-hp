@@ -3,7 +3,7 @@ There are a few options to connect a melcloud wifi adapter / procon as slave.
 The slave works as normal and you are able to control the heatpump via the esp. Note that the older `PAC-WF010-E` is not supported.
 
 ### Custom proxy pcb
-- The recommended hardware for running this integration (in both proxy and non-proxy) is the [Asgard PCB](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/manual.md).
+- The recommended hardware for running this integration (in both proxy and non-proxy) is the [Asgard PCB](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/README.md).
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/img/case-pcb.png?raw=true) ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/img/case-top.png?raw=true) 
 

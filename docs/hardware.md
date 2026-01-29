@@ -1,7 +1,7 @@
 # Recommended hardware
 If you don't want to solder, use one of the tested boards. [More boards that should be working](https://github.com/SwiCago/HeatPump/issues/13#issuecomment-457897457). It also should work for airco units with cn105 connectors. 
 
-The recommended hardware for running this integration is the [Asgard PCB](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/manual.md).
+The recommended hardware for running this integration is the [Asgard PCB](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/README.md).
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/img/case-pcb.png?raw=true) ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/img/case-top.png?raw=true) 
 
@@ -9,7 +9,7 @@ Tested boards
 
 | Board | Link | Notes |
 |:---|:----:|:---|
-| Asgard | https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/manual.md | Plug & Play / supports proxy |
+| Asgard | https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/README.md | Plug & Play / supports proxy |
 | M5Stack Atom Lite (ESP32 variants) | https://docs.m5stack.com/en/core/ATOM%20Lite | Grove ports used |(confs/m5stack-atom-lite-proxy.md) |
 | M5Stack Atom Lite S3 (ESP32-S3 variants) | https://docs.m5stack.com/en/core/AtomS3%20Lite | Grove ports used |
 
