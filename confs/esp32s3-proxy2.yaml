@@ -86,3 +86,4 @@ sensor:
     device_class: temperature
 
 <<: !include esp32s3-led.yaml
+<<: !include slave.yaml

@@ -13,6 +13,8 @@ namespace ecodan
     const uint8_t keep_alive_request[] = { 0xfc, 0x41, 0x02, 0x7a, 0x10, 0x34, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0xfd };
     const uint8_t keep_alive_response[] = { 0xfc, 0x61, 0x02, 0x7a, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13 };
 
+    const uint8_t ack_response[] = { 0xfc, 0x61, 0x02, 0x7a, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13 };
+
     void EcodanHeatpump::process_serial_byte(uint8_t byte, Message& buffer, bool is_proxy_message) {
 
         if (buffer.get_write_offset() == 0) {
@@ -20,8 +22,8 @@ namespace ecodan
             if (skip_byte) {
                 return;
             }
-            else if (is_proxy_message && !this->slave_detected_) {
-                this->slave_detected_ = true;
+            else if (is_proxy_message && !this->slaveDetected) {
+                this->slaveDetected = true;
             }
         }
 
@@ -37,6 +39,20 @@ namespace ecodan
             if (buffer.verify_checksum()) {
                 if (is_proxy_message) { // proxy comm
 
+                    if (this->ignoreSlaveCMDs) {
+                        switch (buffer.payload_type<SetType>())
+                        {
+                        case SetType::BASIC_SETTINGS:
+                        case SetType::ROOM_SETTINGS:
+                            // send ack and drop cmd
+                            proxy_uart_->write_array(ack_response, sizeof(ack_response));
+                            buffer.reset();
+                            //ESP_LOGD(TAG, "Dropping slave cmd");
+                            return;
+                        break;
+                        }
+                    }
+                    
                     // proxy full packet only
                     if (xSemaphoreTake(this->uart_tx_mutex_, (TickType_t)10) == pdTRUE) {
                         this->uart_->write_array(buffer.buffer(), buffer.get_write_offset());
@@ -54,32 +70,17 @@ namespace ecodan
                         proxy_uart_->write_array(expected_second_response, sizeof(expected_second_response));
                         //ESP_LOGD(TAG, "Handshake: Second request detected, sending response. Handshake complete!");
                     }
-                    // else if (buffer.matches(connect_request, sizeof(connect_request))) {
-                    //     proxy_uart_->write_array(connect_response, sizeof(connect_response));
-                    //     this->connected = true;
-                    //     //ESP_LOGD(TAG, "Incoming connect request from proxy interface");
-                    // }
-                    // else if (buffer.matches(keep_alive_request, sizeof(keep_alive_request))) {
-                    //     proxy_uart_->write_array(keep_alive_response, sizeof(keep_alive_response));
-                    //     //ESP_LOGD(TAG, "keep alive request detected");
-                    // } 
+                    else if (buffer.matches(connect_request, sizeof(connect_request))) {
+                        proxy_uart_->write_array(connect_response, sizeof(connect_response));
+                        this->connected = true;
+                        //ESP_LOGD(TAG, "Incoming connect request from proxy interface");
+                    }
+                    else if (buffer.matches(keep_alive_request, sizeof(keep_alive_request))) {
+                        proxy_uart_->write_array(keep_alive_response, sizeof(keep_alive_response));
+                        //ESP_LOGD(TAG, "keep alive request detected");
+                    } 
 
                 } else { // FTC comm
-                    // if (this->proxy_available()) {
-                    //     if (buffer[0] == 0x28 && (buffer[11] == 0x01 || buffer[10] == 0x01)) {
-                    //         // clear error flag
-                    //         if (buffer[11] == 0x01)
-                    //             buffer[11] = 0x00;
-                    //         // hide svc status
-                    //         if (buffer[10] == 0x01)
-                    //             buffer[10] = 0x00;
-
-                    //         buffer.set_checksum();
-                    //         this->proxy_uart_->flush();
-                    //         this->proxy_uart_->write_array(buffer.buffer(), buffer.get_write_offset());
-                    //     }
-                    // }
-
                     if (this->proxy_available())
                         this->proxy_uart_->write_array(buffer.buffer(), buffer.get_write_offset());
                     // enqueue full packet 
