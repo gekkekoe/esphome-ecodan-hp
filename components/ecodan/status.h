@@ -63,6 +63,8 @@ namespace ecodan
         uint8_t MixingValveStatus;
         uint8_t MixingValveStep;
         uint8_t MultiZoneStatus;
+        // FTC7 has z1 mixing valve
+        uint8_t MixingValveStepZ1;
 
         // error codes
         uint8_t RefrigerantErrorCode;

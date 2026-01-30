@@ -64,6 +64,9 @@ sensor:
     z1_return_temp:
       id: z1_return_temp
       name: ${z1_return_temp}
+    mixing_valve_step_z1:
+      id: mixing_valve_step_z1
+      name: ${mixing_valve_step} z1
 
     status_heating_cooling:
       id: status_heating_cooling

@@ -285,7 +285,7 @@ namespace ecodan
             publish_state("status_compressor", status.CompressorOn);
             //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
             break;
-        case GetType::PUMP_STATUS:
+        case GetType::PUMP_STATUS_A:
         {
             // byte 1 = pump running on/off
             // byte 4 = pump 2
@@ -334,6 +334,14 @@ namespace ecodan
             publish_state("status_water_pump_3", status.WaterPump3Active);
             publish_state("status_mixing_valve", static_cast<float>(status.MixingValveStatus));
             publish_state("mixing_valve_step", static_cast<float>(status.MixingValveStep));
+            //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
+        }
+            break;
+        case GetType::PUMP_STATUS_B:
+        {   
+            // byte 8 - Z1  Mixing valve step
+            status.MixingValveStep = res[8];   
+            publish_state("mixing_valve_step_z1", static_cast<float>(status.MixingValveStepZ1));
             //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
         }
             break;              
