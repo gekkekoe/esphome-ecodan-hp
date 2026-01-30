@@ -136,7 +136,7 @@ The Auto-Adaptive algorithm needs to know the **current temperature** being meas
 
 **If you are using a Mitsubishi wireless thermostat, MRC or [esphome-ecodan-remote-thermostat](https://github.com/gekkekoe/esphome-ecodan-remote-thermostat), you can skip the rest of this section and step 3.**
 
-For systems with only a MRC (and no other thermostats), you will need to add a stop condition. The heatpump will never stop otherise. Use server control prohibit to turn off heating when setpoint has been reached.
+For systems with only a MRC (and no other thermostats), you will need to add a stop condition. The heatpump will never stop otherwise. Use server control prohibit to turn off heating when setpoint has been reached.
 
 There are two options to perform **current temperature** feedback:
 
