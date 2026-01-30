@@ -441,6 +441,7 @@ namespace ecodan
             status.DipSwitch4 = res[7];
             status.DipSwitch5 = res[9];
             status.DipSwitch6 = res[11];
+            status.DipSwitch7 = res[13];
             initialCount |= 2;
             break;
         default:

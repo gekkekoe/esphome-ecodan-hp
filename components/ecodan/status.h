@@ -76,6 +76,7 @@ namespace ecodan
         uint8_t DipSwitch4{0};
         uint8_t DipSwitch5{0};
         uint8_t DipSwitch6{0};
+        uint8_t DipSwitch7{0};
 
         // refrigerant code
         uint8_t RefrigerantCode = 255;
