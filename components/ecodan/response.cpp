@@ -376,8 +376,6 @@ namespace ecodan
             publish_state("status_operation", static_cast<float>(status.Operation));
             // publish numeric operation mode for callbacks
             publish_state("operation_mode", static_cast<float>(status.Operation));
-            publish_state("status_heating_cooling", static_cast<float>(status.HeatingCoolingMode));
-            publish_state("status_heating_cooling_z2", static_cast<float>(status.HeatingCoolingModeZone2));
 
             publish_state("dhw_flow_temp_target", status.DhwFlowTemperatureSetPoint);
             //publish_state("sh_flow_temp_target", status.RadiatorFlowTemperatureSetPoint);

@@ -68,22 +68,6 @@ sensor:
       id: mixing_valve_step_z1
       name: ${mixing_valve_step} z1
 
-    status_heating_cooling:
-      id: status_heating_cooling
-      name: HC status
-      internal: true
-      on_value:
-        if:
-          condition:
-            - lambda: |-
-                auto mode = static_cast<uint8_t>(id(ecodan_instance).get_status().HeatingCoolingMode);
-                auto index = id(heatpump_select_operating_mode).active_index();
-                return (index.has_value() && index.value() != mode);
-          then:
-            - select.set_index:
-                id: heatpump_select_operating_mode
-                index: !lambda "return static_cast<uint8_t>(id(ecodan_instance).get_status().HeatingCoolingMode);"
-
 select:
   - platform: template
     name: ${heatpump_select_operating_mode}

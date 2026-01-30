@@ -295,14 +295,6 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("refrigerant_error_code"): sensor.sensor_schema(
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
-        cv.Optional("status_heating_cooling"): sensor.sensor_schema(
-            entity_category=ENTITY_CATEGORY_NONE,
-            icon="mdi:thermostat",
-        ),
-        cv.Optional("status_heating_cooling_z2"): sensor.sensor_schema(
-            entity_category=ENTITY_CATEGORY_NONE,
-            icon="mdi:thermostat",
-        ),    
         cv.Optional("status_mixing_valve"): sensor.sensor_schema(
             icon="mdi:valve",
             state_class=ENTITY_CATEGORY_NONE,
