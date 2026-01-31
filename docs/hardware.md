@@ -5,7 +5,7 @@ The recommended hardware for running this integration is the [Asgard PCB](https:
 
 ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/img/case-pcb.png?raw=true) ![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/img/case-top.png?raw=true) 
 
-Tested boards
+# Tested hardware
 
 | Board | Link | Notes |
 |:---|:----:|:---|
@@ -14,7 +14,8 @@ Tested boards
 | M5Stack Atom Lite S3 (ESP32-S3 variants) | https://docs.m5stack.com/en/core/AtomS3%20Lite | Grove ports used |
 
 
-Cable (Only needed when using Atom S3 Lite, For Asgard use the supplied cable)
+# Grove to CN105 cable
+Only needed when using Atom S3 Lite, For Asgard use the supplied cable.
 * Get one of the grove female cable and a ST PAP-05V-S connector. Remove one end of the grove connector (you can lift the clamp a bit and pull out the wire) and replace it with a ST PAP-05V-S connector. 
 
 Pin mapping (image pin layout: from left to right)
@@ -30,16 +31,3 @@ When done correctly, it should look like [this](https://raw.githubusercontent.co
 *Note: pin 5 (12v) on the cn105 is not used.*
 
 *Note2: when using 5v from the cn105, **do not** use an external usb power source at the same time*
-
-# where to buy
-Asgard
-https://github.com/gekkekoe/esphome-ecodan-hp/discussions/266
-
-atom s3 lite
-https://www.digikey.nl/en/products/detail/m5stack-technology-co-ltd/C124/18070571
-
-grove cable (multiple options/lengths available)
-https://www.digikey.nl/en/products/detail/seeed-technology-co-ltd/110990036/5482563
-
-JST PAP-05V-S connector
-https://www.digikey.nl/en/products/detail/jst-sales-america-inc/PAP-05V-S/759977
