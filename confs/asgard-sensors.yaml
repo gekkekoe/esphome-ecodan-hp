@@ -35,6 +35,13 @@ one_wire:
     id: dallas_bus
 
 sensor:
+  - platform: internal_temperature
+    name: ${internal_esp_temperature}
+    entity_category: diagnostic
+    unit_of_measurement: "°C"
+    device_class: temperature
+    accuracy_decimals: 1
+
 # dallas temp sensors
   - platform: dallas_temp
     index: 0

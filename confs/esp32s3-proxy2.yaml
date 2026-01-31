@@ -7,3 +7,11 @@ substitutions:
 <<: !include proxy-base.yaml
 <<: !include esp32s3-led.yaml
 <<: !include slave.yaml
+
+sensor:
+  - platform: internal_temperature
+    name: ${internal_esp_temperature}
+    entity_category: diagnostic
+    unit_of_measurement: "°C"
+    device_class: temperature
+    accuracy_decimals: 1
