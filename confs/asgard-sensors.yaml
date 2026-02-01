@@ -47,28 +47,28 @@ sensor:
     index: 0
     id: ow_raw_0
     name: "DS18x20 Sensor 0"
-    update_interval: 60s
+    update_interval: 3s
     resolution: 12
 
   - platform: dallas_temp
     index: 1
     id: ow_raw_1
     name: "DS18x20 Sensor 1"
-    update_interval: 60s
+    update_interval: 3s
     resolution: 12
 
   - platform: dallas_temp
     index: 2
     id: ow_raw_2
     name: "DS18x20 Sensor 2"
-    update_interval: 60s
+    update_interval: 3s
     resolution: 12
 
   - platform: dallas_temp
     index: 3
     id: ow_raw_3
     name: "DS18x20 Sensor 3"
-    update_interval: 60s
+    update_interval: 3s
     resolution: 12
 
   - platform: template
