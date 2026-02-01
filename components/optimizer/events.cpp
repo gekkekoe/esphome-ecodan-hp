@@ -166,11 +166,13 @@ namespace esphome
                 if (!isnan(this->pcp_old_z1_setpoint_)) {
                     this->state_.ecodan_instance->set_flow_target_temperature(this->pcp_old_z1_setpoint_, esphome::ecodan::Zone::ZONE_1);
                     this->pcp_old_z1_setpoint_ = NAN;
+                    this->pcp_adjustment_z1_ = 0.0f;
                 }
 
                 if (status.has_2zones() && !isnan(this->pcp_old_z2_setpoint_)) {
                     this->state_.ecodan_instance->set_flow_target_temperature(this->pcp_old_z2_setpoint_, esphome::ecodan::Zone::ZONE_2);
                     this->pcp_old_z2_setpoint_ = NAN;
+                    this->pcp_adjustment_z2_ = 0.0f;
                 }
             }
 

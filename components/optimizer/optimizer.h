@@ -98,6 +98,9 @@ namespace esphome
       // predictive prevention restore points
       float pcp_old_z1_setpoint_ = NAN;
       float pcp_old_z2_setpoint_ = NAN;
+      // need to store offset set by prevention events
+      float pcp_adjustment_z1_ = 0.0f;
+      float pcp_adjustment_z2_ = 0.0f;
 
       uint32_t predictive_delta_start_time_z1_ = 0;
       uint32_t predictive_delta_start_time_z2_ = 0;

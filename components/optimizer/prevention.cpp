@@ -26,6 +26,7 @@ namespace esphome
 
             auto &mapped_delta_start_time_ = (zone == OptimizerZone::ZONE_2) ? this->predictive_delta_start_time_z2_ : this->predictive_delta_start_time_z1_;
             auto &mapped_pcp_old_flow_setpoint_ = (zone == OptimizerZone::ZONE_2) ? this->pcp_old_z2_setpoint_ : this->pcp_old_z1_setpoint_;
+            auto &mapped_pcp_adjustment_ = (zone == OptimizerZone::ZONE_2) ? this->pcp_adjustment_z2_ : this->pcp_adjustment_z1_;
             auto ecodan_zone = (zone == OptimizerZone::ZONE_2) ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1;
 
             auto start_time = mapped_delta_start_time_;
@@ -81,9 +82,10 @@ namespace esphome
                         mapped_pcp_old_flow_setpoint_ = this->get_flow_setpoint(zone);
                         ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Updating Z%d Saved setpont to:  %.1f", static_cast<uint8_t>(zone), mapped_pcp_old_flow_setpoint_);
                     }
+                    mapped_pcp_adjustment_ += adjustment_factor;
 
                     auto limits = this->get_flow_limits(zone);
-                    float adjusted_flow = this->get_flow_setpoint(zone) + adjustment_factor;
+                    float adjusted_flow = this->get_flow_setpoint(zone) + mapped_pcp_adjustment_;
                     adjusted_flow = this->clamp_flow_temp(adjusted_flow, limits.min, limits.max);
                     ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Increase Z%d Heat Flow to -> %.1f°C", static_cast<uint8_t>(zone), adjusted_flow);
                     this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow, ecodan_zone);

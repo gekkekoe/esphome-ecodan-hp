@@ -292,26 +292,25 @@ namespace esphome
                         calculated_flow = this->round_nearest(calculated_flow);
 
                         // if there was a boost adjustment, check if it's still needed and clear if needed
-                        auto &mapped_pcp_old_flow_setpoint_ = (zone == esphome::ecodan::Zone::ZONE_2) ? this->pcp_old_z2_setpoint_ : this->pcp_old_z1_setpoint_;
                         auto optimizer_zone = (zone == esphome::ecodan::Zone::ZONE_2) ? OptimizerZone::ZONE_2 : OptimizerZone::ZONE_1;
-                        auto short_cycle_prevention_adjustment = isnan(mapped_pcp_old_flow_setpoint_) ? 0.0f : this->get_flow_setpoint(optimizer_zone) - mapped_pcp_old_flow_setpoint_;
+                        auto &mapped_pcp_adjustment_ = (zone == esphome::ecodan::Zone::ZONE_2) ? this->pcp_adjustment_z2_ : this->pcp_adjustment_z1_;
 
-                        if (mapped_pcp_old_flow_setpoint_ > 0.0f)
+                        if (mapped_pcp_adjustment_ > 0.0f)
                         {
                             ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING (boost adjustment): boost: %.1f°C, calcluated_flow: %.2f°C, actual_flow: %.2f°C",
-                                     (i + 1), short_cycle_prevention_adjustment, calculated_flow, actual_flow_temp);
+                                     (i + 1), mapped_pcp_adjustment_, calculated_flow, actual_flow_temp);
 
                             if ((actual_flow_temp - calculated_flow) >= 1.0f)
                             {
-                                calculated_flow += short_cycle_prevention_adjustment;
+                                calculated_flow += mapped_pcp_adjustment_;
                             }
                             else
                             {
-                                mapped_pcp_old_flow_setpoint_ = NAN;
+                                mapped_pcp_adjustment_ = 0.0f;
                             }
                         }
                         ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING (Delta T): calculated_flow: %.2f°C (boost: %.1f)",
-                                 (i + 1), calculated_flow, short_cycle_prevention_adjustment);
+                                 (i + 1), calculated_flow, mapped_pcp_adjustment_);
                     }
                 }
 
