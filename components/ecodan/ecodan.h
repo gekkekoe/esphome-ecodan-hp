@@ -195,14 +195,6 @@ namespace ecodan
 
     class EcodanVirtualThermostat : public thermostat::ThermostatClimate {
     public:
-
-        void setup() override {
-            auto restore = this->restore_state_();
-            if (restore.has_value()) {
-                restore->to_call(this).perform();
-            }
-        }
-
         void control(const climate::ClimateCall &call) override {
 
             if (call.get_target_temperature().has_value()) {
