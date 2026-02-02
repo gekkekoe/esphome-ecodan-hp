@@ -196,6 +196,8 @@ namespace ecodan
             publish_state("dhw_secondary_temp", status.DhwSecondaryTemperature);
             status.update_output_power_estimation(specificHeatConstantOverride);
             publish_state("computed_output_power", status.ComputedOutputPower);
+
+            //ESP_LOGE(TAG, "Feed: %.2f°C vs %.2f°C, Return: %.2f°C vs %.2f°C", res.get_float8_v4(3), status.HpFeedTemperature, res.get_float8_v4(6), status.HpReturnTemperature);
             break;
         case GetType::TEMPERATURE_STATE_B:
             status.Z1FeedTemperature = res.get_float16(1);
