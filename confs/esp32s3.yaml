@@ -57,5 +57,3 @@ sensor:
     entity_category: diagnostic
     unit_of_measurement: "°C"
     device_class: temperature
-
-<<: !include esp32s3-led.yaml

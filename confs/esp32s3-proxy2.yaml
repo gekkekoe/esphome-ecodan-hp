@@ -5,7 +5,6 @@ substitutions:
   uart_proxy_tx_pin: 7
 
 <<: !include proxy-base.yaml
-<<: !include esp32s3-led.yaml
 <<: !include slave.yaml
 
 sensor:

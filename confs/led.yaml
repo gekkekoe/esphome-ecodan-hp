@@ -1,13 +1,14 @@
-# Simple status led for Atom s3 (lite)
-# G35=RGB WS2812C-2020
+substitutions:
+  led_gpio_pin: 35
 
+# G35=RGB WS2812C-2020
 light:
   - platform: esp32_rmt_led_strip
     name: Led
     id: id_led
     internal: true
     rgb_order: GRB
-    pin: 35
+    pin: ${led_gpio_pin}
     num_leds: 4
     chipset: ws2812
     restore_mode: ALWAYS_OFF
@@ -29,7 +30,7 @@ light:
 # red => wifi disconnected
 # blue => AP mode
 interval:
-  - interval: 10s
+  - interval: 2s
     then:
       if:
         condition:
