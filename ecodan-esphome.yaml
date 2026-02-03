@@ -31,7 +31,7 @@ api:
 #  base: !include confs/base.yaml # required
 #  req: !include confs/request-codes.yaml 
 #  esp32: !include confs/esp32s3.yaml # esp32.yaml for regular board
-#  led_status: !include confs/esp32s3-led.yaml
+#  led_status: !include confs/led.yaml
 #  zone1: !include confs/zone1.yaml
 #  svc_z1: !include confs/server-control-z1.yaml
 # # disable if you don't want to use zone 2
@@ -82,6 +82,7 @@ packages:
             # confs/ecodan-labels-pl.yaml,  # Polish
             confs/debug.yaml,
             confs/wifi.yaml,
+            confs/led.yaml,
            ]
 
 logger:
