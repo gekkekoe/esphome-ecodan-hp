@@ -1,6 +1,7 @@
 substitutions:
   uart_rx_pin: 2
   uart_tx_pin: 1
+  led_gpio_pin: 35
 
 esphome:
   name: ${name}

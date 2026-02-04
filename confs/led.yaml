@@ -1,5 +1,3 @@
-substitutions:
-  led_gpio_pin: 35
 
 # G35=RGB WS2812C-2020
 light:
