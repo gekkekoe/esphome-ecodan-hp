@@ -18,15 +18,15 @@ substitutions:
   status_in1_request: Status In1 thermostaat
   status_in6_request: Status In6 thermostaat 2
   status_in5_request: Status In5 buiten thermostaat
-  heatpump_select_dhw_mode: Set SWW modus
+  heatpump_select_dhw_mode: SWW modus
   normal: Normaal
   eco: Eco
   version: ESP versie
-  led_brightness: Set Led helderheid
-  led_switch: Set Led schakelaar
-  heatpump_switch_force_dhw: Set forceer sww
-  heatpump_switch_power_mode: Set warmtepomp Aan/uit
-  heatpump_switch_holiday: Set vakantie modus
+  led_brightness: Led helderheid
+  led_switch: Led schakelaar
+  heatpump_switch_force_dhw: Forceer sww
+  heatpump_switch_power_mode: Warmtepomp
+  heatpump_switch_holiday: Vakantie modus
   wifi_signal_proc: WiFi Signaal %
   wifi_signal_db: WiFi Signaal dB
   z1_flow_temp_target: Zone 1 flow setpoint waarde
