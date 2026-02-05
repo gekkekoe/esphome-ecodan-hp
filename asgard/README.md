@@ -5,13 +5,24 @@ Welcome to the manual for the Asgard PCB for Ecodan heatpumps. This board allows
 ---
 
 ## Ordering & Availability
-The **Asgard PCB** will be available for direct purchase here very soon.
-
 * **Product:** Asgard PCB in 3d printed casing + Connector cable
 * **Price:** € 65,- (including VAT)
 * **Delivery:** Shipped within 3 business days from The Netherlands (When in stock)
 
-> [!NOTE] *The secure payment link will be added to this section once the payment system is live.*
+# ⚡ Asgard is Now Shipping!
+
+[![Order Asgard](https://img.shields.io/badge/Order-Asgard%20Now-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFa6oIblrcIPaNN3Wq4AU00)
+
+> [!IMPORTANT]
+> **Shipping Selection Notice**
+> To avoid shipping delays, please ensure you select the correct tier during checkout:
+> * **Netherlands (NL):** Select the "Verzending Nederland" shipping option.
+> * **European Union (EU):** Select the "Shipping to EU" option for EU countries (other than NL).
+>
+> **United Kingdom (UK) Customers:**
+> Due to VAT regulations, we only process UK orders with a total value exceeding **£135**. 
+> Please do not use the checkout link above; instead, **contact us via email** to arrange a manual order.
+
 
 ### Shipping & Returns policy
 * **Shipping costs:** Calculated at checkout (Available for NL & EU). UK buyers please contact me by email.
@@ -97,6 +108,7 @@ Please check if your package contains:
 > The internal unit of your heat pump (Hydrobox/Cylinder Unit) operates on mains voltage.
 > * **ALWAYS switch off the power** at the fuse box/breaker panel before opening the casing.
 > * Wait at least 5 minutes after switching off power to allow internal capacitors to discharge.
+> * Don't connect the usb-c to a computer/power outlet when Asgard is connected and powered by the heatpump.
 > * Always verify that the power is off using a multimeter.
 
 > [!CAUTION]
