@@ -138,8 +138,8 @@ Look at the main control board of the heat pump for a connector labeled **CN105*
 1.  Plug the provided cable into the **CN105** port on the heat pump. The plug is keyed and fits only one way. Do not force it.
 2.  Plug the other end of the cable into the **Asgard PCB** (Use the **HP** port).
 3. [Optional] If you would like to use the virtual thermostat that controls `IN1/IN6` 
-    - Single zone 1: connect 2 wires from Asgard PCB `R1` to `IN1` on your main FTC board.
-    - Dual zone 2: connect 2 wires from `R2` to `IN6`
+    - Single zone 1: connect 2 wires from Asgard PCB `R1` to `IN1` on your main FTC board. When using `R1` please ensure that `SW2-1` is in the `ON` position.
+    - Dual zone 2: connect 2 wires from `R2` to `IN6`. When using `R2` please ensure that `SW3-1` is in the `ON` position
 4. [Optional] The firmware builtin support for number of DS18x20 temperature sensors.
 
 ### Step 4: Mounting
