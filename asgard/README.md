@@ -11,18 +11,21 @@ Welcome to the manual for the Asgard PCB for Ecodan heatpumps. This board allows
 
 # ⚡ Asgard is Now Shipping!
 
-[![Order Asgard](https://img.shields.io/badge/Order-Asgard%20Now-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFa6oIblrcIPaNN3Wq4AU00)
+| Standard Order (NL/EU) | UK Special Bundle (3 Units) |
+| :--- | :--- |
+| [![Order Asgard](https://img.shields.io/badge/Order-Single%20Unit-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFa6oIblrcIPaNN3Wq4AU00) | [![Order UK Bundle](https://img.shields.io/badge/Order-UK%203--Unit%20Bundle-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/14AeVefBH8sz9JJ0Ke4AU01) |
 
 > [!IMPORTANT]
 > **Shipping Selection Notice**
 > To avoid shipping delays, please ensure you select the correct tier during checkout:
 > * **Netherlands (NL):** Select the "Verzending Nederland" shipping option.
-> * **European Union (EU):** Select the "Shipping to EU" option for EU countries (other than NL).
+> * **European Union (EU):** Select the "Shipping to EU" option for EU countries.
 >
 > **United Kingdom (UK) Customers:**
-> Due to VAT regulations, we only process UK orders with a total value exceeding **£135**. 
-> Please do not use the checkout link above; instead, **contact us via email** to arrange a manual order.
-
+> Due to UK VAT regulations, we only process UK orders with a total value exceeding **£135**.
+> * **VAT Not Included:** The bundle price excludes UK VAT. UK VAT (20%) will be collected by the carrier upon delivery.
+> * **Handling Fees:** Please be aware that the carrier may charge an additional customs clearance handling fee.
+> * For custom larger orders, please **contact us via email** to arrange a manual shipment.
 
 ### Shipping & Returns policy
 * **Shipping costs:** Calculated at checkout (Available for NL & EU). UK buyers please contact me by email.
