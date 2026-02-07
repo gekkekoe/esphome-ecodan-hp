@@ -1,6 +1,13 @@
 wifi:
   power_save_mode: high
   reboot_timeout: 0s
+  output_power: 8.5dBm
+  on_connect:
+      - lambda: |-
+          esp_wifi_set_max_tx_power(78);
+  on_disconnect:
+      - lambda: |-
+          esp_wifi_set_max_tx_power(34);
   ap:
     ssid: "${name}"
     password: "configesp"
