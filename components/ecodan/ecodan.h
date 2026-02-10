@@ -6,8 +6,6 @@
 #include <optional>
 #include <atomic>
 
-#include "esp_wifi.h"
-
 #include "esphome.h"
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
