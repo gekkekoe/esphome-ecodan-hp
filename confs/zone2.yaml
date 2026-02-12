@@ -1,7 +1,7 @@
 substitutions:
   zone_identifier_z1: "2"
   z2_cpp_prefix: ""
-  z2_yaml_prefix: ""
+  z2_enabled: true
 
 binary_sensor:
   - platform: ecodan

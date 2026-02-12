@@ -6,6 +6,13 @@ substitutions:
   led_gpio_pin: 42
   # enable asgard prefixes
   asgard_prefix: ""
+  z2_dashboard: !include
+    file: asgard-dashboard-z2.yaml
+  z2_thermostat: !include
+    file: asgard-thermostat.yaml
+    vars: 
+      zone_identifier: "z2"
+      gpio: "GPIO41"
 
 <<: !include proxy-base.yaml
 <<: !include asgard-sensors.yaml
@@ -13,4 +20,7 @@ substitutions:
 
 packages:
  thermostat-room-0: !include { file: asgard-thermostat.yaml, vars: { zone_identifier: "z1", gpio: "GPIO40" } }
- ${z2_yaml_prefix} thermostat-room-1: !include { file: asgard-thermostat.yaml, vars: { zone_identifier: "z2", gpio: "GPIO41" } }
+ thermostat-room-1: ${ z2_thermostat if z2_enabled else {} }
+ dashboard-z1: !include asgard-dashboard-z1.yaml
+ dashboard-z2: ${ z2_dashboard if z2_enabled else {} }
+

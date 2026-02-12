@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HP Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #0f1525;
+    --bg3: #151c30;
+    --card: #131929;
+    --border: #1e2d4a;
+    --accent: #00c8ff;
+    --accent3: #7fff7f;
+    --warn: #ffb020;
+    --danger: #ff4455;
+    --purple: #c084fc;
+    --text: #e2eaff;
+    --text2: #8899bb;
+    --text3: #4a5a7a;
+    --heat: #ff6b35;
+    --cool: #00c8ff;
+    --off: #4a5a7a;
+    --on: #7fff7f;
+    --radius: 12px;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-wrap: wrap;
+  }
+
+  .header-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+
+  .badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px 8px;
+    min-width: 52px;
+    transition: border-color 0.2s;
+  }
+  .badge:hover { border-color: var(--accent); }
+
+  .badge-label {
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 1.3px;
+    color: var(--text3);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .badge-value {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .badge-value.hot    { color: var(--heat); }
+  .badge-value.cool   { color: var(--cool); }
+  .badge-value.green  { color: var(--accent3); }
+  .badge-value.warn   { color: var(--warn); }
+  .badge-value.purple { color: var(--purple); }
+
+  .last-update {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    white-space: nowrap;
+    align-self: center;
+  }
+
+  /* ── Main layout ── */
+  main {
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-left: 8px;
+    border-left: 2px solid var(--accent);
+  }
+
+  /* ── Status bar ── */
+  .status-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+  }
+  .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  .pill-off  { background: rgba(74,90,122,0.2); border-color: var(--text3); color: var(--text3); }
+  .pill-off .dot { background: var(--text3); }
+  .pill-on   { background: rgba(127,255,127,0.1); border-color: var(--accent3); color: var(--accent3); }
+  .pill-on .dot  { background: var(--accent3); box-shadow: 0 0 6px var(--accent3); animation: pulse 2s infinite; }
+  .pill-heat { background: rgba(255,107,53,0.1); border-color: var(--heat); color: var(--heat); }
+  .pill-heat .dot { background: var(--heat); animation: pulse 1.5s infinite; }
+  .pill-warn { background: rgba(255,176,32,0.1); border-color: var(--warn); color: var(--warn); }
+  .pill-warn .dot { background: var(--warn); animation: pulse 1s infinite; }
+  .pill-cool { background: rgba(0,200,255,0.1); border-color: var(--cool); color: var(--cool); }
+  .pill-cool .dot { background: var(--cool); }
+  .pill-mode { background: rgba(0,200,255,0.1); border-color: var(--accent); color: var(--accent); font-size: 11px; padding: 4px 13px; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── greyed out for z2 ── */
+  .disabled-card {
+    opacity: 0.4;
+    pointer-events: none; /* no clicks */
+    filter: grayscale(100%); 
+    transition: all 0.3s;
+  }
+
+  /* ── Chart cards ── */
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .chart-legend { display: flex; gap: 10px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 9px; font-family: var(--mono); color: var(--text2); }
+  .legend-dot  { width: 10px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+  .chart-container { position: relative; width: 100%; height: 180px; }
+  canvas { width: 100% !important; }
+
+  /* ── Control cards ── */
+  .ctrl-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+  }
+  .ctrl-row:last-of-type { border-bottom: none; }
+  .ctrl-label { font-size: 11px; color: var(--text2); flex: 1; }
+  .ctrl-value { font-family: var(--mono); font-size: 12px; color: var(--text); }
+
+  .sub-label {
+    font-size: 9px;
+    font-family: var(--mono);
+    color: var(--text3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin: 10px 0 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Toggle switch */
+  .toggle-wrap { position: relative; width: 38px; height: 20px; flex-shrink: 0; }
+  .toggle-wrap input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 20px; cursor: pointer; transition: all 0.2s;
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute; left: 3px; top: 3px; width: 12px; height: 12px;
+    background: var(--text3); border-radius: 50%; transition: all 0.2s;
+  }
+  .toggle-wrap input:checked + .toggle-slider { background: rgba(127,255,127,0.15); border-color: var(--accent3); }
+  .toggle-wrap input:checked + .toggle-slider::before { transform: translateX(17px); background: var(--accent3); }
+
+  /* Select */
+  .ctrl-select {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 7px;
+    color: var(--text); font-family: var(--mono); font-size: 10px;
+    padding: 4px 8px; cursor: pointer; outline: none; max-width: 210px;
+  }
+  .ctrl-select:focus { border-color: var(--accent); }
+
+  /* Steppers */
+  .stepper { display: flex; align-items: center; gap: 5px; }
+  .step-btn {
+    width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--border);
+    background: var(--bg2); color: var(--text); font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0;
+  }
+  .step-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,200,255,0.1); }
+  .step-btn:active { transform: scale(0.88); }
+  .step-val { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); min-width: 48px; text-align: center; }
+
+  /* Send button */
+  .send-btn {
+    width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px;
+    border: 1px solid var(--accent); background: rgba(0,200,255,0.08);
+    color: var(--accent); font-family: var(--mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+  }
+  .send-btn:hover { background: rgba(0,200,255,0.18); box-shadow: 0 0 10px rgba(0,200,255,0.12); }
+  .send-btn:active { transform: scale(0.98); }
+  .send-btn.sending { opacity: 0.4; pointer-events: none; }
+
+  /* Range slider */
+  .ctrl-range { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 4px; background: var(--border); outline: none; cursor: pointer; }
+  .ctrl-range::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid var(--bg3); box-shadow: 0 0 5px rgba(0,200,255,0.4); }
+
+  /* Big temp */
+  .big-temp { font-family: var(--mono); font-size: 36px; font-weight: 300; line-height: 1; color: var(--text); }
+  .big-temp span { font-size: 16px; color: var(--text2); }
+
+  .stat-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+  .stat-item { display: flex; flex-direction: column; }
+  .stat-label { font-size: 8px; font-family: var(--mono); color: var(--text3); letter-spacing: 1px; text-transform: uppercase; }
+  .stat-value { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text); }
+  .stat-value.hot   { color: var(--heat); }
+  .stat-value.green { color: var(--accent3); }
+  .stat-value.blue  { color: var(--cool); }
+
+  /* Log Viewer Styles */
+  .log-controls {
+    display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .log-btn {
+    padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg2); color: var(--text2); font-size: 10px; font-family: var(--mono);
+    cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .log-btn:hover { border-color: var(--accent); color: var(--text); }
+  .log-btn.active { border-color: var(--accent3); color: var(--accent3); background: rgba(127,255,127,0.1); }
+  
+  #logs-container {
+    height: 300px; overflow-y: scroll;
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px; font-family: var(--mono); font-size: 11px; line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  .log-entry { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 2px 0; display:flex; gap:10px;}
+  .log-debug { color: var(--text3); }
+  .log-info { color: var(--accent3); }
+  .log-warn { color: var(--warn); }
+  .log-error { color: var(--danger); font-weight: bold; }
+  .log-raw { color: var(--text2); }
+  .time-tag { color: var(--accent); opacity:0.7; min-width: 60px;}
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--bg2); border: 1px solid var(--accent3); color: var(--accent3);
+    font-family: var(--mono); font-size: 11px; padding: 9px 14px; border-radius: 8px;
+    opacity: 0; transform: translateY(8px); transition: all 0.3s; z-index: 999; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+
+  @media (min-width: 768px) {
+    .chart-container { height: 200px; }
+    main { grid-template-columns: 1fr 1fr; }
+    .full-width { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-badges" id="headerBadges">
+    <div class="badge"><span class="badge-label">Mode</span><span class="badge-value" id="b-mode">—</span></div>
+    <div class="badge"><span class="badge-label">Feed</span><span class="badge-value hot" id="b-feed">—</span></div>
+    <div class="badge"><span class="badge-label">Return</span><span class="badge-value" id="b-return">—</span></div>
+    <div class="badge"><span class="badge-label">Outside</span><span class="badge-value cool" id="b-outside">—</span></div>
+    <div class="badge"><span class="badge-label">Freq</span><span class="badge-value green" id="b-freq">—</span></div>
+    <div class="badge"><span class="badge-label">Flow</span><span class="badge-value" id="b-flowrate">—</span></div>
+    <div class="badge"><span class="badge-label">Output</span><span class="badge-value warn" id="b-output">—</span></div>
+    <div class="badge"><span class="badge-label">Prod/day</span><span class="badge-value green" id="b-prod">—</span></div>
+    <div class="badge"><span class="badge-label">Cons/day</span><span class="badge-value" id="b-cons">—</span></div>
+    <div class="badge"><span class="badge-label">Starts</span><span class="badge-value" id="b-starts">—</span></div>
+    <div class="badge"><span class="badge-label">Runtime</span><span class="badge-value purple" id="b-runtime">—</span></div>
+    <div class="badge"><span class="badge-label">WiFi</span><span class="badge-value" id="b-wifi">—</span></div>
+  </div>
+  <div class="last-update" id="lastUpdate">—</div>
+</header>
+
+<main>
+
+  <div class="full-width">
+    <div class="section-title">Status</div>
+    <div class="status-bar" id="statusBar">
+      <div class="status-pill pill-mode" id="s-mode"><div class="dot"></div><span id="s-mode-txt">—</span></div>
+      <div class="status-pill pill-off" id="s-comp"><div class="dot"></div><span>Compressor</span></div>
+      <div class="status-pill pill-off" id="s-boost"><div class="dot"></div><span>Booster Heater</span></div>
+      <div class="status-pill pill-off" id="s-defrost"><div class="dot"></div><span>Defrost</span></div>
+      <div class="status-pill pill-off" id="s-pump"><div class="dot"></div><span>Water Pump</span></div>
+      <div class="status-pill pill-off" id="s-in1"><div class="dot"></div><span>IN1</span></div>
+      <div class="status-pill pill-off" id="s-in6"><div class="dot"></div><span>IN6</span></div>
+    </div>
+  </div>
+
+  <div class="chart-card full-width">
+    <div class="chart-header">
+      <div class="section-title" style="margin:0">Temperatures</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#ff6b35"></div>Feed</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#00c8ff"></div>Return</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ffb020; height:0; border-top:2px dashed #ffb020; width:14px"></div>Z1 Target</div>
+      </div>
+    </div>
+    <div class="chart-container"><canvas id="tempChart"></canvas></div>
+  </div>
+
+  <div class="chart-card full-width">
+    <div class="chart-header">
+      <div class="section-title" style="margin:0">Compressor Frequency</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#ff6b35"></div>Heating</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#00c8ff"></div>Cooling</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ffb020"></div>DHW</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff4455"></div>Legionella</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div>Defrost</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff0000"></div>Booster</div>
+      </div>
+    </div>
+    <div class="chart-container"><canvas id="freqChart"></canvas></div>
+  </div>
+
+  <div class="ctrl-card">
+    <div class="section-title">Zone 1</div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Room Temp Source</span>
+      <select class="ctrl-select" id="sel-z1src" onchange="sendSelect('room_temp_source_z1', this.value)">
+        <option>Room Thermostat</option>
+        <option>Home Assistant / REST API</option>
+        <option>Asgard Virtual Thermostat</option>
+      </select>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Operating Mode</span>
+      <select class="ctrl-select" id="sel-z1mode" onchange="sendSelect('operating_mode_z1', this.value)">
+        <option>Heat Target Temperature</option>
+        <option>Heat Flow Temperature</option>
+        <option>Heat Compensation Curve</option>
+        <option>Cool Target Temperature</option>
+        <option>Cool Flow Temperature</option>
+        <option>Floor Dry Up</option>
+        <option>Cool Compensation Curve</option>
+      </select>
+    </div>
+
+    <div class="sub-label">Virtual Thermostat Z1</div>
+    <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+      <div>
+        <div class="stat-label">Current Temp</div>
+        <div class="big-temp" style="font-size:32px" id="z1-current">—<span>°C</span></div>
+      </div>
+      <div style="flex:1;">
+        <div class="stat-label">Setpoint</div>
+        <div class="stepper">
+          <button class="step-btn" onclick="step('z1-sp', -0.5)">−</button>
+          <div class="step-val" style="font-size:18px; min-width:52px" id="z1-sp-val">—</div>
+          <button class="step-btn" onclick="step('z1-sp', +0.5)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">Hysteresis &nbsp;<span id="z1-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span>
+      <input type="range" class="ctrl-range" id="z1-hyst"
+             min="0.1" max="3.0" step="0.1" style="max-width:140px"
+             oninput="hystInput('z1')">
+    </div>
+    <button class="send-btn" id="btn-z1" onclick="sendZone('z1', this)">Apply Zone 1</button>
+  </div>
+
+  <div class="ctrl-card" id="card-z2" style="display:none;">
+    <div class="section-title">Zone 2</div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Room Temp Source</span>
+      <select class="ctrl-select" id="sel-z2src" onchange="sendSelect('room_temp_source_z2', this.value)">
+        <option>Room Thermostat</option>
+        <option>Home Assistant / REST API</option>
+        <option>Asgard Virtual Thermostat</option>
+      </select>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Operating Mode</span>
+      <select class="ctrl-select" id="sel-z2mode" onchange="sendSelect('operating_mode_z2', this.value)">
+        <option>Heat Target Temperature</option>
+        <option>Heat Flow Temperature</option>
+        <option>Heat Compensation Curve</option>
+        <option>Cool Target Temperature</option>
+        <option>Cool Flow Temperature</option>
+        <option>Floor Dry Up</option>
+        <option>Cool Compensation Curve</option>
+      </select>
+    </div>
+
+    <div class="sub-label">Virtual Thermostat Z2</div>
+    <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+      <div>
+        <div class="stat-label">Current Temp</div>
+        <div class="big-temp" style="font-size:32px" id="z2-current">—<span>°C</span></div>
+      </div>
+      <div style="flex:1;">
+        <div class="stat-label">Setpoint</div>
+        <div class="stepper">
+          <button class="step-btn" onclick="step('z2-sp', -0.5)">−</button>
+          <div class="step-val" style="font-size:18px; min-width:52px" id="z2-sp-val">—</div>
+          <button class="step-btn" onclick="step('z2-sp', +0.5)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">Hysteresis &nbsp;<span id="z2-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span>
+      <input type="range" class="ctrl-range" id="z2-hyst"
+             min="0.1" max="3.0" step="0.1" style="max-width:140px"
+             oninput="hystInput('z2')">
+    </div>
+    <button class="send-btn" id="btn-z2" onclick="sendZone('z2', this)">Apply Zone 2</button>
+  </div>
+
+  <div class="ctrl-card">
+    <div class="section-title">Auto Adaptive</div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">Enable / Disable</span>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="sw-aa" onchange="sendSwitch('auto_adaptive_control_enabled', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Defrost Mitigation</span>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="sw-dm" onchange="sendSwitch('defrost_risk_handling_enabled', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Smart Boost</span>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="sw-sb" onchange="sendSwitch('smart_boost_enabled', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Heating System Type</span>
+      <select class="ctrl-select" id="sel-hst" onchange="sendSelect('heating_system_type', this.value)">
+        <option>Underfloor Heating</option>
+        <option>Underfloor Heating *</option>
+        <option>Underfloor Heating + Radiators</option>
+        <option>Underfloor Heating + Radiators *</option>
+        <option>Radiators</option>
+        <option>Radiators *</option>
+      </select>
+    </div>
+
+    <div class="sub-label">Flow Temperature Limits</div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Setpoint Bias</span>
+      <div class="stepper">
+        <button class="step-btn" onclick="step('aa-bias', -0.1)">−</button>
+        <div class="step-val" id="aa-bias-val">—</div>
+        <button class="step-btn" onclick="step('aa-bias', +0.1)">+</button>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Max Flow Heating</span>
+      <div class="stepper">
+        <button class="step-btn" onclick="step('aa-max', -1)">−</button>
+        <div class="step-val" id="aa-max-val">—</div>
+        <button class="step-btn" onclick="step('aa-max', +1)">+</button>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Min Flow Heating</span>
+      <div class="stepper">
+        <button class="step-btn" onclick="step('aa-min', -1)">−</button>
+        <div class="step-val" id="aa-min-val">—</div>
+        <button class="step-btn" onclick="step('aa-min', +1)">+</button>
+      </div>
+    </div>
+    <button class="send-btn" id="btn-aa" onclick="sendAA(this)">Apply Auto Adaptive</button>
+  </div>
+
+  <div class="ctrl-card">
+    <div class="section-title">DHW</div>
+    <div class="big-temp" id="dhw-current">—<span>°C</span></div>
+    <div class="stat-row">
+      <div class="stat-item">
+        <span class="stat-label">Setpoint</span>
+        <span class="stat-value blue" id="dhw-setpoint">—°C</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Max Drop</span>
+        <span class="stat-value" id="dhw-drop">—°C</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Consumed (day)</span>
+        <span class="stat-value hot" id="dhw-cons">— kWh</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Produced (day)</span>
+        <span class="stat-value green" id="dhw-prod">— kWh</span>
+      </div>
+    </div>
+    <div class="sub-label">DHW Setpoint Control</div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Target</span>
+      <div class="stepper">
+        <button class="step-btn" onclick="step('dhw-sp', -0.5)">−</button>
+        <div class="step-val" id="dhw-sp-val">—</div>
+        <button class="step-btn" onclick="step('dhw-sp', +0.5)">+</button>
+      </div>
+    </div>
+    <button class="send-btn" id="btn-dhw" onclick="sendDHW(this)">Set DHW Setpoint</button>
+  </div>
+
+  <div class="chart-card full-width">
+    <div class="chart-header">
+      <div class="section-title" style="margin:0">System Logs</div>
+      <div id="log-status" style="font-size:10px; font-family:var(--mono); color:var(--text3)">Connecting...</div>
+    </div>
+    <div class="log-controls">
+      <button class="log-btn" id="pauseBtn" onclick="togglePause()">Pause</button>
+      <button class="log-btn" onclick="clearLogs()">Clear</button>
+      <button class="log-btn" onclick="downloadLogs()">Download</button>
+    </div>
+    <div id="logs-container"></div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Config ───────────────────────────────────────────────────────────────────
+const HISTORY_MINUTES = 240;
+const POLL_MS = 5000;
+
+// ─── History buffers ──────────────────────────────────────────────────────────
+const history = {
+  timestamps: [],
+  feed: [], 
+  ret: [], 
+  z1sp: [], 
+  freq: [], 
+  mode: [],    
+  booster: [], 
+  defrost: []  
+};
+
+// ─── State Management ─────────────────────────────────────────────────────────
+const pending = {
+  'aa-bias': null, 'aa-max': null, 'aa-min': null,
+  'dhw-sp':  null,
+  'z1-sp':   null, 'z1-hyst': null,
+  'z2-sp':   null, 'z2-hyst': null
+};
+
+const serverState = {};
+
+const LIMITS = {
+  'aa-bias': { min: -5,  max: 5,  step: 0.1 },
+  'aa-max':  { min: 30,  max: 65, step: 1   },
+  'aa-min':  { min: 20,  max: 55, step: 1   },
+  'dhw-sp':  { min: 40,  max: 60, step: 0.5 },
+  'z1-sp':   { min: 10,  max: 30, step: 0.5 },
+  'z2-sp':   { min: 10,  max: 30, step: 0.5 }
+};
+
+const STEP_EL = {
+  'aa-bias': 'aa-bias-val', 'aa-max': 'aa-max-val', 'aa-min': 'aa-min-val',
+  'dhw-sp': 'dhw-sp-val', 'z1-sp': 'z1-sp-val', 'z2-sp': 'z2-sp-val'
+};
+
+let tempChart = null;
+let freqChart = null;
+
+// ─── Advanced Color Logic ─────────────────────────────────────────────────────
+function getColor(idx, alpha) {
+  const m = history.mode[idx] || '';
+  const isBooster = history.booster[idx]; 
+  const isDefrost = history.defrost[idx]; 
+
+  if (isDefrost) return `rgba(192, 132, 252, ${alpha})`; 
+  if (isBooster) return `rgba(255, 0, 0, ${alpha})`; 
+
+  const ml = m.toLowerCase();
+  if (ml.includes('legionella')) return `rgba(255, 68, 85, ${alpha})`;
+  if (ml.includes('hot water') || ml.includes('dhw') || ml.includes('heating water')) return `rgba(255, 176, 32, ${alpha})`;
+  if (ml.includes('cooling'))   return `rgba(0, 200, 255, ${alpha})`;
+  if (ml.includes('heating'))   return `rgba(255, 107, 53, ${alpha})`;
+  
+  return `rgba(74, 90, 122, ${alpha})`;
+}
+
+// ─── Chart factory ────────────────────────────────────────────────────────────
+function makeChart(id, datasets, yLabel) {
+  const ctx = document.getElementById(id).getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: { labels: [], datasets },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f1525',
+          borderColor: '#1e2d4a',
+          borderWidth: 1,
+          titleColor: '#8899bb',
+          bodyColor: '#e2eaff',
+          titleFont: { family: "'JetBrains Mono', monospace", size: 10 },
+          bodyFont:  { family: "'JetBrains Mono', monospace", size: 11 },
+          callbacks: {
+            label: (ctx) => {
+              let label = ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) : '—'}${yLabel}`;
+              if (id === 'freqChart') {
+                const i = ctx.dataIndex;
+                if (history.defrost[i]) label += ' (Defrost)';
+                else if (history.booster[i]) label += ' (Booster)';
+              }
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#4a5a7a', font: { family: "'JetBrains Mono', monospace", size: 9 }, maxTicksLimit: 8, maxRotation: 0 },
+          grid: { color: '#1e2d4a' }
+        },
+        y: {
+          ticks: { color: '#4a5a7a', font: { family: "'JetBrains Mono', monospace", size: 9 }, callback: v => v.toFixed(0) + yLabel },
+          grid: { color: '#1e2d4a' }
+        }
+      }
+    }
+  });
+}
+
+function initCharts() {
+  tempChart = makeChart('tempChart', [
+    { label: 'Feed',     data: [], borderColor: '#ff6b35', backgroundColor: 'rgba(255,107,53,0.08)', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+    { label: 'Return',   data: [], borderColor: '#00c8ff', backgroundColor: 'rgba(0,200,255,0.06)',  borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+    { label: 'Z1 Target',data: [], borderColor: '#ffb020', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [4,3], fill: false }
+  ], '°C');
+
+  freqChart = makeChart('freqChart', [
+    {
+      label: 'Hz', 
+      data: [], 
+      borderColor: '#e2eaff', 
+      borderWidth: 2,
+      pointRadius: 0, 
+      tension: 0.25, 
+      fill: true,
+      backgroundColor: 'rgba(74, 90, 122, 0.1)',
+      segment: {
+        backgroundColor: ctx => getColor(ctx.p0DataIndex, 0.4),
+        borderColor: ctx => getColor(ctx.p0DataIndex, 1.0)
+      }
+    }
+  ], 'Hz');
+}
+
+function updateCharts(d) {
+  if (!tempChart || !freqChart) return;
+  const now = Date.now();
+  const cutoff = now - HISTORY_MINUTES * 60 * 1000;
+
+  while (history.timestamps.length && history.timestamps[0] < cutoff) {
+    history.timestamps.shift();
+    history.feed.shift(); history.ret.shift();
+    history.z1sp.shift(); history.freq.shift(); 
+    history.mode.shift();
+    history.booster.shift();
+    history.defrost.shift();
+  }
+
+  history.timestamps.push(now);
+  history.feed.push(d.hp_feed_temp ?? null);
+  history.ret.push(d.hp_return_temp ?? null);
+  history.z1sp.push(d.z1_setpoint ?? null);
+  history.freq.push(d.compressor_frequency ?? null);
+  history.mode.push(d.status_operation ?? '');
+  history.booster.push(d.status_booster ? 1 : 0);
+  history.defrost.push(d.status_defrost ? 1 : 0);
+
+  const labels = history.timestamps.map(t =>
+    new Date(t).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
+  );
+
+  tempChart.data.labels = labels;
+  tempChart.data.datasets[0].data = history.feed;
+  tempChart.data.datasets[1].data = history.ret;
+  tempChart.data.datasets[2].data = history.z1sp;
+  tempChart.update('none');
+
+  freqChart.data.labels = labels;
+  freqChart.data.datasets[0].data = history.freq;
+  freqChart.update(); 
+}
+
+// ─── Status pills ─────────────────────────────────────────────────────────────
+function setPill(id, active, variant) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'status-pill ' + (active ? `pill-${variant}` : 'pill-off');
+}
+
+// ─── Setters ──────────────────────────────────────────────────────────────────
+function setToggle(id, val) {
+  if (val != null) document.getElementById(id).checked = !!val;
+}
+
+function setSelect(id, val) {
+  if (val === null || val === "unknown" || val === "") return;
+  const el = document.getElementById(id);
+  if (!el || document.activeElement === el) return;
+  
+  const normalize = (s) => String(s).toLowerCase().replace(/\s+/g, '');
+  const target = normalize(val);
+
+  for (let i = 0; i < el.options.length; i++) {
+    const optText = normalize(el.options[i].text);
+    const optVal = normalize(el.options[i].value);
+    if (optText === target || optVal === target) {
+      if (el.selectedIndex !== i) el.selectedIndex = i;
+      return;
+    }
+  }
+}
+
+// ─── Pending & Sync ───────────────────────────────────────────────────────────
+function seedPending(key, val) {
+  if (val != null) {
+    const newVal = parseFloat(val);
+    serverState[key] = newVal;
+    if (pending[key] !== newVal) {
+      pending[key] = newVal;
+      refreshStepVal(key);
+    }
+  }
+}
+
+function seedHyst(zone, val) {
+  const key = zone + '-hyst';
+  if (val != null) {
+    const newVal = parseFloat(val);
+    serverState[key] = newVal;
+    const el = document.getElementById(zone + '-hyst');
+    if (el && document.activeElement === el) return;
+
+    if (pending[key] !== newVal) {
+      pending[key] = newVal;
+      if (el) el.value = newVal;
+      setText(zone + '-hyst-val', newVal.toFixed(1));
+    }
+  }
+}
+
+function refreshStepVal(key) {
+  const el = document.getElementById(STEP_EL[key]);
+  if (el && pending[key] != null) el.textContent = pending[key].toFixed(1);
+}
+
+function hasChanged(key) {
+  if (pending[key] === null) return false;
+  if (serverState[key] === undefined) return true;
+  return Math.abs(pending[key] - serverState[key]) > 0.001;
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function render(d) {
+  // --- Zone 2 Visibility Logic ---
+  const z2Enabled = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
+  const z2Card = document.getElementById('card-z2');
+  
+  if (z2Card) {
+    if (z2Enabled) {
+      z2Card.classList.remove('disabled-card');
+    } else {
+      z2Card.classList.add('disabled-card');
+    }
+    z2Card.style.display = 'block'; 
+  }
+
+  // Update limits
+  if (d.aa_bias_lim) LIMITS['aa-bias'] = d.aa_bias_lim;
+  if (d.max_flow_lim) LIMITS['aa-max'] = d.max_flow_lim;
+  if (d.min_flow_lim) LIMITS['aa-min'] = d.min_flow_lim;
+  
+  if (d.hysteresis_z1_lim) {
+    const el = document.getElementById('z1-hyst');
+    if(el) { el.min = d.hysteresis_z1_lim.min; el.max = d.hysteresis_z1_lim.max; el.step = d.hysteresis_z1_lim.step; }
+  }
+  if (d.hysteresis_z2_lim) {
+    const el = document.getElementById('z2-hyst');
+    if(el) { el.min = d.hysteresis_z2_lim.min; el.max = d.hysteresis_z2_lim.max; el.step = d.hysteresis_z2_lim.step; }
+  }
+
+  // Header badges
+  setText('b-mode',    d.status_operation ?? '—');
+  setText('b-feed',    fmt1(d.hp_feed_temp) + '°');
+  setText('b-return',  fmt1(d.hp_return_temp) + '°');
+  setText('b-outside', fmt1(d.outside_temp) + '°');
+  setText('b-freq',    (d.compressor_frequency != null ? Math.round(d.compressor_frequency) : '—') + 'Hz');
+  setText('b-flowrate',fmt1(d.flow_rate) + 'L');
+  setText('b-output',  (d.computed_output_power != null ? (d.computed_output_power).toFixed(1) : '—') + 'kW');
+  setText('b-prod',    fmt1(d.daily_computed_output_power) + 'kWh');
+  setText('b-cons',    fmt1(d.daily_total_energy_consumption) + 'kWh');
+  setText('b-starts',  d.compressor_starts != null ? String(Math.round(d.compressor_starts)) : '—');
+  setText('b-runtime', d.runtime != null ? fmt1(d.runtime) + 'h' : '—');
+  setText('b-wifi',    d.wifi_signal_db != null ? String(Math.round(d.wifi_signal_db)) + 'dB' : '—');
+
+  // Status pills
+  setText('s-mode-txt', d.status_operation ?? '—');
+  setPill('s-comp',    d.status_compressor,  'on');
+  setPill('s-boost',   d.status_booster,     'heat');
+  setPill('s-defrost', d.status_defrost,     'warn');
+  setPill('s-pump',    d.status_water_pump,  'on');
+  setPill('s-in1',     d.status_in1_request, 'cool');
+  setPill('s-in6',     d.status_in6_request, 'cool');
+
+  // DHW
+  setText('dhw-current',  fmt1(d.dhw_temp));
+  setText('dhw-setpoint', fmt1(d.dhw_flow_temp_target) + '°C');
+  setText('dhw-drop',     fmt1(d.dhw_flow_temp_drop) + '°C');
+  setText('dhw-cons',     fmt1(d.dhw_consumed) + ' kWh');
+  setText('dhw-prod',     fmt1(d.dhw_delivered) + ' kWh');
+  seedPending('dhw-sp', d.dhw_flow_temp_target);
+
+  // Zone 1
+  setText('z1-current', fmt1(d.z1_current_temp));
+  seedPending('z1-sp', d.z1_setpoint);
+  seedHyst('z1', d.thermostat_hysteresis_z1);
+
+  // Zone 2
+  setText('z2-current', fmt1(d.z2_current_temp));
+  seedPending('z2-sp', d.z2_setpoint);
+  seedHyst('z2', d.thermostat_hysteresis_z2);
+
+  // AA
+  seedPending('aa-bias', d.auto_adaptive_setpoint_bias);
+  seedPending('aa-max',  d.maximum_heating_flow_temp);
+  seedPending('aa-min',  d.minimum_heating_flow_temp);
+
+  // Switches
+  setToggle('sw-aa', d.auto_adaptive_control_enabled);
+  setToggle('sw-dm', d.defrost_risk_handling_enabled);
+  setToggle('sw-sb', d.smart_boost_enabled);
+
+  setSelect('sel-hst',   d.heating_system_type);
+  setSelect('sel-z1src', d.room_temp_source_z1);
+  setSelect('sel-z2src', d.room_temp_source_z2);
+  
+  setSelect('sel-z1mode', d.operating_mode_z1);
+  setSelect('sel-z2mode', d.operating_mode_z2);
+
+  setText('lastUpdate', new Date().toLocaleTimeString('nl-NL'));
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+function fmt1(v) { return (v != null && !isNaN(v)) ? parseFloat(v).toFixed(1) : '—'; }
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+function step(key, delta) {
+  const lim = LIMITS[key];
+  if (!lim || pending[key] === null) return;
+  let newVal = pending[key] + delta;
+  const stepSize = lim.step || 0.5;
+  newVal = Math.round(newVal / stepSize) * stepSize;
+  newVal = Math.max(lim.min, Math.min(lim.max, newVal));
+  pending[key] = +newVal.toFixed(2);
+  refreshStepVal(key);
+}
+
+function hystInput(zone) {
+  const key = zone + '-hyst';
+  pending[key] = parseFloat(document.getElementById(zone + '-hyst').value);
+  setText(zone + '-hyst-val', pending[key].toFixed(1));
+}
+
+async function apiPost(payload) {
+  const res = await fetch('/dashboard/set', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+}
+
+async function sendSwitch(key, val) {
+  try { await apiPost({ key, value: val ? 1 : 0 }); showToast('✓ ' + key); } 
+  catch(e) { showToast('✗ ' + e.message, true); }
+}
+
+async function sendSelect(key, val) {
+  try { await apiPost({ key, value: val }); showToast('✓ ' + val); } 
+  catch(e) { showToast('✗ ' + e.message, true); }
+}
+
+async function sendAA(btn) {
+  btn.classList.add('sending');
+  let c = 0;
+  try {
+    if (hasChanged('aa-bias')) { await apiPost({ key: 'auto_adaptive_setpoint_bias', value: pending['aa-bias'] }); c++; }
+    if (hasChanged('aa-max'))  { await apiPost({ key: 'maximum_heating_flow_temp',   value: pending['aa-max']  }); c++; }
+    if (hasChanged('aa-min'))  { await apiPost({ key: 'minimum_heating_flow_temp',   value: pending['aa-min']  }); c++; }
+    showToast(c > 0 ? '✓ AA updated' : 'No changes');
+  } catch(e) { showToast('✗ ' + e.message, true); }
+  btn.classList.remove('sending');
+}
+
+async function sendDHW(btn) {
+  if (!hasChanged('dhw-sp')) { showToast('No change'); return; }
+  btn.classList.add('sending');
+  try {
+    await apiPost({ key: 'dhw_setpoint', value: pending['dhw-sp'] });
+    showToast('✓ DHW updated');
+  } catch(e) { showToast('✗ ' + e.message, true); }
+  btn.classList.remove('sending');
+}
+
+async function sendZone(zone, btn) {
+  btn.classList.add('sending');
+  let c = 0;
+  try {
+    if (hasChanged(zone + '-sp'))   { await apiPost({ key: 'virtual_climate_' + zone + '_setpoint', value: pending[zone+'-sp'] }); c++; }
+    if (hasChanged(zone + '-hyst')) { await apiPost({ key: 'thermostat_hysteresis_' + zone,         value: pending[zone+'-hyst'] }); c++; }
+    showToast(c > 0 ? '✓ Zone ' + zone.toUpperCase() + ' updated' : 'No changes');
+  } catch(e) { showToast('✗ ' + e.message, true); }
+  btn.classList.remove('sending');
+}
+
+async function fetchState() {
+  try {
+    const res = await fetch('/dashboard/state');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    render(d);
+    updateCharts(d);
+  } catch(e) {
+    console.warn(e);
+    setText('lastUpdate', 'ERR');
+  }
+}
+
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = 'toast', 2800);
+}
+
+// ─── Log Viewer Logic ─────────────────────────────────────────────────────────
+let eventSource = null;
+let isPaused = false;
+let logBuffer = [];
+const logContainer = document.getElementById('logs-container');
+const statusDiv = document.getElementById('log-status');
+const ansiRegex = /\x1B\[[0-9;]*[mK]/g;
+
+function startLog() {
+  if(eventSource) eventSource.close();
+  isPaused = false;
+  logContainer.innerHTML = ''; 
+  logBuffer = []; 
+  updateStatus("Connecting...", "var(--warn)");
+
+  eventSource = new EventSource('/events');
+
+  eventSource.addEventListener('log', e => handleLogData(e.data));
+  eventSource.onmessage = e => handleLogData(e.data);
+  
+  eventSource.onopen = () => {
+    updateStatus("Connected", "var(--accent3)");
+    appendLogLine("--- Connected to EventStream ---", "log-info");
+  };
+  eventSource.onerror = (e) => {
+    if (eventSource.readyState == EventSource.CLOSED) {
+      updateStatus("Disconnected", "var(--danger)");
+    } else {
+      updateStatus("Reconnecting...", "var(--warn)");
+    }
+  };
+}
+
+function handleLogData(rawData) {
+  if(isPaused || !rawData) return;
+  let cleanData = rawData.replace(ansiRegex, '');
+  if(cleanData.trim() === "") return;
+
+  try {
+    processJsonLog(JSON.parse(cleanData));
+  } catch (e) {
+    processStringLog(cleanData);
+  }
+}
+
+function processJsonLog(data) {
+  if(!data.message) return;
+  let levelChar = data.level ? data.level.substring(0, 1).toUpperCase() : "U";
+  const tag = data.tag ? `[${data.tag}]` : "";
+  const msg = `[${levelChar}]${tag}: ${data.message}`;
+  
+  let css = 'log-raw';
+  if (data.level === 'DEBUG') css = 'log-debug';
+  else if (data.level === 'INFO') css = 'log-info';
+  else if (data.level === 'WARN') css = 'log-warn';
+  else if (data.level === 'ERROR') css = 'log-error';
+
+  appendLogLine(msg, css);
+}
+
+function processStringLog(text) {
+  let css = 'log-raw';
+  if (text.includes('[D]')) css = 'log-debug';
+  else if (text.includes('[I]')) css = 'log-info';
+  else if (text.includes('[W]')) css = 'log-warn';
+  else if (text.includes('[E]')) css = 'log-error';
+  appendLogLine(text, css);
+}
+
+function appendLogLine(text, cssClass) {
+  const timeStr = new Date().toLocaleTimeString('nl-NL');
+  logBuffer.push(`[${timeStr}] ${text}`);
+  
+  const row = document.createElement('div');
+  row.className = 'log-entry ' + cssClass;
+  row.innerHTML = `<span class="time-tag">${timeStr}</span><span>${text}</span>`;
+  
+  logContainer.appendChild(row);
+  logContainer.scrollTop = logContainer.scrollHeight;
+  
+  // Keep buffer sane
+  if (logContainer.childElementCount > 500) {
+    logContainer.removeChild(logContainer.firstChild);
+    logBuffer.shift();
+  }
+}
+
+function togglePause() {
+  isPaused = !isPaused;
+  const btn = document.getElementById('pauseBtn');
+  if (isPaused) {
+    btn.textContent = "Resume";
+    btn.classList.add('active');
+    updateStatus("Paused", "var(--warn)");
+  } else {
+    btn.textContent = "Pause";
+    btn.classList.remove('active');
+    updateStatus("Streaming", "var(--accent3)");
+  }
+}
+
+function clearLogs() {
+  logContainer.innerHTML = '';
+  logBuffer = [];
+}
+
+function downloadLogs() {
+  if(logBuffer.length === 0) return;
+  const blob = new Blob([logBuffer.join('\n')], { type: 'text/plain' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `logs_${new Date().toISOString().slice(0,19)}.txt`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
+
+function updateStatus(text, color) {
+  statusDiv.textContent = text;
+  statusDiv.style.color = color || 'var(--text3)';
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+(function loadChartJS() {
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+  s.onload = () => { 
+    initCharts(); 
+    fetchState(); 
+    startLog(); // Auto start logging
+    setInterval(fetchState, POLL_MS); 
+  };
+  s.onerror = () => {
+    const s2 = document.createElement('script');
+    s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
+    s2.onload = () => { 
+      initCharts(); 
+      fetchState(); 
+      startLog(); 
+      setInterval(fetchState, POLL_MS); 
+    };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

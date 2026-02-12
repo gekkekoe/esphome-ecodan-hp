@@ -1,0 +1,56 @@
+asgard_dashboard:
+  # ── Header badge sensors ─────────────────────────────────────────────────
+  hp_feed_temp_id:                   hp_feed_temp
+  hp_return_temp_id:                 hp_return_temp
+  outside_temp_id:                   outside_temp
+  compressor_frequency_id:           compressor_frequency
+  flow_rate_id:                      flow_rate          
+  computed_output_power_id:          computed_output_power
+  daily_computed_output_power_id:    daily_computed_output_power
+  daily_total_energy_consumption_id: delta_energy_consumed_increasing
+  compressor_starts_id:              compressor_starts
+  runtime_id:                        runtime
+  wifi_signal_db_id:                 wifi_signal_db
+
+  # ── DHW ──────────────────────────────────────────────────────────────────
+  dhw_temp_id:                       dhw_temp
+  dhw_flow_temp_target_id:           dhw_flow_temp_target
+  dhw_flow_temp_drop_id:             dhw_flow_temp_drop
+  dhw_consumed_id:                   dhw_consumed
+  dhw_delivered_id:                  dhw_delivered
+
+  # ── Binary sensors ────────────────────────────────────────────────────────
+  status_compressor_id:              status_compressor
+  status_booster_id:                 status_booster
+  status_defrost_id:                 status_defrost
+  status_water_pump_id:              status_water_pump
+  status_in1_request_id:             status_in1_request
+  status_in6_request_id:             status_in6_request
+  zone2_enabled_id:                  status_zone2_enabled
+
+  # ── Text sensor ───────────────────────────────────────────────────────────
+  status_operation_id:               status_operation
+
+  # ── Switches ─────────────────────────────────────────────────────────────
+  sw_auto_adaptive_id:               auto_adaptive_control_enabled
+  sw_defrost_mit_id:                 defrost_risk_handling_enabled
+  sw_smart_boost_id:                 smart_boost_enabled
+
+  # ── Selects ─────────────────────────────────────────────────────────────
+  sel_heating_system_type_id:        heating_system_type 
+  sel_room_temp_source_z1_id:        temperature_feedback_source
+  #sel_room_temp_source_z2_id:      temperature_feedback_source   # for now global setting
+  operating_mode_z1_id: heatpump_select_operating_mode
+  #operating_mode_z2_id: heatpump_select_operating_mode_z2 
+ 
+  # ── Numbers ─────────────────────────────────────────────────────────────
+  num_aa_setpoint_bias_id:           auto_adaptive_setpoint_bias
+  num_max_flow_temp_id:              maximum_heating_flow_temp
+  num_min_flow_temp_id:              minimum_heating_flow_temp
+  num_hysteresis_z1_id:              thermostat_hysteresis
+  # num_hysteresis_z2_id:            num_thermostat_hysteresis_z2  # for now global setting
+
+  # ── Climate ───────────────────────────────────────────────────────────────
+  dhw_climate_id:                    heatpump_climate_dhw
+  virtual_climate_z1_id:             virtual_climate_z1
+  # virtual_climate_z2_id:           virtual_climate_z2   

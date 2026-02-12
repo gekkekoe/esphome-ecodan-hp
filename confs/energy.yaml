@@ -149,6 +149,7 @@ sensor:
             }
 
     dhw_consumed:
+      id: dhw_consumed
       name: ${dhw_consumed}
       filters:
         - filter_out: nan
@@ -171,6 +172,7 @@ sensor:
               id(sensor_dhw_consumed_total).publish_state(id(total_dhw_consumed));
             }
     dhw_delivered:
+      id: dhw_delivered
       name: ${dhw_delivered}
       filters:
         - filter_out: nan

@@ -49,7 +49,7 @@ api:
 
 external_components:
   - source: github://gekkekoe/esphome-ecodan-hp@main
-    components: [ ecodan, optimizer ]
+    components: [ ecodan, optimizer, asgard_dashboard ]
     refresh: always
 
 packages:

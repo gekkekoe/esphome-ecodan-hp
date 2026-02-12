@@ -451,6 +451,7 @@ namespace ecodan
             status.DipSwitch6 = res[11];
             status.DipSwitch7 = res[13];
             initialCount |= 2;
+            publish_state("status_zone2_enabled", status.has_2zones());
             break;
         default:
             ESP_LOGI(TAG, "Unknown response type received on serial port: %u", static_cast<uint8_t>(res.payload_type<GetType>()));

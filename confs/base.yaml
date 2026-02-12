@@ -337,6 +337,7 @@ sensor:
       id: heat_source
       internal: true          
     runtime:
+      id: runtime
       name: ${runtime}
     compressor_frequency:
       id: compressor_frequency
@@ -641,3 +642,7 @@ binary_sensor:
     status_in5_request:
       id: status_in5_request
       name: ${status_in5_request}
+    status_zone2_enabled:
+      id: status_zone2_enabled
+      internal: true
+      name: zone 2 enabled

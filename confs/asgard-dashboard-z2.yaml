@@ -1,0 +1,3 @@
+asgard_dashboard:
+  operating_mode_z2_id: heatpump_select_operating_mode_z2 
+  virtual_climate_z2_id: virtual_climate_z2   
