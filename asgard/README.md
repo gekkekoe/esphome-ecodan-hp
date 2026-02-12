@@ -160,7 +160,7 @@ Secure the PCB inside the casing with a screw or 10x2 mm magnet (not supplied). 
 ### Connecting to Wi-Fi
 On first boot, the Asgard PCB will broadcast a Wi-Fi Hotspot (e.g., `ecodan-heatpump`). Verify that the LED is blue.
 1.  Connect to this network with your phone or laptop.
-2.  A portal should open automatically. If not, go to `192.168.4.1` in your browser.
+2.  A portal should open automatically. If not, go to `http://ecodan-heatpump.local` in your browser. The default WiFi password is `configesp`
 3.  Select your home Wi-Fi network and enter the password.
 4.  The device will save the settings and reboot.
 
