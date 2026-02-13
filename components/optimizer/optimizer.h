@@ -118,6 +118,7 @@ namespace esphome
       // cast to bool
       float last_defrost_status_ = 0;
       float last_compressor_status_ = 0;
+      float locked_outside_temp_ = NAN;
 
       // smart boost vars
       uint32_t stagnation_start_time_ = 0;

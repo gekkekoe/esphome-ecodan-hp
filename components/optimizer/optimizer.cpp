@@ -385,6 +385,24 @@ namespace esphome
             }
 
             float actual_outside_temp = status.OutsideTemperature;
+            
+            // use stored outside temp if we are within 5m from last defrost.
+            const uint32_t LOCK_DURATION_MS = 5 * 60 * 1000;
+            bool is_in_lock_window = (millis() - this->last_defrost_time_) < LOCK_DURATION_MS;
+            
+            if (!isnan(this->locked_outside_temp_)) 
+            {
+                if (status.DefrostActive || is_in_lock_window) 
+                {
+                    ESP_LOGD(OPTIMIZER_TAG, "Using locked outside temp: %.1f°C (Sensor: %.1f°C) due to recent defrost.", 
+                             this->locked_outside_temp_, status.OutsideTemperature);
+                    actual_outside_temp = this->locked_outside_temp_;
+                }
+                else 
+                {
+                    this->locked_outside_temp_ = NAN; 
+                }
+            }
 
             if (isnan(actual_outside_temp))
                 return;

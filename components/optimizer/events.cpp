@@ -226,8 +226,18 @@ namespace esphome
         }
 
         void Optimizer::on_defrost_state_change(bool x, bool x_previous) 
-        {      
-            if (x_previous && !x)
+        { 
+            // New defrost, store outside temp
+            if (!x_previous && x)
+            {
+                auto &status = this->state_.ecodan_instance->get_status();
+                if (!std::isnan(status.OutsideTemperature)) {
+                    this->locked_outside_temp_ = status.OutsideTemperature;
+                    ESP_LOGI(OPTIMIZER_TAG, "Defrost started. Locking outside temp at %.1f°C for adaptive calculations.", this->locked_outside_temp_);
+                }
+            }
+            // Defrost STOP
+            else if (x_previous && !x)
             {
                 ESP_LOGD(OPTIMIZER_TAG, "Defrost stop: triggering auto-adaptive loop.");
                 this->run_auto_adaptive_loop();
