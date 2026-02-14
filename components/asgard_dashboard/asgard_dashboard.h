@@ -50,6 +50,10 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_dhw_consumed(sensor::Sensor *s)                    { dhw_consumed_ = s; }
   void set_dhw_delivered(sensor::Sensor *s)                   { dhw_delivered_ = s; }
 
+  // Flow Temp Targets
+  void set_z1_flow_temp_target(sensor::Sensor *s)             { z1_flow_temp_target_ = s; }
+  void set_z2_flow_temp_target(sensor::Sensor *s)             { z2_flow_temp_target_ = s; }
+
   // Binary sensors
   void set_status_compressor(binary_sensor::BinarySensor *b)  { status_compressor_ = b; }
   void set_status_booster(binary_sensor::BinarySensor *b)     { status_booster_ = b; }
@@ -69,6 +73,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_sw_auto_adaptive(switch_::Switch *s)               { sw_auto_adaptive_ = s; }
   void set_sw_defrost_mit(switch_::Switch *s)                 { sw_defrost_mit_ = s; }
   void set_sw_smart_boost(switch_::Switch *s)                 { sw_smart_boost_ = s; }
+  void set_sw_force_dhw(switch_::Switch *s)                   { sw_force_dhw_ = s; } 
 
   // Selects
   void set_sel_heating_system_type(select::Select *s)         { sel_heating_system_type_ = s; }
@@ -76,6 +81,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_sel_room_temp_source_z2(select::Select *s)         { sel_room_temp_source_z2_ = s; }
   void set_sel_operating_mode_z1(select::Select *s)           { sel_operating_mode_z1_ = s; }
   void set_sel_operating_mode_z2(select::Select *s)           { sel_operating_mode_z2_ = s; }
+  void set_sel_temp_source_z1(select::Select *s)              { sel_temp_source_z1_ = s; }
+  void set_sel_temp_source_z2(select::Select *s)              { sel_temp_source_z2_ = s; }
 
   // Numbers (for writing)
   void set_num_aa_setpoint_bias(number::Number *n)            { num_aa_setpoint_bias_ = n; }
@@ -108,7 +115,10 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   static const char *bin_str_(binary_sensor::BinarySensor *b);
   static bool bin_state_(binary_sensor::BinarySensor *b);
   static std::string text_val_(text_sensor::TextSensor *t);
+  
+  static std::string select_idx_(select::Select *s); 
   static std::string select_str_(select::Select *s);
+
   static std::string sw_str_(switch_::Switch *sw);
   
   static std::string number_traits_(number::Number *n);
@@ -135,6 +145,9 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   sensor::Sensor *dhw_flow_temp_drop_{nullptr};
   sensor::Sensor *dhw_consumed_{nullptr};
   sensor::Sensor *dhw_delivered_{nullptr};
+  sensor::Sensor *z1_flow_temp_target_{nullptr};
+  sensor::Sensor *z2_flow_temp_target_{nullptr};
+
   sensor::Sensor *auto_adaptive_setpoint_bias_{nullptr};
   sensor::Sensor *maximum_heating_flow_temp_{nullptr};
   sensor::Sensor *minimum_heating_flow_temp_{nullptr};
@@ -160,6 +173,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   switch_::Switch *sw_auto_adaptive_{nullptr};
   switch_::Switch *sw_defrost_mit_{nullptr};
   switch_::Switch *sw_smart_boost_{nullptr};
+  switch_::Switch *sw_force_dhw_{nullptr}; 
 
   // Selects
   select::Select *sel_heating_system_type_{nullptr};
@@ -167,6 +181,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   select::Select *sel_room_temp_source_z2_{nullptr};
   select::Select *sel_operating_mode_z1_{nullptr};
   select::Select *sel_operating_mode_z2_{nullptr};
+  select::Select *sel_temp_source_z1_{nullptr};
+  select::Select *sel_temp_source_z2_{nullptr};
 
   // Numbers
   number::Number *num_aa_setpoint_bias_{nullptr};

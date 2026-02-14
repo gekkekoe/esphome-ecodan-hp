@@ -28,13 +28,10 @@ void EcodanDashboard::loop() {
     action_queue_.clear();
   }
 
-  // execute set in main loop
   for (const auto &act : todo) {
     this->dispatch_set_(act.key, act.s_value, act.f_value, act.is_string);
   }
 }
-
-// Route matching
 
 bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
   const auto& url = request->url();
@@ -50,8 +47,6 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
   else                                                  request->send(404, "text/plain", "Not found");
 }
 
-// Root: serve gzipped HTML
-
 void EcodanDashboard::handle_root_(AsyncWebServerRequest *request) {
   AsyncWebServerResponse *response = request->beginResponse(
       200, "text/html", DASHBOARD_HTML_GZ, DASHBOARD_HTML_GZ_LEN);
@@ -60,14 +55,11 @@ void EcodanDashboard::handle_root_(AsyncWebServerRequest *request) {
   request->send(response);
 }
 
-// State JSON
-
 void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   std::string j;
-  j.reserve(1200);
+  j.reserve(1500);
   j += "{";
 
-  // Header badge sensors
   j += "\"hp_feed_temp\":"                     + sensor_str_(hp_feed_temp_) + ",";
   j += "\"hp_return_temp\":"                   + sensor_str_(hp_return_temp_) + ",";
   j += "\"outside_temp\":"                     + sensor_str_(outside_temp_) + ",";
@@ -80,14 +72,15 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   j += "\"runtime\":"                         + sensor_str_(runtime_) + ",";
   j += "\"wifi_signal_db\":"                  + sensor_str_(wifi_signal_db_) + ",";
 
-  // DHW sensors 
   j += "\"dhw_temp\":"                        + sensor_str_(dhw_temp_) + ",";
   j += "\"dhw_flow_temp_target\":"            + sensor_str_(dhw_flow_temp_target_) + ",";
   j += "\"dhw_flow_temp_drop\":"              + sensor_str_(dhw_flow_temp_drop_) + ",";
   j += "\"dhw_consumed\":"                    + sensor_str_(dhw_consumed_) + ",";
   j += "\"dhw_delivered\":"                   + sensor_str_(dhw_delivered_) + ",";
 
-  // Auto adaptive (Use NUMBERS + TRAITS) 
+  j += "\"z1_flow_temp_target\":"             + sensor_str_(z1_flow_temp_target_) + ",";
+  j += "\"z2_flow_temp_target\":"             + sensor_str_(z2_flow_temp_target_) + ",";
+
   j += "\"auto_adaptive_setpoint_bias\":"     + number_str_(num_aa_setpoint_bias_) + ",";
   j += "\"aa_bias_lim\":"                     + number_traits_(num_aa_setpoint_bias_) + ",";
   
@@ -97,20 +90,17 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   j += "\"minimum_heating_flow_temp\":"       + number_str_(num_min_flow_temp_) + ",";
   j += "\"min_flow_lim\":"                    + number_traits_(num_min_flow_temp_) + ",";
 
-  //  Hysteresis (Use NUMBERS + TRAITS)
   j += "\"thermostat_hysteresis_z1\":"        + number_str_(num_hysteresis_z1_) + ",";
   j += "\"hysteresis_z1_lim\":"               + number_traits_(num_hysteresis_z1_) + ",";
   
   j += "\"thermostat_hysteresis_z2\":"        + number_str_(num_hysteresis_z2_) + ",";
   j += "\"hysteresis_z2_lim\":"               + number_traits_(num_hysteresis_z2_) + ",";
 
-  // Zone climate current temp + setpoint 
   j += "\"z1_current_temp\":"                 + climate_current_str_(virtual_climate_z1_) + ",";
   j += "\"z1_setpoint\":"                     + climate_target_str_(virtual_climate_z1_) + ",";
   j += "\"z2_current_temp\":"                 + climate_current_str_(virtual_climate_z2_) + ",";
   j += "\"z2_setpoint\":"                     + climate_target_str_(virtual_climate_z2_) + ",";
 
-  // Binary sensors
   j += "\"status_compressor\":"               + std::string(bin_str_(status_compressor_)) + ",";
   j += "\"status_booster\":"                  + std::string(bin_str_(status_booster_)) + ",";
   j += "\"status_defrost\":"                  + std::string(bin_str_(status_defrost_)) + ",";
@@ -119,18 +109,20 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   j += "\"status_in6_request\":"              + std::string(bin_str_(status_in6_request_)) + ",";
   j += "\"zone2_enabled\":"                   + std::string(bin_state_(status_zone2_enabled_) ? "true" : "false") + ",";
 
-  // Switch states
   j += "\"auto_adaptive_control_enabled\":"   + sw_str_(sw_auto_adaptive_) + ",";
   j += "\"defrost_risk_handling_enabled\":"   + sw_str_(sw_defrost_mit_) + ",";
   j += "\"smart_boost_enabled\":"             + sw_str_(sw_smart_boost_) + ",";
+  j += "\"force_dhw\":"                       + sw_str_(sw_force_dhw_) + ","; 
 
-  // Text sensors & Selects
   j += "\"status_operation\":\""              + text_val_(status_operation_) + "\",";
-  j += "\"heating_system_type\":\""           + select_str_(sel_heating_system_type_) + "\",";
-  j += "\"room_temp_source_z1\":\""           + select_str_(sel_room_temp_source_z1_) + "\",";
-  j += "\"room_temp_source_z2\":\""           + select_str_(sel_room_temp_source_z2_) + "\",";
-  j += "\"operating_mode_z1\":\""             + select_str_(sel_operating_mode_z1_) + "\",";
-  j += "\"operating_mode_z2\":\""             + select_str_(sel_operating_mode_z2_) + "\"";
+  
+  j += "\"heating_system_type\":\""           + select_idx_(sel_heating_system_type_) + "\",";
+  j += "\"room_temp_source_z1\":\""           + select_idx_(sel_room_temp_source_z1_) + "\",";
+  j += "\"room_temp_source_z2\":\""           + select_idx_(sel_room_temp_source_z2_) + "\",";
+  j += "\"operating_mode_z1\":\""             + select_idx_(sel_operating_mode_z1_) + "\",";
+  j += "\"operating_mode_z2\":\""             + select_idx_(sel_operating_mode_z2_) + "\",";
+  j += "\"temp_sensor_source_z1\":\""           + select_idx_(sel_temp_source_z1_) + "\",";
+  j += "\"temp_sensor_source_z2\":\""           + select_idx_(sel_temp_source_z2_) + "\"";
 
   j += "}";
 
@@ -141,20 +133,15 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   request->send(response);
 }
 
-// Set
-
 void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   if (request->method() != HTTP_POST) {
     request->send(405, "text/plain", "Method Not Allowed");
     return;
   }
 
-  // AsyncWebServerRequest: use httpd_req_t*() to get the body
   httpd_req_t *req = *request;
-
   size_t content_len = req->content_len;
   if (content_len == 0 || content_len > 512) {
-    ESP_LOGW(TAG, "Bad content_len: %d", (int)content_len);
     request->send(400, "text/plain", "Bad Request");
     return;
   }
@@ -162,7 +149,6 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   char body[513] = {0};
   int received = httpd_req_recv(req, body, content_len);
   if (received <= 0) {
-    ESP_LOGW(TAG, "httpd_req_recv failed: %d", received);
     request->send(400, "text/plain", "Read failed");
     return;
   }
@@ -170,7 +156,6 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
 
   ESP_LOGI(TAG, "Dashboard POST body: %s", body);
 
-  // Parse "key"
   char key[64] = {0};
   const char *kp = strstr(body, "\"key\":");
   if (kp) {
@@ -181,7 +166,6 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   }
   if (strlen(key) == 0) { request->send(400, "text/plain", "Missing key"); return; }
 
-  // Parse "value" — quoted string or number
   char strval[128] = {0};
   float fval = 0.0f;
   bool is_string = false;
@@ -203,13 +187,6 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   ESP_LOGI(TAG, "Dashboard set: key=%s value=%s/%.2f", key,
            is_string ? strval : "-", is_string ? 0.0f : fval);
 
-  // std::string k(key), sv(strval);
-  // float fv = fval;
-  // bool istr = is_string;
-  // this->set_timeout("dashboard_set", 0, [this, k, sv, fv, istr]() {
-  //   dispatch_set_(k, sv, fv, istr);
-  // });
-
   {
     std::lock_guard<std::mutex> lock(action_lock_);
     action_queue_.push_back({
@@ -224,7 +201,6 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
 }
 
 void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &sval, float fval, bool is_string) {
-  // Switches 
   auto doSwitch = [&](switch_::Switch *sw) {
     if (!sw) { ESP_LOGW(TAG, "Switch not configured"); return; }
     fval > 0.5f ? sw->turn_on() : sw->turn_off();
@@ -232,26 +208,27 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "auto_adaptive_control_enabled") { doSwitch(sw_auto_adaptive_); return; }
   if (key == "defrost_risk_handling_enabled") { doSwitch(sw_defrost_mit_);   return; }
   if (key == "smart_boost_enabled")           { doSwitch(sw_smart_boost_);   return; }
+  if (key == "force_dhw")                     { doSwitch(sw_force_dhw_);     return; } 
 
-  // Selects
-  if (is_string) {
-    auto doSelect = [&](select::Select *sel) {
-      if (!sel) { ESP_LOGW(TAG, "Select not configured"); return; }
-      auto call = sel->make_call();
+  auto doSelect = [&](select::Select *sel) {
+    if (!sel) { ESP_LOGW(TAG, "Select not configured"); return; }
+    auto call = sel->make_call();
+    if (is_string) {
       call.set_option(sval);
-      call.perform();
-    };
-    if (key == "heating_system_type")  { doSelect(sel_heating_system_type_); return; }
-    if (key == "room_temp_source_z1")  { doSelect(sel_room_temp_source_z1_); return; }
-    if (key == "room_temp_source_z2")  { doSelect(sel_room_temp_source_z2_); return; }
-    if (key == "operating_mode_z1")    { doSelect(sel_operating_mode_z1_); return; }
-    if (key == "operating_mode_z2")    { doSelect(sel_operating_mode_z2_); return; }
+    } else {
+      call.set_index((size_t)fval);
+    }
+    call.perform();
+  };
 
-    ESP_LOGW(TAG, "Unknown string key: %s", key.c_str());
-    return;
-  }
+  if (key == "heating_system_type")   { doSelect(sel_heating_system_type_); return; }
+  if (key == "room_temp_source_z1")   { doSelect(sel_room_temp_source_z1_); return; }
+  if (key == "room_temp_source_z2")   { doSelect(sel_room_temp_source_z2_); return; }
+  if (key == "operating_mode_z1")     { doSelect(sel_operating_mode_z1_); return; }
+  if (key == "operating_mode_z2")     { doSelect(sel_operating_mode_z2_); return; }
+  if (key == "temp_sensor_source_z1") { doSelect(sel_temp_source_z1_); return; } 
+  if (key == "temp_sensor_source_z2") { doSelect(sel_temp_source_z2_); return; } 
 
-  // Numbers
   auto doNumber = [&](number::Number *n) {
     if (!n) { ESP_LOGW(TAG, "Number not configured"); return; }
     auto call = n->make_call();
@@ -264,7 +241,6 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "thermostat_hysteresis_z1")    { doNumber(num_hysteresis_z1_);    return; }
   if (key == "thermostat_hysteresis_z2")    { doNumber(num_hysteresis_z2_);    return; }
 
-  // DHW setpoint
   if (key == "dhw_setpoint" && dhw_climate_ != nullptr) {
     auto call = dhw_climate_->make_call();
     call.set_target_temperature(fval);
@@ -273,7 +249,6 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
     return;
   }
 
-  // Zone climate setpoints
   auto doClimate = [&](climate::Climate *c, const char *name) {
     if (!c) { ESP_LOGW(TAG, "%s climate not configured", name); return; }
     auto call = c->make_call();
@@ -284,10 +259,10 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "virtual_climate_z1_setpoint") { doClimate(virtual_climate_z1_, "Z1"); return; }
   if (key == "virtual_climate_z2_setpoint") { doClimate(virtual_climate_z2_, "Z2"); return; }
 
-  ESP_LOGW(TAG, "Unknown key: %s", key.c_str());
+  if (is_string) {
+     ESP_LOGW(TAG, "Unknown string key: %s", key.c_str());
+  }
 }
-
-// Helpers
 
 std::string EcodanDashboard::sensor_str_(sensor::Sensor *s) {
   if (s == nullptr || !s->has_state()) return "null";
@@ -337,6 +312,11 @@ std::string EcodanDashboard::text_val_(text_sensor::TextSensor *t) {
   return out;
 }
 
+std::string EcodanDashboard::select_idx_(select::Select *s) {
+  if (s == nullptr || !s->active_index().has_value()) return "null";
+  return std::to_string(s->active_index().value());
+}
+
 std::string EcodanDashboard::select_str_(select::Select *s) {
   if (s == nullptr) return "";
   auto val = s->current_option();
@@ -358,7 +338,6 @@ std::string EcodanDashboard::sw_str_(switch_::Switch *sw) {
 std::string EcodanDashboard::number_traits_(number::Number *n) {
   if (n == nullptr) return "null";
   char buf[64];
-  // Output a JSON object: {"min":10.0, "max":30.0, "step":0.5}
   snprintf(buf, sizeof(buf), "{\"min\":%.1f,\"max\":%.1f,\"step\":%.1f}", 
            n->traits.get_min_value(), n->traits.get_max_value(), n->traits.get_step());
   return std::string(buf);

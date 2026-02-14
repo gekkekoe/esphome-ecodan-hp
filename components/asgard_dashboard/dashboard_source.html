@@ -23,8 +23,6 @@
     --text3: #4a5a7a;
     --heat: #ff6b35;
     --cool: #00c8ff;
-    --off: #4a5a7a;
-    --on: #7fff7f;
     --radius: 12px;
     --mono: 'JetBrains Mono', monospace;
     --sans: 'Space Grotesk', sans-serif;
@@ -40,7 +38,6 @@
     padding: 0;
   }
 
-  /* ── Header ── */
   header {
     background: var(--bg2);
     border-bottom: 1px solid var(--border);
@@ -96,6 +93,16 @@
   .badge-value.warn   { color: var(--warn); }
   .badge-value.purple { color: var(--purple); }
 
+  /* Update Badge Animation */
+  @keyframes pulse-update { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+  .update-available {
+    background: var(--danger) !important;
+    border-color: var(--danger) !important;
+    animation: pulse-update 2s infinite;
+    cursor: pointer;
+  }
+  .update-available .badge-label, .update-available .badge-value { color: #fff !important; }
+
   .last-update {
     font-family: var(--mono);
     font-size: 10px;
@@ -104,7 +111,6 @@
     align-self: center;
   }
 
-  /* ── Main layout ── */
   main {
     padding: 14px;
     display: grid;
@@ -126,56 +132,6 @@
     border-left: 2px solid var(--accent);
   }
 
-  /* ── Status bar ── */
-  .status-bar {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .status-pill {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 11px;
-    border-radius: 100px;
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.4px;
-    border: 1px solid transparent;
-    transition: all 0.3s;
-  }
-  .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-
-  .pill-off  { background: rgba(74,90,122,0.2); border-color: var(--text3); color: var(--text3); }
-  .pill-off .dot { background: var(--text3); }
-  .pill-on   { background: rgba(127,255,127,0.1); border-color: var(--accent3); color: var(--accent3); }
-  .pill-on .dot  { background: var(--accent3); box-shadow: 0 0 6px var(--accent3); animation: pulse 2s infinite; }
-  .pill-heat { background: rgba(255,107,53,0.1); border-color: var(--heat); color: var(--heat); }
-  .pill-heat .dot { background: var(--heat); animation: pulse 1.5s infinite; }
-  .pill-warn { background: rgba(255,176,32,0.1); border-color: var(--warn); color: var(--warn); }
-  .pill-warn .dot { background: var(--warn); animation: pulse 1s infinite; }
-  .pill-cool { background: rgba(0,200,255,0.1); border-color: var(--cool); color: var(--cool); }
-  .pill-cool .dot { background: var(--cool); }
-  .pill-mode { background: rgba(0,200,255,0.1); border-color: var(--accent); color: var(--accent); font-size: 11px; padding: 4px 13px; }
-
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-  /* ── greyed out for z2 ── */
-  .disabled-card {
-    opacity: 0.4;
-    pointer-events: none; /* no clicks */
-    filter: grayscale(100%); 
-    transition: all 0.3s;
-  }
-
-  /* ── Chart cards ── */
   .chart-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -190,11 +146,12 @@
   }
   .chart-legend { display: flex; gap: 10px; flex-wrap: wrap; }
   .legend-item { display: flex; align-items: center; gap: 5px; font-size: 9px; font-family: var(--mono); color: var(--text2); }
-  .legend-dot  { width: 10px; height: 3px; border-radius: 2px; flex-shrink: 0; }
-  .chart-container { position: relative; width: 100%; height: 180px; }
+  
+  .legend-dot  { width: 16px; height: 2px; flex-shrink: 0; }
+
+  .chart-container { position: relative; width: 100%; height: 200px; }
   canvas { width: 100% !important; }
 
-  /* ── Control cards ── */
   .ctrl-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -224,7 +181,6 @@
     border-bottom: 1px solid var(--border);
   }
 
-  /* Toggle switch */
   .toggle-wrap { position: relative; width: 38px; height: 20px; flex-shrink: 0; }
   .toggle-wrap input { opacity: 0; width: 0; height: 0; }
   .toggle-slider {
@@ -238,15 +194,16 @@
   .toggle-wrap input:checked + .toggle-slider { background: rgba(127,255,127,0.15); border-color: var(--accent3); }
   .toggle-wrap input:checked + .toggle-slider::before { transform: translateX(17px); background: var(--accent3); }
 
-  /* Select */
   .ctrl-select {
     background: var(--bg3); border: 1px solid var(--border); border-radius: 7px;
     color: var(--text); font-family: var(--mono); font-size: 10px;
-    padding: 4px 8px; cursor: pointer; outline: none; max-width: 210px;
+    padding: 4px 8px; cursor: pointer; outline: none;
+    width: 220px; 
+    max-width: 100%;
+    text-align: left;
   }
   .ctrl-select:focus { border-color: var(--accent); }
 
-  /* Steppers */
   .stepper { display: flex; align-items: center; gap: 5px; }
   .step-btn {
     width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--border);
@@ -257,7 +214,6 @@
   .step-btn:active { transform: scale(0.88); }
   .step-val { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); min-width: 48px; text-align: center; }
 
-  /* Send button */
   .send-btn {
     width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px;
     border: 1px solid var(--accent); background: rgba(0,200,255,0.08);
@@ -268,11 +224,9 @@
   .send-btn:active { transform: scale(0.98); }
   .send-btn.sending { opacity: 0.4; pointer-events: none; }
 
-  /* Range slider */
   .ctrl-range { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 4px; background: var(--border); outline: none; cursor: pointer; }
   .ctrl-range::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid var(--bg3); box-shadow: 0 0 5px rgba(0,200,255,0.4); }
 
-  /* Big temp */
   .big-temp { font-family: var(--mono); font-size: 36px; font-weight: 300; line-height: 1; color: var(--text); }
   .big-temp span { font-size: 16px; color: var(--text2); }
 
@@ -284,7 +238,6 @@
   .stat-value.green { color: var(--accent3); }
   .stat-value.blue  { color: var(--cool); }
 
-  /* Log Viewer Styles */
   .log-controls {
     display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
   }
@@ -310,7 +263,6 @@
   .log-raw { color: var(--text2); }
   .time-tag { color: var(--accent); opacity:0.7; min-width: 60px;}
 
-  /* Toast */
   .toast {
     position: fixed; bottom: 20px; right: 20px;
     background: var(--bg2); border: 1px solid var(--accent3); color: var(--accent3);
@@ -331,7 +283,6 @@
 
 <header>
   <div class="header-badges" id="headerBadges">
-    <div class="badge"><span class="badge-label">Mode</span><span class="badge-value" id="b-mode">—</span></div>
     <div class="badge"><span class="badge-label">Feed</span><span class="badge-value hot" id="b-feed">—</span></div>
     <div class="badge"><span class="badge-label">Return</span><span class="badge-value" id="b-return">—</span></div>
     <div class="badge"><span class="badge-label">Outside</span><span class="badge-value cool" id="b-outside">—</span></div>
@@ -349,17 +300,11 @@
 
 <main>
 
-  <div class="full-width">
-    <div class="section-title">Status</div>
-    <div class="status-bar" id="statusBar">
-      <div class="status-pill pill-mode" id="s-mode"><div class="dot"></div><span id="s-mode-txt">—</span></div>
-      <div class="status-pill pill-off" id="s-comp"><div class="dot"></div><span>Compressor</span></div>
-      <div class="status-pill pill-off" id="s-boost"><div class="dot"></div><span>Booster Heater</span></div>
-      <div class="status-pill pill-off" id="s-defrost"><div class="dot"></div><span>Defrost</span></div>
-      <div class="status-pill pill-off" id="s-pump"><div class="dot"></div><span>Water Pump</span></div>
-      <div class="status-pill pill-off" id="s-in1"><div class="dot"></div><span>IN1</span></div>
-      <div class="status-pill pill-off" id="s-in6"><div class="dot"></div><span>IN6</span></div>
+  <div class="chart-card full-width">
+    <div class="chart-header">
+      <div class="section-title" style="margin:0">System Status Timeline</div>
     </div>
+    <div class="chart-container"><canvas id="statusChart"></canvas></div>
   </div>
 
   <div class="chart-card full-width">
@@ -368,7 +313,12 @@
       <div class="chart-legend">
         <div class="legend-item"><div class="legend-dot" style="background:#ff6b35"></div>Feed</div>
         <div class="legend-item"><div class="legend-dot" style="background:#00c8ff"></div>Return</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#ffb020; height:0; border-top:2px dashed #ffb020; width:14px"></div>Z1 Target</div>
+        <div class="legend-item"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #ffb020 0 4px, transparent 4px 7px)"></div>Z1 Target</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ffff00"></div>Z1 Current</div>
+        <div class="legend-item"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #00ffff 0 8px, transparent 8px 12px)"></div>Z1 Flow</div>
+        <div class="legend-item" id="leg-z2" style="display:none"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #c084fc 0 4px, transparent 4px 7px)"></div>Z2 Target</div>
+        <div class="legend-item" id="leg-z2-curr" style="display:none"><div class="legend-dot" style="background:#ff69b4"></div>Z2 Current</div>
+        <div class="legend-item" id="leg-z2-flow" style="display:none"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #8a2be2 0 8px, transparent 8px 12px)"></div>Z2 Flow</div>
       </div>
     </div>
     <div class="chart-container"><canvas id="tempChart"></canvas></div>
@@ -381,7 +331,7 @@
         <div class="legend-item"><div class="legend-dot" style="background:#ff6b35"></div>Heating</div>
         <div class="legend-item"><div class="legend-dot" style="background:#00c8ff"></div>Cooling</div>
         <div class="legend-item"><div class="legend-dot" style="background:#ffb020"></div>DHW</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#ff4455"></div>Legionella</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#00ff7f"></div>Legionella</div>
         <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div>Defrost</div>
         <div class="legend-item"><div class="legend-dot" style="background:#ff0000"></div>Booster</div>
       </div>
@@ -392,16 +342,8 @@
   <div class="ctrl-card">
     <div class="section-title">Zone 1</div>
     <div class="ctrl-row">
-      <span class="ctrl-label">Room Temp Source</span>
-      <select class="ctrl-select" id="sel-z1src" onchange="sendSelect('room_temp_source_z1', this.value)">
-        <option>Room Thermostat</option>
-        <option>Home Assistant / REST API</option>
-        <option>Asgard Virtual Thermostat</option>
-      </select>
-    </div>
-    <div class="ctrl-row">
       <span class="ctrl-label">Operating Mode</span>
-      <select class="ctrl-select" id="sel-z1mode" onchange="sendSelect('operating_mode_z1', this.value)">
+      <select class="ctrl-select" id="sel-z1mode" onchange="sendSelect('operating_mode_z1', this)">
         <option>Heat Target Temperature</option>
         <option>Heat Flow Temperature</option>
         <option>Heat Compensation Curve</option>
@@ -411,7 +353,22 @@
         <option>Cool Compensation Curve</option>
       </select>
     </div>
-
+    <div class="ctrl-row">
+      <span class="ctrl-label">Auto Adaptive: Room Temp Source</span>
+      <select class="ctrl-select" id="sel-z1src" onchange="sendSelect('room_temp_source_z1', this)">
+        <option>Room Thermostat</option>
+        <option>Home Assistant / REST API</option>
+        <option>Asgard Virtual Thermostat</option>
+      </select>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Virtual Thermostat: Temp Sensor Source</span>
+      <select class="ctrl-select" id="sel-z1ts" onchange="sendSelect('temp_sensor_source_z1', this)">
+        <option>Virtual Thermostat Input</option>
+        <option>DS18x20</option>
+        <option>MRC</option>
+      </select>
+    </div>
     <div class="sub-label">Virtual Thermostat Z1</div>
     <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
       <div>
@@ -427,7 +384,6 @@
         </div>
       </div>
     </div>
-
     <div class="ctrl-row">
       <span class="ctrl-label">Hysteresis &nbsp;<span id="z1-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span>
       <input type="range" class="ctrl-range" id="z1-hyst"
@@ -441,7 +397,7 @@
     <div class="section-title">Zone 2</div>
     <div class="ctrl-row">
       <span class="ctrl-label">Room Temp Source</span>
-      <select class="ctrl-select" id="sel-z2src" onchange="sendSelect('room_temp_source_z2', this.value)">
+      <select class="ctrl-select" id="sel-z2src" onchange="sendSelect('room_temp_source_z2', this)">
         <option>Room Thermostat</option>
         <option>Home Assistant / REST API</option>
         <option>Asgard Virtual Thermostat</option>
@@ -449,7 +405,7 @@
     </div>
     <div class="ctrl-row">
       <span class="ctrl-label">Operating Mode</span>
-      <select class="ctrl-select" id="sel-z2mode" onchange="sendSelect('operating_mode_z2', this.value)">
+      <select class="ctrl-select" id="sel-z2mode" onchange="sendSelect('operating_mode_z2', this)">
         <option>Heat Target Temperature</option>
         <option>Heat Flow Temperature</option>
         <option>Heat Compensation Curve</option>
@@ -459,7 +415,14 @@
         <option>Cool Compensation Curve</option>
       </select>
     </div>
-
+    <div class="ctrl-row">
+      <span class="ctrl-label">Temp Sensor Source</span>
+      <select class="ctrl-select" id="sel-z2ts" onchange="sendSelect('temp_sensor_source_z2', this)">
+        <option>Virtual Thermostat Input</option>
+        <option>DS18x20</option>
+        <option>MRC</option>
+      </select>
+    </div>
     <div class="sub-label">Virtual Thermostat Z2</div>
     <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
       <div>
@@ -475,7 +438,6 @@
         </div>
       </div>
     </div>
-
     <div class="ctrl-row">
       <span class="ctrl-label">Hysteresis &nbsp;<span id="z2-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span>
       <input type="range" class="ctrl-range" id="z2-hyst"
@@ -487,7 +449,6 @@
 
   <div class="ctrl-card">
     <div class="section-title">Auto Adaptive</div>
-
     <div class="ctrl-row">
       <span class="ctrl-label">Enable / Disable</span>
       <label class="toggle-wrap">
@@ -511,7 +472,7 @@
     </div>
     <div class="ctrl-row">
       <span class="ctrl-label">Heating System Type</span>
-      <select class="ctrl-select" id="sel-hst" onchange="sendSelect('heating_system_type', this.value)">
+      <select class="ctrl-select" id="sel-hst" onchange="sendSelect('heating_system_type', this)">
         <option>Underfloor Heating</option>
         <option>Underfloor Heating *</option>
         <option>Underfloor Heating + Radiators</option>
@@ -520,7 +481,6 @@
         <option>Radiators *</option>
       </select>
     </div>
-
     <div class="sub-label">Flow Temperature Limits</div>
     <div class="ctrl-row">
       <span class="ctrl-label">Setpoint Bias</span>
@@ -551,6 +511,14 @@
 
   <div class="ctrl-card">
     <div class="section-title">DHW</div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Force DHW</span>
+      <label class="toggle-wrap">
+        <input type="checkbox" id="sw-fdhw" onchange="sendSwitch('force_dhw', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="stat-label" style="margin-top:10px">Current Tank Temp</div>
     <div class="big-temp" id="dhw-current">—<span>°C</span></div>
     <div class="stat-row">
       <div class="stat-item">
@@ -591,32 +559,33 @@
       <button class="log-btn" id="pauseBtn" onclick="togglePause()">Pause</button>
       <button class="log-btn" onclick="clearLogs()">Clear</button>
       <button class="log-btn" onclick="downloadLogs()">Download</button>
+      <button class="log-btn" style="border-color: var(--accent); color: var(--accent);" onclick="triggerUpload()">Manual Upload</button>
     </div>
     <div id="logs-container"></div>
   </div>
+
+  <input type="file" id="ota-file" style="display:none" accept=".bin" onchange="performUpload()">
 
 </main>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── Config ───────────────────────────────────────────────────────────────────
-const HISTORY_MINUTES = 240;
+const HISTORY_MINUTES = 1440; 
 const POLL_MS = 5000;
 
-// ─── History buffers ──────────────────────────────────────────────────────────
 const history = {
   timestamps: [],
-  feed: [], 
-  ret: [], 
-  z1sp: [], 
+  feed: [], ret: [], 
+  z1sp: [], z2sp: [], 
+  z1curr: [], z2curr: [],
+  z1flow: [], z2flow: [], 
   freq: [], 
-  mode: [],    
-  booster: [], 
-  defrost: []  
+  mode: [], 
+  bin_comp: [], bin_boost: [], bin_defrost: [], 
+  bin_pump: [], bin_in1: [], bin_in6: []
 };
 
-// ─── State Management ─────────────────────────────────────────────────────────
 const pending = {
   'aa-bias': null, 'aa-max': null, 'aa-min': null,
   'dhw-sp':  null,
@@ -642,167 +611,324 @@ const STEP_EL = {
 
 let tempChart = null;
 let freqChart = null;
+let statusChart = null;
 
-// ─── Advanced Color Logic ─────────────────────────────────────────────────────
-function getColor(idx, alpha) {
-  const m = history.mode[idx] || '';
-  const isBooster = history.booster[idx]; 
-  const isDefrost = history.defrost[idx]; 
+// Manual Upload
+function triggerUpload() { document.getElementById('ota-file').click(); }
+function performUpload() {
+  const input = document.getElementById('ota-file');
+  if (input.files.length === 0) return;
+  const file = input.files[0];
+  const formData = new FormData();
+  formData.append("update", file);
+  const xhr = new XMLHttpRequest();
+  xhr.upload.addEventListener("progress", (e) => {
+    if (e.lengthComputable) {
+      const percent = Math.round((e.loaded / e.total) * 100);
+      showToast(`Uploading: ${percent}%`);
+    }
+  });
+  xhr.addEventListener("load", () => {
+    if (xhr.status === 200) {
+      showToast("✓ Success! Rebooting...", false);
+      setTimeout(() => location.reload(), 15000);
+    } else {
+      showToast(`✗ Error`, true);
+    }
+  });
+  xhr.open("POST", "/update");
+  xhr.send(formData);
+}
 
-  if (isDefrost) return `rgba(192, 132, 252, ${alpha})`; 
-  if (isBooster) return `rgba(255, 0, 0, ${alpha})`; 
+// -- STORAGE & CHARTS --
+function saveHistory() { try { localStorage.setItem('asgard_history', JSON.stringify(history)); } catch(e) {} }
 
-  const ml = m.toLowerCase();
-  if (ml.includes('legionella')) return `rgba(255, 68, 85, ${alpha})`;
-  if (ml.includes('hot water') || ml.includes('dhw') || ml.includes('heating water')) return `rgba(255, 176, 32, ${alpha})`;
-  if (ml.includes('cooling'))   return `rgba(0, 200, 255, ${alpha})`;
-  if (ml.includes('heating'))   return `rgba(255, 107, 53, ${alpha})`;
-  
+function loadHistory() {
+  const raw = localStorage.getItem('asgard_history');
+  if (!raw) return;
+  try {
+    const saved = JSON.parse(raw);
+    if (saved.timestamps && saved.timestamps.length > 0) {
+       // Merge saved keys into current history object, filling missing keys with nulls if needed
+       Object.keys(history).forEach(k => {
+         if (saved[k] && Array.isArray(saved[k])) {
+            history[k] = saved[k];
+         } else if (k.startsWith('z1flow') || k.startsWith('z2flow')) {
+            // Fill missing new keys with nulls to match timestamp length
+            history[k] = new Array(saved.timestamps.length).fill(null);
+         }
+       });
+    }
+  } catch(e) { console.warn("History load failed", e); }
+}
+
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveHistory(); });
+setInterval(saveHistory, 60000);
+
+function getActivityColor(mode, alpha) {
+  if (!mode) return `rgba(74, 90, 122, ${alpha})`;
+  const m = mode.toLowerCase();
+  if (m.includes('legionella')) return `rgba(0, 255, 127, ${alpha})`;
+  if (m.includes('hot water') || m.includes('dhw') || m.includes('heating water')) return `rgba(255, 176, 32, ${alpha})`;
+  if (m.includes('cooling'))   return `rgba(0, 200, 255, ${alpha})`;
+  if (m.includes('heating'))   return `rgba(255, 107, 53, ${alpha})`;
+  if (m.includes('defrost'))   return `rgba(192, 132, 252, ${alpha})`;
   return `rgba(74, 90, 122, ${alpha})`;
 }
 
-// ─── Chart factory ────────────────────────────────────────────────────────────
-function makeChart(id, datasets, yLabel) {
-  const ctx = document.getElementById(id).getContext('2d');
-  return new Chart(ctx, {
+function getModeColor(mode) {
+  if (!mode) return 'transparent';
+  const m = mode.toLowerCase();
+  if (m.includes('legionella')) return '#00ff7f'; 
+  if (m.includes('hot water') || m.includes('dhw') || m.includes('heating water')) return '#ffb020';
+  if (m.includes('cooling'))   return '#00c8ff';
+  if (m.includes('heating'))   return '#ff6b35';
+  if (m.includes('defrost'))   return '#c084fc';
+  if (m.includes('standby') || m.includes('off')) return '#4a5a7a';
+  return '#4a5a7a';
+}
+
+function getFreqColor(idx, alpha) {
+  const isBooster = history.bin_boost[idx]; 
+  const isDefrost = history.bin_defrost[idx]; 
+  if (isDefrost) return `rgba(192, 132, 252, ${alpha})`; 
+  if (isBooster) return `rgba(255, 0, 0, ${alpha})`;
+  return getActivityColor(history.mode[idx], alpha);
+}
+
+function initCharts() {
+  const commonOptions = {
+    animation: false,
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: '#4a5a7a', font: { family: "'JetBrains Mono', monospace", size: 9 }, maxTicksLimit: 8 }, grid: { color: '#1e2d4a' } },
+      y: { ticks: { color: '#4a5a7a', font: { family: "'JetBrains Mono', monospace", size: 9 } }, grid: { color: '#1e2d4a' } }
+    }
+  };
+
+  tempChart = new Chart(document.getElementById('tempChart').getContext('2d'), {
     type: 'line',
-    data: { labels: [], datasets },
-    options: {
+    data: { labels: [], datasets: [
+      { label: 'Feed',     data: [], borderColor: '#ff6b35', backgroundColor: 'rgba(255,107,53,0.08)', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+      { label: 'Return',   data: [], borderColor: '#00c8ff', backgroundColor: 'rgba(0,200,255,0.06)',  borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+      { label: 'Z1 Target',data: [], borderColor: '#ffb020', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [4,3], fill: false },
+      { label: 'Z2 Target',data: [], borderColor: '#c084fc', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [4,3], fill: false, hidden: true },
+      { label: 'Z1 Current',data: [], borderColor: '#ffff00', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+      { label: 'Z2 Current',data: [], borderColor: '#ff69b4', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false, hidden: true },
+      { label: 'Z1 Flow',  data: [], borderColor: '#00ffff', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [8,4], fill: false },
+      { label: 'Z2 Flow',  data: [], borderColor: '#8a2be2', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [8,4], fill: false, hidden: true }
+    ]},
+    options: { ...commonOptions, plugins: { ...commonOptions.plugins,
+      tooltip: { 
+        backgroundColor: '#0f1525', borderColor: '#1e2d4a', borderWidth: 1, titleColor: '#8899bb', bodyColor: '#e2eaff',
+        callbacks: {
+          labelColor: ctx => ({ borderColor: ctx.dataset.borderColor, backgroundColor: ctx.dataset.borderColor, borderWidth:0 }),
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) : '—'}°C`
+        }
+      }
+    }}
+  });
+
+  freqChart = new Chart(document.getElementById('freqChart').getContext('2d'), {
+    type: 'line',
+    data: { labels: [], datasets: [{
+      label: 'Hz', data: [], borderColor: '#e2eaff', borderWidth: 2, pointRadius: 0, tension: 0.25, fill: true,
+      backgroundColor: 'rgba(74, 90, 122, 0.1)',
+      segment: {
+        backgroundColor: ctx => getFreqColor(ctx.p0DataIndex, 0.4),
+        borderColor: ctx => getFreqColor(ctx.p0DataIndex, 1.0)
+      }
+    }]},
+    options: { ...commonOptions, plugins: { ...commonOptions.plugins,
+      tooltip: {
+        backgroundColor: '#0f1525', borderColor: '#1e2d4a', borderWidth: 1, titleColor: '#8899bb', bodyColor: '#e2eaff',
+        callbacks: {
+          labelColor: ctx => {
+            let c = getFreqColor(ctx.dataIndex, 1.0);
+            return { borderColor: c, backgroundColor: c, borderWidth: 0 };
+          },
+          label: ctx => {
+            let l = ` ${ctx.dataset.label}: ${ctx.parsed.y}Hz`;
+            if(history.bin_defrost[ctx.dataIndex]) l += ' (Defrost)';
+            else if(history.bin_boost[ctx.dataIndex]) l += ' (Booster)';
+            return l;
+          }
+        }
+      }
+    }}
+  });
+
+  statusChart = new Chart(document.getElementById('statusChart').getContext('2d'), {
+    type: 'line',
+    data: { labels: [], datasets: [
+      { label: 'Operating Mode',    data: [], borderColor: '#1e2d4a', borderWidth:10, pointRadius:0, fill:false, segment: { borderColor: ctx => getModeColor(history.mode[ctx.p0DataIndex]) } },
+      
+      { label: 'Compressor',    data: [], borderColor: '#1e2d4a', borderWidth:10, pointRadius:0, fill:false, segment: { borderColor: ctx => history.bin_comp[ctx.p0DataIndex] ? '#7fff7f' : 'rgba(30,45,74,0.5)' } },
+      { label: 'Booster Heater', data: [], borderColor: '#1e2d4a', borderWidth:10, pointRadius:0, fill:false, segment: { borderColor: ctx => history.bin_boost[ctx.p0DataIndex] ? '#ff4455' : 'rgba(30,45,74,0.5)' } },
+      { label: 'Defrost', data: [], borderColor: '#1e2d4a', borderWidth:10, pointRadius:0, fill:false, segment: { borderColor: ctx => history.bin_defrost[ctx.p0DataIndex] ? '#c084fc' : 'rgba(30,45,74,0.5)' } },
+      { label: 'Water Pump',    data: [], borderColor: '#1e2d4a', borderWidth:10, pointRadius:0, fill:false, segment: { borderColor: ctx => history.bin_pump[ctx.p0DataIndex] ? '#00c8ff' : 'rgba(30,45,74,0.5)' } },
+      { label: 'IN1 demand',     data: [], borderColor: '#1e2d4a', borderWidth:10, pointRadius:0, fill:false, segment: { borderColor: ctx => history.bin_in1[ctx.p0DataIndex] ? '#8899bb' : 'rgba(30,45,74,0.5)' } },
+      { label: 'IN6 demand',     data: [], borderColor: '#1e2d4a', borderWidth:10, pointRadius:0, fill:false, segment: { borderColor: ctx => history.bin_in6[ctx.p0DataIndex] ? '#8899bb' : 'rgba(30,45,74,0.5)' } }
+    ]},
+    options: { 
       animation: false,
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0f1525',
-          borderColor: '#1e2d4a',
-          borderWidth: 1,
-          titleColor: '#8899bb',
-          bodyColor: '#e2eaff',
-          titleFont: { family: "'JetBrains Mono', monospace", size: 10 },
-          bodyFont:  { family: "'JetBrains Mono', monospace", size: 11 },
-          callbacks: {
-            label: (ctx) => {
-              let label = ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) : '—'}${yLabel}`;
-              if (id === 'freqChart') {
-                const i = ctx.dataIndex;
-                if (history.defrost[i]) label += ' (Defrost)';
-                else if (history.booster[i]) label += ' (Booster)';
-              }
-              return label;
+      interaction: { mode: 'nearest', axis: 'xy', intersect: false },
+      scales: {
+        x: commonOptions.scales.x,
+        y: {
+          min: 0, max: 8,
+          ticks: { 
+            color: '#8899bb', font: { family: "'JetBrains Mono', monospace", size: 9 },
+            callback: (v) => {
+              const map = ['', 'IN6', 'IN1', 'Pump', 'Defrost', 'Booster', 'Compressor', 'Mode', ''];
+              return map[v] || '';
             }
-          }
+          },
+          grid: { color: '#1e2d4a' }
         }
       },
-      scales: {
-        x: {
-          ticks: { color: '#4a5a7a', font: { family: "'JetBrains Mono', monospace", size: 9 }, maxTicksLimit: 8, maxRotation: 0 },
-          grid: { color: '#1e2d4a' }
-        },
-        y: {
-          ticks: { color: '#4a5a7a', font: { family: "'JetBrains Mono', monospace", size: 9 }, callback: v => v.toFixed(0) + yLabel },
-          grid: { color: '#1e2d4a' }
-        }
+      plugins: { 
+        legend: { display: false }, 
+        tooltip: { 
+          enabled: true,
+          backgroundColor: '#0f1525', 
+          borderColor: '#1e2d4a', 
+          borderWidth: 1, 
+          titleColor: '#8899bb', 
+          bodyColor: '#e2eaff',
+          callbacks: {
+            label: (ctx) => {
+               if (ctx.dataset.label === 'Operating Mode') {
+                 return ` Mode: ${history.mode[ctx.dataIndex] || '—'}`;
+               }
+               const keys = ['bin_mode_placeholder', 'bin_comp', 'bin_boost', 'bin_defrost', 'bin_pump', 'bin_in1', 'bin_in6'];
+               const key = keys[ctx.datasetIndex];
+               const val = history[key]?.[ctx.dataIndex]; 
+               return ` ${ctx.dataset.label}: ${val ? 'On' : 'Off'}`;
+            },
+            labelColor: function(context) {
+               if (context.dataset.label === 'Operating Mode') {
+                 const val = history.mode[context.dataIndex];
+                 const c = getModeColor(val);
+                 return { borderColor: c, backgroundColor: c, borderWidth: 0 };
+               }
+               const keys = ['bin_mode_placeholder', 'bin_comp', 'bin_boost', 'bin_defrost', 'bin_pump', 'bin_in1', 'bin_in6'];
+               const key = keys[context.datasetIndex];
+               const val = history[key]?.[context.dataIndex];
+               
+               const onColors = ['#fff', '#7fff7f', '#ff4455', '#c084fc', '#00c8ff', '#8899bb', '#8899bb'];
+               const c = val ? onColors[context.datasetIndex] : '#1e2d4a';
+               
+               return { borderColor: c, backgroundColor: c, borderWidth: 0 };
+            }
+          }
+        } 
       }
     }
   });
 }
 
-function initCharts() {
-  tempChart = makeChart('tempChart', [
-    { label: 'Feed',     data: [], borderColor: '#ff6b35', backgroundColor: 'rgba(255,107,53,0.08)', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
-    { label: 'Return',   data: [], borderColor: '#00c8ff', backgroundColor: 'rgba(0,200,255,0.06)',  borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
-    { label: 'Z1 Target',data: [], borderColor: '#ffb020', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [4,3], fill: false }
-  ], '°C');
-
-  freqChart = makeChart('freqChart', [
-    {
-      label: 'Hz', 
-      data: [], 
-      borderColor: '#e2eaff', 
-      borderWidth: 2,
-      pointRadius: 0, 
-      tension: 0.25, 
-      fill: true,
-      backgroundColor: 'rgba(74, 90, 122, 0.1)',
-      segment: {
-        backgroundColor: ctx => getColor(ctx.p0DataIndex, 0.4),
-        borderColor: ctx => getColor(ctx.p0DataIndex, 1.0)
-      }
-    }
-  ], 'Hz');
-}
-
 function updateCharts(d) {
-  if (!tempChart || !freqChart) return;
+  if (!tempChart || !freqChart || !statusChart) return;
   const now = Date.now();
   const cutoff = now - HISTORY_MINUTES * 60 * 1000;
 
   while (history.timestamps.length && history.timestamps[0] < cutoff) {
     history.timestamps.shift();
     history.feed.shift(); history.ret.shift();
-    history.z1sp.shift(); history.freq.shift(); 
-    history.mode.shift();
-    history.booster.shift();
-    history.defrost.shift();
+    history.z1sp.shift(); history.z2sp.shift();
+    history.z1curr.shift(); history.z2curr.shift();
+    history.z1flow.shift(); history.z2flow.shift();
+    history.freq.shift(); 
+    history.mode.shift();    
+    history.bin_comp.shift(); history.bin_boost.shift(); history.bin_defrost.shift();
+    history.bin_pump.shift(); history.bin_in1.shift(); history.bin_in6.shift();
   }
 
   history.timestamps.push(now);
   history.feed.push(d.hp_feed_temp ?? null);
   history.ret.push(d.hp_return_temp ?? null);
   history.z1sp.push(d.z1_setpoint ?? null);
+  history.z2sp.push(d.z2_setpoint ?? null);
+  history.z1curr.push(d.z1_current_temp ?? null);
+  history.z2curr.push(d.z2_current_temp ?? null);
+  history.z1flow.push(d.z1_flow_temp_target ?? null);
+  history.z2flow.push(d.z2_flow_temp_target ?? null);
+
   history.freq.push(d.compressor_frequency ?? null);
   history.mode.push(d.status_operation ?? '');
-  history.booster.push(d.status_booster ? 1 : 0);
-  history.defrost.push(d.status_defrost ? 1 : 0);
+  
+  const c = d.status_compressor ? 1 : 0;
+  const b = d.status_booster ? 1 : 0;
+  const df = d.status_defrost ? 1 : 0;
+  const p = d.status_water_pump ? 1 : 0;
+  const i1 = d.status_in1_request ? 1 : 0;
+  const i6 = d.status_in6_request ? 1 : 0;
 
-  const labels = history.timestamps.map(t =>
-    new Date(t).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
-  );
+  history.bin_comp.push(c); 
+  history.bin_boost.push(b); 
+  history.bin_defrost.push(df);
+  history.bin_pump.push(p); 
+  history.bin_in1.push(i1); 
+  history.bin_in6.push(i6);
+
+  const labels = history.timestamps.map(t => new Date(t).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }));
 
   tempChart.data.labels = labels;
   tempChart.data.datasets[0].data = history.feed;
   tempChart.data.datasets[1].data = history.ret;
   tempChart.data.datasets[2].data = history.z1sp;
+  tempChart.data.datasets[3].data = history.z2sp;
+  tempChart.data.datasets[4].data = history.z1curr;
+  tempChart.data.datasets[5].data = history.z2curr;
+  tempChart.data.datasets[6].data = history.z1flow;
+  tempChart.data.datasets[7].data = history.z2flow;
+  
+  const z2Enabled = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
+  tempChart.data.datasets[3].hidden = !z2Enabled;
+  tempChart.data.datasets[5].hidden = !z2Enabled;
+  tempChart.data.datasets[7].hidden = !z2Enabled;
+  
+  document.getElementById('leg-z2').style.display = z2Enabled ? 'flex' : 'none';
+  document.getElementById('leg-z2-curr').style.display = z2Enabled ? 'flex' : 'none';
+  document.getElementById('leg-z2-flow').style.display = z2Enabled ? 'flex' : 'none';
+  
   tempChart.update('none');
 
   freqChart.data.labels = labels;
   freqChart.data.datasets[0].data = history.freq;
-  freqChart.update(); 
+  freqChart.update();
+
+  statusChart.data.labels = labels;
+  statusChart.data.datasets[0].data = history.mode.map(() => 7);
+  statusChart.data.datasets[1].data = history.bin_comp.map(() => 6);
+  statusChart.data.datasets[2].data = history.bin_boost.map(() => 5);
+  statusChart.data.datasets[3].data = history.bin_defrost.map(() => 4);
+  statusChart.data.datasets[4].data = history.bin_pump.map(() => 3);
+  statusChart.data.datasets[5].data = history.bin_in1.map(() => 2);
+  statusChart.data.datasets[6].data = history.bin_in6.map(() => 1);
+  statusChart.update('none');
 }
 
-// ─── Status pills ─────────────────────────────────────────────────────────────
-function setPill(id, active, variant) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.className = 'status-pill ' + (active ? `pill-${variant}` : 'pill-off');
-}
-
-// ─── Setters ──────────────────────────────────────────────────────────────────
 function setToggle(id, val) {
   if (val != null) document.getElementById(id).checked = !!val;
 }
 
-function setSelect(id, val) {
-  if (val === null || val === "unknown" || val === "") return;
+function setSelect(id, idx) {
+  if (idx === null || idx === undefined) return;
   const el = document.getElementById(id);
   if (!el || document.activeElement === el) return;
   
-  const normalize = (s) => String(s).toLowerCase().replace(/\s+/g, '');
-  const target = normalize(val);
-
-  for (let i = 0; i < el.options.length; i++) {
-    const optText = normalize(el.options[i].text);
-    const optVal = normalize(el.options[i].value);
-    if (optText === target || optVal === target) {
-      if (el.selectedIndex !== i) el.selectedIndex = i;
-      return;
-    }
+  if (el.selectedIndex !== idx) {
+    el.selectedIndex = idx;
   }
 }
 
-// ─── Pending & Sync ───────────────────────────────────────────────────────────
 function seedPending(key, val) {
   if (val != null) {
     const newVal = parseFloat(val);
@@ -816,10 +942,13 @@ function seedPending(key, val) {
 
 function seedHyst(zone, val) {
   const key = zone + '-hyst';
+  const elId = zone + '-hyst';
+  
   if (val != null) {
     const newVal = parseFloat(val);
     serverState[key] = newVal;
-    const el = document.getElementById(zone + '-hyst');
+    
+    const el = document.getElementById(elId);
     if (el && document.activeElement === el) return;
 
     if (pending[key] !== newVal) {
@@ -841,26 +970,16 @@ function hasChanged(key) {
   return Math.abs(pending[key] - serverState[key]) > 0.001;
 }
 
-// ─── Render ───────────────────────────────────────────────────────────────────
 function render(d) {
-  // --- Zone 2 Visibility Logic ---
   const z2Enabled = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
   const z2Card = document.getElementById('card-z2');
-  
   if (z2Card) {
-    if (z2Enabled) {
-      z2Card.classList.remove('disabled-card');
-    } else {
-      z2Card.classList.add('disabled-card');
-    }
-    z2Card.style.display = 'block'; 
+    z2Card.style.display = z2Enabled ? 'block' : 'none';
   }
 
-  // Update limits
   if (d.aa_bias_lim) LIMITS['aa-bias'] = d.aa_bias_lim;
   if (d.max_flow_lim) LIMITS['aa-max'] = d.max_flow_lim;
   if (d.min_flow_lim) LIMITS['aa-min'] = d.min_flow_lim;
-  
   if (d.hysteresis_z1_lim) {
     const el = document.getElementById('z1-hyst');
     if(el) { el.min = d.hysteresis_z1_lim.min; el.max = d.hysteresis_z1_lim.max; el.step = d.hysteresis_z1_lim.step; }
@@ -870,7 +989,6 @@ function render(d) {
     if(el) { el.min = d.hysteresis_z2_lim.min; el.max = d.hysteresis_z2_lim.max; el.step = d.hysteresis_z2_lim.step; }
   }
 
-  // Header badges
   setText('b-mode',    d.status_operation ?? '—');
   setText('b-feed',    fmt1(d.hp_feed_temp) + '°');
   setText('b-return',  fmt1(d.hp_return_temp) + '°');
@@ -884,49 +1002,37 @@ function render(d) {
   setText('b-runtime', d.runtime != null ? fmt1(d.runtime) + 'h' : '—');
   setText('b-wifi',    d.wifi_signal_db != null ? String(Math.round(d.wifi_signal_db)) + 'dB' : '—');
 
-  // Status pills
-  setText('s-mode-txt', d.status_operation ?? '—');
-  setPill('s-comp',    d.status_compressor,  'on');
-  setPill('s-boost',   d.status_booster,     'heat');
-  setPill('s-defrost', d.status_defrost,     'warn');
-  setPill('s-pump',    d.status_water_pump,  'on');
-  setPill('s-in1',     d.status_in1_request, 'cool');
-  setPill('s-in6',     d.status_in6_request, 'cool');
-
-  // DHW
   setText('dhw-current',  fmt1(d.dhw_temp));
   setText('dhw-setpoint', fmt1(d.dhw_flow_temp_target) + '°C');
   setText('dhw-drop',     fmt1(d.dhw_flow_temp_drop) + '°C');
   setText('dhw-cons',     fmt1(d.dhw_consumed) + ' kWh');
   setText('dhw-prod',     fmt1(d.dhw_delivered) + ' kWh');
   seedPending('dhw-sp', d.dhw_flow_temp_target);
+  setToggle('sw-fdhw', d.force_dhw); 
 
-  // Zone 1
   setText('z1-current', fmt1(d.z1_current_temp));
   seedPending('z1-sp', d.z1_setpoint);
   seedHyst('z1', d.thermostat_hysteresis_z1);
 
-  // Zone 2
   setText('z2-current', fmt1(d.z2_current_temp));
   seedPending('z2-sp', d.z2_setpoint);
   seedHyst('z2', d.thermostat_hysteresis_z2);
 
-  // AA
   seedPending('aa-bias', d.auto_adaptive_setpoint_bias);
   seedPending('aa-max',  d.maximum_heating_flow_temp);
   seedPending('aa-min',  d.minimum_heating_flow_temp);
 
-  // Switches
   setToggle('sw-aa', d.auto_adaptive_control_enabled);
   setToggle('sw-dm', d.defrost_risk_handling_enabled);
   setToggle('sw-sb', d.smart_boost_enabled);
 
-  setSelect('sel-hst',   d.heating_system_type);
-  setSelect('sel-z1src', d.room_temp_source_z1);
-  setSelect('sel-z2src', d.room_temp_source_z2);
-  
+  setSelect('sel-hst',    d.heating_system_type);
+  setSelect('sel-z1src',  d.room_temp_source_z1);
+  setSelect('sel-z2src',  d.room_temp_source_z2);
   setSelect('sel-z1mode', d.operating_mode_z1);
   setSelect('sel-z2mode', d.operating_mode_z2);
+  setSelect('sel-z1ts',   d.temp_sensor_source_z1);
+  setSelect('sel-z2ts',   d.temp_sensor_source_z2);
 
   setText('lastUpdate', new Date().toLocaleTimeString('nl-NL'));
 }
@@ -937,7 +1043,6 @@ function setText(id, val) {
 }
 function fmt1(v) { return (v != null && !isNaN(v)) ? parseFloat(v).toFixed(1) : '—'; }
 
-// ─── Actions ──────────────────────────────────────────────────────────────────
 function step(key, delta) {
   const lim = LIMITS[key];
   if (!lim || pending[key] === null) return;
@@ -967,8 +1072,8 @@ async function sendSwitch(key, val) {
   catch(e) { showToast('✗ ' + e.message, true); }
 }
 
-async function sendSelect(key, val) {
-  try { await apiPost({ key, value: val }); showToast('✓ ' + val); } 
+async function sendSelect(key, el) {
+  try { await apiPost({ key, value: parseInt(el.selectedIndex) }); showToast('✓ ' + key); } 
   catch(e) { showToast('✗ ' + e.message, true); }
 }
 
@@ -1026,7 +1131,6 @@ function showToast(msg, isError=false) {
   t._timer = setTimeout(() => t.className = 'toast', 2800);
 }
 
-// ─── Log Viewer Logic ─────────────────────────────────────────────────────────
 let eventSource = null;
 let isPaused = false;
 let logBuffer = [];
@@ -1106,7 +1210,6 @@ function appendLogLine(text, cssClass) {
   logContainer.appendChild(row);
   logContainer.scrollTop = logContainer.scrollHeight;
   
-  // Keep buffer sane
   if (logContainer.childElementCount > 500) {
     logContainer.removeChild(logContainer.firstChild);
     logBuffer.shift();
@@ -1148,14 +1251,14 @@ function updateStatus(text, color) {
   statusDiv.style.color = color || 'var(--text3)';
 }
 
-// ─── Boot ─────────────────────────────────────────────────────────────────────
 (function loadChartJS() {
   const s = document.createElement('script');
   s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
   s.onload = () => { 
     initCharts(); 
+    loadHistory(); 
     fetchState(); 
-    startLog(); // Auto start logging
+    startLog(); 
     setInterval(fetchState, POLL_MS); 
   };
   s.onerror = () => {
@@ -1163,6 +1266,7 @@ function updateStatus(text, color) {
     s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
     s2.onload = () => { 
       initCharts(); 
+      loadHistory(); 
       fetchState(); 
       startLog(); 
       setInterval(fetchState, POLL_MS); 

@@ -11,6 +11,7 @@ asgard_dashboard:
   compressor_starts_id:              compressor_starts
   runtime_id:                        runtime
   wifi_signal_db_id:                 wifi_signal_db
+  z1_flow_temp_target_id:            z1_flow_temp_target
 
   # ── DHW ──────────────────────────────────────────────────────────────────
   dhw_temp_id:                       dhw_temp
@@ -42,6 +43,7 @@ asgard_dashboard:
   #sel_room_temp_source_z2_id:      temperature_feedback_source   # for now global setting
   operating_mode_z1_id: heatpump_select_operating_mode
   #operating_mode_z2_id: heatpump_select_operating_mode_z2 
+  sel_temp_source_z1_id: asgard_vt_temp_sensor_source_z1
  
   # ── Numbers ─────────────────────────────────────────────────────────────
   num_aa_setpoint_bias_id:           auto_adaptive_setpoint_bias

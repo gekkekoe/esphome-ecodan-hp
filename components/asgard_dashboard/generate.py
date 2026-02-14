@@ -1,13 +1,20 @@
 import gzip
 import os
+import re
 
 def generate_header(source_file, output_file):
     if not os.path.exists(source_file):
-        print(f"Error: {source_file} niet gevonden!")
+        print(f"Error: {source_file} not found!")
         return
 
-    with open(source_file, 'rb') as f:
-        content = f.read()
+    with open(source_file, 'r', encoding='utf-8') as f:
+        content_str = f.read()
+
+    content_str = re.sub(r'', '', content_str)
+    content_str = re.sub(r'/\*[\s\S]*?\*/', '', content_str)
+    content_str = re.sub(r'^\s*//.*\n', '', content_str, flags=re.MULTILINE)
+
+    content = content_str.encode('utf-8')
 
     compressed = gzip.compress(content, compresslevel=9)
     
@@ -19,8 +26,7 @@ def generate_header(source_file, output_file):
     for i in range(0, len(hex_array), 16):
         rows.append("  " + ", ".join(hex_array[i:i+16]))
 
-    header_content = f"""// Auto-generated gzipped dashboard HTML
-#pragma once
+    header_content = f"""#pragma once
 #include <stdint.h>
 #include <stddef.h>
 
@@ -39,7 +45,7 @@ static const size_t DASHBOARD_HTML_GZ_LEN = {len(compressed)};
     with open(output_file, 'w') as f:
         f.write(header_content)
     
-    print(f"Succes! {output_file} gegenereerd ({len(content)} -> {len(compressed)} bytes)")
+    print(f"Success! {output_file} generated. Size reduced from {len(content)} to {len(compressed)} bytes.")
 
 if __name__ == "__main__":
     generate_header("dashboard_source.html", "dashboard_html.h")
