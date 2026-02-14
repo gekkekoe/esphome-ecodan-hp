@@ -85,7 +85,7 @@ namespace esphome
                     mapped_pcp_adjustment_ += adjustment_factor;
 
                     auto limits = this->get_flow_limits(zone);
-                    float adjusted_flow = this->get_flow_setpoint(zone) + mapped_pcp_adjustment_;
+                    float adjusted_flow = this->get_flow_setpoint(zone) + adjustment_factor;
                     adjusted_flow = this->clamp_flow_temp(adjusted_flow, limits.min, limits.max);
                     ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Increase Z%d Heat Flow to -> %.1f°C", static_cast<uint8_t>(zone), adjusted_flow);
                     this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow, ecodan_zone);
