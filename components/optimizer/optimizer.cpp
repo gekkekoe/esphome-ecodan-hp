@@ -386,8 +386,8 @@ namespace esphome
 
             float actual_outside_temp = status.OutsideTemperature;
             
-            // use stored outside temp if we are within 5m from last defrost.
-            const uint32_t LOCK_DURATION_MS = 5 * 60 * 1000;
+            // use stored outside temp if we are within 15m from last defrost start
+            const uint32_t LOCK_DURATION_MS = 15 * 60 * 1000;
             bool is_in_lock_window = (millis() - this->last_defrost_time_) < LOCK_DURATION_MS;
             
             if (!isnan(this->locked_outside_temp_)) 
