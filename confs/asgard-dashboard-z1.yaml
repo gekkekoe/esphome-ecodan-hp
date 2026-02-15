@@ -1,4 +1,5 @@
 asgard_dashboard:
+  version_id:                        current_fw_version
   # ── Header badge sensors ─────────────────────────────────────────────────
   hp_feed_temp_id:                   hp_feed_temp
   hp_return_temp_id:                 hp_return_temp

@@ -113,7 +113,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   j += "\"defrost_risk_handling_enabled\":"   + sw_str_(sw_defrost_mit_) + ",";
   j += "\"smart_boost_enabled\":"             + sw_str_(sw_smart_boost_) + ",";
   j += "\"force_dhw\":"                       + sw_str_(sw_force_dhw_) + ","; 
-
+  j += "\"latest_version\":\""                + text_val_(version_) + "\",";
   j += "\"status_operation\":\""              + text_val_(status_operation_) + "\",";
   
   j += "\"heating_system_type\":\""           + select_idx_(sel_heating_system_type_) + "\",";
