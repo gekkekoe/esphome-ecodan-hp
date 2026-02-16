@@ -1,5 +1,6 @@
 
 ## Standalone Auto Adaptive Installation Guide (Asgard only)
+The local dashboard can be accessed at http://ecodan-heatpump.local/dashboard (or http://esp_ip/dashboard).
 
 ![Standalone config](img/sa-config.png) 
 

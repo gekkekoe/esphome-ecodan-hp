@@ -442,6 +442,7 @@ const pending = {
   'dhw-sp': null, 'z1-sp': null, 'z1-hyst': null, 'z2-sp': null, 'z2-hyst': null 
 };
 
+const lastEdit = {};
 const serverState = {};
 
 const LIMITS = { 
@@ -791,6 +792,11 @@ function seedPending(key, val) {
   if (val != null) {
     const newVal = parseFloat(val);
     serverState[key] = newVal;
+
+    if (lastEdit[key] && (Date.now() - lastEdit[key] < 4000)) {
+        return; 
+    }
+
     if (pending[key] !== newVal) {
       pending[key] = newVal;
       refreshStepVal(key);
@@ -807,7 +813,10 @@ function seedHyst(zone, val) {
     serverState[key] = newVal;
     
     const el = document.getElementById(elId);
+    
     if (el && document.activeElement === el) return;
+    
+    if (lastEdit[key] && (Date.now() - lastEdit[key] < 4000)) return;
 
     if (pending[key] !== newVal) {
       pending[key] = newVal;
@@ -927,6 +936,7 @@ function fmt1(v) { return (v != null && !isNaN(v)) ? parseFloat(v).toFixed(1) : 
 function fmt2(v) { return (v != null && !isNaN(v)) ? parseFloat(v).toFixed(2) : '—'; }
 
 function step(key, delta) {
+  lastEdit[key] = Date.now();
   const lim = LIMITS[key];
   if (!lim || pending[key] === null) return;
   let newVal = pending[key] + delta;
@@ -939,6 +949,7 @@ function step(key, delta) {
 
 function hystInput(zone) {
   const key = zone + '-hyst';
+  lastEdit[key] = Date.now();
   pending[key] = parseFloat(document.getElementById(zone + '-hyst').value);
   setText(zone + '-hyst-val', pending[key].toFixed(1));
 }
