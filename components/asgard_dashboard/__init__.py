@@ -68,6 +68,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("num_aa_setpoint_bias_id"):            cv.use_id(number.Number),
         cv.Optional("num_max_flow_temp_id"):               cv.use_id(number.Number),
         cv.Optional("num_min_flow_temp_id"):               cv.use_id(number.Number),
+        cv.Optional("num_max_flow_temp_z2_id"):            cv.use_id(number.Number),
+        cv.Optional("num_min_flow_temp_z2_id"):            cv.use_id(number.Number),
         cv.Optional("num_hysteresis_z1_id"):               cv.use_id(number.Number),
         cv.Optional("num_hysteresis_z2_id"):               cv.use_id(number.Number),
 
@@ -136,6 +138,8 @@ async def to_code(config):
         ("num_aa_setpoint_bias_id",           "set_num_aa_setpoint_bias"),
         ("num_max_flow_temp_id",              "set_num_max_flow_temp"),
         ("num_min_flow_temp_id",              "set_num_min_flow_temp"),
+        ("num_max_flow_temp_z2_id",           "set_num_max_flow_temp_z2"),
+        ("num_min_flow_temp_z2_id",           "set_num_min_flow_temp_z2"),
         ("num_hysteresis_z1_id",              "set_num_hysteresis_z1"),
         ("num_hysteresis_z2_id",              "set_num_hysteresis_z2"),
         ("dhw_climate_id",                    "set_dhw_climate"),

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HP Dashboard</title>
+<title>Asgard Dashboard</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@300;400;500;600&display=swap');
 
@@ -178,7 +178,7 @@
     <div class="sub-label">Virtual Thermostat Z1</div>
     <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
       <div><div class="stat-label">Current Temp</div><div class="big-temp" style="font-size:32px" id="z1-current">—<span>°C</span></div></div>
-      <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z1-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z1-sp-val">—</div><button class="step-btn" onclick="step('z1-sp', +0.5)">+</button></div></div>
+      <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z1-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z1-sp-val">—</div><button class="step-btn" onclick="step('z1-sp', +0.1)">+</button></div></div>
     </div>
     <div class="ctrl-row"><span class="ctrl-label">Hysteresis &nbsp;<span id="z1-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span><input type="range" class="ctrl-range" id="z1-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z1')"></div>
     <button class="send-btn" id="btn-z1" onclick="sendZone('z1', this)">Apply Zone 1</button>
@@ -192,7 +192,7 @@
     <div class="sub-label">Virtual Thermostat Z2</div>
     <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
       <div><div class="stat-label">Current Temp</div><div class="big-temp" style="font-size:32px" id="z2-current">—<span>°C</span></div></div>
-      <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z2-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z2-sp-val">—</div><button class="step-btn" onclick="step('z2-sp', +0.5)">+</button></div></div>
+      <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z2-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z2-sp-val">—</div><button class="step-btn" onclick="step('z2-sp', +0.1)">+</button></div></div>
     </div>
     <div class="ctrl-row"><span class="ctrl-label">Hysteresis &nbsp;<span id="z2-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span><input type="range" class="ctrl-range" id="z2-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z2')"></div>
     <button class="send-btn" id="btn-z2" onclick="sendZone('z2', this)">Apply Zone 2</button>
@@ -204,10 +204,54 @@
     <div class="ctrl-row"><span class="ctrl-label">Defrost Mitigation</span><label class="toggle-wrap"><input type="checkbox" id="sw-dm" onchange="sendSwitch('defrost_risk_handling_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
     <div class="ctrl-row"><span class="ctrl-label">Smart Boost</span><label class="toggle-wrap"><input type="checkbox" id="sw-sb" onchange="sendSwitch('smart_boost_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
     <div class="ctrl-row"><span class="ctrl-label">Heating System Type</span><select class="ctrl-select" id="sel-hst" onchange="sendSelect('heating_system_type', this)"><option>Underfloor Heating</option><option>Underfloor Heating *</option><option>Underfloor Heating + Radiators</option><option>Underfloor Heating + Radiators *</option><option>Radiators</option><option>Radiators *</option></select></div>
+    
     <div class="sub-label">Flow Temperature Limits</div>
-    <div class="ctrl-row"><span class="ctrl-label">Setpoint Bias</span><div class="stepper"><button class="step-btn" onclick="step('aa-bias', -0.1)">−</button><div class="step-val" id="aa-bias-val">—</div><button class="step-btn" onclick="step('aa-bias', +0.1)">+</button></div></div>
-    <div class="ctrl-row"><span class="ctrl-label">Max Flow Heating</span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -1)">−</button><div class="step-val" id="aa-max-val">—</div><button class="step-btn" onclick="step('aa-max', +1)">+</button></div></div>
-    <div class="ctrl-row"><span class="ctrl-label">Min Flow Heating</span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -1)">−</button><div class="step-val" id="aa-min-val">—</div><button class="step-btn" onclick="step('aa-min', +1)">+</button></div></div>
+    
+    <div class="ctrl-row">
+      <span class="ctrl-label">Setpoint Bias</span>
+      <div class="stepper">
+        <button class="step-btn" onclick="step('aa-bias', -0.1)">−</button>
+        <div class="step-val" id="aa-bias-val">—</div>
+        <button class="step-btn" onclick="step('aa-bias', +0.1)">+</button>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">Max Flow (Zone 1)</span>
+      <div class="stepper">
+        <button class="step-btn" onclick="step('aa-max', -0.1)">−</button>
+        <div class="step-val" id="aa-max-val">—</div>
+        <button class="step-btn" onclick="step('aa-max', +0.1)">+</button>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Min Flow (Zone 1)</span>
+      <div class="stepper">
+        <button class="step-btn" onclick="step('aa-min', -0.1)">−</button>
+        <div class="step-val" id="aa-min-val">—</div>
+        <button class="step-btn" onclick="step('aa-min', +0.1)">+</button>
+      </div>
+    </div>
+
+    <div id="aa-z2-container" style="display:none">
+        <div class="ctrl-row">
+          <span class="ctrl-label">Max Flow (Zone 2)</span>
+          <div class="stepper">
+            <button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button>
+            <div class="step-val" id="aa-max-z2-val">—</div>
+            <button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button>
+          </div>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Min Flow (Zone 2)</span>
+          <div class="stepper">
+            <button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button>
+            <div class="step-val" id="aa-min-z2-val">—</div>
+            <button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button>
+          </div>
+        </div>
+    </div>
+
     <button class="send-btn" id="btn-aa" onclick="sendAA(this)">Apply Auto Adaptive</button>
   </div>
 
@@ -253,10 +297,32 @@ const history = {
   bin_defrost: [], bin_pump: [], bin_in1: [], bin_in6: []
 };
 
-const pending = { 'aa-bias': null, 'aa-max': null, 'aa-min': null, 'dhw-sp': null, 'z1-sp': null, 'z1-hyst': null, 'z2-sp': null, 'z2-hyst': null };
+const pending = { 
+  'aa-bias': null, 
+  'aa-max': null, 'aa-min': null, 
+  'aa-max-z2': null, 'aa-min-z2': null,
+  'dhw-sp': null, 'z1-sp': null, 'z1-hyst': null, 'z2-sp': null, 'z2-hyst': null 
+};
+
 const serverState = {};
-const LIMITS = { 'aa-bias': { min: -5, max: 5, step: 0.1 }, 'aa-max': { min: 30, max: 65, step: 1 }, 'aa-min': { min: 20, max: 55, step: 1 }, 'dhw-sp': { min: 40, max: 60, step: 0.5 }, 'z1-sp': { min: 10, max: 30, step: 0.5 }, 'z2-sp': { min: 10, max: 30, step: 0.5 } };
-const STEP_EL = { 'aa-bias': 'aa-bias-val', 'aa-max': 'aa-max-val', 'aa-min': 'aa-min-val', 'dhw-sp': 'dhw-sp-val', 'z1-sp': 'z1-sp-val', 'z2-sp': 'z2-sp-val' };
+
+const LIMITS = { 
+  'aa-bias': { min: -5, max: 5, step: 0.1 }, 
+  'aa-max': { min: 30, max: 65, step: 0.1 }, 
+  'aa-min': { min: 20, max: 55, step: 0.1 }, 
+  'aa-max-z2': { min: 30, max: 65, step: 0.1 },
+  'aa-min-z2': { min: 20, max: 55, step: 0.1 }, 
+  'dhw-sp': { min: 40, max: 60, step: 0.5 }, 
+  'z1-sp': { min: 10, max: 30, step: 0.1 }, 
+  'z2-sp': { min: 10, max: 30, step: 0.1 } 
+};
+
+const STEP_EL = { 
+  'aa-bias': 'aa-bias-val', 
+  'aa-max': 'aa-max-val', 'aa-min': 'aa-min-val', 
+  'aa-max-z2': 'aa-max-z2-val', 'aa-min-z2': 'aa-min-z2-val',
+  'dhw-sp': 'dhw-sp-val', 'z1-sp': 'z1-sp-val', 'z2-sp': 'z2-sp-val' 
+};
 
 let tempChart = null, freqChart = null, statusChart = null;
 
@@ -300,7 +366,6 @@ function loadHistory() {
          if (saved[k] && Array.isArray(saved[k])) {
             history[k] = saved[k];
          } else if (k.startsWith('z1flow') || k.startsWith('z2flow')) {
-            // Fill missing new keys with nulls to match timestamp length
             history[k] = new Array(saved.timestamps.length).fill(null);
          }
        });
@@ -535,14 +600,14 @@ function updateCharts(d) {
   tempChart.data.datasets[6].data = history.z1flow;
   tempChart.data.datasets[7].data = history.z2flow;
   
-  const z2Enabled = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
-  tempChart.data.datasets[3].hidden = !z2Enabled;
-  tempChart.data.datasets[5].hidden = !z2Enabled;
-  tempChart.data.datasets[7].hidden = !z2Enabled;
+  const isZ2 = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
+  tempChart.data.datasets[3].hidden = !isZ2;
+  tempChart.data.datasets[5].hidden = !isZ2;
+  tempChart.data.datasets[7].hidden = !isZ2;
   
-  document.getElementById('leg-z2').style.display = z2Enabled ? 'flex' : 'none';
-  document.getElementById('leg-z2-curr').style.display = z2Enabled ? 'flex' : 'none';
-  document.getElementById('leg-z2-flow').style.display = z2Enabled ? 'flex' : 'none';
+  document.getElementById('leg-z2').style.display = isZ2 ? 'flex' : 'none';
+  document.getElementById('leg-z2-curr').style.display = isZ2 ? 'flex' : 'none';
+  document.getElementById('leg-z2-flow').style.display = isZ2 ? 'flex' : 'none';
   
   tempChart.update('none');
 
@@ -617,15 +682,22 @@ function hasChanged(key) {
 }
 
 function render(d) {
-  const z2Enabled = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
+  const isZ2 = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
   const z2Card = document.getElementById('card-z2');
   if (z2Card) {
-    z2Card.style.display = z2Enabled ? 'block' : 'none';
+    z2Card.style.display = isZ2 ? 'block' : 'none';
+  }
+  const z2AA = document.getElementById('aa-z2-container');
+  if(z2AA) {
+      z2AA.style.display = isZ2 ? 'block' : 'none';
   }
 
   if (d.aa_bias_lim) LIMITS['aa-bias'] = d.aa_bias_lim;
-  if (d.max_flow_lim) LIMITS['aa-max'] = d.max_flow_lim;
-  if (d.min_flow_lim) LIMITS['aa-min'] = d.min_flow_lim;
+  if (d.max_flow_lim) { LIMITS['aa-max'].min = d.max_flow_lim.min; LIMITS['aa-max'].max = d.max_flow_lim.max; LIMITS['aa-max'].step = 0.1; }
+  if (d.min_flow_lim) { LIMITS['aa-min'].min = d.min_flow_lim.min; LIMITS['aa-min'].max = d.min_flow_lim.max; LIMITS['aa-min'].step = 0.1; }
+  if (d.max_flow_z2_lim) { LIMITS['aa-max-z2'].min = d.max_flow_z2_lim.min; LIMITS['aa-max-z2'].max = d.max_flow_z2_lim.max; LIMITS['aa-max-z2'].step = 0.1; }
+  if (d.min_flow_z2_lim) { LIMITS['aa-min-z2'].min = d.min_flow_z2_lim.min; LIMITS['aa-min-z2'].max = d.min_flow_z2_lim.max; LIMITS['aa-min-z2'].step = 0.1; }
+
   if (d.hysteresis_z1_lim) {
     const el = document.getElementById('z1-hyst');
     if(el) { el.min = d.hysteresis_z1_lim.min; el.max = d.hysteresis_z1_lim.max; el.step = d.hysteresis_z1_lim.step; }
@@ -667,6 +739,8 @@ function render(d) {
   seedPending('aa-bias', d.auto_adaptive_setpoint_bias);
   seedPending('aa-max',  d.maximum_heating_flow_temp);
   seedPending('aa-min',  d.minimum_heating_flow_temp);
+  seedPending('aa-max-z2', d.maximum_heating_flow_temp_z2);
+  seedPending('aa-min-z2', d.minimum_heating_flow_temp_z2);
 
   setToggle('sw-aa', d.auto_adaptive_control_enabled);
   setToggle('sw-dm', d.defrost_risk_handling_enabled);
@@ -732,6 +806,10 @@ async function sendAA(btn) {
     if (hasChanged('aa-bias')) { await apiPost({ key: 'auto_adaptive_setpoint_bias', value: pending['aa-bias'] }); c++; }
     if (hasChanged('aa-max'))  { await apiPost({ key: 'maximum_heating_flow_temp',   value: pending['aa-max']  }); c++; }
     if (hasChanged('aa-min'))  { await apiPost({ key: 'minimum_heating_flow_temp',   value: pending['aa-min']  }); c++; }
+    
+    if (hasChanged('aa-max-z2')) { await apiPost({ key: 'maximum_heating_flow_temp_z2', value: pending['aa-max-z2'] }); c++; }
+    if (hasChanged('aa-min-z2')) { await apiPost({ key: 'minimum_heating_flow_temp_z2', value: pending['aa-min-z2'] }); c++; }
+
     showToast(c > 0 ? '✓ AA updated' : 'No changes');
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');

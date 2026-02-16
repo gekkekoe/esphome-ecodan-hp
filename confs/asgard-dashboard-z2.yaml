@@ -3,3 +3,5 @@ asgard_dashboard:
   virtual_climate_z2_id: virtual_climate_z2   
   sel_temp_source_z2_id: asgard_vt_temp_sensor_source_z2
   z1_flow_temp_target_id: z1_flow_temp_target
+  num_max_flow_temp_z2_id: maximum_heating_flow_temp_z2
+  num_min_flow_temp_z2_id: minimum_heating_flow_temp_z2

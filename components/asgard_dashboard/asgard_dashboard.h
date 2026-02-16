@@ -89,6 +89,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_aa_setpoint_bias(number::Number *n)            { num_aa_setpoint_bias_ = n; }
   void set_num_max_flow_temp(number::Number *n)               { num_max_flow_temp_ = n; }
   void set_num_min_flow_temp(number::Number *n)               { num_min_flow_temp_ = n; }
+  void set_num_max_flow_temp_z2(number::Number *n)            { num_max_flow_temp_z2_ = n; }
+  void set_num_min_flow_temp_z2(number::Number *n)            { num_min_flow_temp_z2_ = n; }
   void set_num_hysteresis_z1(number::Number *n)               { num_hysteresis_z1_ = n; }
   void set_num_hysteresis_z2(number::Number *n)               { num_hysteresis_z2_ = n; }
 
@@ -190,6 +192,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_aa_setpoint_bias_{nullptr};
   number::Number *num_max_flow_temp_{nullptr};
   number::Number *num_min_flow_temp_{nullptr};
+  number::Number *num_max_flow_temp_z2_{nullptr};
+  number::Number *num_min_flow_temp_z2_{nullptr};
   number::Number *num_hysteresis_z1_{nullptr};
   number::Number *num_hysteresis_z2_{nullptr};
 

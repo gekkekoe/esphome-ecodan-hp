@@ -86,9 +86,13 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   
   j += "\"maximum_heating_flow_temp\":"       + number_str_(num_max_flow_temp_) + ",";
   j += "\"max_flow_lim\":"                    + number_traits_(num_max_flow_temp_) + ",";
-  
   j += "\"minimum_heating_flow_temp\":"       + number_str_(num_min_flow_temp_) + ",";
   j += "\"min_flow_lim\":"                    + number_traits_(num_min_flow_temp_) + ",";
+
+  j += "\"maximum_heating_flow_temp_z2\":"    + number_str_(num_max_flow_temp_z2_) + ",";
+  j += "\"max_flow_z2_lim\":"                 + number_traits_(num_max_flow_temp_z2_) + ",";
+  j += "\"minimum_heating_flow_temp_z2\":"    + number_str_(num_min_flow_temp_z2_) + ",";
+  j += "\"min_flow_z2_lim\":"                 + number_traits_(num_min_flow_temp_z2_) + ",";
 
   j += "\"thermostat_hysteresis_z1\":"        + number_str_(num_hysteresis_z1_) + ",";
   j += "\"hysteresis_z1_lim\":"               + number_traits_(num_hysteresis_z1_) + ",";
@@ -238,6 +242,8 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "auto_adaptive_setpoint_bias") { doNumber(num_aa_setpoint_bias_); return; }
   if (key == "maximum_heating_flow_temp")   { doNumber(num_max_flow_temp_);    return; }
   if (key == "minimum_heating_flow_temp")   { doNumber(num_min_flow_temp_);    return; }
+  if (key == "maximum_heating_flow_temp_z2") { doNumber(num_max_flow_temp_z2_); return; }
+  if (key == "minimum_heating_flow_temp_z2") { doNumber(num_min_flow_temp_z2_); return; }
   if (key == "thermostat_hysteresis_z1")    { doNumber(num_hysteresis_z1_);    return; }
   if (key == "thermostat_hysteresis_z2")    { doNumber(num_hysteresis_z2_);    return; }
 
