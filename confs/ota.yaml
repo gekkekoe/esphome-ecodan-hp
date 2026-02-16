@@ -1,7 +1,7 @@
 esphome:
   project:
     name: Gekkekoe.Ecodan ESPHome Heatpump
-    version: "VERSION"
+    version: "FIRMWARE_VERSION"
   on_boot:
       priority: -100
       then:

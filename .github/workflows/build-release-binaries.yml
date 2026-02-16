@@ -35,7 +35,7 @@ jobs:
           sed "s/esp32s3.yaml,/${{ matrix.board }}.yaml,/g; \
               s/ecodan-labels-en.yaml,/ecodan-labels-${{ matrix.lang }}.yaml,/g; \
               s/confs\\/wifi.yaml/confs\/wifi-ota.yaml/g" ecodan-esphome.yaml > build.yaml
-          sed "s/manifest/$MANIFEST/g; s/VERSION/$PREFIX/g" confs/ota.yaml > ota.yaml
+          sed "s/manifest/$MANIFEST/g; s/FIRMWARE_VERSION/$PREFIX/g" confs/ota.yaml > ota.yaml
           echo "<<: !include ota.yaml" >> build.yaml
 
       - if: matrix.zone == 'z2'
@@ -90,7 +90,7 @@ jobs:
           echo "ota: $PREFIX.ota.bin"
           echo "factory: $PREFIX.factory.bin"
 
-          sed "s/VERSION/$PREFIX/g; \
+          sed "s/FIRMWARE_VERSION/$PREFIX/g; \
               s/MD5OTA/$md5ota/g; \
               s/FILEOTA/$PREFIX.ota.bin/g; \
               s/FILEFACTORY/$PREFIX.factory.bin/g" json/manifest.json > $MANIFEST.json
