@@ -43,12 +43,20 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_compressor_starts(sensor::Sensor *s)               { compressor_starts_ = s; }
   void set_runtime(sensor::Sensor *s)                         { runtime_ = s; }
   void set_wifi_signal_db(sensor::Sensor *s)                  { wifi_signal_db_ = s; }
-  // DHW sensors
+
   void set_dhw_temp(sensor::Sensor *s)                        { dhw_temp_ = s; }
   void set_dhw_flow_temp_target(sensor::Sensor *s)            { dhw_flow_temp_target_ = s; }
   void set_dhw_flow_temp_drop(sensor::Sensor *s)              { dhw_flow_temp_drop_ = s; }
   void set_dhw_consumed(sensor::Sensor *s)                    { dhw_consumed_ = s; }
   void set_dhw_delivered(sensor::Sensor *s)                   { dhw_delivered_ = s; }
+  void set_dhw_cop(sensor::Sensor *s)                         { dhw_cop_ = s; }
+
+  void set_heating_consumed(sensor::Sensor *s)                { heating_consumed_ = s; }
+  void set_heating_produced(sensor::Sensor *s)                { heating_produced_ = s; }
+  void set_heating_cop(sensor::Sensor *s)                     { heating_cop_ = s; }
+  void set_cooling_consumed(sensor::Sensor *s)                { cooling_consumed_ = s; }
+  void set_cooling_produced(sensor::Sensor *s)                { cooling_produced_ = s; }
+  void set_cooling_cop(sensor::Sensor *s)                     { cooling_cop_ = s; }
 
   // Flow Temp Targets
   void set_z1_flow_temp_target(sensor::Sensor *s)             { z1_flow_temp_target_ = s; }
@@ -148,6 +156,14 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   sensor::Sensor *dhw_flow_temp_drop_{nullptr};
   sensor::Sensor *dhw_consumed_{nullptr};
   sensor::Sensor *dhw_delivered_{nullptr};
+  sensor::Sensor *dhw_cop_{nullptr};
+  sensor::Sensor *heating_consumed_{nullptr};
+  sensor::Sensor *heating_produced_{nullptr};
+  sensor::Sensor *heating_cop_{nullptr};
+  sensor::Sensor *cooling_consumed_{nullptr};
+  sensor::Sensor *cooling_produced_{nullptr};
+  sensor::Sensor *cooling_cop_{nullptr};
+
   sensor::Sensor *z1_flow_temp_target_{nullptr};
   sensor::Sensor *z2_flow_temp_target_{nullptr};
 

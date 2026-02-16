@@ -7,7 +7,7 @@ The remote thermostat protocol CNRF is supported by [esphome-ecodan-remote-therm
 ![HA Dashboard](img/ha-integration.png) 
 
 ### Stand alone [Dashboard](http://ecodan-heatpump.local/dashboard)
-![Stand Alone Mode](img/asgard-stand-alone.png) 
+![Stand Alone Mode](img/asgard-standalone.png) 
 
 
 # Features

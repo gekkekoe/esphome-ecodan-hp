@@ -77,6 +77,14 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   j += "\"dhw_flow_temp_drop\":"              + sensor_str_(dhw_flow_temp_drop_) + ",";
   j += "\"dhw_consumed\":"                    + sensor_str_(dhw_consumed_) + ",";
   j += "\"dhw_delivered\":"                   + sensor_str_(dhw_delivered_) + ",";
+  j += "\"dhw_cop\":"                         + sensor_str_(dhw_cop_) + ",";
+
+  j += "\"heating_consumed\":"                + sensor_str_(heating_consumed_) + ",";
+  j += "\"heating_produced\":"                + sensor_str_(heating_produced_) + ",";
+  j += "\"heating_cop\":"                     + sensor_str_(heating_cop_) + ",";
+  j += "\"cooling_consumed\":"                + sensor_str_(cooling_consumed_) + ",";
+  j += "\"cooling_produced\":"                + sensor_str_(cooling_produced_) + ",";
+  j += "\"cooling_cop\":"                     + sensor_str_(cooling_cop_) + ",";
 
   j += "\"z1_flow_temp_target\":"             + sensor_str_(z1_flow_temp_target_) + ",";
   j += "\"z2_flow_temp_target\":"             + sensor_str_(z2_flow_temp_target_) + ",";

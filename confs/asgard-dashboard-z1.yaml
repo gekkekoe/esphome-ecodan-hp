@@ -20,6 +20,17 @@ asgard_dashboard:
   dhw_flow_temp_drop_id:             dhw_flow_temp_drop
   dhw_consumed_id:                   dhw_consumed
   dhw_delivered_id:                  dhw_delivered
+  dhw_cop_id:                        ddhw_cop
+
+  # Heating Performance
+  heating_consumed_id:               heating_consumed
+  heating_produced_id:               heating_delivered
+  heating_cop_id:                    heating_cop
+
+  # Cooling Performance
+  cooling_consumed_id:               cool_consumed
+  cooling_produced_id:               cool_delivered
+  cooling_cop_id:                    cool_cop
 
   # ── Binary sensors ────────────────────────────────────────────────────────
   status_compressor_id:              status_compressor

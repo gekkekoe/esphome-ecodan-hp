@@ -34,7 +34,17 @@
 
   .badge { display: flex; flex-direction: column; align-items: center; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 3px 8px; min-width: 52px; transition: border-color 0.2s; }
   .badge:hover { border-color: var(--accent); }
-  .badge-label { font-size: 8px; font-weight: 600; letter-spacing: 1.3px; color: var(--text3); text-transform: uppercase; white-space: nowrap; }
+  .badge-label { 
+    display: flex; 
+    align-items: center; 
+    gap: 3px; 
+    font-size: 8px; 
+    font-weight: 600; 
+    letter-spacing: 1px;
+    color: var(--text3); 
+    text-transform: uppercase; 
+    white-space: nowrap; 
+  }
   .badge-value { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
   .badge-value.hot { color: var(--heat); }
   .badge-value.cool { color: var(--cool); }
@@ -113,17 +123,93 @@
 
 <header>
   <div class="header-badges" id="headerBadges">
-    <div class="badge"><span class="badge-label">Feed</span><span class="badge-value hot" id="b-feed">—</span></div>
-    <div class="badge"><span class="badge-label">Return</span><span class="badge-value" id="b-return">—</span></div>
-    <div class="badge"><span class="badge-label">Outside</span><span class="badge-value cool" id="b-outside">—</span></div>
-    <div class="badge"><span class="badge-label">Freq</span><span class="badge-value green" id="b-freq">—</span></div>
-    <div class="badge"><span class="badge-label">Flow</span><span class="badge-value" id="b-flowrate">—</span></div>
-    <div class="badge"><span class="badge-label">Output</span><span class="badge-value warn" id="b-output">—</span></div>
-    <div class="badge"><span class="badge-label">Prod/day</span><span class="badge-value green" id="b-prod">—</span></div>
-    <div class="badge"><span class="badge-label">Cons/day</span><span class="badge-value" id="b-cons">—</span></div>
-    <div class="badge"><span class="badge-label">Starts</span><span class="badge-value" id="b-starts">—</span></div>
-    <div class="badge"><span class="badge-label">Runtime</span><span class="badge-value purple" id="b-runtime">—</span></div>
-    <div class="badge"><span class="badge-label">WiFi</span><span class="badge-value" id="b-wifi">—</span></div>
+    <div class="badge">
+      <span class="badge-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+        Feed
+      </span>
+      <span class="badge-value hot" id="b-feed">—</span>
+    </div>
+
+    <div class="badge">
+      <span class="badge-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+        Return
+      </span>
+      <span class="badge-value" id="b-return">—</span>
+    </div>
+
+    <div class="badge">
+      <span class="badge-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"></path><line x1="12" y1="2" x2="12" y2="9"></line><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"></line><line x1="1" y1="18" x2="3" y2="18"></line><line x1="21" y1="18" x2="23" y2="18"></line><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"></line><line x1="23" y1="22" x2="1" y2="22"></line><polyline points="8 22 8 18 16 18 16 22"></polyline></svg>
+        Outside
+      </span>
+      <span class="badge-value cool" id="b-outside">—</span>
+    </div>
+
+    <div class="badge">
+      <span class="badge-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        Freq
+      </span>
+      <span class="badge-value green" id="b-freq">—</span>
+    </div>
+
+    <div class="badge">
+      <span class="badge-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"></path><path d="M17 17l-5 5-5-5"></path><path d="M17 7l-5-5-5 5"></path></svg>
+        Flow
+      </span>
+      <span class="badge-value" id="b-flowrate">—</span>
+    </div>
+
+    <div class="badge">
+      <span class="badge-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        Output
+      </span>
+      <span class="badge-value warn" id="b-output">—</span>
+    </div>
+
+    <div class="badge">
+      <span class="badge-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+        Prod
+      </span>
+      <span class="badge-value green" id="b-prod">—</span>
+    </div>
+
+    <div class="badge">
+      <span class="badge-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"></path><path d="M12 12l4-4"></path><path d="M12 12l-4-4"></path><rect x="6" y="12" width="12" height="8" rx="2"></rect><path d="M9 22v2"></path><path d="M15 22v2"></path></svg>
+        Cons
+      </span>
+      <span class="badge-value" id="b-cons">—</span>
+    </div>
+
+    <div class="badge">
+      <span class="badge-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+        Starts
+      </span>
+      <span class="badge-value" id="b-starts">—</span>
+    </div>
+
+    <div class="badge">
+      <span class="badge-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Run
+      </span>
+      <span class="badge-value purple" id="b-runtime">—</span>
+    </div>
+
+    <div class="badge">
+      <span class="badge-label">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+        WiFi
+      </span>
+      <span class="badge-value" id="b-wifi">—</span>
+    </div>
   </div>
   
   <div class="header-right">
@@ -146,10 +232,10 @@
         <div class="legend-item"><div class="legend-dot" style="background:#00c8ff"></div>Return</div>
         <div class="legend-item"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #ffb020 0 4px, transparent 4px 7px)"></div>Z1 Target</div>
         <div class="legend-item"><div class="legend-dot" style="background:#ffff00"></div>Z1 Current</div>
-        <div class="legend-item"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #00ffff 0 8px, transparent 8px 12px)"></div>Z1 Flow</div>
+        <div class="legend-item"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #00ffff 0 8px, transparent 8px 12px)"></div>Z1 Flow Setpoint</div>
         <div class="legend-item" id="leg-z2" style="display:none"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #c084fc 0 4px, transparent 4px 7px)"></div>Z2 Target</div>
         <div class="legend-item" id="leg-z2-curr" style="display:none"><div class="legend-dot" style="background:#ff69b4"></div>Z2 Current</div>
-        <div class="legend-item" id="leg-z2-flow" style="display:none"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #8a2be2 0 8px, transparent 8px 12px)"></div>Z2 Flow</div>
+        <div class="legend-item" id="leg-z2-flow" style="display:none"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #8a2be2 0 8px, transparent 8px 12px)"></div>Z2 Flow Setpoint</div>
       </div>
     </div>
     <div class="chart-container"><canvas id="tempChart"></canvas></div>
@@ -269,6 +355,58 @@
     <div class="sub-label">DHW Setpoint Control</div>
     <div class="ctrl-row"><span class="ctrl-label">Target</span><div class="stepper"><button class="step-btn" onclick="step('dhw-sp', -0.5)">−</button><div class="step-val" id="dhw-sp-val">—</div><button class="step-btn" onclick="step('dhw-sp', +0.5)">+</button></div></div>
     <button class="send-btn" id="btn-dhw" onclick="sendDHW(this)">Set DHW Setpoint</button>
+  </div>
+
+  <div class="ctrl-card">
+    <div class="section-title">Performance</div>
+    
+    <div class="ctrl-row" style="padding: 10px 0;">
+      <div style="display:flex; align-items:center; gap:12px; width:100%">
+        <div style="width:32px; height:32px; background:rgba(255,107,53,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#ff6b35;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.243-2.143.5-3.5a6 6 0 1 0 3 3z"></path></svg>
+        </div>
+        <div style="flex:1">
+          <div class="stat-label">Heating</div>
+          <div class="stat-value" id="perf-h-cop">— COP</div>
+        </div>
+        <div style="text-align:right">
+          <div class="stat-label">In / Out (kWh)</div>
+          <div class="stat-value"><span id="perf-h-in" style="color:var(--text2)">—</span> / <span id="perf-h-out" style="color:var(--text)">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctrl-row" style="padding: 10px 0;">
+      <div style="display:flex; align-items:center; gap:12px; width:100%">
+        <div style="width:32px; height:32px; background:rgba(0,200,255,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#00c8ff;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"></path><path d="M12 2v20"></path><path d="M20 16l-4-4 4-4"></path><path d="M4 8l4 4-4 4"></path><path d="M16 4l-4 4-4-4"></path><path d="M8 20l4-4 4 4"></path></svg>
+        </div>
+        <div style="flex:1">
+          <div class="stat-label">Cooling</div>
+          <div class="stat-value" id="perf-c-cop">— COP</div>
+        </div>
+        <div style="text-align:right">
+          <div class="stat-label">In / Out (kWh)</div>
+          <div class="stat-value"><span id="perf-c-in" style="color:var(--text2)">—</span> / <span id="perf-c-out" style="color:var(--text)">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctrl-row" style="padding: 10px 0; border-bottom:none;">
+      <div style="display:flex; align-items:center; gap:12px; width:100%">
+        <div style="width:32px; height:32px; background:rgba(255,176,32,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#ffb020;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+        </div>
+        <div style="flex:1">
+          <div class="stat-label">DHW</div>
+          <div class="stat-value" id="perf-d-cop">— COP</div>
+        </div>
+        <div style="text-align:right">
+          <div class="stat-label">In / Out (kWh)</div>
+          <div class="stat-value"><span id="perf-d-in" style="color:var(--text2)">—</span> / <span id="perf-d-out" style="color:var(--text)">—</span></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="chart-card full-width">
@@ -429,14 +567,23 @@ function initCharts() {
       { label: 'Z2 Target',data: [], borderColor: '#c084fc', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [4,3], fill: false, hidden: true },
       { label: 'Z1 Current',data: [], borderColor: '#ffff00', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
       { label: 'Z2 Current',data: [], borderColor: '#ff69b4', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false, hidden: true },
-      { label: 'Z1 Flow',  data: [], borderColor: '#00ffff', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [8,4], fill: false },
-      { label: 'Z2 Flow',  data: [], borderColor: '#8a2be2', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [8,4], fill: false, hidden: true }
+      { label: 'Z1 Flow Setpoint',  data: [], borderColor: '#00ffff', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [8,4], fill: false },
+      { label: 'Z2 Flow Setpoint',  data: [], borderColor: '#8a2be2', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [8,4], fill: false, hidden: true }
     ]},
     options: { ...commonOptions, plugins: { ...commonOptions.plugins,
       tooltip: { 
         backgroundColor: '#0f1525', borderColor: '#1e2d4a', borderWidth: 1, titleColor: '#8899bb', bodyColor: '#e2eaff',
         callbacks: {
-          labelColor: ctx => ({ borderColor: ctx.dataset.borderColor, backgroundColor: ctx.dataset.borderColor, borderWidth:0 }),
+          labelColor: ctx => {
+            const isDashed = ctx.dataset.borderDash && ctx.dataset.borderDash.length > 0;
+            
+            return {
+              borderColor: ctx.dataset.borderColor,
+              backgroundColor: isDashed ? 'rgba(0,0,0,0)' : ctx.dataset.borderColor,
+              borderWidth: isDashed ? 3 : 0, 
+              borderDash: isDashed ? [2, 2] : []
+            };
+          },
           label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) : '—'}°C`
         }
       }
@@ -728,6 +875,18 @@ function render(d) {
   seedPending('dhw-sp', d.dhw_flow_temp_target);
   setToggle('sw-fdhw', d.force_dhw); 
 
+  setText('perf-h-in',  fmt2(d.heating_consumed));
+  setText('perf-h-out', fmt2(d.heating_produced));
+  setText('perf-h-cop', fmt2(d.heating_cop) + ' COP');
+
+  setText('perf-c-in',  fmt2(d.cooling_consumed));
+  setText('perf-c-out', fmt2(d.cooling_produced));
+  setText('perf-c-cop', fmt2(d.cooling_cop) + ' COP');
+
+  setText('perf-d-in',  fmt2(d.dhw_consumed));
+  setText('perf-d-out', fmt2(d.dhw_delivered)); 
+  setText('perf-d-cop', fmt2(d.dhw_cop) + ' COP');
+
   setText('z1-current', fmt1(d.z1_current_temp));
   seedPending('z1-sp', d.z1_setpoint);
   seedHyst('z1', d.thermostat_hysteresis_z1);
@@ -763,7 +922,9 @@ function setText(id, val) {
   const el = document.getElementById(id);
   if (el) el.textContent = val;
 }
+
 function fmt1(v) { return (v != null && !isNaN(v)) ? parseFloat(v).toFixed(1) : '—'; }
+function fmt2(v) { return (v != null && !isNaN(v)) ? parseFloat(v).toFixed(2) : '—'; }
 
 function step(key, delta) {
   const lim = LIMITS[key];
