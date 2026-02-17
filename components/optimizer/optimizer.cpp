@@ -392,6 +392,8 @@ namespace esphome
             
             if (!isnan(this->locked_outside_temp_)) 
             {
+                ESP_LOGD(OPTIMIZER_TAG, "Debug locked outside temp: %.1f°C (Sensor: %.1f°C) due to recent defrost.", 
+                        this->locked_outside_temp_, status.OutsideTemperature);
                 if (status.DefrostActive || is_in_lock_window) 
                 {
                     ESP_LOGD(OPTIMIZER_TAG, "Using locked outside temp: %.1f°C (Sensor: %.1f°C) due to recent defrost.", 
