@@ -1,6 +1,6 @@
 {
     "name": "Ecodan ESPHome HP",
-    "version": "VERSION",
+    "version": "FIRMWARE_VERSION",
     "builds": [
       {
         "chipFamily": "ESP32-S3",
