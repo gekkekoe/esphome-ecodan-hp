@@ -68,7 +68,9 @@ esphome:
             ${asgard_prefix} ${z2_cpp_prefix} state.asgard_vt_z2 = id(virtual_climate_z2);
 
             state.heating_system_type = id(heating_system_type);
-            state.temperature_feedback_source = id(temperature_feedback_source);
+            state.temperature_feedback_source_z1 = id(temperature_feedback_source_z1);
+            ${z2_cpp_prefix} state.temperature_feedback_source_z2 = id(temperature_feedback_source_z2);
+
             state.lockout_duration = id(lockout_duration);
             state.status_compressor = id(status_compressor);
             state.status_defrost = id(status_defrost);
@@ -237,8 +239,18 @@ number:
 
 select:
   - platform: template
-    id: temperature_feedback_source
-    name: ${temperature_feedback_source}
+    id: temperature_feedback_source_z1
+    name: ${temperature_feedback_source} z1
+    optimistic: true
+    restore_value: true
+    options:
+      - "${temperature_feedback_option_room}"
+      - "${select_feedback_option_api}"
+      - "${select_feedback_option_asgard_vt}"
+    initial_option: "${temperature_feedback_option_room}"
+  - platform: template
+    id: temperature_feedback_source_z2
+    name: ${temperature_feedback_source} z2
     optimistic: true
     restore_value: true
     options:
