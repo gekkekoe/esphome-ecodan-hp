@@ -94,7 +94,9 @@ namespace esphome
 
         float Optimizer::get_room_current_temp(OptimizerZone zone) {
             auto &status = this->state_.ecodan_instance->get_status();
-            auto temp_feedback_source = this->state_.temperature_feedback_source->active_index().value_or(0);
+
+            auto temp_feedback_source =  (zone == OptimizerZone::ZONE_2) ? this->state_.temperature_feedback_source_z2->active_index().value_or(0)
+                : this->state_.temperature_feedback_source_z1->active_index().value_or(0);
 
             auto current_temp = NAN;
 
@@ -120,7 +122,9 @@ namespace esphome
 
         float Optimizer::get_room_target_temp(OptimizerZone zone) {
             auto &status = this->state_.ecodan_instance->get_status();
-            auto temp_feedback_source = this->state_.temperature_feedback_source->active_index().value_or(0);
+            
+            auto temp_feedback_source =  (zone == OptimizerZone::ZONE_2) ? this->state_.temperature_feedback_source_z2->active_index().value_or(0)
+                : this->state_.temperature_feedback_source_z1->active_index().value_or(0);
 
             auto target_temp = NAN;
 

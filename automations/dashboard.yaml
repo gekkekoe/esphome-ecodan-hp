@@ -100,7 +100,7 @@
               - type: entities
                 entities:
                   - entity: >-
-                      select.ecodan_heatpump_auto_adaptive_room_temperature_source
+                      select.ecodan_heatpump_auto_adaptive_room_temperature_source_z1
                     name: Room Temperature source
                   - entity: >-
                       number.ecodan_heatpump_auto_adaptive_current_room_temperature_feedback_z1

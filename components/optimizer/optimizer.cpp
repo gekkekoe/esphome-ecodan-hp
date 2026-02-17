@@ -214,7 +214,8 @@ namespace esphome
             if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp))
                 return;
 
-            auto temp_feedback_source = this->state_.temperature_feedback_source->active_index().value_or(0);
+            auto temp_feedback_source =  (i == 0) ? this->state_.temperature_feedback_source_z1->active_index().value_or(0)
+                : this->state_.temperature_feedback_source_z2->active_index().value_or(0);
             ESP_LOGD(OPTIMIZER_TAG, "Processing Zone %d: climate source: %d, Room=%.1f, Target=%.1f, Actual Feedtemp: %.1f, Return temp: %.1f, Outside: %.1f, Bias: %.1f, heating: %d, cooling: %d",
                      (i + 1), temp_feedback_source, room_temp, room_target_temp, actual_flow_temp, actual_return_temp, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active);
  

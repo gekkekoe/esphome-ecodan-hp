@@ -56,7 +56,8 @@ namespace esphome
 
       esphome::number::Number *solver_kwh_meter_feedback;
       esphome::select::Select *heating_system_type;
-      esphome::select::Select *temperature_feedback_source;
+      esphome::select::Select *temperature_feedback_source_z1;
+      esphome::select::Select *temperature_feedback_source_z2;
       esphome::select::Select *lockout_duration;
       esphome::select::Select *solver_kwh_meter_feedback_source;
 
