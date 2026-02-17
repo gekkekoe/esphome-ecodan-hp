@@ -239,7 +239,8 @@ namespace esphome
             // Defrost STOP
             else if (x_previous && !x)
             {
-                ESP_LOGD(OPTIMIZER_TAG, "Defrost stop: triggering auto-adaptive loop.");
+                this->last_defrost_time_ = millis();
+                ESP_LOGD(OPTIMIZER_TAG, "Defrost stop: triggering auto-adaptive loop (Also updating last_defrost timestamp).");
                 this->run_auto_adaptive_loop();
             }
         }

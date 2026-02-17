@@ -109,18 +109,6 @@ namespace esphome
             
             auto &status = this->state_.ecodan_instance->get_status();
 
-            static bool was_defrosting = false;
-            if (status.DefrostActive) 
-            {
-                was_defrosting = true;
-            }
-            else if (was_defrosting) 
-            {
-                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Defrost cycle finished. Updating last_defrost timestamp");
-                this->last_defrost_time_ = millis();
-                was_defrosting = false;
-            }
-
             auto multizone_status = status.MultiZoneStatus;
             bool is_heating_z1 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) 
                 || status.is_heating(esphome::ecodan::Zone::ZONE_1)
