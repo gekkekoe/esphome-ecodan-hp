@@ -116,13 +116,19 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
 
   j += "\"z1_current_temp\":"                 + climate_current_str_(virtual_climate_z1_) + ",";
   j += "\"z1_setpoint\":"                     + climate_target_str_(virtual_climate_z1_) + ",";
+  j += "\"z1_action\":"                       + climate_action_str_(virtual_climate_z1_) + ",";
+
   j += "\"z2_current_temp\":"                 + climate_current_str_(virtual_climate_z2_) + ",";
   j += "\"z2_setpoint\":"                     + climate_target_str_(virtual_climate_z2_) + ",";
+  j += "\"z2_action\":"                       + climate_action_str_(virtual_climate_z2_) + ",";
 
   j += "\"eco_z1_current\":"                  + climate_current_str_(heatpump_climate_z1_) + ",";
   j += "\"eco_z1_setpoint\":"                 + climate_target_str_(heatpump_climate_z1_) + ",";
+  j += "\"eco_z1_action\":"                   + climate_action_str_(heatpump_climate_z1_) + ",";
+
   j += "\"eco_z2_current\":"                  + climate_current_str_(heatpump_climate_z2_) + ",";
   j += "\"eco_z2_setpoint\":"                 + climate_target_str_(heatpump_climate_z2_) + ",";
+  j += "\"eco_z2_action\":"                   + climate_action_str_(heatpump_climate_z2_) + ",";
 
   j += "\"status_compressor\":"               + std::string(bin_str_(status_compressor_)) + ",";
   j += "\"status_booster\":"                  + std::string(bin_str_(status_booster_)) + ",";
@@ -302,6 +308,18 @@ std::string EcodanDashboard::sensor_str_(sensor::Sensor *s) {
   char buf[16];
   snprintf(buf, sizeof(buf), "%.2f", s->state);
   return std::string(buf);
+}
+
+std::string EcodanDashboard::climate_action_str_(climate::Climate *c) {
+  if (c == nullptr) return "\"off\"";
+  switch (c->action) {
+    case climate::CLIMATE_ACTION_OFF: return "\"off\"";
+    case climate::CLIMATE_ACTION_COOLING: return "\"cooling\"";
+    case climate::CLIMATE_ACTION_HEATING: return "\"heating\"";
+    case climate::CLIMATE_ACTION_DRYING: return "\"drying\"";
+    case climate::CLIMATE_ACTION_IDLE: return "\"idle\"";
+    default: return "\"idle\"";
+  }
 }
 
 std::string EcodanDashboard::climate_current_str_(climate::Climate *c) {
