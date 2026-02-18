@@ -67,7 +67,7 @@
   .badge-value.purple { color: var(--purple); }
 
   .section-title { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 3px; color: var(--text3); text-transform: uppercase; margin-bottom: 10px; padding-left: 8px; border-left: 2px solid var(--accent); }
-  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
   .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .chart-legend { display: flex; gap: 10px; flex-wrap: wrap; }
   .legend-item { display: flex; align-items: center; gap: 5px; font-size: 9px; font-family: var(--mono); color: var(--text2); }
@@ -253,7 +253,10 @@
 
   <div class="chart-card full-width">
     <div class="chart-header">
+    <div style="display:flex; align-items:center; gap:15px;">
       <div class="section-title" style="margin:0">Temperatures</div>
+      <button class="log-btn" id="btn-reset-zoom" style="display:none; padding: 2px 8px; font-size: 9px;" onclick="resetAllZoom()">Reset Zoom</button>
+    </div>
       <div class="chart-legend">
         <div class="legend-item"><div class="legend-dot" style="background:#ff6b35"></div>Feed</div>
         <div class="legend-item"><div class="legend-dot" style="background:#00c8ff"></div>Return</div>
@@ -470,6 +473,8 @@ const STEP_EL = {
 };
 
 let lastGraphUpdate = 0;
+let initialZoomDone = false;
+let userZoomed = false;
 let tempChart = null, freqChart = null, statusChart = null;
 
 // Manual Upload
@@ -568,13 +573,68 @@ function initCharts() {
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
-    plugins: { legend: { display: false } },
+    plugins: { 
+      legend: { display: false },
+      zoom: {
+        pan: {
+          enabled: true,
+          mode: 'x',
+          modifierKey: 'alt', 
+          onPanStart({chart}) {
+            chart.options.plugins.tooltip.enabled = false;
+            chart.tooltip.setActiveElements([], {x: 0, y: 0});
+            chart.update('none');
+          },
+          onPan({chart}) {
+            userZoomed = true;
+            syncScales(chart, chart.scales.x.min, chart.scales.x.max);
+          },
+          onPanComplete({chart}) {
+            chart.options.plugins.tooltip.enabled = true;
+            chart.update('none');
+            syncScales(chart, chart.scales.x.min, chart.scales.x.max);
+          }
+        },
+        zoom: {
+          wheel: { enabled: true },
+          pinch: { enabled: true },
+          mode: 'x',
+          onZoomStart({chart}) {
+             chart.options.plugins.tooltip.enabled = false;
+             chart.tooltip.setActiveElements([], {x: 0, y: 0}); 
+             chart.update('none');
+          },
+          onZoom({chart}) {
+            userZoomed = true;
+            showResetButton();
+            syncScales(chart, chart.scales.x.min, chart.scales.x.max);
+          },
+          onZoomComplete({chart}) {
+            chart.options.plugins.tooltip.enabled = true;
+            chart.update('none');
+            syncScales(chart, chart.scales.x.min, chart.scales.x.max);
+          }
+        }
+      }
+    },
     scales: {
-      x: { ticks: { color: '#4a5a7a', font: { family: "'JetBrains Mono', monospace", size: 9 }, maxTicksLimit: 8 }, grid: { color: '#1e2d4a' } },
-      y: { ticks: { color: '#4a5a7a', font: { family: "'JetBrains Mono', monospace", size: 9 } }, grid: { color: '#1e2d4a' } }
+      x: { 
+        ticks: { 
+          color: '#4a5a7a', 
+          font: { family: "'JetBrains Mono', monospace", size: 9 }, 
+          maxTicksLimit: 6, 
+          maxRotation: 0 
+        }, 
+        grid: { color: '#1e2d4a' } 
+      },
+      y: { 
+        ticks: { color: '#4a5a7a', font: { family: "'JetBrains Mono', monospace", size: 9 } }, 
+        grid: { color: '#1e2d4a' } 
+      }
     }
   };
 
+  // Temperature Chart
   tempChart = new Chart(document.getElementById('tempChart').getContext('2d'), {
     type: 'line',
     data: { labels: [], datasets: [
@@ -587,26 +647,30 @@ function initCharts() {
       { label: 'Z1 Flow Setpoint',  data: [], borderColor: '#00ffff', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [8,4], fill: false },
       { label: 'Z2 Flow Setpoint',  data: [], borderColor: '#8a2be2', borderWidth: 1.5, pointRadius: 0, tension: 0.3, borderDash: [8,4], fill: false, hidden: true }
     ]},
-    options: { ...commonOptions, plugins: { ...commonOptions.plugins,
-      tooltip: { 
-        backgroundColor: '#0f1525', borderColor: '#1e2d4a', borderWidth: 1, titleColor: '#8899bb', bodyColor: '#e2eaff',
-        callbacks: {
-          labelColor: ctx => {
-            const isDashed = ctx.dataset.borderDash && ctx.dataset.borderDash.length > 0;
-            
-            return {
-              borderColor: ctx.dataset.borderColor,
-              backgroundColor: isDashed ? 'rgba(0,0,0,0)' : ctx.dataset.borderColor,
-              borderWidth: isDashed ? 3 : 0, 
-              borderDash: isDashed ? [2, 2] : []
-            };
-          },
-          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) : '—'}°C`
+    options: { 
+      ...commonOptions, 
+      plugins: { 
+        ...commonOptions.plugins,
+        tooltip: { 
+          backgroundColor: '#0f1525', borderColor: '#1e2d4a', borderWidth: 1, titleColor: '#8899bb', bodyColor: '#e2eaff',
+          callbacks: {
+            labelColor: ctx => {
+              const isDashed = ctx.dataset.borderDash && ctx.dataset.borderDash.length > 0;
+              return {
+                borderColor: ctx.dataset.borderColor,
+                backgroundColor: isDashed ? 'rgba(0,0,0,0)' : ctx.dataset.borderColor,
+                borderWidth: isDashed ? 3 : 0, 
+                borderDash: isDashed ? [2, 2] : []
+              };
+            },
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) : '—'}°C`
+          }
         }
       }
-    }}
+    }
   });
 
+  // Frequency Chart
   freqChart = new Chart(document.getElementById('freqChart').getContext('2d'), {
     type: 'line',
     data: { labels: [], datasets: [{
@@ -617,30 +681,34 @@ function initCharts() {
         borderColor: ctx => getFreqColor(ctx.p0DataIndex, 1.0)
       }
     }]},
-    options: { ...commonOptions, plugins: { ...commonOptions.plugins,
-      tooltip: {
-        backgroundColor: '#0f1525', borderColor: '#1e2d4a', borderWidth: 1, titleColor: '#8899bb', bodyColor: '#e2eaff',
-        callbacks: {
-          labelColor: ctx => {
-            let c = getFreqColor(ctx.dataIndex, 1.0);
-            return { borderColor: c, backgroundColor: c, borderWidth: 0 };
-          },
-          label: ctx => {
-            let l = ` ${ctx.dataset.label}: ${ctx.parsed.y}Hz`;
-            if(history.bin_defrost[ctx.dataIndex]) l += ' (Defrost)';
-            else if(history.bin_boost[ctx.dataIndex]) l += ' (Booster)';
-            return l;
+    options: { 
+      ...commonOptions, 
+      plugins: { 
+        ...commonOptions.plugins,
+        tooltip: {
+          backgroundColor: '#0f1525', borderColor: '#1e2d4a', borderWidth: 1, titleColor: '#8899bb', bodyColor: '#e2eaff',
+          callbacks: {
+            labelColor: ctx => {
+              let c = getFreqColor(ctx.dataIndex, 1.0);
+              return { borderColor: c, backgroundColor: c, borderWidth: 0 };
+            },
+            label: ctx => {
+              let l = ` ${ctx.dataset.label}: ${ctx.parsed.y}Hz`;
+              if(history.bin_defrost[ctx.dataIndex]) l += ' (Defrost)';
+              else if(history.bin_boost[ctx.dataIndex]) l += ' (Booster)';
+              return l;
+            }
           }
         }
       }
-    }}
+    }
   });
 
+  // Status Chart
   statusChart = new Chart(document.getElementById('statusChart').getContext('2d'), {
     type: 'line',
     data: { labels: [], datasets: [
       { label: 'Operating Mode',    data: [], borderColor: '#1e2d4a', borderWidth:10, pointRadius:0, fill:false, segment: { borderColor: ctx => getModeColor(history.mode[ctx.p0DataIndex]) } },
-      
       { label: 'Compressor',    data: [], borderColor: '#1e2d4a', borderWidth:10, pointRadius:0, fill:false, segment: { borderColor: ctx => history.bin_comp[ctx.p0DataIndex] ? '#7fff7f' : 'rgba(30,45,74,0.5)' } },
       { label: 'Booster Heater', data: [], borderColor: '#1e2d4a', borderWidth:10, pointRadius:0, fill:false, segment: { borderColor: ctx => history.bin_boost[ctx.p0DataIndex] ? '#ff4455' : 'rgba(30,45,74,0.5)' } },
       { label: 'Defrost', data: [], borderColor: '#1e2d4a', borderWidth:10, pointRadius:0, fill:false, segment: { borderColor: ctx => history.bin_defrost[ctx.p0DataIndex] ? '#c084fc' : 'rgba(30,45,74,0.5)' } },
@@ -649,10 +717,7 @@ function initCharts() {
       { label: 'IN6 demand',     data: [], borderColor: '#1e2d4a', borderWidth:10, pointRadius:0, fill:false, segment: { borderColor: ctx => history.bin_in6[ctx.p0DataIndex] ? '#8899bb' : 'rgba(30,45,74,0.5)' } }
     ]},
     options: { 
-      animation: false,
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'nearest', axis: 'xy', intersect: false },
+      ...commonOptions,
       scales: {
         x: commonOptions.scales.x,
         y: {
@@ -668,37 +733,26 @@ function initCharts() {
         }
       },
       plugins: { 
-        legend: { display: false }, 
+        ...commonOptions.plugins,
         tooltip: { 
           enabled: true,
-          backgroundColor: '#0f1525', 
-          borderColor: '#1e2d4a', 
-          borderWidth: 1, 
-          titleColor: '#8899bb', 
-          bodyColor: '#e2eaff',
+          backgroundColor: '#0f1525', borderColor: '#1e2d4a', borderWidth: 1, titleColor: '#8899bb', bodyColor: '#e2eaff',
           callbacks: {
             label: (ctx) => {
-               if (ctx.dataset.label === 'Operating Mode') {
-                 return ` Mode: ${history.mode[ctx.dataIndex] || '—'}`;
-               }
+               if (ctx.dataset.label === 'Operating Mode') return ` Mode: ${history.mode[ctx.dataIndex] || '—'}`;
                const keys = ['bin_mode_placeholder', 'bin_comp', 'bin_boost', 'bin_defrost', 'bin_pump', 'bin_in1', 'bin_in6'];
-               const key = keys[ctx.datasetIndex];
-               const val = history[key]?.[ctx.dataIndex]; 
+               const val = history[keys[ctx.datasetIndex]]?.[ctx.dataIndex]; 
                return ` ${ctx.dataset.label}: ${val ? 'On' : 'Off'}`;
             },
-            labelColor: function(context) {
-               if (context.dataset.label === 'Operating Mode') {
-                 const val = history.mode[context.dataIndex];
-                 const c = getModeColor(val);
+            labelColor: (ctx) => {
+               if (ctx.dataset.label === 'Operating Mode') {
+                 const c = getModeColor(history.mode[ctx.dataIndex]);
                  return { borderColor: c, backgroundColor: c, borderWidth: 0 };
                }
                const keys = ['bin_mode_placeholder', 'bin_comp', 'bin_boost', 'bin_defrost', 'bin_pump', 'bin_in1', 'bin_in6'];
-               const key = keys[context.datasetIndex];
-               const val = history[key]?.[context.dataIndex];
-               
+               const val = history[keys[ctx.datasetIndex]]?.[ctx.dataIndex];
                const onColors = ['#fff', '#7fff7f', '#ff4455', '#c084fc', '#00c8ff', '#8899bb', '#8899bb'];
-               const c = val ? onColors[context.datasetIndex] : '#1e2d4a';
-               
+               const c = val ? onColors[ctx.datasetIndex] : '#1e2d4a';
                return { borderColor: c, backgroundColor: c, borderWidth: 0 };
             }
           }
@@ -711,7 +765,7 @@ function initCharts() {
 function updateCharts(d) {
   if (!tempChart || !freqChart || !statusChart) return;
   const now = Date.now();
-  if (now - lastGraphUpdate < 60000) return;
+  if (now - lastGraphUpdate < 4000) return; // Iets snellere check (4s) om sync te houden met poll
   lastGraphUpdate = now;
 
   const cutoff = now - HISTORY_MINUTES * 60 * 1000;
@@ -737,27 +791,20 @@ function updateCharts(d) {
   history.z2curr.push(d.z2_current_temp ?? null);
   history.z1flow.push(d.z1_flow_temp_target ?? null);
   history.z2flow.push(d.z2_flow_temp_target ?? null);
-
   history.freq.push(d.compressor_frequency ?? null);
   history.mode.push(d.status_operation ?? '');
   
-  const c = d.status_compressor ? 1 : 0;
-  const b = d.status_booster ? 1 : 0;
-  const df = d.status_defrost ? 1 : 0;
-  const p = d.status_water_pump ? 1 : 0;
-  const i1 = d.status_in1_request ? 1 : 0;
-  const i6 = d.status_in6_request ? 1 : 0;
+  history.bin_comp.push(d.status_compressor ? 1 : 0); 
+  history.bin_boost.push(d.status_booster ? 1 : 0); 
+  history.bin_defrost.push(d.status_defrost ? 1 : 0);
+  history.bin_pump.push(d.status_water_pump ? 1 : 0); 
+  history.bin_in1.push(d.status_in1_request ? 1 : 0); 
+  history.bin_in6.push(d.status_in6_request ? 1 : 0);
 
-  history.bin_comp.push(c); 
-  history.bin_boost.push(b); 
-  history.bin_defrost.push(df);
-  history.bin_pump.push(p); 
-  history.bin_in1.push(i1); 
-  history.bin_in6.push(i6);
+  const labels = history.timestamps.map(t => new Date(t).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
 
-  const labels = history.timestamps.map(t => new Date(t).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }));
+  [tempChart, freqChart, statusChart].forEach(c => c.data.labels = labels);
 
-  tempChart.data.labels = labels;
   tempChart.data.datasets[0].data = history.feed;
   tempChart.data.datasets[1].data = history.ret;
   tempChart.data.datasets[2].data = history.z1sp;
@@ -768,21 +815,10 @@ function updateCharts(d) {
   tempChart.data.datasets[7].data = history.z2flow;
   
   const isZ2 = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
-  tempChart.data.datasets[3].hidden = !isZ2;
-  tempChart.data.datasets[5].hidden = !isZ2;
-  tempChart.data.datasets[7].hidden = !isZ2;
+  [3,5,7].forEach(idx => tempChart.data.datasets[idx].hidden = !isZ2);
   
-  document.getElementById('leg-z2').style.display = isZ2 ? 'flex' : 'none';
-  document.getElementById('leg-z2-curr').style.display = isZ2 ? 'flex' : 'none';
-  document.getElementById('leg-z2-flow').style.display = isZ2 ? 'flex' : 'none';
-  
-  tempChart.update('none');
-
-  freqChart.data.labels = labels;
   freqChart.data.datasets[0].data = history.freq;
-  freqChart.update();
 
-  statusChart.data.labels = labels;
   statusChart.data.datasets[0].data = history.mode.map(() => 7);
   statusChart.data.datasets[1].data = history.bin_comp.map(() => 6);
   statusChart.data.datasets[2].data = history.bin_boost.map(() => 5);
@@ -790,7 +826,24 @@ function updateCharts(d) {
   statusChart.data.datasets[4].data = history.bin_pump.map(() => 3);
   statusChart.data.datasets[5].data = history.bin_in1.map(() => 2);
   statusChart.data.datasets[6].data = history.bin_in6.map(() => 1);
-  statusChart.update('none');
+
+  if (!userZoomed && history.timestamps.length > 0) {
+    const fiveHoursAgo = now - (5 * 60 * 60 * 1000);
+    const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
+    
+    if (startIndex !== -1 && startIndex < labels.length) {
+      const minLabel = labels[startIndex];
+      [tempChart, freqChart, statusChart].forEach(c => {
+        c.options.scales.x.min = minLabel;
+        c.options.scales.x.max = null; 
+      });
+      if (startIndex > 0) showResetButton();
+    }
+  }
+
+  tempChart.update();
+  freqChart.update();
+  statusChart.update();
 }
 
 function setToggle(id, val) {
@@ -1207,27 +1260,52 @@ function updateStatus(text, color) {
   statusDiv.style.color = color || 'var(--text3)';
 }
 
+function syncScales(chart, min, max) {
+  [tempChart, freqChart, statusChart].forEach(c => {
+    if (c && c !== chart) {
+      c.options.scales.x.min = min;
+      c.options.scales.x.max = max;
+      c.update('none');
+    }
+  });
+}
+
+function resetAllZoom() {
+  userZoomed = false;
+  [tempChart, freqChart, statusChart].forEach(c => {
+    if (c) {
+      c.options.scales.x.min = null; 
+      c.options.scales.x.max = null;
+      c.resetZoom();
+      c.update(); 
+    }
+  });
+  document.getElementById('btn-reset-zoom').style.display = 'none';
+}
+
+function showResetButton() {
+  document.getElementById('btn-reset-zoom').style.display = 'block';
+}
+
 (function loadChartJS() {
   const s = document.createElement('script');
   s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
   s.onload = () => { 
-    initCharts(); 
-    loadHistory(); 
-    fetchState(); 
-    startLog(); 
-    setInterval(fetchState, POLL_MS); 
-  };
-  s.onerror = () => {
-    const s2 = document.createElement('script');
-    s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
-    s2.onload = () => { 
-      initCharts(); 
-      loadHistory(); 
-      fetchState(); 
-      startLog(); 
-      setInterval(fetchState, POLL_MS); 
+    const h = document.createElement('script');
+    h.src = 'https://cdn.jsdelivr.net/npm/hammerjs@2.0.8';
+    h.onload = () => {
+      const z = document.createElement('script');
+      z.src = 'https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1';
+      z.onload = () => {
+        initCharts(); 
+        loadHistory(); 
+        fetchState(); 
+        startLog(); 
+        setInterval(fetchState, POLL_MS); 
+      };
+      document.head.appendChild(z);
     };
-    document.head.appendChild(s2);
+    document.head.appendChild(h);
   };
   document.head.appendChild(s);
 })();
