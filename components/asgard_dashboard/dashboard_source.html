@@ -387,12 +387,23 @@
       <div class="ctrl-row"><span class="ctrl-label">Hysteresis &nbsp;<span id="z1-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span><input type="range" class="ctrl-range" id="z1-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z1')"></div>
       <button class="send-btn" id="btn-z1" onclick="sendZone('z1', this)" style="margin-bottom:20px">Apply Virtual Thermostat Z1</button>
 
-      <div class="sub-label" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 5px;">Ecodan Thermostat Z1</div>
-      <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
-        <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="eco-z1-current">—<span>°C</span></div></div>
-        <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('eco-z1-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="eco-z1-sp-val">—</div><button class="step-btn" onclick="step('eco-z1-sp', +0.5)">+</button></div></div>
+      <div id="flow-z1-area">
+        <div class="sub-label" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 5px;">Flow Climate Z1</div>
+        <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+          <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="flow-z1-current">—<span>°C</span></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z1-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="flow-z1-sp-val">—</div><button class="step-btn" onclick="step('flow-z1-sp', +0.1)">+</button></div></div>
+        </div>
+        <button class="send-btn" id="btn-flow-z1" onclick="sendFlow('z1', this)" style="margin-bottom:20px;">Apply Flow Z1</button>
       </div>
-      <button class="send-btn" id="btn-eco-z1" onclick="sendEcodan('z1', this)" style="margin-bottom:0; border-color:var(--text3); color:var(--text2);">Apply Ecodan Zone 1</button>
+
+      <div id="eco-z1-section">
+        <div class="sub-label" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 5px;">Ecodan Thermostat Z1</div>
+        <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+          <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="eco-z1-current">—<span>°C</span></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('eco-z1-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="eco-z1-sp-val">—</div><button class="step-btn" onclick="step('eco-z1-sp', +0.5)">+</button></div></div>
+        </div>
+        <button class="send-btn" id="btn-eco-z1" onclick="sendEcodan('z1', this)" style="margin-bottom:0;">Apply Ecodan Zone 1</button>
+      </div>
     </div>
 
     <div class="ctrl-card" id="card-z2" style="display:none;">
@@ -412,12 +423,23 @@
       <div class="ctrl-row"><span class="ctrl-label">Hysteresis &nbsp;<span id="z2-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span><input type="range" class="ctrl-range" id="z2-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z2')"></div>
       <button class="send-btn" id="btn-z2" onclick="sendZone('z2', this)" style="margin-bottom:20px">Apply Virtual Thermostat Z2</button>
 
-      <div class="sub-label" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 5px;">Ecodan Thermostat Z2</div>
-      <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
-        <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="eco-z2-current">—<span>°C</span></div></div>
-        <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('eco-z2-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="eco-z2-sp-val">—</div><button class="step-btn" onclick="step('eco-z2-sp', +0.5)">+</button></div></div>
+      <div id="flow-z2-area" style="display:none;">
+        <div class="sub-label" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 5px;">Flow Climate Z2</div>
+        <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+          <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="flow-z2-current">—<span>°C</span></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z2-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="flow-z2-sp-val">—</div><button class="step-btn" onclick="step('flow-z2-sp', +0.1)">+</button></div></div>
+        </div>
+        <button class="send-btn" id="btn-flow-z2" onclick="sendFlow('z2', this)" style="margin-bottom:20px;">Apply Flow Z2</button>
       </div>
-      <button class="send-btn" id="btn-eco-z2" onclick="sendEcodan('z2', this)" style="margin-bottom:0; border-color:var(--text3); color:var(--text2);">Apply Ecodan Zone 2</button>
+
+      <div id="eco-z2-section">
+        <div class="sub-label" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 5px;">Ecodan Thermostat Z2</div>
+        <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+          <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="eco-z2-current">—<span>°C</span></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('eco-z2-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="eco-z2-sp-val">—</div><button class="step-btn" onclick="step('eco-z2-sp', +0.5)">+</button></div></div>
+        </div>
+        <button class="send-btn" id="btn-eco-z2" onclick="sendEcodan('z2', this)" style="margin-bottom:0;">Apply Ecodan Zone 2</button>
+      </div>
     </div>
 
     <div class="ctrl-card">
@@ -501,7 +523,8 @@ const pending = {
   'psc-win': null, 'psc-delta': null, 
   'dhw-sp': null, 
   'z1-sp': null, 'z1-hyst': null, 'eco-z1-sp': null,
-  'z2-sp': null, 'z2-hyst': null, 'eco-z2-sp': null
+  'z2-sp': null, 'z2-hyst': null, 'eco-z2-sp': null,
+  'flow-z1-sp': null, 'flow-z2-sp': null
 };
 
 const lastEdit = {};
@@ -519,7 +542,9 @@ const LIMITS = {
   'z1-sp': { min: 10, max: 30, step: 0.1 }, 
   'z2-sp': { min: 10, max: 30, step: 0.1 },
   'eco-z1-sp': { min: 10, max: 30, step: 0.5 }, 
-  'eco-z2-sp': { min: 10, max: 30, step: 0.5 }
+  'eco-z2-sp': { min: 10, max: 30, step: 0.5 },
+  'flow-z1-sp': { min: 10, max: 60, step: 0.1 },
+  'flow-z2-sp': { min: 10, max: 60, step: 0.1 }
 };
 
 const STEP_EL = { 
@@ -530,7 +555,8 @@ const STEP_EL = {
   'psc-delta': 'psc-delta-val',
   'dhw-sp': 'dhw-sp-val', 
   'z1-sp': 'z1-sp-val', 'eco-z1-sp': 'eco-z1-sp-val',
-  'z2-sp': 'z2-sp-val', 'eco-z2-sp': 'eco-z2-sp-val'
+  'z2-sp': 'z2-sp-val', 'eco-z2-sp': 'eco-z2-sp-val',
+  'flow-z1-sp': 'flow-z1-sp-val', 'flow-z2-sp': 'flow-z2-sp-val'
 };
 
 let lastGraphUpdate = 0;
@@ -567,9 +593,7 @@ function performUpload() {
 
 function switchTab(viewId, btn) {
   document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-  
   document.getElementById('view-' + viewId).classList.add('active');
-  
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   btn.classList.add('active');
 }
@@ -826,7 +850,7 @@ function initCharts() {
 function updateCharts(d) {
   if (!tempChart || !freqChart || !statusChart) return;
   const now = Date.now();
-  if (now - lastGraphUpdate < 4000) return; // Iets snellere check (4s) om sync te houden met poll
+  if (now - lastGraphUpdate < 4000) return; 
   lastGraphUpdate = now;
 
   const cutoff = now - HISTORY_MINUTES * 60 * 1000;
@@ -915,7 +939,6 @@ function setSelect(id, idx) {
   if (idx === null || idx === undefined) return;
   const el = document.getElementById(id);
   if (!el || document.activeElement === el) return;
-  
   if (el.selectedIndex !== idx) {
     el.selectedIndex = idx;
   }
@@ -925,11 +948,9 @@ function seedPending(key, val) {
   if (val != null) {
     const newVal = parseFloat(val);
     serverState[key] = newVal;
-
     if (lastEdit[key] && (Date.now() - lastEdit[key] < 4000)) {
         return; 
     }
-
     if (pending[key] !== newVal) {
       pending[key] = newVal;
       refreshStepVal(key);
@@ -940,17 +961,12 @@ function seedPending(key, val) {
 function seedHyst(zone, val) {
   const key = zone + '-hyst';
   const elId = zone + '-hyst';
-  
   if (val != null) {
     const newVal = parseFloat(val);
     serverState[key] = newVal;
-    
     const el = document.getElementById(elId);
-    
     if (el && document.activeElement === el) return;
-    
     if (lastEdit[key] && (Date.now() - lastEdit[key] < 4000)) return;
-
     if (pending[key] !== newVal) {
       pending[key] = newVal;
       if (el) el.value = newVal;
@@ -974,7 +990,6 @@ function updateDot(id, action) {
   const el = document.getElementById(id);
   if (!el) return;
   el.className = 'status-dot';
-  
   if (action === 'heating') {
     el.classList.add('heating');
   } else if (action === 'cooling') {
@@ -985,15 +1000,21 @@ function updateDot(id, action) {
 function render(d) {
   const isZ2 = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
   const z2Card = document.getElementById('card-z2');
-  if (z2Card) {
-    z2Card.style.display = isZ2 ? 'block' : 'none';
-  }
+  if (z2Card) { z2Card.style.display = isZ2 ? 'block' : 'none'; }
   const z2AA = document.getElementById('aa-z2-container');
-  if(z2AA) {
-      z2AA.style.display = isZ2 ? 'block' : 'none';
+  if(z2AA) { z2AA.style.display = isZ2 ? 'block' : 'none'; }
+
+  document.getElementById('eco-z1-section').style.display = 'block';
+  const ecoZ2Sec = document.getElementById('eco-z2-section');
+  if (ecoZ2Sec) {
+      ecoZ2Sec.style.display = isZ2 ? 'block' : 'none';
   }
 
-  // Check for null (not defined in yaml)
+  const flowZ2Area = document.getElementById('flow-z2-area');
+  if (flowZ2Area) {
+    flowZ2Area.style.display = isZ2 ? 'block' : 'none';
+  }
+
   const z2SrcVal = d.room_temp_source_z2;
   const z2SrcRow = document.getElementById('row-z2src');
   if (z2SrcVal === 'null' || z2SrcVal === null) {
@@ -1073,6 +1094,12 @@ function render(d) {
 
   setText('eco-z2-current', fmt1(d.eco_z2_current));
   seedPending('eco-z2-sp', d.eco_z2_setpoint);
+
+  setText('flow-z1-current', fmt1(d.flow_z1_current));
+  seedPending('flow-z1-sp', d.flow_z1_setpoint);
+
+  setText('flow-z2-current', fmt1(d.flow_z2_current));
+  seedPending('flow-z2-sp', d.flow_z2_setpoint);
 
   seedPending('aa-bias', d.auto_adaptive_setpoint_bias);
   seedPending('aa-max',  d.maximum_heating_flow_temp);
@@ -1183,7 +1210,7 @@ async function sendAA(btn) {
     if (hasChanged('aa-min-z2')) { await apiPost({ key: 'auto_adaptive_min_flow_temp_z2', value: pending['aa-min-z2'] }); c++; }
     if (hasChanged('psc-win'))   { await apiPost({ key: 'predictive_short_cycle_high_delta_time_window', value: pending['psc-win'] }); c++; }
     if (hasChanged('psc-delta')) { await apiPost({ key: 'predictive_short_cycle_high_delta_threshold', value: pending['psc-delta'] }); c++; }
-    showToast(c > 0 ? '✓ Auto Adaptive settings updated' : 'No changes');
+    showToast(c > 0 ? '✓ Auto Adaptive updated' : 'No changes');
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');
 }
@@ -1215,9 +1242,18 @@ async function sendEcodan(zone, btn) {
     if (hasChanged('eco-' + zone + '-sp')) { 
       await apiPost({ key: 'heatpump_climate_' + zone + '_setpoint', value: pending['eco-'+zone+'-sp'] }); 
       showToast('✓ Ecodan Zone ' + zone.toUpperCase() + ' updated');
-    } else {
-      showToast('No changes');
-    }
+    } else { showToast('No changes'); }
+  } catch(e) { showToast('✗ ' + e.message, true); }
+  btn.classList.remove('sending');
+}
+
+async function sendFlow(zone, btn) {
+  btn.classList.add('sending');
+  try {
+    if (hasChanged('flow-' + zone + '-sp')) {
+      await apiPost({ key: 'flow_climate_' + zone + '_setpoint', value: pending['flow-'+zone+'-sp'] });
+      showToast('✓ Flow Climate ' + zone.toUpperCase() + ' updated');
+    } else { showToast('No changes'); }
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');
 }
@@ -1256,12 +1292,9 @@ function startLog() {
   logContainer.innerHTML = ''; 
   logBuffer = []; 
   updateStatus("Connecting...", "var(--warn)");
-
   eventSource = new EventSource('/events');
-
   eventSource.addEventListener('log', e => handleLogData(e.data));
   eventSource.onmessage = e => handleLogData(e.data);
-  
   eventSource.onopen = () => {
     updateStatus("Connected", "var(--accent3)");
     appendLogLine("--- Connected to EventStream ---", "log-info");
@@ -1279,12 +1312,8 @@ function handleLogData(rawData) {
   if(isPaused || !rawData) return;
   let cleanData = rawData.replace(ansiRegex, '');
   if(cleanData.trim() === "") return;
-
-  try {
-    processJsonLog(JSON.parse(cleanData));
-  } catch (e) {
-    processStringLog(cleanData);
-  }
+  try { processJsonLog(JSON.parse(cleanData)); } 
+  catch (e) { processStringLog(cleanData); }
 }
 
 function processJsonLog(data) {
@@ -1292,13 +1321,11 @@ function processJsonLog(data) {
   let levelChar = data.level ? data.level.substring(0, 1).toUpperCase() : "U";
   const tag = data.tag ? `[${data.tag}]` : "";
   const msg = `[${levelChar}]${tag}: ${data.message}`;
-  
   let css = 'log-raw';
   if (data.level === 'DEBUG') css = 'log-debug';
   else if (data.level === 'INFO') css = 'log-info';
   else if (data.level === 'WARN') css = 'log-warn';
   else if (data.level === 'ERROR') css = 'log-error';
-
   appendLogLine(msg, css);
 }
 
@@ -1314,14 +1341,11 @@ function processStringLog(text) {
 function appendLogLine(text, cssClass) {
   const timeStr = new Date().toLocaleTimeString('nl-NL');
   logBuffer.push(`[${timeStr}] ${text}`);
-  
   const row = document.createElement('div');
   row.className = 'log-entry ' + cssClass;
   row.innerHTML = `<span class="time-tag">${timeStr}</span><span>${text}</span>`;
-  
   logContainer.appendChild(row);
   logContainer.scrollTop = logContainer.scrollHeight;
-  
   if (logContainer.childElementCount > 500) {
     logContainer.removeChild(logContainer.firstChild);
     logBuffer.shift();

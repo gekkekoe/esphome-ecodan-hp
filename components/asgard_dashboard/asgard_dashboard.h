@@ -111,6 +111,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_virtual_climate_z2(climate::Climate *c)            { virtual_climate_z2_ = c; }
   void set_heatpump_climate_z1(climate::Climate *c)           { heatpump_climate_z1_ = c; }
   void set_heatpump_climate_z2(climate::Climate *c)           { heatpump_climate_z2_ = c; }
+  void set_flow_climate_z1(climate::Climate *c)               { flow_climate_z1_ = c; }
+  void set_flow_climate_z2(climate::Climate *c)               { flow_climate_z2_ = c; }
 
   // AsyncWebHandler
   bool canHandle(AsyncWebServerRequest *request) const override;
@@ -228,7 +230,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   climate::Climate *virtual_climate_z2_{nullptr};
   climate::Climate *heatpump_climate_z1_{nullptr};
   climate::Climate *heatpump_climate_z2_{nullptr};
-
+  climate::Climate *flow_climate_z1_{nullptr};
+  climate::Climate *flow_climate_z2_{nullptr};
 };
 
 }  // namespace asgard_dashboard

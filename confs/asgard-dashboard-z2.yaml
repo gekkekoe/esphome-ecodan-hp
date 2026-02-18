@@ -2,6 +2,7 @@ asgard_dashboard:
   operating_mode_z2_id: heatpump_select_operating_mode_z2 
   virtual_climate_z2_id: virtual_climate_z2   
   heatpump_climate_z2_id: heatpump_climate_room_z2
+  flow_climate_z2_id: heatpump_climate_z2
   sel_temp_source_z2_id: asgard_vt_temp_sensor_source_z2
   z1_flow_temp_target_id: z1_flow_temp_target
   num_max_flow_temp_z2_id: maximum_heating_flow_temp_z2
