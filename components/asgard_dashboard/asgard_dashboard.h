@@ -83,6 +83,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_sw_defrost_mit(switch_::Switch *s)                 { sw_defrost_mit_ = s; }
   void set_sw_smart_boost(switch_::Switch *s)                 { sw_smart_boost_ = s; }
   void set_sw_force_dhw(switch_::Switch *s)                   { sw_force_dhw_ = s; } 
+  void set_pred_sc_switch(switch_::Switch *s)                 { pred_sc_switch_ = s; }
 
   // Selects
   void set_sel_heating_system_type(select::Select *s)         { sel_heating_system_type_ = s; }
@@ -101,6 +102,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_min_flow_temp_z2(number::Number *n)            { num_min_flow_temp_z2_ = n; }
   void set_num_hysteresis_z1(number::Number *n)               { num_hysteresis_z1_ = n; }
   void set_num_hysteresis_z2(number::Number *n)               { num_hysteresis_z2_ = n; }
+  void set_pred_sc_time(number::Number *n)                    { pred_sc_time_ = n; }
+  void set_pred_sc_delta(number::Number *n)                   { pred_sc_delta_ = n; }
 
   // Climate
   void set_dhw_climate(climate::Climate *c)                   { dhw_climate_ = c; }
@@ -196,6 +199,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   switch_::Switch *sw_defrost_mit_{nullptr};
   switch_::Switch *sw_smart_boost_{nullptr};
   switch_::Switch *sw_force_dhw_{nullptr}; 
+  switch_::Switch *pred_sc_switch_{nullptr};
 
   // Selects
   select::Select *sel_heating_system_type_{nullptr};
@@ -214,6 +218,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_min_flow_temp_z2_{nullptr};
   number::Number *num_hysteresis_z1_{nullptr};
   number::Number *num_hysteresis_z2_{nullptr};
+  number::Number *pred_sc_time_{nullptr};
+  number::Number *pred_sc_delta_{nullptr};
 
   // Climate
   climate::Climate *dhw_climate_{nullptr};

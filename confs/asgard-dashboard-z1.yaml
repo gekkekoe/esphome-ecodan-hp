@@ -65,3 +65,8 @@ asgard_dashboard:
   dhw_climate_id:                    heatpump_climate_dhw
   virtual_climate_z1_id:             virtual_climate_z1
   heatpump_climate_z1_id: heatpump_climate_room_z1
+  
+  # ── Cycle prevention ───────────────────────────────────────────────────────────────
+  predictive_short_cycle_control_enabled_id: predictive_short_cycle_control_enabled 
+  predictive_short_cycle_high_delta_time_window_id: predictive_short_cycle_high_delta_time_window
+  predictive_short_cycle_high_delta_threshold_id: predictive_short_cycle_high_delta_threshold

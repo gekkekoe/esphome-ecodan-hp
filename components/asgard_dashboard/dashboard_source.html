@@ -401,7 +401,13 @@
         <div class="ctrl-row"><span class="ctrl-label">Max Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><div class="step-val" id="aa-max-z2-val">—</div><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
         <div class="ctrl-row"><span class="ctrl-label">Min Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><div class="step-val" id="aa-min-z2-val">—</div><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
       </div>
-      <button class="send-btn" onclick="sendAA(this)">Apply Auto Adaptive</button>
+
+      <div class="sub-label" style="border-top:1px dashed var(--border); margin-top:10px; padding-top:10px">Short Cycle Protection</div>
+      <div class="ctrl-row"><span class="ctrl-label">Predictive Control</span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
+      <div class="ctrl-row"><span class="ctrl-label">Time Window (min)</span><div class="stepper"><button class="step-btn" onclick="step('psc-win', -0.5)">−</button><div class="step-val" id="psc-win-val">—</div><button class="step-btn" onclick="step('psc-win', +0.5)">+</button></div></div>
+      <div class="ctrl-row"><span class="ctrl-label">Delta Threshold (°C)</span><div class="stepper"><button class="step-btn" onclick="step('psc-delta', -0.5)">−</button><div class="step-val" id="psc-delta-val">—</div><button class="step-btn" onclick="step('psc-delta', +0.5)">+</button></div></div>
+
+      <button class="send-btn" onclick="sendAA(this)" style="margin-top:15px">Apply Auto Adaptive</button>
     </div>
 
     <div class="ctrl-card">
@@ -456,9 +462,9 @@ const history = {
 };
 
 const pending = { 
-  'aa-bias': null, 
-  'aa-max': null, 'aa-min': null, 
+  'aa-bias': null, 'aa-max': null, 'aa-min': null, 
   'aa-max-z2': null, 'aa-min-z2': null,
+  'psc-win': null, 'psc-delta': null, 
   'dhw-sp': null, 
   'z1-sp': null, 'z1-hyst': null, 'eco-z1-sp': null,
   'z2-sp': null, 'z2-hyst': null, 'eco-z2-sp': null
@@ -473,6 +479,8 @@ const LIMITS = {
   'aa-min': { min: 20, max: 55, step: 0.1 }, 
   'aa-max-z2': { min: 30, max: 65, step: 0.1 },
   'aa-min-z2': { min: 20, max: 55, step: 0.1 }, 
+  'psc-win': { min: 1.0, max: 5.0, step: 0.5 },
+  'psc-delta': { min: 1.0, max: 3.0, step: 0.5 },
   'dhw-sp': { min: 40, max: 60, step: 0.5 }, 
   'z1-sp': { min: 10, max: 30, step: 0.1 }, 
   'z2-sp': { min: 10, max: 30, step: 0.1 },
@@ -484,6 +492,8 @@ const STEP_EL = {
   'aa-bias': 'aa-bias-val', 
   'aa-max': 'aa-max-val', 'aa-min': 'aa-min-val', 
   'aa-max-z2': 'aa-max-z2-val', 'aa-min-z2': 'aa-min-z2-val',
+  'psc-win': 'psc-win-val',
+  'psc-delta': 'psc-delta-val',
   'dhw-sp': 'dhw-sp-val', 
   'z1-sp': 'z1-sp-val', 'eco-z1-sp': 'eco-z1-sp-val',
   'z2-sp': 'z2-sp-val', 'eco-z2-sp': 'eco-z2-sp-val'
@@ -959,6 +969,8 @@ function render(d) {
   if (d.min_flow_lim) { LIMITS['aa-min'].min = d.min_flow_lim.min; LIMITS['aa-min'].max = d.min_flow_lim.max; LIMITS['aa-min'].step = 0.1; }
   if (d.max_flow_z2_lim) { LIMITS['aa-max-z2'].min = d.max_flow_z2_lim.min; LIMITS['aa-max-z2'].max = d.max_flow_z2_lim.max; LIMITS['aa-max-z2'].step = 0.1; }
   if (d.min_flow_z2_lim) { LIMITS['aa-min-z2'].min = d.min_flow_z2_lim.min; LIMITS['aa-min-z2'].max = d.min_flow_z2_lim.max; LIMITS['aa-min-z2'].step = 0.1; }
+  if (d.pred_sc_time_lim) { LIMITS['psc-win'].min = d.pred_sc_time_lim.min; LIMITS['psc-win'].max = d.pred_sc_time_lim.max; LIMITS['psc-win'].step = d.pred_sc_time_lim.step; }
+  if (d.pred_sc_delta_lim) { LIMITS['psc-delta'].min = d.pred_sc_delta_lim.min; LIMITS['psc-delta'].max = d.pred_sc_delta_lim.max; LIMITS['psc-delta'].step = d.pred_sc_delta_lim.step; }
 
   if (d.hysteresis_z1_lim) {
     const el = document.getElementById('z1-hyst');
@@ -1022,9 +1034,13 @@ function render(d) {
   seedPending('aa-max-z2', d.maximum_heating_flow_temp_z2);
   seedPending('aa-min-z2', d.minimum_heating_flow_temp_z2);
 
+  seedPending('psc-win', d.pred_sc_time);
+  seedPending('psc-delta', d.pred_sc_delta);
+
   setToggle('sw-aa', d.auto_adaptive_control_enabled);
   setToggle('sw-dm', d.defrost_risk_handling_enabled);
   setToggle('sw-sb', d.smart_boost_enabled);
+  setToggle('sw-psc', d.pred_sc_en);
 
   setSelect('sel-hst',    d.heating_system_type);
   setSelect('sel-z1src',  d.room_temp_source_z1);
@@ -1109,14 +1125,14 @@ async function sendAA(btn) {
   btn.classList.add('sending');
   let c = 0;
   try {
-    if (hasChanged('aa-bias')) { await apiPost({ key: 'auto_adaptive_setpoint_bias', value: pending['aa-bias'] }); c++; }
-    if (hasChanged('aa-max'))  { await apiPost({ key: 'maximum_heating_flow_temp',   value: pending['aa-max']  }); c++; }
-    if (hasChanged('aa-min'))  { await apiPost({ key: 'minimum_heating_flow_temp',   value: pending['aa-min']  }); c++; }
-    
-    if (hasChanged('aa-max-z2')) { await apiPost({ key: 'maximum_heating_flow_temp_z2', value: pending['aa-max-z2'] }); c++; }
-    if (hasChanged('aa-min-z2')) { await apiPost({ key: 'minimum_heating_flow_temp_z2', value: pending['aa-min-z2'] }); c++; }
-
-    showToast(c > 0 ? '✓ AA updated' : 'No changes');
+    if (hasChanged('aa-bias'))   { await apiPost({ key: 'auto_adaptive_setpoint_bias', value: pending['aa-bias'] }); c++; }
+    if (hasChanged('aa-max'))    { await apiPost({ key: 'auto_adaptive_max_flow_temp_z1', value: pending['aa-max'] }); c++; }
+    if (hasChanged('aa-min'))    { await apiPost({ key: 'auto_adaptive_min_flow_temp_z1', value: pending['aa-min'] }); c++; }
+    if (hasChanged('aa-max-z2')) { await apiPost({ key: 'auto_adaptive_max_flow_temp_z2', value: pending['aa-max-z2'] }); c++; }
+    if (hasChanged('aa-min-z2')) { await apiPost({ key: 'auto_adaptive_min_flow_temp_z2', value: pending['aa-min-z2'] }); c++; }
+    if (hasChanged('psc-win'))   { await apiPost({ key: 'predictive_short_cycle_high_delta_time_window', value: pending['psc-win'] }); c++; }
+    if (hasChanged('psc-delta')) { await apiPost({ key: 'predictive_short_cycle_high_delta_threshold', value: pending['psc-delta'] }); c++; }
+    showToast(c > 0 ? '✓ Auto Adaptive settings updated' : 'No changes');
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');
 }

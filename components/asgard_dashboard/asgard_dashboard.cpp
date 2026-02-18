@@ -108,6 +108,12 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   j += "\"thermostat_hysteresis_z2\":"        + number_str_(num_hysteresis_z2_) + ",";
   j += "\"hysteresis_z2_lim\":"               + number_traits_(num_hysteresis_z2_) + ",";
 
+  j += "\"pred_sc_time\":"                    + number_str_(pred_sc_time_) + ",";
+  j += "\"pred_sc_time_lim\":"                + number_traits_(pred_sc_time_) + ",";
+  
+  j += "\"pred_sc_delta\":"                   + number_str_(pred_sc_delta_) + ",";
+  j += "\"pred_sc_delta_lim\":"               + number_traits_(pred_sc_delta_) + ",";  
+
   j += "\"z1_current_temp\":"                 + climate_current_str_(virtual_climate_z1_) + ",";
   j += "\"z1_setpoint\":"                     + climate_target_str_(virtual_climate_z1_) + ",";
   j += "\"z2_current_temp\":"                 + climate_current_str_(virtual_climate_z2_) + ",";
@@ -126,6 +132,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   j += "\"status_in6_request\":"              + std::string(bin_str_(status_in6_request_)) + ",";
   j += "\"zone2_enabled\":"                   + std::string(bin_state_(status_zone2_enabled_) ? "true" : "false") + ",";
 
+  j += "\"pred_sc_en\":"                      + sw_str_(pred_sc_switch_) + ",";
   j += "\"auto_adaptive_control_enabled\":"   + sw_str_(sw_auto_adaptive_) + ",";
   j += "\"defrost_risk_handling_enabled\":"   + sw_str_(sw_defrost_mit_) + ",";
   j += "\"smart_boost_enabled\":"             + sw_str_(sw_smart_boost_) + ",";
@@ -226,6 +233,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "defrost_risk_handling_enabled") { doSwitch(sw_defrost_mit_);   return; }
   if (key == "smart_boost_enabled")           { doSwitch(sw_smart_boost_);   return; }
   if (key == "force_dhw")                     { doSwitch(sw_force_dhw_);     return; } 
+  if (key == "predictive_short_cycle_control_enabled") { doSwitch(pred_sc_switch_);   return; }
 
   auto doSelect = [&](select::Select *sel) {
     if (!sel) { ESP_LOGW(TAG, "Select not configured"); return; }
@@ -259,6 +267,9 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "minimum_heating_flow_temp_z2") { doNumber(num_min_flow_temp_z2_); return; }
   if (key == "thermostat_hysteresis_z1")    { doNumber(num_hysteresis_z1_);    return; }
   if (key == "thermostat_hysteresis_z2")    { doNumber(num_hysteresis_z2_);    return; }
+
+  if (key == "predictive_short_cycle_high_delta_time_window")    { doNumber(pred_sc_time_);    return; }
+  if (key == "predictive_short_cycle_high_delta_threshold")    { doNumber(pred_sc_delta_);    return; }
 
   if (key == "dhw_setpoint" && dhw_climate_ != nullptr) {
     auto call = dhw_climate_->make_call();
