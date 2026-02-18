@@ -113,6 +113,11 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   j += "\"z2_current_temp\":"                 + climate_current_str_(virtual_climate_z2_) + ",";
   j += "\"z2_setpoint\":"                     + climate_target_str_(virtual_climate_z2_) + ",";
 
+  j += "\"eco_z1_current\":"                  + climate_current_str_(heatpump_climate_z1_) + ",";
+  j += "\"eco_z1_setpoint\":"                 + climate_target_str_(heatpump_climate_z1_) + ",";
+  j += "\"eco_z2_current\":"                  + climate_current_str_(heatpump_climate_z2_) + ",";
+  j += "\"eco_z2_setpoint\":"                 + climate_target_str_(heatpump_climate_z2_) + ",";
+
   j += "\"status_compressor\":"               + std::string(bin_str_(status_compressor_)) + ",";
   j += "\"status_booster\":"                  + std::string(bin_str_(status_booster_)) + ",";
   j += "\"status_defrost\":"                  + std::string(bin_str_(status_defrost_)) + ",";
@@ -272,6 +277,9 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   };
   if (key == "virtual_climate_z1_setpoint") { doClimate(virtual_climate_z1_, "Z1"); return; }
   if (key == "virtual_climate_z2_setpoint") { doClimate(virtual_climate_z2_, "Z2"); return; }
+
+  if (key == "heatpump_climate_z1_setpoint") { doClimate(heatpump_climate_z1_, "Eco Z1"); return; }
+  if (key == "heatpump_climate_z2_setpoint") { doClimate(heatpump_climate_z2_, "Eco Z2"); return; }
 
   if (is_string) {
      ESP_LOGW(TAG, "Unknown string key: %s", key.c_str());

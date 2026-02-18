@@ -83,6 +83,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("dhw_climate_id"):                     cv.use_id(climate.Climate),
         cv.Optional("virtual_climate_z1_id"):              cv.use_id(climate.Climate),
         cv.Optional("virtual_climate_z2_id"):              cv.use_id(climate.Climate),
+        cv.Optional("heatpump_climate_z1_id"):             cv.use_id(climate.Climate),
+        cv.Optional("heatpump_climate_z2_id"):             cv.use_id(climate.Climate),
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
@@ -159,6 +161,8 @@ async def to_code(config):
         ("dhw_climate_id",                    "set_dhw_climate"),
         ("virtual_climate_z1_id",             "set_virtual_climate_z1"),
         ("virtual_climate_z2_id",             "set_virtual_climate_z2"),
+        ("heatpump_climate_z1_id",            "set_heatpump_climate_z1"),
+        ("heatpump_climate_z2_id",            "set_heatpump_climate_z2"),
     ]
 
     for conf_key, setter in pairs:

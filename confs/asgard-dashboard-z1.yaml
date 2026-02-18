@@ -64,4 +64,4 @@ asgard_dashboard:
   # ── Climate ───────────────────────────────────────────────────────────────
   dhw_climate_id:                    heatpump_climate_dhw
   virtual_climate_z1_id:             virtual_climate_z1
-  # virtual_climate_z2_id:           virtual_climate_z2   
+  heatpump_climate_z1_id: heatpump_climate_room_z1

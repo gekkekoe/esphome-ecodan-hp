@@ -354,7 +354,14 @@
         <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z1-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z1-sp-val">—</div><button class="step-btn" onclick="step('z1-sp', +0.1)">+</button></div></div>
       </div>
       <div class="ctrl-row"><span class="ctrl-label">Hysteresis &nbsp;<span id="z1-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span><input type="range" class="ctrl-range" id="z1-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z1')"></div>
-      <button class="send-btn" id="btn-z1" onclick="sendZone('z1', this)">Apply Zone 1</button>
+      <button class="send-btn" id="btn-z1" onclick="sendZone('z1', this)" style="margin-bottom:20px">Apply Virtual Thermostat Z1</button>
+
+      <div class="sub-label" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 5px;">Ecodan Thermostat Z1</div>
+      <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+        <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="eco-z1-current">—<span>°C</span></div></div>
+        <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('eco-z1-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="eco-z1-sp-val">—</div><button class="step-btn" onclick="step('eco-z1-sp', +0.5)">+</button></div></div>
+      </div>
+      <button class="send-btn" id="btn-eco-z1" onclick="sendEcodan('z1', this)" style="margin-bottom:0; border-color:var(--text3); color:var(--text2);">Apply Ecodan Zone 1</button>
     </div>
 
     <div class="ctrl-card" id="card-z2" style="display:none;">
@@ -369,7 +376,14 @@
         <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z2-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z2-sp-val">—</div><button class="step-btn" onclick="step('z2-sp', +0.1)">+</button></div></div>
       </div>
       <div class="ctrl-row"><span class="ctrl-label">Hysteresis &nbsp;<span id="z2-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span><input type="range" class="ctrl-range" id="z2-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z2')"></div>
-      <button class="send-btn" id="btn-z2" onclick="sendZone('z2', this)">Apply Zone 2</button>
+      <button class="send-btn" id="btn-z2" onclick="sendZone('z2', this)" style="margin-bottom:20px">Apply Virtual Thermostat Z2</button>
+
+      <div class="sub-label" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 5px;">Ecodan Thermostat Z2</div>
+      <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+        <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="eco-z2-current">—<span>°C</span></div></div>
+        <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('eco-z2-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="eco-z2-sp-val">—</div><button class="step-btn" onclick="step('eco-z2-sp', +0.5)">+</button></div></div>
+      </div>
+      <button class="send-btn" id="btn-eco-z2" onclick="sendEcodan('z2', this)" style="margin-bottom:0; border-color:var(--text3); color:var(--text2);">Apply Ecodan Zone 2</button>
     </div>
 
     <div class="ctrl-card">
@@ -379,9 +393,7 @@
       <div class="ctrl-row"><span class="ctrl-label">Smart Boost</span><label class="toggle-wrap"><input type="checkbox" id="sw-sb" onchange="sendSwitch('smart_boost_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
       
       <div class="sub-label">Curve Settings</div>
-      
       <div class="ctrl-row"><span class="ctrl-label">Setpoint Bias</span><div class="stepper"><button class="step-btn" onclick="step('aa-bias', -0.1)">−</button><div class="step-val" id="aa-bias-val">—</div><button class="step-btn" onclick="step('aa-bias', +0.1)">+</button></div></div>
-      
       <div class="ctrl-row"><span class="ctrl-label">Max Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -0.1)">−</button><div class="step-val" id="aa-max-val">—</div><button class="step-btn" onclick="step('aa-max', +0.1)">+</button></div></div>
       <div class="ctrl-row"><span class="ctrl-label">Min Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -0.1)">−</button><div class="step-val" id="aa-min-val">—</div><button class="step-btn" onclick="step('aa-min', +0.1)">+</button></div></div>
       
@@ -389,7 +401,6 @@
         <div class="ctrl-row"><span class="ctrl-label">Max Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><div class="step-val" id="aa-max-z2-val">—</div><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
         <div class="ctrl-row"><span class="ctrl-label">Min Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><div class="step-val" id="aa-min-z2-val">—</div><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
       </div>
-      
       <button class="send-btn" onclick="sendAA(this)">Apply Auto Adaptive</button>
     </div>
 
@@ -448,7 +459,9 @@ const pending = {
   'aa-bias': null, 
   'aa-max': null, 'aa-min': null, 
   'aa-max-z2': null, 'aa-min-z2': null,
-  'dhw-sp': null, 'z1-sp': null, 'z1-hyst': null, 'z2-sp': null, 'z2-hyst': null 
+  'dhw-sp': null, 
+  'z1-sp': null, 'z1-hyst': null, 'eco-z1-sp': null,
+  'z2-sp': null, 'z2-hyst': null, 'eco-z2-sp': null
 };
 
 const lastEdit = {};
@@ -462,14 +475,18 @@ const LIMITS = {
   'aa-min-z2': { min: 20, max: 55, step: 0.1 }, 
   'dhw-sp': { min: 40, max: 60, step: 0.5 }, 
   'z1-sp': { min: 10, max: 30, step: 0.1 }, 
-  'z2-sp': { min: 10, max: 30, step: 0.1 } 
+  'z2-sp': { min: 10, max: 30, step: 0.1 },
+  'eco-z1-sp': { min: 10, max: 30, step: 0.5 }, 
+  'eco-z2-sp': { min: 10, max: 30, step: 0.5 }
 };
 
 const STEP_EL = { 
   'aa-bias': 'aa-bias-val', 
   'aa-max': 'aa-max-val', 'aa-min': 'aa-min-val', 
   'aa-max-z2': 'aa-max-z2-val', 'aa-min-z2': 'aa-min-z2-val',
-  'dhw-sp': 'dhw-sp-val', 'z1-sp': 'z1-sp-val', 'z2-sp': 'z2-sp-val' 
+  'dhw-sp': 'dhw-sp-val', 
+  'z1-sp': 'z1-sp-val', 'eco-z1-sp': 'eco-z1-sp-val',
+  'z2-sp': 'z2-sp-val', 'eco-z2-sp': 'eco-z2-sp-val'
 };
 
 let lastGraphUpdate = 0;
@@ -993,6 +1010,12 @@ function render(d) {
   seedPending('z2-sp', d.z2_setpoint);
   seedHyst('z2', d.thermostat_hysteresis_z2);
 
+  setText('eco-z1-current', fmt1(d.eco_z1_current));
+  seedPending('eco-z1-sp', d.eco_z1_setpoint);
+
+  setText('eco-z2-current', fmt1(d.eco_z2_current));
+  seedPending('eco-z2-sp', d.eco_z2_setpoint);
+
   seedPending('aa-bias', d.auto_adaptive_setpoint_bias);
   seedPending('aa-max',  d.maximum_heating_flow_temp);
   seedPending('aa-min',  d.minimum_heating_flow_temp);
@@ -1115,6 +1138,19 @@ async function sendZone(zone, btn) {
     if (hasChanged(zone + '-sp'))   { await apiPost({ key: 'virtual_climate_' + zone + '_setpoint', value: pending[zone+'-sp'] }); c++; }
     if (hasChanged(zone + '-hyst')) { await apiPost({ key: 'thermostat_hysteresis_' + zone,         value: pending[zone+'-hyst'] }); c++; }
     showToast(c > 0 ? '✓ Zone ' + zone.toUpperCase() + ' updated' : 'No changes');
+  } catch(e) { showToast('✗ ' + e.message, true); }
+  btn.classList.remove('sending');
+}
+
+async function sendEcodan(zone, btn) {
+  btn.classList.add('sending');
+  try {
+    if (hasChanged('eco-' + zone + '-sp')) { 
+      await apiPost({ key: 'heatpump_climate_' + zone + '_setpoint', value: pending['eco-'+zone+'-sp'] }); 
+      showToast('✓ Ecodan Zone ' + zone.toUpperCase() + ' updated');
+    } else {
+      showToast('No changes');
+    }
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');
 }
