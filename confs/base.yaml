@@ -430,9 +430,14 @@ sensor:
           if (controller_day != last_day_of_year) {
             last_day_of_year = controller_day;
             partial_sum = 0.0f;
+            last_value = x;
+            return partial_sum;
           }
 
-          partial_sum += x >= last_value ? (x - last_value) : (65536 + x - last_value);
+          if (x >= last_value) {
+            partial_sum += (x - last_value);
+          }
+          // roll overs are auto handled by total_increasing
           last_value = x;
           return partial_sum;
   
