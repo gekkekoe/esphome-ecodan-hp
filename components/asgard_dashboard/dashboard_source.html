@@ -285,16 +285,16 @@
     <div style="display:flex; align-items:center; gap:15px;">
       <div class="section-title" style="margin:0">Temperatures</div>
       <button class="log-btn" id="btn-reset-zoom" style="display:none; padding: 2px 8px; font-size: 9px;" onclick="resetAllZoom()">Reset Zoom</button>
-    </div>
-      <div class="chart-legend">
+    </div>  
+    <div class="chart-legend">
         <div class="legend-item"><div class="legend-dot" style="background:#ff6b35"></div>Feed</div>
         <div class="legend-item"><div class="legend-dot" style="background:#00c8ff"></div>Return</div>
         <div class="legend-item"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #ffb020 0 4px, transparent 4px 7px)"></div>Z1 Target</div>
+        <div class="legend-item" id="leg-z2"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #c084fc 0 4px, transparent 4px 7px)"></div>Z2 Target</div>
         <div class="legend-item"><div class="legend-dot" style="background:#ffff00"></div>Z1 Current</div>
+        <div class="legend-item" id="leg-z2-curr"><div class="legend-dot" style="background:#ff69b4"></div>Z2 Current</div>
         <div class="legend-item"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #00ffff 0 8px, transparent 8px 12px)"></div>Z1 Flow Setpoint</div>
-        <div class="legend-item" id="leg-z2" style="display:none"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #c084fc 0 4px, transparent 4px 7px)"></div>Z2 Target</div>
-        <div class="legend-item" id="leg-z2-curr" style="display:none"><div class="legend-dot" style="background:#ff69b4"></div>Z2 Current</div>
-        <div class="legend-item" id="leg-z2-flow" style="display:none"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #8a2be2 0 8px, transparent 8px 12px)"></div>Z2 Flow Setpoint</div>
+        <div class="legend-item" id="leg-z2-flow"><div class="legend-dot" style="background: repeating-linear-gradient(90deg, #8a2be2 0 8px, transparent 8px 12px)"></div>Z2 Flow Setpoint</div>
       </div>
     </div>
     <div class="chart-container"><canvas id="tempChart"></canvas></div>
@@ -900,7 +900,19 @@ function updateCharts(d) {
   tempChart.data.datasets[7].data = history.z2flow;
   
   const isZ2 = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
-  [3,5,7].forEach(idx => tempChart.data.datasets[idx].hidden = !isZ2);
+  // show/hide z2
+  [3, 5, 7].forEach(idx => {
+      if(tempChart.data.datasets[idx]) {
+          tempChart.data.datasets[idx].hidden = !isZ2;
+      }
+  });
+
+  const z2LegendIds = ['leg-z2', 'leg-z2-curr', 'leg-z2-flow'];
+  z2LegendIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = isZ2 ? 'flex' : 'none';
+  });
+  // -------------------------------
   
   freqChart.data.datasets[0].data = history.freq;
 
