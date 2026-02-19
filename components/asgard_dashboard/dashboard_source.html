@@ -7,10 +7,15 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@300;400;500;600&display=swap');
 
-  :root {
+:root {
     --bg: #0a0e1a; --bg2: #0f1525; --bg3: #151c30; --card: #131929; --border: #1e2d4a;
     --accent: #00c8ff; --accent3: #7fff7f; --warn: #ffb020; --danger: #ff4455;
-    --purple: #c084fc; --text: #e2eaff; --text2: #8899bb; --text3: #4a5a7a;
+    --purple: #c084fc; 
+    
+    --text: #ffffff; 
+    --text2: #b4c6e7;
+    --text3: #8295b8;
+    
     --heat: #ff6b35; --cool: #00c8ff; --radius: 12px;
     --mono: 'JetBrains Mono', monospace; --sans: 'Space Grotesk', sans-serif;
   }
@@ -23,8 +28,6 @@
     padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
     gap: 10px; position: sticky; top: 0; z-index: 100; 
   }
-
-  .header-badges { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
   
   .header-right {
     display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
@@ -46,7 +49,19 @@
 
   @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-  .badge { display: flex; flex-direction: column; align-items: center; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 3px 8px; min-width: 52px; transition: border-color 0.2s; }
+  .header-badges { 
+    display: flex; gap: 6px; flex: 1; 
+    flex-wrap: nowrap; overflow-x: auto; 
+    padding-bottom: 4px; scrollbar-width: none; 
+    -webkit-overflow-scrolling: touch;
+  }
+  .header-badges::-webkit-scrollbar { display: none; } /* Hides scrollbar on Chrome/Safari */
+  .badge { 
+    display: flex; flex-direction: column; align-items: center; background: var(--bg3); 
+    border: 1px solid var(--border); border-radius: 8px; padding: 3px 8px; 
+    min-width: 52px; transition: border-color 0.2s; 
+    flex: 0 0 auto; 
+  }
   .badge:hover { border-color: var(--accent); }
   .badge-label { 
     display: flex; 
@@ -88,7 +103,13 @@
   .toggle-wrap input:checked + .toggle-slider { background: rgba(127,255,127,0.15); border-color: var(--accent3); }
   .toggle-wrap input:checked + .toggle-slider::before { transform: translateX(17px); background: var(--accent3); }
 
-  .ctrl-select { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; cursor: pointer; outline: none; width: 220px; max-width: 100%; text-align: left; }
+  .ctrl-select { 
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; 
+    color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; 
+    cursor: pointer; outline: none; 
+    flex: 1; max-width: 220px; margin-left: 10px;
+    text-align: left; 
+  }
   .ctrl-select:focus { border-color: var(--accent); }
   .stepper { display: flex; align-items: center; gap: 5px; }
   .step-btn { width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
@@ -159,6 +180,13 @@
   .toast.error { border-color: var(--danger); color: var(--danger); }
 
   @media (min-width: 768px) { .chart-container { height: 200px; } .full-width { grid-column: 1 / -1; } }
+  @media (max-width: 480px) {
+      header { flex-wrap: wrap; }
+      .header-right { flex-direction: row; justify-content: space-between; width: 100%; margin-top: 5px; }
+      .ctrl-card { padding: 12px; }
+      .stat-row { gap: 8px; justify-content: space-between; }
+      .ctrl-label { font-size: 10px; }
+    }
 </style>
 </head>
 <body>
@@ -369,35 +397,40 @@
 </div>
 
 <div id="view-settings" class="view-section">
-  <div style="display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
+  <div style="display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
     
+
     <div class="ctrl-card">
       <div class="section-title">Zone 1</div>
       <div class="ctrl-row"><span class="ctrl-label">Operating Mode</span><select class="ctrl-select" id="sel-z1mode" onchange="sendSelect('operating_mode_z1', this)"><option>Heat Target Temperature</option><option>Heat Flow Temperature</option><option>Heat Compensation Curve</option><option>Cool Target Temperature</option><option>Cool Flow Temperature</option><option>Floor Dry Up</option><option>Cool Compensation Curve</option></select></div>
-      <div class="ctrl-row"><span class="ctrl-label">Room Temp Source</span><select class="ctrl-select" id="sel-z1src" onchange="sendSelect('room_temp_source_z1', this)"><option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option></select></div>
-      <div class="ctrl-row"><span class="ctrl-label">Temp Sensor Source</span><select class="ctrl-select" id="sel-z1ts" onchange="sendSelect('temp_sensor_source_z1', this)"><option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC</option></select></div>
       
-      <div class="sub-label">
-        <span id="dot-z1" class="status-dot"></span>Virtual Thermostat Z1
-      </div>
-      <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
-        <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="z1-current">—<span>°C</span></div></div>
-        <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z1-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z1-sp-val">—</div><button class="step-btn" onclick="step('z1-sp', +0.1)">+</button></div></div>
-      </div>
-      <div class="ctrl-row"><span class="ctrl-label">Hysteresis &nbsp;<span id="z1-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span><input type="range" class="ctrl-range" id="z1-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z1')"></div>
-      <button class="send-btn" id="btn-z1" onclick="sendZone('z1', this)" style="margin-bottom:20px">Apply Virtual Thermostat Z1</button>
-
-      <div id="flow-z1-area">
-        <div class="sub-label" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 5px;">Flow Climate Z1</div>
+      <div id="flow-z1-area" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Flow Climate Z1</div>
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="flow-z1-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z1-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="flow-z1-sp-val">—</div><button class="step-btn" onclick="step('flow-z1-sp', +0.1)">+</button></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z1-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="flow-z1-sp-val">—</div><button class="step-btn" onclick="step('flow-z1-sp', +0.5)">+</button></div></div>
         </div>
-        <button class="send-btn" id="btn-flow-z1" onclick="sendFlow('z1', this)" style="margin-bottom:20px;">Apply Flow Z1</button>
+        <button class="send-btn" id="btn-flow-z1" onclick="sendFlow('z1', this)" style="margin-bottom:0;">Apply Flow Z1</button>
       </div>
 
-      <div id="room-z1-section">
-        <div class="sub-label" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 5px;">Room Thermostat Z1</div>
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 0;">
+          <span id="dot-z1" class="status-dot"></span>Virtual Thermostat Z1
+        </div>
+        <div class="ctrl-row" style="border-bottom: 1px dashed var(--border); margin-bottom: 10px; padding-bottom: 12px;"><span class="ctrl-label">Temp Sensor Source</span><select class="ctrl-select" id="sel-z1ts" onchange="sendSelect('temp_sensor_source_z1', this)"><option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC</option></select></div>
+        
+        <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+          <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="z1-current">—<span>°C</span></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z1-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z1-sp-val">—</div><button class="step-btn" onclick="step('z1-sp', +0.1)">+</button></div></div>
+        </div>
+        <div class="ctrl-row"><span class="ctrl-label">Hysteresis &nbsp;<span id="z1-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span><input type="range" class="ctrl-range" id="z1-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z1')"></div>
+        <button class="send-btn" id="btn-z1" onclick="sendZone('z1', this)" style="margin-bottom:0">Apply Virtual Thermostat Z1</button>
+      </div>
+
+      <div id="room-z1-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">
+          <span id="dot-room-z1" class="status-dot"></span>Room Thermostat Z1
+        </div>
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="room-z1-current">—<span>°C</span></div></div>
           <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('room-z1-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="room-z1-sp-val">—</div><button class="step-btn" onclick="step('room-z1-sp', +0.5)">+</button></div></div>
@@ -409,77 +442,103 @@
     <div class="ctrl-card" id="card-z2" style="display:none;">
       <div class="section-title">Zone 2</div>
       <div class="ctrl-row"><span class="ctrl-label">Operating Mode</span><select class="ctrl-select" id="sel-z2mode" onchange="sendSelect('operating_mode_z2', this)"><option>Heat Target Temperature</option><option>Heat Flow Temperature</option><option>Heat Compensation Curve</option><option>Cool Target Temperature</option><option>Cool Flow Temperature</option><option>Floor Dry Up</option><option>Cool Compensation Curve</option></select></div>
-      <div class="ctrl-row" id="row-z2src"><span class="ctrl-label">Room Temp Source</span><select class="ctrl-select" id="sel-z2src" onchange="sendSelect('room_temp_source_z2', this)"><option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option></select></div>
-      <div class="ctrl-row"><span class="ctrl-label">Temp Sensor Source</span><select class="ctrl-select" id="sel-z2ts" onchange="sendSelect('temp_sensor_source_z2', this)"><option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC</option></select></div>
 
-      <div class="sub-label">
-        <span id="dot-z2" class="status-dot"></span>Virtual Thermostat Z2
-      </div>
-
-      <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
-        <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="z2-current">—<span>°C</span></div></div>
-        <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z2-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z2-sp-val">—</div><button class="step-btn" onclick="step('z2-sp', +0.1)">+</button></div></div>
-      </div>
-      <div class="ctrl-row"><span class="ctrl-label">Hysteresis &nbsp;<span id="z2-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span><input type="range" class="ctrl-range" id="z2-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z2')"></div>
-      <button class="send-btn" id="btn-z2" onclick="sendZone('z2', this)" style="margin-bottom:20px">Apply Virtual Thermostat Z2</button>
-
-      <div id="flow-z2-area" style="display:none;">
-        <div class="sub-label" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 5px;">Flow Climate Z2</div>
+      <div id="flow-z2-area" style="display:none; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Flow Climate Z2</div>
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="flow-z2-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z2-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="flow-z2-sp-val">—</div><button class="step-btn" onclick="step('flow-z2-sp', +0.1)">+</button></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z2-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="flow-z2-sp-val">—</div><button class="step-btn" onclick="step('flow-z2-sp', +0.5)">+</button></div></div>
         </div>
-        <button class="send-btn" id="btn-flow-z2" onclick="sendFlow('z2', this)" style="margin-bottom:20px;">Apply Flow Z2</button>
+        <button class="send-btn" id="btn-flow-z2" onclick="sendFlow('z2', this)" style="margin-bottom:0;">Apply Flow Z2</button>
       </div>
 
-      <div id="room-z2-section">
-        <div class="sub-label" style="border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 5px;">Room Thermostat Z2</div>
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 0;">
+          <span id="dot-z2" class="status-dot"></span>Virtual Thermostat Z2
+        </div>
+        <div class="ctrl-row" style="border-bottom: 1px dashed var(--border); margin-bottom: 10px; padding-bottom: 12px;"><span class="ctrl-label">Temp Sensor Source</span><select class="ctrl-select" id="sel-z2ts" onchange="sendSelect('temp_sensor_source_z2', this)"><option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC</option></select></div>
+        
+        <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+          <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="z2-current">—<span>°C</span></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z2-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z2-sp-val">—</div><button class="step-btn" onclick="step('z2-sp', +0.1)">+</button></div></div>
+        </div>
+        <div class="ctrl-row"><span class="ctrl-label">Hysteresis &nbsp;<span id="z2-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span><input type="range" class="ctrl-range" id="z2-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z2')"></div>
+        <button class="send-btn" id="btn-z2" onclick="sendZone('z2', this)" style="margin-bottom:0">Apply Virtual Thermostat Z2</button>
+      </div>
+
+      <div id="room-z2-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">
+          <span id="dot-room-z2" class="status-dot"></span>Room Thermostat Z2
+        </div>
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="room-z2-current">—<span>°C</span></div></div>
           <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('room-z2-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="room-z2-sp-val">—</div><button class="step-btn" onclick="step('room-z2-sp', +0.5)">+</button></div></div>
         </div>
-        <button class="send-btn" id="btn-room-z2" onclick="sendRoom('z2', this)" style="margin-bottom:0;">Apply Room Thermostaat Z2</button>
+        <button class="send-btn" id="btn-room-z2" onclick="sendRoom('z2', this)" style="margin-bottom:0;">Apply Room Thermostat Z2</button>
       </div>
     </div>
 
     <div class="ctrl-card">
       <div class="section-title">Auto Adaptive</div>
-      <div class="ctrl-row"><span class="ctrl-label">Enable AA Control</span><label class="toggle-wrap"><input type="checkbox" id="sw-aa" onchange="sendSwitch('auto_adaptive_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
-      <div class="ctrl-row"><span class="ctrl-label">Defrost Protection</span><label class="toggle-wrap"><input type="checkbox" id="sw-dm" onchange="sendSwitch('defrost_risk_handling_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
-      <div class="ctrl-row"><span class="ctrl-label">Smart Boost</span><label class="toggle-wrap"><input type="checkbox" id="sw-sb" onchange="sendSwitch('smart_boost_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
       
-      <div class="sub-label">Curve Settings</div>
-      <div class="ctrl-row"><span class="ctrl-label">Setpoint Bias</span><div class="stepper"><button class="step-btn" onclick="step('aa-bias', -0.1)">−</button><div class="step-val" id="aa-bias-val">—</div><button class="step-btn" onclick="step('aa-bias', +0.1)">+</button></div></div>
-      <div class="ctrl-row"><span class="ctrl-label">Max Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -0.1)">−</button><div class="step-val" id="aa-max-val">—</div><button class="step-btn" onclick="step('aa-max', +0.1)">+</button></div></div>
-      <div class="ctrl-row"><span class="ctrl-label">Min Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -0.1)">−</button><div class="step-val" id="aa-min-val">—</div><button class="step-btn" onclick="step('aa-min', +0.1)">+</button></div></div>
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
+        <div class="ctrl-row" style="padding-top: 0;"><span class="ctrl-label">Enable AA Control</span><label class="toggle-wrap"><input type="checkbox" id="sw-aa" onchange="sendSwitch('auto_adaptive_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
+        <div class="ctrl-row"><span class="ctrl-label">Defrost Mitigation</span><label class="toggle-wrap"><input type="checkbox" id="sw-dm" onchange="sendSwitch('defrost_risk_handling_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Smart Boost</span><label class="toggle-wrap"><input type="checkbox" id="sw-sb" onchange="sendSwitch('smart_boost_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
+      </div>
       
-      <div id="aa-z2-container" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border)">
-        <div class="ctrl-row"><span class="ctrl-label">Max Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><div class="step-val" id="aa-max-z2-val">—</div><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
-        <div class="ctrl-row"><span class="ctrl-label">Min Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><div class="step-val" id="aa-min-z2-val">—</div><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Z1/Z2 Settings</div>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Setpoint Bias</span><div class="stepper"><button class="step-btn" onclick="step('aa-bias', -0.1)">−</button><div class="step-val" id="aa-bias-val">—</div><button class="step-btn" onclick="step('aa-bias', +0.1)">+</button></div></div>
+      </div>
+      
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Short Cycle Protection</div>
+        <div class="ctrl-row"><span class="ctrl-label">Predictive Control</span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
+        <div class="ctrl-row"><span class="ctrl-label">Time Window (min)</span><div class="stepper"><button class="step-btn" onclick="step('psc-win', -0.5)">−</button><div class="step-val" id="psc-win-val">—</div><button class="step-btn" onclick="step('psc-win', +0.5)">+</button></div></div>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Delta Threshold (°C)</span><div class="stepper"><button class="step-btn" onclick="step('psc-delta', -0.5)">−</button><div class="step-val" id="psc-delta-val">—</div><button class="step-btn" onclick="step('psc-delta', +0.5)">+</button></div></div>
       </div>
 
-      <div class="sub-label" style="border-top:1px dashed var(--border); margin-top:10px; padding-top:10px">Short Cycle Protection</div>
-      <div class="ctrl-row"><span class="ctrl-label">Predictive Control</span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
-      <div class="ctrl-row"><span class="ctrl-label">Time Window (min)</span><div class="stepper"><button class="step-btn" onclick="step('psc-win', -0.5)">−</button><div class="step-val" id="psc-win-val">—</div><button class="step-btn" onclick="step('psc-win', +0.5)">+</button></div></div>
-      <div class="ctrl-row"><span class="ctrl-label">Delta Threshold (°C)</span><div class="stepper"><button class="step-btn" onclick="step('psc-delta', -0.5)">−</button><div class="step-val" id="psc-delta-val">—</div><button class="step-btn" onclick="step('psc-delta', +0.5)">+</button></div></div>
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Settings Z1</div>
+        <div class="ctrl-row"><span class="ctrl-label">Room Temp Source Z1</span><select class="ctrl-select" id="sel-z1src" onchange="sendSelect('room_temp_source_z1', this)"><option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option></select></div>
+        <div class="ctrl-row"><span class="ctrl-label">Max Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -0.1)">−</button><div class="step-val" id="aa-max-val">—</div><button class="step-btn" onclick="step('aa-max', +0.1)">+</button></div></div>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -0.1)">−</button><div class="step-val" id="aa-min-val">—</div><button class="step-btn" onclick="step('aa-min', +0.1)">+</button></div></div>
+      </div>
+      
+      <div id="aa-z2-container" style="display:none; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Settings Z2</div>
+        <div class="ctrl-row" id="row-z2src"><span class="ctrl-label">Room Temp Source Z2</span><select class="ctrl-select" id="sel-z2src" onchange="sendSelect('room_temp_source_z2', this)"><option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option></select></div>
+        <div class="ctrl-row"><span class="ctrl-label">Max Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><div class="step-val" id="aa-max-z2-val">—</div><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><div class="step-val" id="aa-min-z2-val">—</div><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
+      </div>
 
       <button class="send-btn" onclick="sendAA(this)" style="margin-top:15px">Apply Auto Adaptive</button>
     </div>
 
     <div class="ctrl-card">
       <div class="section-title">DHW</div>
-      <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
-        <div><div class="stat-label">Tank Temp</div><div class="big-temp" id="dhw-current">—<span>°C</span></div></div>
-        <div style="flex:1;"><div class="stat-label">Target</div><div class="stepper"><button class="step-btn" onclick="step('dhw-sp', -0.5)">−</button><div class="step-val" id="dhw-sp-val">—</div><button class="step-btn" onclick="step('dhw-sp', +0.5)">+</button></div></div>
+      
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
+        <div class="ctrl-row" style="border-bottom: none; padding: 0;"><span class="ctrl-label">Force DHW Now</span><label class="toggle-wrap"><input type="checkbox" id="sw-fdhw" onchange="sendSwitch('force_dhw', this.checked)"><span class="toggle-slider"></span></label></div>
       </div>
-      <div class="stat-row" style="margin-bottom:15px">
-        <div class="stat-item"><span class="stat-label">Setpoint</span><span class="stat-value" id="dhw-setpoint">—</span></div>
-        <div class="stat-item"><span class="stat-label">Drop</span><span class="stat-value" id="dhw-drop">—</span></div>
-        <div class="stat-item"><span class="stat-label">Consumed</span><span class="stat-value" id="dhw-cons">—</span></div>
-        <div class="stat-item"><span class="stat-label">Produced</span><span class="stat-value" id="dhw-prod">—</span></div>
+
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="stat-row" style="margin-top: 0;">
+          <div class="stat-item"><span class="stat-label">Setpoint</span><span class="stat-value" id="dhw-setpoint">—</span></div>
+          <div class="stat-item"><span class="stat-label">Drop</span><span class="stat-value" id="dhw-drop">—</span></div>
+          <div class="stat-item"><span class="stat-label">Consumed</span><span class="stat-value" id="dhw-cons">—</span></div>
+          <div class="stat-item"><span class="stat-label">Produced</span><span class="stat-value" id="dhw-prod">—</span></div>
+        </div>
       </div>
-      <div class="ctrl-row"><span class="ctrl-label">Force DHW Now</span><label class="toggle-wrap"><input type="checkbox" id="sw-fdhw" onchange="sendSwitch('force_dhw', this.checked)"><span class="toggle-slider"></span></label></div>
-      <button class="send-btn" onclick="sendDHW(this)">Apply DHW</button>
+
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+          <div><div class="stat-label">Tank Temp</div><div class="big-temp" id="dhw-current">—<span>°C</span></div></div>
+          <div style="flex:1;"><div class="stat-label">Target</div><div class="stepper"><button class="step-btn" onclick="step('dhw-sp', -0.5)">−</button><div class="step-val" id="dhw-sp-val">—</div><button class="step-btn" onclick="step('dhw-sp', +0.5)">+</button></div></div>
+        </div>
+        <button class="send-btn" onclick="sendDHW(this)" style="margin-bottom:0;">Apply DHW</button>
+      </div>
     </div>
 
   </div>
@@ -598,29 +657,7 @@ function switchTab(viewId, btn) {
   btn.classList.add('active');
 }
 
-// -- STORAGE & CHARTS --
-function saveHistory() { try { localStorage.setItem('asgard_history', JSON.stringify(history)); } catch(e) {} }
-
-function loadHistory() {
-  const raw = localStorage.getItem('asgard_history');
-  if (!raw) return;
-  try {
-    const saved = JSON.parse(raw);
-    if (saved.timestamps && saved.timestamps.length > 0) {
-       Object.keys(history).forEach(k => {
-         if (saved[k] && Array.isArray(saved[k])) {
-            history[k] = saved[k];
-         } else if (k.startsWith('z1flow') || k.startsWith('z2flow')) {
-            history[k] = new Array(saved.timestamps.length).fill(null);
-         }
-       });
-    }
-  } catch(e) { console.warn("History load failed", e); }
-}
-
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveHistory(); });
-setInterval(saveHistory, 60000);
-
+// -- CHARTS --
 function getActivityColor(mode, alpha) {
   if (!mode) return `rgba(74, 90, 122, ${alpha})`;
   const m = mode.toLowerCase();
@@ -1218,10 +1255,10 @@ async function sendAA(btn) {
   let c = 0;
   try {
     if (hasChanged('aa-bias'))   { await apiPost({ key: 'auto_adaptive_setpoint_bias', value: pending['aa-bias'] }); c++; }
-    if (hasChanged('aa-max'))    { await apiPost({ key: 'auto_adaptive_max_flow_temp_z1', value: pending['aa-max'] }); c++; }
-    if (hasChanged('aa-min'))    { await apiPost({ key: 'auto_adaptive_min_flow_temp_z1', value: pending['aa-min'] }); c++; }
-    if (hasChanged('aa-max-z2')) { await apiPost({ key: 'auto_adaptive_max_flow_temp_z2', value: pending['aa-max-z2'] }); c++; }
-    if (hasChanged('aa-min-z2')) { await apiPost({ key: 'auto_adaptive_min_flow_temp_z2', value: pending['aa-min-z2'] }); c++; }
+    if (hasChanged('aa-max'))    { await apiPost({ key: 'maximum_heating_flow_temp', value: pending['aa-max'] }); c++; }
+    if (hasChanged('aa-min'))    { await apiPost({ key: 'minimum_heating_flow_temp', value: pending['aa-min'] }); c++; }
+    if (hasChanged('aa-max-z2')) { await apiPost({ key: 'maximum_heating_flow_temp_z2', value: pending['aa-max-z2'] }); c++; }
+    if (hasChanged('aa-min-z2')) { await apiPost({ key: 'minimum_heating_flow_temp_z2', value: pending['aa-min-z2'] }); c++; }
     if (hasChanged('psc-win'))   { await apiPost({ key: 'predictive_short_cycle_high_delta_time_window', value: pending['psc-win'] }); c++; }
     if (hasChanged('psc-delta')) { await apiPost({ key: 'predictive_short_cycle_high_delta_threshold', value: pending['psc-delta'] }); c++; }
     showToast(c > 0 ? '✓ Auto Adaptive updated' : 'No changes');
@@ -1428,6 +1465,60 @@ function showResetButton() {
   document.getElementById('btn-reset-zoom').style.display = 'block';
 }
 
+async function loadServerHistory() {
+  try {
+    const res = await fetch('/dashboard/history');
+    const data = await res.json();
+    if (!data.length) return;
+    
+    history.timestamps = []; history.feed = []; history.ret = [];
+    history.z1sp = []; history.z2sp = []; history.z1curr = []; history.z2curr = [];
+    history.z1flow = []; history.z2flow = []; history.freq = []; history.mode = [];
+    history.bin_comp = []; history.bin_boost = []; history.bin_defrost = [];
+    history.bin_pump = []; history.bin_in1 = []; history.bin_in6 = [];
+
+    const modeMap = {0: "Standby", 1: "Heating", 2: "Cooling", 3: "DHW", 4: "Legionella", 5: "Defrost"};
+    const serverLastTs = data[data.length - 1][0] * 1000; 
+    const browserNow = Date.now();
+    let timeOffset = 0;
+    
+    if (Math.abs(browserNow - serverLastTs) > 86400000) {
+      timeOffset = browserNow - serverLastTs;
+    }
+    // ----------------------------------------
+
+    data.forEach(row => {
+      const ts = (row[0] * 1000) + timeOffset; 
+      
+      const getF = (val) => val === -32768 ? null : val / 10.0;
+      const flags = row[10];
+      
+      history.timestamps.push(ts);
+      history.feed.push(getF(row[1]));
+      history.ret.push(getF(row[2]));
+      history.z1sp.push(getF(row[3]));
+      history.z2sp.push(getF(row[4]));
+      history.z1curr.push(getF(row[5]));
+      history.z2curr.push(getF(row[6]));
+      history.z1flow.push(getF(row[7]));
+      history.z2flow.push(getF(row[8]));
+      history.freq.push(getF(row[9]));
+      
+      history.bin_comp.push((flags & (1 << 0)) ? 1 : 0);
+      history.bin_boost.push((flags & (1 << 1)) ? 1 : 0);
+      history.bin_defrost.push((flags & (1 << 2)) ? 1 : 0);
+      history.bin_pump.push((flags & (1 << 3)) ? 1 : 0);
+      history.bin_in1.push((flags & (1 << 4)) ? 1 : 0);
+      history.bin_in6.push((flags & (1 << 5)) ? 1 : 0);
+      
+      const modeNum = (flags >> 6) & 0x0F;
+      history.mode.push(modeMap[modeNum] || "Unknown");
+    });
+    
+    tempChart.update('none'); freqChart.update('none'); statusChart.update('none');
+  } catch(e) { console.error("History fetch failed", e); }
+}
+
 (function loadChartJS() {
   const s = document.createElement('script');
   s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
@@ -1437,13 +1528,15 @@ function showResetButton() {
     h.onload = () => {
       const z = document.createElement('script');
       z.src = 'https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1';
-      z.onload = () => {
+      
+      z.onload = async () => {
         initCharts(); 
-        loadHistory(); 
-        fetchState(); 
+        await loadServerHistory(); // Fetch 24h history from ESP32
+        fetchState(); // Then fetch the current live state
         startLog(); 
-        setInterval(fetchState, POLL_MS); 
+        setInterval(fetchState, POLL_MS); // Start 5-second live polling
       };
+      
       document.head.appendChild(z);
     };
     document.head.appendChild(h);

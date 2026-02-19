@@ -22,6 +22,21 @@ struct DashboardAction {
   bool is_string;
 };
 
+// 24 bytes per record
+struct HistoryRecord {
+  uint32_t timestamp;
+  int16_t hp_feed;
+  int16_t hp_return;
+  int16_t z1_sp;
+  int16_t z2_sp;
+  int16_t z1_curr;
+  int16_t z2_curr;
+  int16_t z1_flow;
+  int16_t z2_flow;
+  int16_t freq;
+  uint16_t flags; // Bit 0-5 = booleans, Bit 6-9 = mode
+};
+
 class EcodanDashboard : public Component, public AsyncWebHandler {
  public:
   void setup() override;
@@ -232,6 +247,18 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   climate::Climate *heatpump_climate_z2_{nullptr};
   climate::Climate *flow_climate_z1_{nullptr};
   climate::Climate *flow_climate_z2_{nullptr};
+
+private:
+  static const size_t MAX_HISTORY = 1440; // 24h, 1min interval
+  HistoryRecord history_buffer_[MAX_HISTORY];
+  size_t history_head_{0};
+  size_t history_count_{0};
+  uint32_t last_history_time_{0};
+
+  void record_history_();
+  void handle_history_request_(AsyncWebServerRequest *request);
+  static int16_t pack_temp_(float val);
+  static uint8_t encode_mode_(const std::string &mode);
 };
 
 }  // namespace asgard_dashboard

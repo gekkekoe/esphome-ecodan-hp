@@ -19,6 +19,13 @@ void EcodanDashboard::setup() {
 }
 
 void EcodanDashboard::loop() {
+
+  uint32_t now = millis();
+  if (now - last_history_time_ >= 60000 || last_history_time_ == 0) {
+    last_history_time_ = now;
+    record_history_();
+  }
+
   if (action_queue_.empty()) return;
 
   std::vector<DashboardAction> todo;
@@ -36,7 +43,8 @@ void EcodanDashboard::loop() {
 bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
   const auto& url = request->url();
   return (url == "/dashboard" || url == "/dashboard/" ||
-          url == "/dashboard/state" || url == "/dashboard/set");
+          url == "/dashboard/state" || url == "/dashboard/set" ||
+          url == "/dashboard/history");
 }
 
 void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
@@ -44,6 +52,7 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
   if      (url == "/dashboard" || url == "/dashboard/") handle_root_(request);
   else if (url == "/dashboard/state")                   handle_state_(request);
   else if (url == "/dashboard/set")                     handle_set_(request);
+  else if (url == "/dashboard/history")                 handle_history_request_(request);
   else                                                  request->send(404, "text/plain", "Not found");
 }
 
@@ -400,6 +409,85 @@ std::string EcodanDashboard::number_traits_(number::Number *n) {
   snprintf(buf, sizeof(buf), "{\"min\":%.1f,\"max\":%.1f,\"step\":%.1f}", 
            n->traits.get_min_value(), n->traits.get_max_value(), n->traits.get_step());
   return std::string(buf);
+}
+
+// History handling
+
+int16_t EcodanDashboard::pack_temp_(float val) {
+  if (std::isnan(val)) return -32768; 
+  return static_cast<int16_t>(val * 10.0f);
+}
+
+uint8_t EcodanDashboard::encode_mode_(const std::string &mode) {
+  std::string m = mode;
+  for (char &c : m) c = std::tolower((unsigned char)c);
+  if (m.find("legionella") != std::string::npos) return 4;
+  if (m.find("hot water") != std::string::npos || m.find("dhw") != std::string::npos) return 3;
+  if (m.find("cool") != std::string::npos) return 2;
+  if (m.find("heat") != std::string::npos) return 1;
+  if (m.find("defrost") != std::string::npos) return 5;
+  return 0; // standby/off
+}
+
+void EcodanDashboard::record_history_() {
+  HistoryRecord rec;
+  rec.timestamp = time(nullptr); 
+
+  auto get_sensor = [](sensor::Sensor *s) { return (s && s->has_state()) ? s->state : NAN; };
+  auto get_curr = [](climate::Climate *c) { return (c) ? c->current_temperature : NAN; };
+  auto get_targ = [](climate::Climate *c) { return (c) ? c->target_temperature : NAN; };
+
+  rec.hp_feed   = pack_temp_(get_sensor(hp_feed_temp_));
+  rec.hp_return = pack_temp_(get_sensor(hp_return_temp_));
+  rec.z1_sp     = pack_temp_(get_targ(virtual_climate_z1_));
+  rec.z2_sp     = pack_temp_(get_targ(virtual_climate_z2_));
+  rec.z1_curr   = pack_temp_(get_curr(virtual_climate_z1_));
+  rec.z2_curr   = pack_temp_(get_curr(virtual_climate_z2_));
+  rec.z1_flow   = pack_temp_(get_sensor(z1_flow_temp_target_));
+  rec.z2_flow   = pack_temp_(get_sensor(z2_flow_temp_target_));
+  rec.freq      = pack_temp_(get_sensor(compressor_frequency_));
+
+  rec.flags = 0;
+  if (bin_state_(status_compressor_))  rec.flags |= (1 << 0);
+  if (bin_state_(status_booster_))     rec.flags |= (1 << 1);
+  if (bin_state_(status_defrost_))     rec.flags |= (1 << 2);
+  if (bin_state_(status_water_pump_))  rec.flags |= (1 << 3);
+  if (bin_state_(status_in1_request_)) rec.flags |= (1 << 4);
+  if (bin_state_(status_in6_request_)) rec.flags |= (1 << 5);
+
+  std::string mode_str = (status_operation_ && status_operation_->has_state()) ? status_operation_->state : "";
+  uint8_t mode_enc = encode_mode_(mode_str);
+  rec.flags |= ((mode_enc & 0x0F) << 6);
+
+  history_buffer_[history_head_] = rec;
+  history_head_ = (history_head_ + 1) % MAX_HISTORY;
+  if (history_count_ < MAX_HISTORY) history_count_++;
+}
+
+void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
+  AsyncResponseStream *response = request->beginResponseStream("application/json");
+  response->addHeader("Access-Control-Allow-Origin", "*");
+  response->addHeader("Cache-Control", "no-cache");
+  response->print("[");
+  
+  size_t start_idx = (history_count_ == MAX_HISTORY) ? history_head_ : 0;
+  
+  for (size_t i = 0; i < history_count_; i++) {
+    size_t idx = (start_idx + i) % MAX_HISTORY;
+    const HistoryRecord &rec = history_buffer_[idx];
+    
+    if (i > 0) response->print(",");
+    
+    // JSON: [ts, feed, ret, z1sp, z2sp, z1cur, z2cur, z1fl, z2fl, freq, flags]
+    response->printf("[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u]", 
+      rec.timestamp, rec.hp_feed, rec.hp_return, 
+      rec.z1_sp, rec.z2_sp, rec.z1_curr, rec.z2_curr, 
+      rec.z1_flow, rec.z2_flow, rec.freq, rec.flags
+    );
+  }
+  
+  response->print("]");
+  request->send(response);
 }
 
 }  // namespace asgard_dashboard
