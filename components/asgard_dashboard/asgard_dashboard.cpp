@@ -122,13 +122,13 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   j += "\"z2_setpoint\":"                     + climate_target_str_(virtual_climate_z2_) + ",";
   j += "\"z2_action\":"                       + climate_action_str_(virtual_climate_z2_) + ",";
 
-  j += "\"eco_z1_current\":"                  + climate_current_str_(heatpump_climate_z1_) + ",";
-  j += "\"eco_z1_setpoint\":"                 + climate_target_str_(heatpump_climate_z1_) + ",";
-  j += "\"eco_z1_action\":"                   + climate_action_str_(heatpump_climate_z1_) + ",";
+  j += "\"room_z1_current\":"                  + climate_current_str_(heatpump_climate_z1_) + ",";
+  j += "\"room_z1_setpoint\":"                 + climate_target_str_(heatpump_climate_z1_) + ",";
+  j += "\"room_z1_action\":"                   + climate_action_str_(heatpump_climate_z1_) + ",";
 
-  j += "\"eco_z2_current\":"                  + climate_current_str_(heatpump_climate_z2_) + ",";
-  j += "\"eco_z2_setpoint\":"                 + climate_target_str_(heatpump_climate_z2_) + ",";
-  j += "\"eco_z2_action\":"                   + climate_action_str_(heatpump_climate_z2_) + ",";
+  j += "\"room_z2_current\":"                  + climate_current_str_(heatpump_climate_z2_) + ",";
+  j += "\"room_z2_setpoint\":"                 + climate_target_str_(heatpump_climate_z2_) + ",";
+  j += "\"room_z2_action\":"                   + climate_action_str_(heatpump_climate_z2_) + ",";
 
   j += "\"flow_z1_current\":"                 + climate_current_str_(flow_climate_z1_) + ",";
   j += "\"flow_z1_setpoint\":"                + climate_target_str_(flow_climate_z1_) + ",";
@@ -300,8 +300,8 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "virtual_climate_z1_setpoint") { doClimate(virtual_climate_z1_, "Z1"); return; }
   if (key == "virtual_climate_z2_setpoint") { doClimate(virtual_climate_z2_, "Z2"); return; }
 
-  if (key == "heatpump_climate_z1_setpoint") { doClimate(heatpump_climate_z1_, "Eco Z1"); return; }
-  if (key == "heatpump_climate_z2_setpoint") { doClimate(heatpump_climate_z2_, "Eco Z2"); return; }
+  if (key == "heatpump_climate_z1_setpoint") { doClimate(heatpump_climate_z1_, "Room Z1"); return; }
+  if (key == "heatpump_climate_z2_setpoint") { doClimate(heatpump_climate_z2_, "Room Z2"); return; }
 
   if (key == "flow_climate_z1_setpoint")     { doClimate(flow_climate_z1_, "Flow Z1"); return; }
   if (key == "flow_climate_z2_setpoint")     { doClimate(flow_climate_z2_, "Flow Z2"); return; }
