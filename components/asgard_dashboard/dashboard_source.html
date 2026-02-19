@@ -1521,13 +1521,13 @@ async function loadServerHistory() {
 
 (function loadChartJS() {
   const s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+  s.src = '/js/chart.js';
   s.onload = () => { 
     const h = document.createElement('script');
-    h.src = 'https://cdn.jsdelivr.net/npm/hammerjs@2.0.8';
+    h.src = '/js/hammer.js';
     h.onload = () => {
       const z = document.createElement('script');
-      z.src = 'https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1';
+      z.src = '/js/zoom.js';
       
       z.onload = async () => {
         initCharts(); 

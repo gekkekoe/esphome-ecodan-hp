@@ -1,5 +1,6 @@
 #include "asgard_dashboard.h"
 #include "dashboard_html.h"
+#include "dashboard_js.h"
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
 #include <esp_http_server.h>
@@ -44,7 +45,8 @@ bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
   const auto& url = request->url();
   return (url == "/dashboard" || url == "/dashboard/" ||
           url == "/dashboard/state" || url == "/dashboard/set" ||
-          url == "/dashboard/history");
+          url == "/dashboard/history" ||
+          url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js"); 
 }
 
 void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
@@ -53,7 +55,28 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
   else if (url == "/dashboard/state")                   handle_state_(request);
   else if (url == "/dashboard/set")                     handle_set_(request);
   else if (url == "/dashboard/history")                 handle_history_request_(request);
-  else                                                  request->send(404, "text/plain", "Not found");
+  
+  // JS ROUTES ---
+  else if (url == "/js/chart.js") {
+    AsyncWebServerResponse *response = request->beginResponse(200, "application/javascript", CHARTJS_GZ, CHARTJS_GZ_LEN);
+    response->addHeader("Content-Encoding", "gzip");
+    response->addHeader("Cache-Control", "public, max-age=31536000"); // Let browser cache for 1 year
+    request->send(response);
+  }
+  else if (url == "/js/hammer.js") {
+    AsyncWebServerResponse *response = request->beginResponse(200, "application/javascript", HAMMERJS_GZ, HAMMERJS_GZ_LEN);
+    response->addHeader("Content-Encoding", "gzip");
+    response->addHeader("Cache-Control", "public, max-age=31536000");
+    request->send(response);
+  }
+  else if (url == "/js/zoom.js") {
+    AsyncWebServerResponse *response = request->beginResponse(200, "application/javascript", ZOOMJS_GZ, ZOOMJS_GZ_LEN);
+    response->addHeader("Content-Encoding", "gzip");
+    response->addHeader("Cache-Control", "public, max-age=31536000");
+    request->send(response);
+  }
+  
+  else request->send(404, "text/plain", "Not found");
 }
 
 void EcodanDashboard::handle_root_(AsyncWebServerRequest *request) {
