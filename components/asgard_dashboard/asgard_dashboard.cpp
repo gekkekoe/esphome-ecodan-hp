@@ -88,118 +88,200 @@ void EcodanDashboard::handle_root_(AsyncWebServerRequest *request) {
 }
 
 void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
-  std::string j;
-  j.reserve(1500);
-  j += "{";
-
-  j += "\"hp_feed_temp\":"                     + sensor_str_(hp_feed_temp_) + ",";
-  j += "\"hp_return_temp\":"                   + sensor_str_(hp_return_temp_) + ",";
-  j += "\"outside_temp\":"                     + sensor_str_(outside_temp_) + ",";
-  j += "\"compressor_frequency\":"             + sensor_str_(compressor_frequency_) + ",";
-  j += "\"flow_rate\":"                        + sensor_str_(flow_rate_) + ",";
-  j += "\"computed_output_power\":"            + sensor_str_(computed_output_power_) + ",";
-  j += "\"daily_computed_output_power\":"      + sensor_str_(daily_computed_output_power_) + ",";
-  j += "\"daily_total_energy_consumption\":"   + sensor_str_(daily_total_energy_consumption_) + ",";
-  j += "\"compressor_starts\":"               + sensor_str_(compressor_starts_) + ",";
-  j += "\"runtime\":"                         + sensor_str_(runtime_) + ",";
-  j += "\"wifi_signal_db\":"                  + sensor_str_(wifi_signal_db_) + ",";
-
-  j += "\"dhw_temp\":"                        + sensor_str_(dhw_temp_) + ",";
-  j += "\"dhw_flow_temp_target\":"            + sensor_str_(dhw_flow_temp_target_) + ",";
-  j += "\"dhw_flow_temp_drop\":"              + sensor_str_(dhw_flow_temp_drop_) + ",";
-  j += "\"dhw_consumed\":"                    + sensor_str_(dhw_consumed_) + ",";
-  j += "\"dhw_delivered\":"                   + sensor_str_(dhw_delivered_) + ",";
-  j += "\"dhw_cop\":"                         + sensor_str_(dhw_cop_) + ",";
-
-  j += "\"heating_consumed\":"                + sensor_str_(heating_consumed_) + ",";
-  j += "\"heating_produced\":"                + sensor_str_(heating_produced_) + ",";
-  j += "\"heating_cop\":"                     + sensor_str_(heating_cop_) + ",";
-  j += "\"cooling_consumed\":"                + sensor_str_(cooling_consumed_) + ",";
-  j += "\"cooling_produced\":"                + sensor_str_(cooling_produced_) + ",";
-  j += "\"cooling_cop\":"                     + sensor_str_(cooling_cop_) + ",";
-
-  j += "\"z1_flow_temp_target\":"             + sensor_str_(z1_flow_temp_target_) + ",";
-  j += "\"z2_flow_temp_target\":"             + sensor_str_(z2_flow_temp_target_) + ",";
-
-  j += "\"auto_adaptive_setpoint_bias\":"     + number_str_(num_aa_setpoint_bias_) + ",";
-  j += "\"aa_bias_lim\":"                     + number_traits_(num_aa_setpoint_bias_) + ",";
-  
-  j += "\"maximum_heating_flow_temp\":"       + number_str_(num_max_flow_temp_) + ",";
-  j += "\"max_flow_lim\":"                    + number_traits_(num_max_flow_temp_) + ",";
-  j += "\"minimum_heating_flow_temp\":"       + number_str_(num_min_flow_temp_) + ",";
-  j += "\"min_flow_lim\":"                    + number_traits_(num_min_flow_temp_) + ",";
-
-  j += "\"maximum_heating_flow_temp_z2\":"    + number_str_(num_max_flow_temp_z2_) + ",";
-  j += "\"max_flow_z2_lim\":"                 + number_traits_(num_max_flow_temp_z2_) + ",";
-  j += "\"minimum_heating_flow_temp_z2\":"    + number_str_(num_min_flow_temp_z2_) + ",";
-  j += "\"min_flow_z2_lim\":"                 + number_traits_(num_min_flow_temp_z2_) + ",";
-
-  j += "\"thermostat_hysteresis_z1\":"        + number_str_(num_hysteresis_z1_) + ",";
-  j += "\"hysteresis_z1_lim\":"               + number_traits_(num_hysteresis_z1_) + ",";
-  
-  j += "\"thermostat_hysteresis_z2\":"        + number_str_(num_hysteresis_z2_) + ",";
-  j += "\"hysteresis_z2_lim\":"               + number_traits_(num_hysteresis_z2_) + ",";
-
-  j += "\"pred_sc_time\":"                    + number_str_(pred_sc_time_) + ",";
-  j += "\"pred_sc_time_lim\":"                + number_traits_(pred_sc_time_) + ",";
-  
-  j += "\"pred_sc_delta\":"                   + number_str_(pred_sc_delta_) + ",";
-  j += "\"pred_sc_delta_lim\":"               + number_traits_(pred_sc_delta_) + ",";  
-
-  j += "\"z1_current_temp\":"                 + climate_current_str_(virtual_climate_z1_) + ",";
-  j += "\"z1_setpoint\":"                     + climate_target_str_(virtual_climate_z1_) + ",";
-  j += "\"z1_action\":"                       + climate_action_str_(virtual_climate_z1_) + ",";
-  j += "\"z1_mode\":"                         + climate_mode_str_(virtual_climate_z1_) + ",";
-
-  j += "\"z2_current_temp\":"                 + climate_current_str_(virtual_climate_z2_) + ",";
-  j += "\"z2_setpoint\":"                     + climate_target_str_(virtual_climate_z2_) + ",";
-  j += "\"z2_action\":"                       + climate_action_str_(virtual_climate_z2_) + ",";
-  j += "\"z2_mode\":"                         + climate_mode_str_(virtual_climate_z2_) + ",";
-
-  j += "\"room_z1_current\":"                  + climate_current_str_(heatpump_climate_z1_) + ",";
-  j += "\"room_z1_setpoint\":"                 + climate_target_str_(heatpump_climate_z1_) + ",";
-  j += "\"room_z1_action\":"                   + climate_action_str_(heatpump_climate_z1_) + ",";
-
-  j += "\"room_z2_current\":"                  + climate_current_str_(heatpump_climate_z2_) + ",";
-  j += "\"room_z2_setpoint\":"                 + climate_target_str_(heatpump_climate_z2_) + ",";
-  j += "\"room_z2_action\":"                   + climate_action_str_(heatpump_climate_z2_) + ",";
-
-  j += "\"flow_z1_current\":"                 + climate_current_str_(flow_climate_z1_) + ",";
-  j += "\"flow_z1_setpoint\":"                + climate_target_str_(flow_climate_z1_) + ",";
-  j += "\"flow_z2_current\":"                 + climate_current_str_(flow_climate_z2_) + ",";
-  j += "\"flow_z2_setpoint\":"                + climate_target_str_(flow_climate_z2_) + ",";
-
-  j += "\"status_compressor\":"               + std::string(bin_str_(status_compressor_)) + ",";
-  j += "\"status_booster\":"                  + std::string(bin_str_(status_booster_)) + ",";
-  j += "\"status_defrost\":"                  + std::string(bin_str_(status_defrost_)) + ",";
-  j += "\"status_water_pump\":"               + std::string(bin_str_(status_water_pump_)) + ",";
-  j += "\"status_in1_request\":"              + std::string(bin_str_(status_in1_request_)) + ",";
-  j += "\"status_in6_request\":"              + std::string(bin_str_(status_in6_request_)) + ",";
-  j += "\"zone2_enabled\":"                   + std::string(bin_state_(status_zone2_enabled_) ? "true" : "false") + ",";
-
-  j += "\"pred_sc_en\":"                      + sw_str_(pred_sc_switch_) + ",";
-  j += "\"auto_adaptive_control_enabled\":"   + sw_str_(sw_auto_adaptive_) + ",";
-  j += "\"defrost_risk_handling_enabled\":"   + sw_str_(sw_defrost_mit_) + ",";
-  j += "\"smart_boost_enabled\":"             + sw_str_(sw_smart_boost_) + ",";
-  j += "\"force_dhw\":"                       + sw_str_(sw_force_dhw_) + ","; 
-  j += "\"latest_version\":\""                + text_val_(version_) + "\",";
-  j += "\"status_operation\":\""              + text_val_(status_operation_) + "\",";
-  j += "\"status_dip_switch_1\":\""           + text_val_(status_dip_switch_1_) + "\",";
-  
-  j += "\"heating_system_type\":\""           + select_idx_(sel_heating_system_type_) + "\",";
-  j += "\"room_temp_source_z1\":\""           + select_idx_(sel_room_temp_source_z1_) + "\",";
-  j += "\"room_temp_source_z2\":\""           + select_idx_(sel_room_temp_source_z2_) + "\",";
-  j += "\"operating_mode_z1\":\""             + select_idx_(sel_operating_mode_z1_) + "\",";
-  j += "\"operating_mode_z2\":\""             + select_idx_(sel_operating_mode_z2_) + "\",";
-  j += "\"temp_sensor_source_z1\":\""           + select_idx_(sel_temp_source_z1_) + "\",";
-  j += "\"temp_sensor_source_z2\":\""           + select_idx_(sel_temp_source_z2_) + "\"";
-
-  j += "}";
-
-  AsyncWebServerResponse *response =
-      request->beginResponse(200, "application/json", j.c_str());
+  AsyncResponseStream *response = request->beginResponseStream("application/json");
   response->addHeader("Access-Control-Allow-Origin", "*");
   response->addHeader("Cache-Control", "no-cache");
+  response->print("{");
+
+  // --- ZERO-ALLOCATION HELPER FUNCTIES ---
+  auto p_sens = [&](const char* k, sensor::Sensor* s) {
+    if (s && s->has_state() && !std::isnan(s->state)) response->printf("\"%s\":%.2f,", k, s->state);
+    else response->printf("\"%s\":null,", k);
+  };
+  
+  auto p_num = [&](const char* k, number::Number* n) {
+    if (n && n->has_state() && !std::isnan(n->state)) response->printf("\"%s\":%.1f,", k, n->state);
+    else response->printf("\"%s\":null,", k);
+  };
+
+  auto p_lim = [&](const char* k, number::Number* n) {
+    if (n) response->printf("\"%s\":{\"min\":%.1f,\"max\":%.1f,\"step\":%.1f},", 
+         k, n->traits.get_min_value(), n->traits.get_max_value(), n->traits.get_step());
+    else response->printf("\"%s\":null,", k);
+  };
+
+  auto p_bin = [&](const char* k, binary_sensor::BinarySensor* b) {
+    if (b && b->has_state()) response->printf("\"%s\":%s,", k, b->state ? "true" : "false");
+    else response->printf("\"%s\":null,", k);
+  };
+
+  auto p_sw = [&](const char* k, switch_::Switch* sw) {
+    if (sw) response->printf("\"%s\":%s,", k, sw->state ? "true" : "false");
+    else response->printf("\"%s\":null,", k);
+  };
+
+  auto p_sel = [&](const char* k, select::Select* sel) {
+    if (sel && sel->active_index().has_value()) 
+        response->printf("\"%s\":\"%zu\",", k, sel->active_index().value());
+    else response->printf("\"%s\":null,", k);
+  };
+
+  auto p_txt = [&](const char* k, text_sensor::TextSensor* t) {
+    response->printf("\"%s\":\"", k);
+    if (t && t->has_state()) {
+      char stack_buf[128];
+      
+      strncpy(stack_buf, t->state.c_str(), sizeof(stack_buf) - 1);
+      stack_buf[sizeof(stack_buf) - 1] = '\0'; 
+      
+      for (char *c = stack_buf; *c != '\0'; ++c) {
+        if (*c == '"') response->print("\\\"");
+        else if (*c == '\\') response->print("\\\\");
+        else response->printf("%c", *c);
+      }
+    }
+    response->print("\",");
+  };
+
+  auto p_clim_cur = [&](const char* k, climate::Climate* c) {
+    if (c && !std::isnan(c->current_temperature)) response->printf("\"%s\":%.1f,", k, c->current_temperature);
+    else response->printf("\"%s\":null,", k);
+  };
+
+  auto p_clim_tar = [&](const char* k, climate::Climate* c) {
+    if (c && !std::isnan(c->target_temperature)) response->printf("\"%s\":%.1f,", k, c->target_temperature);
+    else response->printf("\"%s\":null,", k);
+  };
+
+  auto p_clim_act = [&](const char* k, climate::Climate* c) {
+    if (!c) { response->printf("\"%s\":\"off\",", k); return; }
+    switch (c->action) {
+      case climate::CLIMATE_ACTION_OFF: response->printf("\"%s\":\"off\",", k); break;
+      case climate::CLIMATE_ACTION_COOLING: response->printf("\"%s\":\"cooling\",", k); break;
+      case climate::CLIMATE_ACTION_HEATING: response->printf("\"%s\":\"heating\",", k); break;
+      case climate::CLIMATE_ACTION_DRYING: response->printf("\"%s\":\"drying\",", k); break;
+      case climate::CLIMATE_ACTION_IDLE: 
+      default: response->printf("\"%s\":\"idle\",", k); break;
+    }
+  };
+
+  auto p_clim_mode = [&](const char* k, climate::Climate* c) {
+    if (!c) { response->printf("\"%s\":\"off\",", k); return; }
+    switch (c->mode) {
+      case climate::CLIMATE_MODE_HEAT: response->printf("\"%s\":\"heat\",", k); break;
+      case climate::CLIMATE_MODE_COOL: response->printf("\"%s\":\"cool\",", k); break;
+      case climate::CLIMATE_MODE_AUTO: response->printf("\"%s\":\"auto\",", k); break;
+      case climate::CLIMATE_MODE_OFF:
+      default: response->printf("\"%s\":\"off\",", k); break;
+    }
+  };
+
+  // --- DIRECT DATA STREAMING ---
+  p_sens("hp_feed_temp", hp_feed_temp_);
+  p_sens("hp_return_temp", hp_return_temp_);
+  p_sens("outside_temp", outside_temp_);
+  p_sens("compressor_frequency", compressor_frequency_);
+  p_sens("flow_rate", flow_rate_);
+  p_sens("computed_output_power", computed_output_power_);
+  p_sens("daily_computed_output_power", daily_computed_output_power_);
+  p_sens("daily_total_energy_consumption", daily_total_energy_consumption_);
+  p_sens("compressor_starts", compressor_starts_);
+  p_sens("runtime", runtime_);
+  p_sens("wifi_signal_db", wifi_signal_db_);
+
+  p_sens("dhw_temp", dhw_temp_);
+  p_sens("dhw_flow_temp_target", dhw_flow_temp_target_);
+  p_sens("dhw_flow_temp_drop", dhw_flow_temp_drop_);
+  p_sens("dhw_consumed", dhw_consumed_);
+  p_sens("dhw_delivered", dhw_delivered_);
+  p_sens("dhw_cop", dhw_cop_);
+
+  p_sens("heating_consumed", heating_consumed_);
+  p_sens("heating_produced", heating_produced_);
+  p_sens("heating_cop", heating_cop_);
+  p_sens("cooling_consumed", cooling_consumed_);
+  p_sens("cooling_produced", cooling_produced_);
+  p_sens("cooling_cop", cooling_cop_);
+
+  p_sens("z1_flow_temp_target", z1_flow_temp_target_);
+  p_sens("z2_flow_temp_target", z2_flow_temp_target_);
+
+  p_num("auto_adaptive_setpoint_bias", num_aa_setpoint_bias_);
+  p_lim("aa_bias_lim", num_aa_setpoint_bias_);
+  
+  p_num("maximum_heating_flow_temp", num_max_flow_temp_);
+  p_lim("max_flow_lim", num_max_flow_temp_);
+  p_num("minimum_heating_flow_temp", num_min_flow_temp_);
+  p_lim("min_flow_lim", num_min_flow_temp_);
+
+  p_num("maximum_heating_flow_temp_z2", num_max_flow_temp_z2_);
+  p_lim("max_flow_z2_lim", num_max_flow_temp_z2_);
+  p_num("minimum_heating_flow_temp_z2", num_min_flow_temp_z2_);
+  p_lim("min_flow_z2_lim", num_min_flow_temp_z2_);
+
+  p_num("thermostat_hysteresis_z1", num_hysteresis_z1_);
+  p_lim("hysteresis_z1_lim", num_hysteresis_z1_);
+  
+  p_num("thermostat_hysteresis_z2", num_hysteresis_z2_);
+  p_lim("hysteresis_z2_lim", num_hysteresis_z2_);
+
+  p_num("pred_sc_time", pred_sc_time_);
+  p_lim("pred_sc_time_lim", pred_sc_time_);
+  p_num("pred_sc_delta", pred_sc_delta_);
+  p_lim("pred_sc_delta_lim", pred_sc_delta_);  
+
+  p_clim_cur("z1_current_temp", virtual_climate_z1_);
+  p_clim_tar("z1_setpoint", virtual_climate_z1_);
+  p_clim_act("z1_action", virtual_climate_z1_);
+  p_clim_mode("z1_mode", virtual_climate_z1_);
+
+  p_clim_cur("z2_current_temp", virtual_climate_z2_);
+  p_clim_tar("z2_setpoint", virtual_climate_z2_);
+  p_clim_act("z2_action", virtual_climate_z2_);
+  p_clim_mode("z2_mode", virtual_climate_z2_);
+
+  p_clim_cur("room_z1_current", heatpump_climate_z1_);
+  p_clim_tar("room_z1_setpoint", heatpump_climate_z1_);
+  p_clim_act("room_z1_action", heatpump_climate_z1_);
+
+  p_clim_cur("room_z2_current", heatpump_climate_z2_);
+  p_clim_tar("room_z2_setpoint", heatpump_climate_z2_);
+  p_clim_act("room_z2_action", heatpump_climate_z2_);
+
+  p_clim_cur("flow_z1_current", flow_climate_z1_);
+  p_clim_tar("flow_z1_setpoint", flow_climate_z1_);
+  p_clim_cur("flow_z2_current", flow_climate_z2_);
+  p_clim_tar("flow_z2_setpoint", flow_climate_z2_);
+
+  p_bin("status_compressor", status_compressor_);
+  p_bin("status_booster", status_booster_);
+  p_bin("status_defrost", status_defrost_);
+  p_bin("status_water_pump", status_water_pump_);
+  p_bin("status_in1_request", status_in1_request_);
+  p_bin("status_in6_request", status_in6_request_);
+  
+  response->printf("\"zone2_enabled\":%s,", bin_state_(status_zone2_enabled_) ? "true" : "false");
+
+  p_sw("pred_sc_en", pred_sc_switch_);
+  p_sw("auto_adaptive_control_enabled", sw_auto_adaptive_);
+  p_sw("defrost_risk_handling_enabled", sw_defrost_mit_);
+  p_sw("smart_boost_enabled", sw_smart_boost_);
+  p_sw("force_dhw", sw_force_dhw_); 
+  
+  p_txt("latest_version", version_);
+  p_txt("status_operation", status_operation_);
+  p_txt("status_dip_switch_1", status_dip_switch_1_);
+  
+  p_sel("heating_system_type", sel_heating_system_type_);
+  p_sel("room_temp_source_z1", sel_room_temp_source_z1_);
+  p_sel("room_temp_source_z2", sel_room_temp_source_z2_);
+  p_sel("operating_mode_z1", sel_operating_mode_z1_);
+  p_sel("operating_mode_z2", sel_operating_mode_z2_);
+  p_sel("temp_sensor_source_z1", sel_temp_source_z1_);
+  p_sel("temp_sensor_source_z2", sel_temp_source_z2_);
+
+  response->printf("\"_uptime_ms\":%u}", millis());
+  
   request->send(response);
 }
 
@@ -360,113 +442,14 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   }
 }
 
-std::string EcodanDashboard::sensor_str_(sensor::Sensor *s) {
-  if (s == nullptr || !s->has_state()) return "null";
-  char buf[16];
-  snprintf(buf, sizeof(buf), "%.2f", s->state);
-  return std::string(buf);
-}
-
-std::string EcodanDashboard::climate_action_str_(climate::Climate *c) {
-  if (c == nullptr) return "\"off\"";
-  switch (c->action) {
-    case climate::CLIMATE_ACTION_OFF: return "\"off\"";
-    case climate::CLIMATE_ACTION_COOLING: return "\"cooling\"";
-    case climate::CLIMATE_ACTION_HEATING: return "\"heating\"";
-    case climate::CLIMATE_ACTION_DRYING: return "\"drying\"";
-    case climate::CLIMATE_ACTION_IDLE: return "\"idle\"";
-    default: return "\"idle\"";
-  }
-}
-
-std::string EcodanDashboard::climate_current_str_(climate::Climate *c) {
-  if (c == nullptr || std::isnan(c->current_temperature)) return "null";
-  char buf[16];
-  snprintf(buf, sizeof(buf), "%.1f", c->current_temperature);
-  return std::string(buf);
-}
-
-std::string EcodanDashboard::climate_target_str_(climate::Climate *c) {
-  if (c == nullptr || std::isnan(c->target_temperature)) return "null";
-  char buf[16];
-  snprintf(buf, sizeof(buf), "%.1f", c->target_temperature);
-  return std::string(buf);
-}
-
-std::string EcodanDashboard::climate_mode_str_(climate::Climate *c) {
-  if (c == nullptr) return "\"off\"";
-  switch (c->mode) {
-    case climate::CLIMATE_MODE_HEAT: return "\"heat\"";
-    case climate::CLIMATE_MODE_COOL: return "\"cool\"";
-    case climate::CLIMATE_MODE_AUTO: return "\"auto\"";
-    case climate::CLIMATE_MODE_OFF:
-    default: return "\"off\"";
-  }
-}
-
-std::string EcodanDashboard::number_str_(number::Number *n) {
-  if (n == nullptr || !n->has_state()) return "null";
-  char buf[16];
-  snprintf(buf, sizeof(buf), "%.1f", n->state);
-  return std::string(buf);
-}
-
-const char *EcodanDashboard::bin_str_(binary_sensor::BinarySensor *b) {
-  if (b == nullptr || !b->has_state()) return "null";
-  return b->state ? "true" : "false";
+// History handling
+int16_t EcodanDashboard::pack_temp_(float val) {
+  if (std::isnan(val)) return -32768; 
+  return static_cast<int16_t>(val * 10.0f);
 }
 
 bool EcodanDashboard::bin_state_(binary_sensor::BinarySensor *b) {
   return (b != nullptr && b->has_state() && b->state);
-}
-
-std::string EcodanDashboard::text_val_(text_sensor::TextSensor *t) {
-  if (t == nullptr || !t->has_state()) return "";
-  std::string out;
-  for (char c : t->state) {
-    if (c == '"') out += "\\\"";
-    else if (c == '\\') out += "\\\\";
-    else out += c;
-  }
-  return out;
-}
-
-std::string EcodanDashboard::select_idx_(select::Select *s) {
-  if (s == nullptr || !s->active_index().has_value()) return "null";
-  return std::to_string(s->active_index().value());
-}
-
-std::string EcodanDashboard::select_str_(select::Select *s) {
-  if (s == nullptr) return "";
-  auto val = s->current_option();
-  std::string out;
-  out.reserve(val.size() + 2);
-  for (char c : val) {
-    if (c == '"') out += "\\\"";
-    else if (c == '\\') out += "\\\\";
-    else out += c;
-  }
-  return out;
-}
-
-std::string EcodanDashboard::sw_str_(switch_::Switch *sw) {
-  if (sw == nullptr) return "null";
-  return sw->state ? "true" : "false";
-}
-
-std::string EcodanDashboard::number_traits_(number::Number *n) {
-  if (n == nullptr) return "null";
-  char buf[64];
-  snprintf(buf, sizeof(buf), "{\"min\":%.1f,\"max\":%.1f,\"step\":%.1f}", 
-           n->traits.get_min_value(), n->traits.get_max_value(), n->traits.get_step());
-  return std::string(buf);
-}
-
-// History handling
-
-int16_t EcodanDashboard::pack_temp_(float val) {
-  if (std::isnan(val)) return -32768; 
-  return static_cast<int16_t>(val * 10.0f);
 }
 
 uint8_t EcodanDashboard::encode_mode_(const std::string &mode) {
@@ -481,6 +464,8 @@ uint8_t EcodanDashboard::encode_mode_(const std::string &mode) {
 }
 
 void EcodanDashboard::record_history_() {
+  std::lock_guard<std::mutex> lock(history_lock_);  
+
   HistoryRecord rec;
   rec.timestamp = time(nullptr); 
 
@@ -516,27 +501,41 @@ void EcodanDashboard::record_history_() {
 }
 
 void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
+  // Snapshot count/head under mutex to avoid reading mid-write
+  size_t snapshot_count, snapshot_head;
+  {
+    std::lock_guard<std::mutex> lock(history_lock_);
+    snapshot_count = history_count_;
+    snapshot_head = history_head_;
+  }
+  
   AsyncResponseStream *response = request->beginResponseStream("application/json");
   response->addHeader("Access-Control-Allow-Origin", "*");
   response->addHeader("Cache-Control", "no-cache");
+  
+  if (snapshot_count == 0) {
+    response->print("[]");
+    request->send(response);
+    return;
+  }
+  
   response->print("[");
+  size_t start_idx = (snapshot_count == MAX_HISTORY) ? snapshot_head : 0;
+  size_t step = (snapshot_count > 360) ? (snapshot_count / 360) : 1;
+  if (step < 1) step = 1;
   
-  size_t start_idx = (history_count_ == MAX_HISTORY) ? history_head_ : 0;
-  
-  for (size_t i = 0; i < history_count_; i++) {
+  bool first = true;
+  for (size_t i = 0; i < snapshot_count; i += step) {
     size_t idx = (start_idx + i) % MAX_HISTORY;
     const HistoryRecord &rec = history_buffer_[idx];
-    
-    if (i > 0) response->print(",");
-    
-    // JSON: [ts, feed, ret, z1sp, z2sp, z1cur, z2cur, z1fl, z2fl, freq, flags]
+    if (!first) response->print(",");
+    first = false;
     response->printf("[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u]", 
       rec.timestamp, rec.hp_feed, rec.hp_return, 
       rec.z1_sp, rec.z2_sp, rec.z1_curr, rec.z2_curr, 
       rec.z1_flow, rec.z2_flow, rec.freq, rec.flags
     );
   }
-  
   response->print("]");
   request->send(response);
 }

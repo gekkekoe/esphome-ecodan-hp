@@ -141,23 +141,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void handle_set_(AsyncWebServerRequest *request);
   void dispatch_set_(const std::string &key, const std::string &sval, float fval, bool is_string);
 
-  // JSON helpers
-  static std::string sensor_str_(sensor::Sensor *s);
-  static std::string climate_current_str_(climate::Climate *c);
-  static std::string climate_target_str_(climate::Climate *c);
-  static std::string climate_action_str_(climate::Climate *c);
-  static std::string climate_mode_str_(climate::Climate *c);
-  static std::string number_str_(number::Number *n);
-  static const char *bin_str_(binary_sensor::BinarySensor *b);
-  static bool bin_state_(binary_sensor::BinarySensor *b);
-  static std::string text_val_(text_sensor::TextSensor *t);
-  
-  static std::string select_idx_(select::Select *s); 
-  static std::string select_str_(select::Select *s);
-
-  static std::string sw_str_(switch_::Switch *sw);
-  
-  static std::string number_traits_(number::Number *n);
   std::vector<DashboardAction> action_queue_;
   std::mutex action_lock_;
 
@@ -257,11 +240,13 @@ private:
   size_t history_head_{0};
   size_t history_count_{0};
   uint32_t last_history_time_{0};
+  std::mutex history_lock_; 
 
   void record_history_();
   void handle_history_request_(AsyncWebServerRequest *request);
   static int16_t pack_temp_(float val);
   static uint8_t encode_mode_(const std::string &mode);
+  static bool bin_state_(binary_sensor::BinarySensor *b);
 };
 
 }  // namespace asgard_dashboard
