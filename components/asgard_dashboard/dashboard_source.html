@@ -498,33 +498,30 @@
       </div>
       
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Z1/Z2 Settings</div>
+        
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Z1/Z2 Settings</div>
         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Setpoint Bias</span><div class="stepper"><button class="step-btn" onclick="step('aa-bias', -0.1)">−</button><div class="step-val" id="aa-bias-val">—</div><button class="step-btn" onclick="step('aa-bias', +0.1)">+</button></div></div>
-      </div>
-      
-      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Short Cycle Protection</div>
+
+        <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Short Cycle Protection</div>
         <div class="ctrl-row"><span class="ctrl-label">Predictive Control</span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
         <div class="ctrl-row"><span class="ctrl-label">Time Window (min)</span><div class="stepper"><button class="step-btn" onclick="step('psc-win', -0.5)">−</button><div class="step-val" id="psc-win-val">—</div><button class="step-btn" onclick="step('psc-win', +0.5)">+</button></div></div>
         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Delta Threshold (°C)</span><div class="stepper"><button class="step-btn" onclick="step('psc-delta', -0.5)">−</button><div class="step-val" id="psc-delta-val">—</div><button class="step-btn" onclick="step('psc-delta', +0.5)">+</button></div></div>
-      </div>
 
-      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Settings Z1</div>
+        <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Settings Z1</div>
         <div class="ctrl-row"><span class="ctrl-label">Room Temp Source Z1</span><select class="ctrl-select" id="sel-z1src" onchange="sendSelect('room_temp_source_z1', this)"><option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option></select></div>
         <div class="ctrl-row"><span class="ctrl-label">Max Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -0.1)">−</button><div class="step-val" id="aa-max-val">—</div><button class="step-btn" onclick="step('aa-max', +0.1)">+</button></div></div>
         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -0.1)">−</button><div class="step-val" id="aa-min-val">—</div><button class="step-btn" onclick="step('aa-min', +0.1)">+</button></div></div>
-      </div>
-      
-      <div id="aa-z2-container" style="display:none; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Settings Z2</div>
-        <div class="ctrl-row" id="row-z2src"><span class="ctrl-label">Room Temp Source Z2</span><select class="ctrl-select" id="sel-z2src" onchange="sendSelect('room_temp_source_z2', this)"><option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option></select></div>
-        <div class="ctrl-row"><span class="ctrl-label">Max Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><div class="step-val" id="aa-max-z2-val">—</div><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
-        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><div class="step-val" id="aa-min-z2-val">—</div><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
-      </div>
+        
+        <div id="aa-z2-container" style="display:none;">
+          <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Settings Z2</div>
+          <div class="ctrl-row" id="row-z2src"><span class="ctrl-label">Room Temp Source Z2</span><select class="ctrl-select" id="sel-z2src" onchange="sendSelect('room_temp_source_z2', this)"><option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option></select></div>
+          <div class="ctrl-row"><span class="ctrl-label">Max Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><div class="step-val" id="aa-max-z2-val">—</div><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><div class="step-val" id="aa-min-z2-val">—</div><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
+        </div>
 
-      <button class="send-btn" onclick="sendAA(this)" style="margin-top:15px">Apply Auto Adaptive</button>
-    </div>
+        <button class="send-btn" onclick="sendAA(this)" style="margin-bottom:0; margin-top:24px;">Apply Auto Adaptive</button>
+      </div>
+    </div>  
 
     <div class="ctrl-card">
       <div class="section-title">DHW</div>
