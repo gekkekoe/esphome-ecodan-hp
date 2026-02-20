@@ -92,6 +92,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_room_temp_source_z1(text_sensor::TextSensor *t)    { room_temp_source_z1_ = t; }
   void set_room_temp_source_z2(text_sensor::TextSensor *t)    { room_temp_source_z2_ = t; }
   void set_version(text_sensor::TextSensor *t)                { version_ = t; }
+  void set_status_dip_switch_1(text_sensor::TextSensor *t)    { status_dip_switch_1_ = t; }
 
   // Switches
   void set_sw_auto_adaptive(switch_::Switch *s)               { sw_auto_adaptive_ = s; }
@@ -211,7 +212,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   text_sensor::TextSensor *room_temp_source_z1_{nullptr};
   text_sensor::TextSensor *room_temp_source_z2_{nullptr};
   text_sensor::TextSensor *version_{nullptr};
-
+  text_sensor::TextSensor *status_dip_switch_1_{nullptr};
+  
   // Switches
   switch_::Switch *sw_auto_adaptive_{nullptr};
   switch_::Switch *sw_defrost_mit_{nullptr};

@@ -161,6 +161,13 @@
     100% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0); }
   }
 
+  .disabled-box { 
+    opacity: 0.35; 
+    pointer-events: none; 
+    filter: grayscale(100%); 
+    transition: all 0.3s ease;
+  }
+
   .log-controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
   .log-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg2); color: var(--text2); font-size: 10px; font-family: var(--mono); cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
   .log-btn:hover { border-color: var(--accent); color: var(--text); }
@@ -399,7 +406,6 @@
 <div id="view-settings" class="view-section">
   <div style="display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
     
-
     <div class="ctrl-card">
       <div class="section-title">Zone 1</div>
       <div class="ctrl-row"><span class="ctrl-label">Operating Mode</span><select class="ctrl-select" id="sel-z1mode" onchange="sendSelect('operating_mode_z1', this)"><option>Heat Target Temperature</option><option>Heat Flow Temperature</option><option>Heat Compensation Curve</option><option>Cool Target Temperature</option><option>Cool Flow Temperature</option><option>Floor Dry Up</option><option>Cool Compensation Curve</option></select></div>
@@ -413,7 +419,7 @@
         <button class="send-btn" id="btn-flow-z1" onclick="sendFlow('z1', this)" style="margin-bottom:0;">Apply Flow Z1</button>
       </div>
 
-      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+      <div id="virtual-z1-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 0;">
           <span id="dot-z1" class="status-dot"></span>Virtual Thermostat Z1
         </div>
@@ -452,7 +458,7 @@
         <button class="send-btn" id="btn-flow-z2" onclick="sendFlow('z2', this)" style="margin-bottom:0;">Apply Flow Z2</button>
       </div>
 
-      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+      <div id="virtual-z2-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 0;">
           <span id="dot-z2" class="status-dot"></span>Virtual Thermostat Z2
         </div>
@@ -1048,6 +1054,31 @@ function updateDot(id, action) {
 
 function render(d) {
   const isZ2 = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
+
+  // Dip Switch 1 Logic (Bit 8 is the first character in the string)
+  const dip = d.status_dip_switch_1;
+  if (dip && typeof dip === 'string' && dip.length >= 8) {
+    const bit8 = dip.charAt(0); 
+    const vZ1 = document.getElementById('virtual-z1-section');
+    const vZ2 = document.getElementById('virtual-z2-section');
+    const rZ1 = document.getElementById('room-z1-section');
+    const rZ2 = document.getElementById('room-z2-section');
+    
+    if (bit8 === '0') {
+      // 0 = No room thermostat configured -> Grey out Room Thermostats
+      if (rZ1) rZ1.classList.add('disabled-box');
+      if (rZ2) rZ2.classList.add('disabled-box');
+      if (vZ1) vZ1.classList.remove('disabled-box');
+      if (vZ2) vZ2.classList.remove('disabled-box');
+    } else if (bit8 === '1') {
+      // 1 = Room thermostat configured -> Grey out Virtual Thermostats
+      if (vZ1) vZ1.classList.add('disabled-box');
+      if (vZ2) vZ2.classList.add('disabled-box');
+      if (rZ1) rZ1.classList.remove('disabled-box');
+      if (rZ2) rZ2.classList.remove('disabled-box');
+    }
+  }
+
   const z2Card = document.getElementById('card-z2');
   if (z2Card) { z2Card.style.display = isZ2 ? 'block' : 'none'; }
   const z2AA = document.getElementById('aa-z2-container');

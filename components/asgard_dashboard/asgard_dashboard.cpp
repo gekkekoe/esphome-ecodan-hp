@@ -182,6 +182,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   j += "\"force_dhw\":"                       + sw_str_(sw_force_dhw_) + ","; 
   j += "\"latest_version\":\""                + text_val_(version_) + "\",";
   j += "\"status_operation\":\""              + text_val_(status_operation_) + "\",";
+  j += "\"status_dip_switch_1\":\""           + text_val_(status_dip_switch_1_) + "\",";
   
   j += "\"heating_system_type\":\""           + select_idx_(sel_heating_system_type_) + "\",";
   j += "\"room_temp_source_z1\":\""           + select_idx_(sel_room_temp_source_z1_) + "\",";

@@ -58,6 +58,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("room_temp_source_z1_id"):             cv.use_id(text_sensor.TextSensor),
         cv.Optional("room_temp_source_z2_id"):             cv.use_id(text_sensor.TextSensor),
         cv.Optional("version_id"):                         cv.use_id(text_sensor.TextSensor),
+        cv.Optional("status_dip_switch_1_id"):             cv.use_id(text_sensor.TextSensor),
 
         cv.Optional("sw_auto_adaptive_id"):                cv.use_id(switch.Switch),
         cv.Optional("sw_defrost_mit_id"):                  cv.use_id(switch.Switch),
@@ -111,6 +112,7 @@ async def to_code(config):
 
     pairs = [
         ("version_id",                        "set_version"),
+        ("status_dip_switch_1_id",            "set_status_dip_switch_1"),
         ("hp_feed_temp_id",                   "set_hp_feed_temp"),
         ("hp_return_temp_id",                 "set_hp_return_temp"),
         ("outside_temp_id",                   "set_outside_temp"),

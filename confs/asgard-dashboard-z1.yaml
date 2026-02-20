@@ -1,6 +1,6 @@
 asgard_dashboard:
   version_id:                        current_fw_version
-  # ── Header badge sensors ─────────────────────────────────────────────────
+  # ── Header badge sensors 
   hp_feed_temp_id:                   hp_feed_temp
   hp_return_temp_id:                 hp_return_temp
   outside_temp_id:                   outside_temp
@@ -14,7 +14,7 @@ asgard_dashboard:
   wifi_signal_db_id:                 wifi_signal_db
   z1_flow_temp_target_id:            z1_flow_temp_target
 
-  # ── DHW ──────────────────────────────────────────────────────────────────
+  # ── DHW 
   dhw_temp_id:                       dhw_temp
   dhw_flow_temp_target_id:           dhw_flow_temp_target
   dhw_flow_temp_drop_id:             dhw_flow_temp_drop
@@ -32,7 +32,7 @@ asgard_dashboard:
   cooling_produced_id:               cool_delivered
   cooling_cop_id:                    cool_cop
 
-  # ── Binary sensors ────────────────────────────────────────────────────────
+  # ── Binary sensors 
   status_compressor_id:              status_compressor
   status_booster_id:                 status_booster
   status_defrost_id:                 status_defrost
@@ -41,33 +41,36 @@ asgard_dashboard:
   status_in6_request_id:             status_in6_request
   zone2_enabled_id:                  status_zone2_enabled
 
-  # ── Text sensor ───────────────────────────────────────────────────────────
+  # ── Text sensor 
   status_operation_id:               status_operation
 
-  # ── Switches ─────────────────────────────────────────────────────────────
+  # ── Switches 
   sw_auto_adaptive_id:               auto_adaptive_control_enabled
   sw_defrost_mit_id:                 defrost_risk_handling_enabled
   sw_smart_boost_id:                 smart_boost_enabled
 
-  # ── Selects ─────────────────────────────────────────────────────────────
+  # ── Selects 
   sel_heating_system_type_id:        heating_system_type 
   sel_room_temp_source_z1_id:        temperature_feedback_source_z1
   operating_mode_z1_id: heatpump_select_operating_mode
   sel_temp_source_z1_id: asgard_vt_temp_sensor_source_z1
  
-  # ── Numbers ─────────────────────────────────────────────────────────────
+  # ── Numbers 
   num_aa_setpoint_bias_id:           auto_adaptive_setpoint_bias
   num_max_flow_temp_id:              maximum_heating_flow_temp
   num_min_flow_temp_id:              minimum_heating_flow_temp
   num_hysteresis_z1_id:              thermostat_hysteresis_z1
 
-  # ── Climate ───────────────────────────────────────────────────────────────
+  # ── Climate 
   dhw_climate_id:                    heatpump_climate_dhw
   virtual_climate_z1_id:             virtual_climate_z1
   heatpump_climate_z1_id: heatpump_climate_room_z1
   flow_climate_z1_id: heatpump_climate_z1
 
-  # ── Cycle prevention ───────────────────────────────────────────────────────────────
+  # ── Cycle prevention 
   predictive_short_cycle_control_enabled_id: predictive_short_cycle_control_enabled 
   predictive_short_cycle_high_delta_time_window_id: predictive_short_cycle_high_delta_time_window
   predictive_short_cycle_high_delta_threshold_id: predictive_short_cycle_high_delta_threshold
+
+  # ── Dip switch 
+  status_dip_switch_1_id: status_dip_switch_1
