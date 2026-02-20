@@ -146,6 +146,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   static std::string climate_current_str_(climate::Climate *c);
   static std::string climate_target_str_(climate::Climate *c);
   static std::string climate_action_str_(climate::Climate *c);
+  static std::string climate_mode_str_(climate::Climate *c);
   static std::string number_str_(number::Number *n);
   static const char *bin_str_(binary_sensor::BinarySensor *b);
   static bool bin_state_(binary_sensor::BinarySensor *b);

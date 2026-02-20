@@ -423,7 +423,9 @@
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 0;">
           <span id="dot-z1" class="status-dot"></span>Virtual Thermostat Z1
         </div>
-        <div class="ctrl-row" style="border-bottom: 1px dashed var(--border); margin-bottom: 10px; padding-bottom: 12px;"><span class="ctrl-label">Temp Sensor Source</span><select class="ctrl-select" id="sel-z1ts" onchange="sendSelect('temp_sensor_source_z1', this)"><option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC</option></select></div>
+
+        <div class="ctrl-row"><span class="ctrl-label">Thermostat Mode</span><select class="ctrl-select" id="sel-z1-vmode" onchange="sendVMode('z1', this)"><option value="heat">Heat</option><option value="cool">Cool</option><option value="off">Off</option></select></div>
+        <div class="ctrl-row" style="margin-bottom: 10px; padding-bottom: 12px;"><span class="ctrl-label">Temp Sensor Source</span><select class="ctrl-select" id="sel-z1ts" onchange="sendSelect('temp_sensor_source_z1', this)"><option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC</option></select></div>        
         
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="z1-current">—<span>°C</span></div></div>
@@ -462,8 +464,10 @@
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 0;">
           <span id="dot-z2" class="status-dot"></span>Virtual Thermostat Z2
         </div>
-        <div class="ctrl-row" style="border-bottom: 1px dashed var(--border); margin-bottom: 10px; padding-bottom: 12px;"><span class="ctrl-label">Temp Sensor Source</span><select class="ctrl-select" id="sel-z2ts" onchange="sendSelect('temp_sensor_source_z2', this)"><option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC</option></select></div>
-        
+
+        <div class="ctrl-row"><span class="ctrl-label">Thermostat Mode</span><select class="ctrl-select" id="sel-z2-vmode" onchange="sendVMode('z2', this)"><option value="heat">Heat</option><option value="cool">Cool</option><option value="off">Off</option></select></div>
+        <div class="ctrl-row" style="margin-bottom: 10px; padding-bottom: 12px;"><span class="ctrl-label">Temp Sensor Source</span><select class="ctrl-select" id="sel-z2ts" onchange="sendSelect('temp_sensor_source_z2', this)"><option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC</option></select></div>
+
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="z2-current">—<span>°C</span></div></div>
           <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z2-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z2-sp-val">—</div><button class="step-btn" onclick="step('z2-sp', +0.1)">+</button></div></div>
@@ -1166,10 +1170,12 @@ function render(d) {
   setText('z1-current', fmt1(d.z1_current_temp));
   seedPending('z1-sp', d.z1_setpoint);
   seedHyst('z1', d.thermostat_hysteresis_z1);
+  if (d.z1_mode) document.getElementById('sel-z1-vmode').value = d.z1_mode;
 
   setText('z2-current', fmt1(d.z2_current_temp));
   seedPending('z2-sp', d.z2_setpoint);
   seedHyst('z2', d.thermostat_hysteresis_z2);
+  if (d.z2_mode) document.getElementById('sel-z2-vmode').value = d.z2_mode;
 
   setText('room-z1-current', fmt1(d.room_z1_current));
   seedPending('room-z1-sp', d.room_z1_setpoint);
@@ -1338,6 +1344,14 @@ async function sendFlow(zone, btn) {
     } else { showToast('No changes'); }
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');
+}
+
+async function sendVMode(zone, el) {
+  try { 
+    await apiPost({ key: 'virtual_climate_' + zone + '_mode', value: el.value }); 
+    showToast('✓ Zone ' + zone.toUpperCase() + ' Mode: ' + el.value); 
+  } 
+  catch(e) { showToast('✗ ' + e.message, true); }
 }
 
 async function fetchState() {

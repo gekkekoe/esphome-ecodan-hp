@@ -149,10 +149,12 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   j += "\"z1_current_temp\":"                 + climate_current_str_(virtual_climate_z1_) + ",";
   j += "\"z1_setpoint\":"                     + climate_target_str_(virtual_climate_z1_) + ",";
   j += "\"z1_action\":"                       + climate_action_str_(virtual_climate_z1_) + ",";
+  j += "\"z1_mode\":"                         + climate_mode_str_(virtual_climate_z1_) + ",";
 
   j += "\"z2_current_temp\":"                 + climate_current_str_(virtual_climate_z2_) + ",";
   j += "\"z2_setpoint\":"                     + climate_target_str_(virtual_climate_z2_) + ",";
   j += "\"z2_action\":"                       + climate_action_str_(virtual_climate_z2_) + ",";
+  j += "\"z2_mode\":"                         + climate_mode_str_(virtual_climate_z2_) + ",";
 
   j += "\"room_z1_current\":"                  + climate_current_str_(heatpump_climate_z1_) + ",";
   j += "\"room_z1_setpoint\":"                 + climate_target_str_(heatpump_climate_z1_) + ",";
@@ -338,6 +340,20 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
 
   if (key == "flow_climate_z1_setpoint")     { doClimate(flow_climate_z1_, "Flow Z1"); return; }
   if (key == "flow_climate_z2_setpoint")     { doClimate(flow_climate_z2_, "Flow Z2"); return; }
+  
+  if (key == "virtual_climate_z1_mode" || key == "virtual_climate_z2_mode") {
+    climate::Climate *c = (key == "virtual_climate_z1_mode") ? virtual_climate_z1_ : virtual_climate_z2_;
+    if (c && is_string) {
+      auto call = c->make_call();
+      if (sval == "heat") call.set_mode(climate::CLIMATE_MODE_HEAT);
+      else if (sval == "cool") call.set_mode(climate::CLIMATE_MODE_COOL);
+      else if (sval == "auto") call.set_mode(climate::CLIMATE_MODE_AUTO);
+      else call.set_mode(climate::CLIMATE_MODE_OFF);
+      call.perform();
+      ESP_LOGI(TAG, "%s set to %s", key.c_str(), sval.c_str());
+    }
+    return;
+  }
 
   if (is_string) {
      ESP_LOGW(TAG, "Unknown string key: %s", key.c_str());
@@ -375,6 +391,17 @@ std::string EcodanDashboard::climate_target_str_(climate::Climate *c) {
   char buf[16];
   snprintf(buf, sizeof(buf), "%.1f", c->target_temperature);
   return std::string(buf);
+}
+
+std::string EcodanDashboard::climate_mode_str_(climate::Climate *c) {
+  if (c == nullptr) return "\"off\"";
+  switch (c->mode) {
+    case climate::CLIMATE_MODE_HEAT: return "\"heat\"";
+    case climate::CLIMATE_MODE_COOL: return "\"cool\"";
+    case climate::CLIMATE_MODE_AUTO: return "\"auto\"";
+    case climate::CLIMATE_MODE_OFF:
+    default: return "\"off\"";
+  }
 }
 
 std::string EcodanDashboard::number_str_(number::Number *n) {
