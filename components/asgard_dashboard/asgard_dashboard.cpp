@@ -269,7 +269,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_sw("force_dhw", sw_force_dhw_); 
   
   p_txt("latest_version", version_);
-  p_txt("status_dip_switch_1", status_dip_switch_1_);
+
   if (operation_mode_ && operation_mode_->has_state() && !std::isnan(operation_mode_->state)) {
     response->printf("\"operation_mode\":%d,", (int)operation_mode_->state);
   } else {

@@ -70,6 +70,3 @@ asgard_dashboard:
   predictive_short_cycle_control_enabled_id: predictive_short_cycle_control_enabled 
   predictive_short_cycle_high_delta_time_window_id: predictive_short_cycle_high_delta_time_window
   predictive_short_cycle_high_delta_threshold_id: predictive_short_cycle_high_delta_threshold
-
-  # ── Dip switch 
-  status_dip_switch_1_id: status_dip_switch_1
