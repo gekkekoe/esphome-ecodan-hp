@@ -501,31 +501,25 @@ void EcodanDashboard::record_history_() {
 }
 
 void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
-  // Snapshot count/head under mutex to avoid reading mid-write
-  size_t snapshot_count, snapshot_head;
-  {
-    std::lock_guard<std::mutex> lock(history_lock_);
-    snapshot_count = history_count_;
-    snapshot_head = history_head_;
-  }
-  
-  AsyncResponseStream *response = request->beginResponseStream("application/json");
+AsyncResponseStream *response = request->beginResponseStream("application/json");
   response->addHeader("Access-Control-Allow-Origin", "*");
   response->addHeader("Cache-Control", "no-cache");
   
-  if (snapshot_count == 0) {
+  std::lock_guard<std::mutex> lock(history_lock_);  
+
+  if (history_count_ == 0) {
     response->print("[]");
     request->send(response);
     return;
   }
   
   response->print("[");
-  size_t start_idx = (snapshot_count == MAX_HISTORY) ? snapshot_head : 0;
-  size_t step = (snapshot_count > 360) ? (snapshot_count / 360) : 1;
+  size_t start_idx = (history_count_ == MAX_HISTORY) ? history_head_ : 0;
+  size_t step = (history_count_ > 360) ? (history_count_ / 360) : 1;
   if (step < 1) step = 1;
   
   bool first = true;
-  for (size_t i = 0; i < snapshot_count; i += step) {
+  for (size_t i = 0; i < history_count_; i += step) {
     size_t idx = (start_idx + i) % MAX_HISTORY;
     const HistoryRecord &rec = history_buffer_[idx];
     if (!first) response->print(",");

@@ -170,6 +170,7 @@ text_sensor:
   - platform: template
     id: status_operation
     name: ${status_operation}
+    update_interval: never
     lambda: |-
       auto value = id(ecodan_instance).get_status().Operation;
       switch (value)
@@ -329,6 +330,9 @@ sensor:
     operation_mode:
       id: operation_mode
       internal: true
+      on_value:
+        then:
+          - component.update: status_operation
     controller_version:
       id: controller_version
       internal: true
