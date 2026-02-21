@@ -358,9 +358,15 @@ sensor:
     hp_feed_temp:
       id: hp_feed_temp
       name: ${hp_feed_temp}
+      on_value:
+        then:
+          - component.update: hp_delta_t
     hp_return_temp:
       id: hp_return_temp
       name: ${hp_return_temp}
+      on_value:
+        then:
+          - component.update: hp_delta_t
     hp_refrigerant_temp:
       id: hp_refrigerant_temp
       name: ${hp_refrigerant_temp}
@@ -490,6 +496,16 @@ sensor:
           last_input_value = status.EnergyConsumedIncreasing;
           return cop;
       }
+
+  - platform: template
+    id: hp_delta_t
+    name: "Delta T"
+    lambda: |-
+      if (isnan(id(hp_feed_temp).state) || isnan(id(hp_return_temp).state)) return NAN;
+      return id(hp_feed_temp).state - id(hp_return_temp).state;
+    accuracy_decimals: 1
+    unit_of_measurement: "°C"
+    update_interval: never
 
   - platform: uptime
     name: ${uptime}
