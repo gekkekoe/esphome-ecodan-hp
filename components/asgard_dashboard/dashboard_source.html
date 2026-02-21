@@ -87,8 +87,8 @@
   .chart-legend { display: flex; gap: 10px; flex-wrap: wrap; }
   .legend-item { display: flex; align-items: center; gap: 5px; font-size: 9px; font-family: var(--mono); color: var(--text2); }
   .legend-dot { width: 16px; height: 2px; flex-shrink: 0; }
-  .chart-container { position: relative; width: 100%; height: 200px; }
-  canvas { width: 100% !important; }
+  .chart-container { position: relative; width: 100%; height: 200px; touch-action: pan-y !important; }
+  canvas { width: 100% !important; touch-action: pan-y !important; }
 
   .ctrl-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
   .ctrl-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); gap: 10px; }
@@ -931,8 +931,7 @@ function updateCharts(d) {
   history.z2flow.push(d.z2_flow_temp_target ?? null);
   history.freq.push(d.compressor_frequency ?? null);
   
-  const modeMapLive = { 0: "Off", 1: "Hot Water", 2: "Heating", 3: "Cooling", 5: "Frost Protect", 6: "Legionella" };
-  history.mode.push((d.operation_mode !== undefined && d.operation_mode !== null) ? (modeMapLive[d.operation_mode] || "Unknown") : '');
+  history.mode.push((d.operation_mode !== undefined && d.operation_mode !== null) ? (MODE_MAP[d.operation_mode] || "Unknown") : '');
 
   history.bin_comp.push(d.status_compressor ? 1 : 0); 
   history.bin_boost.push(d.status_booster ? 1 : 0); 
