@@ -23,10 +23,10 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; padding: 0; }
   
-  header { 
+header { 
     background: var(--bg2); border-bottom: 1px solid var(--border); 
     padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
-    gap: 10px; position: sticky; top: 0; z-index: 100; 
+    gap: 10px; 
   }
   
   .header-right {
@@ -35,7 +35,10 @@
   }
   .fw-version { color: var(--accent); font-weight: 600; margin-bottom: 2px; }
 
-  .tab-bar { display: flex; gap: 10px; margin: 10px 10px 20px 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+  .tab-bar { 
+    display: flex; gap: 10px; padding: 10px 16px; margin: 0; 
+    border-bottom: 1px solid var(--border); background: var(--bg); 
+  }
   .tab-btn { 
     background: transparent; border: none; color: var(--text3); 
     font-family: var(--sans); font-weight: 600; font-size: 16px; 
@@ -44,7 +47,7 @@
   .tab-btn:hover { color: var(--text); background: var(--bg2); }
   .tab-btn.active { color: var(--accent); background: rgba(0, 200, 255, 0.1); }
 
-  .view-section { display: none; animation: fadeIn 0.3s ease; padding: 14px; max-width: 1300px; margin: 0 auto; }
+  .view-section { display: none; animation: fadeIn 0.3s ease; padding: 14px; max-width: 1300px; margin: 10px auto 0; }
   .view-section.active { display: block; }
 
   @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -80,6 +83,13 @@
   .badge-value.green { color: var(--accent3); }
   .badge-value.warn { color: var(--warn); }
   .badge-value.purple { color: var(--purple); }
+
+  .sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+  }  
 
   .section-title { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 3px; color: var(--text3); text-transform: uppercase; margin-bottom: 10px; padding-left: 8px; border-left: 2px solid var(--accent); }
   .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
@@ -303,11 +313,16 @@
   </div>
 </header>
 
-<nav class="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('monitor', this)">Monitor</button>
-  <button class="tab-btn" onclick="switchTab('settings', this)">Settings</button>
-  <button class="tab-btn" onclick="switchTab('logs', this)">System Logs</button>
-</nav>
+<div class="sticky-top">
+  <header>
+    </header>
+
+  <nav class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('monitor', this)">Monitor</button>
+    <button class="tab-btn" onclick="switchTab('settings', this)">Settings</button>
+    <button class="tab-btn" onclick="switchTab('logs', this)">System Logs</button>
+  </nav>
+</div>
 
 <div id="view-monitor" class="view-section active">
   <div class="chart-card full-width">
@@ -734,7 +749,7 @@ function initCharts() {
           }
         },
         zoom: {
-          wheel: { enabled: true },
+          wheel: { enabled: true, speed: 0.05 },
           pinch: { enabled: true },
           mode: 'x',
           onZoomStart({chart}) {
