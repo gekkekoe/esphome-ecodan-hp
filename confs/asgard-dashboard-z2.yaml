@@ -1,4 +1,5 @@
 asgard_dashboard:
+  ui_use_room_z2_id: ui_use_room_z2
   operating_mode_z2_id: heatpump_select_operating_mode_z2 
   virtual_climate_z2_id: virtual_climate_z2   
   heatpump_climate_z2_id: heatpump_climate_room_z2

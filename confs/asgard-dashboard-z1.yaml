@@ -1,5 +1,16 @@
+globals:
+  - id: ui_use_room_z1
+    type: bool
+    restore_value: yes
+    initial_value: 'false'
+  - id: ui_use_room_z2
+    type: bool
+    restore_value: yes
+    initial_value: 'false'
+
 asgard_dashboard:
   version_id:                        current_fw_version
+  ui_use_room_z1_id:                 ui_use_room_z1
   # ── Header badge sensors 
   hp_feed_temp_id:                   hp_feed_temp
   hp_return_temp_id:                 hp_return_temp

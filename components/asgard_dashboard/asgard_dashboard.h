@@ -11,6 +11,8 @@
 #include "esphome/components/number/number.h"
 #include "esphome/components/switch/switch.h"
 #include "esphome/components/select/select.h"
+#include "esphome/components/globals/globals_component.h"
+
 
 namespace esphome {
 namespace asgard_dashboard {
@@ -129,6 +131,10 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_flow_climate_z1(climate::Climate *c)               { flow_climate_z1_ = c; }
   void set_flow_climate_z2(climate::Climate *c)               { flow_climate_z2_ = c; }
 
+  // Globals
+  void set_ui_use_room_z1(esphome::globals::RestoringGlobalsComponent<bool> *g) { ui_use_room_z1_ = g; }
+  void set_ui_use_room_z2(esphome::globals::RestoringGlobalsComponent<bool> *g) { ui_use_room_z2_ = g; }
+
   // AsyncWebHandler
   bool canHandle(AsyncWebServerRequest *request) const override;
   void handleRequest(AsyncWebServerRequest *request) override;
@@ -232,6 +238,9 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   climate::Climate *heatpump_climate_z2_{nullptr};
   climate::Climate *flow_climate_z1_{nullptr};
   climate::Climate *flow_climate_z2_{nullptr};
+
+  esphome::globals::RestoringGlobalsComponent<bool> *ui_use_room_z1_{nullptr};
+  esphome::globals::RestoringGlobalsComponent<bool> *ui_use_room_z2_{nullptr};
 
 private:
   static const size_t MAX_HISTORY = 1440; // 24h, 1min interval

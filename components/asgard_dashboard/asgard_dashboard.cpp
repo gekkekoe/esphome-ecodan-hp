@@ -177,6 +177,9 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   };
 
   // --- DIRECT DATA STREAMING ---
+  response->printf("\"ui_use_room_z1\":%s,", (ui_use_room_z1_ != nullptr) && ui_use_room_z1_->value() ? "true" : "false");
+  response->printf("\"ui_use_room_z2\":%s,", (ui_use_room_z2_ != nullptr) && ui_use_room_z2_->value() ? "true" : "false");
+  
   p_sens("hp_feed_temp", hp_feed_temp_);
   p_sens("hp_return_temp", hp_return_temp_);
   p_sens("outside_temp", outside_temp_);
@@ -440,6 +443,9 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
     }
     return;
   }
+
+  if (key == "ui_use_room_z1" && ui_use_room_z1_) { ui_use_room_z1_->value() = (fval > 0.5); return; }
+  if (key == "ui_use_room_z2" && ui_use_room_z2_) { ui_use_room_z2_->value() = (fval > 0.5); return; }
 
   if (is_string) {
      ESP_LOGW(TAG, "Unknown string key: %s", key.c_str());

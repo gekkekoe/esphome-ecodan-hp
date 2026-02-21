@@ -314,9 +314,6 @@ header {
 </header>
 
 <div class="sticky-top">
-  <header>
-    </header>
-
   <nav class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('monitor', this)">Monitor</button>
     <button class="tab-btn" onclick="switchTab('settings', this)">Settings</button>
@@ -440,9 +437,9 @@ header {
       </div>
       
       <div class="ctrl-row" style="margin-top: 15px; border-bottom: none; padding-bottom: 0;">
-        <span class="ctrl-label" style="font-weight: 600; color: var(--text);">Use Room Thermostat Z1</span>
+        <span class="ctrl-label">Use Room Thermostat Z1</span>
         <label class="toggle-wrap">
-          <input type="checkbox" id="ui-room-z1" onchange="toggleThermostatUI('z1', this.checked)" checked>
+          <input type="checkbox" id="ui-room-z1" onchange="sendUI('z1', this.checked)">
           <span class="toggle-slider"></span>
         </label>
       </div>
@@ -463,7 +460,7 @@ header {
         <button class="send-btn" id="btn-z1" onclick="sendZone('z1', this)" style="margin-bottom:0">Apply Virtual Thermostat Z1</button>
       </div>
 
-      <div id="room-z1-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+      <div id="room-z1-section" style="display:none; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">
           <span id="dot-room-z1" class="status-dot"></span>Room Thermostat Z1
         </div>
@@ -489,9 +486,9 @@ header {
       </div>
 
       <div class="ctrl-row" style="margin-top: 15px; border-bottom: none; padding-bottom: 0;">
-        <span class="ctrl-label" style="font-weight: 600; color: var(--text);">Use Room Thermostat Z2</span>
+        <span class="ctrl-label">Use Room Thermostat Z2</span>
         <label class="toggle-wrap">
-          <input type="checkbox" id="ui-room-z2" onchange="toggleThermostatUI('z2', this.checked)" checked>
+          <input type="checkbox" id="ui-room-z2" onchange="sendUI('z2', this.checked)">
           <span class="toggle-slider"></span>
         </label>
       </div>
@@ -512,7 +509,7 @@ header {
         <button class="send-btn" id="btn-z2" onclick="sendZone('z2', this)" style="margin-bottom:0">Apply Virtual Thermostat Z2</button>
       </div>
 
-      <div id="room-z2-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div id="room-z2-section" style="display:none; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">
           <span id="dot-room-z2" class="status-dot"></span>Room Thermostat Z2
         </div>
@@ -1102,18 +1099,22 @@ function updateDot(id, action) {
 function render(d) {
   const isZ2 = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
 
+  if (d.ui_use_room_z1 !== undefined) {
+    const cbZ1 = document.getElementById('ui-room-z1');
+    if (cbZ1 && document.activeElement !== cbZ1) cbZ1.checked = d.ui_use_room_z1;
+    toggleThermostatUI('z1', d.ui_use_room_z1);
+  }
+  
+  if (d.ui_use_room_z2 !== undefined) {
+    const cbZ2 = document.getElementById('ui-room-z2');
+    if (cbZ2 && document.activeElement !== cbZ2) cbZ2.checked = d.ui_use_room_z2;
+    toggleThermostatUI('z2', d.ui_use_room_z2);
+  }
+
   const z2Card = document.getElementById('card-z2');
   if (z2Card) { z2Card.style.display = isZ2 ? 'block' : 'none'; }
   const z2AA = document.getElementById('aa-z2-container');
   if(z2AA) { z2AA.style.display = isZ2 ? 'block' : 'none'; }
-
-  const roomZ1Sec = document.getElementById('room-z1-section');
-  if (roomZ1Sec) roomZ1Sec.style.display = 'block';
-
-  const roomZ2Sec = document.getElementById('room-z2-section');
-  if (roomZ2Sec) {
-      roomZ2Sec.style.display = isZ2 ? 'block' : 'none';
-  }
 
   const flowZ2Area = document.getElementById('flow-z2-area');
   if (flowZ2Area) {
@@ -1388,29 +1389,22 @@ async function sendVMode(zone, el) {
   catch(e) { showToast('✗ ' + e.message, true); }
 }
 
-
 function toggleThermostatUI(zone, useRoom) {
   const vZ = document.getElementById('virtual-' + zone + '-section');
   const rZ = document.getElementById('room-' + zone + '-section');
   
-  if (rZ) rZ.classList.toggle('disabled-box', !useRoom);
-  if (vZ) vZ.classList.toggle('disabled-box', useRoom);
-  localStorage.setItem('useRoom_' + zone, useRoom ? 'true' : 'false');
+  if (rZ) rZ.style.display = useRoom ? 'block' : 'none';
+  if (vZ) vZ.style.display = useRoom ? 'none' : 'block';
 }
 
-  document.addEventListener('DOMContentLoaded', () => {
-  const savedZ1 = localStorage.getItem('useRoom_z1');
-  const useRoomZ1 = savedZ1 !== null ? savedZ1 === 'true' : false;
-  const cbZ1 = document.getElementById('ui-room-z1');
-  if (cbZ1) cbZ1.checked = useRoomZ1;
-  toggleThermostatUI('z1', useRoomZ1);
-
-  const savedZ2 = localStorage.getItem('useRoom_z2');
-  const useRoomZ2 = savedZ2 !== null ? savedZ2 === 'true' : false;
-  const cbZ2 = document.getElementById('ui-room-z2');
-  if (cbZ2) cbZ2.checked = useRoomZ2;
-  toggleThermostatUI('z2', useRoomZ2);
-});
+async function sendUI(zone, val) {
+  toggleThermostatUI(zone, val);
+  try { 
+    await apiPost({ key: 'ui_use_room_' + zone, value: val ? 1 : 0 }); 
+  } catch(e) { 
+    showToast('✗ ' + e.message, true); 
+  }
+}
 
 async function fetchState() {
   try {

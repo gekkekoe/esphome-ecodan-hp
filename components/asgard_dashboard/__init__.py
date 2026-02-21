@@ -8,7 +8,7 @@ AUTO_LOAD = ["web_server_base"]
 
 CONF_WEB_SERVER_BASE_ID = "web_server_base_id"
 
-from esphome.components import sensor, binary_sensor, text_sensor, climate, number, switch, select
+from esphome.components import sensor, binary_sensor, text_sensor, climate, number, switch, select, globals
 
 asgard_dashboard_ns = cg.esphome_ns.namespace("asgard_dashboard")
 EcodanDashboard = asgard_dashboard_ns.class_("EcodanDashboard", cg.Component)
@@ -93,6 +93,9 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("predictive_short_cycle_high_delta_time_window_id"): cv.use_id(number.Number),
         cv.Optional("predictive_short_cycle_high_delta_threshold_id"):   cv.use_id(number.Number),
 
+        cv.Optional("ui_use_room_z1_id"): cv.use_id(globals.GlobalsComponent),
+        cv.Optional("ui_use_room_z2_id"): cv.use_id(globals.GlobalsComponent),
+
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
@@ -176,6 +179,8 @@ async def to_code(config):
         ("predictive_short_cycle_control_enabled_id",    "set_pred_sc_switch"),
         ("predictive_short_cycle_high_delta_time_window_id", "set_pred_sc_time"),
         ("predictive_short_cycle_high_delta_threshold_id",   "set_pred_sc_delta"),
+        ("ui_use_room_z1_id", "set_ui_use_room_z1"),
+        ("ui_use_room_z2_id", "set_ui_use_room_z2"),
     ]
 
     for conf_key, setter in pairs:
