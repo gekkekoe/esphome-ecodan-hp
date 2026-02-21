@@ -577,6 +577,15 @@
 const HISTORY_MINUTES = 1440; 
 const POLL_MS = 5000;
 
+const MODE_MAP = {
+  0: "Off",
+  1: "Hot Water",
+  2: "Heating",
+  3: "Cooling",
+  5: "Frost Protect",
+  6: "Legionella"
+};
+
 const history = {
   timestamps: [], feed: [], ret: [], z1sp: [], z2sp: [], z1curr: [], z2curr: [],
   z1flow: [], z2flow: [], freq: [], mode: [], bin_comp: [], bin_boost: [], 
@@ -921,8 +930,10 @@ function updateCharts(d) {
   history.z1flow.push(d.z1_flow_temp_target ?? null);
   history.z2flow.push(d.z2_flow_temp_target ?? null);
   history.freq.push(d.compressor_frequency ?? null);
-  history.mode.push(d.status_operation ?? '');
   
+  const modeMapLive = { 0: "Off", 1: "Hot Water", 2: "Heating", 3: "Cooling", 5: "Frost Protect", 6: "Legionella" };
+  history.mode.push((d.operation_mode !== undefined && d.operation_mode !== null) ? (modeMapLive[d.operation_mode] || "Unknown") : '');
+
   history.bin_comp.push(d.status_compressor ? 1 : 0); 
   history.bin_boost.push(d.status_booster ? 1 : 0); 
   history.bin_defrost.push(d.status_defrost ? 1 : 0);
@@ -1131,7 +1142,10 @@ function render(d) {
     if(el) { el.min = d.hysteresis_z2_lim.min; el.max = d.hysteresis_z2_lim.max; el.step = d.hysteresis_z2_lim.step; }
   }
 
-  setText('b-mode',    d.status_operation ?? '—');
+  // --- OPERATION MODE MAPPING ---
+  const modeText = (d.operation_mode !== undefined && d.operation_mode !== null) ? (MODE_MAP[d.operation_mode] || "Unknown") : "—";
+  setText('b-mode', modeText);
+
   setText('b-feed',    fmt1(d.hp_feed_temp) + '°');
   setText('b-return',  fmt1(d.hp_return_temp) + '°');
   setText('b-outside', fmt1(d.outside_temp) + '°');
@@ -1212,14 +1226,14 @@ function render(d) {
   updateDot('dot-z2', d.z2_action);
   updateDot('dot-room-z2', d.room_z2_action);
 
-  // annimations
+  // --- ANIMATIONS LOGIC ---
   const isRunning = d.status_compressor;
   const isFlowing = (d.flow_rate && d.flow_rate > 2) || d.status_water_pump;
   
-  const opMode = (d.status_operation || '').toLowerCase();
-  const isHeating = opMode.includes('heat');
-  const isCooling = opMode.includes('cool');
-  const isDHW     = opMode.includes('dhw') || opMode.includes('hot water') || opMode.includes('legionella');
+  const op = d.operation_mode;
+  const isHeating = (op === 2 || op === 5); // 2 = Heating, 5 = Frost Protect
+  const isCooling = (op === 3);             // 3 = Cooling
+  const isDHW     = (op === 1 || op === 6); // 1 = DHW, 6 = Legionella
 
   const elFlow = document.getElementById('icon-flow');
   if(elFlow) elFlow.classList.toggle('anim-pulse', isFlowing);
@@ -1519,7 +1533,6 @@ async function loadServerHistory() {
     history.bin_comp = []; history.bin_boost = []; history.bin_defrost = [];
     history.bin_pump = []; history.bin_in1 = []; history.bin_in6 = [];
 
-    const modeMap = {0: "Standby", 1: "Heating", 2: "Cooling", 3: "DHW", 4: "Legionella", 5: "Defrost"};
     const serverLastTs = data[data.length - 1][0] * 1000; 
     const browserNow = Date.now();
     let timeOffset = 0;
@@ -1554,7 +1567,7 @@ async function loadServerHistory() {
       history.bin_in6.push((flags & (1 << 5)) ? 1 : 0);
       
       const modeNum = (flags >> 6) & 0x0F;
-      history.mode.push(modeMap[modeNum] || "Unknown");
+      history.mode.push(MODE_MAP[modeNum] || "Unknown");
     });
     
     tempChart.update('none'); freqChart.update('none'); statusChart.update('none');

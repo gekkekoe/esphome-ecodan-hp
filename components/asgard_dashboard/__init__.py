@@ -45,6 +45,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("z1_flow_temp_target_id"):             cv.use_id(sensor.Sensor),
         cv.Optional("z2_flow_temp_target_id"):             cv.use_id(sensor.Sensor),
 
+        cv.Optional("operation_mode_id"):                  cv.use_id(sensor.Sensor),
+
         cv.Optional("status_compressor_id"):               cv.use_id(binary_sensor.BinarySensor),
         cv.Optional("status_booster_id"):                  cv.use_id(binary_sensor.BinarySensor),
         cv.Optional("status_defrost_id"):                  cv.use_id(binary_sensor.BinarySensor),
@@ -53,7 +55,6 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("status_in6_request_id"):              cv.use_id(binary_sensor.BinarySensor),
         cv.Optional("zone2_enabled_id"):                   cv.use_id(binary_sensor.BinarySensor),
 
-        cv.Optional("status_operation_id"):                cv.use_id(text_sensor.TextSensor),
         cv.Optional("heating_system_type_id"):             cv.use_id(text_sensor.TextSensor),
         cv.Optional("room_temp_source_z1_id"):             cv.use_id(text_sensor.TextSensor),
         cv.Optional("room_temp_source_z2_id"):             cv.use_id(text_sensor.TextSensor),
@@ -145,7 +146,7 @@ async def to_code(config):
         ("status_in1_request_id",             "set_status_in1_request"),
         ("status_in6_request_id",             "set_status_in6_request"),
         ("zone2_enabled_id",                  "set_status_zone2_enabled"),
-        ("status_operation_id",               "set_status_operation"),
+        ("operation_mode_id",                 "set_operation_mode"),
         ("heating_system_type_id",            "set_heating_system_type"),
         ("room_temp_source_z1_id",            "set_room_temp_source_z1"),
         ("room_temp_source_z2_id",            "set_room_temp_source_z2"),

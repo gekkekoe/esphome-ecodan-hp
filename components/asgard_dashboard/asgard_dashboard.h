@@ -72,6 +72,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_cooling_consumed(sensor::Sensor *s)                { cooling_consumed_ = s; }
   void set_cooling_produced(sensor::Sensor *s)                { cooling_produced_ = s; }
   void set_cooling_cop(sensor::Sensor *s)                     { cooling_cop_ = s; }
+  void set_operation_mode(sensor::Sensor *s)                  { operation_mode_ = s; }
 
   // Flow Temp Targets
   void set_z1_flow_temp_target(sensor::Sensor *s)             { z1_flow_temp_target_ = s; }
@@ -87,7 +88,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_status_zone2_enabled(binary_sensor::BinarySensor *b) { status_zone2_enabled_ = b; }
 
   // Text sensors
-  void set_status_operation(text_sensor::TextSensor *t)       { status_operation_ = t; }
   void set_heating_system_type(text_sensor::TextSensor *t)    { heating_system_type_ = t; }
   void set_room_temp_source_z1(text_sensor::TextSensor *t)    { room_temp_source_z1_ = t; }
   void set_room_temp_source_z2(text_sensor::TextSensor *t)    { room_temp_source_z2_ = t; }
@@ -181,6 +181,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   sensor::Sensor *thermostat_hysteresis_z1_{nullptr};
   sensor::Sensor *thermostat_hysteresis_z2_{nullptr};
 
+  sensor::Sensor *operation_mode_{nullptr};
+
   // Binary sensors
   binary_sensor::BinarySensor *status_compressor_{nullptr};
   binary_sensor::BinarySensor *status_booster_{nullptr};
@@ -191,7 +193,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   binary_sensor::BinarySensor *status_zone2_enabled_{nullptr};
 
   // Text sensors
-  text_sensor::TextSensor *status_operation_{nullptr};
   text_sensor::TextSensor *heating_system_type_{nullptr};
   text_sensor::TextSensor *room_temp_source_z1_{nullptr};
   text_sensor::TextSensor *room_temp_source_z2_{nullptr};
@@ -245,7 +246,6 @@ private:
   void record_history_();
   void handle_history_request_(AsyncWebServerRequest *request);
   static int16_t pack_temp_(float val);
-  static uint8_t encode_mode_(const std::string &mode);
   static bool bin_state_(binary_sensor::BinarySensor *b);
 };
 

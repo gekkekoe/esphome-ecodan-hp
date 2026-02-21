@@ -13,6 +13,7 @@ asgard_dashboard:
   runtime_id:                        runtime
   wifi_signal_db_id:                 wifi_signal_db
   z1_flow_temp_target_id:            z1_flow_temp_target
+  operation_mode_id:                 operation_mode
 
   # ── DHW 
   dhw_temp_id:                       dhw_temp
@@ -40,9 +41,6 @@ asgard_dashboard:
   status_in1_request_id:             status_in1_request
   status_in6_request_id:             status_in6_request
   zone2_enabled_id:                  status_zone2_enabled
-
-  # ── Text sensor 
-  status_operation_id:               status_operation
 
   # ── Switches 
   sw_auto_adaptive_id:               auto_adaptive_control_enabled

@@ -269,8 +269,12 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_sw("force_dhw", sw_force_dhw_); 
   
   p_txt("latest_version", version_);
-  p_txt("status_operation", status_operation_);
   p_txt("status_dip_switch_1", status_dip_switch_1_);
+  if (operation_mode_ && operation_mode_->has_state() && !std::isnan(operation_mode_->state)) {
+    response->printf("\"operation_mode\":%d,", (int)operation_mode_->state);
+  } else {
+    response->print("\"operation_mode\":null,");
+  }
   
   p_sel("heating_system_type", sel_heating_system_type_);
   p_sel("room_temp_source_z1", sel_room_temp_source_z1_);
@@ -452,17 +456,6 @@ bool EcodanDashboard::bin_state_(binary_sensor::BinarySensor *b) {
   return (b != nullptr && b->has_state() && b->state);
 }
 
-uint8_t EcodanDashboard::encode_mode_(const std::string &mode) {
-  std::string m = mode;
-  for (char &c : m) c = std::tolower((unsigned char)c);
-  if (m.find("legionella") != std::string::npos) return 4;
-  if (m.find("hot water") != std::string::npos || m.find("dhw") != std::string::npos) return 3;
-  if (m.find("cool") != std::string::npos) return 2;
-  if (m.find("heat") != std::string::npos) return 1;
-  if (m.find("defrost") != std::string::npos) return 5;
-  return 0; // standby/off
-}
-
 void EcodanDashboard::record_history_() {
   std::lock_guard<std::mutex> lock(history_lock_);  
 
@@ -491,8 +484,11 @@ void EcodanDashboard::record_history_() {
   if (bin_state_(status_in1_request_)) rec.flags |= (1 << 4);
   if (bin_state_(status_in6_request_)) rec.flags |= (1 << 5);
 
-  std::string mode_str = (status_operation_ && status_operation_->has_state()) ? status_operation_->state : "";
-  uint8_t mode_enc = encode_mode_(mode_str);
+  uint8_t mode_enc = 0; // Default to OFF
+  if (operation_mode_ && operation_mode_->has_state() && !std::isnan(operation_mode_->state)) {
+    int val = (int)operation_mode_->state;
+    if (val != 255) mode_enc = val & 0x0F; // enum value
+  }
   rec.flags |= ((mode_enc & 0x0F) << 6);
 
   history_buffer_[history_head_] = rec;
