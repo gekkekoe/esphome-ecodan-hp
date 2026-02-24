@@ -36,11 +36,12 @@ void EcodanDashboard::loop() {
     update_snapshot_();
   }
 
-  if (action_queue_.empty()) return;
-
   std::vector<DashboardAction> todo;
   {
     std::lock_guard<std::mutex> lock(action_lock_);
+    
+    if (action_queue_.empty()) return;
+    
     todo = action_queue_;
     action_queue_.clear();
   }
