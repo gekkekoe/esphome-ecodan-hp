@@ -505,6 +505,7 @@ sensor:
       return id(hp_feed_temp).state - id(hp_return_temp).state;
     accuracy_decimals: 1
     unit_of_measurement: "°C"
+    state_class: measurement
     update_interval: never
 
   - platform: uptime
