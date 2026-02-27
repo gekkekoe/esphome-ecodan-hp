@@ -96,18 +96,18 @@ Look at the main control board of the heat pump for a connector labeled **CN105*
 > [!TIP]
 > **MelCloud Conflict:** If you have an official MelCloud Wi-Fi module connected to CN105, you must unplug it. You cannot use MelCloud and the Asgard PCB simultaneously on the same port. Plug the MelCloud module into the **slave port** of the Asgard PCB.
 
-
-
 ### Step 3: Connect the PCB
 1.  Plug the provided cable into the **CN105** port on the heat pump. The plug is keyed and fits only one way. Do not force it.
 2.  Plug the other end of the cable into the **Asgard PCB** (Use the **HP** port).
 3. [Optional] If you would like to use the virtual thermostat that controls `IN1/IN6` 
     - Single zone 1: connect 2 wires from Asgard PCB `R1` to `IN1` on your main FTC board. When using `R1` please ensure that `SW2-1` is in the `ON` position.
-    - Dual zone 2: connect 2 wires from `R2` to `IN6`. When using `R2` please ensure that `SW3-1` is in the `ON` position
+    - [Optional] Dual zone 2: connect 2 wires from `R2` to `IN6`. When using `R2` please ensure that `SW3-1` is in the `ON` position
 4. [Optional] The firmware builtin support for number of DS18x20 temperature sensors.
 
 > [!TIP]
 > **Migrating from wireless thermostats (CNRF):** If you are migrating from wireless thermostats (CNRF) please ensure that `SW1-8` is in the `OFF` position when using virtual thermostats
+
+![Schematic](./img/HP-schematic.jpg) 
 
 ### Step 4: Mounting
 Secure the PCB inside the casing with a screw or 10x2 mm magnet (not supplied). The Asgard PCB can also be mounted outside the unit with a magnet.
