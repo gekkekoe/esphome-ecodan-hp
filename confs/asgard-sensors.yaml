@@ -75,6 +75,8 @@ sensor:
     name: "DS18x20 Feed temp"
     id: ow_temp_feed
     unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
     accuracy_decimals: 1
     update_interval: 3s  
     lambda: |-
@@ -94,6 +96,8 @@ sensor:
     name: "DS18x20 Return Temp"
     id: ow_temp_return
     unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
     accuracy_decimals: 1
     update_interval: 3s
     lambda: |-
@@ -113,6 +117,8 @@ sensor:
     name: "DS18x20 Virtual Thermostat input z1"
     id: ow_temp_z1
     unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
     accuracy_decimals: 1
     update_interval: 3s
     lambda: |-
@@ -132,6 +138,8 @@ sensor:
     name: "DS18x20 Virtual Thermostat input z2"
     id: ow_temp_z2
     unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
     accuracy_decimals: 1
     update_interval: 3s
     lambda: |-
@@ -156,6 +164,8 @@ sensor:
       return id(ow_temp_feed).state - id(ow_temp_return).state;
     accuracy_decimals: 1
     unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
     update_interval: 3s
 
 select:  

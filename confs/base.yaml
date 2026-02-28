@@ -506,6 +506,7 @@ sensor:
     accuracy_decimals: 1
     unit_of_measurement: "°C"
     state_class: measurement
+    device_class: temperature
     update_interval: never
 
   - platform: uptime
