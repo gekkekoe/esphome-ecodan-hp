@@ -27,9 +27,6 @@ Configure and control your hot water settings [8]
 4.  Enable the Auto Adaptive `Enable AA Control` switch to enable the auto adaptive algorithm [6]
 5.  [Optional] For 2 zone systems: Apply Step 1 - 3 
 
-> [!TIP]
-> **Greyed thermostats:** When `SW1-8` is in the `OFF` position, the Room thermostats will be disabled [5]. When `SW1-8` is in the `ON` position, the Virtual thermostats will be disabled. 
-
 ### Configure virtual thermostat temperature sensor via REST API
 The esphome component will expose a REST API for the feedback values. You can use GET/POST to access/modify the current temperature. The entities will be named `asgard_vt_input_z1` for zone 1 and `asgard_vt_input_z2` for zone 2. Any temperature sensor that can communicate over REST API can be used.
 
