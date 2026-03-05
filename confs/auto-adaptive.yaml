@@ -7,36 +7,6 @@ globals:
     restore_value: yes
     initial_value: '0'
 
-  - id: raw_heat_produced_global
-    type: float
-    restore_value: yes
-    initial_value: '0.0'
-
-  - id: raw_elec_consumed_global
-    type: float
-    restore_value: yes
-    initial_value: '0.0'
-
-  - id: raw_runtime_hours_global
-    type: float
-    restore_value: yes
-    initial_value: '0.0'
-
-  - id: raw_avg_outside_temp_global
-    type: float
-    restore_value: yes
-    initial_value: '7.0'
-
-  - id: raw_avg_room_temp_global
-    type: float
-    restore_value: yes
-    initial_value: '20.0'
-
-  - id: raw_delta_room_temp_global
-    type: float
-    restore_value: yes
-    initial_value: '0.0'
-
 substitutions:
   update_interval_minutes: "5min"
   asgard_prefix: "//"
@@ -48,12 +18,12 @@ esphome:
         - lambda: |-
             using namespace esphome::optimizer;
             OptimizerState state = {
-                .raw_heat_produced_global = id(raw_heat_produced_global),
-                .raw_elec_consumed_global = id(raw_elec_consumed_global),
-                .raw_runtime_hours_global = id(raw_runtime_hours_global),
-                .raw_avg_outside_temp_global = id(raw_avg_outside_temp_global),
-                .raw_avg_room_temp_global = id(raw_avg_room_temp_global),
-                .raw_delta_room_temp_global = id(raw_delta_room_temp_global),
+                .num_raw_heat_produced = id(num_raw_heat_produced),
+                .num_raw_elec_consumed = id(num_raw_elec_consumed),
+                .num_raw_runtime_hours = id(num_raw_runtime_hours),
+                .num_raw_avg_outside_temp = id(num_raw_avg_outside_temp),
+                .num_raw_avg_room_temp = id(num_raw_avg_room_temp),
+                .num_raw_delta_room_temp = id(num_raw_delta_room_temp),
                 .lockout_expiration_timestamp = id(lockout_expiration_timestamp)
             };
 
@@ -244,6 +214,67 @@ number:
     step: 0.001
     mode: box
 
+  # Overridable solver inputs
+  - platform: template
+    id: num_raw_heat_produced
+    name: ${num_raw_heat_produced}
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: 0.0
+    max_value: 200.0
+    step: 0.1
+
+  - platform: template
+    id: num_raw_elec_consumed
+    name: ${num_raw_elec_consumed}
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: 0.0
+    max_value: 100.0
+    step: 0.1
+
+  - platform: template
+    id: num_raw_runtime_hours
+    name: ${num_raw_runtime_hours}
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: 0.0
+    max_value: 24.0
+    step: 0.1
+
+  - platform: template
+    id: num_raw_avg_outside_temp
+    name: ${num_raw_avg_outside_temp}
+    optimistic: true
+    restore_value: true
+    initial_value: 7.0
+    min_value: -25.0
+    max_value: 40.0
+    step: 0.1
+
+  - platform: template
+    id: num_raw_avg_room_temp
+    name: ${num_raw_avg_room_temp}
+    optimistic: true
+    restore_value: true
+    initial_value: 20.0
+    min_value: 10.0
+    max_value: 35.0
+    step: 0.1
+
+  - platform: template
+    id: num_raw_delta_room_temp
+    name: ${num_raw_delta_room_temp}
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: 0.0
+    max_value: 10.0
+    step: 0.1
+
 select:
   - platform: template
     id: temperature_feedback_source_z1
@@ -332,6 +363,13 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
 
+  - platform: template
+    id: sw_use_solver
+    name: ${sw_use_solver}
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    icon: "mdi:brain"
+
 binary_sensor:
   - platform: template
     id: status_predictive_boost_active
@@ -342,6 +380,18 @@ binary_sensor:
     status_short_cycle_lockout:
       id: status_short_cycle_lockout
       name: ${status_short_cycle_lockout}
+  - platform: template
+    id: bin_solver_connected
+    name: ${bin_solver_connected}
+
+text_sensor:
+  - platform: template
+    id: txt_solver_ip
+    name: "Solver IP Address"
+    on_value:
+      - logger.log:
+          format: "Solver IP changed to: %s"
+          args: [ "x.c_str()" ]
 
 button:
   - platform: template
@@ -373,12 +423,51 @@ button:
   #     - lambda: |-
   #         id(status_compressor).publish_state(false);
 interval:
-  - interval: ${update_interval_minutes}
-    then:
-      - lambda: id(optimizer_ptr)->run_auto_adaptive_loop();
   - interval: 30s
     then:
       - lambda: id(optimizer_ptr)->check_lockout_expiration();
       - lambda: id(optimizer_ptr)->predictive_short_cycle_check();
       - lambda: id(optimizer_ptr)->update_boost_sensor();
       - lambda: id(optimizer_ptr)->update_heat_model();
+  - interval: ${update_interval_minutes}
+    then:
+      - lambda: id(optimizer_ptr)->run_auto_adaptive_loop();
+  - interval: 60s
+    then:
+      - if:
+          condition:
+            lambda: |-
+              return id(sw_use_solver).state && 
+                     (id(txt_solver_ip).state == "" || 
+                     id(txt_solver_ip).state == "0.0.0.0" || 
+                     id(txt_solver_ip).state == "odin.local");
+          then:
+            - lambda: |-
+                ESP_LOGD("asgard", "Starting background task for mDNS discovery...");
+                
+                xTaskCreate([](void *pvParameters) {
+                  struct hostent *he = gethostbyname("odin.local");
+                  
+                  if (he != nullptr && he->h_addr_list[0] != nullptr) {
+                    struct in_addr **addr_list = (struct in_addr **)he->h_addr_list;
+                    std::string ip = inet_ntoa(*addr_list[0]);
+                    
+                    esphome::App.scheduler.set_timeout(nullptr, "mdns_ok", 0, [ip]() {
+                      ESP_LOGI("asgard", "Success! Solver found at IP: %s", ip.c_str());
+                      id(txt_solver_ip).publish_state(ip);
+                      if (id(bin_solver_connected).state != true) {
+                        id(bin_solver_connected).publish_state(true);
+                      }
+                    });
+                  } else {
+                    esphome::App.scheduler.set_timeout(nullptr, "mdns_fail", 0, []() {
+                      ESP_LOGD("asgard", "mDNS lookup failed. Retrying in 60s...");
+                      if (id(bin_solver_connected).state != false) {
+                        id(bin_solver_connected).publish_state(false);
+                      }
+                    });
+                  }
+                  
+                  vTaskDelete(NULL);
+                  
+                }, "mdns_task", 4096, NULL, 1, NULL);

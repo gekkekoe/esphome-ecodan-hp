@@ -120,6 +120,19 @@ struct DashboardSnapshot {
 
   // Safe fixed-size character arrays for text sensors
   char version[32]{0};
+
+  // solver data
+  bool sw_use_solver{false};
+  bool bin_solver_connected{false};
+  
+  NumData num_raw_heat_produced;
+  NumData num_raw_elec_consumed;
+  NumData num_raw_runtime_hours;
+  NumData num_raw_avg_outside_temp;
+  NumData num_raw_avg_room_temp;
+  NumData num_raw_delta_room_temp;
+
+  char txt_solver_ip[32]{0};
 };
 
 class EcodanDashboard : public Component, public AsyncWebHandler {
@@ -173,9 +186,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_status_zone2_enabled(binary_sensor::BinarySensor *b) { status_zone2_enabled_ = b; }
 
   // Text sensors
-  void set_heating_system_type(text_sensor::TextSensor *t)    { heating_system_type_ = t; }
-  void set_room_temp_source_z1(text_sensor::TextSensor *t)    { room_temp_source_z1_ = t; }
-  void set_room_temp_source_z2(text_sensor::TextSensor *t)    { room_temp_source_z2_ = t; }
   void set_version(text_sensor::TextSensor *t)                { version_ = t; }
 
   // Switches
@@ -217,6 +227,18 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   // Globals
   void set_ui_use_room_z1(esphome::globals::RestoringGlobalsComponent<bool> *g) { ui_use_room_z1_ = g; }
   void set_ui_use_room_z2(esphome::globals::RestoringGlobalsComponent<bool> *g) { ui_use_room_z2_ = g; }
+
+  // Solver
+  void set_sw_use_solver(switch_::Switch *s) { sw_use_solver_ = s; }
+  void set_bin_solver_connected(binary_sensor::BinarySensor *b) { bin_solver_connected_ = b; }
+  void set_txt_solver_ip(text_sensor::TextSensor *t) { txt_solver_ip_ = t; }
+
+  void set_num_raw_heat_produced(number::Number *n) { num_raw_heat_produced_ = n; }
+  void set_num_raw_elec_consumed(number::Number *n) { num_raw_elec_consumed_ = n; }
+  void set_num_raw_runtime_hours(number::Number *n) { num_raw_runtime_hours_ = n; }
+  void set_num_raw_avg_outside_temp(number::Number *n) { num_raw_avg_outside_temp_ = n; }
+  void set_num_raw_avg_room_temp(number::Number *n) { num_raw_avg_room_temp_ = n; }
+  void set_num_raw_delta_room_temp(number::Number *n) { num_raw_delta_room_temp_ = n; }
 
   // AsyncWebHandler
   bool canHandle(AsyncWebServerRequest *request) const override;
@@ -281,9 +303,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   binary_sensor::BinarySensor *status_zone2_enabled_{nullptr};
 
   // Text sensors
-  text_sensor::TextSensor *heating_system_type_{nullptr};
-  text_sensor::TextSensor *room_temp_source_z1_{nullptr};
-  text_sensor::TextSensor *room_temp_source_z2_{nullptr};
   text_sensor::TextSensor *version_{nullptr};
   
   // Switches
@@ -324,6 +343,18 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   esphome::globals::RestoringGlobalsComponent<bool> *ui_use_room_z1_{nullptr};
   esphome::globals::RestoringGlobalsComponent<bool> *ui_use_room_z2_{nullptr};
+
+  // Solver
+  switch_::Switch *sw_use_solver_{nullptr};
+  binary_sensor::BinarySensor *bin_solver_connected_{nullptr};
+  text_sensor::TextSensor *txt_solver_ip_{nullptr};
+
+  number::Number *num_raw_heat_produced_{nullptr};
+  number::Number *num_raw_elec_consumed_{nullptr};
+  number::Number *num_raw_runtime_hours_{nullptr};
+  number::Number *num_raw_avg_outside_temp_{nullptr};
+  number::Number *num_raw_avg_room_temp_{nullptr};
+  number::Number *num_raw_delta_room_temp_{nullptr};
 
 private:
   static const size_t MAX_HISTORY = 1440; // 24h, 1min interval

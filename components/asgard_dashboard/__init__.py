@@ -54,16 +54,16 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("status_in1_request_id"):              cv.use_id(binary_sensor.BinarySensor),
         cv.Optional("status_in6_request_id"):              cv.use_id(binary_sensor.BinarySensor),
         cv.Optional("zone2_enabled_id"):                   cv.use_id(binary_sensor.BinarySensor),
+        cv.Optional("bin_solver_connected_id"):            cv.use_id(binary_sensor.BinarySensor),
 
-        cv.Optional("heating_system_type_id"):             cv.use_id(text_sensor.TextSensor),
-        cv.Optional("room_temp_source_z1_id"):             cv.use_id(text_sensor.TextSensor),
-        cv.Optional("room_temp_source_z2_id"):             cv.use_id(text_sensor.TextSensor),
         cv.Optional("version_id"):                         cv.use_id(text_sensor.TextSensor),
+        cv.Optional("txt_solver_ip_id"):                   cv.use_id(text_sensor.TextSensor),
 
         cv.Optional("sw_auto_adaptive_id"):                cv.use_id(switch.Switch),
         cv.Optional("sw_defrost_mit_id"):                  cv.use_id(switch.Switch),
         cv.Optional("sw_smart_boost_id"):                  cv.use_id(switch.Switch),
         cv.Optional("sw_force_dhw_id"):                    cv.use_id(switch.Switch),
+        cv.Optional("sw_use_solver_id"):                   cv.use_id(switch.Switch),
 
         cv.Optional("sel_heating_system_type_id"):         cv.use_id(select.Select),
         cv.Optional("sel_room_temp_source_z1_id"):         cv.use_id(select.Select),
@@ -80,6 +80,12 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("num_min_flow_temp_z2_id"):            cv.use_id(number.Number),
         cv.Optional("num_hysteresis_z1_id"):               cv.use_id(number.Number),
         cv.Optional("num_hysteresis_z2_id"):               cv.use_id(number.Number),
+        cv.Optional("num_raw_heat_produced_id"):           cv.use_id(number.Number),
+        cv.Optional("num_raw_elec_consumed_id"):           cv.use_id(number.Number),
+        cv.Optional("num_raw_runtime_hours_id"):           cv.use_id(number.Number),
+        cv.Optional("num_raw_avg_outside_temp_id"):        cv.use_id(number.Number),
+        cv.Optional("num_raw_avg_room_temp_id"):           cv.use_id(number.Number),
+        cv.Optional("num_raw_delta_room_temp_id"):         cv.use_id(number.Number),
 
         cv.Optional("dhw_climate_id"):                     cv.use_id(climate.Climate),
         cv.Optional("virtual_climate_z1_id"):              cv.use_id(climate.Climate),
@@ -148,9 +154,6 @@ async def to_code(config):
         ("status_in6_request_id",             "set_status_in6_request"),
         ("zone2_enabled_id",                  "set_status_zone2_enabled"),
         ("operation_mode_id",                 "set_operation_mode"),
-        ("heating_system_type_id",            "set_heating_system_type"),
-        ("room_temp_source_z1_id",            "set_room_temp_source_z1"),
-        ("room_temp_source_z2_id",            "set_room_temp_source_z2"),
         ("sw_auto_adaptive_id",               "set_sw_auto_adaptive"),
         ("sw_defrost_mit_id",                 "set_sw_defrost_mit"),
         ("sw_smart_boost_id",                 "set_sw_smart_boost"),
@@ -181,6 +184,15 @@ async def to_code(config):
         ("predictive_short_cycle_high_delta_threshold_id",   "set_pred_sc_delta"),
         ("ui_use_room_z1_id", "set_ui_use_room_z1"),
         ("ui_use_room_z2_id", "set_ui_use_room_z2"),
+        ("sw_use_solver_id",                  "set_sw_use_solver"),
+        ("bin_solver_connected_id",           "set_bin_solver_connected"),
+        ("txt_solver_ip_id",                  "set_txt_solver_ip"),
+        ("num_raw_heat_produced_id",          "set_num_raw_heat_produced"),
+        ("num_raw_elec_consumed_id",          "set_num_raw_elec_consumed"),
+        ("num_raw_runtime_hours_id",          "set_num_raw_runtime_hours"),
+        ("num_raw_avg_outside_temp_id",       "set_num_raw_avg_outside_temp"),
+        ("num_raw_avg_room_temp_id",          "set_num_raw_avg_room_temp"),
+        ("num_raw_delta_room_temp_id",        "set_num_raw_delta_room_temp"),
     ]
 
     for conf_key, setter in pairs:

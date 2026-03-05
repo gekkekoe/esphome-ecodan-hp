@@ -226,6 +226,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "smart_boost_enabled")           { doSwitch(sw_smart_boost_);   return; }
   if (key == "force_dhw")                     { doSwitch(sw_force_dhw_);     return; } 
   if (key == "predictive_short_cycle_control_enabled") { doSwitch(pred_sc_switch_);   return; }
+  if (key == "use_dynamic_cost_solver") { doSwitch(sw_use_solver_); return; }
 
   auto doSelect = [&](select::Select *sel) {
     if (!sel) { ESP_LOGW(TAG, "Select not configured"); return; }
@@ -259,6 +260,12 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "minimum_heating_flow_temp_z2") { doNumber(num_min_flow_temp_z2_); return; }
   if (key == "thermostat_hysteresis_z1")    { doNumber(num_hysteresis_z1_);    return; }
   if (key == "thermostat_hysteresis_z2")    { doNumber(num_hysteresis_z2_);    return; }
+  if (key == "raw_heat_produced") { doNumber(num_raw_heat_produced_); return; }
+  if (key == "raw_elec_consumed") { doNumber(num_raw_elec_consumed_); return; }
+  if (key == "raw_runtime_hours") { doNumber(num_raw_runtime_hours_); return; }
+  if (key == "raw_avg_outside_temp") { doNumber(num_raw_avg_outside_temp_); return; }
+  if (key == "raw_avg_room_temp") { doNumber(num_raw_avg_room_temp_); return; }
+  if (key == "raw_delta_room_temp") { doNumber(num_raw_delta_room_temp_); return; }
 
   if (key == "predictive_short_cycle_high_delta_time_window")    { doNumber(pred_sc_time_);    return; }
   if (key == "predictive_short_cycle_high_delta_threshold")    { doNumber(pred_sc_delta_);    return; }
@@ -303,6 +310,13 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
 
   if (key == "ui_use_room_z1" && ui_use_room_z1_) { ui_use_room_z1_->value() = (fval > 0.5); return; }
   if (key == "ui_use_room_z2" && ui_use_room_z2_) { ui_use_room_z2_->value() = (fval > 0.5); return; }
+
+  // Add support for updating TextSensors via the dashboard
+  if (key == "solver_ip_address" && txt_solver_ip_ != nullptr && is_string) {
+    txt_solver_ip_->publish_state(sval);
+    ESP_LOGI(TAG, "Solver IP Address set to: %s", sval.c_str());
+    return;
+  }
 
   if (is_string) {
      ESP_LOGW(TAG, "Unknown string key: %s", key.c_str());
@@ -355,12 +369,14 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.status_in1_request = get_b(status_in1_request_);
   current_snapshot_.status_in6_request = get_b(status_in6_request_);
   current_snapshot_.status_zone2_enabled = get_b(status_zone2_enabled_);
+  current_snapshot_.bin_solver_connected = get_b(bin_solver_connected_);
 
   current_snapshot_.pred_sc_switch = get_sw(pred_sc_switch_);
   current_snapshot_.sw_auto_adaptive = get_sw(sw_auto_adaptive_);
   current_snapshot_.sw_defrost_mit = get_sw(sw_defrost_mit_);
   current_snapshot_.sw_smart_boost = get_sw(sw_smart_boost_);
   current_snapshot_.sw_force_dhw = get_sw(sw_force_dhw_);
+  current_snapshot_.sw_use_solver = get_sw(sw_use_solver_);
 
   // Populate Floats
   current_snapshot_.hp_feed_temp = get_f(hp_feed_temp_);
@@ -402,6 +418,20 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_hysteresis_z2_, current_snapshot_.num_hysteresis_z2);
   get_n(pred_sc_time_, current_snapshot_.pred_sc_time);
   get_n(pred_sc_delta_, current_snapshot_.pred_sc_delta);
+
+  // solver data
+  get_n(num_raw_heat_produced_, current_snapshot_.num_raw_heat_produced);
+  get_n(num_raw_elec_consumed_, current_snapshot_.num_raw_elec_consumed);
+  get_n(num_raw_runtime_hours_, current_snapshot_.num_raw_runtime_hours);
+  get_n(num_raw_avg_outside_temp_, current_snapshot_.num_raw_avg_outside_temp);
+  get_n(num_raw_avg_room_temp_, current_snapshot_.num_raw_avg_room_temp);
+  get_n(num_raw_delta_room_temp_, current_snapshot_.num_raw_delta_room_temp);
+  if (txt_solver_ip_ && txt_solver_ip_->has_state()) {
+    strncpy(current_snapshot_.txt_solver_ip, txt_solver_ip_->state.c_str(), sizeof(current_snapshot_.txt_solver_ip) - 1);
+    current_snapshot_.txt_solver_ip[sizeof(current_snapshot_.txt_solver_ip) - 1] = '\0';
+  } else {
+    current_snapshot_.txt_solver_ip[0] = '\0';
+  }
 
   // Populate Climates
   get_c(virtual_climate_z1_, current_snapshot_.virt_z1);
@@ -594,6 +624,36 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("defrost_risk_handling_enabled", snap.sw_defrost_mit);
   p_b("smart_boost_enabled", snap.sw_smart_boost);
   p_b("force_dhw", snap.sw_force_dhw);
+
+  // solver switches
+  p_b("use_dynamic_cost_solver", snap.sw_use_solver);
+  p_b("solver_connected", snap.bin_solver_connected);
+
+  p_n("raw_heat_produced", snap.num_raw_heat_produced.val);
+  p_lim("raw_heat_produced_lim", snap.num_raw_heat_produced);
+
+  p_n("raw_elec_consumed", snap.num_raw_elec_consumed.val);
+  p_lim("raw_elec_consumed_lim", snap.num_raw_elec_consumed);
+
+  p_n("raw_runtime_hours", snap.num_raw_runtime_hours.val);
+  p_lim("raw_runtime_hours_lim", snap.num_raw_runtime_hours);
+
+  p_n("raw_avg_outside_temp", snap.num_raw_avg_outside_temp.val);
+  p_lim("raw_avg_outside_temp_lim", snap.num_raw_avg_outside_temp);
+
+  p_n("raw_avg_room_temp", snap.num_raw_avg_room_temp.val);
+  p_lim("raw_avg_room_temp_lim", snap.num_raw_avg_room_temp);
+
+  p_n("raw_delta_room_temp", snap.num_raw_delta_room_temp.val);
+  p_lim("raw_delta_room_temp_lim", snap.num_raw_delta_room_temp);
+
+  response->print("\"solver_ip_address\":\"");
+  for (char *c = snap.txt_solver_ip; *c != '\0'; ++c) {
+    if (*c == '"') response->print("\\\"");
+    else if (*c == '\\') response->print("\\\\");
+    else response->printf("%c", *c);
+  }
+  response->print("\","); 
 
   // Output strings safely
   response->print("\"latest_version\":\"");

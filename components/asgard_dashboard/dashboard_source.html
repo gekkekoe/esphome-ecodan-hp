@@ -42,7 +42,7 @@ header {
   .tab-btn { 
     background: transparent; border: none; color: var(--text3); 
     font-family: var(--sans); font-weight: 600; font-size: 16px; 
-    padding: 8px 16px; cursor: pointer; border-radius: var(--radius); transition: 0.2s; 
+    padding: 6px 10px; cursor: pointer; border-radius: var(--radius); transition: 0.2s; 
   }
   .tab-btn:hover { color: var(--text); background: var(--bg2); }
   .tab-btn.active { color: var(--accent); background: rgba(0, 200, 255, 0.1); }
@@ -333,7 +333,8 @@ header {
   <nav class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('monitor', this)">Monitor</button>
     <button class="tab-btn" onclick="switchTab('settings', this)">Settings</button>
-    <button class="tab-btn" onclick="switchTab('logs', this)">System Logs</button>
+    <button class="tab-btn" onclick="switchTab('solver', this)">Solver</button>
+    <button class="tab-btn" onclick="switchTab('logs', this)">Logs</button>
   </nav>
 </div>
 
@@ -600,6 +601,81 @@ header {
   </div>
 </div>
 
+<div id="view-solver" class="view-section">
+  <div style="display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+    
+    <div class="ctrl-card">
+      <div class="section-title">Odin Settings</div>
+      
+      <div class="ctrl-row">
+        <span class="ctrl-label">Enable Dynamic Cost Solver</span>
+        <label class="toggle-wrap">
+          <input type="checkbox" id="sw-solver" onchange="sendSwitch('use_dynamic_cost_solver', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      
+      <div class="ctrl-row">
+        <span class="ctrl-label">Connection Status</span>
+        <span class="ctrl-value" id="badge-solver-conn" style="font-weight:600;">—</span>
+      </div>
+
+      <div class="ctrl-row" style="border-bottom: none;">
+        <span class="ctrl-label">Odin IP Address</span>
+        <input type="text" id="ui-solver-ip" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 110px; text-align: right; outline: none;" placeholder="0.0.0.0">
+      </div>
+      
+      <div style="display: flex; gap: 8px; margin-top: 8px;">
+        <button class="send-btn" style="margin-top: 0; flex: 1; border-color: var(--text3); color: var(--text3); background: rgba(130,149,184,0.1);" onclick="sendInputString('solver_ip_address', 'ui-solver-ip')">
+          Save IP
+        </button>
+        
+        <button id="btn-odin" class="send-btn" style="margin-top: 0; flex: 1; display: none;" onclick="openOdin()">
+          Open ODIN
+        </button>
+      </div>
+    </div>
+
+    <div class="ctrl-card">
+      <div class="section-title">Physics Data (Daily Averages)</div>
+      <div class="sub-label" style="margin-top:0;">Sent to Solver (Overridable)</div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">Heat Produced (kWh)</span>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-heat', -0.1)">−</button><div class="step-val" id="raw-heat-val">—</div><button class="step-btn" onclick="step('raw-heat', +0.1)">+</button></div>
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">Elec Consumed (kWh)</span>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-elec', -0.1)">−</button><div class="step-val" id="raw-elec-val">—</div><button class="step-btn" onclick="step('raw-elec', +0.1)">+</button></div>
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">Runtime (Hours)</span>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-run', -0.1)">−</button><div class="step-val" id="raw-run-val">—</div><button class="step-btn" onclick="step('raw-run', +0.1)">+</button></div>
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">Avg Outside Temp (°C)</span>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-out', -0.1)">−</button><div class="step-val" id="raw-out-val">—</div><button class="step-btn" onclick="step('raw-out', +0.1)">+</button></div>
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">Avg Room Temp (°C)</span>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-room', -0.1)">−</button><div class="step-val" id="raw-room-val">—</div><button class="step-btn" onclick="step('raw-room', +0.1)">+</button></div>
+      </div>
+
+      <div class="ctrl-row" style="border-bottom:none; padding-bottom:0;">
+        <span class="ctrl-label">Delta Room Temp (°C)</span>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-delta', -0.1)">−</button><div class="step-val" id="raw-delta-val">—</div><button class="step-btn" onclick="step('raw-delta', +0.1)">+</button></div>
+      </div>
+
+      <button class="send-btn" onclick="sendPhysics(this)" style="margin-bottom:0; margin-top:24px;">Apply Physics Data</button>
+    </div>    
+
+  </div>
+</div>
+
 <div id="view-logs" class="view-section">
    <div class="chart-card full-width">
      <div class="chart-header">
@@ -648,7 +724,9 @@ const pending = {
   'dhw-sp': null, 
   'z1-sp': null, 'z1-hyst': null, 'room-z1-sp': null,
   'z2-sp': null, 'z2-hyst': null, 'room-z2-sp': null,
-  'flow-z1-sp': null, 'flow-z2-sp': null
+  'flow-z1-sp': null, 'flow-z2-sp': null,
+  'raw-heat': null, 'raw-elec': null, 'raw-run': null,
+  'raw-out': null, 'raw-room': null, 'raw-delta': null
 };
 
 const lastEdit = {};
@@ -668,7 +746,13 @@ const LIMITS = {
   'room-z1-sp': { min: 10, max: 30, step: 0.5 }, 
   'room-z2-sp': { min: 10, max: 30, step: 0.5 },
   'flow-z1-sp': { min: 10, max: 60, step: 0.1 },
-  'flow-z2-sp': { min: 10, max: 60, step: 0.1 }
+  'flow-z2-sp': { min: 10, max: 60, step: 0.1 },
+  'raw-heat': { min: 0.0, max: 200.0, step: 0.1 },
+  'raw-elec': { min: 0.0, max: 100.0, step: 0.1 },
+  'raw-run': { min: 0.0, max: 24.0, step: 0.1 },
+  'raw-out': { min: -25.0, max: 40.0, step: 0.1 },
+  'raw-room': { min: 10.0, max: 35.0, step: 0.1 },
+  'raw-delta': { min: 0.0, max: 10.0, step: 0.1 }
 };
 
 const STEP_EL = { 
@@ -680,7 +764,9 @@ const STEP_EL = {
   'dhw-sp': 'dhw-sp-val', 
   'z1-sp': 'z1-sp-val', 'room-z1-sp': 'room-z1-sp-val',
   'z2-sp': 'z2-sp-val', 'room-z2-sp': 'room-z2-sp-val',
-  'flow-z1-sp': 'flow-z1-sp-val', 'flow-z2-sp': 'flow-z2-sp-val'
+  'flow-z1-sp': 'flow-z1-sp-val', 'flow-z2-sp': 'flow-z2-sp-val',
+  'raw-heat': 'raw-heat-val', 'raw-elec': 'raw-elec-val', 'raw-run': 'raw-run-val',
+  'raw-out': 'raw-out-val', 'raw-room': 'raw-room-val', 'raw-delta': 'raw-delta-val'
 };
 
 let lastGraphUpdate = 0;
@@ -1303,6 +1389,46 @@ function render(d) {
   updateDot('dot-z2', d.z2_action);
   updateDot('dot-room-z2', d.room_z2_action);
 
+// --- SOLVER & PHYSICS UPDATES ---
+  setToggle('sw-solver', d.use_dynamic_cost_solver);
+
+  const badgeConn = document.getElementById('badge-solver-conn');
+  if (badgeConn) {
+    if (d.solver_connected) {
+      badgeConn.textContent = "Online";
+      badgeConn.style.color = "var(--accent3)"; // Groen
+    } else {
+      badgeConn.textContent = "Offline / Searching...";
+      badgeConn.style.color = "var(--danger)"; // Rood
+    }
+  }
+
+// Helper to prevent overwriting inputs while you type
+  const safeSetInput = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && document.activeElement !== el && val !== undefined && val !== null) el.value = val;
+  };
+  
+  // Vul het tekstveld met het IP (behoudt handmatige bewerkbaarheid)
+  safeSetInput('ui-solver-ip', d.solver_ip_address);
+
+  // Update de "Open ODIN" knop weergave direct
+  const btnOdin = document.getElementById('btn-odin');
+  if (btnOdin) {
+    if (d.solver_ip_address && d.solver_ip_address !== "" && d.solver_ip_address !== "0.0.0.0") {
+      btnOdin.style.display = 'block';
+    } else {
+      btnOdin.style.display = 'none';
+    }
+  }
+
+  seedPending('raw-heat', d.raw_heat_produced);
+  seedPending('raw-elec', d.raw_elec_consumed);
+  seedPending('raw-run', d.raw_runtime_hours);
+  seedPending('raw-out', d.raw_avg_outside_temp);
+  seedPending('raw-room', d.raw_avg_room_temp);
+  seedPending('raw-delta', d.raw_delta_room_temp);
+
   // --- ANIMATIONS LOGIC ---
   const isRunning = d.status_compressor;
   const isFlowing = (d.flow_rate && d.flow_rate > 2) || d.status_water_pump;
@@ -1471,6 +1597,29 @@ async function sendUI(zone, val) {
   }
 }
 
+async function sendInputString(key, elId) {
+  const val = document.getElementById(elId).value;
+  try { 
+    await apiPost({ key: key, value: val }); 
+    showToast('✓ ' + key + ' saved'); 
+  } catch(e) { showToast('✗ ' + e.message, true); }
+}
+
+async function sendPhysics(btn) {
+  btn.classList.add('sending');
+  let c = 0;
+  try {
+    if (hasChanged('raw-heat'))  { await apiPost({ key: 'raw_heat_produced', value: pending['raw-heat'] }); c++; }
+    if (hasChanged('raw-elec'))  { await apiPost({ key: 'raw_elec_consumed', value: pending['raw-elec'] }); c++; }
+    if (hasChanged('raw-run'))   { await apiPost({ key: 'raw_runtime_hours', value: pending['raw-run'] }); c++; }
+    if (hasChanged('raw-out'))   { await apiPost({ key: 'raw_avg_outside_temp', value: pending['raw-out'] }); c++; }
+    if (hasChanged('raw-room'))  { await apiPost({ key: 'raw_avg_room_temp', value: pending['raw-room'] }); c++; }
+    if (hasChanged('raw-delta')) { await apiPost({ key: 'raw_delta_room_temp', value: pending['raw-delta'] }); c++; }
+    showToast(c > 0 ? '✓ Physics Data updated' : 'No changes');
+  } catch(e) { showToast('✗ ' + e.message, true); }
+  btn.classList.remove('sending');
+}
+
 async function fetchState() {
   try {
     const res = await fetch('/dashboard/state');
@@ -1491,6 +1640,66 @@ function showToast(msg, isError=false) {
   clearTimeout(t._timer);
   t._timer = setTimeout(() => t.className = 'toast', 2800);
 }
+
+function updateOdinButton() {
+    const ipInput = document.getElementById('val-odin-ip');
+    const btn = document.getElementById('btn-odin');
+    
+    // Grab the IP from the input field
+    const ip = ipInput.value.trim();
+
+    // Check if it's a valid, non-empty IP
+    if (ip && ip !== "" && ip !== "0.0.0.0") {
+        btn.href = `http://${ip}`;
+        btn.classList.remove('hidden');
+        btn.classList.add('inline-block');
+    } else {
+        btn.removeAttribute('href');
+        btn.classList.add('hidden');
+        btn.classList.remove('inline-block');
+    }
+}
+
+// Function to check if Asgard has detected ODIN's IP
+async function checkOdinIp() {
+    const btn = document.getElementById('btn-odin');
+    try {
+        // Fetch the known ODIN IP from Asgard's own backend
+        const res = await fetch('/api/odin_status'); 
+        const data = await res.json();
+        
+        // Validate that we received a real IP address
+        if (data.odin_ip && data.odin_ip !== "" && data.odin_ip !== "0.0.0.0") {
+            // Success: Inject the IP, unhide the button, and update text
+            btn.href = `http://${data.odin_ip}`;
+            btn.classList.remove('hidden');
+            btn.classList.add('inline-block'); 
+            btn.innerText = `Open ODIN (${data.odin_ip})`;
+        } else {
+            hideOdinBtn(btn);
+        }
+    } catch (error) {
+        hideOdinBtn(btn);
+    }
+}
+
+function openOdin() {
+  const ip = document.getElementById('ui-solver-ip').value.trim();
+  if (ip && ip !== "0.0.0.0") {
+    window.open(`http://${ip}`, '_blank');
+  }
+}
+
+// Helper to completely hide the button if ODIN is lost or undiscovered
+function hideOdinBtn(btn) {
+    btn.removeAttribute('href');
+    btn.classList.add('hidden');
+    btn.classList.remove('inline-block');
+}
+
+// Check immediately on load, then poll every 5 seconds
+checkOdinIp();
+setInterval(checkOdinIp, 5000);
 
 let eventSource = null;
 let isPaused = false;

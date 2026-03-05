@@ -3,6 +3,9 @@
 #include "esphome.h"
 #include "esphome/components/thermostat/thermostat_climate.h"
 
+#include <lwip/netdb.h>
+#include <lwip/sockets.h>
+
 // forward declare EcodanHeatpump
 namespace esphome
 {
@@ -77,13 +80,13 @@ namespace esphome
       esphome::thermostat::ThermostatClimate *asgard_vt_z1;
       esphome::thermostat::ThermostatClimate *asgard_vt_z2;
 
-      // stats vars calculated daily (raw data for the solver)
-      float &raw_heat_produced_global;
-      float &raw_elec_consumed_global;
-      float &raw_runtime_hours_global;
-      float &raw_avg_outside_temp_global;
-      float &raw_avg_room_temp_global;
-      float &raw_delta_room_temp_global;
+      // Stats vars calculated daily (pointers to Number components so they update the UI)
+      esphome::number::Number *num_raw_heat_produced;
+      esphome::number::Number *num_raw_elec_consumed;
+      esphome::number::Number *num_raw_runtime_hours;
+      esphome::number::Number *num_raw_avg_outside_temp;
+      esphome::number::Number *num_raw_avg_room_temp;
+      esphome::number::Number *num_raw_delta_room_temp;
 
       uint32_t &lockout_expiration_timestamp;
     };

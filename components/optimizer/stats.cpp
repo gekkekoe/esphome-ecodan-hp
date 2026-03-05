@@ -125,32 +125,35 @@ namespace esphome
                      heat_produced_kwh, elec_consumed_kwh, runtime_hours, avg_outside, avg_room, delta_room);
             
             // Only update the globals if significant heating occurred (> 2 kWh produced, > 1 hour run)
-            // This prevents updating the baseline with useless summer/idle data
             if (heat_produced_kwh < 2.0f || runtime_hours < 1.0f) {
                 ESP_LOGD(OPTIMIZER_TAG, "Stats Collection: Skipped. Insufficient heating data today.");
                 return;
             }
 
-            // Helper for Exponential Moving Average (EMA)
-            // We apply a slight EMA (15%) to the raw values so the solver doesn't completely derail on a single weird weather day
-            auto update_ema = [](float &current, float observed, float alpha) {
+            // Helper for Exponential Moving Average (EMA) on Number components
+            auto update_ema_num = [](esphome::number::Number *comp, float observed, float alpha) {
+                if (comp == nullptr) return;
+                float current = comp->state;
                 if (current <= 0.01f || std::isnan(current)) current = observed; // Initialize if empty
                 else current = (alpha * observed) + ((1.0f - alpha) * current);
+                
+                // Publish back to ESPHome so the dashboard and NVS flash are updated
+                comp->publish_state(current); 
             };
 
             const float ALPHA = 0.15f; 
 
-            update_ema(this->state_.raw_heat_produced_global, heat_produced_kwh, ALPHA);
-            update_ema(this->state_.raw_elec_consumed_global, elec_consumed_kwh, ALPHA);
-            update_ema(this->state_.raw_runtime_hours_global, runtime_hours, ALPHA);
-            update_ema(this->state_.raw_avg_outside_temp_global, avg_outside, ALPHA);
-            update_ema(this->state_.raw_avg_room_temp_global, avg_room, ALPHA);
-            update_ema(this->state_.raw_delta_room_temp_global, delta_room, ALPHA);
+            update_ema_num(this->state_.num_raw_heat_produced, heat_produced_kwh, ALPHA);
+            update_ema_num(this->state_.num_raw_elec_consumed, elec_consumed_kwh, ALPHA);
+            update_ema_num(this->state_.num_raw_runtime_hours, runtime_hours, ALPHA);
+            update_ema_num(this->state_.num_raw_avg_outside_temp, avg_outside, ALPHA);
+            update_ema_num(this->state_.num_raw_avg_room_temp, avg_room, ALPHA);
+            update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
 
-            ESP_LOGI(OPTIMIZER_TAG, "Globals updated (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
-                     this->state_.raw_heat_produced_global, this->state_.raw_elec_consumed_global, 
-                     this->state_.raw_runtime_hours_global, this->state_.raw_avg_outside_temp_global,
-                     this->state_.raw_avg_room_temp_global, this->state_.raw_delta_room_temp_global);
+            ESP_LOGI(OPTIMIZER_TAG, "Numbers updated (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
+                     this->state_.num_raw_heat_produced->state, this->state_.num_raw_elec_consumed->state, 
+                     this->state_.num_raw_runtime_hours->state, this->state_.num_raw_avg_outside_temp->state,
+                     this->state_.num_raw_avg_room_temp->state, this->state_.num_raw_delta_room_temp->state);
         }
 
     } // namespace optimizer

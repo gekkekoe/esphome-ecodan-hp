@@ -178,3 +178,13 @@ substitutions:
   solver_kwh_meter_feedback: kWh meter feedback
 
   asgard_vt_temp_sensor_source: Virtual Thermostat Source
+
+  # solver settings
+  sw_use_solver:  "Enable Dynamic Cost Solver"
+  bin_solver_connected: "Solver Online Status"
+  num_raw_heat_produced: "Raw Heat Produced (kWh)"
+  num_raw_elec_consumed: "Raw Electricity Consumed (kWh)"
+  num_raw_runtime_hours: "Raw Runtime (Hours)"
+  num_raw_avg_outside_temp: "Raw Avg Outside Temp (°C)"
+  num_raw_avg_room_temp: "Raw Avg Room Temp (°C)"
+  num_raw_delta_room_temp: "Raw Delta Room Temp (°C)"
