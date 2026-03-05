@@ -1,6 +1,7 @@
 #include "optimizer.h"
 #include "esphome/components/ecodan/ecodan.h"
 #include "esphome/core/log.h"
+#include <cmath>
 
 using std::isnan;
 
@@ -8,7 +9,7 @@ namespace esphome
 {
     namespace optimizer
     {
-        // Self-Learning Physics Model
+        // Raw Data Collection Model
         void Optimizer::update_heat_model()
         {
             if (this->state_.ecodan_instance == nullptr) return;
@@ -26,15 +27,41 @@ namespace esphome
             }
             this->last_check_ms_ = now;
 
-            // We assume this function is called periodically (e.g., every 30s).
+            // Track outside temperature periodically
             if (!isnan(status.OutsideTemperature)) {
-                this->daily_temp_sum_ += status.OutsideTemperature;
-                this->daily_temp_count_++;
+                this->daily_outside_temp_sum_ += status.OutsideTemperature;
+                this->daily_outside_temp_count_++;
+            }
+
+            // Track room temperature periodically
+            float z1_temp = this->get_room_current_temp(OptimizerZone::ZONE_1);
+            float current_room_temp = z1_temp;
+
+            // If the system has 2 zones, calculate the average of both rooms
+            if (status.has_2zones()) {
+                float z2_temp = this->get_room_current_temp(OptimizerZone::ZONE_2);
+                
+                // Safely average them if both are valid floats
+                if (!isnan(z1_temp) && !isnan(z2_temp)) {
+                    current_room_temp = (z1_temp + z2_temp) / 2.0f;
+                } else if (isnan(z1_temp) && !isnan(z2_temp)) {
+                    // Fallback to Zone 2 if Zone 1 is missing for some reason
+                    current_room_temp = z2_temp;
+                }
+            }
+
+            if (!isnan(current_room_temp)) {
+                this->daily_room_temp_sum_ += current_room_temp;
+                this->daily_room_temp_count_++;
+                
+                // Track daily min/max to determine the temperature delta
+                if (current_room_temp < this->daily_room_temp_min_) this->daily_room_temp_min_ = current_room_temp;
+                if (current_room_temp > this->daily_room_temp_max_) this->daily_room_temp_max_ = current_room_temp;
             }
 
             int current_day = status.ControllerDateTime.tm_yday;
             
-            // Initialize on boot (prevent jump)
+            // Initialize on boot to prevent jump
             if (this->last_processed_day_ == -1) {
                 this->last_processed_day_ = current_day;
                 return;
@@ -42,21 +69,26 @@ namespace esphome
 
             // Check if day changed (e.g. 303 -> 304)
             if (current_day != this->last_processed_day_) {
-                ESP_LOGI(OPTIMIZER_TAG, "Learning: Day transition detected (%d -> %d). Processing model...", 
+                ESP_LOGI(OPTIMIZER_TAG, "Raw Data Collection: Day transition detected (%d -> %d). Saving stats...", 
                          this->last_processed_day_, current_day);
                 
                 this->update_learning_model(this->last_processed_day_);
 
-                // Reset for new day
+                // Reset variables for the new day
                 this->last_processed_day_ = current_day;
-                this->daily_temp_sum_ = 0.0f;
-                this->daily_temp_count_ = 0;
                 
-                // Reset daily runtime counter via global
-                this->daily_runtime_global = 0;
+                this->daily_outside_temp_sum_ = 0.0f;
+                this->daily_outside_temp_count_ = 0;
+                
+                this->daily_room_temp_sum_ = 0.0f;
+                this->daily_room_temp_count_ = 0;
+                this->daily_room_temp_min_ = 99.0f;
+                this->daily_room_temp_max_ = -99.0f;
+                
+                this->daily_runtime_global = 0.0f;
             }
 
-            // set latest snapshot
+            // Set latest energy snapshots
             this->last_total_heating_produced_ = this->state_.daily_heating_produced->state;
             if (this->state_.solver_kwh_meter_feedback_source->active_index().value_or(0) == 0) {
                 this->last_total_heating_consumed_ = this->state_.daily_heating_consumed->state;
@@ -68,72 +100,57 @@ namespace esphome
 
         void Optimizer::update_learning_model(int day_of_year)
         {
-            if (this->daily_temp_count_ == 0) return;
-            
-            // Calculate Average Temperature of the past day
-            float avg_temp_day = this->daily_temp_sum_ / this->daily_temp_count_;
-            
-            // Retrieve runtime (minutes -> hours)
+            // Calculate average outside temperature
+            float avg_outside = 7.0f; // Safe fallback
+            if (this->daily_outside_temp_count_ > 0) {
+                avg_outside = this->daily_outside_temp_sum_ / this->daily_outside_temp_count_;
+            }
+
+            // Calculate average room temperature and the daily delta
+            float avg_room = 20.0f; // Safe fallback
+            float delta_room = 0.0f;
+            if (this->daily_room_temp_count_ > 0) {
+                avg_room = this->daily_room_temp_sum_ / this->daily_room_temp_count_;
+                if (this->daily_room_temp_max_ >= this->daily_room_temp_min_) {
+                    delta_room = this->daily_room_temp_max_ - this->daily_room_temp_min_;
+                }
+            }
+
+            // Retrieve runtime (convert minutes to hours)
             float runtime_hours = this->daily_runtime_global / 60.0f;
-            
             float heat_produced_kwh = this->last_total_heating_produced_;
             float elec_consumed_kwh = this->last_total_heating_consumed_;
 
-            ESP_LOGI(OPTIMIZER_TAG, "Learning Stats: AvgTemp=%.1fC, Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh",
-                     avg_temp_day, heat_produced_kwh, elec_consumed_kwh, runtime_hours);
+            ESP_LOGI(OPTIMIZER_TAG, "Daily Raw Stats: Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
+                     heat_produced_kwh, elec_consumed_kwh, runtime_hours, avg_outside, avg_room, delta_room);
             
-            // Only learn if significant heating occurred (> 5 kWh produced, > 2 hours run)
-            if (heat_produced_kwh < 5.0f || runtime_hours < 2.0f) {
-                ESP_LOGD(OPTIMIZER_TAG, "Learning: Skipped. Insufficient data/runtime.");
+            // Only update the globals if significant heating occurred (> 2 kWh produced, > 1 hour run)
+            // This prevents updating the baseline with useless summer/idle data
+            if (heat_produced_kwh < 2.0f || runtime_hours < 1.0f) {
+                ESP_LOGD(OPTIMIZER_TAG, "Stats Collection: Skipped. Insufficient heating data today.");
                 return;
             }
-            // Only learn Heat Loss if it was cold enough (Delta T > 5 degrees)
-            float delta_t = 20.0f - avg_temp_day;
-            if (delta_t < 5.0f) {
-                 ESP_LOGD(OPTIMIZER_TAG, "Learning: Skipped. Outside temp too high (%.1fC).", avg_temp_day);
-                 return;
-            }
 
-            // House Factor (Heat Loss)
-            // Formula: kW per Degree = (Total kWh / 24h) / Delta T
-            float observed_heat_loss = (heat_produced_kwh / 24.0f) / delta_t;
-
-            // Base COP (Normalized to 7°C)
-            float measured_cop = heat_produced_kwh / elec_consumed_kwh;
-            if (std::isinf(measured_cop) || measured_cop > 10.0f) measured_cop = 0.0f;
-
-            // Correction: Normalize COP to 7C using standard curve (0.1 per degree)
-            // If temp was 2C, we add (5 * 0.1) to estimate what COP would be at 7C.
-            float temp_diff_from_7 = 7.0f - avg_temp_day;
-            float observed_base_cop = measured_cop + (temp_diff_from_7 * 0.1f);
-
-            // Thermal Output (Average kW)
-            float observed_thermal_output = heat_produced_kwh / runtime_hours;
-
-            // Electrical Power (Average kW)
-            float observed_elec_power = elec_consumed_kwh / runtime_hours;
-
-            // Alpha is weight for moving average
-            const float ALPHA = 0.05f;
-            const float ALPHA_HW = 0.1f;
-
-            // Helper for EMA
+            // Helper for Exponential Moving Average (EMA)
+            // We apply a slight EMA (15%) to the raw values so the solver doesn't completely derail on a single weird weather day
             auto update_ema = [](float &current, float observed, float alpha) {
-                if (current <= 0.01f) current = observed; // Init if empty
+                if (current <= 0.01f || std::isnan(current)) current = observed; // Initialize if empty
                 else current = (alpha * observed) + ((1.0f - alpha) * current);
             };
 
-            // Update Globals (Writes to NVS)
-            update_ema(this->state_.learned_heat_loss_global, observed_heat_loss, ALPHA);
-            update_ema(this->state_.learned_base_cop_global, observed_base_cop, ALPHA);
-            update_ema(this->state_.learned_thermal_output_global, observed_thermal_output, ALPHA_HW);
-            update_ema(this->state_.learned_elec_power_global, observed_elec_power, ALPHA_HW);
+            const float ALPHA = 0.15f; 
 
-            ESP_LOGI(OPTIMIZER_TAG, "Learning Updated: HeatLoss=%.3f (kW/K), BaseCOP=%.2f, Output=%.1f kW, Power=%.1f kW",
-                     this->state_.learned_heat_loss_global,
-                     this->state_.learned_base_cop_global,
-                     this->state_.learned_thermal_output_global,
-                     this->state_.learned_elec_power_global);
+            update_ema(this->state_.raw_heat_produced_global, heat_produced_kwh, ALPHA);
+            update_ema(this->state_.raw_elec_consumed_global, elec_consumed_kwh, ALPHA);
+            update_ema(this->state_.raw_runtime_hours_global, runtime_hours, ALPHA);
+            update_ema(this->state_.raw_avg_outside_temp_global, avg_outside, ALPHA);
+            update_ema(this->state_.raw_avg_room_temp_global, avg_room, ALPHA);
+            update_ema(this->state_.raw_delta_room_temp_global, delta_room, ALPHA);
+
+            ESP_LOGI(OPTIMIZER_TAG, "Globals updated (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
+                     this->state_.raw_heat_produced_global, this->state_.raw_elec_consumed_global, 
+                     this->state_.raw_runtime_hours_global, this->state_.raw_avg_outside_temp_global,
+                     this->state_.raw_avg_room_temp_global, this->state_.raw_delta_room_temp_global);
         }
 
     } // namespace optimizer

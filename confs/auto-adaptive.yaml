@@ -7,27 +7,32 @@ globals:
     restore_value: yes
     initial_value: '0'
 
-  - id: g_learned_heat_loss
+  - id: raw_heat_produced_global
     type: float
     restore_value: yes
-    initial_value: '0.2'   # Default House Factor (kW/K)
+    initial_value: '0.0'
 
-  - id: g_learned_base_cop
+  - id: raw_elec_consumed_global
     type: float
     restore_value: yes
-    initial_value: '5'   # Default COP at 7C
+    initial_value: '0.0'
 
-  - id: g_learned_thermal_output
+  - id: raw_runtime_hours_global
     type: float
     restore_value: yes
-    initial_value: '6.0'   # Default Output (kW)
+    initial_value: '0.0'
 
-  - id: g_learned_elec_power
+  - id: raw_avg_outside_temp_global
     type: float
     restore_value: yes
-    initial_value: '1.5'   # Default Input Power (kW)
+    initial_value: '7.0'
 
-  - id: daily_compressor_runtime_minutes
+  - id: raw_avg_room_temp_global
+    type: float
+    restore_value: yes
+    initial_value: '20.0'
+
+  - id: raw_delta_room_temp_global
     type: float
     restore_value: yes
     initial_value: '0.0'
@@ -43,10 +48,12 @@ esphome:
         - lambda: |-
             using namespace esphome::optimizer;
             OptimizerState state = {
-                .learned_heat_loss_global = id(g_learned_heat_loss),
-                .learned_base_cop_global = id(g_learned_base_cop),
-                .learned_thermal_output_global = id(g_learned_thermal_output),
-                .learned_elec_power_global = id(g_learned_elec_power),
+                .raw_heat_produced_global = id(raw_heat_produced_global),
+                .raw_elec_consumed_global = id(raw_elec_consumed_global),
+                .raw_runtime_hours_global = id(raw_runtime_hours_global),
+                .raw_avg_outside_temp_global = id(raw_avg_outside_temp_global),
+                .raw_avg_room_temp_global = id(raw_avg_room_temp_global),
+                .raw_delta_room_temp_global = id(raw_delta_room_temp_global),
                 .lockout_expiration_timestamp = id(lockout_expiration_timestamp)
             };
 
