@@ -18,6 +18,10 @@ static const char *const TAG = "asgard_dashboard";
 
 void EcodanDashboard::setup() {
   ESP_LOGI(TAG, "Setting up Ecodan Dashboard on /dashboard");
+  
+  action_lock_ = xSemaphoreCreateMutex();
+  snapshot_mutex_ = xSemaphoreCreateMutex();
+
   base_->init();
   base_->add_handler(this);
 }
@@ -37,13 +41,19 @@ void EcodanDashboard::loop() {
   }
 
   std::vector<DashboardAction> todo;
-  {
-    std::lock_guard<std::mutex> lock(action_lock_);
-    
-    if (action_queue_.empty()) return;
+  
+  if (action_lock_ != NULL && xSemaphoreTake(action_lock_, pdMS_TO_TICKS(100)) == pdTRUE) {
+    if (action_queue_.empty()) {
+      xSemaphoreGive(action_lock_);
+      return;
+    }
     
     todo = action_queue_;
     action_queue_.clear();
+    xSemaphoreGive(action_lock_);
+  } else {
+    ESP_LOGW(TAG, "Failed to acquire action_lock_ in loop (Timeout)");
+    return;
   }
 
   for (const auto &act : todo) {
@@ -191,17 +201,19 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   ESP_LOGI(TAG, "Dashboard set: key=%s value=%s/%.2f", key,
            is_string ? strval : "-", is_string ? 0.0f : fval);
 
-  {
-    std::lock_guard<std::mutex> lock(action_lock_);
+  if (action_lock_ != NULL && xSemaphoreTake(action_lock_, pdMS_TO_TICKS(100)) == pdTRUE) {
     action_queue_.push_back({
         std::string(key),
         std::string(strval),
         fval,
         is_string
     });
+    xSemaphoreGive(action_lock_);
+    request->send(200, "application/json", "{\"ok\":true}");
+  } else {
+    ESP_LOGW(TAG, "Failed to acquire action_lock_ in handle_set_ (Timeout)");
+    request->send(503, "text/plain", "System busy, try again");
   }
-
-  request->send(200, "application/json", "{\"ok\":true}");
 }
 
 void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &sval, float fval, bool is_string) {
@@ -298,7 +310,10 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
 }
 
 void EcodanDashboard::update_snapshot_() {
-  std::lock_guard<std::mutex> lock(snapshot_mutex_);
+  if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) {
+    ESP_LOGW(TAG, "Failed to acquire snapshot_mutex_ in update_snapshot_ (Timeout)");
+    return;
+  }
 
   auto get_f = [](sensor::Sensor *s) { return (s && s->has_state()) ? s->state : NAN; };
   auto get_b = [](binary_sensor::BinarySensor *b) { return (b && b->has_state()) ? b->state : false; };
@@ -413,6 +428,8 @@ void EcodanDashboard::update_snapshot_() {
   } else {
     current_snapshot_.version[0] = '\0';
   }
+
+  xSemaphoreGive(snapshot_mutex_);
 }
 
 void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
@@ -421,10 +438,15 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   // ESP_LOGI(TAG, "handle_state_: \t\t\tMemory Stats | Total Free: %u bytes | Largest Block: %u bytes", free_heap, max_block);
 
   DashboardSnapshot snap;
-  {
-    std::lock_guard<std::mutex> lock(snapshot_mutex_);
+  
+  if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(500)) == pdTRUE) {
     snap = current_snapshot_;
-  } 
+    xSemaphoreGive(snapshot_mutex_);
+  } else {
+    ESP_LOGW(TAG, "Failed to acquire snapshot_mutex_ in handle_state_ (Timeout)");
+    request->send(503, "text/plain", "System busy, try again");
+    return;
+  }
 
   AsyncResponseStream *response = request->beginResponseStream("application/json");
   if (response == nullptr) {

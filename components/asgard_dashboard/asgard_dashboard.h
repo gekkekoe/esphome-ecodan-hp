@@ -1,7 +1,8 @@
 #pragma once
 #include <vector> 
-#include <mutex>
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 #include "esphome/core/component.h"
 #include "esphome/components/web_server_base/web_server_base.h"
 #include "esphome/components/sensor/sensor.h"
@@ -227,9 +228,9 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void handle_state_(AsyncWebServerRequest *request);
   void handle_set_(AsyncWebServerRequest *request);
   void dispatch_set_(const std::string &key, const std::string &sval, float fval, bool is_string);
-
   std::vector<DashboardAction> action_queue_;
-  std::mutex action_lock_;
+  SemaphoreHandle_t action_lock_ = NULL;
+
 
   // Members 
   web_server_base::WebServerBase *base_{nullptr};
@@ -333,7 +334,7 @@ private:
 
   // snapshot data to avoid concurrency issues
   DashboardSnapshot current_snapshot_;
-  std::mutex snapshot_mutex_;
+  SemaphoreHandle_t snapshot_mutex_ = NULL;
   uint32_t last_snapshot_time_{0};
   void update_snapshot_();
 
