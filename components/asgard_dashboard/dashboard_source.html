@@ -58,7 +58,7 @@ header {
     padding-bottom: 4px; scrollbar-width: none; 
     -webkit-overflow-scrolling: touch;
   }
-  .header-badges::-webkit-scrollbar { display: none; } /* Hides scrollbar on Chrome/Safari */
+  .header-badges::-webkit-scrollbar { display: none; }
   .badge { 
     display: flex; flex-direction: column; align-items: center; background: var(--bg3); 
     border: 1px solid var(--border); border-radius: 8px; padding: 3px 8px; 
@@ -126,11 +126,15 @@ header {
     text-align: left; 
   }
   .ctrl-select:focus { border-color: var(--accent); }
+  
   .stepper { display: flex; align-items: center; gap: 5px; }
   .step-btn { width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
   .step-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,200,255,0.1); }
   .step-btn:active { transform: scale(0.88); }
-  .step-val { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); min-width: 48px; text-align: center; }
+  .step-val, .step-input { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); min-width: 48px; text-align: center; }
+  .step-input { width: 48px; background: transparent; border: none; outline: none; -moz-appearance: textfield; padding: 0; }
+  .step-input::-webkit-outer-spin-button, .step-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .step-input:focus { background: rgba(0,200,255,0.1); border-radius: 4px; box-shadow: 0 0 0 1px var(--accent); }
 
   .send-btn { width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px; border: 1px solid var(--accent); background: rgba(0,200,255,0.08); color: var(--accent); font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
   .send-btn:hover { background: rgba(0,200,255,0.18); box-shadow: 0 0 10px rgba(0,200,255,0.12); }
@@ -634,6 +638,7 @@ header {
           Open ODIN
         </button>
       </div>
+      <button id="btn-run-solver" class="send-btn" style="margin-top: 8px; border-color: var(--accent3); color: var(--accent3); background: rgba(127,255,127,0.1); display: none;" onclick="runOdinSolver()">Run Optimization</button>
     </div>
 
     <div class="ctrl-card">
@@ -642,37 +647,46 @@ header {
 
       <div class="ctrl-row">
         <span class="ctrl-label">Heat Produced (kWh)</span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-heat', -0.1)">−</button><div class="step-val" id="raw-heat-val">—</div><button class="step-btn" onclick="step('raw-heat', +0.1)">+</button></div>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-heat', -0.1)">−</button><input type="number" class="step-input" id="raw-heat-val" onchange="manualInput('raw-heat', this.value)" /><button class="step-btn" onclick="step('raw-heat', +0.1)">+</button></div>
       </div>
 
       <div class="ctrl-row">
         <span class="ctrl-label">Elec Consumed (kWh)</span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-elec', -0.1)">−</button><div class="step-val" id="raw-elec-val">—</div><button class="step-btn" onclick="step('raw-elec', +0.1)">+</button></div>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-elec-val" onchange="manualInput('raw-elec', this.value)" /><button class="step-btn" onclick="step('raw-elec', +0.1)">+</button></div>
       </div>
 
       <div class="ctrl-row">
         <span class="ctrl-label">Runtime (Hours)</span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-run', -0.1)">−</button><div class="step-val" id="raw-run-val">—</div><button class="step-btn" onclick="step('raw-run', +0.1)">+</button></div>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-run', -0.1)">−</button><input type="number" class="step-input" id="raw-run-val" onchange="manualInput('raw-run', this.value)" /><button class="step-btn" onclick="step('raw-run', +0.1)">+</button></div>
       </div>
 
       <div class="ctrl-row">
         <span class="ctrl-label">Avg Outside Temp (°C)</span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-out', -0.1)">−</button><div class="step-val" id="raw-out-val">—</div><button class="step-btn" onclick="step('raw-out', +0.1)">+</button></div>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-out', -0.1)">−</button><input type="number" class="step-input" id="raw-out-val" onchange="manualInput('raw-out', this.value)" /><button class="step-btn" onclick="step('raw-out', +0.1)">+</button></div>
       </div>
 
       <div class="ctrl-row">
         <span class="ctrl-label">Avg Room Temp (°C)</span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-room', -0.1)">−</button><div class="step-val" id="raw-room-val">—</div><button class="step-btn" onclick="step('raw-room', +0.1)">+</button></div>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-room', -0.1)">−</button><input type="number" class="step-input" id="raw-room-val" onchange="manualInput('raw-room', this.value)" /><button class="step-btn" onclick="step('raw-room', +0.1)">+</button></div>
       </div>
 
       <div class="ctrl-row" style="border-bottom:none; padding-bottom:0;">
         <span class="ctrl-label">Delta Room Temp (°C)</span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-delta', -0.1)">−</button><div class="step-val" id="raw-delta-val">—</div><button class="step-btn" onclick="step('raw-delta', +0.1)">+</button></div>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-delta', -0.1)">−</button><input type="number" class="step-input" id="raw-delta-val" onchange="manualInput('raw-delta', this.value)" /><button class="step-btn" onclick="step('raw-delta', +0.1)">+</button></div>
       </div>
 
       <button class="send-btn" onclick="sendPhysics(this)" style="margin-bottom:0; margin-top:24px;">Apply Physics Data</button>
     </div>    
 
+  </div>
+  
+  <div class="chart-card full-width" style="margin-top: 15px; grid-column: 1 / -1;">
+    <div class="chart-header"><div class="section-title" style="margin:0">Expected vs Actual Consumption (24h)</div></div>
+    <div class="chart-container"><canvas id="odinConsChart"></canvas></div>
+  </div>
+  <div class="chart-card full-width" style="grid-column: 1 / -1;">
+    <div class="chart-header"><div class="section-title" style="margin:0">Expected vs Actual Temperatures (24h)</div></div>
+    <div class="chart-container"><canvas id="odinTempChart"></canvas></div>
   </div>
 </div>
 
@@ -714,7 +728,7 @@ const MODE_MAP = {
 const history = {
   timestamps: [], feed: [], ret: [], z1sp: [], z2sp: [], z1curr: [], z2curr: [],
   z1flow: [], z2flow: [], freq: [], mode: [], bin_comp: [], bin_boost: [], 
-  bin_defrost: [], bin_pump: [], bin_in1: [], bin_in6: []
+  bin_defrost: [], bin_pump: [], bin_in1: [], bin_in6: [], cons: []
 };
 
 const pending = { 
@@ -731,6 +745,11 @@ const pending = {
 
 const lastEdit = {};
 const serverState = {};
+
+let latestState = {};
+let odinDataCache = null;
+let odinConsChart = null;
+let odinTempChart = null;
 
 const LIMITS = { 
   'aa-bias': { min: -5, max: 5, step: 0.1 }, 
@@ -812,12 +831,12 @@ function switchTab(viewId, btn) {
 function getActivityColor(mode, alpha) {
   if (!mode) return `rgba(74, 90, 122, ${alpha})`;
   const m = mode.toLowerCase();
-  if (m.includes('legionella')) return `rgba(127, 255, 127, ${alpha})`; // #7fff7f (Green)
-  if (m.includes('hot water') || m.includes('dhw') || m.includes('heating water')) return `rgba(255, 176, 32, ${alpha})`; // #ffb020 (Yellow)
-  if (m.includes('cooling'))   return `rgba(0, 200, 255, ${alpha})`; // #00c8ff (Blue)
-  if (m.includes('heating'))   return `rgba(255, 107, 53, ${alpha})`; // #ff6b35 (Orange)
-  if (m.includes('frost') || m.includes('defrost')) return `rgba(192, 132, 252, ${alpha})`; // #c084fc (Purple)
-  return `rgba(74, 90, 122, ${alpha})`; // Gray for Off/Standby
+  if (m.includes('legionella')) return `rgba(127, 255, 127, ${alpha})`; 
+  if (m.includes('hot water') || m.includes('dhw') || m.includes('heating water')) return `rgba(255, 176, 32, ${alpha})`; 
+  if (m.includes('cooling'))   return `rgba(0, 200, 255, ${alpha})`; 
+  if (m.includes('heating'))   return `rgba(255, 107, 53, ${alpha})`; 
+  if (m.includes('frost') || m.includes('defrost')) return `rgba(192, 132, 252, ${alpha})`; 
+  return `rgba(74, 90, 122, ${alpha})`; 
 }
 
 function getModeColor(mode) {
@@ -1094,6 +1113,7 @@ function updateCharts(d) {
     history.mode.shift();    
     history.bin_comp.shift(); history.bin_boost.shift(); history.bin_defrost.shift();
     history.bin_pump.shift(); history.bin_in1.shift(); history.bin_in6.shift();
+    history.cons.shift();
   }
 
   history.timestamps.push(now);
@@ -1106,6 +1126,7 @@ function updateCharts(d) {
   history.z1flow.push(d.z1_flow_temp_target ?? null);
   history.z2flow.push(d.z2_flow_temp_target ?? null);
   history.freq.push(d.compressor_frequency ?? null);
+  history.cons.push(d.daily_total_energy_consumption ?? null);
   
   history.mode.push((d.operation_mode !== undefined && d.operation_mode !== null) ? (MODE_MAP[d.operation_mode] || "Unknown") : '');
 
@@ -1142,7 +1163,6 @@ function updateCharts(d) {
       const el = document.getElementById(id);
       if (el) el.style.display = isZ2 ? 'flex' : 'none';
   });
-  // -------------------------------
   
   freqChart.data.datasets[0].data = history.freq;
 
@@ -1219,7 +1239,20 @@ function seedHyst(zone, val) {
 
 function refreshStepVal(key) {
   const el = document.getElementById(STEP_EL[key]);
-  if (el && pending[key] != null) el.textContent = pending[key].toFixed(1);
+  if (el && pending[key] != null) {
+      if(el.tagName === 'INPUT') el.value = pending[key].toFixed(1);
+      else el.textContent = pending[key].toFixed(1);
+  }
+}
+
+function manualInput(key, val) {
+    let v = parseFloat(val);
+    if(isNaN(v)) { refreshStepVal(key); return; } // Restore invalid input
+    const lim = LIMITS[key];
+    if(lim) v = Math.max(lim.min, Math.min(lim.max, v));
+    pending[key] = v;
+    lastEdit[key] = Date.now();
+    refreshStepVal(key);
 }
 
 function hasChanged(key) {
@@ -1301,12 +1334,12 @@ function render(d) {
   const modeBadge = document.getElementById('b-mode');
   if (modeBadge) {
     modeBadge.textContent = modeText;
-    modeBadge.className = 'badge-value'; // Reset default colors
-    if (d.operation_mode === 2) modeBadge.classList.add('hot'); // Heating -> Oranje
-    else if (d.operation_mode === 3) modeBadge.classList.add('cool'); // Cooling -> Blauw
-    else if (d.operation_mode === 1) modeBadge.classList.add('warn'); // DHW -> Geel
-    else if (d.operation_mode === 6) modeBadge.classList.add('green'); // Legionella -> Groen
-    else if (d.operation_mode === 5) modeBadge.classList.add('purple'); // Frost Protect -> Paars
+    modeBadge.className = 'badge-value';
+    if (d.operation_mode === 2) modeBadge.classList.add('hot');
+    else if (d.operation_mode === 3) modeBadge.classList.add('cool');
+    else if (d.operation_mode === 1) modeBadge.classList.add('warn');
+    else if (d.operation_mode === 6) modeBadge.classList.add('green');
+    else if (d.operation_mode === 5) modeBadge.classList.add('purple');
   }
 
   setText('b-feed',    fmt1(d.hp_feed_temp) + '°');
@@ -1396,29 +1429,30 @@ function render(d) {
   if (badgeConn) {
     if (d.solver_connected) {
       badgeConn.textContent = "Online";
-      badgeConn.style.color = "var(--accent3)"; // Groen
+      badgeConn.style.color = "var(--accent3)";
     } else {
       badgeConn.textContent = "Offline / Searching...";
-      badgeConn.style.color = "var(--danger)"; // Rood
+      badgeConn.style.color = "var(--danger)";
     }
   }
 
-// Helper to prevent overwriting inputs while you type
   const safeSetInput = (id, val) => {
     const el = document.getElementById(id);
     if (el && document.activeElement !== el && val !== undefined && val !== null) el.value = val;
   };
   
-  // Vul het tekstveld met het IP (behoudt handmatige bewerkbaarheid)
   safeSetInput('ui-solver-ip', d.solver_ip_address);
 
-  // Update de "Open ODIN" knop weergave direct
+  // Update the ODIN buttons directly
   const btnOdin = document.getElementById('btn-odin');
-  if (btnOdin) {
+  const btnRunSolver = document.getElementById('btn-run-solver');
+  if (btnOdin && btnRunSolver) {
     if (d.solver_ip_address && d.solver_ip_address !== "" && d.solver_ip_address !== "0.0.0.0") {
       btnOdin.style.display = 'block';
+      btnRunSolver.style.display = 'block';
     } else {
       btnOdin.style.display = 'none';
+      btnRunSolver.style.display = 'none';
     }
   }
 
@@ -1434,9 +1468,9 @@ function render(d) {
   const isFlowing = (d.flow_rate && d.flow_rate > 2) || d.status_water_pump;
   
   const op = d.operation_mode;
-  const isHeating = (op === 2 || op === 5); // 2 = Heating, 5 = Frost Protect
-  const isCooling = (op === 3);             // 3 = Cooling
-  const isDHW     = (op === 1 || op === 6); // 1 = DHW, 6 = Legionella
+  const isHeating = (op === 2 || op === 5);
+  const isCooling = (op === 3);
+  const isDHW     = (op === 1 || op === 6);
 
   const elFlow = document.getElementById('icon-flow');
   if(elFlow) elFlow.classList.toggle('anim-pulse', isFlowing);
@@ -1620,11 +1654,170 @@ async function sendPhysics(btn) {
   btn.classList.remove('sending');
 }
 
+// Call the Solver via the Asgard web interface
+async function runOdinSolver() {
+    if (!latestState.solver_ip_address || latestState.solver_ip_address === "0.0.0.0") return;
+    const btn = document.getElementById('btn-run-solver');
+    btn.classList.add('sending');
+    btn.textContent = "Calculating...";
+
+    const payload = {
+        params: {
+            heating_profile: "ufh",
+            heat_produced: pending['raw-heat'] || latestState.raw_heat_produced || 0,
+            elec_consumed: pending['raw-elec'] || latestState.raw_elec_consumed || 0,
+            runtime_hours: pending['raw-run'] || latestState.raw_runtime_hours || 0,
+            avg_outside_temp: pending['raw-out'] || latestState.raw_avg_outside_temp || 7,
+            avg_room_temp: pending['raw-room'] || latestState.raw_avg_room_temp || 20,
+            delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
+            max_output: 6.0,
+            current_room_temp: latestState.z1_current_temp || 20.0
+        }
+    };
+
+    try {
+        const res = await fetch(`http://${latestState.solver_ip_address}/api/solve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (data.success) {
+            showToast("✓ Optimization successful", false);
+            odinDataCache = data;
+            renderOdinCharts();
+        } else {
+            showToast("✗ Solver failed", true);
+        }
+    } catch (err) {
+        showToast("✗ Request failed: " + err.message, true);
+    }
+    
+    btn.classList.remove('sending');
+    btn.textContent = "Run Optimization";
+}
+
+function renderOdinCharts() {
+    if (!odinDataCache) return;
+
+    const labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+
+    // --- Chart 1: Consumption and Costs ---
+    const ctxCons = document.getElementById('odinConsChart').getContext('2d');
+    if (odinConsChart) odinConsChart.destroy();
+
+    const actualConsByHour = new Array(24).fill(null);
+    if (history.timestamps && history.cons) {
+        for(let i=0; i<history.timestamps.length; i++) {
+            const d = new Date(history.timestamps[i]);
+            if (d.toDateString() === new Date().toDateString() && history.cons[i] != null) {
+                actualConsByHour[d.getHours()] = history.cons[i];
+            }
+        }
+    }
+
+    odinConsChart = new Chart(ctxCons, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Expected Cons. (kWh)',
+                    data: odinDataCache.energy_consumption,
+                    backgroundColor: 'rgba(0, 200, 255, 0.4)',
+                    borderColor: '#00c8ff',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                {
+                    type: 'line',
+                    label: 'Actual Cons. (kWh) [CONS Badge]',
+                    data: actualConsByHour,
+                    borderColor: '#7fff7f',
+                    backgroundColor: 'rgba(127, 255, 127, 0.1)',
+                    borderWidth: 2,
+                    spanGaps: true,
+                    yAxisID: 'y'
+                },
+                {
+                    type: 'line',
+                    label: 'Expected Cost (€)',
+                    data: odinDataCache.expected_cost,
+                    borderColor: '#ffb020',
+                    backgroundColor: 'rgba(255, 176, 32, 0.1)',
+                    borderWidth: 2,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
+                y: { type: 'linear', display: true, position: 'left', ticks: { color: '#00c8ff', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
+                y1: { type: 'linear', display: true, position: 'right', ticks: { color: '#ffb020', font: {family: "'JetBrains Mono'"} }, grid: { drawOnChartArea: false } }
+            },
+            plugins: { legend: { labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10} } } }
+        }
+    });
+
+    // --- Chart 2: Temperatures ---
+    const ctxTemp = document.getElementById('odinTempChart').getContext('2d');
+    if (odinTempChart) odinTempChart.destroy();
+
+    const actualTempByHour = new Array(24).fill(null);
+    if (history.timestamps && history.z1curr) {
+        for(let i=0; i<history.timestamps.length; i++) {
+            const d = new Date(history.timestamps[i]);
+            if (d.toDateString() === new Date().toDateString() && history.z1curr[i] != null) {
+                actualTempByHour[d.getHours()] = history.z1curr[i];
+            }
+        }
+    }
+
+    odinTempChart = new Chart(ctxTemp, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Expected Begin Temp (°C)',
+                    data: odinDataCache.expected_begin_temp,
+                    borderColor: '#ffb020',
+                    borderDash: [5, 5],
+                    borderWidth: 2,
+                    tension: 0.3
+                },
+                {
+                    label: 'Actual Room Temp (°C)',
+                    data: actualTempByHour,
+                    borderColor: '#ffff00',
+                    borderWidth: 2,
+                    spanGaps: true,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
+                y: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } }
+            },
+            plugins: { legend: { labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10} } } }
+        }
+    });
+}
+
 async function fetchState() {
   try {
     const res = await fetch('/dashboard/state');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
+    latestState = d;
     render(d);
     updateCharts(d);
   } catch(e) {
@@ -1641,65 +1834,12 @@ function showToast(msg, isError=false) {
   t._timer = setTimeout(() => t.className = 'toast', 2800);
 }
 
-function updateOdinButton() {
-    const ipInput = document.getElementById('val-odin-ip');
-    const btn = document.getElementById('btn-odin');
-    
-    // Grab the IP from the input field
-    const ip = ipInput.value.trim();
-
-    // Check if it's a valid, non-empty IP
-    if (ip && ip !== "" && ip !== "0.0.0.0") {
-        btn.href = `http://${ip}`;
-        btn.classList.remove('hidden');
-        btn.classList.add('inline-block');
-    } else {
-        btn.removeAttribute('href');
-        btn.classList.add('hidden');
-        btn.classList.remove('inline-block');
-    }
-}
-
-// Function to check if Asgard has detected ODIN's IP
-async function checkOdinIp() {
-    const btn = document.getElementById('btn-odin');
-    try {
-        // Fetch the known ODIN IP from Asgard's own backend
-        const res = await fetch('/api/odin_status'); 
-        const data = await res.json();
-        
-        // Validate that we received a real IP address
-        if (data.odin_ip && data.odin_ip !== "" && data.odin_ip !== "0.0.0.0") {
-            // Success: Inject the IP, unhide the button, and update text
-            btn.href = `http://${data.odin_ip}`;
-            btn.classList.remove('hidden');
-            btn.classList.add('inline-block'); 
-            btn.innerText = `Open ODIN (${data.odin_ip})`;
-        } else {
-            hideOdinBtn(btn);
-        }
-    } catch (error) {
-        hideOdinBtn(btn);
-    }
-}
-
 function openOdin() {
   const ip = document.getElementById('ui-solver-ip').value.trim();
   if (ip && ip !== "0.0.0.0") {
     window.open(`http://${ip}`, '_blank');
   }
 }
-
-// Helper to completely hide the button if ODIN is lost or undiscovered
-function hideOdinBtn(btn) {
-    btn.removeAttribute('href');
-    btn.classList.add('hidden');
-    btn.classList.remove('inline-block');
-}
-
-// Check immediately on load, then poll every 5 seconds
-checkOdinIp();
-setInterval(checkOdinIp, 5000);
 
 let eventSource = null;
 let isPaused = false;
@@ -1846,7 +1986,7 @@ async function loadServerHistory() {
     history.z1sp = []; history.z2sp = []; history.z1curr = []; history.z2curr = [];
     history.z1flow = []; history.z2flow = []; history.freq = []; history.mode = [];
     history.bin_comp = []; history.bin_boost = []; history.bin_defrost = [];
-    history.bin_pump = []; history.bin_in1 = []; history.bin_in6 = [];
+    history.bin_pump = []; history.bin_in1 = []; history.bin_in6 = []; history.cons = [];
 
     const serverLastTs = data[data.length - 1][0] * 1000; 
     const browserNow = Date.now();
@@ -1855,7 +1995,6 @@ async function loadServerHistory() {
     if (Math.abs(browserNow - serverLastTs) > 86400000) {
       timeOffset = browserNow - serverLastTs;
     }
-    // ----------------------------------------
 
     data.forEach(row => {
       const ts = (row[0] * 1000) + timeOffset; 
@@ -1880,6 +2019,7 @@ async function loadServerHistory() {
       history.bin_pump.push((flags & (1 << 3)) ? 1 : 0);
       history.bin_in1.push((flags & (1 << 4)) ? 1 : 0);
       history.bin_in6.push((flags & (1 << 5)) ? 1 : 0);
+      history.cons.push(null); 
       
       const modeNum = (flags >> 6) & 0x0F;
       history.mode.push(MODE_MAP[modeNum] || "Unknown");
@@ -1901,10 +2041,10 @@ async function loadServerHistory() {
       
       z.onload = async () => {
         initCharts(); 
-        await loadServerHistory(); // Fetch 24h history from ESP32
-        fetchState(); // Then fetch the current live state
+        await loadServerHistory(); 
+        fetchState(); 
         startLog(); 
-        setInterval(fetchState, POLL_MS); // Start 5-second live polling
+        setInterval(fetchState, POLL_MS); 
       };
       
       document.head.appendChild(z);
