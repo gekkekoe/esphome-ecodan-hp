@@ -1198,6 +1198,15 @@ function renderOdinCharts() {
                     backgroundColor: 'rgba(255, 176, 32, 0.1)',
                     borderWidth: 2,
                     yAxisID: 'y1'
+                },
+                {
+                    type: 'line',
+                    label: 'Expected Cost incl. Tax (€)',
+                    data: odinDataCache.expected_cost_with_tax,
+                    borderColor: '#c084fc', // Purple color to stand out
+                    backgroundColor: 'rgba(192, 132, 252, 0.1)',
+                    borderWidth: 2,
+                    yAxisID: 'y1'
                 }
             ]
         },
@@ -1207,7 +1216,7 @@ function renderOdinCharts() {
             scales: {
                 x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
                 y: { type: 'linear', display: true, position: 'left', ticks: { color: '#00c8ff', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
-                y1: { type: 'linear', display: true, position: 'right', ticks: { color: '#ffb020', font: {family: "'JetBrains Mono'"} }, grid: { drawOnChartArea: false } }
+                y1: { type: 'linear', display: true, position: 'right', ticks: { color: '#c084fc', font: {family: "'JetBrains Mono'"} }, grid: { drawOnChartArea: false } }
             },
             plugins: { legend: { labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10} } } }
         }
@@ -1942,6 +1951,15 @@ function renderOdinCharts() {
                     data: odinDataCache.expected_cost,
                     borderColor: '#ffb020',
                     backgroundColor: 'rgba(255, 176, 32, 0.1)',
+                    borderWidth: 2,
+                    yAxisID: 'y1'
+                },
+                {
+                    type: 'line',
+                    label: 'Expected Cost incl. Tax (€)',
+                    data: odinDataCache.expected_cost_with_tax,
+                    borderColor: '#c084fc', // Purple color to stand out
+                    backgroundColor: 'rgba(192, 132, 252, 0.1)',
                     borderWidth: 2,
                     yAxisID: 'y1'
                 }
