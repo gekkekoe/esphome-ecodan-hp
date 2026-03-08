@@ -229,7 +229,8 @@ namespace esphome
 
       // solver
       int get_current_ecodan_hour();
-      void store_odin_data(const std::vector<float>& sched, const std::vector<float>& energy);
+      bool has_old_odin_data() { return odin_data_ready_ && odin_schedule_.size() == 24; }
+      void store_odin_data(int current_hour, const std::vector<float>& sched, const std::vector<float>& energy);
       bool check_and_clear_odin_fetch_request() {
           if (odin_fetch_requested_) {
               odin_fetch_requested_ = false;

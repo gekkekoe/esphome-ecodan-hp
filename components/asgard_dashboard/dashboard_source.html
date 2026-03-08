@@ -1795,7 +1795,18 @@ async function runOdinSolver() {
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
         if (data.success) {
-            showToast("✓ Optimization successful", false);
+          // preserve old values < current hour
+          if (odinDataCache && odinDataCache.schedule) {
+              const current_hr = new Date().getHours();
+              for (let i = 0; i < current_hr; i++) {
+                  data.schedule[i] = odinDataCache.schedule[i];
+                  data.expected_begin_temp[i] = odinDataCache.expected_begin_temp[i];
+                  data.energy_consumption[i] = odinDataCache.energy_consumption[i];
+                  data.prices[i] = odinDataCache.prices[i];
+                  data.expected_cost[i] = odinDataCache.expected_cost[i];
+                  data.expected_cost_with_tax[i] = odinDataCache.expected_cost_with_tax[i];
+              }
+            }
             odinDataCache = data;
             updateOdinCharts();
         } else {

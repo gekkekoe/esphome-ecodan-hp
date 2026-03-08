@@ -250,7 +250,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void handleRequest(AsyncWebServerRequest *request) override;
   bool isRequestHandlerTrivial() const override { return false; }
 
-  void store_odin_data(const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax);
+  void store_odin_data(int current_hour, const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax);
 
  protected:
   void handle_root_(AsyncWebServerRequest *request);

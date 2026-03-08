@@ -819,14 +819,35 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 }
 
 // solver
-void EcodanDashboard::store_odin_data(const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax) {
+void EcodanDashboard::store_odin_data(int current_hour, const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax) {
+    if (current_hour == -1) return;
+
     if (this->snapshot_mutex_ != NULL && xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
-        this->odin_schedule_ = sched;
-        this->odin_energy_ = energy;
-        this->odin_expected_temp_ = exp_temp;
-        this->odin_cost_ = cost;
-        this->odin_cost_tax_ = cost_tax;
-        this->odin_data_ready_ = true;
+
+        if (this->odin_schedule_.size() != 24) {
+          this->odin_schedule_ = sched;
+          this->odin_energy_ = energy;
+          this->odin_expected_temp_ = exp_temp;
+          this->odin_cost_ = cost;
+          this->odin_cost_tax_ = cost_tax;
+
+          this->odin_schedule_.resize(24);
+          this->odin_energy_.resize(24);
+          this->odin_expected_temp_.resize(24);
+          this->odin_cost_.resize(24);
+          this->odin_cost_tax_.resize(24);
+
+          this->odin_data_ready_ = true;
+        }
+
+        if (current_hour < 0 || current_hour >= 24) return;
+        for (int i = current_hour; i < 24; i++) {
+            this->odin_schedule_[i] = sched[i];
+            this->odin_energy_[i] = energy[i];
+            this->odin_expected_temp_[i] = exp_temp[i];
+            this->odin_cost_[i] = cost[i];
+            this->odin_cost_tax_[i] = cost_tax[i];
+        }
         
         xSemaphoreGive(this->snapshot_mutex_);
         ESP_LOGI(TAG, "ODIN 24-hour arrays safely loaded into Dashboard UI memory.");

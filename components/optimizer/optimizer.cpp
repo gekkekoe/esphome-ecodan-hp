@@ -587,17 +587,33 @@ namespace esphome
         }
 
 
-        void Optimizer::store_odin_data(const std::vector<float>& sched, const std::vector<float>& energy) {
+        void Optimizer::store_odin_data(int current_hour, const std::vector<float>& sched, const std::vector<float>& energy) {
+            if (current_hour == -1) return;
             if (this->odin_mutex_ != NULL && xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
-                this->odin_schedule_ = sched;
-                this->odin_energy_ = energy;
-                // Lock the data to the heat pump's current day
-                auto &status = this->state_.ecodan_instance->get_status();
-                this->odin_data_day_ = status.ControllerDateTime.tm_yday;
-                this->odin_data_ready_ = true;
+        
+                // If first run or size mismatch, initialize fully
+                if (!this->odin_data_ready_ || this->odin_schedule_.size() != 24) {
+
+                    this->odin_schedule_ = sched;
+                    this->odin_energy_ = energy;
+
+                    this->odin_schedule_.resize(24);
+                    this->odin_energy_.resize(24);
+
+                    // Lock the data to the heat pump's current day
+                    auto &status = this->state_.ecodan_instance->get_status();
+                    this->odin_data_day_ = status.ControllerDateTime.tm_yday;
+                    this->odin_data_ready_ = true;
+                }
+
+                if (current_hour < 0 || current_hour >= 24) return;
+                for (int i = current_hour; i < 24; i++) {
+                    this->odin_schedule_[i] = sched[i];
+                    this->odin_energy_[i] = energy[i];
+                }
 
                 xSemaphoreGive(this->odin_mutex_);
-                ESP_LOGI(OPTIMIZER_TAG, "ODIN targets loaded safely into Auto-Adaptive memory.");
+                ESP_LOGI(OPTIMIZER_TAG, "ODIN targets loaded safely into Auto-Adaptive memory. current hour: %d", current_hour);
             } else {
                 ESP_LOGW(OPTIMIZER_TAG, "Failed to acquire ODIN mutex during store.");
             }
