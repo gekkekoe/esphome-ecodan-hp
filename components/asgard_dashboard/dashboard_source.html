@@ -1102,6 +1102,159 @@ function initCharts() {
   });
 }
 
+function updateOdinActuals() {
+    if (!odinConsChart || !odinTempChart || !odinDataCache) return;
+
+    const maxConsByHour = new Array(24).fill(null);
+    const actualTempByHour = new Array(24).fill(null);
+
+    // 1. Gather the maximum cumulative consumption and the latest temperature per hour
+    if (history.timestamps && history.cons) {
+        for(let i = 0; i < history.timestamps.length; i++) {
+            const d = new Date(history.timestamps[i]);
+            if (d.toDateString() === new Date().toDateString()) {
+                const h = d.getHours();
+                
+                if (history.cons[i] != null) {
+                    if (maxConsByHour[h] === null || history.cons[i] > maxConsByHour[h]) {
+                        maxConsByHour[h] = history.cons[i];
+                    }
+                }
+                if (history.z1curr[i] != null) {
+                    actualTempByHour[h] = history.z1curr[i];
+                }
+            }
+        }
+    }
+
+    // 2. Calculate the hourly delta to form a bar chart instead of a line
+    const hourlyDeltaCons = new Array(24).fill(null);
+    let previousCumulative = null; 
+    
+    for(let i = 0; i < 24; i++) {
+        if (maxConsByHour[i] !== null) {
+            if (previousCumulative === null) {
+                // First valid reading of the day
+                hourlyDeltaCons[i] = maxConsByHour[i]; 
+            } else {
+                // Safety check: if the sensor was reset mid-day, prevent negative deltas
+                if (maxConsByHour[i] < previousCumulative) {
+                    previousCumulative = 0;
+                }
+                let delta = maxConsByHour[i] - previousCumulative;
+                hourlyDeltaCons[i] = Math.max(0, delta);
+            }
+            
+            // Clean up floating point math inaccuracies (e.g. 1.000000001 -> 1.00)
+            hourlyDeltaCons[i] = parseFloat(hourlyDeltaCons[i].toFixed(2));
+            previousCumulative = maxConsByHour[i];
+        }
+    }
+
+    // 3. Inject the live data directly into the ODIN charts
+    odinConsChart.data.datasets[1].data = hourlyDeltaCons;
+    odinConsChart.update('none');
+
+    odinTempChart.data.datasets[1].data = actualTempByHour;
+    odinTempChart.update('none');
+}
+
+function renderOdinCharts() {
+    if (!odinDataCache) return;
+
+    const labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+
+    // --- Chart 1: Consumption and Costs ---
+    const ctxCons = document.getElementById('odinConsChart').getContext('2d');
+    if (odinConsChart) odinConsChart.destroy();
+
+    odinConsChart = new Chart(ctxCons, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Expected Cons. (kWh)',
+                    data: odinDataCache.energy_consumption,
+                    backgroundColor: 'rgba(0, 200, 255, 0.4)',
+                    borderColor: '#00c8ff',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                {
+                    type: 'bar', 
+                    label: 'Actual Cons. (kWh)',
+                    data: new Array(24).fill(null), // Filled dynamically by updateOdinActuals()
+                    backgroundColor: 'rgba(127, 255, 127, 0.4)', 
+                    borderColor: '#7fff7f',
+                    borderWidth: 1,
+                    yAxisID: 'y'
+                },
+                {
+                    type: 'line',
+                    label: 'Expected Cost (€)',
+                    data: odinDataCache.expected_cost,
+                    borderColor: '#ffb020',
+                    backgroundColor: 'rgba(255, 176, 32, 0.1)',
+                    borderWidth: 2,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
+                y: { type: 'linear', display: true, position: 'left', ticks: { color: '#00c8ff', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
+                y1: { type: 'linear', display: true, position: 'right', ticks: { color: '#ffb020', font: {family: "'JetBrains Mono'"} }, grid: { drawOnChartArea: false } }
+            },
+            plugins: { legend: { labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10} } } }
+        }
+    });
+
+    // --- Chart 2: Temperatures ---
+    const ctxTemp = document.getElementById('odinTempChart').getContext('2d');
+    if (odinTempChart) odinTempChart.destroy();
+
+    odinTempChart = new Chart(ctxTemp, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Expected Begin Temp (°C)',
+                    data: odinDataCache.expected_begin_temp,
+                    borderColor: '#ffb020',
+                    borderDash: [5, 5],
+                    borderWidth: 2,
+                    tension: 0.3
+                },
+                {
+                    label: 'Actual Room Temp (°C)',
+                    data: new Array(24).fill(null), // Filled dynamically by updateOdinActuals()
+                    borderColor: '#ffff00',
+                    borderWidth: 2,
+                    spanGaps: true,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
+                y: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } }
+            },
+            plugins: { legend: { labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10} } } }
+        }
+    });
+
+    // Populate the arrays immediately after creating the canvases
+    updateOdinActuals();
+}
+
 function updateCharts(d) {
   if (!tempChart || !freqChart || !statusChart) return;
   const now = Date.now();
@@ -1158,7 +1311,6 @@ function updateCharts(d) {
   tempChart.data.datasets[7].data = history.z2flow;
   
   const isZ2 = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
-  // show/hide z2
   [3, 5, 7].forEach(idx => {
       if(tempChart.data.datasets[idx]) {
           tempChart.data.datasets[idx].hidden = !isZ2;
@@ -1198,6 +1350,7 @@ function updateCharts(d) {
   tempChart.update();
   freqChart.update();
   statusChart.update();
+  updateOdinActuals(); 
 }
 
 function setToggle(id, val) {
@@ -1720,13 +1873,44 @@ function renderOdinCharts() {
     const ctxCons = document.getElementById('odinConsChart').getContext('2d');
     if (odinConsChart) odinConsChart.destroy();
 
-    const actualConsByHour = new Array(24).fill(null);
+    // 1. Gather the maximum cumulative consumption for each hour of the current day
+    const maxConsByHour = new Array(24).fill(null);
     if (history.timestamps && history.cons) {
-        for(let i=0; i<history.timestamps.length; i++) {
+        for(let i = 0; i < history.timestamps.length; i++) {
             const d = new Date(history.timestamps[i]);
+            // Only process data for today
             if (d.toDateString() === new Date().toDateString() && history.cons[i] != null) {
-                actualConsByHour[d.getHours()] = history.cons[i];
+                const hour = d.getHours();
+                // Store the highest cumulative value found within this hour block
+                if (maxConsByHour[hour] === null || history.cons[i] > maxConsByHour[hour]) {
+                    maxConsByHour[hour] = history.cons[i];
+                }
             }
+        }
+    }
+
+    // 2. Calculate the hourly delta to form a bar chart instead of a line
+    const hourlyDeltaCons = new Array(24).fill(null);
+    let previousCumulative = null; // Track the previous hour's total to calculate the delta
+    
+    for(let i = 0; i < 24; i++) {
+        if (maxConsByHour[i] !== null) {
+            if (previousCumulative === null) {
+                // First valid reading of the day. Assuming the sensor resets at midnight,
+                // this value represents the total consumption up to this hour.
+                hourlyDeltaCons[i] = maxConsByHour[i]; 
+            } else {
+                // Safety check: if the sensor was reset mid-day, prevent negative deltas
+                if (maxConsByHour[i] < previousCumulative) {
+                    previousCumulative = 0;
+                }
+                let delta = maxConsByHour[i] - previousCumulative;
+                hourlyDeltaCons[i] = Math.max(0, delta);
+            }
+            
+            // Clean up floating point math inaccuracies (e.g. 1.000000001 -> 1.00)
+            hourlyDeltaCons[i] = parseFloat(hourlyDeltaCons[i].toFixed(2));
+            previousCumulative = maxConsByHour[i];
         }
     }
 
@@ -1744,13 +1928,12 @@ function renderOdinCharts() {
                     yAxisID: 'y'
                 },
                 {
-                    type: 'line',
+                    type: 'bar', // Changed from 'line' to 'bar'
                     label: 'Actual Cons. (kWh)',
-                    data: actualConsByHour,
+                    data: hourlyDeltaCons, // Inserted the newly calculated delta array
+                    backgroundColor: 'rgba(127, 255, 127, 0.4)', // Filled background to match the expected bars
                     borderColor: '#7fff7f',
-                    backgroundColor: 'rgba(127, 255, 127, 0.1)',
-                    borderWidth: 2,
-                    spanGaps: true,
+                    borderWidth: 1,
                     yAxisID: 'y'
                 },
                 {
