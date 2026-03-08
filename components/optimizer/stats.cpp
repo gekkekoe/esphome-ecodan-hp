@@ -59,6 +59,14 @@ namespace esphome
                 if (current_room_temp > this->daily_room_temp_max_) this->daily_room_temp_max_ = current_room_temp;
             }
 
+            // Track max output power periodically
+            if (this->state_.computed_output_power != nullptr) {
+                float out_pwr = this->state_.computed_output_power->state;
+                if (!isnan(out_pwr) && out_pwr > this->daily_max_output_power_) {
+                    this->daily_max_output_power_ = out_pwr;
+                }
+            }
+
             int current_day = status.ControllerDateTime.tm_yday;
             
             // Initialize on boot to prevent jump
@@ -84,6 +92,7 @@ namespace esphome
                 this->daily_room_temp_count_ = 0;
                 this->daily_room_temp_min_ = 99.0f;
                 this->daily_room_temp_max_ = -99.0f;
+                this->daily_max_output_power_ = 0.0f;
                 
                 this->daily_runtime_global = 0.0f;
             }
@@ -120,9 +129,10 @@ namespace esphome
             float runtime_hours = this->daily_runtime_global / 60.0f;
             float heat_produced_kwh = this->last_total_heating_produced_;
             float elec_consumed_kwh = this->last_total_heating_consumed_;
+            float max_out_kw = this->daily_max_output_power_;
 
-            ESP_LOGI(OPTIMIZER_TAG, "Daily Raw Stats: Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
-                     heat_produced_kwh, elec_consumed_kwh, runtime_hours, avg_outside, avg_room, delta_room);
+            ESP_LOGI(OPTIMIZER_TAG, "Daily Raw Stats: Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, MaxOut=%.1fkW, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
+                     heat_produced_kwh, elec_consumed_kwh, runtime_hours, max_out_kw, avg_outside, avg_room, delta_room);
             
             // Only update the globals if significant heating occurred (> 2 kWh produced, > 1 hour run)
             if (heat_produced_kwh < 2.0f || runtime_hours < 1.0f) {
@@ -149,6 +159,7 @@ namespace esphome
             update_ema_num(this->state_.num_raw_avg_outside_temp, avg_outside, ALPHA);
             update_ema_num(this->state_.num_raw_avg_room_temp, avg_room, ALPHA);
             update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
+            update_ema_num(this->state_.num_raw_max_output, max_out_kw, ALPHA);
 
             ESP_LOGI(OPTIMIZER_TAG, "Numbers updated (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
                      this->state_.num_raw_heat_produced->state, this->state_.num_raw_elec_consumed->state, 

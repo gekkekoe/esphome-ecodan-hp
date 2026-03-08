@@ -92,3 +92,4 @@ asgard_dashboard:
   num_raw_avg_outside_temp_id:       num_raw_avg_outside_temp
   num_raw_avg_room_temp_id:          num_raw_avg_room_temp
   num_raw_delta_room_temp_id:        num_raw_delta_room_temp
+  num_raw_max_output_id:             num_raw_max_output

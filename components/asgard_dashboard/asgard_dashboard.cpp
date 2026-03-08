@@ -266,6 +266,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "raw_avg_outside_temp") { doNumber(num_raw_avg_outside_temp_); return; }
   if (key == "raw_avg_room_temp") { doNumber(num_raw_avg_room_temp_); return; }
   if (key == "raw_delta_room_temp") { doNumber(num_raw_delta_room_temp_); return; }
+  if (key == "raw_max_output") { doNumber(num_raw_max_output_); return; }
 
   if (key == "predictive_short_cycle_high_delta_time_window")    { doNumber(pred_sc_time_);    return; }
   if (key == "predictive_short_cycle_high_delta_threshold")    { doNumber(pred_sc_delta_);    return; }
@@ -426,6 +427,8 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_raw_avg_outside_temp_, current_snapshot_.num_raw_avg_outside_temp);
   get_n(num_raw_avg_room_temp_, current_snapshot_.num_raw_avg_room_temp);
   get_n(num_raw_delta_room_temp_, current_snapshot_.num_raw_delta_room_temp);
+  get_n(num_raw_max_output_, current_snapshot_.num_raw_max_output);
+  
   if (txt_solver_ip_ && txt_solver_ip_->has_state()) {
     strncpy(current_snapshot_.txt_solver_ip, txt_solver_ip_->state.c_str(), sizeof(current_snapshot_.txt_solver_ip) - 1);
     current_snapshot_.txt_solver_ip[sizeof(current_snapshot_.txt_solver_ip) - 1] = '\0';
@@ -647,6 +650,9 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_n("raw_delta_room_temp", snap.num_raw_delta_room_temp.val);
   p_lim("raw_delta_room_temp_lim", snap.num_raw_delta_room_temp);
 
+  p_n("raw_max_output", snap.num_raw_max_output.val); 
+  p_lim("raw_max_output_lim", snap.num_raw_max_output);
+
   response->print("\"solver_ip_address\":\"");
   for (char *c = snap.txt_solver_ip; *c != '\0'; ++c) {
     if (*c == '"') response->print("\\\"");
@@ -706,6 +712,7 @@ void EcodanDashboard::record_history_() {
   rec.z1_flow   = pack_temp_(get_sensor(z1_flow_temp_target_));
   rec.z2_flow   = pack_temp_(get_sensor(z2_flow_temp_target_));
   rec.freq      = pack_temp_(get_sensor(compressor_frequency_));
+  rec.cons      = pack_temp_(get_sensor(daily_total_energy_consumption_));
 
   rec.flags = 0;
   if (bin_state_(status_compressor_))  rec.flags |= (1 << 0);
@@ -765,10 +772,11 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
     first = false;
     
     char item[128];
-    int len = snprintf(item, sizeof(item), "[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u]", 
+    int len = snprintf(item, sizeof(item), "[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u,%d]", 
       rec.timestamp, rec.hp_feed, rec.hp_return, 
       rec.z1_sp, rec.z2_sp, rec.z1_curr, rec.z2_curr, 
-      rec.z1_flow, rec.z2_flow, rec.freq, rec.flags
+      rec.z1_flow, rec.z2_flow, rec.freq, rec.flags,
+      rec.cons
     );
     httpd_resp_send_chunk(req, item, len);
   }

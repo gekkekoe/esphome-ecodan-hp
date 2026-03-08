@@ -38,6 +38,7 @@ struct HistoryRecord {
   int16_t z2_flow;
   int16_t freq;
   uint16_t flags; // Bit 0-5 = booleans, Bit 6-9 = mode
+  int16_t cons;
 };
 
 struct DashboardSnapshot {
@@ -131,6 +132,7 @@ struct DashboardSnapshot {
   NumData num_raw_avg_outside_temp;
   NumData num_raw_avg_room_temp;
   NumData num_raw_delta_room_temp;
+  NumData num_raw_max_output;
 
   char txt_solver_ip[32]{0};
 };
@@ -239,6 +241,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_raw_avg_outside_temp(number::Number *n) { num_raw_avg_outside_temp_ = n; }
   void set_num_raw_avg_room_temp(number::Number *n) { num_raw_avg_room_temp_ = n; }
   void set_num_raw_delta_room_temp(number::Number *n) { num_raw_delta_room_temp_ = n; }
+  void set_num_raw_max_output(number::Number *n) { num_raw_max_output_ = n; }
 
   // AsyncWebHandler
   bool canHandle(AsyncWebServerRequest *request) const override;
@@ -355,6 +358,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_raw_avg_outside_temp_{nullptr};
   number::Number *num_raw_avg_room_temp_{nullptr};
   number::Number *num_raw_delta_room_temp_{nullptr};
+  number::Number *num_raw_max_output_{nullptr};
 
 private:
   static const size_t MAX_HISTORY = 1440; // 24h, 1min interval

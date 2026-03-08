@@ -675,6 +675,11 @@ header {
         <div class="stepper"><button class="step-btn" onclick="step('raw-delta', -0.1)">−</button><input type="number" class="step-input" id="raw-delta-val" onchange="manualInput('raw-delta', this.value)" /><button class="step-btn" onclick="step('raw-delta', +0.1)">+</button></div>
       </div>
 
+      <div class="ctrl-row">
+        <span class="ctrl-label">Max Output (kW)</span>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-max-out', -0.1)">−</button><input type="number" class="step-input" id="raw-max-out-val" onchange="manualInput('raw-max-out', this.value)" /><button class="step-btn" onclick="step('raw-max-out', +0.1)">+</button></div>
+      </div>
+
       <button class="send-btn" onclick="sendPhysics(this)" style="margin-bottom:0; margin-top:24px;">Apply Physics Data</button>
     </div>    
 
@@ -740,7 +745,7 @@ const pending = {
   'z2-sp': null, 'z2-hyst': null, 'room-z2-sp': null,
   'flow-z1-sp': null, 'flow-z2-sp': null,
   'raw-heat': null, 'raw-elec': null, 'raw-run': null,
-  'raw-out': null, 'raw-room': null, 'raw-delta': null
+  'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-max-out': null
 };
 
 const lastEdit = {};
@@ -771,7 +776,8 @@ const LIMITS = {
   'raw-run': { min: 0.0, max: 24.0, step: 0.1 },
   'raw-out': { min: -25.0, max: 40.0, step: 0.1 },
   'raw-room': { min: 10.0, max: 35.0, step: 0.1 },
-  'raw-delta': { min: 0.0, max: 10.0, step: 0.1 }
+  'raw-delta': { min: 0.0, max: 10.0, step: 0.1 },
+  'raw-max-out': { min: 1.0, max: 20.0, step: 0.1 }
 };
 
 const STEP_EL = { 
@@ -785,7 +791,8 @@ const STEP_EL = {
   'z2-sp': 'z2-sp-val', 'room-z2-sp': 'room-z2-sp-val',
   'flow-z1-sp': 'flow-z1-sp-val', 'flow-z2-sp': 'flow-z2-sp-val',
   'raw-heat': 'raw-heat-val', 'raw-elec': 'raw-elec-val', 'raw-run': 'raw-run-val',
-  'raw-out': 'raw-out-val', 'raw-room': 'raw-room-val', 'raw-delta': 'raw-delta-val'
+  'raw-out': 'raw-out-val', 'raw-room': 'raw-room-val', 'raw-delta': 'raw-delta-val',
+  'raw-max-out': 'raw-max-out-val'
 };
 
 let lastGraphUpdate = 0;
@@ -1462,6 +1469,7 @@ function render(d) {
   seedPending('raw-out', d.raw_avg_outside_temp);
   seedPending('raw-room', d.raw_avg_room_temp);
   seedPending('raw-delta', d.raw_delta_room_temp);
+  seedPending('raw-max-out', d.raw_max_output);
 
   // --- ANIMATIONS LOGIC ---
   const isRunning = d.status_compressor;
@@ -1649,6 +1657,7 @@ async function sendPhysics(btn) {
     if (hasChanged('raw-out'))   { await apiPost({ key: 'raw_avg_outside_temp', value: pending['raw-out'] }); c++; }
     if (hasChanged('raw-room'))  { await apiPost({ key: 'raw_avg_room_temp', value: pending['raw-room'] }); c++; }
     if (hasChanged('raw-delta')) { await apiPost({ key: 'raw_delta_room_temp', value: pending['raw-delta'] }); c++; }
+    if (hasChanged('raw-max-out')) { await apiPost({ key: 'raw_max_output', value: pending['raw-max-out'] }); c++; }
     showToast(c > 0 ? '✓ Physics Data updated' : 'No changes');
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');
@@ -1661,16 +1670,20 @@ async function runOdinSolver() {
     btn.classList.add('sending');
     btn.textContent = "Calculating...";
 
+    // Map ESPHome select index to ODIN string values
+    const profileMap = ["ufh", "radiators", "fancoil"];
+    const profileStr = profileMap[latestState.sel_heating_system_type] || "ufh";
+
     const payload = {
         params: {
-            heating_profile: "ufh",
+            heating_profile: profileStr, // <-- Dynamically mapped
             heat_produced: pending['raw-heat'] || latestState.raw_heat_produced || 0,
             elec_consumed: pending['raw-elec'] || latestState.raw_elec_consumed || 0,
             runtime_hours: pending['raw-run'] || latestState.raw_runtime_hours || 0,
             avg_outside_temp: pending['raw-out'] || latestState.raw_avg_outside_temp || 7,
             avg_room_temp: pending['raw-room'] || latestState.raw_avg_room_temp || 20,
             delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
-            max_output: 6.0,
+            max_output: pending['raw-max-out'] || latestState.raw_max_output || 8.0, // <-- Uses learned EMA
             current_room_temp: latestState.z1_current_temp || 20.0
         }
     };
@@ -1732,7 +1745,7 @@ function renderOdinCharts() {
                 },
                 {
                     type: 'line',
-                    label: 'Actual Cons. (kWh) [CONS Badge]',
+                    label: 'Actual Cons. (kWh)',
                     data: actualConsByHour,
                     borderColor: '#7fff7f',
                     backgroundColor: 'rgba(127, 255, 127, 0.1)',
@@ -2019,7 +2032,7 @@ async function loadServerHistory() {
       history.bin_pump.push((flags & (1 << 3)) ? 1 : 0);
       history.bin_in1.push((flags & (1 << 4)) ? 1 : 0);
       history.bin_in6.push((flags & (1 << 5)) ? 1 : 0);
-      history.cons.push(null); 
+      history.cons.push(row.length > 11 ? getF(row[11]) : null);
       
       const modeNum = (flags >> 6) & 0x0F;
       history.mode.push(MODE_MAP[modeNum] || "Unknown");

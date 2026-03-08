@@ -53,6 +53,7 @@ namespace esphome
       esphome::sensor::Sensor *z1_feed_temp;
       esphome::sensor::Sensor *z2_feed_temp;
       esphome::sensor::Sensor *operation_mode;
+      esphome::sensor::Sensor *computed_output_power;
   
       esphome::sensor::Sensor *daily_heating_produced;
       esphome::sensor::Sensor *daily_heating_consumed;
@@ -87,6 +88,7 @@ namespace esphome
       esphome::number::Number *num_raw_avg_outside_temp;
       esphome::number::Number *num_raw_avg_room_temp;
       esphome::number::Number *num_raw_delta_room_temp;
+      esphome::number::Number *num_raw_max_output;
 
       uint32_t &lockout_expiration_timestamp;
     };
@@ -149,6 +151,9 @@ namespace esphome
       // Energy snapshots for delta calculation
       float last_total_heating_produced_ = 0.0f;
       float last_total_heating_consumed_ = 0.0f;
+
+      // track max output for solver
+      float daily_max_output_power_{0.0f};
 
       void process_adaptive_zone_(
           std::size_t i,

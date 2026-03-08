@@ -86,6 +86,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("num_raw_avg_outside_temp_id"):        cv.use_id(number.Number),
         cv.Optional("num_raw_avg_room_temp_id"):           cv.use_id(number.Number),
         cv.Optional("num_raw_delta_room_temp_id"):         cv.use_id(number.Number),
+        cv.Optional("num_raw_max_output_id"):           cv.use_id(number.Number),
 
         cv.Optional("dhw_climate_id"):                     cv.use_id(climate.Climate),
         cv.Optional("virtual_climate_z1_id"):              cv.use_id(climate.Climate),
@@ -193,6 +194,7 @@ async def to_code(config):
         ("num_raw_avg_outside_temp_id",       "set_num_raw_avg_outside_temp"),
         ("num_raw_avg_room_temp_id",          "set_num_raw_avg_room_temp"),
         ("num_raw_delta_room_temp_id",        "set_num_raw_delta_room_temp"),
+        ("num_raw_max_output_id",             "set_num_raw_max_output"),
     ]
 
     for conf_key, setter in pairs:
