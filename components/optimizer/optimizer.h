@@ -146,6 +146,7 @@ namespace esphome
       float daily_room_temp_max_ = -99.0f;
 
       int last_processed_day_ = -1;
+      int last_processed_hour_{-1};
 
       float daily_runtime_global = 0.0f; 
       // helpers to track runtime
@@ -159,9 +160,10 @@ namespace esphome
       float daily_max_output_power_{0.0f};
 
       // solver results
+      bool odin_fetch_requested_{false};
       std::vector<float> odin_schedule_;
       std::vector<float> odin_energy_;
-      uint32_t odin_last_fetch_ms_{0};
+      int odin_data_day_{-1};
       bool odin_data_ready_{false};
       SemaphoreHandle_t odin_mutex_ = NULL;
 
@@ -227,6 +229,13 @@ namespace esphome
 
       // solver
       void store_odin_data(const std::vector<float>& sched, const std::vector<float>& energy);
+      bool check_and_clear_odin_fetch_request() {
+          if (odin_fetch_requested_) {
+              odin_fetch_requested_ = false;
+              return true;
+          }
+          return false;
+      }
     };
 
     // dummy, can remain empty

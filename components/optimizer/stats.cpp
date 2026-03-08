@@ -68,10 +68,11 @@ namespace esphome
             }
 
             int current_day = status.ControllerDateTime.tm_yday;
-            
+            int current_hour = status.ControllerDateTime.tm_hour;
             // Initialize on boot to prevent jump
             if (this->last_processed_day_ == -1) {
                 this->last_processed_day_ = current_day;
+                this->last_processed_hour_ = current_hour;
                 return;
             }
 
@@ -81,6 +82,9 @@ namespace esphome
                          this->last_processed_day_, current_day);
                 
                 this->update_learning_model(this->last_processed_day_);
+
+                // triiger new data fetch
+                this->odin_fetch_requested_ = true;
 
                 // Reset variables for the new day
                 this->last_processed_day_ = current_day;
@@ -95,6 +99,15 @@ namespace esphome
                 this->daily_max_output_power_ = 0.0f;
                 
                 this->daily_runtime_global = 0.0f;
+            }
+
+            // HOURLY MPC TRIGGER
+            if (current_hour != this->last_processed_hour_) {
+                ESP_LOGI(OPTIMIZER_TAG, "Hour transition detected (%d -> %d). Requesting ODIN hourly course-correction...", 
+                         this->last_processed_hour_, current_hour);
+                         
+                this->odin_fetch_requested_ = true; // Signal YAML to fetch
+                this->last_processed_hour_ = current_hour;
             }
 
             // Set latest energy snapshots

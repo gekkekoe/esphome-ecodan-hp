@@ -227,21 +227,23 @@ namespace esphome
                 if (this->odin_mutex_ != NULL && xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
                     
                     if (this->odin_data_ready_ && !this->odin_schedule_.empty() && !this->odin_energy_.empty()) {
-                        uint32_t ms_since_fetch = millis() - this->odin_last_fetch_ms_;
-                        int current_hour_index = (ms_since_fetch / 3600000); 
+                        auto &status = this->state_.ecodan_instance->get_status();
+                        int current_day = status.ControllerDateTime.tm_yday;
+                        int current_hour = status.ControllerDateTime.tm_hour;
 
-                        if (current_hour_index >= 24) {
-                            this->odin_data_ready_ = false;
+                        // 1. Instantly expire the data if the day rolls over and a new fetch hasn't completed
+                        if (current_day != this->odin_data_day_) {
+                            this->odin_data_ready_ = false; 
                         }
-                        else {
-                            float odin_target = this->odin_schedule_[current_hour_index];
-                            float odin_energy = this->odin_energy_[current_hour_index];
+                        // 2. Map the array index flawlessly to the physical hour of the day
+                        else if (current_hour >= 0 && current_hour < 24) {
+                            float odin_target = this->odin_schedule_[current_hour];
+                            float odin_energy = this->odin_energy_[current_hour];
                             
                             solver_heating_off = (odin_energy < 0.05f);
 
                             if (solver_heating_off) {
-                                // TODO: Soft stop: we should apply virtual thermostat here
-                                
+                                // Soft stop: Force a massive negative bias to close the flow safely
                             } else if (!std::isnan(odin_target)) {
                                 // Correct math: Odin Target - Base Target = Required Bias
                                 solver_bias = odin_target - room_target_temp;
@@ -589,8 +591,11 @@ namespace esphome
             if (this->odin_mutex_ != NULL && xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
                 this->odin_schedule_ = sched;
                 this->odin_energy_ = energy;
-                this->odin_last_fetch_ms_ = millis();
+                // Lock the data to the heat pump's current day
+                auto &status = this->state_.ecodan_instance->get_status();
+                this->odin_data_day_ = status.ControllerDateTime.tm_yday;
                 this->odin_data_ready_ = true;
+
                 xSemaphoreGive(this->odin_mutex_);
                 ESP_LOGI(OPTIMIZER_TAG, "ODIN targets loaded safely into Auto-Adaptive memory.");
             } else {

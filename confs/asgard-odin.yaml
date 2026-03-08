@@ -88,6 +88,11 @@ script:
                         }
 
 interval:
-  - interval: 60min
+  - interval: 60s
     then:
-      - script.execute: fetch_odin_optimization
+      - lambda: |-
+          // The C++ stats loop will raise this flag every time the hour changes
+          if (id(optimizer_ptr)->check_and_clear_odin_fetch_request()) {
+            ESP_LOGI("ODIN", "Hour transition detected by Ecodan clock. Fetching hourly Model Predictive Control (MPC) optimization.");
+            id(fetch_odin_optimization)->execute();
+          }
