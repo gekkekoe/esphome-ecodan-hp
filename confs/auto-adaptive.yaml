@@ -33,6 +33,7 @@ esphome:
             state.predictive_short_cycle_control_enabled = id(predictive_short_cycle_control_enabled);
             state.defrost_risk_handling_enabled = id(defrost_risk_handling_enabled);
             state.smart_boost_enabled = id(smart_boost_enabled);
+            state.sw_use_solver = id(sw_use_solver);
 
             state.status_short_cycle_lockout = id(status_short_cycle_lockout);
             state.status_predictive_boost_active = id(status_predictive_boost_active);

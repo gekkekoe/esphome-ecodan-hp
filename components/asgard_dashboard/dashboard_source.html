@@ -1808,6 +1808,20 @@ async function runOdinSolver() {
     btn.textContent = "Run Optimization";
 }
 
+async function fetchOdinData() {
+  try {
+    const res = await fetch('/dashboard/odin');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.success) {
+      odinDataCache = data;
+      updateOdinCharts();
+    }
+  } catch(e) {
+    console.warn("Failed to load local ODIN cache", e);
+  }
+}
+
 async function fetchState() {
   try {
     const res = await fetch('/dashboard/state');
@@ -2041,6 +2055,7 @@ async function loadServerHistory() {
         fetchState(); 
         startLog(); 
         setInterval(fetchState, POLL_MS); 
+        setInterval(fetchOdinData, 60000);
       };
       
       document.head.appendChild(z);

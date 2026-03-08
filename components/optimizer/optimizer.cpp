@@ -12,6 +12,8 @@ namespace esphome
 
         Optimizer::Optimizer(OptimizerState state) : state_(state) {
 
+            this->odin_mutex_ = xSemaphoreCreateMutex();
+
             auto update_if_changed = [this](float &storage, float new_val, auto callback) {
                 if (std::isnan(new_val)) return; 
 
@@ -214,12 +216,50 @@ namespace esphome
             if (isnan(room_temp) || isnan(room_target_temp) || isnan(requested_flow_temp) || isnan(actual_flow_temp))
                 return;
 
+            // apply solver bias
+            float solver_bias = 0.0f;
+            bool solver_heating_off = false;
+            
+            // Check if solver switch is enabled
+            if (this->state_.sw_use_solver != nullptr && this->state_.sw_use_solver->state) {
+                
+                // Safely lock the arrays before reading them
+                if (this->odin_mutex_ != NULL && xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
+                    
+                    if (this->odin_data_ready_ && !this->odin_schedule_.empty() && !this->odin_energy_.empty()) {
+                        uint32_t ms_since_fetch = millis() - this->odin_last_fetch_ms_;
+                        int current_hour_index = (ms_since_fetch / 3600000); 
+
+                        if (current_hour_index >= 24) {
+                            this->odin_data_ready_ = false;
+                        }
+                        else {
+                            float odin_target = this->odin_schedule_[current_hour_index];
+                            float odin_energy = this->odin_energy_[current_hour_index];
+                            
+                            solver_heating_off = (odin_energy < 0.05f);
+
+                            if (solver_heating_off) {
+                                // TODO: Soft stop: we should apply virtual thermostat here
+                                
+                            } else if (!std::isnan(odin_target)) {
+                                // Correct math: Odin Target - Base Target = Required Bias
+                                solver_bias = odin_target - room_target_temp;
+                            }
+                        }
+                    }
+                    xSemaphoreGive(this->odin_mutex_);
+                }
+            }
+
             auto temp_feedback_source =  (i == 0) ? this->state_.temperature_feedback_source_z1->active_index().value_or(0)
                 : this->state_.temperature_feedback_source_z2->active_index().value_or(0);
-            ESP_LOGD(OPTIMIZER_TAG, "Processing Zone %d: climate source: %d, Room=%.1f, Target=%.1f, Actual Feedtemp: %.1f, Return temp: %.1f, Outside: %.1f, Bias: %.1f, heating: %d, cooling: %d",
-                     (i + 1), temp_feedback_source, room_temp, room_target_temp, actual_flow_temp, actual_return_temp, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active);
+            ESP_LOGD(OPTIMIZER_TAG, "Processing Zone %d: climate source: %d, Room=%.1f, Target=%.1f, Actual Feedtemp: %.1f, Return temp: %.1f, Outside: %.1f, Bias: %.1f, \
+                heating: %d, cooling: %d, use solver: %d, solver bias: %.1f, solver heating off: %d",
+                     (i + 1), temp_feedback_source, room_temp, room_target_temp, actual_flow_temp, actual_return_temp, actual_outside_temp, setpoint_bias, 
+                     is_heating_active, is_cooling_active, this->state_.sw_use_solver->state, solver_bias, solver_heating_off);
  
-            room_target_temp += setpoint_bias;
+            room_target_temp += setpoint_bias + solver_bias;
 
             float error = is_heating_mode ? (room_target_temp - room_temp)
                                           : (room_temp - room_target_temp);
@@ -544,5 +584,18 @@ namespace esphome
             }
         }
 
+
+        void Optimizer::store_odin_data(const std::vector<float>& sched, const std::vector<float>& energy) {
+            if (this->odin_mutex_ != NULL && xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
+                this->odin_schedule_ = sched;
+                this->odin_energy_ = energy;
+                this->odin_last_fetch_ms_ = millis();
+                this->odin_data_ready_ = true;
+                xSemaphoreGive(this->odin_mutex_);
+                ESP_LOGI(OPTIMIZER_TAG, "ODIN targets loaded safely into Auto-Adaptive memory.");
+            } else {
+                ESP_LOGW(OPTIMIZER_TAG, "Failed to acquire ODIN mutex during store.");
+            }
+        }
     } // namespace optimizer
 } // namespace esphome

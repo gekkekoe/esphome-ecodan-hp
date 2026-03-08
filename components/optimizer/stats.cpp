@@ -15,11 +15,11 @@ namespace esphome
             if (this->state_.ecodan_instance == nullptr) return;
             auto &status = this->state_.ecodan_instance->get_status();
             uint32_t now = millis();
+            bool is_running = (status.CompressorFrequency > 0) || status.CompressorOn;
+            bool is_heating_active = status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
 
             if (this->last_check_ms_ != 0) {    
                 float minutes_passed = (now - this->last_check_ms_) / 60000.0f;
-                bool is_running = (status.CompressorFrequency > 0) || status.CompressorOn;
-                bool is_heating_active = status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
 
                 if (is_running && is_heating_active) {
                     this->daily_runtime_global += minutes_passed;
@@ -98,12 +98,18 @@ namespace esphome
             }
 
             // Set latest energy snapshots
-            this->last_total_heating_produced_ = this->state_.daily_heating_produced->state;
-            if (this->state_.solver_kwh_meter_feedback_source->active_index().value_or(0) == 0) {
-                this->last_total_heating_consumed_ = this->state_.daily_heating_consumed->state;
-            }
-            else {
-                this->last_total_heating_consumed_ = this->state_.solver_kwh_meter_feedback->state;
+            if (is_running && is_heating_active) {
+                this->last_total_heating_produced_ = this->state_.daily_heating_produced->state;
+
+                if (this->state_.solver_kwh_meter_feedback_source == nullptr || 
+                    this->state_.solver_kwh_meter_feedback_source->active_index().value_or(0) == 0) {
+                    this->last_total_heating_consumed_ = this->state_.daily_heating_consumed->state;
+                }
+                else {
+                    // Ensure the feedback number is also not null before reading
+                    this->last_total_heating_consumed_ = (this->state_.solver_kwh_meter_feedback != nullptr) ? 
+                                                        this->state_.solver_kwh_meter_feedback->state : 0.0f;
+                }
             }
         }
 

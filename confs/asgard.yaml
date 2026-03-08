@@ -17,6 +17,7 @@ substitutions:
 <<: !include proxy-base.yaml
 <<: !include asgard-sensors.yaml
 <<: !include slave.yaml
+<<: !include asgard-odin.yaml
 
 packages:
  thermostat-room-0: !include { file: asgard-thermostat.yaml, vars: { zone_identifier: "z1", gpio: "GPIO40" } }

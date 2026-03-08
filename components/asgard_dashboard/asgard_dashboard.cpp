@@ -65,7 +65,7 @@ bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
   const auto& url = request->url();
   return (url == "/dashboard" || url == "/dashboard/" ||
           url == "/dashboard/state" || url == "/dashboard/set" ||
-          url == "/dashboard/history" ||
+          url == "/dashboard/history" || url == "/dashboard/odin" ||
           url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js"); 
 }
 
@@ -76,6 +76,7 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
   else if (url == "/dashboard/state")                   handle_state_(request);
   else if (url == "/dashboard/set")                     handle_set_(request);
   else if (url == "/dashboard/history")                 handle_history_request_(request);
+  else if (url == "/dashboard/odin")                    handle_odin_request_(request);
   else if (url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js") {
     handle_js_(request);
   }
@@ -719,14 +720,32 @@ void EcodanDashboard::record_history_() {
   rec.z2_flow   = pack_temp_(get_sensor(z2_flow_temp_target_));
   rec.freq      = pack_temp_(get_sensor(compressor_frequency_));
   
-  // Track the correct consumption source for the history bar charts
+  // Determine if the system is actively running AND heating (Mode 2 = HEAT_ON)
+  bool is_running = bin_state_(status_compressor_) || (get_sensor(compressor_frequency_) > 0.0f);
+  bool is_heating = false;
+  if (operation_mode_ && operation_mode_->has_state() && !std::isnan(operation_mode_->state)) {
+      is_heating = ((int)operation_mode_->state == 2); 
+  }
+
   float current_cons = NAN;
   if (solver_kwh_meter_feedback_source_ != nullptr && solver_kwh_meter_feedback_source_->active_index().value_or(0) != 0) {
       current_cons = solver_kwh_meter_feedback_ ? solver_kwh_meter_feedback_->state : NAN;
   } else {
       current_cons = get_sensor(daily_total_energy_consumption_);
   }
-  rec.cons = pack_temp_(current_cons);
+
+  if (is_running && is_heating) {
+      rec.cons = pack_temp_(current_cons);
+  } else {
+      // Not heating: carry over the last recorded value from the history array
+      if (history_count_ > 0) {
+          size_t prev_idx = (history_head_ + MAX_HISTORY - 1) % MAX_HISTORY;
+          rec.cons = history_buffer_[prev_idx].cons;
+      } else {
+          // Edge case: literally the first minute after boot
+          rec.cons = pack_temp_(current_cons);
+      }
+  }
 
   rec.flags = 0;
   if (bin_state_(status_compressor_))  rec.flags |= (1 << 0);
@@ -797,6 +816,67 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
   httpd_resp_send_chunk(req, "]", 1);
   // Send 0-length chunk to signal the end of the transmission
   httpd_resp_send_chunk(req, nullptr, 0);
+}
+
+// solver
+void EcodanDashboard::store_odin_data(const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax) {
+    if (this->snapshot_mutex_ != NULL && xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
+        this->odin_schedule_ = sched;
+        this->odin_energy_ = energy;
+        this->odin_expected_temp_ = exp_temp;
+        this->odin_cost_ = cost;
+        this->odin_cost_tax_ = cost_tax;
+        this->odin_data_ready_ = true;
+        
+        xSemaphoreGive(this->snapshot_mutex_);
+        ESP_LOGI(TAG, "ODIN 24-hour arrays safely loaded into Dashboard UI memory.");
+    } else {
+        ESP_LOGW(TAG, "Failed to acquire snapshot mutex during ODIN store.");
+    }
+}
+
+void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
+  AsyncResponseStream *response = request->beginResponseStream("application/json");
+  if (response == nullptr) {
+    request->send(500, "text/plain", "Stream alloc failed");
+    return;
+  }
+
+  response->addHeader("Access-Control-Allow-Origin", "*");
+  response->addHeader("Cache-Control", "no-cache");
+
+  // Lock the mutex, read directly, write to JSON, unlock. ZERO copies
+  if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(500)) == pdTRUE) {
+    
+    if (this->odin_data_ready_) {
+      response->print("{\"success\":true,");
+      
+      auto print_arr = [&response](const char* name, const std::vector<float>& arr) {
+          response->printf("\"%s\":[", name);
+          for (size_t i = 0; i < arr.size(); i++) {
+              response->printf("%.2f%s", arr[i], (i == arr.size() - 1) ? "" : ",");
+          }
+          response->print("]");
+      };
+      
+      print_arr("schedule", this->odin_schedule_); response->print(",");
+      print_arr("energy_consumption", this->odin_energy_); response->print(",");
+      print_arr("expected_begin_temp", this->odin_expected_temp_); response->print(",");
+      print_arr("expected_cost", this->odin_cost_); response->print(",");
+      print_arr("expected_cost_with_tax", this->odin_cost_tax_);
+      
+      response->print("}");
+    } else {
+      response->print("{\"success\":false}");
+    }
+    
+    xSemaphoreGive(snapshot_mutex_);
+  } else {
+    response->print("{\"success\":false, \"error\":\"timeout\"}");
+  }
+  
+  // Actually send the buffer over WiFi
+  request->send(response);
 }
 
 }  // namespace asgard_dashboard

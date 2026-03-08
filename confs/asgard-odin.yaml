@@ -1,0 +1,93 @@
+http_request:
+  verify_ssl: false
+  timeout: 5s
+
+script:
+  - id: fetch_odin_optimization
+    then:
+      - if:
+          condition:
+            - switch.is_on: sw_use_solver
+            - lambda: 'return id(txt_solver_ip).state != "0.0.0.0" && id(txt_solver_ip).state != "";'
+          then:
+            - http_request.post:
+                url: !lambda 'return "http://" + id(txt_solver_ip).state + "/api/solve";'
+                request_headers:
+                  Content-Type: application/json
+                  Connection: close
+                capture_response: true
+                
+                body: !lambda |-
+                  char payload[512];
+                  
+                  // Get the active index from your specific select component
+                  int heating_idx = id(heating_system_type).active_index().value_or(0);
+                  const char* profile_str = "ufh"; // Default fallback
+                  
+                  if (heating_idx == 0 || heating_idx == 1) {
+                      profile_str = "ufh";
+                  } else if (heating_idx == 2 || heating_idx == 3) {
+                      profile_str = "hybrid";
+                  } else if (heating_idx == 4 || heating_idx == 5) {
+                      profile_str = "radiators";
+                  }
+
+                  snprintf(payload, sizeof(payload),
+                      "{\"params\":{"
+                      "\"heating_profile\":\"%s\","
+                      "\"heat_produced\":%.2f,"
+                      "\"elec_consumed\":%.2f,"
+                      "\"runtime_hours\":%.2f,"
+                      "\"avg_outside_temp\":%.2f,"
+                      "\"avg_room_temp\":%.2f,"
+                      "\"delta_room_temp\":%.2f,"
+                      "\"max_output\":%.2f,"
+                      "\"current_room_temp\":%.2f"
+                      "}}",
+                      profile_str,
+                      id(num_raw_heat_produced).state,
+                      id(num_raw_elec_consumed).state,
+                      id(num_raw_runtime_hours).state,
+                      id(num_raw_avg_outside_temp).state,
+                      id(num_raw_avg_room_temp).state,
+                      id(num_raw_delta_room_temp).state,
+                      id(num_raw_max_output).state,
+                      id(virtual_climate_z1).current_temperature
+                  );
+                  return std::string(payload);
+                
+                on_response:
+                  then:
+                    - lambda: |-
+                        if (response->status_code == 200) {
+                          esphome::json::parse_json(body, [](JsonObject root) {
+                            if (root["success"].as<bool>()) {
+                              std::vector<float> sched, nrg, exp_t, cost, cost_tax;
+                              
+                              JsonArray j_sched = root["schedule"].as<JsonArray>();
+                              JsonArray j_nrg = root["energy_consumption"].as<JsonArray>();
+                              JsonArray j_exp_t = root["expected_begin_temp"].as<JsonArray>();
+                              JsonArray j_cost = root["expected_cost"].as<JsonArray>();
+                              JsonArray j_cost_tax = root["expected_cost_with_tax"].as<JsonArray>();
+                              
+                              for(int i = 0; i < 24; i++) {
+                                sched.push_back(j_sched[i].as<float>());
+                                nrg.push_back(j_nrg[i].as<float>());
+                                exp_t.push_back(j_exp_t[i].as<float>());
+                                cost.push_back(j_cost[i].as<float>());
+                                cost_tax.push_back(j_cost_tax[i].as<float>());
+                              }
+
+                              id(optimizer_ptr)->store_odin_data(sched, nrg);
+                              id(asgard_dashboard_id)->store_odin_data(sched, nrg, exp_t, cost, cost_tax);
+                            }
+                            return true;
+                          });
+                        } else {
+                          ESP_LOGE("ODIN_SYNC", "ODIN Server error: HTTP %d", response->status_code);
+                        }
+
+interval:
+  - interval: 60min
+    then:
+      - script.execute: fetch_odin_optimization

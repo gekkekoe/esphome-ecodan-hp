@@ -2,6 +2,8 @@
 
 #include "esphome.h"
 #include "esphome/components/thermostat/thermostat_climate.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
@@ -43,6 +45,7 @@ namespace esphome
       esphome::switch_::Switch *predictive_short_cycle_control_enabled;
       esphome::switch_::Switch *defrost_risk_handling_enabled;
       esphome::switch_::Switch *smart_boost_enabled;
+      esphome::switch_::Switch *sw_use_solver;
 
       esphome::binary_sensor::BinarySensor *status_short_cycle_lockout;
       esphome::binary_sensor::BinarySensor *status_predictive_boost_active;
@@ -155,6 +158,13 @@ namespace esphome
       // track max output for solver
       float daily_max_output_power_{0.0f};
 
+      // solver results
+      std::vector<float> odin_schedule_;
+      std::vector<float> odin_energy_;
+      uint32_t odin_last_fetch_ms_{0};
+      bool odin_data_ready_{false};
+      SemaphoreHandle_t odin_mutex_ = NULL;
+
       void process_adaptive_zone_(
           std::size_t i,
           const ecodan::Status &status,
@@ -214,6 +224,9 @@ namespace esphome
       float get_return_temp(OptimizerZone zone);
       float get_flow_setpoint(OptimizerZone zone);
       FlowLimits get_flow_limits(OptimizerZone zone);
+
+      // solver
+      void store_odin_data(const std::vector<float>& sched, const std::vector<float>& energy);
     };
 
     // dummy, can remain empty

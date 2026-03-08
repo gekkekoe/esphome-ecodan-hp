@@ -250,10 +250,13 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void handleRequest(AsyncWebServerRequest *request) override;
   bool isRequestHandlerTrivial() const override { return false; }
 
+  void store_odin_data(const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax);
+
  protected:
   void handle_root_(AsyncWebServerRequest *request);
   void handle_state_(AsyncWebServerRequest *request);
   void handle_set_(AsyncWebServerRequest *request);
+  void handle_odin_request_(AsyncWebServerRequest *request);
   void dispatch_set_(const std::string &key, const std::string &sval, float fval, bool is_string);
   std::vector<DashboardAction> action_queue_;
   SemaphoreHandle_t action_lock_ = NULL;
@@ -364,6 +367,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_raw_delta_room_temp_{nullptr};
   number::Number *num_raw_max_output_{nullptr};
 
+
 private:
   static const size_t MAX_HISTORY = 1440; // 24h, 1min interval
   HistoryRecord history_buffer_[MAX_HISTORY];
@@ -376,6 +380,14 @@ private:
   SemaphoreHandle_t snapshot_mutex_ = NULL;
   uint32_t last_snapshot_time_{0};
   void update_snapshot_();
+
+  // solver
+  std::vector<float> odin_schedule_;
+  std::vector<float> odin_energy_;
+  std::vector<float> odin_expected_temp_;
+  std::vector<float> odin_cost_;
+  std::vector<float> odin_cost_tax_;
+  bool odin_data_ready_{false};
 
   void record_history_();
   void handle_history_request_(AsyncWebServerRequest *request);

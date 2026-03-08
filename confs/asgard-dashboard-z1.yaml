@@ -9,6 +9,7 @@ globals:
     initial_value: 'false'
 
 asgard_dashboard:
+  id: asgard_dashboard_id
   version_id:                        current_fw_version
   ui_use_room_z1_id:                 ui_use_room_z1
   # ── Header badge sensors 
