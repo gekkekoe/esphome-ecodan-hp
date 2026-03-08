@@ -42,6 +42,7 @@ script:
                       "\"avg_room_temp\":%.2f,"
                       "\"delta_room_temp\":%.2f,"
                       "\"max_output\":%.2f,"
+                      "\"current_hour\":%d,"
                       "\"current_room_temp\":%.2f"
                       "}}",
                       profile_str,
@@ -52,6 +53,7 @@ script:
                       id(num_raw_avg_room_temp).state,
                       id(num_raw_delta_room_temp).state,
                       id(num_raw_max_output).state,
+                      id(optimizer_ptr)->get_current_ecodan_hour(),
                       id(virtual_climate_z1).current_temperature
                   );
                   return std::string(payload);

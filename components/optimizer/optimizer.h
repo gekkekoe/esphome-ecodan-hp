@@ -228,6 +228,7 @@ namespace esphome
       FlowLimits get_flow_limits(OptimizerZone zone);
 
       // solver
+      int get_current_ecodan_hour();
       void store_odin_data(const std::vector<float>& sched, const std::vector<float>& energy);
       bool check_and_clear_odin_fetch_request() {
           if (odin_fetch_requested_) {

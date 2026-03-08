@@ -602,5 +602,16 @@ namespace esphome
                 ESP_LOGW(OPTIMIZER_TAG, "Failed to acquire ODIN mutex during store.");
             }
         }
+
+        int Optimizer::get_current_ecodan_hour() {
+          if (this->state_.ecodan_instance == nullptr) return 0;
+          
+          time_t ts = this->state_.ecodan_instance->get_status().timestamp();
+          if (ts == -1) return 0;
+
+          struct tm timeinfo;
+          gmtime_r(&ts, &timeinfo);           
+          return timeinfo.tm_hour;
+        }
     } // namespace optimizer
 } // namespace esphome

@@ -1780,8 +1780,9 @@ async function runOdinSolver() {
             avg_outside_temp: pending['raw-out'] || latestState.raw_avg_outside_temp || 7,
             avg_room_temp: pending['raw-room'] || latestState.raw_avg_room_temp || 20,
             delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
-            max_output: pending['raw-max-out'] || latestState.raw_max_output || 8.0, // <-- Uses learned EMA
-            current_room_temp: latestState.z1_current_temp || 20.0
+            max_output: pending['raw-max-out'] || latestState.raw_max_output || 8.0,
+            current_room_temp: latestState.z1_current_temp || 20.0,
+            current_hour: new Date().getHours()
         }
     };
 
