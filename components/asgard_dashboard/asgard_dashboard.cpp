@@ -387,7 +387,6 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.flow_rate = get_f(flow_rate_);
   current_snapshot_.computed_output_power = get_f(computed_output_power_);
   current_snapshot_.daily_computed_output_power = get_f(daily_computed_output_power_);
-  current_snapshot_.daily_total_energy_consumption = get_f(daily_total_energy_consumption_);
   current_snapshot_.compressor_starts = get_f(compressor_starts_);
   current_snapshot_.runtime = get_f(runtime_);
   current_snapshot_.wifi_signal_db = get_f(wifi_signal_db_);
@@ -428,12 +427,19 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_raw_avg_room_temp_, current_snapshot_.num_raw_avg_room_temp);
   get_n(num_raw_delta_room_temp_, current_snapshot_.num_raw_delta_room_temp);
   get_n(num_raw_max_output_, current_snapshot_.num_raw_max_output);
-  
+
   if (txt_solver_ip_ && txt_solver_ip_->has_state()) {
     strncpy(current_snapshot_.txt_solver_ip, txt_solver_ip_->state.c_str(), sizeof(current_snapshot_.txt_solver_ip) - 1);
     current_snapshot_.txt_solver_ip[sizeof(current_snapshot_.txt_solver_ip) - 1] = '\0';
   } else {
     current_snapshot_.txt_solver_ip[0] = '\0';
+  }
+
+  // Use external kWh meter if selected, otherwise fallback to internal Ecodan sensor
+  if (solver_kwh_meter_feedback_source_ != nullptr && solver_kwh_meter_feedback_source_->active_index().value_or(0) != 0) {
+      current_snapshot_.daily_total_energy_consumption = (solver_kwh_meter_feedback_ != nullptr && solver_kwh_meter_feedback_->has_state()) ? solver_kwh_meter_feedback_->state : NAN;
+  } else {
+      current_snapshot_.daily_total_energy_consumption = get_f(daily_total_energy_consumption_);
   }
 
   // Populate Climates
@@ -712,7 +718,15 @@ void EcodanDashboard::record_history_() {
   rec.z1_flow   = pack_temp_(get_sensor(z1_flow_temp_target_));
   rec.z2_flow   = pack_temp_(get_sensor(z2_flow_temp_target_));
   rec.freq      = pack_temp_(get_sensor(compressor_frequency_));
-  rec.cons      = pack_temp_(get_sensor(daily_total_energy_consumption_));
+  
+  // Track the correct consumption source for the history bar charts
+  float current_cons = NAN;
+  if (solver_kwh_meter_feedback_source_ != nullptr && solver_kwh_meter_feedback_source_->active_index().value_or(0) != 0) {
+      current_cons = solver_kwh_meter_feedback_ ? solver_kwh_meter_feedback_->state : NAN;
+  } else {
+      current_cons = get_sensor(daily_total_energy_consumption_);
+  }
+  rec.cons = pack_temp_(current_cons);
 
   rec.flags = 0;
   if (bin_state_(status_compressor_))  rec.flags |= (1 << 0);

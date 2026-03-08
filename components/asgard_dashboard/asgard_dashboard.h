@@ -234,6 +234,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_sw_use_solver(switch_::Switch *s) { sw_use_solver_ = s; }
   void set_bin_solver_connected(binary_sensor::BinarySensor *b) { bin_solver_connected_ = b; }
   void set_txt_solver_ip(text_sensor::TextSensor *t) { txt_solver_ip_ = t; }
+  void set_solver_kwh_meter_feedback_source(select::Select *s) { solver_kwh_meter_feedback_source_ = s; }
+  void set_solver_kwh_meter_feedback(number::Number *n) { solver_kwh_meter_feedback_ = n; }
 
   void set_num_raw_heat_produced(number::Number *n) { num_raw_heat_produced_ = n; }
   void set_num_raw_elec_consumed(number::Number *n) { num_raw_elec_consumed_ = n; }
@@ -351,6 +353,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   switch_::Switch *sw_use_solver_{nullptr};
   binary_sensor::BinarySensor *bin_solver_connected_{nullptr};
   text_sensor::TextSensor *txt_solver_ip_{nullptr};
+  select::Select *solver_kwh_meter_feedback_source_{nullptr};
+  number::Number *solver_kwh_meter_feedback_{nullptr};
 
   number::Number *num_raw_heat_produced_{nullptr};
   number::Number *num_raw_elec_consumed_{nullptr};

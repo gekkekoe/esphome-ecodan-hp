@@ -72,6 +72,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("operating_mode_z2_id"):               cv.use_id(select.Select),
         cv.Optional("sel_temp_source_z1_id"):              cv.use_id(select.Select),
         cv.Optional("sel_temp_source_z2_id"):              cv.use_id(select.Select),
+        cv.Optional("solver_kwh_meter_feedback_source_id"): cv.use_id(select.Select),
 
         cv.Optional("num_aa_setpoint_bias_id"):            cv.use_id(number.Number),
         cv.Optional("num_max_flow_temp_id"):               cv.use_id(number.Number),
@@ -86,7 +87,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("num_raw_avg_outside_temp_id"):        cv.use_id(number.Number),
         cv.Optional("num_raw_avg_room_temp_id"):           cv.use_id(number.Number),
         cv.Optional("num_raw_delta_room_temp_id"):         cv.use_id(number.Number),
-        cv.Optional("num_raw_max_output_id"):           cv.use_id(number.Number),
+        cv.Optional("num_raw_max_output_id"):              cv.use_id(number.Number),
+        cv.Optional("solver_kwh_meter_feedback_id"):       cv.use_id(number.Number),
 
         cv.Optional("dhw_climate_id"):                     cv.use_id(climate.Climate),
         cv.Optional("virtual_climate_z1_id"):              cv.use_id(climate.Climate),
@@ -195,6 +197,8 @@ async def to_code(config):
         ("num_raw_avg_room_temp_id",          "set_num_raw_avg_room_temp"),
         ("num_raw_delta_room_temp_id",        "set_num_raw_delta_room_temp"),
         ("num_raw_max_output_id",             "set_num_raw_max_output"),
+        ("solver_kwh_meter_feedback_source_id", "set_solver_kwh_meter_feedback_source"),
+        ("solver_kwh_meter_feedback_id", "set_solver_kwh_meter_feedback"),
     ]
 
     for conf_key, setter in pairs:
