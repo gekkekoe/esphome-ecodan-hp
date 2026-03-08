@@ -1100,168 +1100,103 @@ function initCharts() {
       }
     }
   });
+  
+  // --- Initialize ODIN Charts (Empty on load) ---
+  const labels24 = Array.from({length: 24}, (_, i) => `${i}:00`);
+
+  odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+          labels: labels24,
+          datasets: [
+              { label: 'Expected Cons. (kWh)', data: [], backgroundColor: 'rgba(0, 200, 255, 0.4)', borderColor: '#00c8ff', borderWidth: 1, yAxisID: 'y' },
+              { type: 'bar', label: 'Actual Cons. (kWh)', data: [], backgroundColor: 'rgba(127, 255, 127, 0.4)', borderColor: '#7fff7f', borderWidth: 1, yAxisID: 'y' },
+              { type: 'line', label: 'Expected Cost (€)', data: [], borderColor: '#ffb020', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4, 4], pointRadius: 0, yAxisID: 'y1' },
+              { type: 'line', label: 'Cost incl. Tax (€)', data: [], borderColor: '#c084fc', backgroundColor: 'rgba(192, 132, 252, 0.1)', borderWidth: 3, pointRadius: 2, yAxisID: 'y1' }
+          ]
+      },
+      options: {
+          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10}, usePointStyle: true } } },
+          scales: {
+              x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
+              y: { type: 'linear', display: true, position: 'left', title: {display: true, text: 'kWh', color: '#00c8ff'}, ticks: { color: '#00c8ff' }, grid: { color: '#1e2d4a' } },
+              y1: { type: 'linear', display: true, position: 'right', title: {display: true, text: 'Euro (€)', color: '#c084fc'}, ticks: { color: '#c084fc' }, grid: { drawOnChartArea: false } }
+          }
+      }
+  });
+
+  odinTempChart = new Chart(document.getElementById('odinTempChart').getContext('2d'), {
+      type: 'line',
+      data: {
+          labels: labels24,
+          datasets: [
+              { label: 'Expected Begin Temp (°C)', data: [], borderColor: '#ffb020', borderDash: [5, 5], borderWidth: 2, tension: 0.3 },
+              { label: 'Actual Room Temp (°C)', data: [], borderColor: '#ffff00', borderWidth: 2, spanGaps: true, tension: 0.3 }
+          ]
+      },
+      options: {
+          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10} } } },
+          scales: {
+              x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
+              y: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } }
+          }
+      }
+  });
 }
 
-function updateOdinActuals() {
-    if (!odinConsChart || !odinTempChart || !odinDataCache) return;
+function updateOdinCharts() {
+    if (!odinConsChart || !odinTempChart) return;
 
-    const maxConsByHour = new Array(24).fill(null);
+    // 1. Gather historical actuals securely
+    const firstConsByHour = new Array(24).fill(null);
+    const lastConsByHour = new Array(24).fill(null);
     const actualTempByHour = new Array(24).fill(null);
 
-    // 1. Gather the maximum cumulative consumption and the latest temperature per hour
     if (history.timestamps && history.cons) {
         for(let i = 0; i < history.timestamps.length; i++) {
             const d = new Date(history.timestamps[i]);
             if (d.toDateString() === new Date().toDateString()) {
                 const h = d.getHours();
-                
                 if (history.cons[i] != null) {
-                    if (maxConsByHour[h] === null || history.cons[i] > maxConsByHour[h]) {
-                        maxConsByHour[h] = history.cons[i];
-                    }
+                    if (firstConsByHour[h] === null) firstConsByHour[h] = history.cons[i];
+                    lastConsByHour[h] = history.cons[i];
                 }
-                if (history.z1curr[i] != null) {
-                    actualTempByHour[h] = history.z1curr[i];
-                }
+                if (history.z1curr[i] != null) actualTempByHour[h] = history.z1curr[i];
             }
         }
     }
 
-    // 2. Calculate the hourly delta to form a bar chart instead of a line
     const hourlyDeltaCons = new Array(24).fill(null);
-    let previousCumulative = null; 
-    
-    for(let i = 0; i < 24; i++) {
-        if (maxConsByHour[i] !== null) {
-            if (previousCumulative === null) {
-                // First valid reading of the day
-                hourlyDeltaCons[i] = maxConsByHour[i]; 
-            } else {
-                // Safety check: if the sensor was reset mid-day, prevent negative deltas
-                if (maxConsByHour[i] < previousCumulative) {
-                    previousCumulative = 0;
-                }
-                let delta = maxConsByHour[i] - previousCumulative;
-                hourlyDeltaCons[i] = Math.max(0, delta);
+    for(let h = 0; h < 24; h++) {
+        if (lastConsByHour[h] !== null) {
+            let prevMax = null;
+            for (let prev = h - 1; prev >= 0; prev--) {
+                if (lastConsByHour[prev] !== null) { prevMax = lastConsByHour[prev]; break; }
             }
-            
-            // Clean up floating point math inaccuracies (e.g. 1.000000001 -> 1.00)
-            hourlyDeltaCons[i] = parseFloat(hourlyDeltaCons[i].toFixed(2));
-            previousCumulative = maxConsByHour[i];
+            let delta = (prevMax !== null) ? (lastConsByHour[h] - prevMax) : (lastConsByHour[h] - firstConsByHour[h]);
+            if (delta < 0) delta = lastConsByHour[h]; 
+            hourlyDeltaCons[h] = parseFloat(Math.max(0, delta).toFixed(2));
         }
     }
 
-    // 3. Inject the live data directly into the ODIN charts
+    // 2. Fetch expected data (fallback to empty arrays if no solver run yet)
+    const expCons = odinDataCache ? odinDataCache.energy_consumption : new Array(24).fill(null);
+    const expCost = odinDataCache ? odinDataCache.expected_cost : new Array(24).fill(null);
+    const expTax  = odinDataCache ? odinDataCache.expected_cost_with_tax : new Array(24).fill(null);
+    const expTemp = odinDataCache ? odinDataCache.expected_begin_temp : new Array(24).fill(null);
+
+    // 3. Inject ALL data and refresh
+    odinConsChart.data.datasets[0].data = expCons;
     odinConsChart.data.datasets[1].data = hourlyDeltaCons;
+    odinConsChart.data.datasets[2].data = expCost;
+    odinConsChart.data.datasets[3].data = expTax;
     odinConsChart.update('none');
 
+    odinTempChart.data.datasets[0].data = expTemp;
     odinTempChart.data.datasets[1].data = actualTempByHour;
     odinTempChart.update('none');
-}
-
-function renderOdinCharts() {
-    if (!odinDataCache) return;
-
-    const labels = Array.from({length: 24}, (_, i) => `${i}:00`);
-
-    // --- Chart 1: Consumption and Costs ---
-    const ctxCons = document.getElementById('odinConsChart').getContext('2d');
-    if (odinConsChart) odinConsChart.destroy();
-
-    odinConsChart = new Chart(ctxCons, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Expected Cons. (kWh)',
-                    data: odinDataCache.energy_consumption,
-                    backgroundColor: 'rgba(0, 200, 255, 0.4)',
-                    borderColor: '#00c8ff',
-                    borderWidth: 1,
-                    yAxisID: 'y'
-                },
-                {
-                    type: 'bar', 
-                    label: 'Actual Cons. (kWh)',
-                    data: new Array(24).fill(null), // Filled dynamically by updateOdinActuals()
-                    backgroundColor: 'rgba(127, 255, 127, 0.4)', 
-                    borderColor: '#7fff7f',
-                    borderWidth: 1,
-                    yAxisID: 'y'
-                },
-                {
-                    type: 'line',
-                    label: 'Expected Cost (€)',
-                    data: odinDataCache.expected_cost,
-                    borderColor: '#ffb020',
-                    backgroundColor: 'rgba(255, 176, 32, 0.1)',
-                    borderWidth: 2,
-                    yAxisID: 'y1'
-                },
-                {
-                    type: 'line',
-                    label: 'Expected Cost incl. Tax (€)',
-                    data: odinDataCache.expected_cost_with_tax,
-                    borderColor: '#c084fc', // Purple color to stand out
-                    backgroundColor: 'rgba(192, 132, 252, 0.1)',
-                    borderWidth: 2,
-                    yAxisID: 'y1'
-                }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            scales: {
-                x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
-                y: { type: 'linear', display: true, position: 'left', ticks: { color: '#00c8ff', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
-                y1: { type: 'linear', display: true, position: 'right', ticks: { color: '#c084fc', font: {family: "'JetBrains Mono'"} }, grid: { drawOnChartArea: false } }
-            },
-            plugins: { legend: { labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10} } } }
-        }
-    });
-
-    // --- Chart 2: Temperatures ---
-    const ctxTemp = document.getElementById('odinTempChart').getContext('2d');
-    if (odinTempChart) odinTempChart.destroy();
-
-    odinTempChart = new Chart(ctxTemp, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Expected Begin Temp (°C)',
-                    data: odinDataCache.expected_begin_temp,
-                    borderColor: '#ffb020',
-                    borderDash: [5, 5],
-                    borderWidth: 2,
-                    tension: 0.3
-                },
-                {
-                    label: 'Actual Room Temp (°C)',
-                    data: new Array(24).fill(null), // Filled dynamically by updateOdinActuals()
-                    borderColor: '#ffff00',
-                    borderWidth: 2,
-                    spanGaps: true,
-                    tension: 0.3
-                }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            scales: {
-                x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
-                y: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } }
-            },
-            plugins: { legend: { labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10} } } }
-        }
-    });
-
-    // Populate the arrays immediately after creating the canvases
-    updateOdinActuals();
 }
 
 function updateCharts(d) {
@@ -1359,7 +1294,7 @@ function updateCharts(d) {
   tempChart.update();
   freqChart.update();
   statusChart.update();
-  updateOdinActuals(); 
+  updateOdinCharts();
 }
 
 function setToggle(id, val) {
@@ -1861,7 +1796,7 @@ async function runOdinSolver() {
         if (data.success) {
             showToast("✓ Optimization successful", false);
             odinDataCache = data;
-            renderOdinCharts();
+            updateOdinCharts();
         } else {
             showToast("✗ Solver failed", true);
         }
@@ -1871,159 +1806,6 @@ async function runOdinSolver() {
     
     btn.classList.remove('sending');
     btn.textContent = "Run Optimization";
-}
-
-function renderOdinCharts() {
-    if (!odinDataCache) return;
-
-    const labels = Array.from({length: 24}, (_, i) => `${i}:00`);
-
-    // --- Chart 1: Consumption and Costs ---
-    const ctxCons = document.getElementById('odinConsChart').getContext('2d');
-    if (odinConsChart) odinConsChart.destroy();
-
-    // 1. Gather the maximum cumulative consumption for each hour of the current day
-    const maxConsByHour = new Array(24).fill(null);
-    if (history.timestamps && history.cons) {
-        for(let i = 0; i < history.timestamps.length; i++) {
-            const d = new Date(history.timestamps[i]);
-            // Only process data for today
-            if (d.toDateString() === new Date().toDateString() && history.cons[i] != null) {
-                const hour = d.getHours();
-                // Store the highest cumulative value found within this hour block
-                if (maxConsByHour[hour] === null || history.cons[i] > maxConsByHour[hour]) {
-                    maxConsByHour[hour] = history.cons[i];
-                }
-            }
-        }
-    }
-
-    // 2. Calculate the hourly delta to form a bar chart instead of a line
-    const hourlyDeltaCons = new Array(24).fill(null);
-    let previousCumulative = null; // Track the previous hour's total to calculate the delta
-    
-    for(let i = 0; i < 24; i++) {
-        if (maxConsByHour[i] !== null) {
-            if (previousCumulative === null) {
-                // First valid reading of the day. Assuming the sensor resets at midnight,
-                // this value represents the total consumption up to this hour.
-                hourlyDeltaCons[i] = maxConsByHour[i]; 
-            } else {
-                // Safety check: if the sensor was reset mid-day, prevent negative deltas
-                if (maxConsByHour[i] < previousCumulative) {
-                    previousCumulative = 0;
-                }
-                let delta = maxConsByHour[i] - previousCumulative;
-                hourlyDeltaCons[i] = Math.max(0, delta);
-            }
-            
-            // Clean up floating point math inaccuracies (e.g. 1.000000001 -> 1.00)
-            hourlyDeltaCons[i] = parseFloat(hourlyDeltaCons[i].toFixed(2));
-            previousCumulative = maxConsByHour[i];
-        }
-    }
-
-    odinConsChart = new Chart(ctxCons, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Expected Cons. (kWh)',
-                    data: odinDataCache.energy_consumption,
-                    backgroundColor: 'rgba(0, 200, 255, 0.4)',
-                    borderColor: '#00c8ff',
-                    borderWidth: 1,
-                    yAxisID: 'y'
-                },
-                {
-                    type: 'bar', // Changed from 'line' to 'bar'
-                    label: 'Actual Cons. (kWh)',
-                    data: hourlyDeltaCons, // Inserted the newly calculated delta array
-                    backgroundColor: 'rgba(127, 255, 127, 0.4)', // Filled background to match the expected bars
-                    borderColor: '#7fff7f',
-                    borderWidth: 1,
-                    yAxisID: 'y'
-                },
-                {
-                    type: 'line',
-                    label: 'Expected Cost (€)',
-                    data: odinDataCache.expected_cost,
-                    borderColor: '#ffb020',
-                    backgroundColor: 'rgba(255, 176, 32, 0.1)',
-                    borderWidth: 2,
-                    yAxisID: 'y1'
-                },
-                {
-                    type: 'line',
-                    label: 'Expected Cost incl. Tax (€)',
-                    data: odinDataCache.expected_cost_with_tax,
-                    borderColor: '#c084fc', // Purple color to stand out
-                    backgroundColor: 'rgba(192, 132, 252, 0.1)',
-                    borderWidth: 2,
-                    yAxisID: 'y1'
-                }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            scales: {
-                x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
-                y: { type: 'linear', display: true, position: 'left', ticks: { color: '#00c8ff', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
-                y1: { type: 'linear', display: true, position: 'right', ticks: { color: '#ffb020', font: {family: "'JetBrains Mono'"} }, grid: { drawOnChartArea: false } }
-            },
-            plugins: { legend: { labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10} } } }
-        }
-    });
-
-    // --- Chart 2: Temperatures ---
-    const ctxTemp = document.getElementById('odinTempChart').getContext('2d');
-    if (odinTempChart) odinTempChart.destroy();
-
-    const actualTempByHour = new Array(24).fill(null);
-    if (history.timestamps && history.z1curr) {
-        for(let i=0; i<history.timestamps.length; i++) {
-            const d = new Date(history.timestamps[i]);
-            if (d.toDateString() === new Date().toDateString() && history.z1curr[i] != null) {
-                actualTempByHour[d.getHours()] = history.z1curr[i];
-            }
-        }
-    }
-
-    odinTempChart = new Chart(ctxTemp, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Expected Begin Temp (°C)',
-                    data: odinDataCache.expected_begin_temp,
-                    borderColor: '#ffb020',
-                    borderDash: [5, 5],
-                    borderWidth: 2,
-                    tension: 0.3
-                },
-                {
-                    label: 'Actual Room Temp (°C)',
-                    data: actualTempByHour,
-                    borderColor: '#ffff00',
-                    borderWidth: 2,
-                    spanGaps: true,
-                    tension: 0.3
-                }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            scales: {
-                x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
-                y: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } }
-            },
-            plugins: { legend: { labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10} } } }
-        }
-    });
 }
 
 async function fetchState() {
