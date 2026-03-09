@@ -606,7 +606,10 @@ namespace esphome
                     this->odin_data_ready_ = true;
                 }
 
-                if (current_hour < 0 || current_hour >= 24) return;
+                if (current_hour < 0 || current_hour >= 24) {
+                    xSemaphoreGive(this->odin_mutex_);
+                    return;
+                }
                 for (int i = current_hour; i < 24; i++) {
                     this->odin_schedule_[i] = sched[i];
                     this->odin_energy_[i] = energy[i];

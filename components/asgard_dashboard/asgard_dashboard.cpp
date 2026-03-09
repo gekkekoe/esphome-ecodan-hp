@@ -268,6 +268,8 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "raw_avg_room_temp") { doNumber(num_raw_avg_room_temp_); return; }
   if (key == "raw_delta_room_temp") { doNumber(num_raw_delta_room_temp_); return; }
   if (key == "raw_max_output") { doNumber(num_raw_max_output_); return; }
+  if (key == "battery_soc_kwh") { doNumber(num_battery_soc_kwh_); return; }
+  if (key == "battery_max_discharge_kw") { doNumber(num_battery_max_discharge_kw_); return; }
 
   if (key == "predictive_short_cycle_high_delta_time_window")    { doNumber(pred_sc_time_);    return; }
   if (key == "predictive_short_cycle_high_delta_threshold")    { doNumber(pred_sc_delta_);    return; }
@@ -428,6 +430,9 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_raw_avg_room_temp_, current_snapshot_.num_raw_avg_room_temp);
   get_n(num_raw_delta_room_temp_, current_snapshot_.num_raw_delta_room_temp);
   get_n(num_raw_max_output_, current_snapshot_.num_raw_max_output);
+
+  get_n(num_battery_soc_kwh_, current_snapshot_.num_battery_soc_kwh);
+  get_n(num_battery_max_discharge_kw_, current_snapshot_.num_battery_max_discharge_kw);
 
   if (txt_solver_ip_ && txt_solver_ip_->has_state()) {
     strncpy(current_snapshot_.txt_solver_ip, txt_solver_ip_->state.c_str(), sizeof(current_snapshot_.txt_solver_ip) - 1);
@@ -660,6 +665,12 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_n("raw_max_output", snap.num_raw_max_output.val); 
   p_lim("raw_max_output_lim", snap.num_raw_max_output);
 
+  p_n("battery_soc_kwh", snap.num_battery_soc_kwh.val);
+  p_lim("battery_soc_kwh_lim", snap.num_battery_soc_kwh);
+
+  p_n("battery_max_discharge_kw", snap.num_battery_max_discharge_kw.val);
+  p_lim("battery_max_discharge_kw_lim", snap.num_battery_max_discharge_kw);
+
   response->print("\"solver_ip_address\":\"");
   for (char *c = snap.txt_solver_ip; *c != '\0'; ++c) {
     if (*c == '"') response->print("\\\"");
@@ -819,7 +830,7 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 }
 
 // solver
-void EcodanDashboard::store_odin_data(int current_hour, const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax) {
+void EcodanDashboard::store_odin_data(int current_hour, const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax, const std::vector<float>& battery_discharge) {
     if (current_hour == -1) return;
 
     if (this->snapshot_mutex_ != NULL && xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
@@ -830,23 +841,30 @@ void EcodanDashboard::store_odin_data(int current_hour, const std::vector<float>
           this->odin_expected_temp_ = exp_temp;
           this->odin_cost_ = cost;
           this->odin_cost_tax_ = cost_tax;
+          this->odin_battery_discharge_ = battery_discharge;
 
           this->odin_schedule_.resize(24);
           this->odin_energy_.resize(24);
           this->odin_expected_temp_.resize(24);
           this->odin_cost_.resize(24);
           this->odin_cost_tax_.resize(24);
+          this->odin_battery_discharge_.resize(24, 0.0f);
 
           this->odin_data_ready_ = true;
         }
 
-        if (current_hour < 0 || current_hour >= 24) return;
+        if (current_hour < 0 || current_hour >= 24) {
+            xSemaphoreGive(this->snapshot_mutex_);
+            return;
+        }
         for (int i = current_hour; i < 24; i++) {
             this->odin_schedule_[i] = sched[i];
             this->odin_energy_[i] = energy[i];
             this->odin_expected_temp_[i] = exp_temp[i];
             this->odin_cost_[i] = cost[i];
             this->odin_cost_tax_[i] = cost_tax[i];
+            if (i < (int)battery_discharge.size())
+                this->odin_battery_discharge_[i] = battery_discharge[i];
         }
         
         xSemaphoreGive(this->snapshot_mutex_);
@@ -884,7 +902,8 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
       print_arr("energy_consumption", this->odin_energy_); response->print(",");
       print_arr("expected_begin_temp", this->odin_expected_temp_); response->print(",");
       print_arr("expected_cost", this->odin_cost_); response->print(",");
-      print_arr("expected_cost_with_tax", this->odin_cost_tax_);
+      print_arr("expected_cost_with_tax", this->odin_cost_tax_); response->print(",");
+      print_arr("battery_discharge", this->odin_battery_discharge_);
       
       response->print("}");
     } else {

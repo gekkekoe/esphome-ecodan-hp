@@ -89,6 +89,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("num_raw_delta_room_temp_id"):         cv.use_id(number.Number),
         cv.Optional("num_raw_max_output_id"):              cv.use_id(number.Number),
         cv.Optional("solver_kwh_meter_feedback_id"):       cv.use_id(number.Number),
+        cv.Optional("num_battery_soc_kwh_id"):             cv.use_id(number.Number),
+        cv.Optional("num_battery_max_discharge_kw_id"):    cv.use_id(number.Number),
 
         cv.Optional("dhw_climate_id"):                     cv.use_id(climate.Climate),
         cv.Optional("virtual_climate_z1_id"):              cv.use_id(climate.Climate),
@@ -199,6 +201,8 @@ async def to_code(config):
         ("num_raw_max_output_id",             "set_num_raw_max_output"),
         ("solver_kwh_meter_feedback_source_id", "set_solver_kwh_meter_feedback_source"),
         ("solver_kwh_meter_feedback_id", "set_solver_kwh_meter_feedback"),
+        ("num_battery_soc_kwh_id",            "set_num_battery_soc_kwh"),
+        ("num_battery_max_discharge_kw_id",   "set_num_battery_max_discharge_kw"),
     ]
 
     for conf_key, setter in pairs:

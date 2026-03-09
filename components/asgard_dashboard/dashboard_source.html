@@ -680,6 +680,16 @@ header {
         <div class="stepper"><button class="step-btn" onclick="step('raw-max-out', -0.1)">−</button><input type="number" class="step-input" id="raw-max-out-val" onchange="manualInput('raw-max-out', this.value)" /><button class="step-btn" onclick="step('raw-max-out', +0.1)">+</button></div>
       </div>
 
+      <div class="ctrl-row">
+        <span class="ctrl-label">Battery SoC (kWh)</span>
+        <div class="stepper"><button class="step-btn" onclick="step('batt-soc', -0.1)">−</button><input type="number" class="step-input" id="batt-soc-val" onchange="manualInput('batt-soc', this.value)" /><button class="step-btn" onclick="step('batt-soc', +0.1)">+</button></div>
+      </div>
+
+      <div class="ctrl-row">
+        <span class="ctrl-label">Battery Max Discharge (kW)</span>
+        <div class="stepper"><button class="step-btn" onclick="step('batt-max-dis', -0.1)">−</button><input type="number" class="step-input" id="batt-max-dis-val" onchange="manualInput('batt-max-dis', this.value)" /><button class="step-btn" onclick="step('batt-max-dis', +0.1)">+</button></div>
+      </div>
+
       <button class="send-btn" onclick="sendPhysics(this)" style="margin-bottom:0; margin-top:24px;">Apply Physics Data</button>
     </div>    
 
@@ -692,6 +702,10 @@ header {
   <div class="chart-card full-width" style="grid-column: 1 / -1;">
     <div class="chart-header"><div class="section-title" style="margin:0">Expected vs Actual Temperatures (24h)</div></div>
     <div class="chart-container"><canvas id="odinTempChart"></canvas></div>
+  </div>
+  <div class="chart-card full-width" style="grid-column: 1 / -1;">
+    <div class="chart-header"><div class="section-title" style="margin:0">Battery Discharge Plan (24h)</div></div>
+    <div class="chart-container"><canvas id="odinBattChart"></canvas></div>
   </div>
 </div>
 
@@ -745,7 +759,8 @@ const pending = {
   'z2-sp': null, 'z2-hyst': null, 'room-z2-sp': null,
   'flow-z1-sp': null, 'flow-z2-sp': null,
   'raw-heat': null, 'raw-elec': null, 'raw-run': null,
-  'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-max-out': null
+  'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-max-out': null,
+  'batt-soc': null, 'batt-max-dis': null
 };
 
 const lastEdit = {};
@@ -755,6 +770,7 @@ let latestState = {};
 let odinDataCache = null;
 let odinConsChart = null;
 let odinTempChart = null;
+let odinBattChart = null;
 
 const LIMITS = { 
   'aa-bias': { min: -5, max: 5, step: 0.1 }, 
@@ -777,7 +793,9 @@ const LIMITS = {
   'raw-out': { min: -25.0, max: 40.0, step: 0.1 },
   'raw-room': { min: 10.0, max: 35.0, step: 0.1 },
   'raw-delta': { min: 0.0, max: 10.0, step: 0.1 },
-  'raw-max-out': { min: 1.0, max: 20.0, step: 0.1 }
+  'raw-max-out': { min: 1.0, max: 20.0, step: 0.1 },
+  'batt-soc': { min: 0.0, max: 30.0, step: 0.1 },
+  'batt-max-dis': { min: 0.5, max: 15.0, step: 0.1 }
 };
 
 const STEP_EL = { 
@@ -792,7 +810,9 @@ const STEP_EL = {
   'flow-z1-sp': 'flow-z1-sp-val', 'flow-z2-sp': 'flow-z2-sp-val',
   'raw-heat': 'raw-heat-val', 'raw-elec': 'raw-elec-val', 'raw-run': 'raw-run-val',
   'raw-out': 'raw-out-val', 'raw-room': 'raw-room-val', 'raw-delta': 'raw-delta-val',
-  'raw-max-out': 'raw-max-out-val'
+  'raw-max-out': 'raw-max-out-val',
+  'batt-soc': 'batt-soc-val',
+  'batt-max-dis': 'batt-max-dis-val'
 };
 
 let lastGraphUpdate = 0;
@@ -1144,10 +1164,30 @@ function initCharts() {
           }
       }
   });
+
+  odinBattChart = new Chart(document.getElementById('odinBattChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+          labels: labels24,
+          datasets: [
+              { label: 'Battery Discharge (kWh)', data: [], backgroundColor: 'rgba(251, 191, 36, 0.45)', borderColor: '#fbbf24', borderWidth: 1, yAxisID: 'y' }
+          ]
+      },
+      options: {
+          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10}, usePointStyle: true } } },
+          scales: {
+              x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
+              y: { type: 'linear', display: true, position: 'left',
+                   title: { display: true, text: 'kWh', color: '#fbbf24' },
+                   ticks: { color: '#fbbf24' }, grid: { color: '#1e2d4a' }, min: 0 }
+          }
+      }
+  });
 }
 
 function updateOdinCharts() {
-    if (!odinConsChart || !odinTempChart) return;
+    if (!odinConsChart || !odinTempChart || !odinBattChart) return;
 
     // 1. Gather historical actuals securely
     const firstConsByHour = new Array(24).fill(null);
@@ -1186,6 +1226,7 @@ function updateOdinCharts() {
     const expCost = odinDataCache ? odinDataCache.expected_cost : new Array(24).fill(null);
     const expTax  = odinDataCache ? odinDataCache.expected_cost_with_tax : new Array(24).fill(null);
     const expTemp = odinDataCache ? odinDataCache.expected_begin_temp : new Array(24).fill(null);
+    const battDischarge = odinDataCache ? (odinDataCache.battery_discharge || new Array(24).fill(0)) : new Array(24).fill(0);
 
     // 3. Inject ALL data and refresh
     odinConsChart.data.datasets[0].data = expCons;
@@ -1197,6 +1238,9 @@ function updateOdinCharts() {
     odinTempChart.data.datasets[0].data = expTemp;
     odinTempChart.data.datasets[1].data = actualTempByHour;
     odinTempChart.update('none');
+
+    odinBattChart.data.datasets[0].data = battDischarge;
+    odinBattChart.update('none');
 }
 
 function updateCharts(d) {
@@ -1567,6 +1611,8 @@ function render(d) {
   seedPending('raw-room', d.raw_avg_room_temp);
   seedPending('raw-delta', d.raw_delta_room_temp);
   seedPending('raw-max-out', d.raw_max_output);
+  seedPending('batt-soc', d.battery_soc_kwh);
+  seedPending('batt-max-dis', d.battery_max_discharge_kw);
 
   // --- ANIMATIONS LOGIC ---
   const isRunning = d.status_compressor;
@@ -1755,6 +1801,8 @@ async function sendPhysics(btn) {
     if (hasChanged('raw-room'))  { await apiPost({ key: 'raw_avg_room_temp', value: pending['raw-room'] }); c++; }
     if (hasChanged('raw-delta')) { await apiPost({ key: 'raw_delta_room_temp', value: pending['raw-delta'] }); c++; }
     if (hasChanged('raw-max-out')) { await apiPost({ key: 'raw_max_output', value: pending['raw-max-out'] }); c++; }
+    if (hasChanged('batt-soc'))     { await apiPost({ key: 'battery_soc_kwh', value: pending['batt-soc'] }); c++; }
+    if (hasChanged('batt-max-dis')) { await apiPost({ key: 'battery_max_discharge_kw', value: pending['batt-max-dis'] }); c++; }
     showToast(c > 0 ? '✓ Physics Data updated' : 'No changes');
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');
@@ -1782,7 +1830,9 @@ async function runOdinSolver() {
             delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
             max_output: pending['raw-max-out'] || latestState.raw_max_output || 8.0,
             current_room_temp: latestState.z1_current_temp || 20.0,
-            current_hour: new Date().getHours()
+            current_hour: new Date().getHours(),
+            battery_soc_kwh: pending['batt-soc'] ?? latestState.battery_soc_kwh ?? 0.0,
+            battery_max_discharge_kw: pending['batt-max-dis'] ?? latestState.battery_max_discharge_kw ?? 3.0
         }
     };
 

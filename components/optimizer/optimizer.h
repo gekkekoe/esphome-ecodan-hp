@@ -93,6 +93,9 @@ namespace esphome
       esphome::number::Number *num_raw_delta_room_temp;
       esphome::number::Number *num_raw_max_output;
 
+      esphome::number::Number *num_battery_soc_kwh;
+      esphome::number::Number *num_battery_max_discharge_kw;
+
       uint32_t &lockout_expiration_timestamp;
     };
 

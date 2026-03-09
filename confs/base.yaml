@@ -673,3 +673,5 @@ binary_sensor:
       id: status_zone2_enabled
       internal: true
       name: zone 2 enabled
+
+<<: !include stats.yaml

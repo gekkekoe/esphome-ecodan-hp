@@ -134,6 +134,9 @@ struct DashboardSnapshot {
   NumData num_raw_delta_room_temp;
   NumData num_raw_max_output;
 
+  NumData num_battery_soc_kwh;
+  NumData num_battery_max_discharge_kw;
+
   char txt_solver_ip[32]{0};
 };
 
@@ -245,12 +248,15 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_raw_delta_room_temp(number::Number *n) { num_raw_delta_room_temp_ = n; }
   void set_num_raw_max_output(number::Number *n) { num_raw_max_output_ = n; }
 
+  void set_num_battery_soc_kwh(number::Number *n) { num_battery_soc_kwh_ = n; }
+  void set_num_battery_max_discharge_kw(number::Number *n) { num_battery_max_discharge_kw_ = n; }
+
   // AsyncWebHandler
   bool canHandle(AsyncWebServerRequest *request) const override;
   void handleRequest(AsyncWebServerRequest *request) override;
   bool isRequestHandlerTrivial() const override { return false; }
 
-  void store_odin_data(int current_hour, const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax);
+  void store_odin_data(int current_hour, const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax, const std::vector<float>& battery_discharge);
 
  protected:
   void handle_root_(AsyncWebServerRequest *request);
@@ -367,6 +373,9 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_raw_delta_room_temp_{nullptr};
   number::Number *num_raw_max_output_{nullptr};
 
+  number::Number *num_battery_soc_kwh_{nullptr};
+  number::Number *num_battery_max_discharge_kw_{nullptr};
+
 
 private:
   static const size_t MAX_HISTORY = 1440; // 24h, 1min interval
@@ -387,6 +396,7 @@ private:
   std::vector<float> odin_expected_temp_;
   std::vector<float> odin_cost_;
   std::vector<float> odin_cost_tax_;
+  std::vector<float> odin_battery_discharge_;
   bool odin_data_ready_{false};
 
   void record_history_();

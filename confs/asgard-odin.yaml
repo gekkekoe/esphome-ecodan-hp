@@ -16,9 +16,10 @@ script:
                   Content-Type: application/json
                   Connection: close
                 capture_response: true
+                max_response_buffer_size: 4096
                 
                 body: !lambda |-
-                  char payload[512];
+                  char payload[600];
                   
                   // Get the active index from your specific select component
                   int heating_idx = id(heating_system_type).active_index().value_or(0);
@@ -43,7 +44,9 @@ script:
                       "\"delta_room_temp\":%.2f,"
                       "\"max_output\":%.2f,"
                       "\"current_hour\":%d,"
-                      "\"current_room_temp\":%.2f"
+                      "\"current_room_temp\":%.2f,"
+                      "\"battery_soc_kwh\":%.2f,"
+                      "\"battery_max_discharge_kw\":%.2f"
                       "}}",
                       profile_str,
                       id(num_raw_heat_produced).state,
@@ -54,7 +57,9 @@ script:
                       id(num_raw_delta_room_temp).state,
                       id(num_raw_max_output).state,
                       id(optimizer_ptr)->get_current_ecodan_hour(),
-                      id(virtual_climate_z1).current_temperature
+                      id(virtual_climate_z1).current_temperature,
+                      id(num_battery_soc_kwh).state,
+                      id(num_battery_max_discharge_kw).state
                   );
                   return std::string(payload);
                 
@@ -64,7 +69,7 @@ script:
                         if (response->status_code == 200) {
                           esphome::json::parse_json(body, [](JsonObject root) {
                             if (root["success"].as<bool>()) {
-                              std::vector<float> sched, nrg, exp_t, cost, cost_tax;
+                              std::vector<float> sched, nrg, exp_t, cost, cost_tax, batt;
                               
                               // Extract arrays from JSON
                               JsonArray j_s = root["schedule"];
@@ -72,6 +77,7 @@ script:
                               JsonArray j_t = root["expected_begin_temp"];
                               JsonArray j_c = root["expected_cost"];
                               JsonArray j_ct = root["expected_cost_with_tax"];
+                              JsonArray j_b = root["battery_discharge"];
                               
                               for(int i = 0; i < 24; i++) {
                                 sched.push_back(j_s[i]);
@@ -79,12 +85,13 @@ script:
                                 exp_t.push_back(j_t[i]);
                                 cost.push_back(j_c[i]);
                                 cost_tax.push_back(j_ct[i]);
+                                batt.push_back(j_b ? j_b[i].as<float>() : 0.0f);
                               }
 
                               int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
                               // These calls now automatically handle the "Past vs Future" merge
                               id(optimizer_ptr)->store_odin_data(cur_hr, sched, nrg);
-                              id(asgard_dashboard_id)->store_odin_data(cur_hr, sched, nrg, exp_t, cost, cost_tax);
+                              id(asgard_dashboard_id)->store_odin_data(cur_hr, sched, nrg, exp_t, cost, cost_tax, batt);
                             }
                             return true;
                           });
