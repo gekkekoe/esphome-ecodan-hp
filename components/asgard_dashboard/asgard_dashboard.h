@@ -398,8 +398,13 @@ private:
   std::vector<float> odin_cost_tax_;
   std::vector<float> odin_battery_discharge_;
   bool odin_data_ready_{false};
+  int odin_stored_day_{-1};
+  bool odin_nvs_dirty_{false};
+  uint32_t odin_nvs_last_write_ms_{0};
 
   void record_history_();
+  void nvs_persist_odin_();
+  void nvs_load_odin_();
   void handle_history_request_(AsyncWebServerRequest *request);
   void handle_js_(AsyncWebServerRequest *request);
   void send_chunked_(AsyncWebServerRequest *request, const char *content_type, const uint8_t *data, size_t length, const char *cache_control);

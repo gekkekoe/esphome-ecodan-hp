@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <cstring>
 #include <cmath>
+#include "nvs_flash.h"
+#include "nvs.h"
 
 // #include "esp_system.h"
 // #include "esp_heap_caps.h"
@@ -21,6 +23,9 @@ void EcodanDashboard::setup() {
   
   action_lock_ = xSemaphoreCreateMutex();
   snapshot_mutex_ = xSemaphoreCreateMutex();
+
+  // Restore last-known ODIN arrays from flash so charts survive reboot
+  this->nvs_load_odin_();
 
   base_->init();
   base_->add_handler(this);
@@ -38,6 +43,16 @@ void EcodanDashboard::loop() {
   if (now - last_snapshot_time_ >= 1000 || last_snapshot_time_ == 0) {
     last_snapshot_time_ = now;
     update_snapshot_();
+  }
+
+  // Flush ODIN arrays to NVS if dirty, max once per 5 minutes
+  if (this->odin_nvs_dirty_) {
+    const uint32_t NVS_FLUSH_INTERVAL_MS = 5 * 60 * 1000;
+    if (this->odin_nvs_last_write_ms_ == 0 || (now - this->odin_nvs_last_write_ms_) >= NVS_FLUSH_INTERVAL_MS) {
+      this->nvs_persist_odin_();
+      this->odin_nvs_dirty_ = false;
+      this->odin_nvs_last_write_ms_ = now;
+    }
   }
 
   std::vector<DashboardAction> todo;
@@ -830,6 +845,94 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 }
 
 // solver
+// ---------------------------------------------------------------------------
+// NVS persistence for ODIN arrays
+// Namespace: "odin_cache"  Keys: "day", "sched", "energy", "exp_t",
+//            "cost", "cost_tax", "batt"  (each 24 floats = 96 bytes)
+// ---------------------------------------------------------------------------
+static const char* NVS_ODIN_NS = "odin_cache";
+
+void EcodanDashboard::nvs_persist_odin_() {
+    // Take snapshot of arrays under mutex, then write to NVS outside it
+    std::vector<float> sched, energy, exp_t, cost, cost_tax, batt;
+    int32_t day = -1;
+
+    if (this->snapshot_mutex_ != NULL && xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(200)) == pdTRUE) {
+        sched    = this->odin_schedule_;
+        energy   = this->odin_energy_;
+        exp_t    = this->odin_expected_temp_;
+        cost     = this->odin_cost_;
+        cost_tax = this->odin_cost_tax_;
+        batt     = this->odin_battery_discharge_;
+        day      = (int32_t)this->odin_stored_day_;
+        xSemaphoreGive(this->snapshot_mutex_);
+    } else {
+        ESP_LOGW(TAG, "NVS persist: failed to acquire snapshot mutex, skipping");
+        return;
+    }
+
+    nvs_handle_t h;
+    if (nvs_open(NVS_ODIN_NS, NVS_READWRITE, &h) != ESP_OK) {
+        ESP_LOGW(TAG, "NVS: failed to open odin_cache for write");
+        return;
+    }
+    nvs_set_i32(h, "day", day);
+
+    auto save_arr = [&](const char* key, const std::vector<float>& v) {
+        if (v.size() == 24)
+            nvs_set_blob(h, key, v.data(), 24 * sizeof(float));
+    };
+    save_arr("sched",    sched);
+    save_arr("energy",   energy);
+    save_arr("exp_t",    exp_t);
+    save_arr("cost",     cost);
+    save_arr("cost_tax", cost_tax);
+    save_arr("batt",     batt);
+
+    nvs_commit(h);
+    nvs_close(h);
+    ESP_LOGI(TAG, "NVS: ODIN arrays persisted (day=%d)", day);
+}
+
+// NOTE: called from setup() only, before HTTP server and other tasks start — no mutex needed.
+void EcodanDashboard::nvs_load_odin_() {
+    nvs_handle_t h;
+    if (nvs_open(NVS_ODIN_NS, NVS_READONLY, &h) != ESP_OK) {
+        ESP_LOGI(TAG, "NVS: no odin_cache found, starting fresh");
+        return;
+    }
+
+    int32_t stored_day = -1;
+    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK) {
+        nvs_close(h);
+        return;
+    }
+
+    auto load_arr = [&](const char* key, std::vector<float>& out) -> bool {
+        size_t len = 24 * sizeof(float);
+        out.resize(24);
+        return nvs_get_blob(h, key, out.data(), &len) == ESP_OK && len == 24 * sizeof(float);
+    };
+
+    bool ok = load_arr("sched",    this->odin_schedule_)
+           && load_arr("energy",   this->odin_energy_)
+           && load_arr("exp_t",    this->odin_expected_temp_)
+           && load_arr("cost",     this->odin_cost_)
+           && load_arr("cost_tax", this->odin_cost_tax_)
+           && load_arr("batt",     this->odin_battery_discharge_);
+
+    nvs_close(h);
+
+    if (ok) {
+        this->odin_stored_day_ = (int)stored_day;
+        this->odin_data_ready_ = true;
+        ESP_LOGI(TAG, "NVS: ODIN arrays restored from flash (day=%d)", stored_day);
+    } else {
+        ESP_LOGW(TAG, "NVS: ODIN cache incomplete, discarding");
+        this->odin_data_ready_ = false;
+    }
+}
+
 void EcodanDashboard::store_odin_data(int current_hour, const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax, const std::vector<float>& battery_discharge) {
     if (current_hour == -1) return;
 
@@ -851,6 +954,10 @@ void EcodanDashboard::store_odin_data(int current_hour, const std::vector<float>
           this->odin_battery_discharge_.resize(24, 0.0f);
 
           this->odin_data_ready_ = true;
+          // day-of-year for NVS: derive from ESPHome's current time
+          time_t now = ::time(nullptr);
+          struct tm t; localtime_r(&now, &t);
+          this->odin_stored_day_ = t.tm_yday;
         }
 
         if (current_hour < 0 || current_hour >= 24) {
@@ -869,6 +976,9 @@ void EcodanDashboard::store_odin_data(int current_hour, const std::vector<float>
         
         xSemaphoreGive(this->snapshot_mutex_);
         ESP_LOGI(TAG, "ODIN 24-hour arrays safely loaded into Dashboard UI memory.");
+
+        // Mark dirty — loop() will flush to NVS max once per 5 minutes
+        this->odin_nvs_dirty_ = true;
     } else {
         ESP_LOGW(TAG, "Failed to acquire snapshot mutex during ODIN store.");
     }
