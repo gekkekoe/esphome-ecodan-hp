@@ -10,7 +10,3 @@ asgard_dashboard:
   num_min_flow_temp_z2_id: minimum_heating_flow_temp_z2
   sel_room_temp_source_z2_id: temperature_feedback_source_z2
   num_hysteresis_z2_id: thermostat_hysteresis_z2
-
-  # ── Cooling Z2
-  num_cooling_smart_start_z2_id:     cooling_smart_start_temp_z2
-  num_min_cooling_flow_z2_id:        minimum_cooling_flow_temp_z2
