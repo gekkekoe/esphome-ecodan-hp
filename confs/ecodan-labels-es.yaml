@@ -169,3 +169,14 @@ substitutions:
   solver_kwh_meter_feedback: "Retroalimentación kWh"
 
   asgard_vt_temp_sensor_source: 'Fuente Termostato Virtual'
+
+  sw_use_solver: "Habilitar solucionador de costos dinámicos"
+  bin_solver_connected: "Estado en línea del solucionador"
+  num_raw_heat_produced: "Calor bruto producido (kWh)"
+  num_raw_elec_consumed: "Electricidad bruta consumida (kWh)"
+  num_raw_runtime_hours: "Tiempo de ejecución bruto (Horas)"
+  num_raw_avg_outside_temp: "Temp. ext. promedio bruta (°C)"
+  num_raw_avg_room_temp: "Temp. ambiente promedio bruta (°C)"
+  num_raw_delta_room_temp: "Delta temp. ambiente bruta (°C)"
+  num_battery_soc_kwh: "Estado de carga de la batería (kWh)"
+  num_battery_max_discharge_kw: "Descarga máx. de la batería (kW)"

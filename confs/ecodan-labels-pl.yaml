@@ -168,3 +168,14 @@ substitutions:
   solver_kwh_meter_feedback: "Sprzężenie zwrotne licznika"
 
   asgard_vt_temp_sensor_source: 'Źródło Wirtualnego Termostatu'
+
+  sw_use_solver: "Włącz dynamiczny kalkulator kosztów"
+  bin_solver_connected: "Status online kalkulatora"
+  num_raw_heat_produced: "Surowe wyprodukowane ciepło (kWh)"
+  num_raw_elec_consumed: "Surowe zużycie prądu (kWh)"
+  num_raw_runtime_hours: "Surowy czas pracy (Godziny)"
+  num_raw_avg_outside_temp: "Surowa śr. temp. na zewnątrz (°C)"
+  num_raw_avg_room_temp: "Surowa śr. temp. w pomieszczeniu (°C)"
+  num_raw_delta_room_temp: "Surowa delta temp. w pomieszczeniu (°C)"
+  num_battery_soc_kwh: "Stan naładowania baterii (kWh)"
+  num_battery_max_discharge_kw: "Maks. rozładowanie baterii (kW)"

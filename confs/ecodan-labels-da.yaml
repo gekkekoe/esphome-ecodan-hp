@@ -168,3 +168,14 @@ substitutions:
   solver_kwh_meter_feedback: kWh meter feedback
 
   asgard_vt_temp_sensor_source: 'Kilde Virtuel Termostat'
+
+  sw_use_solver: "Aktivér dynamisk omkostningsberegner"
+  bin_solver_connected: "Beregner online status"
+  num_raw_heat_produced: "Rå produceret varme (kWh)"
+  num_raw_elec_consumed: "Rå forbrugt strøm (kWh)"
+  num_raw_runtime_hours: "Rå driftstid (Timer)"
+  num_raw_avg_outside_temp: "Rå gns. udendørstemp. (°C)"
+  num_raw_avg_room_temp: "Rå gns. rumtemp. (°C)"
+  num_raw_delta_room_temp: "Rå delta rumtemp. (°C)"
+  num_battery_soc_kwh: "Batteri SoC (kWh)"
+  num_battery_max_discharge_kw: "Maks. batteriafladning (kW)"

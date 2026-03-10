@@ -168,3 +168,14 @@ substitutions:
   solver_kwh_meter_feedback: kWh meter feedback
 
   asgard_vt_temp_sensor_source: 'Quelle Virtuelles Thermostat'
+
+  sw_use_solver: "Dynamischen Kosten-Solver aktivieren"
+  bin_solver_connected: "Solver Online-Status"
+  num_raw_heat_produced: "Rohwert Erzeugte Wärme (kWh)"
+  num_raw_elec_consumed: "Rohwert Stromverbrauch (kWh)"
+  num_raw_runtime_hours: "Rohwert Laufzeit (Stunden)"
+  num_raw_avg_outside_temp: "Rohwert Durchschn. Außentemp. (°C)"
+  num_raw_avg_room_temp: "Rohwert Durchschn. Raumtemp. (°C)"
+  num_raw_delta_room_temp: "Rohwert Delta Raumtemp. (°C)"
+  num_battery_soc_kwh: "Batterie-Ladezustand (kWh)"
+  num_battery_max_discharge_kw: "Max. Batterieentladung (kW)"

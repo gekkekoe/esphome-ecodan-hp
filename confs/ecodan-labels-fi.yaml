@@ -169,3 +169,14 @@ substitutions:
   solver_kwh_meter_feedback: "kWh-mittarin palaute"
 
   asgard_vt_temp_sensor_source: 'Virtuaalisen Termostaatin Lähde'
+
+  sw_use_solver: "Ota käyttöön dynaaminen kustannusratkaisija"
+  bin_solver_connected: "Ratkaisijan online-tila"
+  num_raw_heat_produced: "Raaka tuotettu lämpö (kWh)"
+  num_raw_elec_consumed: "Raaka kulutettu sähkö (kWh)"
+  num_raw_runtime_hours: "Raaka käyntiaika (Tuntia)"
+  num_raw_avg_outside_temp: "Raaka keskim. ulkolämpötila (°C)"
+  num_raw_avg_room_temp: "Raaka keskim. huonelämpötila (°C)"
+  num_raw_delta_room_temp: "Raaka huonelämpötilan delta (°C)"
+  num_battery_soc_kwh: "Akun varaustila (kWh)"
+  num_battery_max_discharge_kw: "Akun maksimipurkaus (kW)"

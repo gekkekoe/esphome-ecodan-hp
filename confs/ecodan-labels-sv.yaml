@@ -169,3 +169,14 @@ substitutions:
   solver_kwh_meter_feedback: "kWh-mätare återkoppling"
 
   asgard_vt_temp_sensor_source: 'Källa Virtuell Termostat'
+
+  sw_use_solver: "Aktivera dynamisk kostnadsberäknare"
+  bin_solver_connected: "Beräknare onlinestatus"
+  num_raw_heat_produced: "Rå producerad värme (kWh)"
+  num_raw_elec_consumed: "Rå förbrukad el (kWh)"
+  num_raw_runtime_hours: "Rå drifttid (Timmar)"
+  num_raw_avg_outside_temp: "Rå genomsnittlig utetemp. (°C)"
+  num_raw_avg_room_temp: "Rå genomsnittlig rumstemp. (°C)"
+  num_raw_delta_room_temp: "Rå delta rumstemp. (°C)"
+  num_battery_soc_kwh: "Batteri SoC (kWh)"
+  num_battery_max_discharge_kw: "Max. batteriurladdning (kW)"

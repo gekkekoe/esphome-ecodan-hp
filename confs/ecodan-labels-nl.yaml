@@ -169,3 +169,14 @@ substitutions:
   solver_kwh_meter_feedback: "kWh-meter terugkoppeling"
 
   asgard_vt_temp_sensor_source: 'Bron Virtuele Thermostaat'
+
+  sw_use_solver: "Activeer Dynamische Kosten Solver"
+  bin_solver_connected: "Solver Online Status"
+  num_raw_heat_produced: "Ruwe Geproduceerde Warmte (kWh)"
+  num_raw_elec_consumed: "Ruw Stroomverbruik (kWh)"
+  num_raw_runtime_hours: "Ruwe Draaitijd (Uren)"
+  num_raw_avg_outside_temp: "Ruwe Gem. Buitentemperatuur (°C)"
+  num_raw_avg_room_temp: "Ruwe Gem. Kamertemperatuur (°C)"
+  num_raw_delta_room_temp: "Ruwe Delta Kamertemperatuur (°C)"
+  num_battery_soc_kwh: "Batterij SoC (kWh)"
+  num_battery_max_discharge_kw: "Max. Batterijontlading (kW)"
