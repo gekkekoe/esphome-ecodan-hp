@@ -88,10 +88,11 @@ script:
                                 batt.push_back(j_b ? j_b[i].as<float>() : 0.0f);
                               }
 
-                              int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
+                              int cur_hr  = id(optimizer_ptr)->get_current_ecodan_hour();
+                              int cur_day = id(optimizer_ptr)->get_current_ecodan_day();
                               // These calls now automatically handle the "Past vs Future" merge
                               id(optimizer_ptr)->store_odin_data(cur_hr, sched, nrg);
-                              id(asgard_dashboard_id)->store_odin_data(cur_hr, sched, nrg, exp_t, cost, cost_tax, batt);
+                              id(asgard_dashboard_id)->store_odin_data(cur_hr, cur_day, sched, nrg, exp_t, cost, cost_tax, batt);
                             }
                             return true;
                           });

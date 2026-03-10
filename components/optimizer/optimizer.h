@@ -96,6 +96,9 @@ namespace esphome
       esphome::number::Number *num_battery_soc_kwh;
       esphome::number::Number *num_battery_max_discharge_kw;
 
+      esphome::switch_::Switch *demand_switch_z1{nullptr};
+      esphome::switch_::Switch *demand_switch_z2{nullptr};
+
       uint32_t &lockout_expiration_timestamp;
     };
 
@@ -170,6 +173,10 @@ namespace esphome
       bool odin_data_ready_{false};
       SemaphoreHandle_t odin_mutex_ = NULL;
 
+      // solver soft-stop state (relay-based, no Ecodan protocol impact)
+      int  solver_stop_hour_{-1};
+      bool solver_stop_active_{false};
+
       void process_adaptive_zone_(
           std::size_t i,
           const ecodan::Status &status,
@@ -206,6 +213,7 @@ namespace esphome
 
       // stats
       void update_learning_model(int day_of_year);
+      void apply_solver_soft_stop(bool should_stop);
 
     public:
       Optimizer(OptimizerState state);
@@ -232,6 +240,7 @@ namespace esphome
 
       // solver
       int get_current_ecodan_hour();
+      int get_current_ecodan_day();
       bool has_old_odin_data() { return odin_data_ready_ && odin_schedule_.size() == 24; }
       void store_odin_data(int current_hour, const std::vector<float>& sched, const std::vector<float>& energy);
       bool check_and_clear_odin_fetch_request() {

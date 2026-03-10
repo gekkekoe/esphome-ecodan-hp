@@ -44,6 +44,8 @@ esphome:
             ${z2_cpp_prefix} state.z2_feed_temp = id(z2_feed_temp);
             ${asgard_prefix} state.asgard_vt_z1 = id(virtual_climate_z1);
             ${asgard_prefix} ${z2_cpp_prefix} state.asgard_vt_z2 = id(virtual_climate_z2);
+            ${asgard_prefix} state.demand_switch_z1 = id(demand_switch_z1);
+            ${asgard_prefix} ${z2_cpp_prefix} state.demand_switch_z2 = id(demand_switch_z2);
 
             state.heating_system_type = id(heating_system_type);
             state.temperature_feedback_source_z1 = id(temperature_feedback_source_z1);

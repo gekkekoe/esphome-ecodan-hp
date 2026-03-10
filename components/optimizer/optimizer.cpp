@@ -228,14 +228,14 @@ namespace esphome
                     
                     if (this->odin_data_ready_ && !this->odin_schedule_.empty() && !this->odin_energy_.empty()) {
                         auto &status = this->state_.ecodan_instance->get_status();
-                        int current_day = status.ControllerDateTime.tm_yday;
-                        int current_hour = status.ControllerDateTime.tm_hour;
+                        int current_day = this->get_current_ecodan_day();
+                        int current_hour = this->get_current_ecodan_hour();
 
-                        // 1. Instantly expire the data if the day rolls over and a new fetch hasn't completed
+                        // expire the data if the day rolls over and a new fetch hasn't completed
                         if (current_day != this->odin_data_day_) {
-                            this->odin_data_ready_ = false; 
+                            this->odin_data_ready_ = false;
+                            apply_solver_soft_stop(false); 
                         }
-                        // 2. Map the array index flawlessly to the physical hour of the day
                         else if (current_hour >= 0 && current_hour < 24) {
                             float odin_target = this->odin_schedule_[current_hour];
                             float odin_energy = this->odin_energy_[current_hour];
@@ -243,9 +243,9 @@ namespace esphome
                             solver_heating_off = (odin_energy < 0.05f);
 
                             if (solver_heating_off) {
-                                // Soft stop: Force a massive negative bias to close the flow safely
+                                apply_solver_soft_stop(true);
                             } else if (!std::isnan(odin_target)) {
-                                // Correct math: Odin Target - Base Target = Required Bias
+                                apply_solver_soft_stop(false); 
                                 solver_bias = odin_target - room_target_temp;
                             }
                         }
@@ -253,6 +253,11 @@ namespace esphome
                     xSemaphoreGive(this->odin_mutex_);
                 }
             }
+
+            // Soft stop active for this hour — relay is off, thermostat is OFF.
+            // Skip all flow temp calculations; nothing to drive.
+            if (solver_heating_off)
+                return;
 
             auto temp_feedback_source =  (i == 0) ? this->state_.temperature_feedback_source_z1->active_index().value_or(0)
                 : this->state_.temperature_feedback_source_z2->active_index().value_or(0);
@@ -602,7 +607,7 @@ namespace esphome
 
                     // Lock the data to the heat pump's current day
                     auto &status = this->state_.ecodan_instance->get_status();
-                    this->odin_data_day_ = status.ControllerDateTime.tm_yday;
+                    this->odin_data_day_ = this->get_current_ecodan_day();
                     this->odin_data_ready_ = true;
                 }
 
@@ -624,13 +629,86 @@ namespace esphome
 
         int Optimizer::get_current_ecodan_hour() {
           if (this->state_.ecodan_instance == nullptr) return 0;
-          
           time_t ts = this->state_.ecodan_instance->get_status().timestamp();
           if (ts == -1) return 0;
-
           struct tm timeinfo;
-          gmtime_r(&ts, &timeinfo);           
+          gmtime_r(&ts, &timeinfo);
           return timeinfo.tm_hour;
         }
+
+        int Optimizer::get_current_ecodan_day() {
+          if (this->state_.ecodan_instance == nullptr) return 0;
+          time_t ts = this->state_.ecodan_instance->get_status().timestamp();
+          if (ts == -1) return 0;
+          struct tm timeinfo;
+          gmtime_r(&ts, &timeinfo);
+          return timeinfo.tm_yday;
+        }
+
+        void Optimizer::apply_solver_soft_stop(bool should_stop) {
+            auto &status = this->state_.ecodan_instance->get_status();
+
+            if (status.DefrostActive ||
+                this->state_.status_short_cycle_lockout->state ||
+                this->is_dhw_active(status)) {
+                return;
+            }
+
+            int current_hour = this->get_current_ecodan_hour();
+            auto *relay_z1 = this->state_.demand_switch_z1;
+            auto *relay_z2 = this->state_.demand_switch_z2;
+
+            if (should_stop) {
+                if (this->solver_stop_active_ && this->solver_stop_hour_ == current_hour)
+                    return;
+
+                if (relay_z1 == nullptr) {
+                    ESP_LOGW(OPTIMIZER_TAG, "Solver soft-stop: demand_switch_z1 not wired");
+                    return;
+                }
+
+                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: ODIN 0 kWh for hour %d — cutting relay", current_hour);
+
+                if (this->state_.asgard_vt_z1 != nullptr) {
+                    auto call = this->state_.asgard_vt_z1->make_call();
+                    call.set_mode("off");
+                    call.perform();
+                }
+                if (relay_z2 != nullptr && this->state_.asgard_vt_z2 != nullptr) {
+                    auto call = this->state_.asgard_vt_z2->make_call();
+                    call.set_mode("off");
+                    call.perform();
+                }
+
+                relay_z1->turn_off();
+                if (relay_z2 != nullptr)
+                    relay_z2->turn_off();
+
+                this->solver_stop_active_ = true;
+                this->solver_stop_hour_   = current_hour;
+
+            } else {
+                if (!this->solver_stop_active_)
+                    return;
+
+                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: lifting relay stop (was hour %d, now hour %d)",
+                         this->solver_stop_hour_, current_hour);
+
+                if (this->state_.asgard_vt_z1 != nullptr) {
+                    auto call = this->state_.asgard_vt_z1->make_call();
+                    call.set_mode("heat");
+                    call.perform();
+                }
+                if (relay_z2 != nullptr && this->state_.asgard_vt_z2 != nullptr) {
+                    auto call = this->state_.asgard_vt_z2->make_call();
+                    call.set_mode("heat");
+                    call.perform();
+                }
+
+                this->solver_stop_active_ = false;
+                this->solver_stop_hour_   = -1;
+            }
+        }
+
     } // namespace optimizer
 } // namespace esphome

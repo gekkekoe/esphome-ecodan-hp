@@ -67,8 +67,8 @@ namespace esphome
                 }
             }
 
-            int current_day = status.ControllerDateTime.tm_yday;
-            int current_hour = status.ControllerDateTime.tm_hour;
+            int current_day = this->get_current_ecodan_day();
+            int current_hour = this->get_current_ecodan_hour();
             // Initialize on boot to prevent jump
             if (this->last_processed_day_ == -1) {
                 this->last_processed_day_ = current_day;

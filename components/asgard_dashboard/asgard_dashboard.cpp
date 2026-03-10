@@ -933,7 +933,7 @@ void EcodanDashboard::nvs_load_odin_() {
     }
 }
 
-void EcodanDashboard::store_odin_data(int current_hour, const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax, const std::vector<float>& battery_discharge) {
+void EcodanDashboard::store_odin_data(int current_hour, int current_day, const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax, const std::vector<float>& battery_discharge) {
     if (current_hour == -1) return;
 
     if (this->snapshot_mutex_ != NULL && xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
@@ -954,10 +954,7 @@ void EcodanDashboard::store_odin_data(int current_hour, const std::vector<float>
           this->odin_battery_discharge_.resize(24, 0.0f);
 
           this->odin_data_ready_ = true;
-          // day-of-year for NVS: derive from ESPHome's current time
-          time_t now = ::time(nullptr);
-          struct tm t; localtime_r(&now, &t);
-          this->odin_stored_day_ = t.tm_yday;
+          this->odin_stored_day_ = current_day; 
         }
 
         if (current_hour < 0 || current_hour >= 24) {
