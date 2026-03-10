@@ -98,3 +98,7 @@ asgard_dashboard:
   num_battery_max_discharge_kw_id:   num_battery_max_discharge_kw
   solver_kwh_meter_feedback_source_id: solver_kwh_meter_feedback_source
   solver_kwh_meter_feedback_id: solver_kwh_meter_feedback
+
+# ── Cooling Z1
+  num_cooling_smart_start_z1_id:     cooling_smart_start_temp
+  num_min_cooling_flow_z1_id:        minimum_cooling_flow_temp

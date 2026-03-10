@@ -100,6 +100,12 @@ struct DashboardSnapshot {
   NumData pred_sc_time;
   NumData pred_sc_delta;
 
+  // cooling settings
+  NumData num_cooling_smart_start_z1;
+  NumData num_min_cooling_flow_z1;
+  NumData num_cooling_smart_start_z2;
+  NumData num_min_cooling_flow_z2;
+
   // Climate data
   struct ClimData { float curr{NAN}; float tar{NAN}; int action{-1}; int mode{-1}; };
   ClimData virt_z1;
@@ -219,6 +225,12 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_hysteresis_z2(number::Number *n)               { num_hysteresis_z2_ = n; }
   void set_pred_sc_time(number::Number *n)                    { pred_sc_time_ = n; }
   void set_pred_sc_delta(number::Number *n)                   { pred_sc_delta_ = n; }
+
+  // Cooling Settings (Numbers)
+  void set_num_cooling_smart_start_z1(number::Number *n)      { num_cooling_smart_start_z1_ = n; }
+  void set_num_min_cooling_flow_z1(number::Number *n)         { num_min_cooling_flow_z1_ = n; }
+  void set_num_cooling_smart_start_z2(number::Number *n)      { num_cooling_smart_start_z2_ = n; }
+  void set_num_min_cooling_flow_z2(number::Number *n)         { num_min_cooling_flow_z2_ = n; }
 
   // Climate
   void set_dhw_climate(climate::Climate *c)                   { dhw_climate_ = c; }
@@ -345,6 +357,12 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_hysteresis_z2_{nullptr};
   number::Number *pred_sc_time_{nullptr};
   number::Number *pred_sc_delta_{nullptr};
+
+  // cooling settings
+  number::Number *num_cooling_smart_start_z1_{nullptr};
+  number::Number *num_min_cooling_flow_z1_{nullptr};
+  number::Number *num_cooling_smart_start_z2_{nullptr};
+  number::Number *num_min_cooling_flow_z2_{nullptr};
 
   // Climate
   climate::Climate *dhw_climate_{nullptr};

@@ -563,14 +563,30 @@ header {
 
         <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Settings Z1</div>
         <div class="ctrl-row"><span class="ctrl-label">Room Temp Source Z1</span><select class="ctrl-select" id="sel-z1src" onchange="sendSelect('room_temp_source_z1', this)"><option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option></select></div>
-        <div class="ctrl-row"><span class="ctrl-label">Max Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -0.1)">−</button><div class="step-val" id="aa-max-val">—</div><button class="step-btn" onclick="step('aa-max', +0.1)">+</button></div></div>
-        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -0.1)">−</button><div class="step-val" id="aa-min-val">—</div><button class="step-btn" onclick="step('aa-min', +0.1)">+</button></div></div>
+        
+        <div id="heat-settings-z1">
+          <div class="ctrl-row"><span class="ctrl-label">Max Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -0.1)">−</button><div class="step-val" id="aa-max-val">—</div><button class="step-btn" onclick="step('aa-max', +0.1)">+</button></div></div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -0.1)">−</button><div class="step-val" id="aa-min-val">—</div><button class="step-btn" onclick="step('aa-min', +0.1)">+</button></div></div>
+        </div>
+
+        <div id="cool-settings-z1" style="display:none;">
+          <div class="ctrl-row"><span class="ctrl-label">Smart Start Temp Z1</span><div class="stepper"><button class="step-btn" onclick="step('cool-start-z1', -0.5)">−</button><div class="step-val" id="cool-start-z1-val">—</div><button class="step-btn" onclick="step('cool-start-z1', +0.5)">+</button></div></div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Cool Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('cool-min-z1', -0.5)">−</button><div class="step-val" id="cool-min-z1-val">—</div><button class="step-btn" onclick="step('cool-min-z1', +0.5)">+</button></div></div>
+        </div>
         
         <div id="aa-z2-container" style="display:none;">
           <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Settings Z2</div>
           <div class="ctrl-row" id="row-z2src"><span class="ctrl-label">Room Temp Source Z2</span><select class="ctrl-select" id="sel-z2src" onchange="sendSelect('room_temp_source_z2', this)"><option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option></select></div>
-          <div class="ctrl-row"><span class="ctrl-label">Max Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><div class="step-val" id="aa-max-z2-val">—</div><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
-          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><div class="step-val" id="aa-min-z2-val">—</div><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
+          
+          <div id="heat-settings-z2">
+            <div class="ctrl-row"><span class="ctrl-label">Max Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><div class="step-val" id="aa-max-z2-val">—</div><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
+            <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><div class="step-val" id="aa-min-z2-val">—</div><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
+          </div>
+
+          <div id="cool-settings-z2" style="display:none;">
+            <div class="ctrl-row"><span class="ctrl-label">Smart Start Temp Z2</span><div class="stepper"><button class="step-btn" onclick="step('cool-start-z2', -0.5)">−</button><div class="step-val" id="cool-start-z2-val">—</div><button class="step-btn" onclick="step('cool-start-z2', +0.5)">+</button></div></div>
+            <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Cool Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('cool-min-z2', -0.5)">−</button><div class="step-val" id="cool-min-z2-val">—</div><button class="step-btn" onclick="step('cool-min-z2', +0.5)">+</button></div></div>
+          </div>
         </div>
 
         <button class="send-btn" onclick="sendAA(this)" style="margin-bottom:0; margin-top:24px;">Apply Auto Adaptive</button>
@@ -766,7 +782,9 @@ const pending = {
   'flow-z1-sp': null, 'flow-z2-sp': null,
   'raw-heat': null, 'raw-elec': null, 'raw-run': null,
   'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-max-out': null,
-  'batt-soc': null, 'batt-max-dis': null
+  'batt-soc': null, 'batt-max-dis': null,
+  'cool-start-z1': null, 'cool-min-z1': null,
+  'cool-start-z2': null, 'cool-min-z2': null
 };
 
 const lastEdit = {};
@@ -801,7 +819,11 @@ const LIMITS = {
   'raw-delta': { min: 0.0, max: 10.0, step: 0.1 },
   'raw-max-out': { min: 1.0, max: 20.0, step: 0.1 },
   'batt-soc': { min: 0.0, max: 30.0, step: 0.1 },
-  'batt-max-dis': { min: 0.5, max: 15.0, step: 0.1 }
+  'batt-max-dis': { min: 0.5, max: 15.0, step: 0.1 },
+  'cool-start-z1': { min: 16.0, max: 22.0, step: 0.5 },
+  'cool-min-z1':   { min: 10.0, max: 25.0, step: 0.5 },
+  'cool-start-z2': { min: 16.0, max: 22.0, step: 0.5 },
+  'cool-min-z2':   { min: 10.0, max: 25.0, step: 0.5 }
 };
 
 const STEP_EL = { 
@@ -818,7 +840,9 @@ const STEP_EL = {
   'raw-out': 'raw-out-val', 'raw-room': 'raw-room-val', 'raw-delta': 'raw-delta-val',
   'raw-max-out': 'raw-max-out-val',
   'batt-soc': 'batt-soc-val',
-  'batt-max-dis': 'batt-max-dis-val'
+  'batt-max-dis': 'batt-max-dis-val',
+  'cool-start-z1': 'cool-start-z1-val', 'cool-min-z1': 'cool-min-z1-val',
+  'cool-start-z2': 'cool-start-z2-val', 'cool-min-z2': 'cool-min-z2-val'
 };
 
 let lastGraphUpdate = 0;
@@ -1446,6 +1470,22 @@ function updateDot(id, action) {
   }
 }
 
+function toggleCoolingUI() {
+  const modeZ1 = document.getElementById('sel-z1mode')?.selectedIndex;
+  const z1IsCooling = (modeZ1 === 3 || modeZ1 === 4 || modeZ1 === 6);
+  const h1 = document.getElementById('heat-settings-z1');
+  const c1 = document.getElementById('cool-settings-z1');
+  if (h1) h1.style.display = z1IsCooling ? 'none' : 'block';
+  if (c1) c1.style.display = z1IsCooling ? 'block' : 'none';
+  
+  const modeZ2 = document.getElementById('sel-z2mode')?.selectedIndex;
+  const z2IsCooling = (modeZ2 === 3 || modeZ2 === 4 || modeZ2 === 6);
+  const h2 = document.getElementById('heat-settings-z2');
+  const c2 = document.getElementById('cool-settings-z2');
+  if (h2) h2.style.display = z2IsCooling ? 'none' : 'block';
+  if (c2) c2.style.display = z2IsCooling ? 'block' : 'none';
+}
+
 function render(d) {
   const isZ2 = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
 
@@ -1596,6 +1636,21 @@ function render(d) {
   updateDot('dot-z2', d.z2_action);
   updateDot('dot-room-z2', d.room_z2_action);
 
+  // cooling settings
+  if (d.cool_smart_z1_lim) { LIMITS['cool-start-z1'].min = d.cool_smart_z1_lim.min; LIMITS['cool-start-z1'].max = d.cool_smart_z1_lim.max; LIMITS['cool-start-z1'].step = d.cool_smart_z1_lim.step || 0.5; }
+  if (d.min_cool_flow_z1_lim) { LIMITS['cool-min-z1'].min = d.min_cool_flow_z1_lim.min; LIMITS['cool-min-z1'].max = d.min_cool_flow_z1_lim.max; LIMITS['cool-min-z1'].step = d.min_cool_flow_z1_lim.step || 0.5; }
+  
+  if (d.cool_smart_z2_lim) { LIMITS['cool-start-z2'].min = d.cool_smart_z2_lim.min; LIMITS['cool-start-z2'].max = d.cool_smart_z2_lim.max; LIMITS['cool-start-z2'].step = d.cool_smart_z2_lim.step || 0.5; }
+  if (d.min_cool_flow_z2_lim) { LIMITS['cool-min-z2'].min = d.min_cool_flow_z2_lim.min; LIMITS['cool-min-z2'].max = d.min_cool_flow_z2_lim.max; LIMITS['cool-min-z2'].step = d.min_cool_flow_z2_lim.step || 0.5; }
+
+  seedPending('cool-start-z1', d.cooling_smart_start_z1);
+  seedPending('cool-min-z1', d.minimum_cooling_flow_z1);
+  seedPending('cool-start-z2', d.cooling_smart_start_z2);
+  seedPending('cool-min-z2', d.minimum_cooling_flow_z2);
+
+  // toggle show/hide based on settings
+  toggleCoolingUI();
+
 // --- SOLVER & PHYSICS UPDATES ---
   setToggle('sw-solver', d.use_dynamic_cost_solver);
 
@@ -1721,6 +1776,9 @@ async function sendSwitch(key, val) {
 }
 
 async function sendSelect(key, el) {
+  // toggle show/hide options based on operating modes
+  if (key === 'operating_mode_z1' || key === 'operating_mode_z2') toggleCoolingUI();
+
   try { await apiPost({ key, value: parseInt(el.selectedIndex) }); showToast('✓ ' + key); } 
   catch(e) { showToast('✗ ' + e.message, true); }
 }
@@ -1734,6 +1792,13 @@ async function sendAA(btn) {
     if (hasChanged('aa-min'))    { await apiPost({ key: 'minimum_heating_flow_temp', value: pending['aa-min'] }); c++; }
     if (hasChanged('aa-max-z2')) { await apiPost({ key: 'maximum_heating_flow_temp_z2', value: pending['aa-max-z2'] }); c++; }
     if (hasChanged('aa-min-z2')) { await apiPost({ key: 'minimum_heating_flow_temp_z2', value: pending['aa-min-z2'] }); c++; }
+    
+    // Nieuwe velden
+    if (hasChanged('cool-start-z1')) { await apiPost({ key: 'cooling_smart_start_z1', value: pending['cool-start-z1'] }); c++; }
+    if (hasChanged('cool-min-z1'))   { await apiPost({ key: 'minimum_cooling_flow_z1', value: pending['cool-min-z1'] }); c++; }
+    if (hasChanged('cool-start-z2')) { await apiPost({ key: 'cooling_smart_start_z2', value: pending['cool-start-z2'] }); c++; }
+    if (hasChanged('cool-min-z2'))   { await apiPost({ key: 'minimum_cooling_flow_z2', value: pending['cool-min-z2'] }); c++; }
+
     if (hasChanged('psc-win'))   { await apiPost({ key: 'predictive_short_cycle_high_delta_time_window', value: pending['psc-win'] }); c++; }
     if (hasChanged('psc-delta')) { await apiPost({ key: 'predictive_short_cycle_high_delta_threshold', value: pending['psc-delta'] }); c++; }
     showToast(c > 0 ? '✓ Auto Adaptive updated' : 'No changes');

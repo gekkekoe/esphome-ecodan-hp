@@ -91,6 +91,10 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("solver_kwh_meter_feedback_id"):       cv.use_id(number.Number),
         cv.Optional("num_battery_soc_kwh_id"):             cv.use_id(number.Number),
         cv.Optional("num_battery_max_discharge_kw_id"):    cv.use_id(number.Number),
+        cv.Optional("num_cooling_smart_start_z1_id"):      cv.use_id(number.Number),
+        cv.Optional("num_min_cooling_flow_z1_id"):         cv.use_id(number.Number),
+        cv.Optional("num_cooling_smart_start_z2_id"):      cv.use_id(number.Number),
+        cv.Optional("num_min_cooling_flow_z2_id"):         cv.use_id(number.Number),
 
         cv.Optional("dhw_climate_id"):                     cv.use_id(climate.Climate),
         cv.Optional("virtual_climate_z1_id"):              cv.use_id(climate.Climate),
@@ -203,6 +207,10 @@ async def to_code(config):
         ("solver_kwh_meter_feedback_id", "set_solver_kwh_meter_feedback"),
         ("num_battery_soc_kwh_id",            "set_num_battery_soc_kwh"),
         ("num_battery_max_discharge_kw_id",   "set_num_battery_max_discharge_kw"),
+        ("num_cooling_smart_start_z1_id",     "set_num_cooling_smart_start_z1"),
+        ("num_min_cooling_flow_z1_id",        "set_num_min_cooling_flow_z1"),
+        ("num_cooling_smart_start_z2_id",     "set_num_cooling_smart_start_z2"),
+        ("num_min_cooling_flow_z2_id",        "set_num_min_cooling_flow_z2"),
     ]
 
     for conf_key, setter in pairs:
