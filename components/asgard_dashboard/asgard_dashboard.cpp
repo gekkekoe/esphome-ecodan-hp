@@ -26,6 +26,7 @@ void EcodanDashboard::setup() {
 
   // Restore last-known ODIN arrays from flash so charts survive reboot
   this->nvs_load_odin_();
+  this->odin_nvs_last_write_ms_ = millis();
 
   base_->init();
   base_->add_handler(this);
@@ -45,9 +46,9 @@ void EcodanDashboard::loop() {
     update_snapshot_();
   }
 
-  // Flush ODIN arrays to NVS if dirty, max once per 5 minutes
+  // Flush ODIN arrays to NVS if dirty, max once per 10 minutes
   if (this->odin_nvs_dirty_) {
-    const uint32_t NVS_FLUSH_INTERVAL_MS = 5 * 60 * 1000;
+    const uint32_t NVS_FLUSH_INTERVAL_MS = 10 * 60 * 1000;
     if (this->odin_nvs_last_write_ms_ == 0 || (now - this->odin_nvs_last_write_ms_) >= NVS_FLUSH_INTERVAL_MS) {
       this->nvs_persist_odin_();
       this->odin_nvs_dirty_ = false;
@@ -853,7 +854,6 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 static const char* NVS_ODIN_NS = "odin_cache";
 
 void EcodanDashboard::nvs_persist_odin_() {
-    // Take snapshot of arrays under mutex, then write to NVS outside it
     std::vector<float> sched, energy, exp_t, cost, cost_tax, batt;
     int32_t day = -1;
 
@@ -876,12 +876,43 @@ void EcodanDashboard::nvs_persist_odin_() {
         ESP_LOGW(TAG, "NVS: failed to open odin_cache for write");
         return;
     }
-    nvs_set_i32(h, "day", day);
+
+    bool has_changes = false;
+
+    // Check if day changed
+    int32_t stored_day = -1;
+    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK || stored_day != day) {
+        nvs_set_i32(h, "day", day);
+        has_changes = true;
+    }
 
     auto save_arr = [&](const char* key, const std::vector<float>& v) {
-        if (v.size() == 24)
+        if (v.size() != 24) return;
+        
+        size_t required_size = 0;
+        bool needs_write = true;
+        
+        // Check if blob exists and matches exactly 24 floats in size
+        if (nvs_get_blob(h, key, NULL, &required_size) == ESP_OK && required_size == 24 * sizeof(float)) {
+            std::vector<float> temp(24);
+            if (nvs_get_blob(h, key, temp.data(), &required_size) == ESP_OK) {
+                needs_write = false;
+                for (int i = 0; i < 24; i++) {
+                    if (std::abs(temp[i] - v[i]) > 0.001f) {
+                        needs_write = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Only write to flash if data is missing or different
+        if (needs_write) {
             nvs_set_blob(h, key, v.data(), 24 * sizeof(float));
+            has_changes = true;
+        }
     };
+
     save_arr("sched",    sched);
     save_arr("energy",   energy);
     save_arr("exp_t",    exp_t);
@@ -889,9 +920,15 @@ void EcodanDashboard::nvs_persist_odin_() {
     save_arr("cost_tax", cost_tax);
     save_arr("batt",     batt);
 
-    nvs_commit(h);
+    // Only commit to physical flash memory if at least one value was updated
+    if (has_changes) {
+        nvs_commit(h);
+        ESP_LOGI(TAG, "NVS: ODIN arrays updated and persisted (day=%d)", day);
+    } else {
+        ESP_LOGD(TAG, "NVS: ODIN arrays match NVS exact state, skipping physical write (day=%d)", day);
+    }
+
     nvs_close(h);
-    ESP_LOGI(TAG, "NVS: ODIN arrays persisted (day=%d)", day);
 }
 
 // NOTE: called from setup() only, before HTTP server and other tasks start — no mutex needed.
