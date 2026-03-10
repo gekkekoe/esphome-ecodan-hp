@@ -263,6 +263,7 @@ namespace esphome
             float room_temp         = this->get_room_current_temp((i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
             float room_target_temp  = this->get_room_target_temp((i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
             float actual_flow_temp  = this->get_feed_temp((i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
+            float flow_rate = status.FlowRate;
 
             if (isnan(room_temp) || isnan(room_target_temp) || isnan(actual_flow_temp)) return;
 
@@ -277,9 +278,9 @@ namespace esphome
                 : this->state_.temperature_feedback_source_z2->active_index().value_or(0);
 
             ESP_LOGD(OPTIMIZER_TAG,
-                "Z%d src=%d room=%.1f target=%.1f flow=%.1f outside=%.1f bias=%.1f H=%d C=%d solver_bias=%.1f solver_heating_off=%d",
+                "Z%d src=%d room=%.1f target=%.1f flow=%.1f flow_rate=%.1f outside=%.1f bias=%.1f H=%d C=%d solver_bias=%.1f solver_heating_off=%d",
                 (i + 1), feedback_src, room_temp, room_target_temp,
-                actual_flow_temp, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active, solver_bias, solver_heating_off);
+                actual_flow_temp, flow_rate, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active, solver_bias, solver_heating_off);
 
             if (solver_heating_off) return;
             
