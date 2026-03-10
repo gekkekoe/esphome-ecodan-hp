@@ -638,7 +638,13 @@ header {
           Open ODIN
         </button>
       </div>
-      <button id="btn-run-solver" class="send-btn" style="margin-top: 8px; border-color: var(--accent3); color: var(--accent3); background: rgba(127,255,127,0.1); display: none;" onclick="runOdinSolver()">Run Optimization</button>
+      <div id="run-solver-row" style="display:none; margin-top: 8px; gap: 8px; align-items: center; flex-wrap: nowrap;">
+        <button id="btn-run-solver" class="send-btn" style="border-color: var(--accent3); color: var(--accent3); background: rgba(127,255,127,0.1); flex: 1;" onclick="runOdinSolver()">Run Optimization</button>
+        <div style="display: flex; align-items: center; gap: 5px; flex-shrink: 0;">
+          <label style="font-size: 10px; color: var(--text3); white-space: nowrap;">From hour</label>
+          <input id="ui-solver-hour" type="number" min="0" max="23" step="1" class="step-input" style="width: 36px;" title="Override start hour (default = current hour)">
+        </div>
+      </div>
     </div>
 
     <div class="ctrl-card">
@@ -847,11 +853,20 @@ function performUpload() {
   xhr.send(formData);
 }
 
+let solverTabInitialized = false;
 function switchTab(viewId, btn) {
   document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + viewId).classList.add('active');
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   btn.classList.add('active');
+  if (viewId === 'solver') {
+    if (!solverTabInitialized) {
+      solverTabInitialized = true;
+      fetchOdinData(); // first open: fetch from ESP32 immediately
+    } else {
+      updateOdinCharts(); // already cached, just re-render
+    }
+  }
 }
 
 // -- CHARTS --
@@ -1189,13 +1204,18 @@ function initCharts() {
 function updateOdinCharts() {
     if (!odinConsChart || !odinTempChart || !odinBattChart) return;
 
-    // 1. Gather historical actuals securely
-    const firstConsByHour = new Array(24).fill(null);
-    const lastConsByHour = new Array(24).fill(null);
-    const actualTempByHour = new Array(24).fill(null);
+    // Start from NVS-persisted actuals (survive reboot), then overlay today's live history
+    const actualConsByHour = odinDataCache ? [...(odinDataCache.actual_cons || new Array(24).fill(null))] : new Array(24).fill(null);
+    const actualTempByHour = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(24).fill(null))] : new Array(24).fill(null);
 
+    // Live history overlay — overrides NVS values for hours already seen this session
     if (history.timestamps && history.cons) {
-        for(let i = 0; i < history.timestamps.length; i++) {
+        const firstConsByHour = new Array(24).fill(null);
+        const lastConsByHour  = new Array(24).fill(null);
+        // actual_room_temp = FIRST reading of each hour — matches expected_begin_temp semantics
+        const firstTempByHour = new Array(24).fill(null);
+
+        for (let i = 0; i < history.timestamps.length; i++) {
             const d = new Date(history.timestamps[i]);
             if (d.toDateString() === new Date().toDateString()) {
                 const h = d.getHours();
@@ -1203,34 +1223,40 @@ function updateOdinCharts() {
                     if (firstConsByHour[h] === null) firstConsByHour[h] = history.cons[i];
                     lastConsByHour[h] = history.cons[i];
                 }
-                if (history.z1curr[i] != null) actualTempByHour[h] = history.z1curr[i];
+                if (history.z1curr[i] != null && firstTempByHour[h] === null)
+                    firstTempByHour[h] = history.z1curr[i];
             }
+        }
+
+        // Compute hourly kWh delta from live cons readings
+        const hourlyDeltaCons = new Array(24).fill(null);
+        for (let h = 0; h < 24; h++) {
+            if (lastConsByHour[h] !== null) {
+                let prevMax = null;
+                for (let prev = h - 1; prev >= 0; prev--) {
+                    if (lastConsByHour[prev] !== null) { prevMax = lastConsByHour[prev]; break; }
+                }
+                let delta = (prevMax !== null) ? (lastConsByHour[h] - prevMax) : (lastConsByHour[h] - firstConsByHour[h]);
+                if (delta < 0) delta = lastConsByHour[h];
+                hourlyDeltaCons[h] = parseFloat(Math.max(0, delta).toFixed(2));
+            }
+        }
+
+        // Merge: live data wins over NVS for any hour that has live readings
+        for (let h = 0; h < 24; h++) {
+            if (hourlyDeltaCons[h] !== null) actualConsByHour[h] = hourlyDeltaCons[h];
+            if (firstTempByHour[h] !== null) actualTempByHour[h] = firstTempByHour[h];
         }
     }
 
-    const hourlyDeltaCons = new Array(24).fill(null);
-    for(let h = 0; h < 24; h++) {
-        if (lastConsByHour[h] !== null) {
-            let prevMax = null;
-            for (let prev = h - 1; prev >= 0; prev--) {
-                if (lastConsByHour[prev] !== null) { prevMax = lastConsByHour[prev]; break; }
-            }
-            let delta = (prevMax !== null) ? (lastConsByHour[h] - prevMax) : (lastConsByHour[h] - firstConsByHour[h]);
-            if (delta < 0) delta = lastConsByHour[h]; 
-            hourlyDeltaCons[h] = parseFloat(Math.max(0, delta).toFixed(2));
-        }
-    }
-
-    // 2. Fetch expected data (fallback to empty arrays if no solver run yet)
-    const expCons = odinDataCache ? odinDataCache.energy_consumption : new Array(24).fill(null);
-    const expCost = odinDataCache ? odinDataCache.expected_cost : new Array(24).fill(null);
-    const expTax  = odinDataCache ? odinDataCache.expected_cost_with_tax : new Array(24).fill(null);
-    const expTemp = odinDataCache ? odinDataCache.expected_begin_temp : new Array(24).fill(null);
+    const expCons       = odinDataCache ? odinDataCache.energy_consumption          : new Array(24).fill(null);
+    const expCost       = odinDataCache ? odinDataCache.expected_cost               : new Array(24).fill(null);
+    const expTax        = odinDataCache ? odinDataCache.expected_cost_with_tax      : new Array(24).fill(null);
+    const expTemp       = odinDataCache ? odinDataCache.expected_begin_temp         : new Array(24).fill(null);
     const battDischarge = odinDataCache ? (odinDataCache.battery_discharge || new Array(24).fill(0)) : new Array(24).fill(0);
 
-    // 3. Inject ALL data and refresh
     odinConsChart.data.datasets[0].data = expCons;
-    odinConsChart.data.datasets[1].data = hourlyDeltaCons;
+    odinConsChart.data.datasets[1].data = actualConsByHour;
     odinConsChart.data.datasets[2].data = expCost;
     odinConsChart.data.datasets[3].data = expTax;
     odinConsChart.update('none');
@@ -1590,17 +1616,18 @@ function render(d) {
   };
   
   safeSetInput('ui-solver-ip', d.solver_ip_address);
+  safeSetInput('ui-solver-hour', new Date().getHours());
 
   // Update the ODIN buttons directly
   const btnOdin = document.getElementById('btn-odin');
-  const btnRunSolver = document.getElementById('btn-run-solver');
-  if (btnOdin && btnRunSolver) {
+  const runSolverRow = document.getElementById('run-solver-row');
+  if (btnOdin && runSolverRow) {
     if (d.solver_ip_address && d.solver_ip_address !== "" && d.solver_ip_address !== "0.0.0.0") {
       btnOdin.style.display = 'block';
-      btnRunSolver.style.display = 'block';
+      runSolverRow.style.display = 'flex';
     } else {
       btnOdin.style.display = 'none';
-      btnRunSolver.style.display = 'none';
+      runSolverRow.style.display = 'none';
     }
   }
 
@@ -1808,12 +1835,20 @@ async function sendPhysics(btn) {
   btn.classList.remove('sending');
 }
 
-// Call the Solver via the Asgard web interface
 async function runOdinSolver() {
     if (!latestState.solver_ip_address || latestState.solver_ip_address === "0.0.0.0") return;
     const btn = document.getElementById('btn-run-solver');
     btn.classList.add('sending');
     btn.textContent = "Calculating...";
+
+    // Hour: use override input if set, otherwise current hour
+    const hourInput = document.getElementById('ui-solver-hour');
+    const actualHour = new Date().getHours();
+    let solveHour = actualHour;
+    if (hourInput && hourInput.value !== "" && hourInput.value !== null) {
+        const parsed = parseInt(hourInput.value, 10);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 23) solveHour = parsed;
+    }
 
     // Map ESPHome select index to ODIN string values
     const profileMap = ["ufh", "radiators", "fancoil"];
@@ -1821,7 +1856,7 @@ async function runOdinSolver() {
 
     const payload = {
         params: {
-            heating_profile: profileStr, // <-- Dynamically mapped
+            heating_profile: profileStr,
             heat_produced: pending['raw-heat'] || latestState.raw_heat_produced || 0,
             elec_consumed: pending['raw-elec'] || latestState.raw_elec_consumed || 0,
             runtime_hours: pending['raw-run'] || latestState.raw_runtime_hours || 0,
@@ -1830,7 +1865,7 @@ async function runOdinSolver() {
             delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
             max_output: pending['raw-max-out'] || latestState.raw_max_output || 8.0,
             current_room_temp: latestState.z1_current_temp || 20.0,
-            current_hour: new Date().getHours(),
+            current_hour: solveHour,
             battery_soc_kwh: pending['batt-soc'] ?? latestState.battery_soc_kwh ?? 0.0,
             battery_max_discharge_kw: pending['batt-max-dis'] ?? latestState.battery_max_discharge_kw ?? 3.0
         }
@@ -1844,32 +1879,44 @@ async function runOdinSolver() {
         });
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
+        
         if (data.success) {
-            // preserve old values < current hour
-            if (odinDataCache && 
-                odinDataCache.schedule && 
-                odinDataCache.prices && 
-                odinDataCache.prices.length > 0) {
-                
-                const current_hr = new Date().getHours();
-                for (let i = 0; i < current_hr; i++) {
+            // Preserve cached values for hours before the chosen start hour
+            if (odinDataCache &&
+                odinDataCache.schedule &&
+                odinDataCache.schedule.length > 0) {
+
+                for (let i = 0; i < solveHour; i++) {
                     data.schedule[i] = odinDataCache.schedule?.[i] ?? data.schedule[i];
                     data.expected_begin_temp[i] = odinDataCache.expected_begin_temp?.[i] ?? data.expected_begin_temp[i];
                     data.energy_consumption[i] = odinDataCache.energy_consumption?.[i] ?? data.energy_consumption[i];
-                    data.prices[i] = odinDataCache.prices?.[i] ?? data.prices[i];
                     data.expected_cost[i] = odinDataCache.expected_cost?.[i] ?? data.expected_cost[i];
                     data.expected_cost_with_tax[i] = odinDataCache.expected_cost_with_tax?.[i] ?? data.expected_cost_with_tax[i];
+                    
+                    // battery and prices are not stored, only retrieved via solver
+                    if (odinDataCache.battery_discharge) {
+                        data.battery_discharge[i] = odinDataCache.battery_discharge[i] ?? data.battery_discharge[i];
+                    }
+                    if (odinDataCache.prices) {
+                        data.prices[i] = odinDataCache.prices[i] ?? data.prices[i];
+                    }
                 }
+                
+                // Preserve the ESP32's tracked actuals before overwriting the cache
+                data.actual_cons = odinDataCache.actual_cons;
+                data.actual_room_temp = odinDataCache.actual_room_temp;
             }
+            
             odinDataCache = data;
             updateOdinCharts();
+            showToast(`✓ Optimized from hour ${solveHour}`);
         } else {
             showToast("✗ Solver failed", true);
         }
     } catch (err) {
         showToast("✗ Request failed: " + err.message, true);
     }
-    
+
     btn.classList.remove('sending');
     btn.textContent = "Run Optimization";
 }
