@@ -15,6 +15,7 @@
 #include "esphome/components/globals/globals_component.h"
 
 
+
 namespace esphome {
 namespace asgard_dashboard {
 
@@ -264,7 +265,28 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void handleRequest(AsyncWebServerRequest *request) override;
   bool isRequestHandlerTrivial() const override { return false; }
 
-  void store_odin_data(int current_hour, int current_day, const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax, const std::vector<float>& battery_discharge);
+  // Called from YAML after each successful solver response
+  void store_odin_data(int current_hour, int current_day,
+                       const std::vector<float>& sched,
+                       const std::vector<float>& energy,
+                       const std::vector<float>& production,
+                       const std::vector<float>& exp_temp,
+                       const std::vector<float>& cost,
+                       const std::vector<float>& cost_tax,
+                       const std::vector<float>& battery_discharge);
+
+  // Called each hour by YAML to track actual consumption and room temp per-hour slot
+  void update_actual_data(int hour, float actual_cons_kwh, float actual_room_temp);
+
+  // Solver run stats populated from YAML after each solve
+  struct LastRunStats {
+      uint32_t execution_ms{0};
+      float heat_loss{0.0f}, base_cop{0.0f}, thermal_mass{0.0f};
+      float exp_consumption{0.0f}, exp_production{0.0f}, exp_solar{0.0f};
+      float total_cost{0.0f}, total_cost_tax{0.0f};
+  } last_run_stats_;
+
+
 
  protected:
   void handle_root_(AsyncWebServerRequest *request);
@@ -405,10 +427,13 @@ private:
   // solver
   std::vector<float> odin_schedule_;
   std::vector<float> odin_energy_;
+  std::vector<float> odin_production_;     // heat kWh produced per hour
   std::vector<float> odin_expected_temp_;
   std::vector<float> odin_cost_;
   std::vector<float> odin_cost_tax_;
   std::vector<float> odin_battery_discharge_;
+  std::vector<float> odin_actual_cons_;    // actual kWh consumed per hour (NVS persisted)
+  std::vector<float> odin_actual_room_;    // actual room temp at start of each hour (NVS persisted)
   bool odin_data_ready_{false};
   int odin_stored_day_{-1};
   bool odin_nvs_dirty_{false};

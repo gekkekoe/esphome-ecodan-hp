@@ -861,22 +861,40 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 // solver
 // ---------------------------------------------------------------------------
 // NVS persistence for ODIN arrays
-// Namespace: "odin_cache"  Keys: "day", "sched", "energy", "exp_t",
-//            "cost", "cost_tax", "batt"  (each 24 floats = 96 bytes)
+// Namespace: "odin_cache"  Keys: "day", "sched", "energy", "prod", "exp_t",
+//            "cost", "cost_tax", "batt", "act_cons", "act_room"
+//            (each 24 floats = 96 bytes)
 // ---------------------------------------------------------------------------
 static const char* NVS_ODIN_NS = "odin_cache";
 
+void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_room_temp) {
+    if (hour < 0 || hour >= 24) return;
+    if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
+
+    if (odin_actual_cons_.size() != 24) odin_actual_cons_.assign(24, NAN);
+    if (odin_actual_room_.size() != 24) odin_actual_room_.assign(24, NAN);
+
+    odin_actual_cons_[hour] = actual_cons_kwh;
+    odin_actual_room_[hour] = actual_room_temp;
+
+    xSemaphoreGive(snapshot_mutex_);
+    this->odin_nvs_dirty_ = true;
+}
+
 void EcodanDashboard::nvs_persist_odin_() {
-    std::vector<float> sched, energy, exp_t, cost, cost_tax, batt;
+    std::vector<float> sched, energy, prod, exp_t, cost, cost_tax, batt, act_cons, act_room;
     int32_t day = -1;
 
     if (this->snapshot_mutex_ != NULL && xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(200)) == pdTRUE) {
         sched    = this->odin_schedule_;
         energy   = this->odin_energy_;
+        prod     = this->odin_production_;
         exp_t    = this->odin_expected_temp_;
         cost     = this->odin_cost_;
         cost_tax = this->odin_cost_tax_;
         batt     = this->odin_battery_discharge_;
+        act_cons = this->odin_actual_cons_;
+        act_room = this->odin_actual_room_;
         day      = (int32_t)this->odin_stored_day_;
         xSemaphoreGive(this->snapshot_mutex_);
     } else {
@@ -892,7 +910,6 @@ void EcodanDashboard::nvs_persist_odin_() {
 
     bool has_changes = false;
 
-    // Check if day changed
     int32_t stored_day = -1;
     if (nvs_get_i32(h, "day", &stored_day) != ESP_OK || stored_day != day) {
         nvs_set_i32(h, "day", day);
@@ -901,46 +918,36 @@ void EcodanDashboard::nvs_persist_odin_() {
 
     auto save_arr = [&](const char* key, const std::vector<float>& v) {
         if (v.size() != 24) return;
-        
         size_t required_size = 0;
         bool needs_write = true;
-        
-        // Check if blob exists and matches exactly 24 floats in size
         if (nvs_get_blob(h, key, NULL, &required_size) == ESP_OK && required_size == 24 * sizeof(float)) {
             std::vector<float> temp(24);
             if (nvs_get_blob(h, key, temp.data(), &required_size) == ESP_OK) {
                 needs_write = false;
                 for (int i = 0; i < 24; i++) {
-                    if (std::abs(temp[i] - v[i]) > 0.001f) {
-                        needs_write = true;
-                        break;
-                    }
+                    if (std::abs(temp[i] - v[i]) > 0.001f) { needs_write = true; break; }
                 }
             }
         }
-        
-        // Only write to flash if data is missing or different
-        if (needs_write) {
-            nvs_set_blob(h, key, v.data(), 24 * sizeof(float));
-            has_changes = true;
-        }
+        if (needs_write) { nvs_set_blob(h, key, v.data(), 24 * sizeof(float)); has_changes = true; }
     };
 
     save_arr("sched",    sched);
     save_arr("energy",   energy);
+    save_arr("prod",     prod);
     save_arr("exp_t",    exp_t);
     save_arr("cost",     cost);
     save_arr("cost_tax", cost_tax);
     save_arr("batt",     batt);
+    save_arr("act_cons", act_cons);
+    save_arr("act_room", act_room);
 
-    // Only commit to physical flash memory if at least one value was updated
     if (has_changes) {
         nvs_commit(h);
         ESP_LOGI(TAG, "NVS: ODIN arrays updated and persisted (day=%d)", day);
     } else {
         ESP_LOGD(TAG, "NVS: ODIN arrays match NVS exact state, skipping physical write (day=%d)", day);
     }
-
     nvs_close(h);
 }
 
@@ -953,14 +960,11 @@ void EcodanDashboard::nvs_load_odin_() {
     }
 
     int32_t stored_day = -1;
-    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK) {
-        nvs_close(h);
-        return;
-    }
+    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK) { nvs_close(h); return; }
 
-    auto load_arr = [&](const char* key, std::vector<float>& out) -> bool {
+    auto load_arr = [&](const char* key, std::vector<float>& out, float fill = 0.0f) -> bool {
         size_t len = 24 * sizeof(float);
-        out.resize(24);
+        out.resize(24, fill);
         return nvs_get_blob(h, key, out.data(), &len) == ESP_OK && len == 24 * sizeof(float);
     };
 
@@ -970,6 +974,11 @@ void EcodanDashboard::nvs_load_odin_() {
            && load_arr("cost",     this->odin_cost_)
            && load_arr("cost_tax", this->odin_cost_tax_)
            && load_arr("batt",     this->odin_battery_discharge_);
+
+    // Optional arrays — don't fail if missing (added in later versions)
+    load_arr("prod",     this->odin_production_);
+    load_arr("act_cons", this->odin_actual_cons_, NAN);
+    load_arr("act_room", this->odin_actual_room_, NAN);
 
     nvs_close(h);
 
@@ -983,96 +992,107 @@ void EcodanDashboard::nvs_load_odin_() {
     }
 }
 
-void EcodanDashboard::store_odin_data(int current_hour, int current_day, const std::vector<float>& sched, const std::vector<float>& energy, const std::vector<float>& exp_temp, const std::vector<float>& cost, const std::vector<float>& cost_tax, const std::vector<float>& battery_discharge) {
-    if (current_hour == -1) return;
+void EcodanDashboard::store_odin_data(int current_hour, int current_day,
+                                      const std::vector<float>& sched,
+                                      const std::vector<float>& energy,
+                                      const std::vector<float>& production,
+                                      const std::vector<float>& exp_temp,
+                                      const std::vector<float>& cost,
+                                      const std::vector<float>& cost_tax,
+                                      const std::vector<float>& battery_discharge) {
+    if (current_hour < 0) return;
 
-    if (this->snapshot_mutex_ != NULL && xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
-
-        if (this->odin_schedule_.size() != 24) {
-          this->odin_schedule_ = sched;
-          this->odin_energy_ = energy;
-          this->odin_expected_temp_ = exp_temp;
-          this->odin_cost_ = cost;
-          this->odin_cost_tax_ = cost_tax;
-          this->odin_battery_discharge_ = battery_discharge;
-
-          this->odin_schedule_.resize(24);
-          this->odin_energy_.resize(24);
-          this->odin_expected_temp_.resize(24);
-          this->odin_cost_.resize(24);
-          this->odin_cost_tax_.resize(24);
-          this->odin_battery_discharge_.resize(24, 0.0f);
-
-          this->odin_data_ready_ = true;
-          this->odin_stored_day_ = current_day; 
-        }
-
-        if (current_hour < 0 || current_hour >= 24) {
-            xSemaphoreGive(this->snapshot_mutex_);
-            return;
-        }
-        for (int i = current_hour; i < 24; i++) {
-            this->odin_schedule_[i] = sched[i];
-            this->odin_energy_[i] = energy[i];
-            this->odin_expected_temp_[i] = exp_temp[i];
-            this->odin_cost_[i] = cost[i];
-            this->odin_cost_tax_[i] = cost_tax[i];
-            if (i < (int)battery_discharge.size())
-                this->odin_battery_discharge_[i] = battery_discharge[i];
-        }
-        
-        xSemaphoreGive(this->snapshot_mutex_);
-        ESP_LOGI(TAG, "ODIN 24-hour arrays safely loaded into Dashboard UI memory.");
-
-        // Mark dirty — loop() will flush to NVS max once per 5 minutes
-        this->odin_nvs_dirty_ = true;
-    } else {
+    if (this->snapshot_mutex_ == NULL ||
+        xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) {
         ESP_LOGW(TAG, "Failed to acquire snapshot mutex during ODIN store.");
+        return;
     }
+
+    // First run or size mismatch — full replace
+    if (this->odin_schedule_.size() != 24) {
+        this->odin_schedule_          = sched;         this->odin_schedule_.resize(24);
+        this->odin_energy_            = energy;         this->odin_energy_.resize(24);
+        this->odin_production_        = production;     this->odin_production_.resize(24);
+        this->odin_expected_temp_     = exp_temp;       this->odin_expected_temp_.resize(24);
+        this->odin_cost_              = cost;           this->odin_cost_.resize(24);
+        this->odin_cost_tax_          = cost_tax;       this->odin_cost_tax_.resize(24);
+        this->odin_battery_discharge_ = battery_discharge; this->odin_battery_discharge_.resize(24, 0.0f);
+        // actual arrays keep their NVS-loaded values
+        if (this->odin_actual_cons_.size() != 24) this->odin_actual_cons_.assign(24, NAN);
+        if (this->odin_actual_room_.size() != 24) this->odin_actual_room_.assign(24, NAN);
+        this->odin_data_ready_  = true;
+        this->odin_stored_day_  = current_day;
+    }
+
+    // Partial update: overwrite current_hour onward (past hours stay from NVS)
+    if (current_hour < 24) {
+        for (int i = current_hour; i < 24; i++) {
+            if (i < (int)sched.size())      this->odin_schedule_[i]          = sched[i];
+            if (i < (int)energy.size())     this->odin_energy_[i]            = energy[i];
+            if (i < (int)production.size()) this->odin_production_[i]        = production[i];
+            if (i < (int)exp_temp.size())   this->odin_expected_temp_[i]     = exp_temp[i];
+            if (i < (int)cost.size())       this->odin_cost_[i]              = cost[i];
+            if (i < (int)cost_tax.size())   this->odin_cost_tax_[i]          = cost_tax[i];
+            if (i < (int)battery_discharge.size()) this->odin_battery_discharge_[i] = battery_discharge[i];
+        }
+    }
+
+    xSemaphoreGive(this->snapshot_mutex_);
+    ESP_LOGI(TAG, "ODIN arrays stored (hour=%d, day=%d)", current_hour, current_day);
+    this->odin_nvs_dirty_ = true;
 }
 
 void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
   AsyncResponseStream *response = request->beginResponseStream("application/json");
-  if (response == nullptr) {
-    request->send(500, "text/plain", "Stream alloc failed");
-    return;
-  }
-
+  if (response == nullptr) { request->send(500, "text/plain", "Stream alloc failed"); return; }
   response->addHeader("Access-Control-Allow-Origin", "*");
   response->addHeader("Cache-Control", "no-cache");
 
-  // Lock the mutex, read directly, write to JSON, unlock. ZERO copies
   if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(500)) == pdTRUE) {
-    
     if (this->odin_data_ready_) {
       response->print("{\"success\":true,");
-      
-      auto print_arr = [&response](const char* name, const std::vector<float>& arr) {
+
+      auto print_arr = [&response](const char* name, const std::vector<float>& arr, bool last = false) {
           response->printf("\"%s\":[", name);
           for (size_t i = 0; i < arr.size(); i++) {
-              response->printf("%.2f%s", arr[i], (i == arr.size() - 1) ? "" : ",");
+              if (std::isnan(arr[i])) response->print("null");
+              else                    response->printf("%.2f", arr[i]);
+              if (i != arr.size() - 1) response->print(",");
           }
-          response->print("]");
+          response->print(last ? "]" : "],");
       };
-      
-      print_arr("schedule", this->odin_schedule_); response->print(",");
-      print_arr("energy_consumption", this->odin_energy_); response->print(",");
-      print_arr("expected_begin_temp", this->odin_expected_temp_); response->print(",");
-      print_arr("expected_cost", this->odin_cost_); response->print(",");
-      print_arr("expected_cost_with_tax", this->odin_cost_tax_); response->print(",");
-      print_arr("battery_discharge", this->odin_battery_discharge_);
-      
-      response->print("}");
+
+      print_arr("schedule",               this->odin_schedule_);
+      print_arr("energy_consumption",     this->odin_energy_);
+      print_arr("heat_production",        this->odin_production_);
+      print_arr("expected_begin_temp",    this->odin_expected_temp_);
+      print_arr("expected_cost",          this->odin_cost_);
+      print_arr("expected_cost_with_tax", this->odin_cost_tax_);
+      print_arr("battery_discharge",      this->odin_battery_discharge_);
+      print_arr("actual_cons",            this->odin_actual_cons_);
+      print_arr("actual_room_temp",       this->odin_actual_room_, /*last=*/false);
+
+      // Run stats
+      response->printf(
+          "\"last_run\":{\"execution_ms\":%u,\"heat_loss\":%.3f,\"base_cop\":%.2f,"
+          "\"thermal_mass\":%.1f,\"exp_consumption\":%.2f,\"exp_production\":%.2f,"
+          "\"exp_solar\":%.2f,\"total_cost\":%.4f,\"total_cost_tax\":%.4f}}",
+          this->last_run_stats_.execution_ms,
+          this->last_run_stats_.heat_loss,
+          this->last_run_stats_.base_cop,
+          this->last_run_stats_.thermal_mass,
+          this->last_run_stats_.exp_consumption,
+          this->last_run_stats_.exp_production,
+          this->last_run_stats_.exp_solar,
+          this->last_run_stats_.total_cost,
+          this->last_run_stats_.total_cost_tax);
     } else {
       response->print("{\"success\":false}");
     }
-    
     xSemaphoreGive(snapshot_mutex_);
   } else {
-    response->print("{\"success\":false, \"error\":\"timeout\"}");
+    response->print("{\"success\":false,\"error\":\"timeout\"}");
   }
-  
-  // Actually send the buffer over WiFi
   request->send(response);
 }
 

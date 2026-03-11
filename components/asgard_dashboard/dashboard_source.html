@@ -644,7 +644,6 @@ header {
         <button class="send-btn" style="margin-top: 0; flex: 1; border-color: var(--text3); color: var(--text3); background: rgba(130,149,184,0.1);" onclick="sendInputString('solver_ip_address', 'ui-solver-ip')">
           Save IP
         </button>
-        
         <button id="btn-odin" class="send-btn" style="margin-top: 0; flex: 1; display: none;" onclick="openOdin()">
           Open ODIN
         </button>
@@ -654,6 +653,22 @@ header {
         <div style="display: flex; align-items: center; gap: 5px; flex-shrink: 0;">
           <label style="font-size: 10px; color: var(--text3); white-space: nowrap;">From hour</label>
           <input id="ui-solver-hour" type="number" min="0" max="23" step="1" class="step-input" style="width: 36px;" title="Override start hour (default = current hour)">
+        </div>
+      </div>
+
+      <!-- Last Run Stats — shown after first successful solve -->
+      <div id="run-stats-block" style="display:none; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px;">
+        <div class="sub-label" style="margin:0 0 6px 0; font-size:9px; letter-spacing:1px;">LAST RUN RESULT</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:3px 10px;">
+          <span class="ctrl-label" style="font-size:9px;">Exec time</span>   <span id="rs-exec"    class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Heat loss</span>    <span id="rs-hloss"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Base COP</span>     <span id="rs-cop"     class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Thermal mass</span> <span id="rs-tmass"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Exp. cons.</span>   <span id="rs-econs"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Exp. prod.</span>   <span id="rs-eprod"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Solar gen.</span>   <span id="rs-solar"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Total cost</span>   <span id="rs-cost"    class="ctrl-value" style="font-size:10px; text-align:right; color:var(--accent2);">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Cost incl. tax</span> <span id="rs-costtax" class="ctrl-value" style="font-size:10px; text-align:right; color:#c084fc;">—</span>
         </div>
       </div>
     </div>
@@ -713,7 +728,14 @@ header {
   </div>
   
   <div class="chart-card full-width" style="margin-top: 15px; grid-column: 1 / -1;">
-    <div class="chart-header"><div class="section-title" style="margin:0">Expected vs Actual Consumption (24h)</div></div>
+    <div class="chart-header">
+      <div class="section-title" style="margin:0">Energy (24h)</div>
+      <div class="chart-legend">
+        <span style="color:#00c8ff; font-size:10px;">■ Exp. Cons.</span>
+        <span style="color:#7fff7f; font-size:10px;">■ Actual Cons.</span>
+        <span style="color:#fb923c; font-size:10px;">■ Exp. Prod.</span>
+      </div>
+    </div>
     <div class="chart-container"><canvas id="odinConsChart"></canvas></div>
   </div>
   <div class="chart-card full-width" style="grid-column: 1 / -1;">
@@ -721,6 +743,10 @@ header {
     <div class="chart-container"><canvas id="odinTempChart"></canvas></div>
   </div>
   <div class="chart-card full-width" style="grid-column: 1 / -1;">
+    <div class="chart-header"><div class="section-title" style="margin:0">Expected Cost (24h)</div></div>
+    <div class="chart-container"><canvas id="odinCostChart"></canvas></div>
+  </div>
+  <div id="odin-batt-card" class="chart-card full-width" style="display:none; grid-column: 1 / -1;">
     <div class="chart-header"><div class="section-title" style="margin:0">Battery Discharge Plan (24h)</div></div>
     <div class="chart-container"><canvas id="odinBattChart"></canvas></div>
   </div>
@@ -787,6 +813,7 @@ const serverState = {};
 let latestState = {};
 let odinDataCache = null;
 let odinConsChart = null;
+let odinCostChart = null;
 let odinTempChart = null;
 let odinBattChart = null;
 
@@ -1153,25 +1180,48 @@ function initCharts() {
   
   // --- Initialize ODIN Charts (Empty on load) ---
   const labels24 = Array.from({length: 24}, (_, i) => `${i}:00`);
+  const monoFont = { family: "'JetBrains Mono'", size: 10 };
+  const xAxis   = { ticks: { color: '#4a5a7a', font: monoFont }, grid: { color: '#1e2d4a' } };
 
+  // Energy chart: Exp Cons + Actual Cons + Exp Production — all kWh bars
   odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2d'), {
       type: 'bar',
       data: {
           labels: labels24,
           datasets: [
-              { label: 'Expected Cons. (kWh)', data: [], backgroundColor: 'rgba(0, 200, 255, 0.4)', borderColor: '#00c8ff', borderWidth: 1, yAxisID: 'y' },
-              { type: 'bar', label: 'Actual Cons. (kWh)', data: [], backgroundColor: 'rgba(127, 255, 127, 0.4)', borderColor: '#7fff7f', borderWidth: 1, yAxisID: 'y' },
-              { type: 'line', label: 'Expected Cost (€)', data: [], borderColor: '#ffb020', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4, 4], pointRadius: 0, yAxisID: 'y1' },
-              { type: 'line', label: 'Cost incl. Tax (€)', data: [], borderColor: '#c084fc', backgroundColor: 'rgba(192, 132, 252, 0.1)', borderWidth: 3, pointRadius: 2, yAxisID: 'y1' }
+              { label: 'Exp. Cons. (kWh)',  data: [], backgroundColor: 'rgba(0,200,255,0.35)',   borderColor: '#00c8ff', borderWidth: 1 },
+              { label: 'Actual Cons. (kWh)', data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 },
+              { label: 'Exp. Prod. (kWh)',  data: [], backgroundColor: 'rgba(251,146,60,0.35)',  borderColor: '#fb923c', borderWidth: 1 }
           ]
       },
       options: {
           responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10}, usePointStyle: true } } },
+          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } } },
           scales: {
-              x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
-              y: { type: 'linear', display: true, position: 'left', title: {display: true, text: 'kWh', color: '#00c8ff'}, ticks: { color: '#00c8ff' }, grid: { color: '#1e2d4a' } },
-              y1: { type: 'linear', display: true, position: 'right', title: {display: true, text: 'Euro (€)', color: '#c084fc'}, ticks: { color: '#c084fc' }, grid: { drawOnChartArea: false } }
+              x: xAxis,
+              y: { ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' },
+                   title: { display: true, text: 'kWh', color: '#8295b8' } }
+          }
+      }
+  });
+
+  // Cost chart: Expected Cost + Cost incl. Tax
+  odinCostChart = new Chart(document.getElementById('odinCostChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+          labels: labels24,
+          datasets: [
+              { label: 'Exp. Cost (€)',       data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
+              { label: 'Cost incl. Tax (€)',   data: [], backgroundColor: 'rgba(192,132,252,0.35)', borderColor: '#c084fc', borderWidth: 1 }
+          ]
+      },
+      options: {
+          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } } },
+          scales: {
+              x: xAxis,
+              y: { ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' },
+                   title: { display: true, text: '€', color: '#8295b8' } }
           }
       }
   });
@@ -1181,17 +1231,14 @@ function initCharts() {
       data: {
           labels: labels24,
           datasets: [
-              { label: 'Expected Begin Temp (°C)', data: [], borderColor: '#ffb020', borderDash: [5, 5], borderWidth: 2, tension: 0.3 },
-              { label: 'Actual Room Temp (°C)', data: [], borderColor: '#ffff00', borderWidth: 2, spanGaps: true, tension: 0.3 }
+              { label: 'Expected Begin Temp (°C)', data: [], borderColor: '#ffb020', borderDash: [5,5], borderWidth: 2, tension: 0.3 },
+              { label: 'Actual Room Temp (°C)',    data: [], borderColor: '#ffff00', borderWidth: 2, spanGaps: true, tension: 0.3 }
           ]
       },
       options: {
           responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10} } } },
-          scales: {
-              x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
-              y: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } }
-          }
+          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont } } },
+          scales: { x: xAxis, y: { ticks: { color: '#4a5a7a', font: monoFont }, grid: { color: '#1e2d4a' } } }
       }
   });
 
@@ -1199,35 +1246,31 @@ function initCharts() {
       type: 'bar',
       data: {
           labels: labels24,
-          datasets: [
-              { label: 'Battery Discharge (kWh)', data: [], backgroundColor: 'rgba(251, 191, 36, 0.45)', borderColor: '#fbbf24', borderWidth: 1, yAxisID: 'y' }
-          ]
+          datasets: [{ label: 'Battery Discharge (kWh)', data: [], backgroundColor: 'rgba(251,191,36,0.45)', borderColor: '#fbbf24', borderWidth: 1 }]
       },
       options: {
           responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: {family: "'JetBrains Mono'", size: 10}, usePointStyle: true } } },
+          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } } },
           scales: {
-              x: { ticks: { color: '#4a5a7a', font: {family: "'JetBrains Mono'"} }, grid: { color: '#1e2d4a' } },
-              y: { type: 'linear', display: true, position: 'left',
-                   title: { display: true, text: 'kWh', color: '#fbbf24' },
-                   ticks: { color: '#fbbf24' }, grid: { color: '#1e2d4a' }, min: 0 }
+              x: xAxis,
+              y: { ticks: { color: '#fbbf24', font: monoFont }, grid: { color: '#1e2d4a' },
+                   title: { display: true, text: 'kWh', color: '#fbbf24' }, min: 0 }
           }
       }
   });
 }
 
 function updateOdinCharts() {
-    if (!odinConsChart || !odinTempChart || !odinBattChart) return;
+    if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart) return;
 
     // Start from NVS-persisted actuals (survive reboot), then overlay today's live history
-    const actualConsByHour = odinDataCache ? [...(odinDataCache.actual_cons || new Array(24).fill(null))] : new Array(24).fill(null);
-    const actualTempByHour = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(24).fill(null))] : new Array(24).fill(null);
+    const actualConsByHour  = odinDataCache ? [...(odinDataCache.actual_cons || new Array(24).fill(null))] : new Array(24).fill(null);
+    const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(24).fill(null))] : new Array(24).fill(null);
 
     // Live history overlay — overrides NVS values for hours already seen this session
     if (history.timestamps && history.cons) {
         const firstConsByHour = new Array(24).fill(null);
         const lastConsByHour  = new Array(24).fill(null);
-        // actual_room_temp = FIRST reading of each hour — matches expected_begin_temp semantics
         const firstTempByHour = new Array(24).fill(null);
 
         for (let i = 0; i < history.timestamps.length; i++) {
@@ -1243,7 +1286,6 @@ function updateOdinCharts() {
             }
         }
 
-        // Compute hourly kWh delta from live cons readings
         const hourlyDeltaCons = new Array(24).fill(null);
         for (let h = 0; h < 24; h++) {
             if (lastConsByHour[h] !== null) {
@@ -1257,31 +1299,57 @@ function updateOdinCharts() {
             }
         }
 
-        // Merge: live data wins over NVS for any hour that has live readings
         for (let h = 0; h < 24; h++) {
             if (hourlyDeltaCons[h] !== null) actualConsByHour[h] = hourlyDeltaCons[h];
             if (firstTempByHour[h] !== null) actualTempByHour[h] = firstTempByHour[h];
         }
     }
 
-    const expCons       = odinDataCache ? odinDataCache.energy_consumption          : new Array(24).fill(null);
-    const expCost       = odinDataCache ? odinDataCache.expected_cost               : new Array(24).fill(null);
-    const expTax        = odinDataCache ? odinDataCache.expected_cost_with_tax      : new Array(24).fill(null);
-    const expTemp       = odinDataCache ? odinDataCache.expected_begin_temp         : new Array(24).fill(null);
+    const expCons       = odinDataCache ? odinDataCache.energy_consumption         : new Array(24).fill(null);
+    const expProd       = odinDataCache ? odinDataCache.heat_production             : new Array(24).fill(null);
+    const expCost       = odinDataCache ? odinDataCache.expected_cost              : new Array(24).fill(null);
+    const expTax        = odinDataCache ? odinDataCache.expected_cost_with_tax     : new Array(24).fill(null);
+    const expTemp       = odinDataCache ? odinDataCache.expected_begin_temp        : new Array(24).fill(null);
     const battDischarge = odinDataCache ? (odinDataCache.battery_discharge || new Array(24).fill(0)) : new Array(24).fill(0);
 
+    // Energy chart: Exp Cons, Actual Cons, Exp Production
     odinConsChart.data.datasets[0].data = expCons;
     odinConsChart.data.datasets[1].data = actualConsByHour;
-    odinConsChart.data.datasets[2].data = expCost;
-    odinConsChart.data.datasets[3].data = expTax;
+    odinConsChart.data.datasets[2].data = expProd;
     odinConsChart.update('none');
 
+    // Cost chart
+    odinCostChart.data.datasets[0].data = expCost;
+    odinCostChart.data.datasets[1].data = expTax;
+    odinCostChart.update('none');
+
+    // Temp chart
     odinTempChart.data.datasets[0].data = expTemp;
     odinTempChart.data.datasets[1].data = actualTempByHour;
     odinTempChart.update('none');
 
+    // Battery chart — only show when there is discharge planned
+    const hasBatt = battDischarge.some(v => v > 0.01);
+    const battCard = document.getElementById('odin-batt-card');
+    if (battCard) battCard.style.display = hasBatt ? '' : 'none';
     odinBattChart.data.datasets[0].data = battDischarge;
     odinBattChart.update('none');
+
+    // Run stats card
+    const rs = odinDataCache && odinDataCache.last_run;
+    const statsBlock = document.getElementById('run-stats-block');
+    if (rs && statsBlock && rs.execution_ms > 0) {
+        statsBlock.style.display = '';
+        document.getElementById('rs-exec').textContent    = rs.execution_ms + ' ms';
+        document.getElementById('rs-hloss').textContent   = rs.heat_loss.toFixed(3) + ' kW/K';
+        document.getElementById('rs-cop').textContent     = rs.base_cop.toFixed(2);
+        document.getElementById('rs-tmass').textContent   = rs.thermal_mass.toFixed(1) + ' kWh/K';
+        document.getElementById('rs-econs').textContent   = rs.exp_consumption.toFixed(2) + ' kWh';
+        document.getElementById('rs-eprod').textContent   = rs.exp_production.toFixed(2) + ' kWh';
+        document.getElementById('rs-solar').textContent   = rs.exp_solar.toFixed(2) + ' kWh';
+        document.getElementById('rs-cost').textContent    = '€' + rs.total_cost.toFixed(4);
+        document.getElementById('rs-costtax').textContent = '€' + rs.total_cost_tax.toFixed(4);
+    }
 }
 
 function updateCharts(d) {
@@ -1946,16 +2014,32 @@ async function runOdinSolver() {
                     if (odinDataCache.battery_discharge) {
                         data.battery_discharge[i] = odinDataCache.battery_discharge[i] ?? data.battery_discharge[i];
                     }
+                    if (odinDataCache.heat_production) {
+                        data.heat_production[i] = odinDataCache.heat_production[i] ?? data.heat_production[i];
+                    }
                     if (odinDataCache.prices) {
                         data.prices[i] = odinDataCache.prices[i] ?? data.prices[i];
                     }
                 }
                 
                 // Preserve the ESP32's tracked actuals before overwriting the cache
-                data.actual_cons = odinDataCache.actual_cons;
+                data.actual_cons      = odinDataCache.actual_cons;
                 data.actual_room_temp = odinDataCache.actual_room_temp;
             }
-            
+
+            // Build last_run from solver response scalars — available immediately after every solve
+            data.last_run = {
+                execution_ms:    data.execution_ms                  || 0,
+                heat_loss:       data.used_heat_loss                || 0,
+                base_cop:        data.used_base_cop                 || 0,
+                thermal_mass:    data.used_thermal_mass             || 0,
+                exp_consumption: data.total_consumption_kwh        || 0,
+                exp_production:  data.total_heat_produced_kwh      || 0,
+                exp_solar:       data.total_solar_generation_kwh   || 0,
+                total_cost:      data.total_cost_eur               || 0,
+                total_cost_tax:  data.total_cost_with_tax_eur      || 0
+            };
+
             odinDataCache = data;
             updateOdinCharts();
             showToast(`✓ Optimized from hour ${solveHour}`);

@@ -1,5 +1,4 @@
 #include "optimizer.h"
-#include "esphome/components/ecodan/ecodan.h"
 #include <algorithm>
 #include <cmath>
 

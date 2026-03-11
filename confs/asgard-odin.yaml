@@ -33,6 +33,8 @@ script:
                       profile_str = "radiators";
                   }
 
+                  int _cur_hour = id(optimizer_ptr)->get_current_ecodan_hour();
+
                   snprintf(payload, sizeof(payload),
                       "{\"params\":{"
                       "\"heating_profile\":\"%s\","
@@ -56,7 +58,7 @@ script:
                       id(num_raw_avg_room_temp).state,
                       id(num_raw_delta_room_temp).state,
                       id(num_raw_max_output).state,
-                      id(optimizer_ptr)->get_current_ecodan_hour(),
+                      _cur_hour,
                       id(virtual_climate_z1).current_temperature,
                       id(num_battery_soc_kwh).state,
                       id(num_battery_max_discharge_kw).state
@@ -69,30 +71,46 @@ script:
                         if (response->status_code == 200) {
                           esphome::json::parse_json(body, [](JsonObject root) {
                             if (root["success"].as<bool>()) {
-                              std::vector<float> sched, nrg, exp_t, cost, cost_tax, batt;
-                              
-                              // Extract arrays from JSON
-                              JsonArray j_s = root["schedule"];
-                              JsonArray j_e = root["energy_consumption"];
-                              JsonArray j_t = root["expected_begin_temp"];
-                              JsonArray j_c = root["expected_cost"];
+                              std::vector<float> sched, nrg, prod, exp_t, cost, cost_tax, batt;
+
+                              JsonArray j_s  = root["schedule"];
+                              JsonArray j_e  = root["energy_consumption"];
+                              JsonArray j_p  = root["heat_production"];
+                              JsonArray j_t  = root["expected_begin_temp"];
+                              JsonArray j_c  = root["expected_cost"];
                               JsonArray j_ct = root["expected_cost_with_tax"];
-                              JsonArray j_b = root["battery_discharge"];
-                              
-                              for(int i = 0; i < 24; i++) {
-                                sched.push_back(j_s[i]);
-                                nrg.push_back(j_e[i]);
-                                exp_t.push_back(j_t[i]);
-                                cost.push_back(j_c[i]);
-                                cost_tax.push_back(j_ct[i]);
+                              JsonArray j_b  = root["battery_discharge"];
+
+                              for (int i = 0; i < 24; i++) {
+                                sched.push_back(j_s[i].as<float>());
+                                nrg.push_back(j_e[i].as<float>());
+                                prod.push_back(j_p ? j_p[i].as<float>() : 0.0f);
+                                exp_t.push_back(j_t[i].as<float>());
+                                cost.push_back(j_c[i].as<float>());
+                                cost_tax.push_back(j_ct[i].as<float>());
                                 batt.push_back(j_b ? j_b[i].as<float>() : 0.0f);
                               }
 
                               int cur_hr  = id(optimizer_ptr)->get_current_ecodan_hour();
                               int cur_day = id(optimizer_ptr)->get_current_ecodan_day();
-                              // These calls now automatically handle the "Past vs Future" merge
+
                               id(optimizer_ptr)->store_odin_data(cur_hr, sched, nrg);
-                              id(asgard_dashboard_id)->store_odin_data(cur_hr, cur_day, sched, nrg, exp_t, cost, cost_tax, batt);
+                              id(asgard_dashboard_id)->store_odin_data(
+                                  cur_hr, cur_day, sched, nrg, prod, exp_t, cost, cost_tax, batt);
+
+                              // Store solver run stats in dashboard
+                              {
+                                auto& s = id(asgard_dashboard_id)->last_run_stats_;
+                                s.execution_ms    = root["execution_ms"].as<uint32_t>();
+                                s.heat_loss       = root["used_heat_loss"].as<float>();
+                                s.base_cop        = root["used_base_cop"].as<float>();
+                                s.thermal_mass    = root["used_thermal_mass"].as<float>();
+                                s.exp_consumption = root["total_consumption_kwh"].as<float>();
+                                s.exp_production  = root["total_heat_produced_kwh"].as<float>();
+                                s.exp_solar       = root["total_solar_generation_kwh"].as<float>();
+                                s.total_cost      = root["total_cost_eur"].as<float>();
+                                s.total_cost_tax  = root["total_cost_with_tax_eur"].as<float>();
+                              }
                             }
                             return true;
                           });
@@ -101,8 +119,18 @@ interval:
   - interval: 60s
     then:
       - lambda: |-
-          // The C++ stats loop will raise this flag every time the hour changes
           if (id(optimizer_ptr)->check_and_clear_odin_fetch_request()) {
-            ESP_LOGI("ODIN", "Hour transition detected by Ecodan clock. Fetching hourly Model Predictive Control (MPC) optimization.");
+            ESP_LOGI("ODIN", "Hour transition: fetching MPC optimization.");
             id(fetch_odin_optimization)->execute();
+          }
+          // Track actual consumption and room temp per hour for the dashboard
+          {
+            int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
+            // daily_total_energy_consumption is a cumulative kWh meter —
+            // the dashboard persists per-hour DELTA by reading it once per hour.
+            // We pass the raw meter value here; the dashboard computes the delta itself
+            // from NVS-stored previous values, same as the JS chart does from history.
+            float cons = id(num_raw_elec_consumed).state;  // kWh today
+            float room = id(virtual_climate_z1).current_temperature;
+            id(asgard_dashboard_id)->update_actual_data(cur_hr, cons, room);
           }
