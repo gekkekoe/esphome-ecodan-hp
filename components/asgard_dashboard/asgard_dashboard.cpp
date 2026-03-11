@@ -999,7 +999,8 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
                                       const std::vector<float>& exp_temp,
                                       const std::vector<float>& cost,
                                       const std::vector<float>& cost_tax,
-                                      const std::vector<float>& battery_discharge) {
+                                      const std::vector<float>& battery_discharge,
+                                      const LastRunStats& run_stats) {
     if (current_hour < 0) return;
 
     if (this->snapshot_mutex_ == NULL ||
@@ -1036,6 +1037,9 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             if (i < (int)battery_discharge.size()) this->odin_battery_discharge_[i] = battery_discharge[i];
         }
     }
+
+    // copy runtime stats
+    this->last_run_stats_ = run_stats;
 
     xSemaphoreGive(this->snapshot_mutex_);
     ESP_LOGI(TAG, "ODIN arrays stored (hour=%d, day=%d)", current_hour, current_day);

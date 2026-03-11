@@ -95,22 +95,22 @@ script:
                               int cur_day = id(optimizer_ptr)->get_current_ecodan_day();
 
                               id(optimizer_ptr)->store_odin_data(cur_hr, sched, nrg);
-                              id(asgard_dashboard_id)->store_odin_data(
-                                  cur_hr, cur_day, sched, nrg, prod, exp_t, cost, cost_tax, batt);
 
-                              // Store solver run stats in dashboard
-                              {
-                                auto& s = id(asgard_dashboard_id)->last_run_stats_;
-                                s.execution_ms    = root["execution_ms"].as<uint32_t>();
-                                s.heat_loss       = root["used_heat_loss"].as<float>();
-                                s.base_cop        = root["used_base_cop"].as<float>();
-                                s.thermal_mass    = root["used_thermal_mass"].as<float>();
-                                s.exp_consumption = root["total_consumption_kwh"].as<float>();
-                                s.exp_production  = root["total_heat_produced_kwh"].as<float>();
-                                s.exp_solar       = root["total_solar_generation_kwh"].as<float>();
-                                s.total_cost      = root["total_cost_eur"].as<float>();
-                                s.total_cost_tax  = root["total_cost_with_tax_eur"].as<float>();
-                              }
+                              // Pack solver run stats into a struct safely
+                              esphome::asgard_dashboard::EcodanDashboard::LastRunStats stats;
+                              stats.execution_ms    = root["execution_ms"].as<uint32_t>();
+                              stats.heat_loss       = root["used_heat_loss"].as<float>();
+                              stats.base_cop        = root["used_base_cop"].as<float>();
+                              stats.thermal_mass    = root["used_thermal_mass"].as<float>();
+                              stats.exp_consumption = root["total_consumption_kwh"].as<float>();
+                              stats.exp_production  = root["total_heat_produced_kwh"].as<float>();
+                              stats.exp_solar       = root["total_solar_generation_kwh"].as<float>();
+                              stats.total_cost      = root["total_cost_eur"].as<float>();
+                              stats.total_cost_tax  = root["total_cost_with_tax_eur"].as<float>();
+
+                              // Safely send arrays and stats to the dashboard component in one go
+                              id(asgard_dashboard_id)->store_odin_data(
+                                  cur_hr, cur_day, sched, nrg, prod, exp_t, cost, cost_tax, batt, stats);
                             }
                             return true;
                           });

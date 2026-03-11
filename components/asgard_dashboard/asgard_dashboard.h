@@ -265,6 +265,14 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void handleRequest(AsyncWebServerRequest *request) override;
   bool isRequestHandlerTrivial() const override { return false; }
 
+    // Solver run stats populated from YAML after each solve
+  struct LastRunStats {
+      uint32_t execution_ms{0};
+      float heat_loss{0.0f}, base_cop{0.0f}, thermal_mass{0.0f};
+      float exp_consumption{0.0f}, exp_production{0.0f}, exp_solar{0.0f};
+      float total_cost{0.0f}, total_cost_tax{0.0f};
+  } last_run_stats_;
+
   // Called from YAML after each successful solver response
   void store_odin_data(int current_hour, int current_day,
                        const std::vector<float>& sched,
@@ -273,20 +281,11 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
                        const std::vector<float>& exp_temp,
                        const std::vector<float>& cost,
                        const std::vector<float>& cost_tax,
-                       const std::vector<float>& battery_discharge);
+                       const std::vector<float>& battery_discharge,
+                       const LastRunStats& run_stats);
 
   // Called each hour by YAML to track actual consumption and room temp per-hour slot
   void update_actual_data(int hour, float actual_cons_kwh, float actual_room_temp);
-
-  // Solver run stats populated from YAML after each solve
-  struct LastRunStats {
-      uint32_t execution_ms{0};
-      float heat_loss{0.0f}, base_cop{0.0f}, thermal_mass{0.0f};
-      float exp_consumption{0.0f}, exp_production{0.0f}, exp_solar{0.0f};
-      float total_cost{0.0f}, total_cost_tax{0.0f};
-  } last_run_stats_;
-
-
 
  protected:
   void handle_root_(AsyncWebServerRequest *request);
