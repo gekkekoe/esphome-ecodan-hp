@@ -123,14 +123,18 @@ interval:
             ESP_LOGI("ODIN", "Hour transition: fetching MPC optimization.");
             id(fetch_odin_optimization)->execute();
           }
-          // Track actual consumption and room temp per hour for the dashboard
+
           {
+            static int last_actual_hour = -1;
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
-            // daily_total_energy_consumption is a cumulative kWh meter —
-            // the dashboard persists per-hour DELTA by reading it once per hour.
-            // We pass the raw meter value here; the dashboard computes the delta itself
-            // from NVS-stored previous values, same as the JS chart does from history.
-            float cons = id(num_raw_elec_consumed).state;  // kWh today
-            float room = id(virtual_climate_z1).current_temperature;
-            id(asgard_dashboard_id)->update_actual_data(cur_hr, cons, room);
+            if (last_actual_hour == -1) {
+              last_actual_hour = cur_hr;
+            } else if (cur_hr != last_actual_hour) {
+              // A real hour transition occurred — seal the completed hour.
+              int completed_hr = (cur_hr == 0) ? 23 : cur_hr - 1;
+              float cons = id(num_raw_elec_consumed).state;
+              float room = id(virtual_climate_z1).current_temperature;
+              id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, room);
+              last_actual_hour = cur_hr;
+            }
           }

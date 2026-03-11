@@ -1263,8 +1263,20 @@ function initCharts() {
 function updateOdinCharts() {
     if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart) return;
 
-    // Start from NVS-persisted actuals (survive reboot), then overlay today's live history
-    const actualConsByHour  = odinDataCache ? [...(odinDataCache.actual_cons || new Array(24).fill(null))] : new Array(24).fill(null);
+    // actual_cons from NVS holds cumulative kWh meter values per hour-slot.
+    // Convert to per-hour delta (same logic as history.cons overlay below).
+    const rawNvsCons = odinDataCache ? (odinDataCache.actual_cons || new Array(24).fill(null)) : new Array(24).fill(null);
+    const actualConsByHour = new Array(24).fill(null);
+    for (let h = 0; h < 24; h++) {
+        if (rawNvsCons[h] == null) continue;
+        // Find the last non-null cumulative value before this hour
+        let prevCum = null;
+        for (let prev = h - 1; prev >= 0; prev--) {
+            if (rawNvsCons[prev] != null) { prevCum = rawNvsCons[prev]; break; }
+        }
+        let delta = prevCum !== null ? (rawNvsCons[h] - prevCum) : 0;
+        actualConsByHour[h] = parseFloat(Math.max(0, delta).toFixed(2));
+    }
     const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(24).fill(null))] : new Array(24).fill(null);
 
     // Live history overlay — overrides NVS values for hours already seen this session
