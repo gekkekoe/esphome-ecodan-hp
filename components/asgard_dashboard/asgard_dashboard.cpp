@@ -1025,16 +1025,18 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         this->odin_stored_day_  = current_day;
     }
 
-    // Partial update: overwrite current_hour onward (past hours stay from NVS)
+    // Partial update: overwrite current_hour onward (past hours stay from NVS).
+    // NAN values in exp_temp/schedule mean "don't overwrite" — the DP engine
+    // pads past hours with NAN so the original morning forecast is preserved.
     if (current_hour < 24) {
         for (int i = current_hour; i < 24; i++) {
-            if (i < (int)sched.size())      this->odin_schedule_[i]          = sched[i];
-            if (i < (int)energy.size())     this->odin_energy_[i]            = energy[i];
-            if (i < (int)production.size()) this->odin_production_[i]        = production[i];
-            if (i < (int)exp_temp.size())   this->odin_expected_temp_[i]     = exp_temp[i];
-            if (i < (int)cost.size())       this->odin_cost_[i]              = cost[i];
-            if (i < (int)cost_tax.size())   this->odin_cost_tax_[i]          = cost_tax[i];
-            if (i < (int)battery_discharge.size()) this->odin_battery_discharge_[i] = battery_discharge[i];
+            if (i < (int)sched.size()      && !std::isnan(sched[i]))       this->odin_schedule_[i]          = sched[i];
+            if (i < (int)energy.size()     && !std::isnan(energy[i]))      this->odin_energy_[i]            = energy[i];
+            if (i < (int)production.size() && !std::isnan(production[i]))  this->odin_production_[i]        = production[i];
+            if (i < (int)exp_temp.size()   && !std::isnan(exp_temp[i]))    this->odin_expected_temp_[i]     = exp_temp[i];
+            if (i < (int)cost.size()       && !std::isnan(cost[i]))        this->odin_cost_[i]              = cost[i];
+            if (i < (int)cost_tax.size()   && !std::isnan(cost_tax[i]))    this->odin_cost_tax_[i]          = cost_tax[i];
+            if (i < (int)battery_discharge.size() && !std::isnan(battery_discharge[i])) this->odin_battery_discharge_[i] = battery_discharge[i];
         }
     }
 
