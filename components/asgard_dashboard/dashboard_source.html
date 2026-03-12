@@ -730,10 +730,13 @@ header {
   <div class="chart-card full-width" style="margin-top: 15px; grid-column: 1 / -1;">
     <div class="chart-header">
       <div class="section-title" style="margin:0">Energy (24h)</div>
-      <div class="chart-legend">
-        <span style="color:#00c8ff; font-size:10px;">■ Exp. Cons.</span>
-        <span style="color:#7fff7f; font-size:10px;">■ Actual Cons.</span>
-        <span style="color:#fb923c; font-size:10px;">■ Exp. Prod.</span>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button class="log-btn" id="btn-reset-zoom-odin" style="display:none; padding: 2px 8px; font-size: 9px;" onclick="resetOdinZoom()">Reset Zoom</button>
+        <div class="chart-legend">
+          <span style="color:#00c8ff; font-size:10px;">■ Exp. Cons.</span>
+          <span style="color:#7fff7f; font-size:10px;">■ Actual Cons.</span>
+          <span style="color:#fb923c; font-size:10px;">■ Exp. Prod.</span>
+        </div>
       </div>
     </div>
     <div class="chart-container"><canvas id="odinConsChart"></canvas></div>
@@ -1196,7 +1199,19 @@ function initCharts() {
       },
       options: {
           responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } } },
+          plugins: {
+              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
+              zoom: {
+                  pan: { enabled: true, mode: 'x', threshold: 5,
+                      onPan({chart}) { odinZoomed = true; syncOdinScales(chart); },
+                      onPanComplete({chart}) { syncOdinScales(chart); }
+                  },
+                  zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x',
+                      onZoom({chart}) { odinZoomed = true; showOdinResetButton(); syncOdinScales(chart); },
+                      onZoomComplete({chart}) { syncOdinScales(chart); }
+                  }
+              }
+          },
           scales: {
               x: xAxis,
               y: { ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' },
@@ -1205,7 +1220,6 @@ function initCharts() {
       }
   });
 
-  // Cost chart: Expected Cost + Cost incl. Tax
   odinCostChart = new Chart(document.getElementById('odinCostChart').getContext('2d'), {
       type: 'bar',
       data: {
@@ -1217,7 +1231,19 @@ function initCharts() {
       },
       options: {
           responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } } },
+          plugins: {
+              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
+              zoom: {
+                  pan: { enabled: true, mode: 'x', threshold: 5,
+                      onPan({chart}) { odinZoomed = true; syncOdinScales(chart); },
+                      onPanComplete({chart}) { syncOdinScales(chart); }
+                  },
+                  zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x',
+                      onZoom({chart}) { odinZoomed = true; showOdinResetButton(); syncOdinScales(chart); },
+                      onZoomComplete({chart}) { syncOdinScales(chart); }
+                  }
+              }
+          },
           scales: {
               x: xAxis,
               y: { ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' },
@@ -1237,7 +1263,19 @@ function initCharts() {
       },
       options: {
           responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont } } },
+          plugins: {
+              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont } },
+              zoom: {
+                  pan: { enabled: true, mode: 'x', threshold: 5,
+                      onPan({chart}) { odinZoomed = true; syncOdinScales(chart); },
+                      onPanComplete({chart}) { syncOdinScales(chart); }
+                  },
+                  zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x',
+                      onZoom({chart}) { odinZoomed = true; showOdinResetButton(); syncOdinScales(chart); },
+                      onZoomComplete({chart}) { syncOdinScales(chart); }
+                  }
+              }
+          },
           scales: { x: xAxis, y: { ticks: { color: '#4a5a7a', font: monoFont }, grid: { color: '#1e2d4a' } } }
       }
   });
@@ -1250,7 +1288,19 @@ function initCharts() {
       },
       options: {
           responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: { legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } } },
+          plugins: {
+              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
+              zoom: {
+                  pan: { enabled: true, mode: 'x', threshold: 5,
+                      onPan({chart}) { odinZoomed = true; syncOdinScales(chart); },
+                      onPanComplete({chart}) { syncOdinScales(chart); }
+                  },
+                  zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x',
+                      onZoom({chart}) { odinZoomed = true; showOdinResetButton(); syncOdinScales(chart); },
+                      onZoomComplete({chart}) { syncOdinScales(chart); }
+                  }
+              }
+          },
           scales: {
               x: xAxis,
               y: { ticks: { color: '#fbbf24', font: monoFont }, grid: { color: '#1e2d4a' },
@@ -2242,6 +2292,38 @@ function resetAllZoom() {
 
 function showResetButton() {
   document.getElementById('btn-reset-zoom').style.display = 'block';
+}
+
+let odinZoomed = false;
+
+function syncOdinScales(sourceChart) {
+  const min = sourceChart.scales.x.min;
+  const max = sourceChart.scales.x.max;
+  [odinConsChart, odinCostChart, odinTempChart, odinBattChart].forEach(c => {
+    if (c && c !== sourceChart) {
+      c.options.scales.x.min = min;
+      c.options.scales.x.max = max;
+      c.update('none');
+    }
+  });
+  showOdinResetButton();
+}
+
+function resetOdinZoom() {
+  odinZoomed = false;
+  [odinConsChart, odinCostChart, odinTempChart, odinBattChart].forEach(c => {
+    if (c) {
+      c.options.scales.x.min = null;
+      c.options.scales.x.max = null;
+      c.resetZoom();
+      c.update();
+    }
+  });
+  document.getElementById('btn-reset-zoom-odin').style.display = 'none';
+}
+
+function showOdinResetButton() {
+  document.getElementById('btn-reset-zoom-odin').style.display = 'block';
 }
 
 async function loadServerHistory() {

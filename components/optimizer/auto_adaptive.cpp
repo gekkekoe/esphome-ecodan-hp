@@ -83,10 +83,9 @@ namespace esphome
                 int current_hour = this->get_current_ecodan_hour();
 
                 if (current_day != this->odin_data_day_) {
-                    // Day rolled over — data is stale
+                    // Day rolled over — data is stale, wait for new solve
                     this->odin_data_ready_ = false;
                     xSemaphoreGive(this->odin_mutex_);
-                    apply_solver_soft_stop(false);
                     return result;
                 }
 
@@ -313,18 +312,29 @@ namespace esphome
         // ─────────────────────────────────────────────────────────────────
 
         void Optimizer::run_auto_adaptive_loop() {
-            if (!this->state_.auto_adaptive_control_enabled->state) return;
+            if (this->adaptive_loop_running_) {
+                ESP_LOGD(OPTIMIZER_TAG, "run_auto_adaptive_loop: re-entrant call ignored");
+                return;
+            }
+            this->adaptive_loop_running_ = true;
+
+            if (!this->state_.auto_adaptive_control_enabled->state) {
+                this->adaptive_loop_running_ = false;
+                return;
+            }
 
             auto &status = this->state_.ecodan_instance->get_status();
 
             if (this->is_system_hands_off(status)) {
                 ESP_LOGD(OPTIMIZER_TAG, "System is busy (DHW/Defrost/Lockout). Exiting.");
+                this->adaptive_loop_running_ = false;
                 return;
             }
 
             if (status.HeatingCoolingMode != esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP &&
                 status.HeatingCoolingMode != esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP) {
                 ESP_LOGD(OPTIMIZER_TAG, "Zone 1 not in fixed flow mode. Exiting.");
+                this->adaptive_loop_running_ = false;
                 return;
             }
 
@@ -332,16 +342,21 @@ namespace esphome
                 status.HeatingCoolingModeZone2 != esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP &&
                 status.HeatingCoolingModeZone2 != esphome::ecodan::Status::HpMode::COOL_FLOW_TEMP) {
                 ESP_LOGD(OPTIMIZER_TAG, "Zone 2 not in fixed flow mode. Exiting.");
+                this->adaptive_loop_running_ = false;
                 return;
             }
 
             if (isnan(this->state_.hp_feed_temp->state) || isnan(status.OutsideTemperature)) {
                 ESP_LOGW(OPTIMIZER_TAG, "Sensor data unavailable. Exiting.");
+                this->adaptive_loop_running_ = false;
                 return;
             }
 
             float actual_outside_temp = this->resolve_outside_temp_();
-            if (isnan(actual_outside_temp)) return;
+            if (isnan(actual_outside_temp)) {
+                this->adaptive_loop_running_ = false;
+                return;
+            }
 
             auto heating_type_index = this->state_.heating_system_type->active_index().value_or(0);
             auto prof = this->get_heating_profile_(heating_type_index);
@@ -420,6 +435,8 @@ namespace esphome
                         set_flow_temp(final_flow, OptimizerZone::SINGLE);
                 }
             }
+
+            this->adaptive_loop_running_ = false;
         }
 
     } // namespace optimizer

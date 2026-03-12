@@ -24,6 +24,7 @@ esphome:
                 .num_raw_avg_outside_temp = id(num_raw_avg_outside_temp),
                 .num_raw_avg_room_temp = id(num_raw_avg_room_temp),
                 .num_raw_delta_room_temp = id(num_raw_delta_room_temp),
+                .num_raw_hl_tm_product = id(num_raw_hl_tm_product),
                 .lockout_expiration_timestamp = id(lockout_expiration_timestamp)
             };
 

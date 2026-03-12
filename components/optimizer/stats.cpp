@@ -1,4 +1,5 @@
 #include "optimizer.h"
+#include "esphome/components/ecodan/ecodan.h"
 #include "esphome/core/log.h"
 #include <cmath>
 
@@ -20,8 +21,78 @@ namespace esphome
             if (this->last_check_ms_ != 0) {    
                 float minutes_passed = (now - this->last_check_ms_) / 60000.0f;
 
+                // If gap > 10 minutes (reboot/reconnect), reset free cooling window
+                // to avoid accumulating stale time into the measurement.
+                if (minutes_passed > 10.0f) {
+                    if (this->fc_active_) {
+                        ESP_LOGD(OPTIMIZER_TAG, "Free cooling window reset after %.0f min gap (reconnect/reboot)", minutes_passed);
+                        this->fc_active_ = false;
+                    }
+                    this->last_check_ms_ = now;
+                    return;
+                }
+
                 if (is_running && is_heating_active) {
                     this->daily_runtime_global += minutes_passed;
+                }
+
+                // --- Free cooling window (HP-off period, any time of day) ---
+                float current_room_tmp = this->get_room_current_temp(OptimizerZone::ZONE_1);
+                bool hp_off = !is_running || !is_heating_active;
+
+                if (!isnan(current_room_tmp) && !isnan(status.OutsideTemperature)) {
+                    if (hp_off && !this->fc_active_) {
+                        this->fc_active_     = true;
+                        this->fc_room_start_    = current_room_tmp;
+                        this->fc_outside_sum_   = status.OutsideTemperature;
+                        this->fc_outside_count_ = 1;
+                        this->fc_hours_         = 0.0f;
+                        ESP_LOGD(OPTIMIZER_TAG, "Free cooling window started: room=%.2f°C", current_room_tmp);
+
+                    } else if (hp_off && this->fc_active_) {
+                        this->fc_outside_sum_  += status.OutsideTemperature;
+                        this->fc_outside_count_++;
+                        this->fc_hours_ += minutes_passed / 60.0f;
+
+                    } else if (!hp_off && this->fc_active_) {
+                        // HP just came back on — seal the measurement window
+                        float delta_cool  = this->fc_room_start_ - current_room_tmp;
+                        float t_hours     = this->fc_hours_;
+                        float t_outside   = this->fc_outside_sum_ / this->fc_outside_count_;
+                        float t_room_avg  = (this->fc_room_start_ + current_room_tmp) / 2.0f;
+                        float delta_T_avg = t_room_avg - t_outside;
+                        this->fc_active_ = false;
+
+                        // Quality gates:
+                        //   t_hours > 3h       — minimum window for reliable signal (short bursts are noise)
+                        //   delta_cool > 0.15K — above sensor noise floor (~0.1K for NTC)
+                        //   delta_T_avg > 2K   — some gradient needed for meaningful physics
+                        //   delta_cool < 5K    — reject frost-protection outliers
+                        if (t_hours > 3.0f && delta_cool > 0.15f && delta_T_avg > 2.0f && delta_cool < 5.0f) {
+                            float hl_tm = delta_cool * delta_T_avg * t_hours;
+                            // Physical sanity: HL(0.01..0.5) × TM(0.5..20) — generous for high-insulation
+                            if (hl_tm > 0.005f && hl_tm < 10.0f) {
+                                if (this->state_.num_raw_hl_tm_product != nullptr) {
+                                    float cur = this->state_.num_raw_hl_tm_product->state;
+                                    float next = (cur <= 0.001f || std::isnan(cur)) ? hl_tm
+                                                 : (0.20f * hl_tm + 0.80f * cur);
+                                    this->state_.num_raw_hl_tm_product->publish_state(next);
+                                }
+                                ESP_LOGI(OPTIMIZER_TAG,
+                                    "Free cooling: %.2f->%.2f°C (%.2fK) in %.1fh, "
+                                    "outside=%.1f°C -> HL×TM=%.4f",
+                                    this->fc_room_start_, current_room_tmp,
+                                    delta_cool, t_hours, t_outside, hl_tm);
+                            } else {
+                                ESP_LOGW(OPTIMIZER_TAG,
+                                    "Free cooling HL×TM=%.4f out of range, discarded", hl_tm);
+                            }
+                        } else {
+                            ESP_LOGD(OPTIMIZER_TAG,
+                                "Free cooling window too short/small: delta=%.2fK, hours=%.1f, delta_T=%.1fK",
+                                delta_cool, t_hours, delta_T_avg);
+                        }
+                    }
                 }
             }
             this->last_check_ms_ = now;

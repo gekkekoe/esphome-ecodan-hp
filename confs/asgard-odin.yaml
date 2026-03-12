@@ -45,6 +45,7 @@ script:
                       "\"avg_room_temp\":%.2f,"
                       "\"delta_room_temp\":%.2f,"
                       "\"max_output\":%.2f,"
+                      "\"hl_tm_product\":%.4f,"
                       "\"current_hour\":%d,"
                       "\"current_room_temp\":%.2f,"
                       "\"battery_soc_kwh\":%.2f,"
@@ -58,6 +59,7 @@ script:
                       id(num_raw_avg_room_temp).state,
                       id(num_raw_delta_room_temp).state,
                       id(num_raw_max_output).state,
+                      id(num_raw_hl_tm_product).state,
                       _cur_hour,
                       id(virtual_climate_z1).current_temperature,
                       id(num_battery_soc_kwh).state,

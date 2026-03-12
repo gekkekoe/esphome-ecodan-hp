@@ -287,6 +287,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "raw_avg_room_temp") { doNumber(num_raw_avg_room_temp_); return; }
   if (key == "raw_delta_room_temp") { doNumber(num_raw_delta_room_temp_); return; }
   if (key == "raw_max_output") { doNumber(num_raw_max_output_); return; }
+  if (key == "raw_hl_tm_product") { doNumber(num_raw_hl_tm_product_); return; }
   if (key == "battery_soc_kwh") { doNumber(num_battery_soc_kwh_); return; }
   if (key == "battery_max_discharge_kw") { doNumber(num_battery_max_discharge_kw_); return; }
 
@@ -453,6 +454,7 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_raw_avg_room_temp_, current_snapshot_.num_raw_avg_room_temp);
   get_n(num_raw_delta_room_temp_, current_snapshot_.num_raw_delta_room_temp);
   get_n(num_raw_max_output_, current_snapshot_.num_raw_max_output);
+  get_n(num_raw_hl_tm_product_, current_snapshot_.num_raw_hl_tm_product);
 
   get_n(num_battery_soc_kwh_, current_snapshot_.num_battery_soc_kwh);
   get_n(num_battery_max_discharge_kw_, current_snapshot_.num_battery_max_discharge_kw);
@@ -693,6 +695,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
 
   p_n("raw_max_output", snap.num_raw_max_output.val); 
   p_lim("raw_max_output_lim", snap.num_raw_max_output);
+  p_n("raw_hl_tm_product", snap.num_raw_hl_tm_product.val);
 
   p_n("battery_soc_kwh", snap.num_battery_soc_kwh.val);
   p_lim("battery_soc_kwh_lim", snap.num_battery_soc_kwh);
@@ -986,6 +989,25 @@ void EcodanDashboard::nvs_load_odin_() {
         this->odin_stored_day_ = (int)stored_day;
         this->odin_data_ready_ = true;
         ESP_LOGI(TAG, "NVS: ODIN arrays restored from flash (day=%d)", stored_day);
+
+        // If the stored day doesn't match today, the actual arrays belong to a
+        // previous day — clear them now so stale data never appears in the graph.
+        // (The day check in store_odin_data only handles day_delta==1 rollovers;
+        //  multi-day gaps after reboot are caught here.)
+        int today = 0;
+        {
+            time_t now_t = 0;
+            time(&now_t);
+            struct tm ti;
+            gmtime_r(&now_t, &ti);
+            today = ti.tm_yday;
+        }
+        if (today != 0 && today != (int)stored_day) {
+            ESP_LOGI(TAG, "NVS: stored day %d != today %d — clearing actual arrays on restore",
+                     (int)stored_day, today);
+            this->odin_actual_cons_.assign(24, NAN);
+            this->odin_actual_room_.assign(24, NAN);
+        }
     } else {
         ESP_LOGW(TAG, "NVS: ODIN cache incomplete, discarding");
         this->odin_data_ready_ = false;
@@ -1023,6 +1045,26 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         if (this->odin_actual_room_.size() != 24) this->odin_actual_room_.assign(24, NAN);
         this->odin_data_ready_  = true;
         this->odin_stored_day_  = current_day;
+    }
+
+    // Real day transition: day advanced by exactly 1 (not a reboot with stale NVS day).
+    // Only clear hours >= current_hour — hours before this are measured actuals that are still valid.
+    if (current_day != this->odin_stored_day_) {
+        int day_delta = current_day - this->odin_stored_day_;
+        if (day_delta == 1 || day_delta == -364) {
+            // Normal midnight rollover: clear future actuals, keep past hours measured today
+            ESP_LOGI(TAG, "ODIN day transition (%d -> %d): clearing actual data from hour %d onward",
+                     this->odin_stored_day_, current_day, current_hour);
+            for (int i = current_hour; i < 24; i++) {
+                if (i < (int)this->odin_actual_cons_.size()) this->odin_actual_cons_[i] = NAN;
+                if (i < (int)this->odin_actual_room_.size()) this->odin_actual_room_[i] = NAN;
+            }
+        } else {
+            // Multi-day gap (reboot with stale NVS, or missed days): just adopt new day, don't wipe actuals
+            ESP_LOGI(TAG, "ODIN day gap (%d -> %d, delta=%d): adopting new day without clearing actuals",
+                     this->odin_stored_day_, current_day, day_delta);
+        }
+        this->odin_stored_day_ = current_day;
     }
 
     // Partial update: overwrite current_hour onward (past hours stay from NVS).

@@ -94,6 +94,7 @@ asgard_dashboard:
   num_raw_avg_room_temp_id:          num_raw_avg_room_temp
   num_raw_delta_room_temp_id:        num_raw_delta_room_temp
   num_raw_max_output_id:             num_raw_max_output
+  num_raw_hl_tm_product_id:          num_raw_hl_tm_product
   num_battery_soc_kwh_id:            num_battery_soc_kwh
   num_battery_max_discharge_kw_id:   num_battery_max_discharge_kw
   solver_kwh_meter_feedback_source_id: solver_kwh_meter_feedback_source

@@ -62,6 +62,14 @@ namespace esphome
       float    last_total_heating_produced_ = 0.0f;
       float    last_total_heating_consumed_ = 0.0f;
 
+      // Free cooling window tracking (HP-off period, any time of day)
+      // Measures HL×TM product from unregulated cooldown, free of solar/DHW contamination.
+      bool     fc_active_        = false;
+      float    fc_room_start_    = NAN;
+      float    fc_outside_sum_   = 0.0f;
+      int      fc_outside_count_ = 0;
+      float    fc_hours_         = 0.0f;
+
       // ODIN solver data
       bool     odin_fetch_requested_{false};
       std::vector<float> odin_schedule_;
@@ -73,6 +81,10 @@ namespace esphome
       // Solver soft-stop state
       int  solver_stop_hour_   {-1};
       bool solver_stop_active_ {false};
+
+      // Reentrancy guard — prevents run_auto_adaptive_loop from being called
+      // recursively via ThermostatClimate callbacks fired by apply_solver_soft_stop
+      bool adaptive_loop_running_ {false};
 
       // ── adaptive_loop.cpp ──────────────────────────────────────────────
       HeatingProfile   get_heating_profile_(int type_index);

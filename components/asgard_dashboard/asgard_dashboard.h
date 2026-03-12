@@ -138,6 +138,7 @@ struct DashboardSnapshot {
   NumData num_raw_avg_room_temp;
   NumData num_raw_delta_room_temp;
   NumData num_raw_max_output;
+  NumData num_raw_hl_tm_product;
 
   NumData num_battery_soc_kwh;
   NumData num_battery_max_discharge_kw;
@@ -256,6 +257,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_raw_avg_room_temp(number::Number *n) { num_raw_avg_room_temp_ = n; }
   void set_num_raw_delta_room_temp(number::Number *n) { num_raw_delta_room_temp_ = n; }
   void set_num_raw_max_output(number::Number *n) { num_raw_max_output_ = n; }
+  void set_num_raw_hl_tm_product(number::Number *n) { num_raw_hl_tm_product_ = n; }
 
   void set_num_battery_soc_kwh(number::Number *n) { num_battery_soc_kwh_ = n; }
   void set_num_battery_max_discharge_kw(number::Number *n) { num_battery_max_discharge_kw_ = n; }
@@ -405,6 +407,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_raw_avg_room_temp_{nullptr};
   number::Number *num_raw_delta_room_temp_{nullptr};
   number::Number *num_raw_max_output_{nullptr};
+  number::Number *num_raw_hl_tm_product_{nullptr};
 
   number::Number *num_battery_soc_kwh_{nullptr};
   number::Number *num_battery_max_discharge_kw_{nullptr};

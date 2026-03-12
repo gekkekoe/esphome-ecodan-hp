@@ -97,7 +97,10 @@ namespace esphome
 
                 ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: 0 kWh hour %d — cutting relay", current_hour);
 
-                // Set thermostat to OFF first so it won't re-trigger the relay
+                this->solver_stop_active_ = true;
+                this->solver_stop_hour_   = current_hour;
+
+                // Set thermostat to OFF first so it won't re-trigger the relay.
                 if (this->state_.asgard_vt_z1 != nullptr) {
                     auto call = this->state_.asgard_vt_z1->make_call();
                     call.set_mode("off");
@@ -113,15 +116,18 @@ namespace esphome
                 if (relay_z2 != nullptr)
                     relay_z2->turn_off();
 
-                this->solver_stop_active_ = true;
-                this->solver_stop_hour_   = current_hour;
-
             } else {
                 if (!this->solver_stop_active_)
                     return;
 
                 ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: lifting stop (was hour %d, now %d)",
                          this->solver_stop_hour_, current_hour);
+
+                // Clear state BEFORE performing thermostat calls.
+                // This prevents a re-entrant run_auto_adaptive_loop (triggered by
+                // ThermostatClimate callbacks) from calling apply_solver_soft_stop(false)
+                this->solver_stop_active_ = false;
+                this->solver_stop_hour_   = -1;
 
                 // Restore thermostats to HEAT — relay hysteresis handles turn-on
                 if (this->state_.asgard_vt_z1 != nullptr) {
@@ -134,9 +140,6 @@ namespace esphome
                     call.set_mode("heat");
                     call.perform();
                 }
-
-                this->solver_stop_active_ = false;
-                this->solver_stop_hour_   = -1;
             }
         }
 
