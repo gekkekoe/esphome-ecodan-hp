@@ -287,7 +287,11 @@ namespace esphome
             float error           = is_heating_mode ? (room_target_temp - room_temp) : (room_temp - room_target_temp);
             bool  use_linear      = (heating_type_index % 2 != 0);
             float error_positive  = fmax(error, 0.0f);
-            float x               = fmin(error_positive / prof.max_error_range, 1.0f);
+
+            // Scale max_error_range down with cold_factor so the system reaches
+            // full output at a smaller room error when it's cold outside.
+            float effective_error_range = prof.max_error_range * (1.0f - 0.5f * std::min(cold_factor, 1.0f));
+            float x               = fmin(error_positive / effective_error_range, 1.0f);
             float error_factor    = use_linear ? x : x * x * (3.0f - 2.0f * x);
             float smart_boost     = is_heating_mode ? this->calculate_smart_boost(heating_type_index, error) : 1.0f;
 
@@ -295,8 +299,8 @@ namespace esphome
             float target_delta = dynamic_min + error_factor * smart_boost * (prof.max_delta_t - dynamic_min);
 
             ESP_LOGD(OPTIMIZER_TAG,
-                "Z%d target_delta=%.2f cold_factor=%.2f dyn_min=%.2f error_factor=%.2f boost=%.2f linear=%d",
-                (i + 1), target_delta, cold_factor, dynamic_min, error_factor, smart_boost, use_linear);
+                "Z%d target_delta=%.2f cold_factor=%.2f dyn_min=%.2f eff_range=%.2f error_factor=%.2f boost=%.2f linear=%d",
+                (i + 1), target_delta, cold_factor, dynamic_min, effective_error_range, error_factor, smart_boost, use_linear);
 
             if (is_heating_mode && is_heating_active) {
                 out_flow_heat = this->calculate_heating_flow_(
