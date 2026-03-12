@@ -38,6 +38,11 @@ jobs:
           sed "s/manifest/$MANIFEST/g; s/FIRMWARE_VERSION/$PREFIX/g" confs/ota.yaml > ota.yaml
           echo "<<: !include ota.yaml" >> build.yaml
 
+      - if: contains(matrix.board, 'asgard')
+        name: add asgard external component
+        run: |
+          echo "<<: !include asgard-dashboard.yaml" >> build.yaml
+
       - if: matrix.zone == 'z2'
         name: adjust build.yaml for 2 zones
         run: |

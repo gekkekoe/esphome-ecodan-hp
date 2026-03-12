@@ -1,0 +1,4 @@
+external_components:
+  - source: github://gekkekoe/esphome-ecodan-hp@main
+    components: [ asgard_dashboard ]
+    refresh: always
