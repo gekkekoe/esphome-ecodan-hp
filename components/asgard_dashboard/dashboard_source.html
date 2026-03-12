@@ -1225,8 +1225,8 @@ function initCharts() {
       data: {
           labels: labels24,
           datasets: [
-              { label: 'Exp. Cost (€)',       data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
-              { label: 'Cost incl. Tax (€)',   data: [], backgroundColor: 'rgba(192,132,252,0.35)', borderColor: '#c084fc', borderWidth: 1 }
+              { label: 'Exp. Cost (€)',    data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
+              { label: 'Actual Cost (€)',  data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
           ]
       },
       options: {
@@ -1370,9 +1370,19 @@ function updateOdinCharts() {
     const expCons       = odinDataCache ? odinDataCache.energy_consumption         : new Array(24).fill(null);
     const expProd       = odinDataCache ? odinDataCache.heat_production             : new Array(24).fill(null);
     const expCost       = odinDataCache ? odinDataCache.expected_cost              : new Array(24).fill(null);
-    const expTax        = odinDataCache ? odinDataCache.expected_cost_with_tax     : new Array(24).fill(null);
     const expTemp       = odinDataCache ? odinDataCache.expected_begin_temp        : new Array(24).fill(null);
     const battDischarge = odinDataCache ? (odinDataCache.battery_discharge || new Array(24).fill(0)) : new Array(24).fill(0);
+    const prices        = odinDataCache ? (odinDataCache.prices || new Array(24).fill(null)) : new Array(24).fill(null);
+
+    // Actual cost per hour = actual consumption (kWh) × price (EUR/MWh) / 1000
+    const actualCost = new Array(24).fill(null);
+    for (let h = 0; h < 24; h++) {
+        const cons  = actualConsByHour[h];
+        const price = prices[h];
+        if (cons !== null && cons > 0 && price !== null && price > 0) {
+            actualCost[h] = parseFloat((cons * price / 1000).toFixed(4));
+        }
+    }
 
     // Energy chart: Exp Cons, Actual Cons, Exp Production
     odinConsChart.data.datasets[0].data = expCons;
@@ -1380,9 +1390,9 @@ function updateOdinCharts() {
     odinConsChart.data.datasets[2].data = expProd;
     odinConsChart.update('none');
 
-    // Cost chart
+    // Cost chart: Exp Cost, Actual Cost
     odinCostChart.data.datasets[0].data = expCost;
-    odinCostChart.data.datasets[1].data = expTax;
+    odinCostChart.data.datasets[1].data = actualCost;
     odinCostChart.update('none');
 
     // Temp chart
