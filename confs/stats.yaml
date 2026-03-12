@@ -1,8 +1,12 @@
+substitutions:
+  is_internal_asgard_only: "true"
+
 number:
  # Overridable solver inputs
   - platform: template
     id: num_raw_heat_produced
     name: ${num_raw_heat_produced}
+    internal: ${is_internal_asgard_only}
     optimistic: true
     restore_value: true
     initial_value: 0.0
@@ -13,6 +17,7 @@ number:
   - platform: template
     id: num_raw_elec_consumed
     name: ${num_raw_elec_consumed}
+    internal: ${is_internal_asgard_only}
     optimistic: true
     restore_value: true
     initial_value: 0.0
@@ -23,6 +28,7 @@ number:
   - platform: template
     id: num_raw_runtime_hours
     name: ${num_raw_runtime_hours}
+    internal: ${is_internal_asgard_only}
     optimistic: true
     restore_value: true
     initial_value: 0.0
@@ -33,6 +39,7 @@ number:
   - platform: template
     id: num_raw_avg_outside_temp
     name: ${num_raw_avg_outside_temp}
+    internal: ${is_internal_asgard_only}
     optimistic: true
     restore_value: true
     initial_value: 7.0
@@ -43,6 +50,7 @@ number:
   - platform: template
     id: num_raw_avg_room_temp
     name: ${num_raw_avg_room_temp}
+    internal: ${is_internal_asgard_only}
     optimistic: true
     restore_value: true
     initial_value: 20.0
@@ -53,6 +61,7 @@ number:
   - platform: template
     id: num_raw_delta_room_temp
     name: ${num_raw_delta_room_temp}
+    internal: ${is_internal_asgard_only}
     optimistic: true
     restore_value: true
     initial_value: 0.0
@@ -63,6 +72,7 @@ number:
   - platform: template
     name: "Raw Max Output Power"
     id: num_raw_max_output
+    internal: ${is_internal_asgard_only}
     initial_value: 7.0
     min_value: 1.0
     max_value: 20.0
@@ -75,6 +85,7 @@ number:
   - platform: template
     id: num_battery_soc_kwh
     name: ${num_battery_soc_kwh}
+    internal: ${is_internal_asgard_only}
     icon: mdi:battery-charging
     optimistic: true
     restore_value: true
@@ -87,6 +98,7 @@ number:
   - platform: template
     id: num_battery_max_discharge_kw
     name: ${num_battery_max_discharge_kw}
+    internal: ${is_internal_asgard_only}
     icon: mdi:lightning-bolt
     optimistic: true
     restore_value: true
@@ -99,6 +111,7 @@ number:
   - platform: template
     id: num_raw_hl_tm_product
     name: "Raw HL×TM Product"
+    internal: ${is_internal_asgard_only}
     unit_of_measurement: "kWh²/K"
     optimistic: true
     restore_value: true

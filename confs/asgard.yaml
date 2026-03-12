@@ -6,6 +6,7 @@ substitutions:
   led_gpio_pin: 42
   # enable asgard prefixes
   asgard_prefix: ""
+  is_internal_asgard_only: "false"
   z2_dashboard: !include
     file: asgard-dashboard-z2.yaml
   z2_thermostat: !include
