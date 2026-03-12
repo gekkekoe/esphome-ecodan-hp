@@ -418,6 +418,7 @@ private:
   HistoryRecord history_buffer_[MAX_HISTORY];
   size_t history_head_{0};
   size_t history_count_{0};
+  SemaphoreHandle_t history_mutex_{NULL};
   uint32_t last_history_time_{0};
 
   // snapshot data to avoid concurrency issues

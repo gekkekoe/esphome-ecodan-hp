@@ -23,6 +23,7 @@ void EcodanDashboard::setup() {
   
   action_lock_ = xSemaphoreCreateMutex();
   snapshot_mutex_ = xSemaphoreCreateMutex();
+  history_mutex_ = xSemaphoreCreateMutex();
 
   // Restore last-known ODIN arrays from flash so charts survive reboot
   this->nvs_load_odin_();
@@ -782,8 +783,13 @@ void EcodanDashboard::record_history_() {
   } else {
       // Not heating: carry over the last recorded value from the history array
       if (history_count_ > 0) {
-          size_t prev_idx = (history_head_ + MAX_HISTORY - 1) % MAX_HISTORY;
-          rec.cons = history_buffer_[prev_idx].cons;
+          if (history_mutex_ != NULL && xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
+              size_t prev_idx = (history_head_ + MAX_HISTORY - 1) % MAX_HISTORY;
+              rec.cons = history_buffer_[prev_idx].cons;
+              xSemaphoreGive(history_mutex_);
+          } else {
+              rec.cons = pack_temp_(current_cons);
+          }
       } else {
           // Edge case: literally the first minute after boot
           rec.cons = pack_temp_(current_cons);
@@ -805,52 +811,67 @@ void EcodanDashboard::record_history_() {
   }
   rec.flags |= ((mode_enc & 0x0F) << 6);
 
-  history_buffer_[history_head_] = rec;
-  history_head_ = (history_head_ + 1) % MAX_HISTORY;
-  if (history_count_ < MAX_HISTORY) history_count_++;
+  // Write under lock — handle_history_request_ runs on httpd task and reads concurrently
+  if (history_mutex_ != NULL && xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
+      history_buffer_[history_head_] = rec;
+      history_head_ = (history_head_ + 1) % MAX_HISTORY;
+      if (history_count_ < MAX_HISTORY) history_count_++;
+      xSemaphoreGive(history_mutex_);
+  } else {
+      ESP_LOGW(TAG, "record_history_: failed to acquire history_mutex_, record dropped");
+  }
 }
 
 void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
-  // uint32_t free_heap = esp_get_free_heap_size();
-  // uint32_t max_block = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-  // ESP_LOGI(TAG, "history_request_: \t\tMemory Stats | Total Free: %u bytes | Largest Block: %u bytes", free_heap, max_block);
-
   httpd_req_t *req = *request;
   httpd_resp_set_status(req, "200 OK");
   httpd_resp_set_type(req, "application/json");
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
 
-  size_t current_count = history_count_;
-  size_t current_head = history_head_;
+  // Snapshot count/head under lock — record_history_() writes from main loop task
+  size_t current_count, current_head;
+  if (history_mutex_ == NULL || xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(200)) != pdTRUE) {
+      ESP_LOGW(TAG, "handle_history_request_: failed to acquire history_mutex_");
+      httpd_resp_send_chunk(req, "[]", 2);
+      httpd_resp_send_chunk(req, nullptr, 0);
+      return;
+  }
+  current_count = history_count_;
+  current_head  = history_head_;
+  xSemaphoreGive(history_mutex_);
 
   if (current_count == 0) {
     httpd_resp_send_chunk(req, "[]", 2);
-    httpd_resp_send_chunk(req, nullptr, 0); 
+    httpd_resp_send_chunk(req, nullptr, 0);
     return;
   }
-  
+
   size_t start_idx = (current_count == MAX_HISTORY) ? current_head : 0;
   size_t step = (current_count > 360) ? (current_count / 360) : 1;
   if (step < 1) step = 1;
-  
-  // Start the JSON array
+
   httpd_resp_send_chunk(req, "[", 1);
-  
+
   bool first = true;
   for (size_t i = 0; i < current_count; i += step) {
     size_t idx = (start_idx + i) % MAX_HISTORY;
-    HistoryRecord rec = history_buffer_[idx];
-    
-    if (!first) {
-      httpd_resp_send_chunk(req, ",", 1);
+
+    HistoryRecord rec;
+    if (history_mutex_ != NULL && xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
+        rec = history_buffer_[idx];
+        xSemaphoreGive(history_mutex_);
+    } else {
+        continue;
     }
+
+    if (!first) httpd_resp_send_chunk(req, ",", 1);
     first = false;
-    
+
     char item[128];
-    int len = snprintf(item, sizeof(item), "[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u,%d]", 
-      rec.timestamp, rec.hp_feed, rec.hp_return, 
-      rec.z1_sp, rec.z2_sp, rec.z1_curr, rec.z2_curr, 
+    int len = snprintf(item, sizeof(item), "[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u,%d]",
+      rec.timestamp, rec.hp_feed, rec.hp_return,
+      rec.z1_sp, rec.z2_sp, rec.z1_curr, rec.z2_curr,
       rec.z1_flow, rec.z2_flow, rec.freq, rec.flags,
       rec.cons
     );
