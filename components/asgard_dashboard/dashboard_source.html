@@ -1185,6 +1185,38 @@ function initCharts() {
   const labels24 = Array.from({length: 24}, (_, i) => `${i}:00`);
   const monoFont = { family: "'JetBrains Mono'", size: 10 };
   const xAxis   = { ticks: { color: '#4a5a7a', font: monoFont }, grid: { color: '#1e2d4a' } };
+  const odinZoomConfig = {
+      pan: {
+          enabled: true, mode: 'x', modifierKey: 'alt', threshold: 10,
+          onPanStart({chart, event}) {
+              // Sta verticaal scrollen op de pagina toe!
+              if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) return false;
+              chart.options.plugins.tooltip.enabled = false;
+              chart.tooltip.setActiveElements([], {x: 0, y: 0});
+              chart.update('none');
+          },
+          onPan({chart}) { odinZoomed = true; syncOdinScales(chart); },
+          onPanComplete({chart}) {
+              chart.options.plugins.tooltip.enabled = true;
+              chart.update('none');
+              syncOdinScales(chart);
+          }
+      },
+      zoom: {
+          wheel: { enabled: true, speed: 0.05 }, pinch: { enabled: true }, mode: 'x',
+          onZoomStart({chart}) {
+              chart.options.plugins.tooltip.enabled = false;
+              chart.tooltip.setActiveElements([], {x: 0, y: 0}); 
+              chart.update('none');
+          },
+          onZoom({chart}) { odinZoomed = true; showOdinResetButton(); syncOdinScales(chart); },
+          onZoomComplete({chart}) {
+              chart.options.plugins.tooltip.enabled = true;
+              chart.update('none');
+              syncOdinScales(chart);
+          }
+      }
+  };
 
   // Energy chart: Exp Cons + Actual Cons + Exp Production — all kWh bars
   odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2d'), {
@@ -1201,16 +1233,7 @@ function initCharts() {
           responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
           plugins: {
               legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
-              zoom: {
-                  pan: { enabled: true, mode: 'x', threshold: 5,
-                      onPan({chart}) { odinZoomed = true; syncOdinScales(chart); },
-                      onPanComplete({chart}) { syncOdinScales(chart); }
-                  },
-                  zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x',
-                      onZoom({chart}) { odinZoomed = true; showOdinResetButton(); syncOdinScales(chart); },
-                      onZoomComplete({chart}) { syncOdinScales(chart); }
-                  }
-              }
+              zoom: odinZoomConfig
           },
           scales: {
               x: xAxis,
@@ -1233,16 +1256,7 @@ function initCharts() {
           responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
           plugins: {
               legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
-              zoom: {
-                  pan: { enabled: true, mode: 'x', threshold: 5,
-                      onPan({chart}) { odinZoomed = true; syncOdinScales(chart); },
-                      onPanComplete({chart}) { syncOdinScales(chart); }
-                  },
-                  zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x',
-                      onZoom({chart}) { odinZoomed = true; showOdinResetButton(); syncOdinScales(chart); },
-                      onZoomComplete({chart}) { syncOdinScales(chart); }
-                  }
-              }
+              zoom: odinZoomConfig
           },
           scales: {
               x: xAxis,
@@ -1291,16 +1305,7 @@ function initCharts() {
                   // hide the redundant min label — band is visually obvious
                   filter: item => item.text !== 'Schedule Min (°C)' && item.text !== 'Schedule Max (°C)'
               }},
-              zoom: {
-                  pan: { enabled: true, mode: 'x', threshold: 5,
-                      onPan({chart}) { odinZoomed = true; syncOdinScales(chart); },
-                      onPanComplete({chart}) { syncOdinScales(chart); }
-                  },
-                  zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x',
-                      onZoom({chart}) { odinZoomed = true; showOdinResetButton(); syncOdinScales(chart); },
-                      onZoomComplete({chart}) { syncOdinScales(chart); }
-                  }
-              }
+              zoom: odinZoomConfig
           },
           scales: { x: xAxis, y: { ticks: { color: '#4a5a7a', font: monoFont }, grid: { color: '#1e2d4a' } } }
       }
@@ -1316,16 +1321,7 @@ function initCharts() {
           responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
           plugins: {
               legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
-              zoom: {
-                  pan: { enabled: true, mode: 'x', threshold: 5,
-                      onPan({chart}) { odinZoomed = true; syncOdinScales(chart); },
-                      onPanComplete({chart}) { syncOdinScales(chart); }
-                  },
-                  zoom: { wheel: { enabled: true, speed: 0.1 }, pinch: { enabled: true }, mode: 'x',
-                      onZoom({chart}) { odinZoomed = true; showOdinResetButton(); syncOdinScales(chart); },
-                      onZoomComplete({chart}) { syncOdinScales(chart); }
-                  }
-              }
+              zoom: odinZoomConfig
           },
           scales: {
               x: xAxis,
