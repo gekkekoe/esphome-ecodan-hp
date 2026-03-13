@@ -753,6 +753,14 @@ header {
     <div class="chart-header"><div class="section-title" style="margin:0">Battery Discharge Plan (24h)</div></div>
     <div class="chart-container"><canvas id="odinBattChart"></canvas></div>
   </div>
+  <div class="chart-card full-width" style="grid-column: 1 / -1;">
+    <div class="chart-header"><div class="section-title" style="margin:0">Electricity Prices (24h)</div></div>
+    <div class="chart-container"><canvas id="odinPriceChart"></canvas></div>
+  </div>
+  <div class="chart-card full-width" style="grid-column: 1 / -1;">
+    <div class="chart-header"><div class="section-title" style="margin:0">Weather Forecast &amp; Solar Irradiance (24h)</div></div>
+    <div class="chart-container"><canvas id="odinWeatherChart"></canvas></div>
+  </div>
 </div>
 
 <div id="view-logs" class="view-section">
@@ -819,6 +827,8 @@ let odinConsChart = null;
 let odinCostChart = null;
 let odinTempChart = null;
 let odinBattChart = null;
+let odinPriceChart = null;
+let odinWeatherChart = null;
 
 const LIMITS = { 
   'aa-bias': { min: -5, max: 5, step: 0.1 }, 
@@ -1307,7 +1317,8 @@ function initCharts() {
               }},
               zoom: odinZoomConfig
           },
-          scales: { x: xAxis, y: { ticks: { color: '#4a5a7a', font: monoFont }, grid: { color: '#1e2d4a' } } }
+          scales: { x: xAxis, y: { ticks: { color: '#4a5a7a', font: monoFont }, grid: { color: '#1e2d4a' },
+                           title: { display: true, text: '°C', color: '#8295b8' } } }
       }
   });
 
@@ -1330,10 +1341,59 @@ function initCharts() {
           }
       }
   });
+
+  odinPriceChart = new Chart(document.getElementById('odinPriceChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+          labels: labels24,
+          datasets: [{ label: 'Price (EUR/kWh)', data: [], backgroundColor: 'rgba(129,140,248,0.45)', borderColor: '#818cf8', borderWidth: 1 }]
+      },
+      options: {
+          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+          plugins: {
+              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
+              zoom: odinZoomConfig
+          },
+          scales: {
+              x: xAxis,
+              y: { ticks: { color: '#818cf8', font: monoFont }, grid: { color: '#1e2d4a' },
+                   title: { display: true, text: 'EUR/kWh', color: '#818cf8' } }
+          }
+      }
+  });
+
+  odinWeatherChart = new Chart(document.getElementById('odinWeatherChart').getContext('2d'), {
+      type: 'line',
+      data: {
+          labels: labels24,
+          datasets: [
+              { label: 'Outside Temp (°C)', data: [], borderColor: '#38bdf8', borderWidth: 2,
+                backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, spanGaps: true,
+                yAxisID: 'yTemp' },
+              { label: 'Solar Irradiance (W/m²)', data: [], borderColor: '#fde68a', borderWidth: 2,
+                backgroundColor: 'rgba(253,230,138,0.12)', fill: true, tension: 0.3, pointRadius: 0, spanGaps: true,
+                yAxisID: 'ySolar' }
+          ]
+      },
+      options: {
+          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+          plugins: {
+              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
+              zoom: odinZoomConfig
+          },
+          scales: {
+              x: xAxis,
+              yTemp:  { position: 'left',  ticks: { color: '#38bdf8', font: monoFont }, grid: { color: '#1e2d4a' },
+                        title: { display: true, text: '°C', color: '#38bdf8' } },
+              ySolar: { position: 'right', ticks: { color: '#fde68a', font: monoFont }, grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'W/m²', color: '#fde68a' }, min: 0 }
+          }
+      }
+  });
 }
 
 function updateOdinCharts() {
-    if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart) return;
+    if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart || !odinPriceChart || !odinWeatherChart) return;
 
     // actual_cons from NVS holds cumulative kWh meter values per hour-slot.
     // Convert to per-hour delta (same logic as history.cons overlay below).
@@ -1400,6 +1460,10 @@ function updateOdinCharts() {
     const schedBase     = odinDataCache ? (odinDataCache.sched_base || new Array(24).fill(null)) : new Array(24).fill(null);
     const schedMin      = odinDataCache ? (odinDataCache.sched_min  || new Array(24).fill(null)) : new Array(24).fill(null);
     const schedMax      = odinDataCache ? (odinDataCache.sched_max  || new Array(24).fill(null)) : new Array(24).fill(null);
+    const weather       = odinDataCache ? (odinDataCache.weather    || new Array(24).fill(null)) : new Array(24).fill(null);
+    const solar         = odinDataCache ? (odinDataCache.solar      || new Array(24).fill(null)) : new Array(24).fill(null);
+    // prices in EUR/MWh → convert to EUR/kWh for display
+    const pricesKwh     = prices.map(p => p !== null ? parseFloat((p / 1000).toFixed(5)) : null);
 
     // Actual cost per hour = actual consumption (kWh) × price (EUR/MWh) / 1000
     const actualCost = new Array(24).fill(null);
@@ -1436,6 +1500,15 @@ function updateOdinCharts() {
     if (battCard) battCard.style.display = hasBatt ? '' : 'none';
     odinBattChart.data.datasets[0].data = battDischarge;
     odinBattChart.update('none');
+
+    // Price chart
+    odinPriceChart.data.datasets[0].data = pricesKwh;
+    odinPriceChart.update('none');
+
+    // Weather & solar chart
+    odinWeatherChart.data.datasets[0].data = weather;
+    odinWeatherChart.data.datasets[1].data = solar;
+    odinWeatherChart.update('none');
 
     // Run stats card
     const rs = odinDataCache && odinDataCache.last_run;
@@ -2349,7 +2422,7 @@ let odinZoomed = false;
 function syncOdinScales(sourceChart) {
   const min = sourceChart.scales.x.min;
   const max = sourceChart.scales.x.max;
-  [odinConsChart, odinCostChart, odinTempChart, odinBattChart].forEach(c => {
+  [odinConsChart, odinCostChart, odinTempChart, odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
     if (c && c !== sourceChart) {
       c.options.scales.x.min = min;
       c.options.scales.x.max = max;
@@ -2361,7 +2434,7 @@ function syncOdinScales(sourceChart) {
 
 function resetOdinZoom() {
   odinZoomed = false;
-  [odinConsChart, odinCostChart, odinTempChart, odinBattChart].forEach(c => {
+  [odinConsChart, odinCostChart, odinTempChart, odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
     if (c) {
       c.options.scales.x.min = null;
       c.options.scales.x.max = null;
