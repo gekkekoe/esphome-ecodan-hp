@@ -284,6 +284,9 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
                        const std::vector<float>& cost,
                        const std::vector<float>& cost_tax,
                        const std::vector<float>& battery_discharge,
+                       const std::vector<float>& sched_base,
+                       const std::vector<float>& sched_min,
+                       const std::vector<float>& sched_max,
                        const LastRunStats& run_stats);
 
   // Called each hour by YAML to track actual consumption and room temp per-hour slot
@@ -437,6 +440,9 @@ private:
   std::vector<float> odin_battery_discharge_;
   std::vector<float> odin_actual_cons_;    // actual kWh consumed per hour (NVS persisted)
   std::vector<float> odin_actual_room_;    // actual room temp at start of each hour (NVS persisted)
+  std::vector<float> odin_sched_base_;     // schedule base setpoint per hour (not NVS persisted)
+  std::vector<float> odin_sched_min_;      // absolute min (base + min_offset)
+  std::vector<float> odin_sched_max_;      // absolute max (base + max_offset)
   bool odin_data_ready_{false};
   int odin_stored_day_{-1};
   bool odin_nvs_dirty_{false};

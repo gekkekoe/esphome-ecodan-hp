@@ -1003,6 +1003,10 @@ void EcodanDashboard::nvs_load_odin_() {
     load_arr("prod",     this->odin_production_);
     load_arr("act_cons", this->odin_actual_cons_, NAN);
     load_arr("act_room", this->odin_actual_room_, NAN);
+    // sched_base/min/max not persisted in NVS — initialize to 0 so partial update loop is safe
+    this->odin_sched_base_.assign(24, 0.0f);
+    this->odin_sched_min_.assign(24, 0.0f);
+    this->odin_sched_max_.assign(24, 0.0f);
 
     nvs_close(h);
 
@@ -1043,6 +1047,9 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
                                       const std::vector<float>& cost,
                                       const std::vector<float>& cost_tax,
                                       const std::vector<float>& battery_discharge,
+                                      const std::vector<float>& sched_base,
+                                      const std::vector<float>& sched_min,
+                                      const std::vector<float>& sched_max,
                                       const LastRunStats& run_stats) {
     if (current_hour < 0) return;
 
@@ -1061,6 +1068,9 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         this->odin_cost_              = cost;           this->odin_cost_.resize(24);
         this->odin_cost_tax_          = cost_tax;       this->odin_cost_tax_.resize(24);
         this->odin_battery_discharge_ = battery_discharge; this->odin_battery_discharge_.resize(24, 0.0f);
+        this->odin_sched_base_        = sched_base;    this->odin_sched_base_.resize(24, 0.0f);
+        this->odin_sched_min_         = sched_min;     this->odin_sched_min_.resize(24, 0.0f);
+        this->odin_sched_max_         = sched_max;     this->odin_sched_max_.resize(24, 0.0f);
         // actual arrays keep their NVS-loaded values
         if (this->odin_actual_cons_.size() != 24) this->odin_actual_cons_.assign(24, NAN);
         if (this->odin_actual_room_.size() != 24) this->odin_actual_room_.assign(24, NAN);
@@ -1103,6 +1113,14 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         }
     }
 
+    // STATIC SCHEDULES: Overwrite the full 24 hours regardless of current_hour, 
+    // because the schedule band limits apply to the entire day.
+    for (int i = 0; i < 24; i++) {
+        if (i < (int)sched_base.size() && !std::isnan(sched_base[i])) this->odin_sched_base_[i] = sched_base[i];
+        if (i < (int)sched_min.size()  && !std::isnan(sched_min[i]))  this->odin_sched_min_[i]  = sched_min[i];
+        if (i < (int)sched_max.size()  && !std::isnan(sched_max[i]))  this->odin_sched_max_[i]  = sched_max[i];
+    }
+
     // copy runtime stats
     this->last_run_stats_ = run_stats;
 
@@ -1138,6 +1156,9 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
       print_arr("expected_cost",          this->odin_cost_);
       print_arr("expected_cost_with_tax", this->odin_cost_tax_);
       print_arr("battery_discharge",      this->odin_battery_discharge_);
+      print_arr("sched_base",             this->odin_sched_base_);
+      print_arr("sched_min",              this->odin_sched_min_);
+      print_arr("sched_max",              this->odin_sched_max_);
       print_arr("actual_cons",            this->odin_actual_cons_);
       print_arr("actual_room_temp",       this->odin_actual_room_, /*last=*/false);
 

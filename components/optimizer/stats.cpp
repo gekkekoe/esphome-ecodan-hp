@@ -70,8 +70,10 @@ namespace esphome
                         //   delta_cool < 5K    — reject frost-protection outliers
                         if (t_hours > 3.0f && delta_cool > 0.15f && delta_T_avg > 2.0f && delta_cool < 5.0f) {
                             float hl_tm = delta_cool * delta_T_avg * t_hours;
-                            // Physical sanity: HL(0.01..0.5) × TM(0.5..20) — generous for high-insulation
-                            if (hl_tm > 0.005f && hl_tm < 10.0f) {
+                            // Physical sanity: product of (room drop K) × (delta_T K) × (hours)
+                            // High-insulation / high-mass houses easily produce values of 30-60,
+                            // so upper bound is set generously at 100.
+                            if (hl_tm > 0.005f && hl_tm < 100.0f) {
                                 if (this->state_.num_raw_hl_tm_product != nullptr) {
                                     float cur = this->state_.num_raw_hl_tm_product->state;
                                     float next = (cur <= 0.001f || std::isnan(cur)) ? hl_tm

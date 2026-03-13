@@ -1257,14 +1257,40 @@ function initCharts() {
       data: {
           labels: labels24,
           datasets: [
-              { label: 'Expected Begin Temp (°C)', data: [], borderColor: '#ffb020', borderDash: [5,5], borderWidth: 2, tension: 0.3 },
-              { label: 'Actual Room Temp (°C)',    data: [], borderColor: '#ffff00', borderWidth: 2, spanGaps: true, tension: 0.3 }
+              // [0] Band top — fill down to dataset[1]
+              { label: 'Schedule Max (°C)',
+                data: [], borderColor: 'rgba(99,179,237,0.35)', borderWidth: 1, borderDash: [3,3],
+                backgroundColor: 'rgba(99,179,237,0.10)', fill: '+1',
+                tension: 0.2, pointRadius: 0, spanGaps: true },
+              // [1] Band bottom — no fill of its own
+              { label: 'Schedule Min (°C)',
+                data: [], borderColor: 'rgba(99,179,237,0.35)', borderWidth: 1, borderDash: [3,3],
+                backgroundColor: 'transparent', fill: false,
+                tension: 0.2, pointRadius: 0, spanGaps: true },
+              // [2] Base setpoint
+              { label: 'Schedule (°C)',
+                data: [], borderColor: '#63b3ed', borderWidth: 1.5, borderDash: [6,3],
+                backgroundColor: 'transparent', fill: false,
+                tension: 0.2, pointRadius: 0, spanGaps: true },
+              // [3] Solver expected room temp
+              { label: 'Expected Temp (°C)',
+                data: [], borderColor: '#ffb020', borderDash: [5,5], borderWidth: 2,
+                backgroundColor: 'transparent', fill: false,
+                tension: 0.3, pointRadius: 0, spanGaps: true },
+              // [4] Actual measured room temp
+              { label: 'Actual Room Temp (°C)',
+                data: [], borderColor: '#ffff00', borderWidth: 2,
+                backgroundColor: 'transparent', fill: false,
+                tension: 0.3, pointRadius: 2, spanGaps: true }
           ]
       },
       options: {
           responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
           plugins: {
-              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont } },
+              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont,
+                  // hide the redundant min label — band is visually obvious
+                  filter: item => item.text !== 'Schedule Min (°C)' && item.text !== 'Schedule Max (°C)'
+              }},
               zoom: {
                   pan: { enabled: true, mode: 'x', threshold: 5,
                       onPan({chart}) { odinZoomed = true; syncOdinScales(chart); },
@@ -1330,6 +1356,7 @@ function updateOdinCharts() {
     const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(24).fill(null))] : new Array(24).fill(null);
 
     // Live history overlay — overrides NVS values for hours already seen this session
+    // Only count consumption when mode === "Heating" (excludes DHW, defrost, etc.)
     if (history.timestamps && history.cons) {
         const firstConsByHour = new Array(24).fill(null);
         const lastConsByHour  = new Array(24).fill(null);
@@ -1339,7 +1366,8 @@ function updateOdinCharts() {
             const d = new Date(history.timestamps[i]);
             if (d.toDateString() === new Date().toDateString()) {
                 const h = d.getHours();
-                if (history.cons[i] != null) {
+                // Only accumulate consumption when actively heating (not DHW, not off)
+                if (history.cons[i] != null && history.mode[i] === 'Heating') {
                     if (firstConsByHour[h] === null) firstConsByHour[h] = history.cons[i];
                     lastConsByHour[h] = history.cons[i];
                 }
@@ -1373,6 +1401,9 @@ function updateOdinCharts() {
     const expTemp       = odinDataCache ? odinDataCache.expected_begin_temp        : new Array(24).fill(null);
     const battDischarge = odinDataCache ? (odinDataCache.battery_discharge || new Array(24).fill(0)) : new Array(24).fill(0);
     const prices        = odinDataCache ? (odinDataCache.prices || new Array(24).fill(null)) : new Array(24).fill(null);
+    const schedBase     = odinDataCache ? (odinDataCache.sched_base || new Array(24).fill(null)) : new Array(24).fill(null);
+    const schedMin      = odinDataCache ? (odinDataCache.sched_min  || new Array(24).fill(null)) : new Array(24).fill(null);
+    const schedMax      = odinDataCache ? (odinDataCache.sched_max  || new Array(24).fill(null)) : new Array(24).fill(null);
 
     // Actual cost per hour = actual consumption (kWh) × price (EUR/MWh) / 1000
     const actualCost = new Array(24).fill(null);
@@ -1395,9 +1426,12 @@ function updateOdinCharts() {
     odinCostChart.data.datasets[1].data = actualCost;
     odinCostChart.update('none');
 
-    // Temp chart
-    odinTempChart.data.datasets[0].data = expTemp;
-    odinTempChart.data.datasets[1].data = actualTempByHour;
+    // Temp chart: schedule band (max/min), base setpoint, expected temp, actual temp
+    odinTempChart.data.datasets[0].data = schedMax;
+    odinTempChart.data.datasets[1].data = schedMin;
+    odinTempChart.data.datasets[2].data = schedBase;
+    odinTempChart.data.datasets[3].data = expTemp;
+    odinTempChart.data.datasets[4].data = actualTempByHour;
     odinTempChart.update('none');
 
     // Battery chart — only show when there is discharge planned
@@ -2091,6 +2125,16 @@ async function runOdinSolver() {
                     }
                     if (odinDataCache.prices) {
                         data.prices[i] = odinDataCache.prices[i] ?? data.prices[i];
+                    }
+                    // schedule profile — comes fresh from solver every run, merge from cache for past hours
+                    if (odinDataCache.sched_base) {
+                        data.sched_base[i] = odinDataCache.sched_base[i] ?? data.sched_base[i];
+                    }
+                    if (odinDataCache.sched_min) {
+                        data.sched_min[i] = odinDataCache.sched_min[i] ?? data.sched_min[i];
+                    }
+                    if (odinDataCache.sched_max) {
+                        data.sched_max[i] = odinDataCache.sched_max[i] ?? data.sched_max[i];
                     }
                 }
                 
