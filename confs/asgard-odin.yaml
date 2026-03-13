@@ -72,7 +72,7 @@ script:
                         if (response->status_code == 200) {
                           esphome::json::parse_json(body, [](JsonObject root) {
                             if (root["success"].as<bool>()) {
-                              std::vector<float> sched, nrg, prod, exp_t, cost, cost_tax, batt, sb, smn, smx;
+                              std::vector<float> sched, nrg, prod, exp_t, cost, cost_tax, batt, sb, smn, smx, wth, sol, prc;
 
                               JsonArray j_s  = root["schedule"];
                               JsonArray j_e  = root["energy_consumption"];
@@ -84,10 +84,16 @@ script:
                               JsonArray j_sb = root["sched_base"];
                               JsonArray j_smn = root["sched_min"];
                               JsonArray j_smx = root["sched_max"];
+                              JsonArray j_wth = root["weather"];
+                              JsonArray j_sol = root["solar"];
+                              JsonArray j_prc = root["prices"];
 
                               bool has_sb  = !j_sb.isNull();
                               bool has_smn = !j_smn.isNull();
                               bool has_smx = !j_smx.isNull();
+                              bool has_wth = !j_wth.isNull();
+                              bool has_sol = !j_sol.isNull();
+                              bool has_prc = !j_prc.isNull();
 
                               for (int i = 0; i < 24; i++) {
                                 sched.push_back(j_s[i].as<float>());
@@ -100,6 +106,9 @@ script:
                                 sb.push_back(has_sb  ? j_sb[i].as<float>()  : 0.0f);
                                 smn.push_back(has_smn ? j_smn[i].as<float>() : 0.0f);
                                 smx.push_back(has_smx ? j_smx[i].as<float>() : 0.0f);
+                                wth.push_back(has_wth ? j_wth[i].as<float>() : 0.0f);
+                                sol.push_back(has_sol ? j_sol[i].as<float>() : 0.0f);
+                                prc.push_back(has_prc ? j_prc[i].as<float>() : 0.0f);
                               }
 
                               int cur_hr = root["current_hour"].is<int>() ? root["current_hour"].as<int>() : id(optimizer_ptr)->get_current_ecodan_hour();
@@ -121,7 +130,7 @@ script:
 
                               // Safely send arrays and stats to the dashboard component in one go
                               id(asgard_dashboard_id)->store_odin_data(
-                                  cur_hr, cur_day, sched, nrg, prod, exp_t, cost, cost_tax, batt, sb, smn, smx, stats);
+                                  cur_hr, cur_day, sched, nrg, prod, exp_t, cost, cost_tax, batt, sb, smn, smx, wth, sol, prc, stats);
                             }
                             return true;
                           });
