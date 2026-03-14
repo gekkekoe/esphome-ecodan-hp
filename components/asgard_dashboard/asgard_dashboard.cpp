@@ -1110,7 +1110,13 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             if (i < (int)sched.size()      && !std::isnan(sched[i]))       this->odin_schedule_[i]          = sched[i];
             if (i < (int)energy.size()     && !std::isnan(energy[i]))      this->odin_energy_[i]            = energy[i];
             if (i < (int)production.size() && !std::isnan(production[i]))  this->odin_production_[i]        = production[i];
-            if (i < (int)exp_temp.size()   && !std::isnan(exp_temp[i]))    this->odin_expected_temp_[i]     = exp_temp[i];
+            
+            // we only want expected temp for hour+1, but not for hour=0
+            bool preserve_current = (i == current_hour && current_hour != 0);
+            if (!preserve_current && i < (int)exp_temp.size() && !std::isnan(exp_temp[i])) {
+                this->odin_expected_temp_[i] = exp_temp[i];
+            }
+
             if (i < (int)cost.size()       && !std::isnan(cost[i]))        this->odin_cost_[i]              = cost[i];
             if (i < (int)cost_tax.size()   && !std::isnan(cost_tax[i]))    this->odin_cost_tax_[i]          = cost_tax[i];
             if (i < (int)battery_discharge.size() && !std::isnan(battery_discharge[i])) this->odin_battery_discharge_[i] = battery_discharge[i];
