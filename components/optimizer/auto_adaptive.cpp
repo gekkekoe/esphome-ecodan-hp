@@ -67,14 +67,13 @@ namespace esphome
         // ─────────────────────────────────────────────────────────────────
         // ODIN solver bias — mutex-safe, returns {bias, heating_off}
         // ─────────────────────────────────────────────────────────────────
-        Optimizer::SolverBiasResult Optimizer::resolve_solver_bias_(float room_target_temp, float current_room_temp) {
-            SolverBiasResult result{0.0f, false};
+        Optimizer::SolverResult Optimizer::resolve_solver_result_(float room_target_temp, float current_room_temp) {
+            SolverResult result{0.0f, false};
 
             if (this->state_.sw_use_solver == nullptr || !this->state_.sw_use_solver->state)
                 return result;
 
-            if (this->odin_mutex_ == NULL ||
-                xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(10)) != pdTRUE)
+            if (this->odin_mutex_ == NULL || xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(10)) != pdTRUE)
                 return result;
 
             // Check if we have both energy (for on/off) and production (for scaling)
@@ -92,17 +91,15 @@ namespace esphome
                 if (current_hour >= 0 && current_hour < 24) {
                     float odin_energy = this->odin_energy_[current_hour];
                     float odin_prod   = this->odin_production_[current_hour];
+                    xSemaphoreGive(this->odin_mutex_);
 
                     result.heating_off = (odin_energy < 0.05f);
-
                     if (result.heating_off) {
-                        xSemaphoreGive(this->odin_mutex_);
                         apply_solver_soft_stop(true);
                         return result;
                     }
 
                     if (!std::isnan(odin_prod)) {
-                        xSemaphoreGive(this->odin_mutex_);
                         apply_solver_soft_stop(false);
                         
                         int heating_type_index = 0;
@@ -110,7 +107,6 @@ namespace esphome
                             heating_type_index = this->state_.heating_system_type->active_index().value_or(0);
                         }
                         HeatingProfile prof = this->get_heating_profile_(heating_type_index);
-                        
 
                         float max_out = 7.0f;
                         if (this->state_.num_raw_max_output != nullptr && this->state_.num_raw_max_output->has_state()) {
@@ -119,12 +115,9 @@ namespace esphome
                         if (max_out < 1.0f) max_out = 7.0f;
                         
                         // Calculate how hard ODIN wants the heat pump to work (Ratio between 0.0 and 1.0)
-                        float load_ratio = std::clamp(odin_prod / max_out, 0.0f, 1.0f);
-                        float desired_error = load_ratio * prof.max_error_range;
-                        result.bias = desired_error + current_room_temp - room_target_temp;
+                        result.load_ratio = 1.0f + std::clamp(odin_prod / max_out, 0.0f, 1.0f);
                         
-                        ESP_LOGD(OPTIMIZER_TAG, "ODIN -> Hour %d | Prod: %.1f/%.1f (%.0f%%) | Desired Err: %.2f | Set Bias: %+.2f", 
-                                 current_hour, odin_prod, max_out, load_ratio * 100.0f, desired_error, result.bias);
+                        ESP_LOGD(OPTIMIZER_TAG, "ODIN -> Hour %d | Prod: %.1f/%.1f | factor: %.2f", current_hour, odin_prod, max_out, result.load_ratio);
                         
                         return result;
                     }
@@ -290,20 +283,20 @@ namespace esphome
             if (isnan(setpoint_bias)) setpoint_bias = 0.0f;
 
             // Solver bias (also handles soft-stop internally)
-            auto [solver_bias, solver_heating_off] = this->resolve_solver_bias_(room_target_temp, room_temp);
+            auto [solver_load_ratio, solver_heating_off] = this->resolve_solver_result_(room_target_temp, room_temp);
 
             auto feedback_src = (i == 0)
                 ? this->state_.temperature_feedback_source_z1->active_index().value_or(0)
                 : this->state_.temperature_feedback_source_z2->active_index().value_or(0);
 
             ESP_LOGD(OPTIMIZER_TAG,
-                "Z%d src=%d room=%.1f target=%.1f flow=%.1f flow_rate=%.1f outside=%.1f bias=%.1f H=%d C=%d solver_bias=%.1f solver_heating_off=%d",
+                "Z%d src=%d room=%.1f target=%.1f flow=%.1f flow_rate=%.1f outside=%.1f bias=%.1f H=%d C=%d solver_load=%.1f solver_heating_off=%d",
                 (i + 1), feedback_src, room_temp, room_target_temp,
-                actual_flow_temp, flow_rate, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active, solver_bias, solver_heating_off);
+                actual_flow_temp, flow_rate, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active, solver_load_ratio, solver_heating_off);
 
             if (solver_heating_off) return;
             
-            room_target_temp += setpoint_bias + solver_bias;
+            room_target_temp += setpoint_bias;
 
             float error           = is_heating_mode ? (room_target_temp - room_temp) : (room_temp - room_target_temp);
             bool  use_linear      = (heating_type_index % 2 != 0);
@@ -316,8 +309,8 @@ namespace esphome
             float error_factor    = use_linear ? x : x * x * (3.0f - 2.0f * x);
             float smart_boost     = is_heating_mode ? this->calculate_smart_boost(heating_type_index, error) : 1.0f;
 
-            float dynamic_min  = prof.base_min_delta_t + cold_factor * (prof.min_delta_cold_limit - prof.base_min_delta_t);
-            float target_delta = dynamic_min + error_factor * smart_boost * (prof.max_delta_t - dynamic_min);
+            float dynamic_min  =  prof.base_min_delta_t + cold_factor * (prof.min_delta_cold_limit - prof.base_min_delta_t);
+            float target_delta = dynamic_min + error_factor * smart_boost * solver_load_ratio * (prof.max_delta_t - dynamic_min);
 
             ESP_LOGD(OPTIMIZER_TAG,
                 "Z%d target_delta=%.2f cold_factor=%.2f dyn_min=%.2f eff_range=%.2f error_factor=%.2f boost=%.2f linear=%d",

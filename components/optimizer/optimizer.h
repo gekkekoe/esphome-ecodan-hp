@@ -88,8 +88,8 @@ namespace esphome
       // ── adaptive_loop.cpp ──────────────────────────────────────────────
       HeatingProfile   get_heating_profile_(int type_index);
       float            resolve_outside_temp_();
-      struct SolverBiasResult { float bias; bool heating_off; };
-      SolverBiasResult resolve_solver_bias_(float room_target_temp, float current_room_temp);
+      struct SolverResult { float load_ratio; bool heating_off; };
+      SolverResult resolve_solver_result_(float room_target_temp, float current_room_temp);
       float            calculate_heating_flow_(std::size_t zone_i,
                                                const ecodan::Status &status,
                                                const HeatingProfile &prof,
