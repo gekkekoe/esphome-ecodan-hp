@@ -17,16 +17,10 @@ namespace esphome
 
         bool Optimizer::is_system_hands_off(const ecodan::Status &status)
         {
-            if (status.DefrostActive)
-            {
-                //ESP_LOGD(OPTIMIZER_TAG, "System is Defrosting");
-                return true;
-            }
-            if (this->state_.status_short_cycle_lockout->state)
-            {
-                //ESP_LOGD(OPTIMIZER_TAG, "System is in Lockout");
-                return true;
-            }
+            if (status.DefrostActive) return true;
+
+            if (this->state_.status_short_cycle_lockout != nullptr && 
+                this->state_.status_short_cycle_lockout->state) return true;
             
             if (status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON ||
                 status.Operation == esphome::ecodan::Status::OperationMode::FROST_PROTECT ||

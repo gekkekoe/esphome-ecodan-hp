@@ -10,8 +10,8 @@ namespace esphome
         // callbacks to monitor step down, need to keep within 1.0C else compressor will halt
         void Optimizer::on_feed_temp_change(float actual_flow_temp, OptimizerZone zone) {            
             if (std::isnan(actual_flow_temp) 
-                || this->state_.status_short_cycle_lockout->state
-                || !this->state_.auto_adaptive_control_enabled->state) {
+                || (this->state_.status_short_cycle_lockout != nullptr && this->state_.status_short_cycle_lockout->state)
+                || (this->state_.auto_adaptive_control_enabled != nullptr && !this->state_.auto_adaptive_control_enabled->state)) {
                 return;
             }
 

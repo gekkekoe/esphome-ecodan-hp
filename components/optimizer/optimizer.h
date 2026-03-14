@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include "optimizer_state.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
@@ -71,7 +72,7 @@ namespace esphome
       float    fc_hours_         = 0.0f;
 
       // ODIN solver data
-      bool     odin_fetch_requested_{false};
+      std::atomic<bool> odin_fetch_requested_{false};
       std::vector<float> odin_energy_;
       std::vector<float> odin_production_;
       int      odin_data_day_   {-1};
@@ -170,11 +171,10 @@ namespace esphome
       // Solver / ODIN
       int  get_current_ecodan_hour();
       int  get_current_ecodan_day();
-      bool has_old_odin_data() { return odin_data_ready_ && odin_energy_.size() == 24; }
+      bool has_old_odin_data();
       void store_odin_data(int current_hour, const std::vector<float>& prod, const std::vector<float>& energy);
       bool check_and_clear_odin_fetch_request() {
-          if (odin_fetch_requested_) { odin_fetch_requested_ = false; return true; }
-          return false;
+          return odin_fetch_requested_.exchange(false);
       }
     };
 

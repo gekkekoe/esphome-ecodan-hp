@@ -30,6 +30,17 @@ namespace esphome
             return t.tm_yday;
         }
 
+        bool Optimizer::has_old_odin_data() { 
+          if (this->odin_mutex_ == NULL) return false;
+          bool has_data = false;
+          
+          if (xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
+              has_data = (odin_data_ready_ && odin_energy_.size() == 24);
+              xSemaphoreGive(this->odin_mutex_);
+          }
+          return has_data;
+        }
+
         // ─────────────────────────────────────────────────────────────────
         // ODIN production store (called from YAML after fetch completes)
         // ─────────────────────────────────────────────────────────────────
@@ -58,8 +69,13 @@ namespace esphome
             // Partial update: overwrite current hour onward
             if (current_hour >= 0 && current_hour < 24) {
                 for (int i = current_hour; i < 24; i++) {
-                    this->odin_production_[i] = prod[i];
-                    this->odin_energy_[i]     = energy[i];
+                    if (i < prod.size() && i < energy.size()) {
+                        this->odin_production_[i] = prod[i];
+                        this->odin_energy_[i]     = energy[i];
+                    } else {
+                        ESP_LOGW(OPTIMIZER_TAG, "ODIN payload shorter than expected, stopping partial update at hour %d", i);
+                        break; 
+                    }
                 }
             }
 

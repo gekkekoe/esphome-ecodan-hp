@@ -144,7 +144,9 @@ namespace esphome
                 this->state_.ecodan_instance->set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
             }
             this->state_.lockout_expiration_timestamp = 0;
-            this->state_.status_short_cycle_lockout->publish_state(false);
+            if (this->state_.status_short_cycle_lockout != nullptr) {
+                this->state_.status_short_cycle_lockout->publish_state(false);
+            }
         }
 
         void Optimizer::start_lockout()
@@ -211,7 +213,7 @@ namespace esphome
             }
             else
             {
-                if (!this->state_.status_short_cycle_lockout->state)
+                if (this->state_.status_short_cycle_lockout != nullptr && !this->state_.status_short_cycle_lockout->state)
                 {
                     ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Booted during active lockout. Re-enabling lockout sensor. (Ecodan Time: %u, Expiration: %u)", current_time, expiration);
                     this->state_.status_short_cycle_lockout->publish_state(true);
