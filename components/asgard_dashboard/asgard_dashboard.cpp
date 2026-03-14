@@ -906,71 +906,66 @@ void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float 
 }
 
 void EcodanDashboard::nvs_persist_odin_() {
-    std::vector<float> sched, energy, prod, exp_t, cost, cost_tax, batt, act_cons, act_room;
-    int32_t day = -1;
-
-    if (this->snapshot_mutex_ != NULL && xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(200)) == pdTRUE) {
-        sched    = this->odin_schedule_;
-        energy   = this->odin_energy_;
-        prod     = this->odin_production_;
-        exp_t    = this->odin_expected_temp_;
-        cost     = this->odin_cost_;
-        cost_tax = this->odin_cost_tax_;
-        batt     = this->odin_battery_discharge_;
-        act_cons = this->odin_actual_cons_;
-        act_room = this->odin_actual_room_;
-        day      = (int32_t)this->odin_stored_day_;
-        xSemaphoreGive(this->snapshot_mutex_);
-    } else {
-        ESP_LOGW(TAG, "NVS persist: failed to acquire snapshot mutex, skipping");
+    nvs_handle_t h;
+    if (nvs_open("odin_cache", NVS_READWRITE, &h) != ESP_OK) {
+        ESP_LOGW(TAG, "NVS: failed to open odin_cache for write");
         return;
     }
 
-    nvs_handle_t h;
-    if (nvs_open(NVS_ODIN_NS, NVS_READWRITE, &h) != ESP_OK) {
-        ESP_LOGW(TAG, "NVS: failed to open odin_cache for write");
+    // 1. Lock the mutex only briefly to read the data
+    if (this->snapshot_mutex_ == NULL || xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(200)) != pdTRUE) {
+        ESP_LOGW(TAG, "NVS persist: failed to acquire snapshot mutex, skipping");
+        nvs_close(h);
         return;
     }
 
     bool has_changes = false;
 
     int32_t stored_day = -1;
-    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK || stored_day != day) {
-        nvs_set_i32(h, "day", day);
+    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK || stored_day != this->odin_stored_day_) {
+        nvs_set_i32(h, "day", this->odin_stored_day_);
         has_changes = true;
     }
 
+    // Smart lambda without heap memory allocations
     auto save_arr = [&](const char* key, const std::vector<float>& v) {
         if (v.size() != 24) return;
         size_t required_size = 0;
         bool needs_write = true;
+        
         if (nvs_get_blob(h, key, NULL, &required_size) == ESP_OK && required_size == 24 * sizeof(float)) {
-            std::vector<float> temp(24);
-            if (nvs_get_blob(h, key, temp.data(), &required_size) == ESP_OK) {
+            float temp[24]; // <-- Extremely fast stack allocation, prevents OOM crashes!
+            if (nvs_get_blob(h, key, temp, &required_size) == ESP_OK) {
                 needs_write = false;
                 for (int i = 0; i < 24; i++) {
                     if (std::abs(temp[i] - v[i]) > 0.001f) { needs_write = true; break; }
                 }
             }
         }
-        if (needs_write) { nvs_set_blob(h, key, v.data(), 24 * sizeof(float)); has_changes = true; }
+        if (needs_write) { 
+            nvs_set_blob(h, key, v.data(), 24 * sizeof(float)); 
+            has_changes = true; 
+        }
     };
 
-    save_arr("sched",    sched);
-    save_arr("energy",   energy);
-    save_arr("prod",     prod);
-    save_arr("exp_t",    exp_t);
-    save_arr("cost",     cost);
-    save_arr("cost_tax", cost_tax);
-    save_arr("batt",     batt);
-    save_arr("act_cons", act_cons);
-    save_arr("act_room", act_room);
+    save_arr("sched",    this->odin_schedule_);
+    save_arr("energy",   this->odin_energy_);
+    save_arr("prod",     this->odin_production_);
+    save_arr("exp_t",    this->odin_expected_temp_);
+    save_arr("cost",     this->odin_cost_);
+    save_arr("cost_tax", this->odin_cost_tax_);
+    save_arr("batt",     this->odin_battery_discharge_);
+    save_arr("act_cons", this->odin_actual_cons_);
+    save_arr("act_room", this->odin_actual_room_);
+
+    int32_t log_day = this->odin_stored_day_;
+    xSemaphoreGive(this->snapshot_mutex_); 
 
     if (has_changes) {
         nvs_commit(h);
-        ESP_LOGI(TAG, "NVS: ODIN arrays updated and persisted (day=%d)", day);
+        ESP_LOGI(TAG, "NVS: ODIN arrays updated and persisted (day=%d)", log_day);
     } else {
-        ESP_LOGD(TAG, "NVS: ODIN arrays match NVS exact state, skipping physical write (day=%d)", day);
+        ESP_LOGD(TAG, "NVS: ODIN arrays match NVS exact state, skipping physical write (day=%d)", log_day);
     }
     nvs_close(h);
 }
