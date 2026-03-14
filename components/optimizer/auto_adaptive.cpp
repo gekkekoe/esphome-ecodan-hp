@@ -302,10 +302,21 @@ namespace esphome
                 "Z%d target_delta=%.2f cold_factor=%.2f dyn_min=%.2f eff_range=%.2f error_factor=%.2f boost=%.2f linear=%d",
                 (i + 1), target_delta, cold_factor, dynamic_min, effective_error_range, error_factor, smart_boost, use_linear);
 
-            if (is_heating_mode && is_heating_active) {
-                out_flow_heat = this->calculate_heating_flow_(
-                    i, status, prof, cold_factor, actual_outside_temp,
-                    zone_min, zone_max, error, error_factor, smart_boost);
+            if (is_heating_mode) {
+                if (is_heating_active) {
+                    // HP already heating — calculate precise flow temp
+                    out_flow_heat = this->calculate_heating_flow_(
+                        i, status, prof, cold_factor, actual_outside_temp,
+                        zone_min, zone_max, error, error_factor, smart_boost);
+                } else if (error > 0.0f) {
+                    // HP not yet active but room is below target — assert demand so
+                    // heating_demand becomes true and relay/thermostat can activate.
+                    // Use zone_min as conservative start; next cycle recalculates once running.
+                    ESP_LOGD(OPTIMIZER_TAG,
+                        "Z%d HP not active but heating needed (error=%.2f) — asserting demand at min flow %.1f\u00b0C",
+                        (i + 1), error, zone_min);
+                    out_flow_heat = zone_min;
+                }
             } else if (is_cooling_mode && is_cooling_active) {
                 out_flow_cool = this->calculate_cooling_flow_(i, status, target_delta);
             }

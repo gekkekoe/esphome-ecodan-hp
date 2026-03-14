@@ -81,9 +81,7 @@ namespace esphome
       // Solver soft-stop state
       int  solver_stop_hour_   {-1};
       bool solver_stop_active_ {false};
-
-      // Reentrancy guard — prevents run_auto_adaptive_loop from being called
-      // recursively via ThermostatClimate callbacks fired by apply_solver_soft_stop
+      int  solver_resume_hour_ {-1};
       bool adaptive_loop_running_ {false};
 
       // ── adaptive_loop.cpp ──────────────────────────────────────────────
