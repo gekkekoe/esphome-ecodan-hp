@@ -313,6 +313,13 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     icon: "mdi:brain"
 
+  - platform: template
+    id: sw_show_solver_tab
+    name: "Show Solver Tab"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    icon: "mdi:brain"
+
 binary_sensor:
   - platform: template
     id: status_predictive_boost_active

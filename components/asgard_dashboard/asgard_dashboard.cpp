@@ -131,17 +131,10 @@ void EcodanDashboard::send_chunked_(AsyncWebServerRequest *request, const char *
 }
 
 void EcodanDashboard::handle_root_(AsyncWebServerRequest *request) {
-  // uint32_t free_heap = esp_get_free_heap_size();
-  // uint32_t max_block = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-  // ESP_LOGI(TAG, "handle_root_: \t\t\tMemory Stats | Total Free: %u bytes | Largest Block: %u bytes", free_heap, max_block);
   send_chunked_(request, "text/html", DASHBOARD_HTML_GZ, DASHBOARD_HTML_GZ_LEN, "no-cache");
 }
 
 void EcodanDashboard::handle_js_(AsyncWebServerRequest *request) {
-  // uint32_t free_heap = esp_get_free_heap_size();
-  // uint32_t max_block = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-  // ESP_LOGI(TAG, "handle_js_: \t\t\tMemory Stats | Total Free: %u bytes | Largest Block: %u bytes", free_heap, max_block);
-
   const auto& url = request->url();
   const uint8_t *file_data = nullptr;
   size_t file_len = 0;
@@ -244,7 +237,8 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "smart_boost_enabled")           { doSwitch(sw_smart_boost_);   return; }
   if (key == "force_dhw")                     { doSwitch(sw_force_dhw_);     return; } 
   if (key == "predictive_short_cycle_control_enabled") { doSwitch(pred_sc_switch_);   return; }
-  if (key == "use_dynamic_cost_solver") { doSwitch(sw_use_solver_); return; }
+  if (key == "use_dynamic_cost_solver")       { doSwitch(sw_use_solver_);    return; }
+  if (key == "show_solver_tab_enabled")       { doSwitch(sw_show_solver_tab_); return; }
 
   auto doSelect = [&](select::Select *sel) {
     if (!sel) { ESP_LOGW(TAG, "Select not configured"); return; }
@@ -402,6 +396,7 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.sw_smart_boost = get_sw(sw_smart_boost_);
   current_snapshot_.sw_force_dhw = get_sw(sw_force_dhw_);
   current_snapshot_.sw_use_solver = get_sw(sw_use_solver_);
+  current_snapshot_.sw_show_solver_tab = get_sw(sw_show_solver_tab_);
 
   // Populate Floats
   current_snapshot_.hp_feed_temp = get_f(hp_feed_temp_);
@@ -674,6 +669,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
 
   // solver switches
   p_b("use_dynamic_cost_solver", snap.sw_use_solver);
+  p_b("show_solver_tab", snap.sw_show_solver_tab);
   p_b("solver_connected", snap.bin_solver_connected);
 
   p_n("raw_heat_produced", snap.num_raw_heat_produced.val);
@@ -780,19 +776,23 @@ void EcodanDashboard::record_history_() {
 
   if (is_running && is_heating) {
       rec.cons = pack_temp_(current_cons);
+      rec.prod = pack_temp_(get_sensor(daily_computed_output_power_));
   } else {
       // Not heating: carry over the last recorded value from the history array
       if (history_count_ > 0) {
           if (history_mutex_ != NULL && xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
               size_t prev_idx = (history_head_ + MAX_HISTORY - 1) % MAX_HISTORY;
               rec.cons = history_buffer_[prev_idx].cons;
+              rec.prod = history_buffer_[prev_idx].prod;
               xSemaphoreGive(history_mutex_);
           } else {
               rec.cons = pack_temp_(current_cons);
+              rec.prod = pack_temp_(get_sensor(daily_computed_output_power_));
           }
       } else {
           // Edge case: literally the first minute after boot
           rec.cons = pack_temp_(current_cons);
+          rec.prod = pack_temp_(get_sensor(daily_computed_output_power_));
       }
   }
 
@@ -869,11 +869,11 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
     first = false;
 
     char item[128];
-    int len = snprintf(item, sizeof(item), "[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u,%d]",
+    int len = snprintf(item, sizeof(item), "[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u,%d,%d]",
       rec.timestamp, rec.hp_feed, rec.hp_return,
       rec.z1_sp, rec.z2_sp, rec.z1_curr, rec.z2_curr,
       rec.z1_flow, rec.z2_flow, rec.freq, rec.flags,
-      rec.cons
+      rec.cons, rec.prod
     );
     httpd_resp_send_chunk(req, item, len);
   }
@@ -886,19 +886,21 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 // ---------------------------------------------------------------------------
 // NVS persistence for ODIN arrays
 // Namespace: "odin_cache"  Keys: "day", "sched", "energy", "prod", "exp_t",
-//            "cost", "cost_tax", "batt", "act_cons", "act_room"
+//            "cost", "cost_tax", "batt", "act_cons", "act_room", "act_prod"
 //            (each 24 floats = 96 bytes)
 // ---------------------------------------------------------------------------
 static const char* NVS_ODIN_NS = "odin_cache";
 
-void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_room_temp) {
+void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float actual_room_temp) {
     if (hour < 0 || hour >= 24) return;
     if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
 
     if (odin_actual_cons_.size() != 24) odin_actual_cons_.assign(24, NAN);
+    if (odin_actual_prod_.size() != 24) odin_actual_prod_.assign(24, NAN);
     if (odin_actual_room_.size() != 24) odin_actual_room_.assign(24, NAN);
 
     odin_actual_cons_[hour] = actual_cons_kwh;
+    odin_actual_prod_[hour] = actual_prod_kwh;
     odin_actual_room_[hour] = actual_room_temp;
 
     xSemaphoreGive(snapshot_mutex_);
@@ -956,6 +958,7 @@ void EcodanDashboard::nvs_persist_odin_() {
     save_arr("cost_tax", this->odin_cost_tax_);
     save_arr("batt",     this->odin_battery_discharge_);
     save_arr("act_cons", this->odin_actual_cons_);
+    save_arr("act_prod", this->odin_actual_prod_);
     save_arr("act_room", this->odin_actual_room_);
 
     int32_t log_day = this->odin_stored_day_;
@@ -997,6 +1000,7 @@ void EcodanDashboard::nvs_load_odin_() {
     // Optional arrays — don't fail if missing (added in later versions)
     load_arr("prod",     this->odin_production_);
     load_arr("act_cons", this->odin_actual_cons_, NAN);
+    load_arr("act_prod", this->odin_actual_prod_, NAN);
     load_arr("act_room", this->odin_actual_room_, NAN);
     // sched_base/min/max, weather, solar and prices not persisted in NVS — initialize to 0 so partial update loop is safe
     this->odin_sched_base_.assign(24, 0.0f);
@@ -1029,6 +1033,7 @@ void EcodanDashboard::nvs_load_odin_() {
             ESP_LOGI(TAG, "NVS: stored day %d != today %d — clearing actual arrays on restore",
                      (int)stored_day, today);
             this->odin_actual_cons_.assign(24, NAN);
+            this->odin_actual_prod_.assign(24, NAN);
             this->odin_actual_room_.assign(24, NAN);
         }
     } else {
@@ -1077,6 +1082,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         this->odin_prices_            = prices;        this->odin_prices_.resize(24, 0.0f);
         // actual arrays keep their NVS-loaded values
         if (this->odin_actual_cons_.size() != 24) this->odin_actual_cons_.assign(24, NAN);
+        if (this->odin_actual_prod_.size() != 24) this->odin_actual_prod_.assign(24, NAN);
         if (this->odin_actual_room_.size() != 24) this->odin_actual_room_.assign(24, NAN);
         this->odin_data_ready_  = true;
         this->odin_stored_day_  = current_day;
@@ -1092,6 +1098,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
                      this->odin_stored_day_, current_day, current_hour);
             for (int i = current_hour; i < 24; i++) {
                 if (i < (int)this->odin_actual_cons_.size()) this->odin_actual_cons_[i] = NAN;
+                if (i < (int)this->odin_actual_prod_.size()) this->odin_actual_prod_[i] = NAN;
                 if (i < (int)this->odin_actual_room_.size()) this->odin_actual_room_[i] = NAN;
             }
         } else {
@@ -1177,6 +1184,7 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
       print_arr("solar",                  this->odin_solar_);
       print_arr("prices",                 this->odin_prices_);
       print_arr("actual_cons",            this->odin_actual_cons_);
+      print_arr("actual_prod",            this->odin_actual_prod_);
       print_arr("actual_room_temp",       this->odin_actual_room_, /*last=*/false);
 
       // Run stats

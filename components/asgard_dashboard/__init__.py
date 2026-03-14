@@ -64,6 +64,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("sw_smart_boost_id"):                  cv.use_id(switch.Switch),
         cv.Optional("sw_force_dhw_id"):                    cv.use_id(switch.Switch),
         cv.Optional("sw_use_solver_id"):                   cv.use_id(switch.Switch),
+        cv.Optional("sw_show_solver_tab_id"):              cv.use_id(switch.Switch),
 
         cv.Optional("sel_heating_system_type_id"):         cv.use_id(select.Select),
         cv.Optional("sel_room_temp_source_z1_id"):         cv.use_id(select.Select),
@@ -209,6 +210,7 @@ async def to_code(config):
         ("num_battery_max_discharge_kw_id",   "set_num_battery_max_discharge_kw"),
         ("num_cooling_smart_start_z1_id",     "set_num_cooling_smart_start_z1"),
         ("num_min_cooling_flow_z1_id",        "set_num_min_cooling_flow_z1"),
+        ("sw_show_solver_tab_id",             "set_sw_show_solver_tab"), 
     ]
 
     for conf_key, setter in pairs:

@@ -84,6 +84,7 @@ asgard_dashboard:
   predictive_short_cycle_high_delta_threshold_id: predictive_short_cycle_high_delta_threshold
 
 # ── Solver & Physics
+  sw_show_solver_tab_id:             sw_show_solver_tab
   sw_use_solver_id:                  sw_use_solver
   bin_solver_connected_id:           bin_solver_connected
   txt_solver_ip_id:                  txt_solver_ip

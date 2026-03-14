@@ -33,12 +33,19 @@ script:
                       profile_str = "radiators";
                   }
 
+                  // Use accurate cumulative sensors for consumption and production
+                  float elec_cons = id(delta_energy_consumed_increasing).state;
+                  if (id(solver_kwh_meter_feedback_source).active_index().value_or(0) != 0) {
+                      elec_cons = id(solver_kwh_meter_feedback).state;
+                  }
+                  float heat_prod = id(daily_computed_output_power).state;
+
                   int _cur_hour = id(optimizer_ptr)->get_current_ecodan_hour();
                   snprintf(payload, sizeof(payload),
                       "{\"params\":{"
                       "\"heating_profile\":\"%s\","
-                      "\"heat_produced\":%.2f,"
-                      "\"elec_consumed\":%.2f,"
+                      "\"heat_produced\":%.3f,"
+                      "\"elec_consumed\":%.3f,"
                       "\"runtime_hours\":%.2f,"
                       "\"avg_outside_temp\":%.2f,"
                       "\"avg_room_temp\":%.2f,"
@@ -51,8 +58,8 @@ script:
                       "\"battery_max_discharge_kw\":%.2f"
                       "}}",
                       profile_str,
-                      id(num_raw_heat_produced).state,
-                      id(num_raw_elec_consumed).state,
+                      heat_prod,
+                      elec_cons,
                       id(num_raw_runtime_hours).state,
                       id(num_raw_avg_outside_temp).state,
                       id(num_raw_avg_room_temp).state,
@@ -72,7 +79,7 @@ script:
                         if (response->status_code == 200) {
                           esphome::json::parse_json(body, [](JsonObject root) {
                             if (root["success"].as<bool>()) {
-                              // Pre-allocate all vectors with exactly 24 slots to prevent memory fragmentation!
+                              // Pre-allocate all vectors with exactly 24 slots to prevent memory fragmentation
                               std::vector<float> sched(24), nrg(24), prod(24), exp_t(24), cost(24), cost_tax(24), batt(24), sb(24), smn(24), smx(24), wth(24), sol(24), prc(24);
 
                               JsonArray j_s  = root["schedule"];
@@ -152,9 +159,18 @@ interval:
             } else if (cur_hr != last_actual_hour) {
               // A real hour transition occurred — seal the completed hour.
               int completed_hr = (cur_hr == 0) ? 23 : cur_hr - 1;
-              float cons = id(num_raw_elec_consumed).state;
+              
+              // Use accurate cumulative sensors for consumption and production
+              float cons = id(delta_energy_consumed_increasing).state;
+              if (id(solver_kwh_meter_feedback_source).active_index().value_or(0) != 0) {
+                  cons = id(solver_kwh_meter_feedback).state;
+              }
+              
+              float prod = id(daily_computed_output_power).state; 
               float room = id(virtual_climate_z1).current_temperature;
-              id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, room);
+              
+              id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, prod, room);
+              
               last_actual_hour = cur_hr;
             }
           }
