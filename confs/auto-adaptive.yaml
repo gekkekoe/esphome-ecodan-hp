@@ -18,13 +18,6 @@ esphome:
         - lambda: |-
             using namespace esphome::optimizer;
             OptimizerState state = {
-                .num_raw_heat_produced = id(num_raw_heat_produced),
-                .num_raw_elec_consumed = id(num_raw_elec_consumed),
-                .num_raw_runtime_hours = id(num_raw_runtime_hours),
-                .num_raw_avg_outside_temp = id(num_raw_avg_outside_temp),
-                .num_raw_avg_room_temp = id(num_raw_avg_room_temp),
-                .num_raw_delta_room_temp = id(num_raw_delta_room_temp),
-                .num_raw_hl_tm_product = id(num_raw_hl_tm_product),
                 .lockout_expiration_timestamp = id(lockout_expiration_timestamp)
             };
 
@@ -73,6 +66,15 @@ esphome:
             state.solver_kwh_meter_feedback = id(solver_kwh_meter_feedback); 
             state.daily_heating_produced = id(daily_computed_output_power);
             state.daily_heating_consumed = id(delta_energy_consumed_increasing);
+
+            state.num_raw_max_output = id(num_raw_max_output);
+            state.num_raw_heat_produced = id(num_raw_heat_produced);
+            state.num_raw_elec_consumed = id(num_raw_elec_consumed);
+            state.num_raw_runtime_hours = id(num_raw_runtime_hours);
+            state.num_raw_avg_outside_temp = id(num_raw_avg_outside_temp);
+            state.num_raw_avg_room_temp = id(num_raw_avg_room_temp);
+            state.num_raw_delta_room_temp = id(num_raw_delta_room_temp);
+            state.num_raw_hl_tm_product = id(num_raw_hl_tm_product);
 
             // instantiate optimizer
             id(optimizer_ptr) = new esphome::optimizer::Optimizer(state);

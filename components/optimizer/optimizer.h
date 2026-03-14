@@ -93,10 +93,11 @@ namespace esphome
       float            calculate_heating_flow_(std::size_t zone_i,
                                                const ecodan::Status &status,
                                                const HeatingProfile &prof,
+                                               bool set_point_reached,
                                                float cold_factor,
                                                float actual_outside_temp,
                                                float zone_min, float zone_max,
-                                               float error, float error_factor,
+                                               float error_factor,
                                                float smart_boost);
       float            calculate_cooling_flow_(std::size_t zone_i,
                                                const ecodan::Status &status,

@@ -85,6 +85,7 @@ switch:
     id: asgard_relay_${zone_identifier}
     name: "Hardware Relay ${zone_identifier}"
     internal: true 
+    restore_mode: RESTORE_DEFAULT_OFF
 
   - platform: template
     name: "Manual Relay ${zone_identifier}"

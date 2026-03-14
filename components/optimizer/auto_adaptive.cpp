@@ -115,7 +115,7 @@ namespace esphome
                         if (max_out < 1.0f) max_out = 7.0f;
                         
                         // Calculate how hard ODIN wants the heat pump to work (Ratio between 0.0 and 1.0)
-                        result.load_ratio = 1.0f + std::clamp(odin_prod / max_out, 0.0f, 1.0f);
+                        result.load_ratio = std::clamp(odin_prod / max_out, 0.0f, 1.0f);
                         
                         ESP_LOGD(OPTIMIZER_TAG, "ODIN -> Hour %d | Prod: %.1f/%.1f | factor: %.2f", current_hour, odin_prod, max_out, result.load_ratio);
                         
@@ -135,10 +135,11 @@ namespace esphome
         float Optimizer::calculate_heating_flow_(std::size_t zone_i,
                                                   const ecodan::Status &status,
                                                   const HeatingProfile &prof,
+                                                  bool set_point_reached,
                                                   float cold_factor,
                                                   float actual_outside_temp,
                                                   float zone_min, float zone_max,
-                                                  float error, float error_factor,
+                                                  float error_factor,
                                                   float smart_boost) {
             float actual_return_temp = this->get_return_temp(
                 (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
@@ -175,10 +176,10 @@ namespace esphome
                 ESP_LOGW(OPTIMIZER_TAG, "Z%d Defrost Recovery: %.0f%% done. Flow: %.2f",
                          (zone_i + 1), ratio * 100.0f, calculated_flow);
             } else {
-                if (error < 0.0f) {
+                if (set_point_reached) {
                     // Setpoint reached — fall back to base delta
                     calculated_flow = actual_return_temp + prof.base_min_delta_t;
-                    ESP_LOGD(OPTIMIZER_TAG, "Z%d Setpoint reached (error %.1f). Base delta T.", (zone_i + 1), error);
+                    ESP_LOGD(OPTIMIZER_TAG, "Z%d Setpoint reached. Base delta T.", (zone_i + 1));
                 } else {
                     calculated_flow = actual_return_temp + target_delta;
                 }
@@ -196,7 +197,7 @@ namespace esphome
                         pcp_adj = 0.0f;
                     }
                 }
-                ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING: flow=%.2f°C (boost %.1f)", (zone_i + 1), calculated_flow, pcp_adj);
+                ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING: flow=%.2f°C, return=%.2f°C (boost %.1f)", (zone_i + 1), calculated_flow, actual_return_temp, pcp_adj);
             }
 
             // Clamp + step-down (order depends on post-DHW window)
@@ -282,19 +283,14 @@ namespace esphome
             float setpoint_bias = this->state_.auto_adaptive_setpoint_bias->state;
             if (isnan(setpoint_bias)) setpoint_bias = 0.0f;
 
-            // Solver bias (also handles soft-stop internally)
-            auto [solver_load_ratio, solver_heating_off] = this->resolve_solver_result_(room_target_temp, room_temp);
-
             auto feedback_src = (i == 0)
                 ? this->state_.temperature_feedback_source_z1->active_index().value_or(0)
                 : this->state_.temperature_feedback_source_z2->active_index().value_or(0);
 
             ESP_LOGD(OPTIMIZER_TAG,
-                "Z%d src=%d room=%.1f target=%.1f flow=%.1f flow_rate=%.1f outside=%.1f bias=%.1f H=%d C=%d solver_load=%.1f solver_heating_off=%d",
+                "Z%d src=%d room=%.1f target=%.1f flow=%.1f flow_rate=%.1f outside=%.1f bias=%.1f H=%d C=%d",
                 (i + 1), feedback_src, room_temp, room_target_temp,
-                actual_flow_temp, flow_rate, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active, solver_load_ratio, solver_heating_off);
-
-            if (solver_heating_off) return;
+                actual_flow_temp, flow_rate, actual_outside_temp, setpoint_bias, is_heating_active, is_cooling_active);
             
             room_target_temp += setpoint_bias;
 
@@ -308,29 +304,43 @@ namespace esphome
             float x               = fmin(error_positive / effective_error_range, 1.0f);
             float error_factor    = use_linear ? x : x * x * (3.0f - 2.0f * x);
             float smart_boost     = is_heating_mode ? this->calculate_smart_boost(heating_type_index, error) : 1.0f;
+            float dynamic_min     = prof.base_min_delta_t + cold_factor * (prof.min_delta_cold_limit - prof.base_min_delta_t);
 
-            float dynamic_min  =  prof.base_min_delta_t + cold_factor * (prof.min_delta_cold_limit - prof.base_min_delta_t);
-            float target_delta = dynamic_min + error_factor * smart_boost * solver_load_ratio * (prof.max_delta_t - dynamic_min);
+            bool set_point_reached = error < 0.0f;
+            bool use_solver = this->state_.sw_use_solver != nullptr && this->state_.sw_use_solver->state;
+            if (use_solver) {
+                auto [solver_load_ratio, solver_heating_off] = this->resolve_solver_result_(room_target_temp, room_temp);
+                if (solver_heating_off) return;
+                
+                float desired_delta = prof.base_min_delta_t + solver_load_ratio * (prof.max_delta_t - prof.base_min_delta_t);
+                
+                // Reverse-engineer the error_factor so calculate_heating_flow_ produces the exact desired Delta T,
+                if (prof.max_delta_t > dynamic_min) {
+                    error_factor = (desired_delta - dynamic_min) / (prof.max_delta_t - dynamic_min);
+                    error_factor = std::max(0.0f, error_factor); // Allow > 1.0 if solver demands absolute max
+                } else {
+                    error_factor = 1.0f;
+                }
+                
+                // Disable local smart boost, and setpoint reached
+                smart_boost = 1.0f; 
+                set_point_reached = false;
 
+                ESP_LOGD(OPTIMIZER_TAG,
+                    "Z%d ODIN Load: %.2f -> mapped error_factor: %.2f (desired \u0394T: %.2f) solver_heating_off=%d",
+                    (i + 1), solver_load_ratio, error_factor, desired_delta, solver_heating_off);
+            }
+
+            float target_delta = dynamic_min + error_factor * smart_boost * (prof.max_delta_t - dynamic_min);
             ESP_LOGD(OPTIMIZER_TAG,
-                "Z%d target_delta=%.2f cold_factor=%.2f dyn_min=%.2f eff_range=%.2f error_factor=%.2f boost=%.2f linear=%d",
-                (i + 1), target_delta, cold_factor, dynamic_min, effective_error_range, error_factor, smart_boost, use_linear);
+                "Z%d target_delta=%.2f cold_factor=%.2f dyn_min=%.2f eff_range=%.2f error_factor=%.2f boost=%.2f linear=%d, use_solver=%d",
+                (i + 1), target_delta, cold_factor, dynamic_min, effective_error_range, error_factor, smart_boost, use_linear, use_solver);
 
             if (is_heating_mode) {
-                if (is_heating_active) {
-                    // HP already heating — calculate precise flow temp
-                    out_flow_heat = this->calculate_heating_flow_(
-                        i, status, prof, cold_factor, actual_outside_temp,
-                        zone_min, zone_max, error, error_factor, smart_boost);
-                } else if (error > 0.0f) {
-                    // HP not yet active but room is below target — assert demand so
-                    // heating_demand becomes true and relay/thermostat can activate.
-                    // Use zone_min as conservative start; next cycle recalculates once running.
-                    ESP_LOGD(OPTIMIZER_TAG,
-                        "Z%d HP not active but heating needed (error=%.2f) — asserting demand at min flow %.1f\u00b0C",
-                        (i + 1), error, zone_min);
-                    out_flow_heat = zone_min;
-                }
+                out_flow_heat = this->calculate_heating_flow_(
+                    i, status, prof, set_point_reached,
+                    cold_factor, actual_outside_temp,
+                    zone_min, zone_max, error_factor, smart_boost);
             } else if (is_cooling_mode && is_cooling_active) {
                 out_flow_cool = this->calculate_cooling_flow_(i, status, target_delta);
             }
@@ -396,8 +406,8 @@ namespace esphome
             float cold_factor = cf_raw * cf_raw * 1.5f;
 
             ESP_LOGD(OPTIMIZER_TAG,
-                "[*] Auto-adaptive cycle: independent_zone_temps=%d has_cooling=%d cold_factor=%.2f min_delta=%.2f max_delta=%.2f use_solver=%d",
-                status.has_independent_zone_temps(), status.has_cooling(), cold_factor, prof.base_min_delta_t, prof.max_delta_t, this->state_.sw_use_solver->state);
+                "[*] Auto-adaptive cycle: independent_zone_temps=%d has_cooling=%d cold_factor=%.2f min_delta=%.2f max_delta=%.2f",
+                status.has_independent_zone_temps(), status.has_cooling(), cold_factor, prof.base_min_delta_t, prof.max_delta_t);
 
             auto max_zones = status.has_2zones() ? 2 : 1;
 

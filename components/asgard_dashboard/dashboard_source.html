@@ -452,7 +452,7 @@ header {
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Flow Climate Z1</div>
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="flow-z1-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z1-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="flow-z1-sp-val">—</div><button class="step-btn" onclick="step('flow-z1-sp', +0.5)">+</button></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z1-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="flow-z1-sp-val">—</div><button class="step-btn" onclick="step('flow-z1-sp', +0.1)">+</button></div></div>
         </div>
         <button class="send-btn" id="btn-flow-z1" onclick="sendFlow('z1', this)" style="margin-bottom:0;">Apply Flow Z1</button>
       </div>
@@ -501,7 +501,7 @@ header {
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Flow Climate Z2</div>
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="flow-z2-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z2-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="flow-z2-sp-val">—</div><button class="step-btn" onclick="step('flow-z2-sp', +0.5)">+</button></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z2-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="flow-z2-sp-val">—</div><button class="step-btn" onclick="step('flow-z2-sp', +0.1)">+</button></div></div>
         </div>
         <button class="send-btn" id="btn-flow-z2" onclick="sendFlow('z2', this)" style="margin-bottom:0;">Apply Flow Z2</button>
       </div>
@@ -670,15 +670,15 @@ header {
       <div id="run-stats-block" style="display:none; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px;">
         <div class="sub-label" style="margin:0 0 6px 0; font-size:9px; letter-spacing:1px;">LAST RUN RESULT</div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:3px 10px;">
-          <span class="ctrl-label" style="font-size:9px;">Exec time</span>   <span id="rs-exec"    class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Execution time</span>   <span id="rs-exec"    class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
           <span class="ctrl-label" style="font-size:9px;">Heat loss</span>    <span id="rs-hloss"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
           <span class="ctrl-label" style="font-size:9px;">Base COP</span>     <span id="rs-cop"     class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
           <span class="ctrl-label" style="font-size:9px;">Thermal mass</span> <span id="rs-tmass"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Exp. cons.</span>   <span id="rs-econs"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Exp. prod.</span>   <span id="rs-eprod"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Solar gen.</span>   <span id="rs-solar"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Total cost</span>   <span id="rs-cost"    class="ctrl-value" style="font-size:10px; text-align:right; color:var(--accent2);">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Cost incl. tax</span> <span id="rs-costtax" class="ctrl-value" style="font-size:10px; text-align:right; color:#c084fc;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Expected consumption</span>   <span id="rs-econs"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Expected production</span>   <span id="rs-eprod"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Expected Solar production</span>   <span id="rs-solar"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Expected Total cost</span>   <span id="rs-cost"    class="ctrl-value" style="font-size:10px; text-align:right; color:var(--accent2);">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Expected Total Cost incl. tax</span> <span id="rs-costtax" class="ctrl-value" style="font-size:10px; text-align:right; color:#c084fc;">—</span>
         </div>
       </div>
     </div>
@@ -712,7 +712,7 @@ header {
         <div class="stepper"><button class="step-btn" onclick="step('raw-room', -0.1)">−</button><input type="number" class="step-input" id="raw-room-val" onchange="manualInput('raw-room', this.value)" /><button class="step-btn" onclick="step('raw-room', +0.1)">+</button></div>
       </div>
 
-      <div class="ctrl-row" style="border-bottom:none; padding-bottom:0;">
+      <div class="ctrl-row">
         <span class="ctrl-label">Delta Room Temp (°C)</span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-delta', -0.1)">−</button><input type="number" class="step-input" id="raw-delta-val" onchange="manualInput('raw-delta', this.value)" /><button class="step-btn" onclick="step('raw-delta', +0.1)">+</button></div>
       </div>
@@ -739,13 +739,18 @@ header {
   
   <div class="chart-card full-width" style="margin-top: 15px; grid-column: 1 / -1;">
     <div class="chart-header">
-      <div class="section-title" style="margin:0">Energy Consumption (24h)</div>
+      <div class="section-title" style="margin:0">Room Temperatures (24h)</div>
       <div style="display:flex; align-items:center; gap:10px;">
         <button class="log-btn" id="btn-reset-zoom-odin" style="display:none; padding: 2px 8px; font-size: 9px;" onclick="resetOdinZoom()">Reset Zoom</button>
-        <div class="chart-legend">
-          <span style="color:#00c8ff; font-size:10px;">■ Exp. Cons.</span>
-          <span style="color:#7fff7f; font-size:10px;">■ Actual Cons.</span>
-        </div>
+      </div>
+    </div>
+    <div class="chart-container"><canvas id="odinTempChart"></canvas></div>
+  </div>
+
+  <div class="chart-card full-width" style="grid-column: 1 / -1;">
+    <div class="chart-header">
+      <div class="section-title" style="margin:0">Energy Consumption (24h)</div>
+      <div style="display:flex; align-items:center; gap:10px;">
       </div>
     </div>
     <div class="chart-container"><canvas id="odinConsChart"></canvas></div>
@@ -755,21 +760,12 @@ header {
     <div class="chart-header">
       <div class="section-title" style="margin:0">Energy Production (24h)</div>
       <div style="display:flex; align-items:center; gap:10px;">
-        <div class="chart-legend">
-          <span style="color:#fb923c; font-size:10px;">■ Exp. Prod.</span>
-          <span style="color:#c084fc; font-size:10px;">■ Actual Prod.</span>
-        </div>
       </div>
     </div>
     <div class="chart-container"><canvas id="odinProdChart"></canvas></div>
   </div>
-
   <div class="chart-card full-width" style="grid-column: 1 / -1;">
-    <div class="chart-header"><div class="section-title" style="margin:0">Expected vs Actual Temperatures (24h)</div></div>
-    <div class="chart-container"><canvas id="odinTempChart"></canvas></div>
-  </div>
-  <div class="chart-card full-width" style="grid-column: 1 / -1;">
-    <div class="chart-header"><div class="section-title" style="margin:0">Expected Cost (24h)</div></div>
+    <div class="chart-header"><div class="section-title" style="margin:0">Cost (24h)</div></div>
     <div class="chart-container"><canvas id="odinCostChart"></canvas></div>
   </div>
   <div id="odin-batt-card" class="chart-card full-width" style="display:none; grid-column: 1 / -1;">
@@ -1014,7 +1010,7 @@ function initCharts() {
           }
         },
         zoom: {
-          wheel: { enabled: true, speed: 0.05 },
+          wheel: { enabled: true, speed: 0.20 },
           pinch: { enabled: true },
           mode: 'x',
           onZoomStart({chart}) {
@@ -1038,15 +1034,16 @@ function initCharts() {
     scales: {
       x: { 
         ticks: { 
-          color: '#4a5a7a', 
-          font: { family: "'JetBrains Mono', monospace", size: 9 }, 
-          maxTicksLimit: 6, 
-          maxRotation: 0 
+          color: '#8295b8',
+          font: { family: "'JetBrains Mono', monospace", size: 10 },
+          maxTicksLimit: 8, 
+          maxRotation: 45,
+          minRotation: 45
         }, 
         grid: { color: '#1e2d4a' } 
       },
       y: { 
-        ticks: { color: '#4a5a7a', font: { family: "'JetBrains Mono', monospace", size: 9 } }, 
+        ticks: { color: '#8295b8', font: { family: "'JetBrains Mono', monospace", size: 10 } }, 
         grid: { color: '#1e2d4a' } 
       }
     }
@@ -1141,7 +1138,7 @@ function initCharts() {
         y: {
           min: 0, max: 8,
           ticks: { 
-            color: '#8899bb', font: { family: "'JetBrains Mono', monospace", size: 9 },
+            color: '#8295b8', font: { family: "'JetBrains Mono', monospace", size: 10 },
             callback: (v) => {
               const map = ['', 'IN6', 'IN1', 'Pump', 'Defrost', 'Booster', 'Compressor', 'Mode', ''];
               return map[v] || '';
@@ -1218,9 +1215,39 @@ function initCharts() {
   
   // --- Initialize ODIN Charts (Empty on load) ---
   const labels24 = Array.from({length: 24}, (_, i) => `${i}:00`);
-  const monoFont = { family: "'JetBrains Mono'", size: 10 };
-  const xAxis   = { ticks: { color: '#4a5a7a', font: monoFont }, grid: { color: '#1e2d4a' } };
+  const monoFont = { family: "'JetBrains Mono'", size: 11 }; // Iets groter
+  const xAxis   = { 
+      ticks: { 
+          color: '#8295b8',
+          font: monoFont,
+          maxRotation: 45,
+          minRotation: 45
+      }, 
+      grid: { color: '#1e2d4a' } 
+  };
+const linearXAxis = {
+      type: 'linear',
+      min: 0, 
+      max: 23,
+      ticks: {
+          stepSize: 1,
+          callback: function(v) { 
+              if (Number.isInteger(v)) {
+                  return v + ':00';
+              }
+              return null; 
+          },
+          color: '#8295b8', 
+          font: monoFont, 
+          maxRotation: 45, 
+          minRotation: 45
+      },
+      grid: { color: '#1e2d4a' }
+  };
   const odinZoomConfig = {
+      limits: {
+          x: { min: 0, max: 23, minRange: 2 }
+      },
       pan: {
           enabled: true, mode: 'x', modifierKey: 'alt', threshold: 10,
           onPanStart({chart, event}) {
@@ -1257,8 +1284,8 @@ function initCharts() {
       data: {
           labels: labels24,
           datasets: [
-              { label: 'Exp. Cons. (kWh)',  data: [], backgroundColor: 'rgba(0,200,255,0.35)',   borderColor: '#00c8ff', borderWidth: 1 },
-              { label: 'Actual Cons. (kWh)', data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
+              { label: 'Expected',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
+              { label: 'Actual',    data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
           ]
       },
       options: {
@@ -1275,13 +1302,13 @@ function initCharts() {
       }
   });
 
-  odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2d'), {
+odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2d'), {
       type: 'bar',
       data: {
           labels: labels24,
           datasets: [
-              { label: 'Exp. Prod. (kWh)',  data: [], backgroundColor: 'rgba(251,146,60,0.35)',  borderColor: '#fb923c', borderWidth: 1 },
-              { label: 'Actual Prod. (kWh)', data: [], backgroundColor: 'rgba(192,132,252,0.35)', borderColor: '#c084fc', borderWidth: 1 }
+              { label: 'Expected',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
+              { label: 'Actual',    data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
           ]
       },
       options: {
@@ -1303,8 +1330,8 @@ function initCharts() {
       data: {
           labels: labels24,
           datasets: [
-              { label: 'Exp. Cost (€)',    data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
-              { label: 'Actual Cost (€)',  data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
+              { label: 'Expected',    data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
+              { label: 'Actual',  data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
           ]
       },
       options: {
@@ -1337,33 +1364,54 @@ function initCharts() {
                 backgroundColor: 'transparent', fill: false,
                 tension: 0.2, pointRadius: 0, spanGaps: true },
               // [2] Base setpoint
-              { label: 'Schedule (°C)',
+              { label: 'Scheduled',
                 data: [], borderColor: '#63b3ed', borderWidth: 1.5, borderDash: [6,3],
                 backgroundColor: 'transparent', fill: false,
                 tension: 0.2, pointRadius: 0, spanGaps: true },
               // [3] Solver expected room temp
-              { label: 'Expected Temp (°C)',
+              { label: 'Expected',
                 data: [], borderColor: '#ffb020', borderDash: [5,5], borderWidth: 2,
                 backgroundColor: 'transparent', fill: false,
                 tension: 0.3, pointRadius: 0, spanGaps: true },
               // [4] Actual measured room temp
-              { label: 'Actual Room Temp (°C)',
+              { label: 'Actual',
                 data: [], borderColor: '#ffff00', borderWidth: 2,
                 backgroundColor: 'transparent', fill: false,
                 tension: 0.3, pointRadius: 2, spanGaps: true }
           ]
       },
       options: {
-          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+          responsive: true, 
+          maintainAspectRatio: false, 
+          // Use nearest on the X axis so it doesn't mix up the 15m and 1h data indexes
+          interaction: { mode: 'nearest', axis: 'x', intersect: false },
           plugins: {
-              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont,
-                  // hide the redundant min label — band is visually obvious
-                  filter: item => item.text !== 'Schedule Min (°C)' && item.text !== 'Schedule Max (°C)'
-              }},
-              zoom: odinZoomConfig
+              legend: { 
+                  display: true, position: 'top', labels: { color: '#8295b8', font: monoFont,
+                  filter: item => item.text !== 'Schedule Min (°C)' && item.text !== 'Schedule Max (°C)' }
+              },
+              zoom: odinZoomConfig,
+              tooltip: {
+                  callbacks: {
+                      title: function(ctx) {
+                          if (!ctx || !ctx.length) return '';
+                          // Convert decimal hour (e.g. 10.25) back to clock time (10:15)
+                          let val = ctx[0].parsed.x;
+                          let h = Math.floor(val);
+                          let m = Math.round((val - h) * 60);
+                          return h + ':' + (m < 10 ? '0' + m : m);
+                      }
+                  }
+              }
           },
-          scales: { x: xAxis, y: { ticks: { color: '#4a5a7a', font: monoFont }, grid: { color: '#1e2d4a' },
-                           title: { display: true, text: '°C', color: '#8295b8' } } }
+          scales: { 
+              x: linearXAxis, 
+              y: { 
+                  ticks: { color: '#8295b8', font: monoFont }, 
+                  grid: { color: '#1e2d4a' },
+                  title: { display: true, text: '°C', color: '#8295b8' } 
+              } 
+          }
       }
   });
 
@@ -1566,12 +1614,41 @@ function updateOdinCharts() {
     odinCostChart.data.datasets[1].data = actualCost;
     odinCostChart.update('none');
 
-    // Temp chart: schedule band (max/min), base setpoint, expected temp, actual temp
-    odinTempChart.data.datasets[0].data = schedMax;
-    odinTempChart.data.datasets[1].data = schedMin;
-    odinTempChart.data.datasets[2].data = schedBase;
-    odinTempChart.data.datasets[3].data = expTemp;
-    odinTempChart.data.datasets[4].data = actualTempByHour;
+    const mapToXY = (arr) => arr ? arr.map((v, i) => ({x: i, y: v})) : [];
+
+    // Temp chart: schedule band (max/min), base setpoint, expected temp
+    odinTempChart.data.datasets[0].data = mapToXY(schedMax);
+    odinTempChart.data.datasets[1].data = mapToXY(schedMin);
+    odinTempChart.data.datasets[2].data = mapToXY(schedBase);
+    odinTempChart.data.datasets[3].data = mapToXY(expTemp);
+
+    let fineActualTemp = [];
+    let hasFineData = false;
+    let lastQuarter = -1;
+    
+    if (history.timestamps && history.timestamps.length > 0) {
+        const todayString = new Date().toDateString();
+        for (let i = 0; i < history.timestamps.length; i++) {
+            const d = new Date(history.timestamps[i]);
+            if (d.toDateString() === todayString && history.z1curr[i] != null) {
+                const quarter = Math.floor(d.getMinutes() / 15);
+                const absoluteQuarter = d.getHours() * 4 + quarter;
+                
+                if (absoluteQuarter !== lastQuarter) {
+                    const hourDecimal = d.getHours() + ((quarter * 15) / 60);
+                    fineActualTemp.push({ x: hourDecimal, y: history.z1curr[i] });
+                    lastQuarter = absoluteQuarter;
+                    hasFineData = true;
+                }
+            }
+        }
+    }
+
+    if (!hasFineData) {
+        fineActualTemp = mapToXY(actualTempByHour);
+    }
+
+    odinTempChart.data.datasets[4].data = fineActualTemp;
     odinTempChart.update('none');
 
     // Battery chart — only show when there is discharge planned
@@ -1650,7 +1727,7 @@ function updateCharts(d) {
   history.bin_in1.push(d.status_in1_request ? 1 : 0); 
   history.bin_in6.push(d.status_in6_request ? 1 : 0);
 
-  const labels = history.timestamps.map(t => new Date(t).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+  const labels = history.timestamps.map(t => new Date(t).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }));
 
   [tempChart, freqChart, statusChart].forEach(c => c.data.labels = labels);
 
@@ -1939,17 +2016,11 @@ function render(d) {
   setToggle('sw-psc', d.pred_sc_en);
   
   // SOLVER SETTINGS & UI Auto-Toggle
-  if (d.solver_ip_address && d.solver_ip_address !== "0.0.0.0" && d.solver_ip_address !== "" && !d.show_solver_tab && !odinAutoEnabled) {
-      odinAutoEnabled = true;
-      sendSwitch('show_solver_tab_enabled', true);
-  }
-
   setToggle('sw-show-solver', d.show_solver_tab);
   setToggle('sw-solver', d.use_dynamic_cost_solver);
   
-  const showSolver = d.show_solver_tab || odinAutoEnabled;
   const tabSolver = document.getElementById('tab-btn-solver');
-  if (tabSolver) tabSolver.style.display = showSolver ? 'block' : 'none';
+  if (tabSolver) tabSolver.style.display = d.show_solver_tab ? 'block' : 'none';
 
   setSelect('sel-hst',    d.heating_system_type);
   setSelect('sel-z1src',  d.room_temp_source_z1);
@@ -2087,7 +2158,16 @@ async function apiPost(payload) {
 }
 
 async function sendSwitch(key, val) {
-  try { await apiPost({ key, value: val ? 1 : 0 }); showToast('✓ ' + key); } 
+  try { 
+    await apiPost({ key, value: val ? 1 : 0 }); 
+    showToast('✓ ' + key); 
+    
+    // Immediately show or hide the solver tab in the UI
+    if (key === 'show_solver_tab_enabled') {
+      const tabSolver = document.getElementById('tab-btn-solver');
+      if (tabSolver) tabSolver.style.display = val ? 'block' : 'none';
+    }
+  } 
   catch(e) { showToast('✗ ' + e.message, true); }
 }
 
@@ -2191,6 +2271,11 @@ async function sendInputString(key, elId) {
   try { 
     await apiPost({ key: key, value: val }); 
     showToast('✓ ' + key + ' saved'); 
+    
+    // Auto-enable the solver tab when a valid IP is entered and saved
+    if (key === 'solver_ip_address' && val && val !== '0.0.0.0') {
+       sendSwitch('show_solver_tab_enabled', true);
+    }
   } catch(e) { showToast('✗ ' + e.message, true); }
 }
 
@@ -2503,9 +2588,8 @@ function syncOdinScales(sourceChart) {
   const max = sourceChart.scales.x.max;
   [odinConsChart, odinProdChart, odinCostChart, odinTempChart, odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
     if (c && c !== sourceChart) {
-      c.options.scales.x.min = min;
-      c.options.scales.x.max = max;
-      c.update('none');
+      // Use the plugin's native API instead of overriding chart options
+      c.zoomScale('x', {min: min, max: max}, 'none');
     }
   });
   showOdinResetButton();
@@ -2515,10 +2599,8 @@ function resetOdinZoom() {
   odinZoomed = false;
   [odinConsChart, odinProdChart, odinCostChart, odinTempChart, odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
     if (c) {
-      c.options.scales.x.min = null;
-      c.options.scales.x.max = null;
-      c.resetZoom();
-      c.update();
+      // The plugin natively remembers its original 0-23 state, just tell it to reset
+      c.resetZoom('none');
     }
   });
   document.getElementById('btn-reset-zoom-odin').style.display = 'none';
