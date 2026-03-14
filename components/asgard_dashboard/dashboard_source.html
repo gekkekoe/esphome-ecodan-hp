@@ -1939,17 +1939,11 @@ function render(d) {
   setToggle('sw-psc', d.pred_sc_en);
   
   // SOLVER SETTINGS & UI Auto-Toggle
-  if (d.solver_ip_address && d.solver_ip_address !== "0.0.0.0" && d.solver_ip_address !== "" && !d.show_solver_tab && !odinAutoEnabled) {
-      odinAutoEnabled = true;
-      sendSwitch('show_solver_tab_enabled', true);
-  }
-
   setToggle('sw-show-solver', d.show_solver_tab);
   setToggle('sw-solver', d.use_dynamic_cost_solver);
   
-  const showSolver = d.show_solver_tab || odinAutoEnabled;
   const tabSolver = document.getElementById('tab-btn-solver');
-  if (tabSolver) tabSolver.style.display = showSolver ? 'block' : 'none';
+  if (tabSolver) tabSolver.style.display = d.show_solver_tab ? 'block' : 'none';
 
   setSelect('sel-hst',    d.heating_system_type);
   setSelect('sel-z1src',  d.room_temp_source_z1);
@@ -2087,7 +2081,16 @@ async function apiPost(payload) {
 }
 
 async function sendSwitch(key, val) {
-  try { await apiPost({ key, value: val ? 1 : 0 }); showToast('✓ ' + key); } 
+  try { 
+    await apiPost({ key, value: val ? 1 : 0 }); 
+    showToast('✓ ' + key); 
+    
+    // Immediately show or hide the solver tab in the UI
+    if (key === 'show_solver_tab_enabled') {
+      const tabSolver = document.getElementById('tab-btn-solver');
+      if (tabSolver) tabSolver.style.display = val ? 'block' : 'none';
+    }
+  } 
   catch(e) { showToast('✗ ' + e.message, true); }
 }
 
@@ -2191,6 +2194,11 @@ async function sendInputString(key, elId) {
   try { 
     await apiPost({ key: key, value: val }); 
     showToast('✓ ' + key + ' saved'); 
+    
+    // Auto-enable the solver tab when a valid IP is entered and saved
+    if (key === 'solver_ip_address' && val && val !== '0.0.0.0') {
+       sendSwitch('show_solver_tab_enabled', true);
+    }
   } catch(e) { showToast('✗ ' + e.message, true); }
 }
 

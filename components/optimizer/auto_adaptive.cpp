@@ -196,7 +196,7 @@ namespace esphome
                         pcp_adj = 0.0f;
                     }
                 }
-                ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING: flow=%.2f°C (boost %.1f)", (zone_i + 1), calculated_flow, pcp_adj);
+                ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING: flow=%.2f°C, return=%.2f°C (boost %.1f)", (zone_i + 1), calculated_flow, actual_return_temp, pcp_adj);
             }
 
             // Clamp + step-down (order depends on post-DHW window)

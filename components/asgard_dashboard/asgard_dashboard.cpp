@@ -238,7 +238,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "force_dhw")                     { doSwitch(sw_force_dhw_);     return; } 
   if (key == "predictive_short_cycle_control_enabled") { doSwitch(pred_sc_switch_);   return; }
   if (key == "use_dynamic_cost_solver")       { doSwitch(sw_use_solver_);    return; }
-  if (key == "show_solver_tab_enabled")       { doSwitch(sw_show_solver_tab_); return; }
+  if (key == "show_solver_tab_enabled")       { doSwitch(sw_show_solver_tab_); this->odin_nvs_dirty_ = true; return; }
 
   auto doSelect = [&](select::Select *sel) {
     if (!sel) { ESP_LOGW(TAG, "Select not configured"); return; }
@@ -929,6 +929,13 @@ void EcodanDashboard::nvs_persist_odin_() {
         has_changes = true;
     }
 
+    uint8_t current_show_tab = (this->sw_show_solver_tab_ != nullptr && this->sw_show_solver_tab_->state) ? 1 : 0;
+    uint8_t stored_show_tab = 0;
+    if (nvs_get_u8(h, "show_tab", &stored_show_tab) != ESP_OK || stored_show_tab != current_show_tab) {
+        nvs_set_u8(h, "show_tab", current_show_tab);
+        has_changes = true;
+    }
+
     // Smart lambda without heap memory allocations
     auto save_arr = [&](const char* key, const std::vector<float>& v) {
         if (v.size() != 24) return;
@@ -983,6 +990,14 @@ void EcodanDashboard::nvs_load_odin_() {
 
     int32_t stored_day = -1;
     if (nvs_get_i32(h, "day", &stored_day) != ESP_OK) { nvs_close(h); return; }
+
+    uint8_t stored_show_tab = 0;
+    if (nvs_get_u8(h, "show_tab", &stored_show_tab) == ESP_OK) {
+        if (this->sw_show_solver_tab_ != nullptr) {
+            if (stored_show_tab) this->sw_show_solver_tab_->turn_on();
+            else this->sw_show_solver_tab_->turn_off();
+        }
+    }
 
     auto load_arr = [&](const char* key, std::vector<float>& out, float fill = 0.0f) -> bool {
         size_t len = 24 * sizeof(float);
