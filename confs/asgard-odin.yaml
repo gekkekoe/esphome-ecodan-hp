@@ -116,7 +116,7 @@ script:
                               int cur_hr = root["current_hour"].is<int>() ? root["current_hour"].as<int>() : id(optimizer_ptr)->get_current_ecodan_hour();
                               int cur_day = id(optimizer_ptr)->get_current_ecodan_day();
 
-                              id(optimizer_ptr)->store_odin_data(cur_hr, sched, nrg);
+                              id(optimizer_ptr)->store_odin_data(cur_hr, prod, nrg);
 
                               esphome::asgard_dashboard::EcodanDashboard::LastRunStats stats;
                               stats.execution_ms    = root["execution_ms"].as<uint32_t>();

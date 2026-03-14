@@ -67,8 +67,7 @@ namespace esphome
         // ─────────────────────────────────────────────────────────────────
         // ODIN solver bias — mutex-safe, returns {bias, heating_off}
         // ─────────────────────────────────────────────────────────────────
-
-        Optimizer::SolverBiasResult Optimizer::resolve_solver_bias_(float room_target_temp) {
+        Optimizer::SolverBiasResult Optimizer::resolve_solver_bias_(float room_target_temp, float current_room_temp) {
             SolverBiasResult result{0.0f, false};
 
             if (this->state_.sw_use_solver == nullptr || !this->state_.sw_use_solver->state)
@@ -78,7 +77,8 @@ namespace esphome
                 xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(10)) != pdTRUE)
                 return result;
 
-            if (this->odin_data_ready_ && !this->odin_schedule_.empty() && !this->odin_energy_.empty()) {
+            // Check if we have both energy (for on/off) and production (for scaling)
+            if (this->odin_data_ready_ && !this->odin_production_.empty() && !this->odin_energy_.empty()) {
                 int current_day  = this->get_current_ecodan_day();
                 int current_hour = this->get_current_ecodan_hour();
 
@@ -90,8 +90,8 @@ namespace esphome
                 }
 
                 if (current_hour >= 0 && current_hour < 24) {
-                    float odin_target = this->odin_schedule_[current_hour];
                     float odin_energy = this->odin_energy_[current_hour];
+                    float odin_prod   = this->odin_production_[current_hour];
 
                     result.heating_off = (odin_energy < 0.05f);
 
@@ -101,10 +101,31 @@ namespace esphome
                         return result;
                     }
 
-                    if (!std::isnan(odin_target)) {
+                    if (!std::isnan(odin_prod)) {
                         xSemaphoreGive(this->odin_mutex_);
                         apply_solver_soft_stop(false);
-                        result.bias = odin_target - room_target_temp;
+                        
+                        int heating_type_index = 0;
+                        if (this->state_.heating_system_type != nullptr) {
+                            heating_type_index = this->state_.heating_system_type->active_index().value_or(0);
+                        }
+                        HeatingProfile prof = this->get_heating_profile_(heating_type_index);
+                        
+
+                        float max_out = 7.0f;
+                        if (this->state_.num_raw_max_output != nullptr && this->state_.num_raw_max_output->has_state()) {
+                            max_out = this->state_.num_raw_max_output->state;
+                        }
+                        if (max_out < 1.0f) max_out = 7.0f;
+                        
+                        // Calculate how hard ODIN wants the heat pump to work (Ratio between 0.0 and 1.0)
+                        float load_ratio = std::clamp(odin_prod / max_out, 0.0f, 1.0f);
+                        float desired_error = load_ratio * prof.max_error_range;
+                        result.bias = desired_error + current_room_temp - room_target_temp;
+                        
+                        ESP_LOGD(OPTIMIZER_TAG, "ODIN -> Hour %d | Prod: %.1f/%.1f (%.0f%%) | Desired Err: %.2f | Set Bias: %+.2f", 
+                                 current_hour, odin_prod, max_out, load_ratio * 100.0f, desired_error, result.bias);
+                        
                         return result;
                     }
                 }
@@ -269,7 +290,7 @@ namespace esphome
             if (isnan(setpoint_bias)) setpoint_bias = 0.0f;
 
             // Solver bias (also handles soft-stop internally)
-            auto [solver_bias, solver_heating_off] = this->resolve_solver_bias_(room_target_temp);
+            auto [solver_bias, solver_heating_off] = this->resolve_solver_bias_(room_target_temp, room_temp);
 
             auto feedback_src = (i == 0)
                 ? this->state_.temperature_feedback_source_z1->active_index().value_or(0)

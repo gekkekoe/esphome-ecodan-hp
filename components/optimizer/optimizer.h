@@ -72,8 +72,8 @@ namespace esphome
 
       // ODIN solver data
       bool     odin_fetch_requested_{false};
-      std::vector<float> odin_schedule_;
       std::vector<float> odin_energy_;
+      std::vector<float> odin_production_;
       int      odin_data_day_   {-1};
       bool     odin_data_ready_ {false};
       SemaphoreHandle_t odin_mutex_ = NULL;
@@ -88,7 +88,7 @@ namespace esphome
       HeatingProfile   get_heating_profile_(int type_index);
       float            resolve_outside_temp_();
       struct SolverBiasResult { float bias; bool heating_off; };
-      SolverBiasResult resolve_solver_bias_(float room_target_temp);
+      SolverBiasResult resolve_solver_bias_(float room_target_temp, float current_room_temp);
       float            calculate_heating_flow_(std::size_t zone_i,
                                                const ecodan::Status &status,
                                                const HeatingProfile &prof,
@@ -170,8 +170,8 @@ namespace esphome
       // Solver / ODIN
       int  get_current_ecodan_hour();
       int  get_current_ecodan_day();
-      bool has_old_odin_data() { return odin_data_ready_ && odin_schedule_.size() == 24; }
-      void store_odin_data(int current_hour, const std::vector<float>& sched, const std::vector<float>& energy);
+      bool has_old_odin_data() { return odin_data_ready_ && odin_energy_.size() == 24; }
+      void store_odin_data(int current_hour, const std::vector<float>& prod, const std::vector<float>& energy);
       bool check_and_clear_odin_fetch_request() {
           if (odin_fetch_requested_) { odin_fetch_requested_ = false; return true; }
           return false;
