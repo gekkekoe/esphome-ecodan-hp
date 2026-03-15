@@ -174,8 +174,7 @@ namespace esphome
             }
 
             // HOURLY MPC TRIGGER
-            if (this->state_.sw_use_solver != nullptr 
-                && this->state_.sw_use_solver->state 
+            if (this->solver_enabled() 
                 && current_hour != this->last_processed_hour_) {
                 ESP_LOGI(OPTIMIZER_TAG, "Hour transition detected (%d -> %d). Requesting ODIN hourly course-correction...", 
                          this->last_processed_hour_, current_hour);

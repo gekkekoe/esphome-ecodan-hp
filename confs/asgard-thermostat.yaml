@@ -80,6 +80,13 @@ select:
         - component.update: asgard_vt_feedback_${zone_identifier}
 
 switch:
+  - platform: template
+    id: sw_odin_override_${zone_identifier}
+    name: "ODIN Relay Override ${zone_identifier}"
+    internal: true
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+
   - platform: gpio
     pin: ${gpio}
     id: asgard_relay_${zone_identifier}
@@ -135,11 +142,23 @@ climate:
     cool_overrun: 0.5
     
     heat_action:
-      - switch.turn_on: demand_switch_${zone_identifier}
+      - if:
+          condition:
+            lambda: 'return !id(sw_odin_override_${zone_identifier}).state;'
+          then:
+            - switch.turn_on: demand_switch_${zone_identifier}
     cool_action:
-      - switch.turn_on: demand_switch_${zone_identifier}
+      - if:
+          condition:
+            lambda: 'return !id(sw_odin_override_${zone_identifier}).state;'
+          then:
+            - switch.turn_on: demand_switch_${zone_identifier}
     idle_action:
-      - switch.turn_off: demand_switch_${zone_identifier}
+      - if:
+          condition:
+            lambda: 'return !id(sw_odin_override_${zone_identifier}).state;'
+          then:
+            - switch.turn_off: demand_switch_${zone_identifier}
 
     # enfore min runtime of 15m, or user supplied
     min_heating_run_time: 15min

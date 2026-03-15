@@ -307,8 +307,8 @@ namespace esphome
             float dynamic_min     = prof.base_min_delta_t + cold_factor * (prof.min_delta_cold_limit - prof.base_min_delta_t);
 
             bool set_point_reached = error < 0.0f;
-            bool use_solver = this->state_.sw_use_solver != nullptr && this->state_.sw_use_solver->state;
-            if (use_solver) {
+            bool solver_enabled = this->solver_enabled();
+            if (solver_enabled) {
                 auto [solver_load_ratio, solver_heating_off] = this->resolve_solver_result_(room_target_temp, room_temp);
                 if (solver_heating_off) return;
                 
@@ -334,7 +334,7 @@ namespace esphome
             float target_delta = dynamic_min + error_factor * smart_boost * (prof.max_delta_t - dynamic_min);
             ESP_LOGD(OPTIMIZER_TAG,
                 "Z%d target_delta=%.2f cold_factor=%.2f dyn_min=%.2f eff_range=%.2f error_factor=%.2f boost=%.2f linear=%d, use_solver=%d",
-                (i + 1), target_delta, cold_factor, dynamic_min, effective_error_range, error_factor, smart_boost, use_linear, use_solver);
+                (i + 1), target_delta, cold_factor, dynamic_min, effective_error_range, error_factor, smart_boost, use_linear, solver_enabled);
 
             if (is_heating_mode) {
                 out_flow_heat = this->calculate_heating_flow_(
@@ -357,7 +357,24 @@ namespace esphome
             }
             this->adaptive_loop_running_ = true;
 
-            if (!this->state_.auto_adaptive_control_enabled->state) {
+            bool aa_enabled = this->aa_enabled();
+            bool solver_enabled = this->solver_enabled();
+
+            // If the user disables Auto Adaptive or the Solver, we must ensure the hardware relays are released.
+            if (!aa_enabled || !solver_enabled) {
+                bool z1_locked = this->state_.sw_odin_override_z1 != nullptr && this->state_.sw_odin_override_z1->state;
+                bool z2_locked = this->state_.sw_odin_override_z2 != nullptr && this->state_.sw_odin_override_z2->state;
+                
+                if (z1_locked || z2_locked || this->solver_stop_active_) {
+                    ESP_LOGI(OPTIMIZER_TAG, "Solver/AA disabled, but override switches are active. Forcing release.");
+                    
+                    // Bypass the anti-chatter hour guard to guarantee immediate release
+                    this->solver_resume_hour_ = -1; 
+                    this->apply_solver_soft_stop(false);
+                }
+            }
+
+            if (!aa_enabled) {
                 this->adaptive_loop_running_ = false;
                 return;
             }

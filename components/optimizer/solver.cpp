@@ -12,6 +12,14 @@ namespace esphome
         // Ecodan RTC helpers
         // ─────────────────────────────────────────────────────────────────
 
+        bool Optimizer::aa_enabled() const {
+            return this->state_.auto_adaptive_control_enabled != nullptr && this->state_.auto_adaptive_control_enabled->state;
+        }
+
+        bool Optimizer::solver_enabled() const {
+            return this->state_.sw_use_solver != nullptr && this->state_.sw_use_solver->state;
+        }
+
         int Optimizer::get_current_ecodan_hour() {
             if (this->state_.ecodan_instance == nullptr) return 0;
             time_t ts = this->state_.ecodan_instance->get_status().timestamp();
@@ -86,7 +94,6 @@ namespace esphome
         // ─────────────────────────────────────────────────────────────────
         // Solver soft-stop: cut/restore relay when ODIN says 0 kWh
         // ─────────────────────────────────────────────────────────────────
-
         void Optimizer::apply_solver_soft_stop(bool should_stop) {
             if (this->state_.ecodan_instance == nullptr) return;
             auto &status = this->state_.ecodan_instance->get_status();
@@ -103,54 +110,68 @@ namespace esphome
             }
 
             int current_hour = this->get_current_ecodan_hour();
-            auto *relay_z1   = this->state_.demand_switch_z1;
-            auto *relay_z2   = this->state_.demand_switch_z2;
+            
+            auto *override_z1 = this->state_.sw_odin_override_z1;
+            auto *override_z2 = this->state_.sw_odin_override_z2;
+            auto *relay_z1    = this->state_.demand_switch_z1;
+            auto *relay_z2    = this->state_.demand_switch_z2;
+            auto *vt_z1       = this->state_.asgard_vt_z1;
+            auto *vt_z2       = this->state_.asgard_vt_z2;
 
             if (should_stop) {
                 // One write per hour guard
                 if (this->solver_stop_active_ && this->solver_stop_hour_ == current_hour)
                     return;
 
-                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: 0 kWh hour %d — cutting relay", current_hour);
+                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: hour %d — engaging override & cutting demand switch", current_hour);
 
-                if (this->state_.asgard_vt_z1 != nullptr) {
+                if (override_z1 != nullptr) {
+                    override_z1->turn_on();
                     if (relay_z1 != nullptr && relay_z1->state) relay_z1->turn_off();
-                    auto call = this->state_.asgard_vt_z1->make_call();
-                    call.set_mode(climate::CLIMATE_MODE_OFF);
-                    call.perform();
-                }
-                if (this->state_.asgard_vt_z2 != nullptr) {
+                } 
+
+                if (override_z2 != nullptr) {
+                    override_z2->turn_on();
                     if (relay_z2 != nullptr && relay_z2->state) relay_z2->turn_off();
-                    auto call = this->state_.asgard_vt_z2->make_call();
-                    call.set_mode(climate::CLIMATE_MODE_OFF);
-                    call.perform();
-                }
+                } 
 
                 this->solver_stop_active_ = true;
                 this->solver_stop_hour_   = current_hour;
 
             } else {
-                // One write per hour guard to avoid chattering.
+                // One write per hour guard to avoid chattering
                 if (this->solver_resume_hour_ == current_hour)
                     return;
                 this->solver_resume_hour_ = current_hour;
 
-                ESP_LOGI(OPTIMIZER_TAG, "Solver: ensuring relay ON for heating hour %d (was_stopped=%d)",
-                         current_hour, this->solver_stop_active_);
+                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: releasing override for hour %d", current_hour);
 
-                if (this->state_.asgard_vt_z1 != nullptr) {
-                    if (relay_z1 != nullptr && !relay_z1->state) relay_z1->turn_on();
-                    auto call = this->state_.asgard_vt_z1->make_call();
-                    call.set_mode(climate::CLIMATE_MODE_HEAT);
-                    call.perform();
+                if (override_z1 != nullptr) {
+                    if (relay_z1 != nullptr && vt_z1 != nullptr) {
+                        bool z1_has_demand = (vt_z1->action == climate::CLIMATE_ACTION_HEATING || 
+                                              vt_z1->action == climate::CLIMATE_ACTION_COOLING);
+                        if (z1_has_demand && !relay_z1->state) {
+                            relay_z1->turn_on();
+                        } else if (!z1_has_demand && relay_z1->state) {
+                            relay_z1->turn_off();
+                        }
+                    }
+                    override_z1->turn_off();
+                } 
+                
+                if (override_z2 != nullptr) {
+                    if (relay_z2 != nullptr && vt_z2 != nullptr) {
+                        bool z2_has_demand = (vt_z2->action == climate::CLIMATE_ACTION_HEATING || 
+                                              vt_z2->action == climate::CLIMATE_ACTION_COOLING);
+                        if (z2_has_demand && !relay_z2->state) {
+                            relay_z2->turn_on();
+                        } else if (!z2_has_demand && relay_z2->state) {
+                            relay_z2->turn_off();
+                        }
+                    }
+                    override_z2->turn_off();
                 }
-                if (this->state_.asgard_vt_z2 != nullptr) {
-                    if (relay_z2 != nullptr && !relay_z2->state) relay_z2->turn_on();
-                    auto call = this->state_.asgard_vt_z2->make_call();
-                    call.set_mode(climate::CLIMATE_MODE_HEAT);
-                    call.perform();
-                }
-
+                
                 this->solver_stop_active_ = false;
                 this->solver_stop_hour_   = -1;
             }

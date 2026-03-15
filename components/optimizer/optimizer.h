@@ -170,6 +170,8 @@ namespace esphome
       FlowLimits get_flow_limits(OptimizerZone zone);
 
       // Solver / ODIN
+      bool aa_enabled() const;
+      bool solver_enabled() const;
       int  get_current_ecodan_hour();
       int  get_current_ecodan_day();
       bool has_old_odin_data();

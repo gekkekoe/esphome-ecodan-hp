@@ -52,6 +52,8 @@ namespace esphome
         esphome::switch_::Switch *sw_use_solver;
         esphome::switch_::Switch *demand_switch_z1{nullptr};
         esphome::switch_::Switch *demand_switch_z2{nullptr};
+        esphome::switch_::Switch *sw_odin_override_z1{nullptr};
+        esphome::switch_::Switch *sw_odin_override_z2{nullptr};
 
         esphome::binary_sensor::BinarySensor *status_short_cycle_lockout;
         esphome::binary_sensor::BinarySensor *status_predictive_boost_active;
