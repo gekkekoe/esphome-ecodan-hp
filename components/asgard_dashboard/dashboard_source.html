@@ -721,6 +721,11 @@ header {
         <span class="ctrl-label">Max Output (kW)</span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-max-out', -0.1)">−</button><input type="number" class="step-input" id="raw-max-out-val" onchange="manualInput('raw-max-out', this.value)" /><button class="step-btn" onclick="step('raw-max-out', +0.1)">+</button></div>
       </div>
+      
+      <div class="ctrl-row">
+        <span class="ctrl-label">HL × TM Product</span>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-hl-tm', -0.5)">−</button><input type="number" class="step-input" id="raw-hl-tm-val" onchange="manualInput('raw-hl-tm', this.value)" /><button class="step-btn" onclick="step('raw-hl-tm', +0.5)">+</button></div>
+      </div>
 
       <div class="ctrl-row">
         <span class="ctrl-label">Battery SoC (kWh)</span>
@@ -873,6 +878,7 @@ const LIMITS = {
   'raw-room': { min: 10.0, max: 35.0, step: 0.1 },
   'raw-delta': { min: 0.0, max: 10.0, step: 0.1 },
   'raw-max-out': { min: 1.0, max: 20.0, step: 0.1 },
+  'raw-hl-tm': { min: 0.0, max: 100.0, step: 0.5 },
   'batt-soc': { min: 0.0, max: 30.0, step: 0.1 },
   'batt-max-dis': { min: 0.5, max: 15.0, step: 0.1 },
   'cool-start-z1': { min: 16.0, max: 22.0, step: 0.5 },
@@ -891,7 +897,7 @@ const STEP_EL = {
   'flow-z1-sp': 'flow-z1-sp-val', 'flow-z2-sp': 'flow-z2-sp-val',
   'raw-heat': 'raw-heat-val', 'raw-elec': 'raw-elec-val', 'raw-run': 'raw-run-val',
   'raw-out': 'raw-out-val', 'raw-room': 'raw-room-val', 'raw-delta': 'raw-delta-val',
-  'raw-max-out': 'raw-max-out-val',
+  'raw-max-out': 'raw-max-out-val', 'raw-hl-tm': 'raw-hl-tm-val',
   'batt-soc': 'batt-soc-val',
   'batt-max-dis': 'batt-max-dis-val',
   'cool-start-z1': 'cool-start-z1-val', 'cool-min-z1': 'cool-min-z1-val'
@@ -1214,39 +1220,50 @@ function initCharts() {
   });
   
   // --- Initialize ODIN Charts (Empty on load) ---
-  const labels24 = Array.from({length: 24}, (_, i) => `${i}:00`);
-  const monoFont = { family: "'JetBrains Mono'", size: 11 }; // Iets groter
-  const xAxis   = { 
+  const labels24 = Array.from({length: 48}, (_, i) => `${i % 24}:00`);
+  const monoFont = { family: "'JetBrains Mono'", size: 11 };
+  const xAxis = { 
+      min: 24, 
+      max: 47,
+      offset: false, 
       ticks: { 
+          autoSkip: false,
           color: '#8295b8',
           font: monoFont,
           maxRotation: 45,
-          minRotation: 45
+          minRotation: 45,
+          callback: function(val, index) {
+              if (window.innerWidth < 768 && index % 2 !== 0) return '';
+              return this.getLabelForValue(val);
+          }
       }, 
       grid: { color: '#1e2d4a' } 
   };
-const linearXAxis = {
+
+  const linearXAxis = {
       type: 'linear',
-      min: 0, 
-      max: 23,
-      ticks: {
-          stepSize: 1,
-          callback: function(v) { 
-              if (Number.isInteger(v)) {
-                  return v + ':00';
-              }
-              return null; 
-          },
-          color: '#8295b8', 
-          font: monoFont, 
-          maxRotation: 45, 
-          minRotation: 45
-      },
-      grid: { color: '#1e2d4a' }
+      min: 24, 
+      max: 47,
+      ticks: { 
+          autoSkip: false,
+          stepSize: 1, 
+          color: '#8295b8',
+          font: monoFont,
+          maxRotation: 45,
+          minRotation: 45,
+          callback: function(value) {
+              if (value % 1 !== 0) return ''; 
+              let h = Math.floor(value) % 24;
+              if (h < 0) h += 24; 
+              if (window.innerWidth < 768 && h % 2 !== 0) return '';
+              return h + ':00';
+          }
+      }, 
+      grid: { color: '#1e2d4a' } 
   };
   const odinZoomConfig = {
       limits: {
-          x: { min: 0, max: 23, minRange: 2 }
+          x: { min: 0, max: 47, minRange: 2 }
       },
       pan: {
           enabled: true, mode: 'x', modifierKey: 'alt', threshold: 10,
@@ -1395,10 +1412,13 @@ odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2
                   callbacks: {
                       title: function(ctx) {
                           if (!ctx || !ctx.length) return '';
-                          // Convert decimal hour (e.g. 10.25) back to clock time (10:15)
                           let val = ctx[0].parsed.x;
-                          let h = Math.floor(val);
-                          let m = Math.round((val - h) * 60);
+                          let h = Math.floor(val) % 24;
+                          if (h < 0) h += 24; 
+                          
+
+                          let m = Math.round((val - Math.floor(val)) * 60);
+                          
                           return h + ':' + (m < 10 ? '0' + m : m);
                       }
                   }
@@ -1488,35 +1508,39 @@ odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2
 function updateOdinCharts() {
     if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart || !odinPriceChart || !odinWeatherChart || !odinProdChart) return;
 
-    const rawNvsCons = odinDataCache ? (odinDataCache.actual_cons || new Array(24).fill(null)) : new Array(24).fill(null);
-    const rawNvsProd = odinDataCache ? (odinDataCache.actual_prod || new Array(24).fill(null)) : new Array(24).fill(null);
+    const rawNvsCons = odinDataCache ? (odinDataCache.actual_cons || new Array(48).fill(null)) : new Array(48).fill(null);
+    const rawNvsProd = odinDataCache ? (odinDataCache.actual_prod || new Array(48).fill(null)) : new Array(48).fill(null);
     
-    const actualConsByHour = new Array(24).fill(null);
-    const actualProdByHour = new Array(24).fill(null);
+    const actualConsByHour = new Array(48).fill(null);
+    const actualProdByHour = new Array(48).fill(null);
 
-    // Delta processing
-    for (let h = 0; h < 24; h++) {
-        // Cons
-        if (rawNvsCons[h] != null) {
+    // Process NVS Consumption and Production Deltas safely across 48h
+    for (let h = 0; h < 48; h++) {
+        // Calculate consumption delta
+        if (rawNvsCons && rawNvsCons[h] != null) {
             let prevCum = null;
+            // Look backwards indefinitely until we find a valid previous meter reading
             for (let prev = h - 1; prev >= 0; prev--) {
                 if (rawNvsCons[prev] != null) { prevCum = rawNvsCons[prev]; break; }
             }
-            let delta = prevCum !== null ? (rawNvsCons[h] - prevCum) : 0;
+            // If no previous data exists (e.g., after flash), delta is 0 to prevent huge spikes
+            let delta = prevCum !== null ? (rawNvsCons[h] - prevCum) : 0; 
+            if (delta < 0) delta = rawNvsCons[h]; // Catch daily meter resets
             actualConsByHour[h] = parseFloat(Math.max(0, delta).toFixed(2));
         }
         
-        // Prod
-        if (rawNvsProd[h] != null) {
+        // Calculate production delta
+        if (rawNvsProd && rawNvsProd[h] != null) {
             let prevCum = null;
             for (let prev = h - 1; prev >= 0; prev--) {
                 if (rawNvsProd[prev] != null) { prevCum = rawNvsProd[prev]; break; }
             }
             let delta = prevCum !== null ? (rawNvsProd[h] - prevCum) : 0;
+            if (delta < 0) delta = rawNvsProd[h];
             actualProdByHour[h] = parseFloat(Math.max(0, delta).toFixed(2));
         }
     }
-    const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(24).fill(null))] : new Array(24).fill(null);
+    const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(48).fill(null))] : new Array(48).fill(null);
 
     // Live history overlay
     if (history.timestamps) {
@@ -1570,28 +1594,29 @@ function updateOdinCharts() {
         }
 
         for (let h = 0; h < 24; h++) {
-            if (hourlyDeltaCons[h] !== null) actualConsByHour[h] = hourlyDeltaCons[h];
-            if (hourlyDeltaProd[h] !== null) actualProdByHour[h] = hourlyDeltaProd[h];
-            if (firstTempByHour[h] !== null) actualTempByHour[h] = firstTempByHour[h];
+            // Map live history to the "Today" portion of the 48h array (indexes 24-47)
+            if (hourlyDeltaCons[h] !== null) actualConsByHour[h + 24] = hourlyDeltaCons[h];
+            if (hourlyDeltaProd[h] !== null) actualProdByHour[h + 24] = hourlyDeltaProd[h];
+            if (firstTempByHour[h] !== null) actualTempByHour[h + 24] = firstTempByHour[h];
         }
     }
 
-    const expCons       = odinDataCache ? odinDataCache.energy_consumption         : new Array(24).fill(null);
-    const expProd       = odinDataCache ? odinDataCache.heat_production             : new Array(24).fill(null);
-    const expCost       = odinDataCache ? odinDataCache.expected_cost              : new Array(24).fill(null);
-    const expTemp       = odinDataCache ? odinDataCache.expected_begin_temp        : new Array(24).fill(null);
-    const battDischarge = odinDataCache ? (odinDataCache.battery_discharge || new Array(24).fill(0)) : new Array(24).fill(0);
-    const prices        = odinDataCache ? (odinDataCache.prices || new Array(24).fill(null)) : new Array(24).fill(null);
-    const schedBase     = odinDataCache ? (odinDataCache.sched_base || new Array(24).fill(null)) : new Array(24).fill(null);
-    const schedMin      = odinDataCache ? (odinDataCache.sched_min  || new Array(24).fill(null)) : new Array(24).fill(null);
-    const schedMax      = odinDataCache ? (odinDataCache.sched_max  || new Array(24).fill(null)) : new Array(24).fill(null);
-    const weather       = odinDataCache ? (odinDataCache.weather    || new Array(24).fill(null)) : new Array(24).fill(null);
-    const solar         = odinDataCache ? (odinDataCache.solar      || new Array(24).fill(null)) : new Array(24).fill(null);
+    const expCons       = odinDataCache ? odinDataCache.energy_consumption         : new Array(48).fill(null);
+    const expProd       = odinDataCache ? odinDataCache.heat_production            : new Array(48).fill(null);
+    const expCost       = odinDataCache ? odinDataCache.expected_cost              : new Array(48).fill(null);
+    const expTemp       = odinDataCache ? odinDataCache.expected_begin_temp        : new Array(48).fill(null);
+    const battDischarge = odinDataCache ? (odinDataCache.battery_discharge || new Array(48).fill(0)) : new Array(48).fill(0);
+    const prices        = odinDataCache ? (odinDataCache.prices || new Array(48).fill(null)) : new Array(48).fill(null);
+    const schedBase     = odinDataCache ? (odinDataCache.sched_base || new Array(48).fill(null)) : new Array(48).fill(null);
+    const schedMin      = odinDataCache ? (odinDataCache.sched_min  || new Array(48).fill(null)) : new Array(48).fill(null);
+    const schedMax      = odinDataCache ? (odinDataCache.sched_max  || new Array(48).fill(null)) : new Array(48).fill(null);
+    const weather       = odinDataCache ? (odinDataCache.weather    || new Array(48).fill(null)) : new Array(48).fill(null);
+    const solar         = odinDataCache ? (odinDataCache.solar      || new Array(48).fill(null)) : new Array(48).fill(null);
     
     const pricesKwh     = prices.map(p => p !== null ? parseFloat((p / 1000).toFixed(5)) : null);
 
-    const actualCost = new Array(24).fill(null);
-    for (let h = 0; h < 24; h++) {
+    const actualCost = new Array(48).fill(null);
+    for (let h = 0; h < 48; h++) {
         const cons  = actualConsByHour[h];
         const price = prices[h];
         if (cons !== null && cons > 0 && price !== null && price > 0) {
@@ -1622,30 +1647,13 @@ function updateOdinCharts() {
     odinTempChart.data.datasets[2].data = mapToXY(schedBase);
     odinTempChart.data.datasets[3].data = mapToXY(expTemp);
 
+    // The actualTempByHour array already contains the perfectly merged NVS + Live data.
+    // We simply map it to strict 1-hour X-coordinates to remove any decimal/30m offsets.
     let fineActualTemp = [];
-    let hasFineData = false;
-    let lastQuarter = -1;
-    
-    if (history.timestamps && history.timestamps.length > 0) {
-        const todayString = new Date().toDateString();
-        for (let i = 0; i < history.timestamps.length; i++) {
-            const d = new Date(history.timestamps[i]);
-            if (d.toDateString() === todayString && history.z1curr[i] != null) {
-                const quarter = Math.floor(d.getMinutes() / 15);
-                const absoluteQuarter = d.getHours() * 4 + quarter;
-                
-                if (absoluteQuarter !== lastQuarter) {
-                    const hourDecimal = d.getHours() + ((quarter * 15) / 60);
-                    fineActualTemp.push({ x: hourDecimal, y: history.z1curr[i] });
-                    lastQuarter = absoluteQuarter;
-                    hasFineData = true;
-                }
-            }
+    for (let h = 0; h < 48; h++) {
+        if (actualTempByHour[h] !== null) {
+            fineActualTemp.push({ x: h, y: actualTempByHour[h] });
         }
-    }
-
-    if (!hasFineData) {
-        fineActualTemp = mapToXY(actualTempByHour);
     }
 
     odinTempChart.data.datasets[4].data = fineActualTemp;
@@ -2081,6 +2089,7 @@ function render(d) {
   seedPending('raw-room', d.raw_avg_room_temp);
   seedPending('raw-delta', d.raw_delta_room_temp);
   seedPending('raw-max-out', d.raw_max_output);
+  seedPending('raw-hl-tm', d.raw_hl_tm_product);
   seedPending('batt-soc', d.battery_soc_kwh);
   seedPending('batt-max-dis', d.battery_max_discharge_kw);
 
@@ -2290,6 +2299,7 @@ async function sendPhysics(btn) {
     if (hasChanged('raw-room'))  { await apiPost({ key: 'raw_avg_room_temp', value: pending['raw-room'] }); c++; }
     if (hasChanged('raw-delta')) { await apiPost({ key: 'raw_delta_room_temp', value: pending['raw-delta'] }); c++; }
     if (hasChanged('raw-max-out')) { await apiPost({ key: 'raw_max_output', value: pending['raw-max-out'] }); c++; }
+    if (hasChanged('raw-hl-tm')) { await apiPost({ key: 'raw_hl_tm_product', value: pending['raw-hl-tm'] }); c++; }
     if (hasChanged('batt-soc'))     { await apiPost({ key: 'battery_soc_kwh', value: pending['batt-soc'] }); c++; }
     if (hasChanged('batt-max-dis')) { await apiPost({ key: 'battery_max_discharge_kw', value: pending['batt-max-dis'] }); c++; }
     showToast(c > 0 ? '✓ Physics Data updated' : 'No changes');
@@ -2324,6 +2334,7 @@ async function runOdinSolver() {
             avg_room_temp: pending['raw-room'] || latestState.raw_avg_room_temp || 20,
             delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
             max_output: pending['raw-max-out'] || latestState.raw_max_output || 8.0,
+            hl_tm_product: pending['hl_tm_product'] ?? latestState.raw_hl_tm_product ?? 0.0,
             current_room_temp: latestState.z1_current_temp || 20.0,
             current_hour: solveHour,
             battery_soc_kwh: pending['batt-soc'] ?? latestState.battery_soc_kwh ?? 0.0,
@@ -2341,47 +2352,48 @@ async function runOdinSolver() {
         const data = await res.json();
         
         if (data.success) {
-            if (odinDataCache &&
-                odinDataCache.schedule &&
-                odinDataCache.schedule.length > 0) {
-
-                for (let i = 0; i < solveHour; i++) {
-                    data.schedule[i] = odinDataCache.schedule?.[i] ?? data.schedule[i];
-                    data.expected_begin_temp[i] = odinDataCache.expected_begin_temp?.[i] ?? data.expected_begin_temp[i];
-                    data.energy_consumption[i] = odinDataCache.energy_consumption?.[i] ?? data.energy_consumption[i];
-                    data.expected_cost[i] = odinDataCache.expected_cost?.[i] ?? data.expected_cost[i];
-                    data.expected_cost_with_tax[i] = odinDataCache.expected_cost_with_tax?.[i] ?? data.expected_cost_with_tax[i];
-                    
-                    if (odinDataCache.battery_discharge) {
-                        data.battery_discharge[i] = odinDataCache.battery_discharge[i] ?? data.battery_discharge[i];
-                    }
-                    if (odinDataCache.heat_production) {
-                        data.heat_production[i] = odinDataCache.heat_production[i] ?? data.heat_production[i];
-                    }
-                    if (odinDataCache.prices) {
-                        data.prices[i] = odinDataCache.prices[i] ?? data.prices[i];
-                    }
-                    if (odinDataCache.sched_base) {
-                        data.sched_base[i] = odinDataCache.sched_base[i] ?? data.sched_base[i];
-                    }
-                    if (odinDataCache.sched_min) {
-                        data.sched_min[i] = odinDataCache.sched_min[i] ?? data.sched_min[i];
-                    }
-                    if (odinDataCache.sched_max) {
-                        data.sched_max[i] = odinDataCache.sched_max[i] ?? data.sched_max[i];
+          if (!odinDataCache) odinDataCache = {};
+            
+            // Safely inject the 24h solver data into the "Today" (24-47) portion of the cache
+            const inject48 = (key, new24, preserveCurrentHour = false) => {
+                if (!odinDataCache[key] || odinDataCache[key].length !== 48) {
+                    let old = odinDataCache[key] || [];
+                    odinDataCache[key] = new Array(48).fill(null);
+                    if (old.length === 24) {
+                        for(let i=0; i<24; i++) odinDataCache[key][i+24] = old[i];
                     }
                 }
-                
-                data.actual_cons      = odinDataCache.actual_cons;
-                data.actual_prod      = odinDataCache.actual_prod;
-                data.actual_room_temp = odinDataCache.actual_room_temp;
-            }
+                if (new24 && new24.length >= 24) {
+                    for (let i = 0; i < 24; i++) {
+                        let isCurrent = (i === solveHour && solveHour !== 0);
+                        if (preserveCurrentHour && isCurrent) continue;
 
-            data.last_run = {
-                execution_ms:    data.execution_ms                  || 0,
-                heat_loss:       data.used_heat_loss                || 0,
-                base_cop:        data.used_base_cop                 || 0,
-                thermal_mass:    data.used_thermal_mass             || 0,
+                        if (new24[i] !== null && new24[i] !== undefined) {
+                            odinDataCache[key][i + 24] = new24[i];
+                        }
+                    }
+                }
+            };
+
+            inject48('schedule', data.schedule);
+            inject48('expected_begin_temp', data.expected_begin_temp, true); // true = lock current hour
+            inject48('prices', data.prices);
+            inject48('sched_base', data.sched_base);
+            inject48('sched_min', data.sched_min);
+            inject48('sched_max', data.sched_max);
+            inject48('weather', data.weather);
+            inject48('solar', data.solar);
+            inject48('energy_consumption', data.energy_consumption);
+            inject48('heat_production', data.heat_production);
+            inject48('expected_cost', data.expected_cost);
+            inject48('expected_cost_with_tax', data.expected_cost_with_tax);
+            inject48('battery_discharge', data.battery_discharge);  
+
+            odinDataCache.last_run = {
+                execution_ms:    data.execution_ms                 || 0,
+                heat_loss:       data.used_heat_loss               || 0,
+                base_cop:        data.used_base_cop                || 0,
+                thermal_mass:    data.used_thermal_mass            || 0,
                 exp_consumption: data.total_consumption_kwh        || 0,
                 exp_production:  data.total_heat_produced_kwh      || 0,
                 exp_solar:       data.total_solar_generation_kwh   || 0,
@@ -2389,7 +2401,6 @@ async function runOdinSolver() {
                 total_cost_tax:  data.total_cost_with_tax_eur      || 0
             };
 
-            odinDataCache = data;
             updateOdinCharts();
             showToast(`✓ Optimized from hour ${solveHour}`);
         } else {

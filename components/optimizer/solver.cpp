@@ -109,31 +109,19 @@ namespace esphome
                 return;
             }
 
-            int current_hour = this->get_current_ecodan_hour();
-            
-            auto *override_z1 = this->state_.sw_odin_override_z1;
-            auto *override_z2 = this->state_.sw_odin_override_z2;
+            int current_hour = this->get_current_ecodan_hour();   
             auto *relay_z1    = this->state_.demand_switch_z1;
             auto *relay_z2    = this->state_.demand_switch_z2;
-            auto *vt_z1       = this->state_.asgard_vt_z1;
-            auto *vt_z2       = this->state_.asgard_vt_z2;
 
             if (should_stop) {
                 // One write per hour guard
                 if (this->solver_stop_active_ && this->solver_stop_hour_ == current_hour)
                     return;
 
-                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: hour %d — engaging override & cutting demand switch", current_hour);
+                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: enable stop for hour %d", current_hour);
 
-                if (override_z1 != nullptr) {
-                    override_z1->turn_on();
-                    if (relay_z1 != nullptr && relay_z1->state) relay_z1->turn_off();
-                } 
-
-                if (override_z2 != nullptr) {
-                    override_z2->turn_on();
-                    if (relay_z2 != nullptr && relay_z2->state) relay_z2->turn_off();
-                } 
+                if (relay_z1 != nullptr && relay_z1->state) relay_z1->turn_off();
+                if (relay_z2 != nullptr && relay_z2->state) relay_z2->turn_off();
 
                 this->solver_stop_active_ = true;
                 this->solver_stop_hour_   = current_hour;
@@ -144,34 +132,10 @@ namespace esphome
                     return;
                 this->solver_resume_hour_ = current_hour;
 
-                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: releasing override for hour %d", current_hour);
+                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: disable stop for hour %d", current_hour);
 
-                if (override_z1 != nullptr) {
-                    if (relay_z1 != nullptr && vt_z1 != nullptr) {
-                        bool z1_has_demand = (vt_z1->action == climate::CLIMATE_ACTION_HEATING || 
-                                              vt_z1->action == climate::CLIMATE_ACTION_COOLING);
-                        if (z1_has_demand && !relay_z1->state) {
-                            relay_z1->turn_on();
-                        } else if (!z1_has_demand && relay_z1->state) {
-                            relay_z1->turn_off();
-                        }
-                    }
-                    override_z1->turn_off();
-                } 
-                
-                if (override_z2 != nullptr) {
-                    if (relay_z2 != nullptr && vt_z2 != nullptr) {
-                        bool z2_has_demand = (vt_z2->action == climate::CLIMATE_ACTION_HEATING || 
-                                              vt_z2->action == climate::CLIMATE_ACTION_COOLING);
-                        if (z2_has_demand && !relay_z2->state) {
-                            relay_z2->turn_on();
-                        } else if (!z2_has_demand && relay_z2->state) {
-                            relay_z2->turn_off();
-                        }
-                    }
-                    override_z2->turn_off();
-                }
-                
+                if (relay_z1 != nullptr) relay_z1->turn_on();
+                if (relay_z2 != nullptr) relay_z2->turn_on();         
                 this->solver_stop_active_ = false;
                 this->solver_stop_hour_   = -1;
             }

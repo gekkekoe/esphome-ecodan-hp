@@ -891,17 +891,18 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 // ---------------------------------------------------------------------------
 static const char* NVS_ODIN_NS = "odin_cache";
 
-void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float actual_room_temp) {
-    if (hour < 0 || hour >= 24) return;
+void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float actual_room_temp, bool is_yesterday) {
+    int target_idx = is_yesterday ? hour : (hour + 24);
+    if (target_idx < 0 || target_idx >= 48) return;
     if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
 
-    if (odin_actual_cons_.size() != 24) odin_actual_cons_.assign(24, NAN);
-    if (odin_actual_prod_.size() != 24) odin_actual_prod_.assign(24, NAN);
-    if (odin_actual_room_.size() != 24) odin_actual_room_.assign(24, NAN);
+    if (odin_actual_cons_.size() != 48) odin_actual_cons_.assign(48, NAN);
+    if (odin_actual_prod_.size() != 48) odin_actual_prod_.assign(48, NAN);
+    if (odin_actual_room_.size() != 48) odin_actual_room_.assign(48, NAN);
 
-    odin_actual_cons_[hour] = actual_cons_kwh;
-    odin_actual_prod_[hour] = actual_prod_kwh;
-    odin_actual_room_[hour] = actual_room_temp;
+    odin_actual_cons_[target_idx] = actual_cons_kwh;
+    odin_actual_prod_[target_idx] = actual_prod_kwh;
+    odin_actual_room_[target_idx] = actual_room_temp;
 
     xSemaphoreGive(snapshot_mutex_);
     this->odin_nvs_dirty_ = true;
@@ -938,21 +939,28 @@ void EcodanDashboard::nvs_persist_odin_() {
 
     // Smart lambda without heap memory allocations
     auto save_arr = [&](const char* key, const std::vector<float>& v) {
-        if (v.size() != 24) return;
+        if (v.size() != 48) return;
         size_t required_size = 0;
         bool needs_write = true;
         
-        if (nvs_get_blob(h, key, NULL, &required_size) == ESP_OK && required_size == 24 * sizeof(float)) {
-            float temp[24]; // <-- Extremely fast stack allocation, prevents OOM crashes!
+        if (nvs_get_blob(h, key, NULL, &required_size) == ESP_OK && required_size == 48 * sizeof(float)) {
+            float temp[48];
             if (nvs_get_blob(h, key, temp, &required_size) == ESP_OK) {
                 needs_write = false;
-                for (int i = 0; i < 24; i++) {
-                    if (std::abs(temp[i] - v[i]) > 0.001f) { needs_write = true; break; }
+                for (int i = 0; i < 48; i++) {
+                    // Check if one is NAN and the other isn't, OR if the numerical difference > 0.001
+                    bool temp_is_nan = std::isnan(temp[i]);
+                    bool v_is_nan = std::isnan(v[i]);
+                    
+                    if (temp_is_nan != v_is_nan || (!temp_is_nan && std::abs(temp[i] - v[i]) > 0.001f)) { 
+                        needs_write = true; 
+                        break; 
+                    }
                 }
             }
         }
         if (needs_write) { 
-            nvs_set_blob(h, key, v.data(), 24 * sizeof(float)); 
+            nvs_set_blob(h, key, v.data(), 48 * sizeof(float)); 
             has_changes = true; 
         }
     };
@@ -1000,9 +1008,9 @@ void EcodanDashboard::nvs_load_odin_() {
     }
 
     auto load_arr = [&](const char* key, std::vector<float>& out, float fill = 0.0f) -> bool {
-        size_t len = 24 * sizeof(float);
-        out.resize(24, fill);
-        return nvs_get_blob(h, key, out.data(), &len) == ESP_OK && len == 24 * sizeof(float);
+        size_t len = 48 * sizeof(float);
+        out.resize(48, fill);
+        return nvs_get_blob(h, key, out.data(), &len) == ESP_OK && len == 48 * sizeof(float);
     };
 
     bool ok = load_arr("sched",    this->odin_schedule_)
@@ -1010,20 +1018,21 @@ void EcodanDashboard::nvs_load_odin_() {
            && load_arr("exp_t",    this->odin_expected_temp_)
            && load_arr("cost",     this->odin_cost_)
            && load_arr("cost_tax", this->odin_cost_tax_)
-           && load_arr("batt",     this->odin_battery_discharge_);
+           && load_arr("batt",     this->odin_battery_discharge_)
+           && load_arr("prod",     this->odin_production_);
 
     // Optional arrays — don't fail if missing (added in later versions)
-    load_arr("prod",     this->odin_production_);
     load_arr("act_cons", this->odin_actual_cons_, NAN);
     load_arr("act_prod", this->odin_actual_prod_, NAN);
     load_arr("act_room", this->odin_actual_room_, NAN);
+    
     // sched_base/min/max, weather, solar and prices not persisted in NVS — initialize to 0 so partial update loop is safe
-    this->odin_sched_base_.assign(24, 0.0f);
-    this->odin_sched_min_.assign(24, 0.0f);
-    this->odin_sched_max_.assign(24, 0.0f);
-    this->odin_weather_.assign(24, 0.0f);
-    this->odin_solar_.assign(24, 0.0f);
-    this->odin_prices_.assign(24, 0.0f);
+    this->odin_sched_base_.assign(48, 0.0f);
+    this->odin_sched_min_.assign(48, 0.0f);
+    this->odin_sched_max_.assign(48, 0.0f);
+    this->odin_weather_.assign(48, 0.0f);
+    this->odin_solar_.assign(48, 0.0f);
+    this->odin_prices_.assign(48, 0.0f);
 
     nvs_close(h);
 
@@ -1034,8 +1043,6 @@ void EcodanDashboard::nvs_load_odin_() {
 
         // If the stored day doesn't match today, the actual arrays belong to a
         // previous day — clear them now so stale data never appears in the graph.
-        // (The day check in store_odin_data only handles day_delta==1 rollovers;
-        //  multi-day gaps after reboot are caught here.)
         int today = 0;
         {
             time_t now_t = 0;
@@ -1047,9 +1054,9 @@ void EcodanDashboard::nvs_load_odin_() {
         if (today != 0 && today != (int)stored_day) {
             ESP_LOGI(TAG, "NVS: stored day %d != today %d — clearing actual arrays on restore",
                      (int)stored_day, today);
-            this->odin_actual_cons_.assign(24, NAN);
-            this->odin_actual_prod_.assign(24, NAN);
-            this->odin_actual_room_.assign(24, NAN);
+            this->odin_actual_cons_.assign(48, NAN);
+            this->odin_actual_prod_.assign(48, NAN);
+            this->odin_actual_room_.assign(48, NAN);
         }
     } else {
         ESP_LOGW(TAG, "NVS: ODIN cache incomplete, discarding");
@@ -1080,84 +1087,91 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         return;
     }
 
-    // First run or size mismatch — full replace
-    if (this->odin_schedule_.size() != 24) {
-        this->odin_schedule_          = sched;         this->odin_schedule_.resize(24);
-        this->odin_energy_            = energy;         this->odin_energy_.resize(24);
-        this->odin_production_        = production;     this->odin_production_.resize(24);
-        this->odin_expected_temp_     = exp_temp;       this->odin_expected_temp_.resize(24);
-        this->odin_cost_              = cost;           this->odin_cost_.resize(24);
-        this->odin_cost_tax_          = cost_tax;       this->odin_cost_tax_.resize(24);
-        this->odin_battery_discharge_ = battery_discharge; this->odin_battery_discharge_.resize(24, 0.0f);
-        this->odin_sched_base_        = sched_base;    this->odin_sched_base_.resize(24, 0.0f);
-        this->odin_sched_min_         = sched_min;     this->odin_sched_min_.resize(24, 0.0f);
-        this->odin_sched_max_         = sched_max;     this->odin_sched_max_.resize(24, 0.0f);
-        this->odin_weather_           = weather;       this->odin_weather_.resize(24, 0.0f);
-        this->odin_solar_             = solar;         this->odin_solar_.resize(24, 0.0f);
-        this->odin_prices_            = prices;        this->odin_prices_.resize(24, 0.0f);
-        // actual arrays keep their NVS-loaded values
-        if (this->odin_actual_cons_.size() != 24) this->odin_actual_cons_.assign(24, NAN);
-        if (this->odin_actual_prod_.size() != 24) this->odin_actual_prod_.assign(24, NAN);
-        if (this->odin_actual_room_.size() != 24) this->odin_actual_room_.assign(24, NAN);
-        this->odin_data_ready_  = true;
-        this->odin_stored_day_  = current_day;
+    auto ensure_48 = [](std::vector<float>& v, float fill_val) {
+        if (v.size() != 48) v.assign(48, fill_val);
+    };
+
+    ensure_48(this->odin_schedule_, NAN);
+    ensure_48(this->odin_energy_, NAN);
+    ensure_48(this->odin_production_, NAN);
+    ensure_48(this->odin_expected_temp_, NAN);
+    ensure_48(this->odin_cost_, NAN);
+    ensure_48(this->odin_cost_tax_, NAN);
+    ensure_48(this->odin_actual_cons_, NAN);
+    ensure_48(this->odin_actual_prod_, NAN);
+    ensure_48(this->odin_actual_room_, NAN);
+
+    ensure_48(this->odin_battery_discharge_, 0.0f);
+    ensure_48(this->odin_sched_base_, 0.0f);
+    ensure_48(this->odin_sched_min_, 0.0f);
+    ensure_48(this->odin_sched_max_, 0.0f);
+    ensure_48(this->odin_weather_, 0.0f);
+    ensure_48(this->odin_solar_, 0.0f);
+    ensure_48(this->odin_prices_, 0.0f);
+
+    if (!this->odin_data_ready_) {
+        this->odin_data_ready_ = true;
+        this->odin_stored_day_ = current_day;
     }
 
-    // Real day transition: day advanced by exactly 1 (not a reboot with stale NVS day).
-    // Only clear hours >= current_hour — hours before this are measured actuals that are still valid.
+    // 2. Real day transition: Shift array left by 24h
     if (current_day != this->odin_stored_day_) {
         int day_delta = current_day - this->odin_stored_day_;
         if (day_delta == 1 || day_delta == -364) {
-            // Normal midnight rollover: clear future actuals, keep past hours measured today
-            ESP_LOGI(TAG, "ODIN day transition (%d -> %d): clearing actual data from hour %d onward",
-                     this->odin_stored_day_, current_day, current_hour);
-            for (int i = current_hour; i < 24; i++) {
-                if (i < (int)this->odin_actual_cons_.size()) this->odin_actual_cons_[i] = NAN;
-                if (i < (int)this->odin_actual_prod_.size()) this->odin_actual_prod_[i] = NAN;
-                if (i < (int)this->odin_actual_room_.size()) this->odin_actual_room_[i] = NAN;
-            }
-        } else {
-            // Multi-day gap (reboot with stale NVS, or missed days): just adopt new day, don't wipe actuals
-            ESP_LOGI(TAG, "ODIN day gap (%d -> %d, delta=%d): adopting new day without clearing actuals",
-                     this->odin_stored_day_, current_day, day_delta);
+            ESP_LOGI(TAG, "ODIN day transition (%d -> %d): shifting 48h window", this->odin_stored_day_, current_day);
+            auto shift_arr = [](std::vector<float>& v, float fill_val) {
+                for (int i = 0; i < 24; i++) v[i] = v[i + 24];
+                for (int i = 24; i < 48; i++) v[i] = fill_val;
+            };
+            shift_arr(this->odin_schedule_, NAN);
+            shift_arr(this->odin_energy_, NAN);
+            shift_arr(this->odin_production_, NAN);
+            shift_arr(this->odin_expected_temp_, NAN);
+            shift_arr(this->odin_cost_, NAN);
+            shift_arr(this->odin_cost_tax_, NAN);
+            shift_arr(this->odin_battery_discharge_, 0.0f);
+            shift_arr(this->odin_sched_base_, 0.0f);
+            shift_arr(this->odin_sched_min_, 0.0f);
+            shift_arr(this->odin_sched_max_, 0.0f);
+            shift_arr(this->odin_weather_, 0.0f);
+            shift_arr(this->odin_solar_, 0.0f);
+            shift_arr(this->odin_prices_, 0.0f);
+            shift_arr(this->odin_actual_cons_, NAN);
+            shift_arr(this->odin_actual_prod_, NAN);
+            shift_arr(this->odin_actual_room_, NAN);
         }
         this->odin_stored_day_ = current_day;
     }
 
-    // Partial update: overwrite current_hour onward (past hours stay from NVS).
-    // NAN values in exp_temp/schedule mean "don't overwrite" — the DP engine
-    // pads past hours with NAN so the original morning forecast is preserved.
+    // 3. Forward-only updates (Indexes 24-47 from current hour)
     if (current_hour < 24) {
         for (int i = current_hour; i < 24; i++) {
-            if (i < (int)sched.size()      && !std::isnan(sched[i]))       this->odin_schedule_[i]          = sched[i];
-            if (i < (int)energy.size()     && !std::isnan(energy[i]))      this->odin_energy_[i]            = energy[i];
-            if (i < (int)production.size() && !std::isnan(production[i]))  this->odin_production_[i]        = production[i];
+            int target_idx = i + 24;
+            if (i < (int)energy.size()     && !std::isnan(energy[i]))      this->odin_energy_[target_idx]            = energy[i];
+            if (i < (int)production.size() && !std::isnan(production[i]))  this->odin_production_[target_idx]        = production[i];
+            if (i < (int)cost.size()       && !std::isnan(cost[i]))        this->odin_cost_[target_idx]              = cost[i];
+            if (i < (int)cost_tax.size()   && !std::isnan(cost_tax[i]))    this->odin_cost_tax_[target_idx]          = cost_tax[i];
+            if (i < (int)battery_discharge.size() && !std::isnan(battery_discharge[i])) this->odin_battery_discharge_[target_idx] = battery_discharge[i];
             
-            // we only want expected temp for hour+1, but not for hour=0
             bool preserve_current = (i == current_hour && current_hour != 0);
             if (!preserve_current && i < (int)exp_temp.size() && !std::isnan(exp_temp[i])) {
-                this->odin_expected_temp_[i] = exp_temp[i];
+                this->odin_expected_temp_[target_idx] = exp_temp[i];
             }
-
-            if (i < (int)cost.size()       && !std::isnan(cost[i]))        this->odin_cost_[i]              = cost[i];
-            if (i < (int)cost_tax.size()   && !std::isnan(cost_tax[i]))    this->odin_cost_tax_[i]          = cost_tax[i];
-            if (i < (int)battery_discharge.size() && !std::isnan(battery_discharge[i])) this->odin_battery_discharge_[i] = battery_discharge[i];
         }
     }
 
-    // STATIC SCHEDULES: Overwrite the full 24 hours regardless of current_hour, 
-    // because the schedule band limits apply to the entire day.
+    // 4. FULL DAY updates (Indexes 24-47 covering 0-23)
     for (int i = 0; i < 24; i++) {
-        if (i < (int)sched_base.size() && !std::isnan(sched_base[i])) this->odin_sched_base_[i] = sched_base[i];
-        if (i < (int)sched_min.size()  && !std::isnan(sched_min[i]))  this->odin_sched_min_[i]  = sched_min[i];
-        if (i < (int)sched_max.size()  && !std::isnan(sched_max[i]))  this->odin_sched_max_[i]  = sched_max[i];
-        // weather, solar, prices: always overwrite from fresh solver data
-        if (i < (int)weather.size() && !std::isnan(weather[i])) this->odin_weather_[i] = weather[i];
-        if (i < (int)solar.size()   && !std::isnan(solar[i]))   this->odin_solar_[i]   = solar[i];
-        if (i < (int)prices.size()  && !std::isnan(prices[i]))  this->odin_prices_[i]  = prices[i];
+        int target_idx = i + 24;
+        if (i < (int)sched.size()      && !std::isnan(sched[i]))       this->odin_schedule_[target_idx]          = sched[i];
+        if (i < (int)sched_base.size() && !std::isnan(sched_base[i]))  this->odin_sched_base_[target_idx] = sched_base[i];
+        if (i < (int)sched_min.size()  && !std::isnan(sched_min[i]))   this->odin_sched_min_[target_idx]  = sched_min[i];
+        if (i < (int)sched_max.size()  && !std::isnan(sched_max[i]))   this->odin_sched_max_[target_idx]  = sched_max[i];
+        if (i < (int)weather.size()    && !std::isnan(weather[i]))     this->odin_weather_[target_idx]    = weather[i];
+        if (i < (int)solar.size()      && !std::isnan(solar[i]))       this->odin_solar_[target_idx]      = solar[i];
+        if (i < (int)prices.size()     && !std::isnan(prices[i]))      this->odin_prices_[target_idx]     = prices[i];
     }
 
-    // copy runtime stats
     this->last_run_stats_ = run_stats;
 
     xSemaphoreGive(this->snapshot_mutex_);

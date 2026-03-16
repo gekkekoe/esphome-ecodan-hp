@@ -33,14 +33,8 @@ script:
                       profile_str = "radiators";
                   }
 
-                  // Use accurate cumulative sensors for consumption and production
-                  float elec_cons = id(delta_energy_consumed_increasing).state;
-                  if (id(solver_kwh_meter_feedback_source).active_index().value_or(0) != 0) {
-                      elec_cons = id(solver_kwh_meter_feedback).state;
-                  }
-                  float heat_prod = id(daily_computed_output_power).state;
-
                   int _cur_hour = id(optimizer_ptr)->get_current_ecodan_hour();
+
                   snprintf(payload, sizeof(payload),
                       "{\"params\":{"
                       "\"heating_profile\":\"%s\","
@@ -58,8 +52,8 @@ script:
                       "\"battery_max_discharge_kw\":%.2f"
                       "}}",
                       profile_str,
-                      heat_prod,
-                      elec_cons,
+                      id(num_raw_heat_produced).state,
+                      id(num_raw_elec_consumed).state,
                       id(num_raw_runtime_hours).state,
                       id(num_raw_avg_outside_temp).state,
                       id(num_raw_avg_room_temp).state,
@@ -157,10 +151,11 @@ interval:
             if (last_actual_hour == -1) {
               last_actual_hour = cur_hr;
             } else if (cur_hr != last_actual_hour) {
-              // A real hour transition occurred — seal the completed hour.
               int completed_hr = (cur_hr == 0) ? 23 : cur_hr - 1;
               
-              // Use accurate cumulative sensors for consumption and production
+              // Exactly at midnight, the data belongs to yesterday's final hour
+              bool is_yesterday = (cur_hr == 0);
+              
               float cons = id(delta_energy_consumed_increasing).state;
               if (id(solver_kwh_meter_feedback_source).active_index().value_or(0) != 0) {
                   cons = id(solver_kwh_meter_feedback).state;
@@ -169,7 +164,7 @@ interval:
               float prod = id(daily_computed_output_power).state; 
               float room = id(virtual_climate_z1).current_temperature;
               
-              id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, prod, room);
+              id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, prod, room, is_yesterday);
               
               last_actual_hour = cur_hr;
             }

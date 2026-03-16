@@ -310,7 +310,12 @@ namespace esphome
             bool solver_enabled = this->solver_enabled();
             if (solver_enabled) {
                 auto [solver_load_ratio, solver_heating_off] = this->resolve_solver_result_(room_target_temp, room_temp);
-                if (solver_heating_off) return;
+                if (solver_heating_off) {
+                    ESP_LOGD(OPTIMIZER_TAG,
+                        "Z%d ODIN heating stopped, solver_load_ratio: %.2f",
+                        (i + 1), solver_load_ratio);
+                    return;
+                }
                 
                 float desired_delta = prof.base_min_delta_t + solver_load_ratio * (prof.max_delta_t - prof.base_min_delta_t);
                 
@@ -359,19 +364,24 @@ namespace esphome
 
             bool aa_enabled = this->aa_enabled();
             bool solver_enabled = this->solver_enabled();
+            auto *override_z1 = this->state_.sw_odin_override_z1;
+            auto *override_z2 = this->state_.sw_odin_override_z2;
 
             // If the user disables Auto Adaptive or the Solver, we must ensure the hardware relays are released.
             if (!aa_enabled || !solver_enabled) {
-                bool z1_locked = this->state_.sw_odin_override_z1 != nullptr && this->state_.sw_odin_override_z1->state;
-                bool z2_locked = this->state_.sw_odin_override_z2 != nullptr && this->state_.sw_odin_override_z2->state;
+                bool z1_locked = override_z1 != nullptr && override_z1->state;
+                bool z2_locked = override_z2 != nullptr && override_z2->state;
                 
                 if (z1_locked || z2_locked || this->solver_stop_active_) {
                     ESP_LOGI(OPTIMIZER_TAG, "Solver/AA disabled, but override switches are active. Forcing release.");
-                    
-                    // Bypass the anti-chatter hour guard to guarantee immediate release
-                    this->solver_resume_hour_ = -1; 
-                    this->apply_solver_soft_stop(false);
+                    if (override_z1 != nullptr && override_z1->state) override_z1->turn_off();
+                    if (override_z2 != nullptr && override_z2->state) override_z2->turn_off();
                 }
+            }
+            else {
+                // aa and solver enabled, ensure that override is on
+                if (override_z1 != nullptr && !override_z1->state) override_z1->turn_on();
+                if (override_z2 != nullptr && !override_z2->state) override_z2->turn_on();
             }
 
             if (!aa_enabled) {
