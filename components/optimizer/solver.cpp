@@ -110,8 +110,8 @@ namespace esphome
             }
 
             int current_hour = this->get_current_ecodan_hour();   
-            auto *relay_z1    = this->state_.demand_switch_z1;
-            auto *relay_z2    = this->state_.demand_switch_z2;
+            auto *relay_z1    = this->state_.relay_switch_z1;
+            auto *relay_z2    = this->state_.relay_switch_z2;
 
             if (should_stop) {
                 // One write per hour guard

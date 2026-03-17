@@ -102,7 +102,7 @@ switch:
     turn_on_action:
       - if:
           condition:
-            lambda: 'return id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF;'
+            lambda: 'return !id(sw_odin_override_${zone_identifier}).state && (id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF);'
           then:
             - switch.turn_on: asgard_relay_${zone_identifier}
           else:
@@ -111,18 +111,9 @@ switch:
     turn_off_action:
       - if:
           condition:
-             lambda: 'return id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF;'
+             lambda: 'return !id(sw_odin_override_${zone_identifier}).state && (id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF);'
           then:
             - switch.turn_off: asgard_relay_${zone_identifier}
-
-  - platform: template
-    id: demand_switch_${zone_identifier}
-    internal: true
-    lambda: 'return id(asgard_relay_${zone_identifier}).state;'
-    turn_on_action:
-      - switch.turn_on: asgard_relay_${zone_identifier}
-    turn_off_action:
-      - switch.turn_off: asgard_relay_${zone_identifier}
 
 climate:
   - platform: ecodan
@@ -146,19 +137,19 @@ climate:
           condition:
             lambda: 'return !id(sw_odin_override_${zone_identifier}).state;'
           then:
-            - switch.turn_on: demand_switch_${zone_identifier}
+            - switch.turn_on: asgard_relay_${zone_identifier}
     cool_action:
       - if:
           condition:
             lambda: 'return !id(sw_odin_override_${zone_identifier}).state;'
           then:
-            - switch.turn_on: demand_switch_${zone_identifier}
+            - switch.turn_on: asgard_relay_${zone_identifier}
     idle_action:
       - if:
           condition:
             lambda: 'return !id(sw_odin_override_${zone_identifier}).state;'
           then:
-            - switch.turn_off: demand_switch_${zone_identifier}
+            - switch.turn_off: asgard_relay_${zone_identifier}
 
     # enfore min runtime of 15m, or user supplied
     min_heating_run_time: 15min

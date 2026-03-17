@@ -50,8 +50,8 @@ namespace esphome
         esphome::switch_::Switch *defrost_risk_handling_enabled;
         esphome::switch_::Switch *smart_boost_enabled;
         esphome::switch_::Switch *sw_use_solver;
-        esphome::switch_::Switch *demand_switch_z1{nullptr};
-        esphome::switch_::Switch *demand_switch_z2{nullptr};
+        esphome::switch_::Switch *relay_switch_z1{nullptr};
+        esphome::switch_::Switch *relay_switch_z2{nullptr};
         esphome::switch_::Switch *sw_odin_override_z1{nullptr};
         esphome::switch_::Switch *sw_odin_override_z2{nullptr};
 
