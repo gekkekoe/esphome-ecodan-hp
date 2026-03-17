@@ -31,9 +31,21 @@ namespace esphome
       uint32_t predictive_delta_start_time_z2_ = 0;
 
       // Compressor / defrost tracking
+      struct DefrostState {
+        float locked_outside_temp_{NAN};
+        float locked_return_temp_{NAN};
+        float locked_return_temp_z1_{NAN};
+        float locked_return_temp_z2_{NAN};
+
+        float get_return_temp(bool independent_zone_temp, OptimizerZone zone) const {
+            if (independent_zone_temp)
+                return (zone == OptimizerZone::ZONE_2) ? locked_return_temp_z2_ : locked_return_temp_z1_;        
+            return locked_return_temp_;
+        }
+      };
       uint32_t compressor_start_time_ = 0;
       uint32_t last_defrost_time_     = 0;
-      float locked_outside_temp_      = NAN;
+      DefrostState state_before_defrost_;
 
       // Callback state (detect change before firing)
       float last_hp_feed_temp_      = NAN;
@@ -87,8 +99,8 @@ namespace esphome
 
       // ── adaptive_loop.cpp ──────────────────────────────────────────────
       HeatingProfile   get_heating_profile_(int type_index);
-      float            resolve_outside_temp_();
       struct SolverResult { float load_ratio; bool heating_off; };
+      DefrostState resolve_defrost_state_();
       SolverResult resolve_solver_result_(float room_target_temp, float current_room_temp);
       float            calculate_heating_flow_(std::size_t zone_i,
                                                const ecodan::Status &status,

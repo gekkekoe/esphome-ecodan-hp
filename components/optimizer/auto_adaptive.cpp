@@ -42,26 +42,26 @@ namespace esphome
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // Outside temp — locked during/after defrost
+        // defrost sates — locked during/after defrost
         // ─────────────────────────────────────────────────────────────────
 
-        float Optimizer::resolve_outside_temp_() {
+        Optimizer::DefrostState Optimizer::resolve_defrost_state_() {
             auto &status = this->state_.ecodan_instance->get_status();
-            float actual = status.OutsideTemperature;
-
             const uint32_t LOCK_DURATION_MS = 15 * 60 * 1000;
-            bool in_lock_window = (millis() - this->last_defrost_time_) < LOCK_DURATION_MS;
+            bool in_lock_window = (this->last_defrost_time_ > 0) && 
+                                  ((millis() - this->last_defrost_time_) < LOCK_DURATION_MS);
 
-            if (!isnan(this->locked_outside_temp_)) {
-                if (status.DefrostActive || in_lock_window) {
-                    ESP_LOGD(OPTIMIZER_TAG, "Using locked outside temp: %.1f°C (sensor: %.1f°C)",
-                             this->locked_outside_temp_, actual);
-                    return this->locked_outside_temp_;
-                } else {
-                    this->locked_outside_temp_ = NAN;
-                }
+            if (status.DefrostActive || in_lock_window) {
+                ESP_LOGD(OPTIMIZER_TAG, "Using locked defrost states: outside temp: %.1f, hp return: %.1f, z1 return: %.1f, z2 return: %.1f for adaptive calculations.", 
+                    this->state_before_defrost_.locked_outside_temp_, this->state_before_defrost_.locked_return_temp_, 
+                    this->state_before_defrost_.locked_return_temp_z1_, this->state_before_defrost_.locked_return_temp_z2_);
             }
-            return actual;
+            else {
+                // clear state, outside defrost window
+                this->state_before_defrost_ = DefrostState{};
+            }
+
+            return this->state_before_defrost_;
         }
 
         // ─────────────────────────────────────────────────────────────────
@@ -141,8 +141,18 @@ namespace esphome
                                                   float zone_min, float zone_max,
                                                   float error_factor,
                                                   float smart_boost) {
+
+            auto defrost_state = this->resolve_defrost_state_();
+            float locked_return_temp = defrost_state.get_return_temp(
+                status.has_independent_zone_temps(),
+                (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
+
             float actual_return_temp = this->get_return_temp(
                 (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
+
+            if (!isnan(locked_return_temp)) {
+                actual_return_temp = locked_return_temp;
+            }
 
             float dynamic_min = prof.base_min_delta_t +
                                 cold_factor * (prof.min_delta_cold_limit - prof.base_min_delta_t);
@@ -447,7 +457,9 @@ namespace esphome
                 return;
             }
 
-            float actual_outside_temp = this->resolve_outside_temp_();
+            auto defrost_state = this->resolve_defrost_state_();
+
+            float actual_outside_temp = isnan(defrost_state.locked_outside_temp_) ? status.OutsideTemperature : defrost_state.locked_outside_temp_;
             if (isnan(actual_outside_temp)) {
                 this->adaptive_loop_running_ = false;
                 return;
