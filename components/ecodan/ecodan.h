@@ -82,6 +82,7 @@ namespace ecodan
         void set_svc_state_before_lockout(CONTROLLER_FLAG flag) { serverControlFlagBeforeLockout = flag; }
         void reset_svc_state_before_lockout() { serverControlFlagBeforeLockout.reset(); }
         void set_specific_heat_constant(float newConstant) { specificHeatConstantOverride = newConstant; }
+        float get_specific_heat_constant() const { return specificHeatConstantOverride; }
         void set_polling_interval(uint32_t ms) { this->set_update_interval(ms); }
         void set_uart_parent(uart::UARTComponent *uart) { this->uart_ = uart; }
         void set_proxy_uart(uart::UARTComponent *uart) { this->proxy_uart_ = uart; }

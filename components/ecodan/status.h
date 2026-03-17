@@ -302,7 +302,7 @@ Temp C	specific heat (J/Kg. K)
 90	    4.208
 100	    4.22
 */
-        float estimate_water_constant(float temp) {
+        float estimate_water_constant(float temp) const {
             return 4.21f + -2.04e-03 * temp + 3.09e-05 * temp * temp + -9.63e-08 * temp * temp * temp;
         }
 

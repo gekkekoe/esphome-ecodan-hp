@@ -308,6 +308,7 @@ namespace esphome
 
             bool set_point_reached = error < 0.0f;
             bool solver_enabled = this->solver_enabled();
+
             if (solver_enabled) {
                 auto [solver_load_ratio, solver_heating_off] = this->resolve_solver_result_(room_target_temp, room_temp);
                 if (solver_heating_off) {
@@ -317,12 +318,40 @@ namespace esphome
                     return;
                 }
                 
-                float desired_delta = prof.base_min_delta_t + solver_load_ratio * (prof.max_delta_t - prof.base_min_delta_t);
+                float desired_delta = 0.0f;
+
+                // If we have a reliable flow rate, use the deterministic physical formula.
+                // Otherwise, fall back to the heuristic load-ratio mapping.
+                if (flow_rate > 5.0f) {
+                    float max_out = 7.0f;
+                    if (this->state_.num_raw_max_output != nullptr && this->state_.num_raw_max_output->has_state()) {
+                        max_out = this->state_.num_raw_max_output->state;
+                    }
+                    
+                    // kW = (flow / 60) * (delta T) * 4.18
+                    // delta T = (flow * 60) / (flow * 4.18)
+                    float shc_override = this->state_.ecodan_instance->get_specific_heat_constant();
+                    float specific_heat_constant = std::isnan(shc_override) ? status.estimate_water_constant(actual_flow_temp) : shc_override;
+                    float target_kw = solver_load_ratio * max_out;
+                    float physical_delta = (target_kw * 60.0f) / (flow_rate * specific_heat_constant);
+                    desired_delta = std::clamp(physical_delta, prof.base_min_delta_t, prof.max_delta_t);
+
+                    ESP_LOGD(OPTIMIZER_TAG,
+                        "Z%d ODIN (Physical) demands %.1fkW. Flow: %.1f L/min -> \u0394T: %.2f (Clamped: %.2f)",
+                        (i + 1), target_kw, flow_rate, physical_delta, desired_delta);
+                } else {
+                    // Fallback: Heuristic linear mapping when flow is too low/starting up
+                    desired_delta = prof.base_min_delta_t + solver_load_ratio * (prof.max_delta_t - prof.base_min_delta_t);
+                    
+                    ESP_LOGD(OPTIMIZER_TAG,
+                        "Z%d ODIN (Heuristic) Low Flow (%.1f L/min). Load Ratio: %.2f -> \u0394T: %.2f",
+                        (i + 1), flow_rate, solver_load_ratio, desired_delta);
+                }
                 
-                // Reverse-engineer the error_factor so calculate_heating_flow_ produces the exact desired Delta T,
+                // Reverse-engineer the error_factor so calculate_heating_flow_ produces the exact desired Delta T
                 if (prof.max_delta_t > dynamic_min) {
                     error_factor = (desired_delta - dynamic_min) / (prof.max_delta_t - dynamic_min);
-                    error_factor = std::max(0.0f, error_factor); // Allow > 1.0 if solver demands absolute max
+                    error_factor = std::max(0.0f, error_factor); // Allow > 1.0 if physical demand is higher than profile max
                 } else {
                     error_factor = 1.0f;
                 }
@@ -332,8 +361,8 @@ namespace esphome
                 set_point_reached = false;
 
                 ESP_LOGD(OPTIMIZER_TAG,
-                    "Z%d ODIN Load: %.2f -> mapped error_factor: %.2f (desired \u0394T: %.2f) solver_heating_off=%d",
-                    (i + 1), solver_load_ratio, error_factor, desired_delta, solver_heating_off);
+                    "Z%d ODIN Final mapped error_factor: %.2f",
+                    (i + 1), error_factor);
             }
 
             float target_delta = dynamic_min + error_factor * smart_boost * (prof.max_delta_t - dynamic_min);
