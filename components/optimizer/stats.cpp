@@ -69,25 +69,28 @@ namespace esphome
                         //   delta_T_avg > 2K   — some gradient needed for meaningful physics
                         //   delta_cool < 5K    — reject frost-protection outliers
                         if (t_hours > 3.0f && delta_cool > 0.15f && delta_T_avg > 2.0f && delta_cool < 5.0f) {
-                            float hl_tm = delta_cool * delta_T_avg * t_hours;
-                            // Physical sanity: product of (room drop K) × (delta_T K) × (hours)
-                            // High-insulation / high-mass houses easily produce values of 30-60,
-                            // so upper bound is set generously at 100.
-                            if (hl_tm > 0.005f && hl_tm < 100.0f) {
+                            
+                            // Thermal Time Constant (Tau) in hours = TM / HL
+                            float tau = (delta_T_avg * t_hours) / delta_cool;
+                            
+                            // Physical sanity: Tau in hours. 
+                            // High-insulation / high-mass houses easily produce values of 60-150h
+                            // so upper bound is set generously at 300.
+                            if (tau > 5.0f && tau < 300.0f) {
                                 if (this->state_.num_raw_hl_tm_product != nullptr) {
                                     float cur = this->state_.num_raw_hl_tm_product->state;
-                                    float next = (cur <= 0.001f || std::isnan(cur)) ? hl_tm
-                                                 : (0.20f * hl_tm + 0.80f * cur);
+                                    float next = (cur <= 0.001f || std::isnan(cur)) ? tau
+                                                 : (0.20f * tau + 0.80f * cur);
                                     this->state_.num_raw_hl_tm_product->publish_state(next);
                                 }
                                 ESP_LOGI(OPTIMIZER_TAG,
                                     "Free cooling: %.2f->%.2f°C (%.2fK) in %.1fh, "
-                                    "outside=%.1f°C -> HL×TM=%.4f",
+                                    "outside=%.1f°C -> Tau=%.1fh",
                                     this->fc_room_start_, current_room_tmp,
-                                    delta_cool, t_hours, t_outside, hl_tm);
+                                    delta_cool, t_hours, t_outside, tau);
                             } else {
                                 ESP_LOGW(OPTIMIZER_TAG,
-                                    "Free cooling HL×TM=%.4f out of range, discarded", hl_tm);
+                                    "Free cooling Tau=%.1fh out of range, discarded", tau);
                             }
                         } else {
                             ESP_LOGD(OPTIMIZER_TAG,
