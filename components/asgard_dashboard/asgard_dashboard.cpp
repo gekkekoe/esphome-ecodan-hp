@@ -971,9 +971,15 @@ void EcodanDashboard::nvs_persist_odin_() {
     save_arr("cost",     this->odin_cost_);
     save_arr("cost_tax", this->odin_cost_tax_);
     save_arr("batt",     this->odin_battery_discharge_);
-    save_arr("act_cons", this->odin_actual_cons_);
-    save_arr("act_prod", this->odin_actual_prod_);
-    save_arr("act_room", this->odin_actual_room_);
+    save_arr("act_cons",   this->odin_actual_cons_);
+    save_arr("act_prod",   this->odin_actual_prod_);
+    save_arr("act_room",   this->odin_actual_room_);
+    save_arr("prices",     this->odin_prices_);
+    save_arr("weather",    this->odin_weather_);
+    save_arr("solar",      this->odin_solar_);
+    save_arr("sb",         this->odin_sched_base_);
+    save_arr("smn",        this->odin_sched_min_);
+    save_arr("smx",        this->odin_sched_max_);
 
     int32_t log_day = this->odin_stored_day_;
     xSemaphoreGive(this->snapshot_mutex_); 
@@ -1046,12 +1052,13 @@ void EcodanDashboard::load_odin_data(int current_day) {
     load_arr("act_prod", this->odin_actual_prod_, NAN);
     load_arr("act_room", this->odin_actual_room_, NAN);
     
-    this->odin_sched_base_.assign(48, 0.0f);
-    this->odin_sched_min_.assign(48, 0.0f);
-    this->odin_sched_max_.assign(48, 0.0f);
-    this->odin_weather_.assign(48, 0.0f);
-    this->odin_solar_.assign(48, 0.0f);
-    this->odin_prices_.assign(48, 0.0f);
+    // Optional — not in "ok" chain, fall back to 0 if missing (added later)
+    if (!load_arr("prices",  this->odin_prices_))   this->odin_prices_.assign(48, 0.0f);
+    if (!load_arr("weather", this->odin_weather_))  this->odin_weather_.assign(48, 0.0f);
+    if (!load_arr("solar",   this->odin_solar_))    this->odin_solar_.assign(48, 0.0f);
+    if (!load_arr("sb",      this->odin_sched_base_)) this->odin_sched_base_.assign(48, 0.0f);
+    if (!load_arr("smn",     this->odin_sched_min_))  this->odin_sched_min_.assign(48, 0.0f);
+    if (!load_arr("smx",     this->odin_sched_max_))  this->odin_sched_max_.assign(48, 0.0f);
 
     nvs_close(h);
 
@@ -1078,6 +1085,13 @@ void EcodanDashboard::load_odin_data(int current_day) {
                 shift_arr(this->odin_actual_cons_, NAN);
                 shift_arr(this->odin_actual_prod_, NAN);
                 shift_arr(this->odin_actual_room_, NAN);
+                // Non-NVS arrays must also be shifted so yesterday's schedule/weather is visible
+                shift_arr(this->odin_sched_base_, 0.0f);
+                shift_arr(this->odin_sched_min_, 0.0f);
+                shift_arr(this->odin_sched_max_, 0.0f);
+                shift_arr(this->odin_weather_, 0.0f);
+                shift_arr(this->odin_solar_, 0.0f);
+                shift_arr(this->odin_prices_, 0.0f);
             } else {
                 ESP_LOGI(TAG, "NVS Load: Day jump (%d -> %d), clearing stale actuals", this->odin_stored_day_, current_day);
                 this->odin_actual_cons_.assign(48, NAN);
