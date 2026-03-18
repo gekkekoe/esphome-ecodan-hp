@@ -136,10 +136,21 @@ script:
                             return true;
                           });
                         }
+
 interval:
   - interval: 60s
     then:
       - lambda: |-
+          // Ensure we load NVS data once, and only when the Ecodan time is valid
+          static bool nvs_loaded = false;
+          int cur_day = id(optimizer_ptr)->get_current_ecodan_day();
+          if (!nvs_loaded && cur_day != -1) {
+              id(asgard_dashboard_id)->load_odin_data(cur_day);
+              nvs_loaded = true;
+              ESP_LOGI("ODIN", "Initinal load: fetching MPC optimization.");
+              id(fetch_odin_optimization)->execute();
+          }
+
           if (id(optimizer_ptr)->check_and_clear_odin_fetch_request()) {
             ESP_LOGI("ODIN", "Hour transition: fetching MPC optimization.");
             id(fetch_odin_optimization)->execute();
@@ -148,24 +159,28 @@ interval:
           {
             static int last_actual_hour = -1;
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
-            if (last_actual_hour == -1) {
-              last_actual_hour = cur_hr;
-            } else if (cur_hr != last_actual_hour) {
-              int completed_hr = (cur_hr == 0) ? 23 : cur_hr - 1;
-              
-              // Exactly at midnight, the data belongs to yesterday's final hour
-              bool is_yesterday = (cur_hr == 0);
-              
-              float cons = id(delta_energy_consumed_increasing).state;
-              if (id(solver_kwh_meter_feedback_source).active_index().value_or(0) != 0) {
-                  cons = id(solver_kwh_meter_feedback).state;
+            
+            // Wait for NVS to load before logging actuals
+            if (nvs_loaded) {
+              if (last_actual_hour == -1) {
+                last_actual_hour = cur_hr;
+              } else if (cur_hr != last_actual_hour) {
+                int completed_hr = (cur_hr == 0) ? 23 : cur_hr - 1;
+                
+                // Exactly at midnight, the data belongs to yesterday's final hour
+                bool is_yesterday = (cur_hr == 0);
+                
+                float cons = id(delta_energy_consumed_increasing).state;
+                if (id(solver_kwh_meter_feedback_source).active_index().value_or(0) != 0) {
+                    cons = id(solver_kwh_meter_feedback).state;
+                }
+                
+                float prod = id(daily_computed_output_power).state; 
+                float room = id(virtual_climate_z1).current_temperature;
+                
+                id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, prod, room, is_yesterday);
+                
+                last_actual_hour = cur_hr;
               }
-              
-              float prod = id(daily_computed_output_power).state; 
-              float room = id(virtual_climate_z1).current_temperature;
-              
-              id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, prod, room, is_yesterday);
-              
-              last_actual_hour = cur_hr;
             }
           }

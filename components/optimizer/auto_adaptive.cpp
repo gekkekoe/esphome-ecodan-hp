@@ -68,7 +68,7 @@ namespace esphome
         // ODIN solver bias — mutex-safe, returns {bias, heating_off}
         // ─────────────────────────────────────────────────────────────────
         Optimizer::SolverResult Optimizer::resolve_solver_result_(float room_target_temp, float current_room_temp) {
-            SolverResult result{0.0f, false};
+            SolverResult result{-1.0f, false};
 
             if (this->state_.sw_use_solver == nullptr || !this->state_.sw_use_solver->state)
                 return result;
@@ -93,34 +93,37 @@ namespace esphome
                     float odin_prod   = this->odin_production_[current_hour];
                     xSemaphoreGive(this->odin_mutex_);
 
+                    if (std::isnan(odin_energy) || std::isnan(odin_prod)) {
+                        ESP_LOGW(OPTIMIZER_TAG, "ODIN data is NAN at hour %d. Forcing fallback.", current_hour);
+                        return result;
+                    }
+
                     result.heating_off = (odin_energy < 0.05f);
                     if (result.heating_off) {
                         apply_solver_soft_stop(true);
                         return result;
                     }
 
-                    if (!std::isnan(odin_prod)) {
-                        apply_solver_soft_stop(false);
-                        
-                        int heating_type_index = 0;
-                        if (this->state_.heating_system_type != nullptr) {
-                            heating_type_index = this->state_.heating_system_type->active_index().value_or(0);
-                        }
-                        HeatingProfile prof = this->get_heating_profile_(heating_type_index);
-
-                        float max_out = 7.0f;
-                        if (this->state_.num_raw_max_output != nullptr && this->state_.num_raw_max_output->has_state()) {
-                            max_out = this->state_.num_raw_max_output->state;
-                        }
-                        if (max_out < 1.0f) max_out = 7.0f;
-                        
-                        // Calculate how hard ODIN wants the heat pump to work (Ratio between 0.0 and 1.0)
-                        result.load_ratio = std::clamp(odin_prod / max_out, 0.0f, 1.0f);
-                        
-                        ESP_LOGD(OPTIMIZER_TAG, "ODIN -> Hour %d | Prod: %.1f/%.1f | factor: %.2f", current_hour, odin_prod, max_out, result.load_ratio);
-                        
-                        return result;
+                    apply_solver_soft_stop(false);
+                    
+                    int heating_type_index = 0;
+                    if (this->state_.heating_system_type != nullptr) {
+                        heating_type_index = this->state_.heating_system_type->active_index().value_or(0);
                     }
+                    HeatingProfile prof = this->get_heating_profile_(heating_type_index);
+
+                    float max_out = 7.0f;
+                    if (this->state_.num_raw_max_output != nullptr && this->state_.num_raw_max_output->has_state()) {
+                        max_out = this->state_.num_raw_max_output->state;
+                    }
+                    if (max_out < 1.0f) max_out = 7.0f;
+                    
+                    // Calculate how hard ODIN wants the heat pump to work (Ratio between 0.0 and 1.0)
+                    result.load_ratio = std::clamp(odin_prod / max_out, 0.0f, 1.0f);
+                    
+                    ESP_LOGD(OPTIMIZER_TAG, "ODIN -> Hour %d | Prod: %.1f/%.1f | factor: %.2f", current_hour, odin_prod, max_out, result.load_ratio);
+                    
+                    return result;
                 }
             }
 
@@ -320,59 +323,69 @@ namespace esphome
             bool solver_enabled = this->solver_enabled();
 
             if (solver_enabled) {
-                auto [solver_load_ratio, solver_heating_off] = this->resolve_solver_result_(room_target_temp, room_temp);
-                if (solver_heating_off) {
+                auto [solver_load_ratio, solver_heating_off] = this->resolve_solver_result_(room_target_temp, room_temp);                
+                if (solver_load_ratio < 0.0f && !solver_heating_off) {
+                    if (millis() < 2*60000) {
+                        ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN enabled but data not ready. Skipping one AA iteration.", (i + 1));
+                        return;
+                    }
+                    else {
+                        ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN data still pending (+5m). Falling back to auto adaptive.", (i + 1));
+                    }
+                } 
+                else if (solver_heating_off) {
                     ESP_LOGD(OPTIMIZER_TAG,
                         "Z%d ODIN heating stopped, solver_load_ratio: %.2f",
                         (i + 1), solver_load_ratio);
                     return;
-                }
-                
-                float desired_delta = 0.0f;
+                } 
+                else {
+                    float desired_delta = 0.0f;
 
-                // If we have a reliable flow rate, use the deterministic physical formula.
-                // Otherwise, fall back to the heuristic load-ratio mapping.
-                if (flow_rate > 5.0f) {
-                    float max_out = 7.0f;
-                    if (this->state_.num_raw_max_output != nullptr && this->state_.num_raw_max_output->has_state()) {
-                        max_out = this->state_.num_raw_max_output->state;
+                    // If we have a reliable flow rate, use the deterministic physical formula.
+                    // Otherwise, fall back to the heuristic load-ratio mapping.
+                    if (flow_rate > 5.0f) {
+                        float max_out = 7.0f;
+                        if (this->state_.num_raw_max_output != nullptr && this->state_.num_raw_max_output->has_state()) {
+                            max_out = this->state_.num_raw_max_output->state;
+                        }
+                        
+                        // kW = (flow / 60) * (delta T) * 4.18
+                        // delta T = (kW * 60) / (flow * 4.18)
+                        float shc_override = this->state_.ecodan_instance->get_specific_heat_constant();
+                        float specific_heat_constant = std::isnan(shc_override) ? status.estimate_water_constant(actual_flow_temp) : shc_override;
+                        float target_kw = solver_load_ratio * max_out;
+                        float physical_delta = (target_kw * 60.0f) / (flow_rate * specific_heat_constant);
+                        desired_delta = std::clamp(physical_delta, prof.base_min_delta_t, prof.max_delta_t);
+
+                        ESP_LOGD(OPTIMIZER_TAG,
+                            "Z%d ODIN (Physical) demands %.1fkW. Flow: %.1f L/min -> \u0394T: %.2f (Clamped: %.2f)",
+                            (i + 1), target_kw, flow_rate, physical_delta, desired_delta);
+                    } else {
+                        // Fallback: Heuristic linear mapping when flow is too low/starting up
+                        desired_delta = prof.base_min_delta_t + solver_load_ratio * (prof.max_delta_t - prof.base_min_delta_t);
+                        
+                        ESP_LOGD(OPTIMIZER_TAG,
+                            "Z%d ODIN (Heuristic) Low Flow (%.1f L/min). Load Ratio: %.2f -> \u0394T: %.2f",
+                            (i + 1), flow_rate, solver_load_ratio, desired_delta);
                     }
                     
-                    // kW = (flow / 60) * (delta T) * 4.18
-                    // delta T = (flow * 60) / (flow * 4.18)
-                    float shc_override = this->state_.ecodan_instance->get_specific_heat_constant();
-                    float specific_heat_constant = std::isnan(shc_override) ? status.estimate_water_constant(actual_flow_temp) : shc_override;
-                    float target_kw = solver_load_ratio * max_out;
-                    float physical_delta = (target_kw * 60.0f) / (flow_rate * specific_heat_constant);
-                    desired_delta = std::clamp(physical_delta, prof.base_min_delta_t, prof.max_delta_t);
-
-                    ESP_LOGD(OPTIMIZER_TAG,
-                        "Z%d ODIN (Physical) demands %.1fkW. Flow: %.1f L/min -> \u0394T: %.2f (Clamped: %.2f)",
-                        (i + 1), target_kw, flow_rate, physical_delta, desired_delta);
-                } else {
-                    // Fallback: Heuristic linear mapping when flow is too low/starting up
-                    desired_delta = prof.base_min_delta_t + solver_load_ratio * (prof.max_delta_t - prof.base_min_delta_t);
+                    // Reverse-engineer the error_factor so calculate_heating_flow_ produces the exact desired Delta T
+                    if (prof.max_delta_t > dynamic_min) {
+                        error_factor = (desired_delta - dynamic_min) / (prof.max_delta_t - dynamic_min);
+                        error_factor = std::max(0.0f, error_factor); // Allow > 1.0 if physical demand is higher than profile max
+                    } else {
+                        error_factor = 1.0f;
+                    }
                     
-                    ESP_LOGD(OPTIMIZER_TAG,
-                        "Z%d ODIN (Heuristic) Low Flow (%.1f L/min). Load Ratio: %.2f -> \u0394T: %.2f",
-                        (i + 1), flow_rate, solver_load_ratio, desired_delta);
-                }
-                
-                // Reverse-engineer the error_factor so calculate_heating_flow_ produces the exact desired Delta T
-                if (prof.max_delta_t > dynamic_min) {
-                    error_factor = (desired_delta - dynamic_min) / (prof.max_delta_t - dynamic_min);
-                    error_factor = std::max(0.0f, error_factor); // Allow > 1.0 if physical demand is higher than profile max
-                } else {
-                    error_factor = 1.0f;
-                }
-                
-                // Disable local smart boost, and setpoint reached
-                smart_boost = 1.0f; 
-                set_point_reached = false;
+                    // Disable local smart boost, and setpoint reached
+                    smart_boost = 1.0f; 
+                    set_point_reached = false;
 
-                ESP_LOGD(OPTIMIZER_TAG,
-                    "Z%d ODIN Final mapped error_factor: %.2f",
-                    (i + 1), error_factor);
+                    ESP_LOGD(OPTIMIZER_TAG,
+                        "Z%d ODIN Final mapped error_factor: %.2f",
+                        (i + 1), error_factor);
+                }
             }
 
             float target_delta = dynamic_min + error_factor * smart_boost * (prof.max_delta_t - dynamic_min);

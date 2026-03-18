@@ -32,7 +32,7 @@ namespace esphome
         int Optimizer::get_current_ecodan_day() {
             if (this->state_.ecodan_instance == nullptr) return 0;
             time_t ts = this->state_.ecodan_instance->get_status().timestamp();
-            if (ts == -1) return 0;
+            if (ts == -1) return -1;
             struct tm t;
             gmtime_r(&ts, &t);
             return t.tm_yday;

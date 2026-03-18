@@ -24,9 +24,7 @@ void EcodanDashboard::setup() {
   action_lock_ = xSemaphoreCreateMutex();
   snapshot_mutex_ = xSemaphoreCreateMutex();
   history_mutex_ = xSemaphoreCreateMutex();
-
-  // Restore last-known ODIN arrays from flash so charts survive reboot
-  this->nvs_load_odin_();
+  // prevent premature nvs flushes
   this->odin_nvs_last_write_ms_ = millis();
 
   base_->init();
@@ -988,16 +986,25 @@ void EcodanDashboard::nvs_persist_odin_() {
     nvs_close(h);
 }
 
-// NOTE: called from setup() only, before HTTP server and other tasks start — no mutex needed.
-void EcodanDashboard::nvs_load_odin_() {
+void EcodanDashboard::load_odin_data(int current_day) {
+    // Only load once
+    if (this->odin_data_ready_) return; 
+
     nvs_handle_t h;
     if (nvs_open(NVS_ODIN_NS, NVS_READONLY, &h) != ESP_OK) {
         ESP_LOGI(TAG, "NVS: no odin_cache found, starting fresh");
+        this->odin_stored_day_ = current_day;
+        this->odin_data_ready_ = true;
         return;
     }
 
     int32_t stored_day = -1;
-    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK) { nvs_close(h); return; }
+    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK) { 
+        nvs_close(h); 
+        this->odin_stored_day_ = current_day;
+        this->odin_data_ready_ = true;
+        return; 
+    }
 
     uint8_t stored_show_tab = 0;
     if (nvs_get_u8(h, "show_tab", &stored_show_tab) == ESP_OK) {
@@ -1021,12 +1028,10 @@ void EcodanDashboard::nvs_load_odin_() {
            && load_arr("batt",     this->odin_battery_discharge_)
            && load_arr("prod",     this->odin_production_);
 
-    // Optional arrays — don't fail if missing (added in later versions)
     load_arr("act_cons", this->odin_actual_cons_, NAN);
     load_arr("act_prod", this->odin_actual_prod_, NAN);
     load_arr("act_room", this->odin_actual_room_, NAN);
     
-    // sched_base/min/max, weather, solar and prices not persisted in NVS — initialize to 0 so partial update loop is safe
     this->odin_sched_base_.assign(48, 0.0f);
     this->odin_sched_min_.assign(48, 0.0f);
     this->odin_sched_max_.assign(48, 0.0f);
@@ -1038,29 +1043,42 @@ void EcodanDashboard::nvs_load_odin_() {
 
     if (ok) {
         this->odin_stored_day_ = (int)stored_day;
-        this->odin_data_ready_ = true;
-        ESP_LOGI(TAG, "NVS: ODIN arrays restored from flash (day=%d)", stored_day);
+        
+        // Immediately align the loaded data with the actual Ecodan time
+        if (current_day != this->odin_stored_day_) {
+            int day_delta = current_day - this->odin_stored_day_;
+            if (day_delta == 1 || day_delta == -364 || day_delta == -365) {
+                ESP_LOGI(TAG, "NVS Load: Day transition (%d -> %d), shifting arrays", this->odin_stored_day_, current_day);
+                auto shift_arr = [](std::vector<float>& v, float fill_val) {
+                    if (v.size() != 48) return;
+                    for (int i = 0; i < 24; i++) v[i] = v[i + 24];
+                    for (int i = 24; i < 48; i++) v[i] = fill_val;
+                };
+                shift_arr(this->odin_schedule_, NAN);
+                shift_arr(this->odin_energy_, NAN);
+                shift_arr(this->odin_production_, NAN);
+                shift_arr(this->odin_expected_temp_, NAN);
+                shift_arr(this->odin_cost_, NAN);
+                shift_arr(this->odin_cost_tax_, NAN);
+                shift_arr(this->odin_battery_discharge_, 0.0f);
+                shift_arr(this->odin_actual_cons_, NAN);
+                shift_arr(this->odin_actual_prod_, NAN);
+                shift_arr(this->odin_actual_room_, NAN);
+            } else {
+                ESP_LOGI(TAG, "NVS Load: Day jump (%d -> %d), clearing stale actuals", this->odin_stored_day_, current_day);
+                this->odin_actual_cons_.assign(48, NAN);
+                this->odin_actual_prod_.assign(48, NAN);
+                this->odin_actual_room_.assign(48, NAN);
+            }
+            this->odin_stored_day_ = current_day;
+        }
 
-        // If the stored day doesn't match today, the actual arrays belong to a
-        // previous day — clear them now so stale data never appears in the graph.
-        int today = 0;
-        {
-            time_t now_t = 0;
-            time(&now_t);
-            struct tm ti;
-            gmtime_r(&now_t, &ti);
-            today = ti.tm_yday;
-        }
-        if (today != 0 && today != (int)stored_day) {
-            ESP_LOGI(TAG, "NVS: stored day %d != today %d — clearing actual arrays on restore",
-                     (int)stored_day, today);
-            this->odin_actual_cons_.assign(48, NAN);
-            this->odin_actual_prod_.assign(48, NAN);
-            this->odin_actual_room_.assign(48, NAN);
-        }
+        this->odin_data_ready_ = true;
+        ESP_LOGI(TAG, "NVS: ODIN arrays restored and time-aligned (day=%d)", current_day);
     } else {
         ESP_LOGW(TAG, "NVS: ODIN cache incomplete, discarding");
-        this->odin_data_ready_ = false;
+        this->odin_stored_day_ = current_day;
+        this->odin_data_ready_ = true;
     }
 }
 
@@ -1117,7 +1135,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
     // 2. Real day transition: Shift array left by 24h
     if (current_day != this->odin_stored_day_) {
         int day_delta = current_day - this->odin_stored_day_;
-        if (day_delta == 1 || day_delta == -364) {
+        if (day_delta == 1 || day_delta == -364 || day_delta == -365) {
             ESP_LOGI(TAG, "ODIN day transition (%d -> %d): shifting 48h window", this->odin_stored_day_, current_day);
             auto shift_arr = [](std::vector<float>& v, float fill_val) {
                 for (int i = 0; i < 24; i++) v[i] = v[i + 24];
@@ -1139,6 +1157,11 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             shift_arr(this->odin_actual_cons_, NAN);
             shift_arr(this->odin_actual_prod_, NAN);
             shift_arr(this->odin_actual_room_, NAN);
+        } else {
+            ESP_LOGI(TAG, "ODIN day jump (%d -> %d): clearing old actuals", this->odin_stored_day_, current_day);
+            this->odin_actual_cons_.assign(48, NAN);
+            this->odin_actual_prod_.assign(48, NAN);
+            this->odin_actual_room_.assign(48, NAN);
         }
         this->odin_stored_day_ = current_day;
     }
