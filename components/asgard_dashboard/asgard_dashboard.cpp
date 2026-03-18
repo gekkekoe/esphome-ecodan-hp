@@ -963,7 +963,7 @@ void EcodanDashboard::nvs_persist_odin_() {
         }
     };
 
-    save_arr("sched",    this->odin_schedule_);
+    save_arr("sched",    this->odin_expected_end_temp_);
     save_arr("energy",   this->odin_energy_);
     save_arr("prod",     this->odin_production_);
     save_arr("exp_t",    this->odin_expected_temp_);
@@ -1020,7 +1020,7 @@ void EcodanDashboard::load_odin_data(int current_day) {
         return nvs_get_blob(h, key, out.data(), &len) == ESP_OK && len == 48 * sizeof(float);
     };
 
-    bool ok = load_arr("sched",    this->odin_schedule_)
+    bool ok = load_arr("sched",    this->odin_expected_end_temp_)
            && load_arr("energy",   this->odin_energy_)
            && load_arr("exp_t",    this->odin_expected_temp_)
            && load_arr("cost",     this->odin_cost_)
@@ -1054,7 +1054,7 @@ void EcodanDashboard::load_odin_data(int current_day) {
                     for (int i = 0; i < 24; i++) v[i] = v[i + 24];
                     for (int i = 24; i < 48; i++) v[i] = fill_val;
                 };
-                shift_arr(this->odin_schedule_, NAN);
+                shift_arr(this->odin_expected_end_temp_, NAN);
                 shift_arr(this->odin_energy_, NAN);
                 shift_arr(this->odin_production_, NAN);
                 shift_arr(this->odin_expected_temp_, NAN);
@@ -1083,7 +1083,7 @@ void EcodanDashboard::load_odin_data(int current_day) {
 }
 
 void EcodanDashboard::store_odin_data(int current_hour, int current_day,
-                                      const std::vector<float>& sched,
+                                      const std::vector<float>& expected_end_temp,
                                       const std::vector<float>& energy,
                                       const std::vector<float>& production,
                                       const std::vector<float>& exp_temp,
@@ -1109,7 +1109,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         if (v.size() != 48) v.assign(48, fill_val);
     };
 
-    ensure_48(this->odin_schedule_, NAN);
+    ensure_48(this->odin_expected_end_temp_, NAN);
     ensure_48(this->odin_energy_, NAN);
     ensure_48(this->odin_production_, NAN);
     ensure_48(this->odin_expected_temp_, NAN);
@@ -1141,7 +1141,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
                 for (int i = 0; i < 24; i++) v[i] = v[i + 24];
                 for (int i = 24; i < 48; i++) v[i] = fill_val;
             };
-            shift_arr(this->odin_schedule_, NAN);
+            shift_arr(this->odin_expected_end_temp_, NAN);
             shift_arr(this->odin_energy_, NAN);
             shift_arr(this->odin_production_, NAN);
             shift_arr(this->odin_expected_temp_, NAN);
@@ -1186,7 +1186,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
     // 4. FULL DAY updates (Indexes 24-47 covering 0-23)
     for (int i = 0; i < 24; i++) {
         int target_idx = i + 24;
-        if (i < (int)sched.size()      && !std::isnan(sched[i]))       this->odin_schedule_[target_idx]          = sched[i];
+        if (i < (int)expected_end_temp.size() && !std::isnan(expected_end_temp[i])) this->odin_expected_end_temp_[target_idx] = expected_end_temp[i];
         if (i < (int)sched_base.size() && !std::isnan(sched_base[i]))  this->odin_sched_base_[target_idx] = sched_base[i];
         if (i < (int)sched_min.size()  && !std::isnan(sched_min[i]))   this->odin_sched_min_[target_idx]  = sched_min[i];
         if (i < (int)sched_max.size()  && !std::isnan(sched_max[i]))   this->odin_sched_max_[target_idx]  = sched_max[i];
@@ -1222,7 +1222,7 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
           response->print(last ? "]" : "],");
       };
 
-      print_arr("schedule",               this->odin_schedule_);
+      print_arr("expected_end_temp",      this->odin_expected_end_temp_);
       print_arr("energy_consumption",     this->odin_energy_);
       print_arr("heat_production",        this->odin_production_);
       print_arr("expected_begin_temp",    this->odin_expected_temp_);

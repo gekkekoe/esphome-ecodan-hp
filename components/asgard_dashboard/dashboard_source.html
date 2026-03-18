@@ -2375,7 +2375,7 @@ async function runOdinSolver() {
                 }
             };
 
-            inject48('schedule', data.schedule);
+            inject48('expected_end_temp', data.expected_end_temp);
             inject48('expected_begin_temp', data.expected_begin_temp, true); // true = lock current hour
             inject48('prices', data.prices);
             inject48('sched_base', data.sched_base);

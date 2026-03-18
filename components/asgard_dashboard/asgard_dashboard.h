@@ -437,7 +437,7 @@ private:
   void update_snapshot_();
 
   // solver
-  std::vector<float> odin_schedule_;
+  std::vector<float> odin_expected_end_temp_;
   std::vector<float> odin_energy_;
   std::vector<float> odin_production_;     // heat kWh produced per hour
   std::vector<float> odin_expected_temp_;

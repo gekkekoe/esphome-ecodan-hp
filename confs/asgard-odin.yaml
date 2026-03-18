@@ -74,9 +74,9 @@ script:
                           esphome::json::parse_json(body, [](JsonObject root) {
                             if (root["success"].as<bool>()) {
                               // Pre-allocate all vectors with exactly 24 slots to prevent memory fragmentation
-                              std::vector<float> sched(24), nrg(24), prod(24), exp_t(24), cost(24), cost_tax(24), batt(24), sb(24), smn(24), smx(24), wth(24), sol(24), prc(24);
+                              std::vector<float> exp_end_t(24), nrg(24), prod(24), exp_t(24), cost(24), cost_tax(24), batt(24), sb(24), smn(24), smx(24), wth(24), sol(24), prc(24);
 
-                              JsonArray j_s  = root["schedule"];
+                              JsonArray j_eet = root["expected_end_temp"];
                               JsonArray j_e  = root["energy_consumption"];
                               JsonArray j_p  = root["heat_production"];
                               JsonArray j_t  = root["expected_begin_temp"];
@@ -99,7 +99,7 @@ script:
 
                               for (int i = 0; i < 24; i++) {
                                 // Assign directly to the index instead of using push_back
-                                sched[i]    = j_s[i].as<float>();
+                                exp_end_t[i] = j_eet[i].as<float>();
                                 nrg[i]      = j_e[i].as<float>();
                                 prod[i]     = j_p.isNull() ? 0.0f : j_p[i].as<float>();
                                 exp_t[i]    = j_t[i].as<float>();
@@ -131,7 +131,7 @@ script:
                               stats.total_cost_tax  = root["total_cost_with_tax_eur"].as<float>();
 
                               id(asgard_dashboard_id)->store_odin_data(
-                                  cur_hr, cur_day, sched, nrg, prod, exp_t, cost, cost_tax, batt, sb, smn, smx, wth, sol, prc, stats);
+                                  cur_hr, cur_day, exp_end_t, nrg, prod, exp_t, cost, cost_tax, batt, sb, smn, smx, wth, sol, prc, stats);
                             }
                             return true;
                           });
