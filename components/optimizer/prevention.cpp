@@ -16,8 +16,8 @@ namespace esphome
 
         void Optimizer::reset_predictive_boost()
         {
-            this->pcp_adjustment_z1_ = NAN;
-            this->pcp_adjustment_z2_ = NAN;
+            this->pcp_adjustment_z1_ = 0.0f;
+            this->pcp_adjustment_z2_ = 0.0f;
             this->update_boost_sensor();
         }
 
