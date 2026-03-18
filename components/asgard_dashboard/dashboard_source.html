@@ -2675,6 +2675,22 @@ async function loadServerHistory() {
   } catch(e) { console.error("History fetch failed", e); }
 }
 
+// Fix for sticky tooltips on mobile/touch devices
+document.addEventListener('touchstart', function(e) {
+  // If the user taps anywhere that isn't a chart canvas
+  if (e.target.tagName !== 'CANVAS') {
+    // Iterate through all active Chart.js instances on the page
+    for (let id in Chart.instances) {
+      let chart = Chart.instances[id];
+      if (chart && chart.tooltip) {
+        // Force the tooltip to clear and re-render without animation
+        chart.tooltip.setActiveElements([], {x: 0, y: 0});
+        chart.update('none');
+      }
+    }
+  }
+}, { passive: true });
+
 (function loadChartJS() {
   const s = document.createElement('script');
   s.src = '/js/chart.js';
