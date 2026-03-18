@@ -142,8 +142,12 @@ namespace esphome
                 }
             }
 
-            int current_day = this->get_current_ecodan_day();
+            int current_day  = this->get_current_ecodan_day();
             int current_hour = this->get_current_ecodan_hour();
+
+            // Ecodan time not yet valid — skip to prevent false day/hour transitions
+            if (current_day < 0 || current_hour < 0) return;
+
             // Initialize on boot to prevent jump
             if (this->last_processed_day_ == -1) {
                 this->last_processed_day_ = current_day;

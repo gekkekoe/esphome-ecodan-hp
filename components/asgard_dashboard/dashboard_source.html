@@ -1220,7 +1220,7 @@ function initCharts() {
   });
   
   // --- Initialize ODIN Charts (Empty on load) ---
-  const labels24 = Array.from({length: 48}, (_, i) => `${i % 24}:00`);
+  const labels48 = Array.from({length: 48}, (_, i) => `${i % 24}:00`);
   const monoFont = { family: "'JetBrains Mono'", size: 11 };
   const xAxis = { 
       min: 24, 
@@ -1299,7 +1299,7 @@ function initCharts() {
   odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2d'), {
       type: 'bar',
       data: {
-          labels: labels24,
+          labels: labels48,
           datasets: [
               { label: 'Expected',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
               { label: 'Actual',    data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
@@ -1322,7 +1322,7 @@ function initCharts() {
 odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2d'), {
       type: 'bar',
       data: {
-          labels: labels24,
+          labels: labels48,
           datasets: [
               { label: 'Expected',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
               { label: 'Actual',    data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
@@ -1345,7 +1345,7 @@ odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2
   odinCostChart = new Chart(document.getElementById('odinCostChart').getContext('2d'), {
       type: 'bar',
       data: {
-          labels: labels24,
+          labels: labels48,
           datasets: [
               { label: 'Expected',    data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
               { label: 'Actual',  data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
@@ -1368,7 +1368,7 @@ odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2
   odinTempChart = new Chart(document.getElementById('odinTempChart').getContext('2d'), {
       type: 'line',
       data: {
-          labels: labels24,
+          labels: labels48,
           datasets: [
               // [0] Band top — fill down to dataset[1]
               { label: 'Schedule Max (°C)',
@@ -1438,7 +1438,7 @@ odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2
   odinBattChart = new Chart(document.getElementById('odinBattChart').getContext('2d'), {
       type: 'bar',
       data: {
-          labels: labels24,
+          labels: labels48,
           datasets: [{ label: 'Battery Discharge (kWh)', data: [], backgroundColor: 'rgba(251,191,36,0.45)', borderColor: '#fbbf24', borderWidth: 1 }]
       },
       options: {
@@ -1458,7 +1458,7 @@ odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2
   odinPriceChart = new Chart(document.getElementById('odinPriceChart').getContext('2d'), {
       type: 'bar',
       data: {
-          labels: labels24,
+          labels: labels48,
           datasets: [{ label: 'Price (EUR/kWh)', data: [], backgroundColor: 'rgba(129,140,248,0.45)', borderColor: '#818cf8', borderWidth: 1 }]
       },
       options: {
@@ -1478,7 +1478,7 @@ odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2
   odinWeatherChart = new Chart(document.getElementById('odinWeatherChart').getContext('2d'), {
       type: 'line',
       data: {
-          labels: labels24,
+          labels: labels48,
           datasets: [
               { label: 'Outside Temp (°C)', data: [], borderColor: '#38bdf8', borderWidth: 2,
                 backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, spanGaps: true,

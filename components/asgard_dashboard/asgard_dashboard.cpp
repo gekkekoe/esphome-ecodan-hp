@@ -889,8 +889,9 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 // ---------------------------------------------------------------------------
 static const char* NVS_ODIN_NS = "odin_cache";
 
-void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float actual_room_temp, bool is_yesterday) {
-    int target_idx = is_yesterday ? hour : (hour + 24);
+void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float actual_room_temp) {
+    // Always write to slot hour+24 (today half). Shift in store_odin_data moves it to yesterday.
+    int target_idx = hour + 24;
     if (target_idx < 0 || target_idx >= 48) return;
     if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
 
@@ -963,7 +964,7 @@ void EcodanDashboard::nvs_persist_odin_() {
         }
     };
 
-    save_arr("sched",    this->odin_expected_end_temp_);
+    save_arr("exp_end",  this->odin_expected_end_temp_);  // new key (legacy: "sched")
     save_arr("energy",   this->odin_energy_);
     save_arr("prod",     this->odin_production_);
     save_arr("exp_t",    this->odin_expected_temp_);
@@ -992,26 +993,30 @@ void EcodanDashboard::load_odin_data(int current_day) {
 
     nvs_handle_t h;
     if (nvs_open(NVS_ODIN_NS, NVS_READONLY, &h) != ESP_OK) {
+        // Fresh device — no NVS data at all. show_solver_tab defaults to off (correct).
         ESP_LOGI(TAG, "NVS: no odin_cache found, starting fresh");
         this->odin_stored_day_ = current_day;
         this->odin_data_ready_ = true;
         return;
     }
 
-    int32_t stored_day = -1;
-    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK) { 
-        nvs_close(h); 
-        this->odin_stored_day_ = current_day;
-        this->odin_data_ready_ = true;
-        return; 
-    }
-
+    // Load show_tab first — must survive even if ODIN data arrays are missing/stale
     uint8_t stored_show_tab = 0;
     if (nvs_get_u8(h, "show_tab", &stored_show_tab) == ESP_OK) {
         if (this->sw_show_solver_tab_ != nullptr) {
             if (stored_show_tab) this->sw_show_solver_tab_->turn_on();
             else this->sw_show_solver_tab_->turn_off();
+            ESP_LOGI(TAG, "NVS: show_solver_tab restored to %d", stored_show_tab);
         }
+    }
+
+    int32_t stored_day = -1;
+    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK) {
+        // No ODIN data yet — but show_tab was already loaded above
+        nvs_close(h);
+        this->odin_stored_day_ = current_day;
+        this->odin_data_ready_ = true;
+        return;
     }
 
     auto load_arr = [&](const char* key, std::vector<float>& out, float fill = 0.0f) -> bool {
@@ -1020,7 +1025,16 @@ void EcodanDashboard::load_odin_data(int current_day) {
         return nvs_get_blob(h, key, out.data(), &len) == ESP_OK && len == 48 * sizeof(float);
     };
 
-    bool ok = load_arr("sched",    this->odin_expected_end_temp_)
+    // Load expected_end_temp: try new key first, fall back to legacy "sched"
+    bool has_exp_end = load_arr("exp_end", this->odin_expected_end_temp_);
+    if (!has_exp_end) {
+        has_exp_end = load_arr("sched", this->odin_expected_end_temp_);
+        if (has_exp_end) {
+            ESP_LOGI(TAG, "NVS: loaded expected_end_temp from legacy key 'sched'");
+        }
+    }
+
+    bool ok = has_exp_end
            && load_arr("energy",   this->odin_energy_)
            && load_arr("exp_t",    this->odin_expected_temp_)
            && load_arr("cost",     this->odin_cost_)

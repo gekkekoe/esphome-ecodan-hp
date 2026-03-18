@@ -70,7 +70,8 @@ namespace esphome
                 this->odin_energy_     = energy;
                 this->odin_production_.resize(24);
                 this->odin_energy_.resize(24);
-                this->odin_data_day_   = this->get_current_ecodan_day();
+                int _day = this->get_current_ecodan_day();
+                this->odin_data_day_   = (_day >= 0) ? _day : -1;
                 this->odin_data_ready_ = true;
             }
 
@@ -109,7 +110,8 @@ namespace esphome
                 return;
             }
 
-            int current_hour = this->get_current_ecodan_hour();   
+            int current_hour = this->get_current_ecodan_hour();
+            if (current_hour < 0) return;  // Ecodan time not yet valid
             auto *relay_z1    = this->state_.relay_switch_z1;
             auto *relay_z2    = this->state_.relay_switch_z2;
 

@@ -278,7 +278,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   // Called from YAML after each successful solver response
   void store_odin_data(int current_hour, int current_day,
-                       const std::vector<float>& sched,
+                       const std::vector<float>& expected_end_temp,
                        const std::vector<float>& energy,
                        const std::vector<float>& production,
                        const std::vector<float>& exp_temp,
@@ -295,7 +295,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void load_odin_data(int current_day);
 
   // Called each hour by YAML to track actual consumption and room temp per-hour slot
-  void update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float actual_room_temp, bool is_yesterday = false);
+  void update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float actual_room_temp);
 
  protected:
   void handle_root_(AsyncWebServerRequest *request);
