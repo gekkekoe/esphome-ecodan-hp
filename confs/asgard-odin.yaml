@@ -8,7 +8,7 @@ script:
       - if:
           condition:
             - switch.is_on: sw_use_solver
-            - lambda: 'return id(txt_solver_ip).state != "0.0.0.0" && id(txt_solver_ip).state != "";'
+            - lambda: 'return id(txt_solver_ip).state != "0.0.0.0" && id(txt_solver_ip).state != "" && id(optimizer_ptr)->get_current_ecodan_hour() >= 0;'
           then:
             - http_request.post:
                 url: !lambda 'return "http://" + id(txt_solver_ip).state + "/api/solve";'
@@ -161,7 +161,7 @@ interval:
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
             
             // Wait for NVS to load before logging actuals
-            if (nvs_loaded) {
+            if (nvs_loaded && cur_hr >= 0 && cur_hr < 24) {
               if (last_actual_hour == -1) {
                 last_actual_hour = cur_hr;
               } else if (cur_hr != last_actual_hour) {
