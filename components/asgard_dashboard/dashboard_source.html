@@ -2072,11 +2072,31 @@ function render(d) {
 
   const btnOdin = document.getElementById('btn-odin');
   const runSolverRow = document.getElementById('run-solver-row');
+  
   if (btnOdin && runSolverRow) {
-    if (d.solver_ip_address && d.solver_ip_address !== "" && d.solver_ip_address !== "0.0.0.0") {
+    // 1. Check of er überhaupt een IP-adres geconfigureerd is
+    const hasValidIP = d.solver_ip_address && d.solver_ip_address !== "" && d.solver_ip_address !== "0.0.0.0";
+
+    if (hasValidIP) {
+      // IP is aanwezig: Toon de rij en de knop
       btnOdin.style.display = 'block';
       runSolverRow.style.display = 'flex';
+
+      // 2. Check of de C++ ping-taak heeft bevestigd dat de server online is
+      if (d.solver_connected === true) {
+        btnOdin.disabled = false;
+        btnOdin.style.opacity = '1';
+        btnOdin.style.cursor = 'pointer';
+        // Optioneel: btnOdin.textContent = "Run Optimization";
+      } else {
+        // Wel een IP, maar (nog) niet online: Maak de knop onklikbaar
+        btnOdin.disabled = true;
+        btnOdin.style.opacity = '0.5';
+        btnOdin.style.cursor = 'not-allowed';
+        // Optioneel: btnOdin.textContent = "Waiting for connection...";
+      }
     } else {
+      // Helemaal geen IP geconfigureerd: Verberg alles
       btnOdin.style.display = 'none';
       runSolverRow.style.display = 'none';
     }
@@ -2280,12 +2300,9 @@ async function sendInputString(key, elId) {
   try { 
     await apiPost({ key: key, value: val }); 
     showToast('✓ ' + key + ' saved'); 
-    
-    // Auto-enable the solver tab when a valid IP is entered and saved
-    if (key === 'solver_ip_address' && val && val !== '0.0.0.0') {
-       sendSwitch('show_solver_tab_enabled', true);
-    }
-  } catch(e) { showToast('✗ ' + e.message, true); }
+  } catch(e) { 
+    showToast('✗ ' + e.message, true); 
+  }
 }
 
 async function sendPhysics(btn) {

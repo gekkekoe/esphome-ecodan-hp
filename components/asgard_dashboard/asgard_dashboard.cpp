@@ -158,7 +158,6 @@ void EcodanDashboard::handle_js_(AsyncWebServerRequest *request) {
   send_chunked_(request, "application/javascript", file_data, file_len, "public, max-age=31536000");
 }
 
-
 void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   if (request->method() != HTTP_POST) {
     request->send(405, "text/plain", "Method Not Allowed");
@@ -167,14 +166,22 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
 
   httpd_req_t *req = *request;
   size_t content_len = req->content_len;
-  if (content_len == 0 || content_len > 512) {
+  if (content_len == 0 || content_len > 1024) {
     request->send(400, "text/plain", "Bad Request");
     return;
   }
 
-  char body[513] = {0};
+  // Memory-safe allocation on the heap instead of the stack
+  char *body = (char *)malloc(content_len + 1);
+  if (body == nullptr) {
+    request->send(500, "text/plain", "Out of Memory");
+    return;
+  }
+  memset(body, 0, content_len + 1);
+
   int received = httpd_req_recv(req, body, content_len);
   if (received <= 0) {
+    free(body);
     request->send(400, "text/plain", "Read failed");
     return;
   }
@@ -182,6 +189,7 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
 
   ESP_LOGI(TAG, "Dashboard POST body: %s", body);
 
+  // Restore the original JSON parsing logic for keys and values
   char key[64] = {0};
   const char *kp = strstr(body, "\"key\":");
   if (kp) {
@@ -190,7 +198,12 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
     int i = 0;
     while (*kp && *kp != '"' && i < 63) key[i++] = *kp++;
   }
-  if (strlen(key) == 0) { request->send(400, "text/plain", "Missing key"); return; }
+  
+  if (strlen(key) == 0) { 
+    free(body);
+    request->send(400, "text/plain", "Missing key"); 
+    return; 
+  }
 
   char strval[128] = {0};
   float fval = 0.0f;
@@ -210,9 +223,13 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
     }
   }
 
+  // Always free heap memory immediately after extracting values
+  free(body); 
+
   ESP_LOGI(TAG, "Dashboard set: key=%s value=%s/%.2f", key,
            is_string ? strval : "-", is_string ? 0.0f : fval);
 
+  // Queue the action safely to be executed on the ESPHome Main Thread
   if (action_lock_ != NULL && xSemaphoreTake(action_lock_, pdMS_TO_TICKS(100)) == pdTRUE) {
     action_queue_.push_back({
         std::string(key),
@@ -227,6 +244,7 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
     request->send(503, "text/plain", "System busy, try again");
   }
 }
+
 
 void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &sval, float fval, bool is_string) {
   auto doSwitch = [&](switch_::Switch *sw) {
