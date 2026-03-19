@@ -5,6 +5,7 @@
 #include <chrono>
 #include <optional>
 #include <atomic>
+#include <queue>
 
 #include "esphome.h"
 #include "esphome/core/component.h"

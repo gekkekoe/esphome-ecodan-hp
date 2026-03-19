@@ -77,7 +77,8 @@ void EcodanDashboard::loop() {
 }
 
 bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
-  const auto& url = request->url();
+  char url_buf[AsyncWebServerRequest::URL_BUF_SIZE];
+  auto url = request->url_to(url_buf);
   return (url == "/dashboard" || url == "/dashboard/" ||
           url == "/dashboard/state" || url == "/dashboard/set" ||
           url == "/dashboard/history" || url == "/dashboard/odin" ||
@@ -85,7 +86,8 @@ bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
 }
 
 void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
-  const auto& url = request->url();
+  char url_buf[AsyncWebServerRequest::URL_BUF_SIZE];
+  auto url = request->url_to(url_buf);
   
   if      (url == "/dashboard" || url == "/dashboard/") handle_root_(request);
   else if (url == "/dashboard/state")                   handle_state_(request);
@@ -133,7 +135,8 @@ void EcodanDashboard::handle_root_(AsyncWebServerRequest *request) {
 }
 
 void EcodanDashboard::handle_js_(AsyncWebServerRequest *request) {
-  const auto& url = request->url();
+  char url_buf[AsyncWebServerRequest::URL_BUF_SIZE];
+  auto url = request->url_to(url_buf);
   const uint8_t *file_data = nullptr;
   size_t file_len = 0;
 
