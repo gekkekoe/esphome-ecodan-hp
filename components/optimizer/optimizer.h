@@ -184,6 +184,8 @@ namespace esphome
       // Solver / ODIN
       bool aa_enabled() const;
       bool solver_enabled() const;
+      float get_heating_produced_kwh() const { return last_total_heating_produced_; }
+      float get_heating_consumed_kwh() const { return last_total_heating_consumed_; }
       int  get_current_ecodan_hour();
       int  get_current_ecodan_day();
       bool has_old_odin_data();

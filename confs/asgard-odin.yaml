@@ -157,27 +157,39 @@ interval:
           }
 
           {
-            static int last_actual_hour = -1;
+            static int   last_actual_hour = -1;
+            static float hour_start_cons  = 0.0f;
+            static float hour_start_prod  = 0.0f;
+
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
-            
-            // Wait for NVS to load before logging actuals
+
             if (nvs_loaded && cur_hr >= 0 && cur_hr < 24) {
               if (last_actual_hour == -1) {
+                // First valid read — snapshot start values
                 last_actual_hour = cur_hr;
+                hour_start_cons  = id(optimizer_ptr)->get_heating_consumed_kwh();
+                hour_start_prod  = id(optimizer_ptr)->get_heating_produced_kwh();
+
               } else if (cur_hr != last_actual_hour) {
                 int completed_hr = (cur_hr == 0) ? 23 : cur_hr - 1;
-                
-                float cons = id(delta_energy_consumed_increasing).state;
-                if (id(solver_kwh_meter_feedback_source).active_index().value_or(0) != 0) {
-                    cons = id(solver_kwh_meter_feedback).state;
-                }
-                
-                float prod = id(daily_computed_output_power).state; 
                 float room = id(virtual_climate_z1).current_temperature;
-                
+
+                // Diff vs start of hour — heating only, no DHW
+                float cur_cons = id(optimizer_ptr)->get_heating_consumed_kwh();
+                float cur_prod = id(optimizer_ptr)->get_heating_produced_kwh();
+
+                // Guard against day reset making diff negative
+                float cons = cur_cons - hour_start_cons;
+                float prod = cur_prod - hour_start_prod;
+                if (cons < 0.0f) cons = 0.0f;
+                if (prod < 0.0f) prod = 0.0f;
+
                 id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, prod, room);
-                
+
+                // Snapshot for next hour
                 last_actual_hour = cur_hr;
+                hour_start_cons  = cur_cons;
+                hour_start_prod  = cur_prod;
               }
             }
           }
