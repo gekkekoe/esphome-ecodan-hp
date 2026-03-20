@@ -110,7 +110,7 @@ number:
 
   - platform: template
     id: num_raw_hl_tm_product
-    name: "Raw HL×TM Product"
+    name: ${num_raw_hl_tm_product}
     internal: ${is_internal_asgard_only}
     unit_of_measurement: "kWh²/K"
     optimistic: true
@@ -119,3 +119,14 @@ number:
     min_value: 0.0
     max_value: 300.0
     step: 0.001
+
+  - platform: template
+    name: ${num_raw_solar_factor}
+    id: num_raw_solar_factor
+    internal: ${is_internal_asgard_only}
+    optimistic: true
+    restore_value: true
+    initial_value: 0.1
+    min_value: 0.01
+    max_value: 0.5
+    step: 0.01

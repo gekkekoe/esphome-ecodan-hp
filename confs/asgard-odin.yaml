@@ -33,6 +33,11 @@ script:
                       profile_str = "radiators";
                   }
 
+                  float solar_factor = id(num_raw_solar_factor).state;
+                  if (std::isnan(solar_factor) || solar_factor <= 0.01f) {
+                      solar_factor = 1.2f; // default
+                  }
+
                   int _cur_hour = id(optimizer_ptr)->get_current_ecodan_hour();
 
                   snprintf(payload, sizeof(payload),
@@ -46,6 +51,7 @@ script:
                       "\"delta_room_temp\":%.2f,"
                       "\"max_output\":%.2f,"
                       "\"hl_tm_product\":%.4f,"
+                      "\"passive_solar_gain_factor\":%.2f,"
                       "\"current_hour\":%d,"
                       "\"current_room_temp\":%.2f,"
                       "\"battery_soc_kwh\":%.2f,"
@@ -60,6 +66,7 @@ script:
                       id(num_raw_delta_room_temp).state,
                       id(num_raw_max_output).state,
                       id(num_raw_hl_tm_product).state,
+                      solar_factor,
                       _cur_hour,
                       id(virtual_climate_z1).current_temperature,
                       id(num_battery_soc_kwh).state,
@@ -117,7 +124,7 @@ script:
                               int cur_hr = root["current_hour"].is<int>() ? root["current_hour"].as<int>() : id(optimizer_ptr)->get_current_ecodan_hour();
                               int cur_day = id(optimizer_ptr)->get_current_ecodan_day();
 
-                              id(optimizer_ptr)->store_odin_data(cur_hr, prod, nrg);
+                              id(optimizer_ptr)->store_odin_data(cur_hr, prod, nrg, sol);
 
                               esphome::asgard_dashboard::EcodanDashboard::LastRunStats stats;
                               stats.execution_ms    = root["execution_ms"].as<uint32_t>();

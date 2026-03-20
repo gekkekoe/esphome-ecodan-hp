@@ -179,3 +179,5 @@ substitutions:
   num_raw_delta_room_temp: "Rå delta romtemp. (°C)"
   num_battery_soc_kwh: "Batteri SoC (kWh)"
   num_battery_max_discharge_kw: "Maks. batteriutlading (kW)"
+  num_raw_hl_tm_product: "Rått HL×TM-produkt"
+  num_raw_solar_factor: "Passiv solvarmefaktor"

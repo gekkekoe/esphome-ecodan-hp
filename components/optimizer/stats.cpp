@@ -25,7 +25,7 @@ namespace esphome
                 // to avoid accumulating stale time into the measurement.
                 if (minutes_passed > 10.0f) {
                     if (this->fc_active_) {
-                        ESP_LOGD(OPTIMIZER_TAG, "Free cooling window reset after %.0f min gap (reconnect/reboot)", minutes_passed);
+                        ESP_LOGD(OPTIMIZER_TAG, "Free heating/cooling window reset after %.0f min gap (reconnect/reboot)", minutes_passed);
                         this->fc_active_ = false;
                     }
                     this->last_check_ms_ = now;
@@ -42,15 +42,17 @@ namespace esphome
 
                 if (!isnan(current_room_tmp) && !isnan(status.OutsideTemperature)) {
                     if (hp_off && !this->fc_active_) {
-                        this->fc_active_     = true;
+                        this->fc_active_        = true;
                         this->fc_room_start_    = current_room_tmp;
                         this->fc_outside_sum_   = status.OutsideTemperature;
+                        this->fc_solar_sum_     = this->get_current_solar_irradiance(); 
                         this->fc_outside_count_ = 1;
                         this->fc_hours_         = 0.0f;
-                        ESP_LOGD(OPTIMIZER_TAG, "Free cooling window started: room=%.2f°C", current_room_tmp);
+                        ESP_LOGD(OPTIMIZER_TAG, "Passive thermal window started: room=%.2fC", current_room_tmp);
 
                     } else if (hp_off && this->fc_active_) {
                         this->fc_outside_sum_  += status.OutsideTemperature;
+                        this->fc_solar_sum_    += this->get_current_solar_irradiance(); 
                         this->fc_outside_count_++;
                         this->fc_hours_ += minutes_passed / 60.0f;
 
@@ -59,49 +61,88 @@ namespace esphome
                         float delta_cool  = this->fc_room_start_ - current_room_tmp;
                         float t_hours     = this->fc_hours_;
                         float t_outside   = this->fc_outside_sum_ / this->fc_outside_count_;
+                        float avg_sol     = this->fc_solar_sum_ / this->fc_outside_count_; 
                         float t_room_avg  = (this->fc_room_start_ + current_room_tmp) / 2.0f;
                         float delta_T_avg = t_room_avg - t_outside;
                         this->fc_active_ = false;
 
-                        // Quality gates:
-                        //   t_hours > 3h       — minimum window for reliable signal (short bursts are noise)
-                        //   delta_cool > 0.15K — above sensor noise floor (~0.1K for NTC)
-                        //   delta_T_avg > 2K   — some gradient needed for meaningful physics
-                        //   delta_cool < 5K    — reject frost-protection outliers
-                        if (t_hours > 3.0f && delta_cool > 0.15f && delta_T_avg > 2.0f && delta_cool < 5.0f) {
+                        // Base quality gates (need enough time and a decent inside/outside delta)
+                        if (t_hours >= 2.0f && delta_T_avg > 2.0f) {
                             
-                            // Thermal Time Constant (Tau) in hours = TM / HL
-                            float tau = (delta_T_avg * t_hours) / delta_cool;
-                            
-                            // Physical sanity: Tau in hours. 
-                            // High-insulation / high-mass houses easily produce values of 60-150h
-                            // so upper bound is set generously at 300.
-                            if (tau > 5.0f && tau < 300.0f) {
-                                if (this->state_.num_raw_hl_tm_product != nullptr) {
-                                    float cur = this->state_.num_raw_hl_tm_product->state;
-                                    float next = (cur <= 0.001f || std::isnan(cur)) ? tau
-                                                 : (0.20f * tau + 0.80f * cur);
-                                    this->state_.num_raw_hl_tm_product->publish_state(next);
+                            if (avg_sol < 50.0f) {
+                                // NO SIGNIFICANT SOLAR: Learn pure thermal time constant (Tau).
+                                // Happens at night or during heavily overcast days.
+                                // Strictly require the room to have cooled down to calculate physics.
+                                if (t_hours >= 3.0f && delta_cool > 0.15f && delta_cool < 5.0f) {
+                                    float tau = (delta_T_avg * t_hours) / delta_cool;
+                                    
+                                    if (tau > 5.0f && tau < 300.0f) {
+                                        if (this->state_.num_raw_hl_tm_product != nullptr) {
+                                            float cur = this->state_.num_raw_hl_tm_product->state;
+                                            float next = (cur <= 0.001f || std::isnan(cur)) ? tau
+                                                         : (0.20f * tau + 0.80f * cur);
+                                            this->state_.num_raw_hl_tm_product->publish_state(next);
+                                        }
+                                        ESP_LOGI(OPTIMIZER_TAG,
+                                            "Free heating/cooling (No Solar): %.2f->%.2fC (%.2fK) in %.1fh, "
+                                            "outside=%.1fC -> Tau=%.1fh",
+                                            this->fc_room_start_, current_room_tmp,
+                                            delta_cool, t_hours, t_outside, tau);
+                                    } else {
+                                        ESP_LOGW(OPTIMIZER_TAG, "Free heating/cooling Tau=%.1fh out of range, discarded", tau);
+                                    }
                                 }
-                                ESP_LOGI(OPTIMIZER_TAG,
-                                    "Free cooling: %.2f->%.2f°C (%.2fK) in %.1fh, "
-                                    "outside=%.1f°C -> Tau=%.1fh",
-                                    this->fc_room_start_, current_room_tmp,
-                                    delta_cool, t_hours, t_outside, tau);
                             } else {
-                                ESP_LOGW(OPTIMIZER_TAG,
-                                    "Free cooling Tau=%.1fh out of range, discarded", tau);
+                                // SOLAR ACTIVE: Learn passive solar gain.
+                                // solar_factor is dimensionless: K of extra room warmth per kW of solar irradiance.
+                                // Formula: free_heating_K / avg_solar_kW
+                                //   free_heating_K = expected_drop (from Tau) - actual_drop
+                                //   This avoids needing thermal_mass explicitly (which is unknown here).
+                                // Units: solar_factor [K / kW] — used in optimizer as:
+                                //   free_solar_heat_kw = (irradiance_W/m2 / 1000) * solar_factor
+                                // which gives kW of equivalent heat input to the room.
+                                if (this->state_.num_raw_solar_factor != nullptr && this->state_.num_raw_hl_tm_product != nullptr) {
+                                    float tau = this->state_.num_raw_hl_tm_product->state;
+                                    
+                                    if (tau > 5.0f) {  // only when Tau is reliably learned
+                                        float expected_drop = (delta_T_avg * t_hours) / tau;
+                                        // positive = house cooled less than expected (solar kept it warm)
+                                        // negative = house cooled more than expected (no solar effect)
+                                        float free_heating_kelvin = expected_drop - delta_cool;
+                                        float avg_sol_kw = avg_sol / 1000.0f;
+                                        
+                                        if (free_heating_kelvin > 0.0f && avg_sol_kw > 0.05f) {
+                                            // K of passive gain per kW solar irradiance per hour
+                                            float learned_solar_factor = (free_heating_kelvin / t_hours) / avg_sol_kw;
+                                            
+                                            // Physical range: 0.01–0.5 K/kW
+                                            // Upper bound: ~0.5 means a very glassy, light-mass house.
+                                            // Values above 0.5 are likely measurement noise or DHW contamination.
+                                            learned_solar_factor = std::max(0.01f, std::min(0.5f, learned_solar_factor));
+                                            
+                                            float cur = this->state_.num_raw_solar_factor->state;
+                                            float next = (cur <= 0.001f || std::isnan(cur)) ? learned_solar_factor
+                                                         : (0.20f * learned_solar_factor + 0.80f * cur);
+                                            this->state_.num_raw_solar_factor->publish_state(next);
+                                            
+                                            ESP_LOGI(OPTIMIZER_TAG, "Passive solar gain: factor=%.3f K/kW (avg_sol=%.0fW, expected_drop=%.2fK, actual_drop=%.2fK, t=%.1fh)",
+                                                     next, avg_sol, expected_drop, delta_cool, t_hours);
+                                        } else {
+                                            ESP_LOGD(OPTIMIZER_TAG, "Free passive solar gain: No measurable solar gain (expected drop %.2fK, actual drop %.2fK)", 
+                                                     expected_drop, delta_cool);
+                                        }
+                                    }
+                                }
                             }
                         } else {
                             ESP_LOGD(OPTIMIZER_TAG,
-                                "Free cooling window too short/small: delta=%.2fK, hours=%.1f, delta_T=%.1fK",
-                                delta_cool, t_hours, delta_T_avg);
+                                "Free heating/cooling window invalid: delta_T=%.1fK, hours=%.1f",
+                                delta_T_avg, t_hours);
                         }
                     }
                 }
             }
             this->last_check_ms_ = now;
-
             // Track outside temperature periodically
             if (!isnan(status.OutsideTemperature)) {
                 this->daily_outside_temp_sum_ += status.OutsideTemperature;
@@ -162,7 +203,7 @@ namespace esphome
                 
                 this->update_learning_model(this->last_processed_day_);
 
-                // triiger new data fetch
+                // trigger new data fetch
                 this->odin_fetch_requested_ = true;
 
                 // Reset variables for the new day

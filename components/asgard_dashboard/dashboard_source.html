@@ -728,6 +728,11 @@ header {
       </div>
 
       <div class="ctrl-row">
+        <span class="ctrl-label">Passive Solar Factor</span>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-solar-factor', -0.01)">−</button><input type="number" class="step-input" id="raw-solar-factor-val" onchange="manualInput('raw-solar-factor', this.value)" /><button class="step-btn" onclick="step('raw-solar-factor', +0.01)">+</button></div>
+      </div>
+
+      <div class="ctrl-row">
         <span class="ctrl-label">Battery SoC (kWh)</span>
         <div class="stepper"><button class="step-btn" onclick="step('batt-soc', -0.1)">−</button><input type="number" class="step-input" id="batt-soc-val" onchange="manualInput('batt-soc', this.value)" /><button class="step-btn" onclick="step('batt-soc', +0.1)">+</button></div>
       </div>
@@ -837,7 +842,7 @@ const pending = {
   'z2-sp': null, 'z2-hyst': null, 'room-z2-sp': null,
   'flow-z1-sp': null, 'flow-z2-sp': null,
   'raw-heat': null, 'raw-elec': null, 'raw-run': null,
-  'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-max-out': null,
+  'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-max-out': null, 'raw-solar-factor': null,
   'batt-soc': null, 'batt-max-dis': null,
   'cool-start-z1': null, 'cool-min-z1': null
 };
@@ -879,6 +884,7 @@ const LIMITS = {
   'raw-delta': { min: 0.0, max: 10.0, step: 0.1 },
   'raw-max-out': { min: 1.0, max: 20.0, step: 0.1 },
   'raw-hl-tm': { min: 0.0, max: 100.0, step: 0.5 },
+  'raw-solar-factor': { min: 0.01, max: 0.5, step: 0.01 },
   'batt-soc': { min: 0.0, max: 30.0, step: 0.1 },
   'batt-max-dis': { min: 0.5, max: 15.0, step: 0.1 },
   'cool-start-z1': { min: 16.0, max: 22.0, step: 0.5 },
@@ -897,7 +903,7 @@ const STEP_EL = {
   'flow-z1-sp': 'flow-z1-sp-val', 'flow-z2-sp': 'flow-z2-sp-val',
   'raw-heat': 'raw-heat-val', 'raw-elec': 'raw-elec-val', 'raw-run': 'raw-run-val',
   'raw-out': 'raw-out-val', 'raw-room': 'raw-room-val', 'raw-delta': 'raw-delta-val',
-  'raw-max-out': 'raw-max-out-val', 'raw-hl-tm': 'raw-hl-tm-val',
+  'raw-max-out': 'raw-max-out-val', 'raw-hl-tm': 'raw-hl-tm-val','raw-solar-factor': 'raw-solar-factor-val',
   'batt-soc': 'batt-soc-val',
   'batt-max-dis': 'batt-max-dis-val',
   'cool-start-z1': 'cool-start-z1-val', 'cool-min-z1': 'cool-min-z1-val'
@@ -2119,6 +2125,7 @@ function render(d) {
   seedPending('raw-delta', d.raw_delta_room_temp);
   seedPending('raw-max-out', d.raw_max_output);
   seedPending('raw-hl-tm', d.raw_hl_tm_product);
+  seedPending('raw-solar-factor', d.raw_solar_factor);
   seedPending('batt-soc', d.battery_soc_kwh);
   seedPending('batt-max-dis', d.battery_max_discharge_kw);
 
@@ -2326,6 +2333,7 @@ async function sendPhysics(btn) {
     if (hasChanged('raw-delta')) { await apiPost({ key: 'raw_delta_room_temp', value: pending['raw-delta'] }); c++; }
     if (hasChanged('raw-max-out')) { await apiPost({ key: 'raw_max_output', value: pending['raw-max-out'] }); c++; }
     if (hasChanged('raw-hl-tm')) { await apiPost({ key: 'raw_hl_tm_product', value: pending['raw-hl-tm'] }); c++; }
+    if (hasChanged('raw-solar-factor')) { await apiPost({ key: 'raw_solar_factor', value: pending['raw-solar-factor'] }); c++; }
     if (hasChanged('batt-soc'))     { await apiPost({ key: 'battery_soc_kwh', value: pending['batt-soc'] }); c++; }
     if (hasChanged('batt-max-dis')) { await apiPost({ key: 'battery_max_discharge_kw', value: pending['batt-max-dis'] }); c++; }
     showToast(c > 0 ? '✓ Physics Data updated' : 'No changes');
@@ -2361,6 +2369,7 @@ async function runOdinSolver() {
             delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
             max_output: pending['raw-max-out'] || latestState.raw_max_output || 8.0,
             hl_tm_product: pending['hl_tm_product'] ?? latestState.raw_hl_tm_product ?? 0.0,
+            passive_solar_gain_factor: pending['raw-solar-factor'] || latestState.raw_solar_factor || 0.1,
             current_room_temp: latestState.z1_current_temp || 20.0,
             current_hour: solveHour,
             battery_soc_kwh: pending['batt-soc'] ?? latestState.battery_soc_kwh ?? 0.0,

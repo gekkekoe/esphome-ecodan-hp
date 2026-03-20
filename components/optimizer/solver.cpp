@@ -49,13 +49,29 @@ namespace esphome
           return has_data;
         }
 
+        float Optimizer::get_current_solar_irradiance() {
+            float current_solar = 0.0f;
+            int hr = this->get_current_ecodan_hour();
+            
+            if (hr >= 0 && hr < 24) {
+                if (this->odin_mutex_ != NULL && xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(50)) == pdTRUE) {
+                    if (!this->odin_solar_forecast_.empty() && hr < this->odin_solar_forecast_.size()) {
+                        current_solar = this->odin_solar_forecast_[hr];
+                    }
+                    xSemaphoreGive(this->odin_mutex_);
+                }
+            }
+            return current_solar;
+        }
+
         // ─────────────────────────────────────────────────────────────────
         // ODIN production store (called from YAML after fetch completes)
         // ─────────────────────────────────────────────────────────────────
 
         void Optimizer::store_odin_data(int current_hour,
                                         const std::vector<float>& prod,
-                                        const std::vector<float>& energy) {
+                                        const std::vector<float>& energy,
+                                        const std::vector<float>& solar) {
             if (current_hour == -1) return;
 
             if (this->odin_mutex_ == NULL ||
@@ -68,6 +84,7 @@ namespace esphome
             if (!this->odin_data_ready_ || this->odin_production_.size() != 24) {
                 this->odin_production_ = prod;
                 this->odin_energy_     = energy;
+                this->odin_solar_forecast_ = solar;
                 this->odin_production_.resize(24);
                 this->odin_energy_.resize(24);
                 int _day = this->get_current_ecodan_day();

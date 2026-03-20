@@ -180,3 +180,5 @@ substitutions:
   num_raw_delta_room_temp: "Delta temp. ambiante brut (°C)"
   num_battery_soc_kwh: "Niveau de batterie (kWh)"
   num_battery_max_discharge_kw: "Décharge max. de la batterie (kW)"
+  num_raw_hl_tm_product: "Produit HL×TM brut"
+  num_raw_solar_factor: "Facteur de gain solaire passif"

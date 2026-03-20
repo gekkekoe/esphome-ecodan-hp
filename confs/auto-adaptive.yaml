@@ -77,6 +77,7 @@ esphome:
             state.num_raw_avg_room_temp = id(num_raw_avg_room_temp);
             state.num_raw_delta_room_temp = id(num_raw_delta_room_temp);
             state.num_raw_hl_tm_product = id(num_raw_hl_tm_product);
+            state.num_raw_solar_factor = id(num_raw_solar_factor);
 
             // instantiate optimizer
             id(optimizer_ptr) = new esphome::optimizer::Optimizer(state);

@@ -82,11 +82,14 @@ namespace esphome
       float    fc_outside_sum_   = 0.0f;
       int      fc_outside_count_ = 0;
       float    fc_hours_         = 0.0f;
-
+      float    fc_solar_sum_     = 0.0f;
+      
       // ODIN solver data
       std::atomic<bool> odin_fetch_requested_{false};
       std::vector<float> odin_energy_;
       std::vector<float> odin_production_;
+      std::vector<float> odin_solar_forecast_;
+
       int      odin_data_day_   {-1};
       bool     odin_data_ready_ {false};
       SemaphoreHandle_t odin_mutex_ = NULL;
@@ -184,12 +187,13 @@ namespace esphome
       // Solver / ODIN
       bool aa_enabled() const;
       bool solver_enabled() const;
+      float get_current_solar_irradiance();
       float get_heating_produced_kwh() const { return last_total_heating_produced_; }
       float get_heating_consumed_kwh() const { return last_total_heating_consumed_; }
       int  get_current_ecodan_hour();
       int  get_current_ecodan_day();
       bool has_old_odin_data();
-      void store_odin_data(int current_hour, const std::vector<float>& prod, const std::vector<float>& energy);
+      void store_odin_data(int current_hour, const std::vector<float>& prod, const std::vector<float>& energy, const std::vector<float>& solar);
       bool check_and_clear_odin_fetch_request() {
           return odin_fetch_requested_.exchange(false);
       }

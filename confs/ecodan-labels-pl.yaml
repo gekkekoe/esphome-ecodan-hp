@@ -179,3 +179,5 @@ substitutions:
   num_raw_delta_room_temp: "Surowa delta temp. w pomieszczeniu (°C)"
   num_battery_soc_kwh: "Stan naładowania baterii (kWh)"
   num_battery_max_discharge_kw: "Maks. rozładowanie baterii (kW)"
+  num_raw_hl_tm_product: "Surowy iloczyn HL×TM"
+  num_raw_solar_factor: "Współczynnik pasywnych zysków słonecznych"

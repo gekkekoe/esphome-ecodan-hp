@@ -190,3 +190,5 @@ substitutions:
   num_raw_delta_room_temp: "Raw Delta Room Temp (°C)"
   num_battery_soc_kwh: "Battery SoC (kWh)"
   num_battery_max_discharge_kw: "Battery Max Discharge (kW)"
+  num_raw_hl_tm_product: "Raw HL×TM Product"
+  num_raw_solar_factor: "Passive Solar Gain Factor"

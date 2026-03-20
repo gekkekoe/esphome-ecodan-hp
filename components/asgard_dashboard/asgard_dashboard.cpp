@@ -302,6 +302,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "raw_delta_room_temp") { doNumber(num_raw_delta_room_temp_); return; }
   if (key == "raw_max_output") { doNumber(num_raw_max_output_); return; }
   if (key == "raw_hl_tm_product") { doNumber(num_raw_hl_tm_product_); return; }
+  if (key == "raw_solar_factor") { doNumber(num_raw_solar_factor_); return; }
   if (key == "battery_soc_kwh") { doNumber(num_battery_soc_kwh_); return; }
   if (key == "battery_max_discharge_kw") { doNumber(num_battery_max_discharge_kw_); return; }
 
@@ -470,6 +471,7 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_raw_delta_room_temp_, current_snapshot_.num_raw_delta_room_temp);
   get_n(num_raw_max_output_, current_snapshot_.num_raw_max_output);
   get_n(num_raw_hl_tm_product_, current_snapshot_.num_raw_hl_tm_product);
+  get_n(num_raw_solar_factor_, current_snapshot_.num_raw_solar_factor);
 
   get_n(num_battery_soc_kwh_, current_snapshot_.num_battery_soc_kwh);
   get_n(num_battery_max_discharge_kw_, current_snapshot_.num_battery_max_discharge_kw);
@@ -712,6 +714,9 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_n("raw_max_output", snap.num_raw_max_output.val); 
   p_lim("raw_max_output_lim", snap.num_raw_max_output);
   p_n("raw_hl_tm_product", snap.num_raw_hl_tm_product.val);
+
+  p_n("raw_solar_factor", snap.num_raw_solar_factor.val);
+  p_lim("raw_solar_factor_lim", snap.num_raw_solar_factor);
 
   p_n("battery_soc_kwh", snap.num_battery_soc_kwh.val);
   p_lim("battery_soc_kwh_lim", snap.num_battery_soc_kwh);
