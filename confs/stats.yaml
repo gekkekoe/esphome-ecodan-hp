@@ -126,7 +126,7 @@ number:
     internal: ${is_internal_asgard_only}
     optimistic: true
     restore_value: true
-    initial_value: 0.1
-    min_value: 0.01
+    initial_value: 0.015
+    min_value: 0.001
     max_value: 0.5
-    step: 0.01
+    step: 0.005

@@ -557,12 +557,12 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
 
 
   auto p_n = [&](const char* k, float v) {
-    if (!std::isnan(v)) response->printf("\"%s\":%.1f,", k, v);
+    if (!std::isnan(v)) response->printf("\"%s\":%.4g,", k, v);
     else response->printf("\"%s\":null,", k);
   };
   
   auto p_lim = [&](const char* k, const DashboardSnapshot::NumData& d) {
-    if (!std::isnan(d.min)) response->printf("\"%s\":{\"min\":%.1f,\"max\":%.1f,\"step\":%.1f},", k, d.min, d.max, d.step);
+    if (!std::isnan(d.min)) response->printf("\"%s\":{\"min\":%.4g,\"max\":%.4g,\"step\":%.4g},", k, d.min, d.max, d.step);
     else response->printf("\"%s\":null,", k);
   };
   

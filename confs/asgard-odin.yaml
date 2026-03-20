@@ -164,39 +164,46 @@ interval:
           }
 
           {
+            // Track hourly heating actuals (DHW excluded via get_heating_*_kwh()).
+            // Two snapshots per hour:
+            //   prev_start_* = value at start of previous hour
+            //   cur_start_*  = value at start of current hour (refreshed on hour change)
+            // Diff for completed hour = cur_start - prev_start (both are clean boundaries).
             static int   last_actual_hour = -1;
-            static float hour_start_cons  = 0.0f;
-            static float hour_start_prod  = 0.0f;
+            static float prev_start_cons  = 0.0f;
+            static float prev_start_prod  = 0.0f;
+            static float cur_start_cons   = 0.0f;
+            static float cur_start_prod   = 0.0f;
+            static int   snapped_hour     = -1;
 
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
 
             if (nvs_loaded && cur_hr >= 0 && cur_hr < 24) {
+
+              // On hour change: promote cur_start → prev_start, take new cur_start snapshot.
+              if (snapped_hour != cur_hr) {
+                prev_start_cons = cur_start_cons;
+                prev_start_prod = cur_start_prod;
+                cur_start_cons  = id(optimizer_ptr)->get_heating_consumed_kwh();
+                cur_start_prod  = id(optimizer_ptr)->get_heating_produced_kwh();
+                snapped_hour    = cur_hr;
+              }
+
               if (last_actual_hour == -1) {
-                // First valid read — snapshot start values
                 last_actual_hour = cur_hr;
-                hour_start_cons  = id(optimizer_ptr)->get_heating_consumed_kwh();
-                hour_start_prod  = id(optimizer_ptr)->get_heating_produced_kwh();
 
               } else if (cur_hr != last_actual_hour) {
                 int completed_hr = (cur_hr == 0) ? 23 : cur_hr - 1;
                 float room = id(virtual_climate_z1).current_temperature;
 
-                // Diff vs start of hour — heating only, no DHW
-                float cur_cons = id(optimizer_ptr)->get_heating_consumed_kwh();
-                float cur_prod = id(optimizer_ptr)->get_heating_produced_kwh();
-
-                // Guard against day reset making diff negative
-                float cons = cur_cons - hour_start_cons;
-                float prod = cur_prod - hour_start_prod;
+                // diff = cur_start (= end of completed hour) - prev_start (= start of completed hour)
+                float cons = cur_start_cons - prev_start_cons;
+                float prod = cur_start_prod - prev_start_prod;
                 if (cons < 0.0f) cons = 0.0f;
                 if (prod < 0.0f) prod = 0.0f;
 
                 id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, prod, room);
-
-                // Snapshot for next hour
                 last_actual_hour = cur_hr;
-                hour_start_cons  = cur_cons;
-                hour_start_prod  = cur_prod;
               }
             }
           }

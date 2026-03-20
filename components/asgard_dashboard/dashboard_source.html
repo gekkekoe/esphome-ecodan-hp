@@ -728,8 +728,8 @@ header {
       </div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label">Passive Solar Factor</span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-solar-factor', -0.01)">−</button><input type="number" class="step-input" id="raw-solar-factor-val" onchange="manualInput('raw-solar-factor', this.value)" /><button class="step-btn" onclick="step('raw-solar-factor', +0.01)">+</button></div>
+        <span class="ctrl-label">Passive Solar Factor <small style="opacity:0.6">(kWh/W/m²)</small></span>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-solar-factor', -0.005)">−</button><input type="number" class="step-input" id="raw-solar-factor-val" onchange="manualInput('raw-solar-factor', this.value)" /><button class="step-btn" onclick="step('raw-solar-factor', +0.005)">+</button></div>
       </div>
 
       <div class="ctrl-row">
@@ -884,7 +884,7 @@ const LIMITS = {
   'raw-delta': { min: 0.0, max: 10.0, step: 0.1 },
   'raw-max-out': { min: 1.0, max: 20.0, step: 0.1 },
   'raw-hl-tm': { min: 0.0, max: 100.0, step: 0.5 },
-  'raw-solar-factor': { min: 0.01, max: 0.5, step: 0.01 },
+  'raw-solar-factor': { min: 0.001, max: 0.5, step: 0.005 },
   'batt-soc': { min: 0.0, max: 30.0, step: 0.1 },
   'batt-max-dis': { min: 0.5, max: 15.0, step: 0.1 },
   'cool-start-z1': { min: 16.0, max: 22.0, step: 0.5 },
@@ -1853,8 +1853,12 @@ function seedHyst(zone, val) {
 function refreshStepVal(key) {
   const el = document.getElementById(STEP_EL[key]);
   if (el && pending[key] != null) {
-      if(el.tagName === 'INPUT') el.value = pending[key].toFixed(1);
-      else el.textContent = pending[key].toFixed(1);
+      const lim = LIMITS[key];
+      const step = lim ? (lim.step || 0.5) : 0.5;
+      const decimals = step < 0.01 ? 4 : step < 0.1 ? 3 : step < 1 ? 2 : 1;
+      const display = pending[key].toFixed(decimals);
+      if(el.tagName === 'INPUT') el.value = display;
+      else el.textContent = display;
   }
 }
 
@@ -2184,7 +2188,9 @@ function step(key, delta) {
   const stepSize = lim.step || 0.5;
   newVal = Math.round(newVal / stepSize) * stepSize;
   newVal = Math.max(lim.min, Math.min(lim.max, newVal));
-  pending[key] = +newVal.toFixed(2);
+  // Determine decimal places from step size to avoid toFixed(2) truncating small values
+  const decimals = stepSize < 0.01 ? 4 : stepSize < 0.1 ? 3 : stepSize < 1 ? 2 : 1;
+  pending[key] = +newVal.toFixed(decimals);
   refreshStepVal(key);
 }
 
@@ -2325,17 +2331,18 @@ async function sendPhysics(btn) {
   btn.classList.add('sending');
   let c = 0;
   try {
-    if (hasChanged('raw-heat'))  { await apiPost({ key: 'raw_heat_produced', value: pending['raw-heat'] }); c++; }
-    if (hasChanged('raw-elec'))  { await apiPost({ key: 'raw_elec_consumed', value: pending['raw-elec'] }); c++; }
-    if (hasChanged('raw-run'))   { await apiPost({ key: 'raw_runtime_hours', value: pending['raw-run'] }); c++; }
-    if (hasChanged('raw-out'))   { await apiPost({ key: 'raw_avg_outside_temp', value: pending['raw-out'] }); c++; }
-    if (hasChanged('raw-room'))  { await apiPost({ key: 'raw_avg_room_temp', value: pending['raw-room'] }); c++; }
-    if (hasChanged('raw-delta')) { await apiPost({ key: 'raw_delta_room_temp', value: pending['raw-delta'] }); c++; }
-    if (hasChanged('raw-max-out')) { await apiPost({ key: 'raw_max_output', value: pending['raw-max-out'] }); c++; }
-    if (hasChanged('raw-hl-tm')) { await apiPost({ key: 'raw_hl_tm_product', value: pending['raw-hl-tm'] }); c++; }
-    if (hasChanged('raw-solar-factor')) { await apiPost({ key: 'raw_solar_factor', value: pending['raw-solar-factor'] }); c++; }
-    if (hasChanged('batt-soc'))     { await apiPost({ key: 'battery_soc_kwh', value: pending['batt-soc'] }); c++; }
-    if (hasChanged('batt-max-dis')) { await apiPost({ key: 'battery_max_discharge_kw', value: pending['batt-max-dis'] }); c++; }
+    const physicsKeys = ['raw-heat','raw-elec','raw-run','raw-out','raw-room','raw-delta','raw-max-out','raw-hl-tm','raw-solar-factor','batt-soc','batt-max-dis'];
+    const physicsMap = { 'raw-heat': 'raw_heat_produced', 'raw-elec': 'raw_elec_consumed', 'raw-run': 'raw_runtime_hours',
+      'raw-out': 'raw_avg_outside_temp', 'raw-room': 'raw_avg_room_temp', 'raw-delta': 'raw_delta_room_temp',
+      'raw-max-out': 'raw_max_output', 'raw-hl-tm': 'raw_hl_tm_product', 'raw-solar-factor': 'raw_solar_factor',
+      'batt-soc': 'battery_soc_kwh', 'batt-max-dis': 'battery_max_discharge_kw' };
+    for (const k of physicsKeys) {
+      if (hasChanged(k)) {
+        await apiPost({ key: physicsMap[k], value: pending[k] });
+        serverState[k] = pending[k];  // update serverState immediately to prevent poll overwrite
+        c++;
+      }
+    }
     showToast(c > 0 ? '✓ Physics Data updated' : 'No changes');
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');
@@ -2369,7 +2376,7 @@ async function runOdinSolver() {
             delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
             max_output: pending['raw-max-out'] || latestState.raw_max_output || 8.0,
             hl_tm_product: pending['hl_tm_product'] ?? latestState.raw_hl_tm_product ?? 0.0,
-            passive_solar_gain_factor: pending['raw-solar-factor'] || latestState.raw_solar_factor || 0.1,
+            passive_solar_gain_factor: pending['raw-solar-factor'] || latestState.raw_solar_factor || 0.015,
             current_room_temp: latestState.z1_current_temp || 20.0,
             current_hour: solveHour,
             battery_soc_kwh: pending['batt-soc'] ?? latestState.battery_soc_kwh ?? 0.0,

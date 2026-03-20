@@ -93,43 +93,53 @@ namespace esphome
                                     }
                                 }
                             } else {
-                                // SOLAR ACTIVE: Learn passive solar gain.
-                                // solar_factor is dimensionless: K of extra room warmth per kW of solar irradiance.
-                                // Formula: free_heating_K / avg_solar_kW
-                                //   free_heating_K = expected_drop (from Tau) - actual_drop
-                                //   This avoids needing thermal_mass explicitly (which is unknown here).
-                                // Units: solar_factor [K / kW] — used in optimizer as:
-                                //   free_solar_heat_kw = (irradiance_W/m2 / 1000) * solar_factor
-                                // which gives kW of equivalent heat input to the room.
+                                // SOLAR ACTIVE: Learn passive solar gain factor.
+                                // Unit: kWh of heat input per W/m² irradiance (independent of solar_kwp).
+                                // Formula: (K_gained × TM) / (W/m² × hours)
+                                // Typical range: 0.001–0.05 kWh/W/m²
                                 if (this->state_.num_raw_solar_factor != nullptr && this->state_.num_raw_hl_tm_product != nullptr) {
                                     float tau = this->state_.num_raw_hl_tm_product->state;
-                                    
+
                                     if (tau > 5.0f) {  // only when Tau is reliably learned
                                         float expected_drop = (delta_T_avg * t_hours) / tau;
-                                        // positive = house cooled less than expected (solar kept it warm)
-                                        // negative = house cooled more than expected (no solar effect)
                                         float free_heating_kelvin = expected_drop - delta_cool;
-                                        float avg_sol_kw = avg_sol / 1000.0f;
-                                        
-                                        if (free_heating_kelvin > 0.0f && avg_sol_kw > 0.05f) {
-                                            // K of passive gain per kW solar irradiance per hour
-                                            float learned_solar_factor = (free_heating_kelvin / t_hours) / avg_sol_kw;
-                                            
-                                            // Physical range: 0.01–0.5 K/kW
-                                            // Upper bound: ~0.5 means a very glassy, light-mass house.
-                                            // Values above 0.5 are likely measurement noise or DHW contamination.
-                                            learned_solar_factor = std::max(0.01f, std::min(0.5f, learned_solar_factor));
-                                            
+
+                                        // avg_sol is raw W/m² irradiance
+                                        if (free_heating_kelvin > 0.0f && avg_sol > 50.0f) {
+                                            // TM = Tau * HL. Derive HL from EMA stats using the same
+                                            // formula as odin_server: avg_thermal_power / delta_T_out.
+                                            // Fallback to 0.22 kW/K if data is insufficient.
+                                            float derived_heat_loss = 0.22f;
+                                            if (this->state_.num_raw_heat_produced != nullptr &&
+                                                this->state_.num_raw_avg_room_temp != nullptr &&
+                                                this->state_.num_raw_avg_outside_temp != nullptr) {
+                                                float ema_heat    = this->state_.num_raw_heat_produced->state;
+                                                float ema_room    = this->state_.num_raw_avg_room_temp->state;
+                                                float ema_outside = this->state_.num_raw_avg_outside_temp->state;
+                                                float delta_t_out = ema_room - ema_outside;
+                                                if (delta_t_out > 2.0f && ema_heat > 0.1f) {
+                                                    float hl = (ema_heat / 24.0f) / delta_t_out;
+                                                    derived_heat_loss = std::max(0.05f, std::min(0.6f, hl));
+                                                }
+                                            }
+                                            float thermal_mass_est = tau * derived_heat_loss;
+                                            float learned_solar_factor = (free_heating_kelvin * thermal_mass_est) / (avg_sol * t_hours);
+
+                                            // Physical range: 0.001–0.05 kWh/W/m²
+                                            learned_solar_factor = std::max(0.001f, std::min(0.05f, learned_solar_factor));
+
                                             float cur = this->state_.num_raw_solar_factor->state;
                                             float next = (cur <= 0.001f || std::isnan(cur)) ? learned_solar_factor
                                                          : (0.20f * learned_solar_factor + 0.80f * cur);
                                             this->state_.num_raw_solar_factor->publish_state(next);
-                                            
-                                            ESP_LOGI(OPTIMIZER_TAG, "Passive solar gain: factor=%.3f K/kW (avg_sol=%.0fW, expected_drop=%.2fK, actual_drop=%.2fK, t=%.1fh)",
-                                                     next, avg_sol, expected_drop, delta_cool, t_hours);
+
+                                            ESP_LOGI(OPTIMIZER_TAG,
+                                                "Passive solar factor: %.4f kWh/W/m² (avg_sol=%.0fW/m², expected_drop=%.2fK, actual_drop=%.2fK, hl=%.3f)",
+                                                next, avg_sol, expected_drop, delta_cool, derived_heat_loss);
                                         } else {
-                                            ESP_LOGD(OPTIMIZER_TAG, "Free passive solar gain: No measurable solar gain (expected drop %.2fK, actual drop %.2fK)", 
-                                                     expected_drop, delta_cool);
+                                            ESP_LOGD(OPTIMIZER_TAG,
+                                                "Passive solar: no measurable gain (free_K=%.2f, sol=%.0fW/m²)",
+                                                free_heating_kelvin, avg_sol);
                                         }
                                     }
                                 }
