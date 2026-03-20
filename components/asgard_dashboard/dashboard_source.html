@@ -1599,6 +1599,15 @@ function updateOdinCharts() {
             if (hourlyDeltaProd[h] !== null) actualProdByHour[h + 24] = hourlyDeltaProd[h];
             if (firstTempByHour[h] !== null) actualTempByHour[h + 24] = firstTempByHour[h];
         }
+
+        const currentLocalHour = new Date().getHours();
+        for (let h = 24; h < 48; h++) {
+            if ((h - 24) > currentLocalHour) {
+                actualConsByHour[h] = null;
+                actualProdByHour[h] = null;
+                actualTempByHour[h] = null;
+            }
+        }
     }
 
     const expCons       = odinDataCache ? odinDataCache.energy_consumption         : new Array(48).fill(null);
