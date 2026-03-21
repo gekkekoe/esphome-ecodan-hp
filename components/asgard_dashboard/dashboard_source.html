@@ -1514,38 +1514,13 @@ odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2
 function updateOdinCharts() {
     if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart || !odinPriceChart || !odinWeatherChart || !odinProdChart) return;
 
+    // NVS actual data: already stored as per-hour deltas by the YAML (cur_start - prev_start).
+    // No delta calculation needed here — use values directly.
     const rawNvsCons = odinDataCache ? (odinDataCache.actual_cons || new Array(48).fill(null)) : new Array(48).fill(null);
     const rawNvsProd = odinDataCache ? (odinDataCache.actual_prod || new Array(48).fill(null)) : new Array(48).fill(null);
-    
-    const actualConsByHour = new Array(48).fill(null);
-    const actualProdByHour = new Array(48).fill(null);
 
-    // Process NVS Consumption and Production Deltas safely across 48h
-    for (let h = 0; h < 48; h++) {
-        // Calculate consumption delta
-        if (rawNvsCons && rawNvsCons[h] != null) {
-            let prevCum = null;
-            // Look backwards indefinitely until we find a valid previous meter reading
-            for (let prev = h - 1; prev >= 0; prev--) {
-                if (rawNvsCons[prev] != null) { prevCum = rawNvsCons[prev]; break; }
-            }
-            // If no previous data exists (e.g., after flash), delta is 0 to prevent huge spikes
-            let delta = prevCum !== null ? (rawNvsCons[h] - prevCum) : 0; 
-            if (delta < 0) delta = rawNvsCons[h]; // Catch daily meter resets
-            actualConsByHour[h] = parseFloat(Math.max(0, delta).toFixed(2));
-        }
-        
-        // Calculate production delta
-        if (rawNvsProd && rawNvsProd[h] != null) {
-            let prevCum = null;
-            for (let prev = h - 1; prev >= 0; prev--) {
-                if (rawNvsProd[prev] != null) { prevCum = rawNvsProd[prev]; break; }
-            }
-            let delta = prevCum !== null ? (rawNvsProd[h] - prevCum) : 0;
-            if (delta < 0) delta = rawNvsProd[h];
-            actualProdByHour[h] = parseFloat(Math.max(0, delta).toFixed(2));
-        }
-    }
+    const actualConsByHour = rawNvsCons.map(v => v != null ? parseFloat(Math.max(0, v).toFixed(2)) : null);
+    const actualProdByHour = rawNvsProd.map(v => v != null ? parseFloat(Math.max(0, v).toFixed(2)) : null);
     const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(48).fill(null))] : new Array(48).fill(null);
 
     // Live history overlay
