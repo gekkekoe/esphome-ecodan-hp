@@ -182,5 +182,3 @@ substitutions:
   num_battery_max_discharge_kw: "Max. Batterijontlading (kW)"
   num_raw_hl_tm_product: "Ruw HL×TM Product"
   num_raw_solar_factor: "Passieve Zonnewarmte Factor"
-  num_raw_hl_tm_product: "Ruw HL×TM Product"
-  num_raw_solar_factor: "Passieve Zonnewarmte Factor"
