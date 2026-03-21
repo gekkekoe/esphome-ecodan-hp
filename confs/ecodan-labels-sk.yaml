@@ -1,0 +1,164 @@
+substitutions:
+  status_three_way_valve: Trojcestný ventil
+  status_three_way_valve_2: Trojcestný ventil 2
+  heatpump_climate_dhw: Termostat TÚV
+  dhw_temp: Teplota TÚV
+  dhw_secondary_temp: Sekundárna teplota TÚV
+  status_dhw_forced: Nútený ohrev TÚV
+  dhw_flow_temp_drop: Max. pokles teploty TÚV
+  status_prohibit_dhw: TÚV zakázaná
+  dhw_flow_temp_target: Cieľová teplota TÚV
+  status_dhw_eco: TÚV - úsporný režim
+  esp_ip: IP adresa ESP
+  internal_esp_temperature: Teplota modulu ESP
+  esp_sidd: SSID siete ESP
+  uptime: Prevádzkový čas ESP
+  esp_version: Verzia ESP
+  restart_button: Reštart ESP
+  status_in1_request: Termostat IN1
+  status_in6_request: Termostat IN6
+  status_in5_request: Externý termostat IN5
+  heatpump_select_dhw_mode: Režim TÚV
+  normal: Normálny
+  eco: Úsporný
+  version: Verzia softvéru
+  led_brightness: Jas LED
+  led_switch: LED indikátor
+  heatpump_switch_force_dhw: Vynútiť ohrev TÚV
+  heatpump_switch_power_mode: Zapnúť tepelné čerpadlo
+  heatpump_switch_holiday: Režim dovolenky
+  wifi_signal_proc: WiFi signál (%)
+  wifi_signal_db: WiFi signál (dB)
+  z1_flow_temp_target: Zóna 1 - cieľová teplota vody
+  status_prohibit_cool_z1: Zóna 1 - chladenie zakázané
+  status_prohibit_heating_z1: Zóna 1 - kúrenie zakázané
+  heatpump_climate_z1: Zóna 1 - teplota prívodu
+  heatpump_climate_room_z1: Zóna 1 - teplota miestnosti
+  z1_room_temp_target: Zóna 1 - cieľová teplota miestnosti
+  z1_room_temp: Zóna 1 - aktuálna teplota
+  heatpump_number_z2_set_flow_temperature: Zóna 2 - cieľová teplota vody
+  z2_flow_temp_target: Zóna 2 - cieľová teplota vody
+  status_prohibit_cool_z2: Zóna 2 - chladenie zakázané
+  status_prohibit_heating_z2: Zóna 2 - kúrenie zakázané
+  heatpump_number_z2_set_room_temperature: Zóna 2 - cieľová teplota miestnosti
+  heatpump_climate_z2: Zóna 2 - teplota prívodu
+  heatpump_climate_room_z2: Zóna 2 - teplota miestnosti
+  z2_room_temp_target: Zóna 2 - cieľová teplota miestnosti
+  z2_room_temp: Zóna 2 - aktuálna teplota
+  mixing_tank_temp: Teplota zmiešavacej nádrže
+  boiler_flow_temp: Teplota výstupu kotla
+  boiler_return_temp: Teplota spiatočky kotla
+  status_booster: Pomocný elektrický ohrievač
+  compressor_frequency: Frekvencia kompresora
+  status_compressor: Kompresor
+  controller_version_text: Verzia regulátora
+  controller_firmware_text: Firmware regulátora
+  controller_datetime_text: Dátum a čas regulátora
+  cool_consumed: Spotreba chladenia
+  cool_cop: COP chladenia
+  cool_delivered: Dodané chladenie
+  status_defrost: Odmrazovanie
+  dhw_consumed: Spotreba TÚV
+  dhw_cop: COP TÚV
+  dhw_delivered: Dodaná energia TÚV
+  hp_feed_temp: Teplota prívodu
+  z1_feed_temp: Zóna 1 - teplota prívodu
+  z2_feed_temp: Zóna 2 - teplota prívodu
+  flow_rate: Prietok vody
+  heat_source_text: Zdroj tepla
+  heatpump: Tepelné čerpadlo
+  immersion_heater: Ponorný ohrievač
+  booster_heater: Pomocný ohrievač
+  immersion_and_booster_heater: Ponorný + pomocný ohrievač
+  boiler: Kotol
+  energy_consumed_increasing: Celková spotreba energie
+  heating_consumed: Spotreba kúrenia
+  heating_cop: COP kúrenia
+  heating_delivered: Dodaná energia kúrenia
+  status_holiday: Režim dovolenky
+  status_immersion: Ponorný ohrievač
+  legionella_prevention_temp: Teplota prevencie legionely
+  heatpump_select_operating_mode: Zvolený režim prevádzky
+  heat_target_temperature: Cieľová teplota kúrenia
+  heat_flow_temperature: Teplota vody pri kúrení
+  heat_compensation_curve: Kompenzačná krivka kúrenia
+  cool_target_temperature: Cieľová teplota chladenia
+  cool_flow_temperature: Teplota vody pri chladení
+  floor_dry_up: Režim vysúšania poteru
+  cool_compensation_curve: Kompenzačná krivka chladenia
+  operation_off: 'Vypnuté'
+  hotwater: Ohrev vody
+  heating: Kúrenie
+  cooling: Chladenie
+  frost_protection: Ochrana pred mrazom
+  legionella_prevention: Prevencia legionely
+  runtime: Prevádzkový čas
+  status_operation: Prevádzkový režim
+  output_power: Výstupný výkon
+  computed_output_power: Odhadovaný výkon
+  computed_cop: Odhadovaný COP
+  daily_computed_output_power: Denná výroba energie
+  daily_repported_input_power: Denná spotreba energie
+  outside_temp: Vonkajšia teplota
+  hp_refrigerant_temp: Teplota chladiva
+  hp_refrigerant_condensing_temp: Teplota kondenzácie chladiva
+  hp_return_temp: Teplota spiatočky
+  z1_return_temp: Zóna 1 - teplota spiatočky
+  z2_return_temp: Zóna 2 - teplota spiatočky
+  status_water_pump: Čerpadlo - stav
+  status_water_pump_2: Čerpadlo 2 - stav
+  status_water_pump_3: Čerpadlo 3 - stav
+  status_mixing_valve: Zmiešavací ventil
+  mixing_valve_step: Poloha ventilu
+  status_multi_zone: Viaczónový režim
+  status_multi_zone_idle: Nečinné
+  status_multi_zone_both: Obe zóny aktívne
+  status_multi_zone_zone1: Aktívna zóna 1
+  status_multi_zone_zone2: Aktívna zóna 2
+  fault_code_text: Kód chyby
+  refrigerant_error_code_text: Chyba chladiva
+  compressor_starts: Počet štartov kompresora
+  discharge_temp: Teplota výtlaku
+  ou_liquid_pipe_temp: Vonkajšia jednotka - kvapalinové potrubie
+  ou_two_phase_pipe_temp: Vonkajšia jednotka - dvojfázové potrubie
+  ou_suction_pipe_temp: Vonkajšia jednotka - nasávacie potrubie
+  ou_heatsink_temp: Vonkajšia jednotka - chladič
+  ou_compressor_surface_temp: Vonkajšia jednotka - povrch kompresora
+  super_heat_temp: Prehriatie chladiva
+  sub_cool_temp: Podchladenie chladiva
+  fan_speed: Rýchlosť ventilátora
+  status_short_cycle_lockout: 'Blokovanie krátkeho cyklu'
+  minimum_compressor_on_time: 'Minimálny čas zapnutia kompresora'
+  lockout_duration: 'Dĺžka blokovania (min)'
+  short_cycle_mitigation_button: 'Zrušiť blokovanie cyklu'
+  predictive_short_cycle_control_enabled: 'Prediktívna prevencia krátkeho cyklu'
+  predictive_short_cycle_high_delta_time_window: 'Trvanie vysokej odchýlky'
+  auto_adaptive_control_enabled: 'Auto-adaptívne riadenie'
+  heating_slope: 'Sklon krivky kúrenia'
+  cooling_slope: 'Sklon krivky chladenia'
+  maximum_heating_flow_temp: 'Max. teplota vody pri kúrení'
+  minimum_heating_flow_temp: 'Min. teplota vody pri kúrení'
+  minimum_cooling_flow_temp: 'Min. teplota vody pri chladení'
+  cooling_smart_start_temp: 'Inteligentný štart chladenia'
+  temperature_feedback_source: 'Zdroj teploty miestnosti'
+  temperature_feedback_option_room: 'Miestny termostat'
+  select_feedback_option_api: 'Home Assistant / API'
+  heating_system_type: 'Typ vykurovacieho systému'
+  heating_system_type_option_ufh: 'Podlahové kúrenie'
+  heating_system_type_option_ufh_rad: 'Podlahové kúrenie + radiátory'
+  heating_system_type_option_rad: 'Radiátory'
+  heating_offset_sensor: 'Posun kúrenia'
+  cooling_offset_sensor: 'Posun chladenia'
+  auto_adaptive_setpoint_bias: 'Posun cieľovej hodnoty'
+  dynamic_learning_rate_sensor: 'Rýchlosť učenia systému'
+  temperature_feedback: 'Aktuálna teplota miestnosti'
+  thermostat_overshoot_compensation: 'Kompenzácia prekúrenia miestnosti'
+  outside_temperature_feedback: 'Spätná väzba vonkajšej teploty'
+  outside_temperature_source: 'Zdroj vonkajšej teploty'
+  outside_temperature_option_internal: 'Vnútorný senzor jednotky'
+  total_increasing_heating_consumed: Celková spotreba kúrenia
+  total_increasing_heating_delivered: Celková dodaná energia kúrenia
+  total_increasing_cool_consumed: Celková spotreba chladenia
+  total_increasing_cool_delivered: Celková dodaná energia chladenia
+  total_increasing_dhw_consumed: Celková spotreba TÚV
+  total_increasing_dhw_delivered: Celková dodaná energia TÚV
