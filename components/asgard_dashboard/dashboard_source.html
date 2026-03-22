@@ -1680,6 +1680,14 @@ function updateOdinCharts() {
         document.getElementById('rs-cost').textContent    = '€' + rs.total_cost.toFixed(4);
         document.getElementById('rs-costtax').textContent = '€' + rs.total_cost_tax.toFixed(4);
     }
+
+    // Auto-focus to today (index 24-47) unless user has manually zoomed/panned
+    if (!odinZoomed) {
+        [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
+        odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
+            if (c) c.zoomScale('x', {min: 24, max: 47}, 'none');
+        });
+    }
 }
 
 function updateCharts(d) {
@@ -2624,14 +2632,12 @@ function syncOdinScales(sourceChart) {
 }
 
 function resetOdinZoom() {
-  odinZoomed = false;
-  [odinConsChart, odinProdChart, odinCostChart, odinTempChart, odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-    if (c) {
-      // The plugin natively remembers its original 0-23 state, just tell it to reset
-      c.resetZoom('none');
-    }
-  });
-  document.getElementById('btn-reset-zoom-odin').style.display = 'none';
+    odinZoomed = false;
+    [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
+     odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
+        if (c) c.zoomScale('x', {min: 24, max: 47}, 'none');
+    });
+    document.getElementById('btn-reset-zoom-odin').style.display = 'none';
 }
 
 function showOdinResetButton() {

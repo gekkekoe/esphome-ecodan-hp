@@ -128,5 +128,5 @@ number:
     restore_value: true
     initial_value: 0.015
     min_value: 0.001
-    max_value: 0.5
+    max_value: 0.05
     step: 0.005

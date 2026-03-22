@@ -81,7 +81,9 @@ namespace esphome
                                             float cur = this->state_.num_raw_hl_tm_product->state;
                                             float next = (cur <= 0.001f || std::isnan(cur)) ? tau
                                                          : (0.20f * tau + 0.80f * cur);
-                                            this->state_.num_raw_hl_tm_product->publish_state(next);
+                                            auto call = this->state_.num_raw_hl_tm_product->make_call();
+                                            call.set_value(next);
+                                            call.perform();
                                         }
                                         ESP_LOGI(OPTIMIZER_TAG,
                                             "Free heating/cooling (No Solar): %.2f->%.2fC (%.2fK) in %.1fh, "
@@ -131,7 +133,9 @@ namespace esphome
                                             float cur = this->state_.num_raw_solar_factor->state;
                                             float next = (cur <= 0.001f || std::isnan(cur)) ? learned_solar_factor
                                                          : (0.20f * learned_solar_factor + 0.80f * cur);
-                                            this->state_.num_raw_solar_factor->publish_state(next);
+                                            auto call = this->state_.num_raw_solar_factor->make_call();
+                                            call.set_value(next);
+                                            call.perform();
 
                                             ESP_LOGI(OPTIMIZER_TAG,
                                                 "Passive solar factor: %.4f kWh/W/m² (avg_sol=%.0fW/m², expected_drop=%.2fK, actual_drop=%.2fK, hl=%.3f)",
@@ -297,8 +301,10 @@ namespace esphome
                 if (current <= 0.01f || std::isnan(current)) current = observed; // Initialize if empty
                 else current = (alpha * observed) + ((1.0f - alpha) * current);
                 
-                // Publish back to ESPHome so the dashboard and NVS flash are updated
-                comp->publish_state(current); 
+                // Use make_call so ESPHome's template number saves to NVS (restore_value)
+                auto call = comp->make_call();
+                call.set_value(current);
+                call.perform();
             };
 
             const float ALPHA = 0.15f; 
@@ -307,8 +313,11 @@ namespace esphome
             update_ema_num(this->state_.num_raw_elec_consumed, elec_consumed_kwh, ALPHA);
             update_ema_num(this->state_.num_raw_runtime_hours, runtime_hours, ALPHA);
             // avg_outside_temp is already a daily mean — publish raw so the solver
-            if (this->state_.num_raw_avg_outside_temp != nullptr)
-                this->state_.num_raw_avg_outside_temp->publish_state(avg_outside);
+            if (this->state_.num_raw_avg_outside_temp != nullptr) {
+                auto outside_call = this->state_.num_raw_avg_outside_temp->make_call();
+                outside_call.set_value(avg_outside);
+                outside_call.perform();
+            }
             update_ema_num(this->state_.num_raw_avg_room_temp, avg_room, ALPHA);
             update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
             update_ema_num(this->state_.num_raw_max_output, max_out_kw, ALPHA);
