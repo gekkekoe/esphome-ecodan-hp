@@ -246,18 +246,28 @@ namespace esphome
             }
 
             // Set latest energy snapshots
-            if (is_running && is_heating_active) {
-                this->last_total_heating_produced_ = this->state_.daily_heating_produced->state;
+            bool heating_now = is_running && is_heating_active;
 
-                if (this->state_.solver_kwh_meter_feedback_source == nullptr || 
+            auto snap_energy = [&]() {
+                this->last_total_heating_produced_ = this->state_.daily_heating_produced->state;
+                if (this->state_.solver_kwh_meter_feedback_source == nullptr ||
                     this->state_.solver_kwh_meter_feedback_source->active_index().value_or(0) == 0) {
                     this->last_total_heating_consumed_ = this->state_.daily_heating_consumed->state;
-                }
-                else {
-                    // Ensure the feedback number is also not null before reading
-                    this->last_total_heating_consumed_ = (this->state_.solver_kwh_meter_feedback != nullptr) ? 
+                } else {
+                    this->last_total_heating_consumed_ = (this->state_.solver_kwh_meter_feedback != nullptr) ?
                                                         this->state_.solver_kwh_meter_feedback->state : 0.0f;
                 }
+            };
+
+            if (heating_now) {
+                snap_energy();
+                this->last_was_heating_ = true;
+            } else if (this->last_was_heating_) {
+                // Transition: heating → DHW/idle. Snap clean baseline before DHW contaminates meter.
+                snap_energy();
+                this->last_was_heating_ = false;
+                ESP_LOGD(OPTIMIZER_TAG, "Heating stopped — clean energy baseline saved: cons=%.3f prod=%.3f",
+                         this->last_total_heating_consumed_, this->last_total_heating_produced_);
             }
         }
 

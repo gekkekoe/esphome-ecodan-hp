@@ -74,6 +74,7 @@ namespace esphome
       int      last_processed_hour_         {-1};
       float    last_total_heating_produced_ = 0.0f;
       float    last_total_heating_consumed_ = 0.0f;
+      bool     last_was_heating_            = false;
 
       // Free cooling window tracking (HP-off period, any time of day)
       // Measures HL×TM product from unregulated cooldown, free of solar/DHW contamination.
