@@ -676,9 +676,10 @@ header {
           <span class="ctrl-label" style="font-size:9px;">Thermal mass</span> <span id="rs-tmass"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
           <span class="ctrl-label" style="font-size:9px;">Expected consumption</span>   <span id="rs-econs"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
           <span class="ctrl-label" style="font-size:9px;">Expected production</span>   <span id="rs-eprod"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Expected Solar production</span>   <span id="rs-solar"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Expected Total cost</span>   <span id="rs-cost"    class="ctrl-value" style="font-size:10px; text-align:right; color:var(--accent2);">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Expected Total Cost incl. tax</span> <span id="rs-costtax" class="ctrl-value" style="font-size:10px; text-align:right; color:#c084fc;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Expected solar used</span>   <span id="rs-solar"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Expected total solar generation</span>   <span id="rs-solar-total"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Expected total cost</span>   <span id="rs-cost"    class="ctrl-value" style="font-size:10px; text-align:right; color:var(--accent2);">—</span>
+          <span class="ctrl-label" style="font-size:9px;">Expected total cost incl. tax</span> <span id="rs-costtax" class="ctrl-value" style="font-size:10px; text-align:right; color:#c084fc;">—</span>
         </div>
       </div>
     </div>
@@ -1676,7 +1677,8 @@ function updateOdinCharts() {
         document.getElementById('rs-tmass').textContent   = rs.thermal_mass.toFixed(1) + ' kWh/K';
         document.getElementById('rs-econs').textContent   = rs.exp_consumption.toFixed(2) + ' kWh';
         document.getElementById('rs-eprod').textContent   = rs.exp_production.toFixed(2) + ' kWh';
-        document.getElementById('rs-solar').textContent   = rs.exp_solar.toFixed(2) + ' kWh';
+        document.getElementById('rs-solar').textContent         = rs.exp_solar.toFixed(2) + ' kWh';
+        document.getElementById('rs-solar-total').textContent   = (rs.exp_solar_total || rs.exp_solar).toFixed(2) + ' kWh';
         document.getElementById('rs-cost').textContent    = '€' + rs.total_cost.toFixed(4);
         document.getElementById('rs-costtax').textContent = '€' + rs.total_cost_tax.toFixed(4);
     }
@@ -2422,6 +2424,7 @@ async function runOdinSolver() {
                 exp_consumption: data.total_consumption_kwh        || 0,
                 exp_production:  data.total_heat_produced_kwh      || 0,
                 exp_solar:       data.total_solar_generation_kwh   || 0,
+                exp_solar_total: data.total_solar_total_kwh        || data.total_solar_generation_kwh || 0,
                 total_cost:      data.total_cost_eur               || 0,
                 total_cost_tax:  data.total_cost_with_tax_eur      || 0
             };

@@ -134,6 +134,7 @@ script:
                               stats.exp_consumption = root["total_consumption_kwh"].as<float>();
                               stats.exp_production  = root["total_heat_produced_kwh"].as<float>();
                               stats.exp_solar       = root["total_solar_generation_kwh"].as<float>();
+                              stats.exp_solar_total = root["total_solar_total_kwh"].is<float>() ? root["total_solar_total_kwh"].as<float>() : stats.exp_solar;
                               stats.total_cost      = root["total_cost_eur"].as<float>();
                               stats.total_cost_tax  = root["total_cost_with_tax_eur"].as<float>();
 
