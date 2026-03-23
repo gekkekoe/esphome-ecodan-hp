@@ -136,6 +136,14 @@ header {
   .step-input::-webkit-outer-spin-button, .step-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .step-input:focus { background: rgba(0,200,255,0.1); border-radius: 4px; box-shadow: 0 0 0 1px var(--accent); }
 
+
+  /* Physics param tooltips */
+  .param-label { position: relative; display: inline-flex; align-items: center; gap: 4px; cursor: default; }
+  .param-label .tip-icon { width: 13px; height: 13px; border-radius: 50%; border: 1px solid var(--text3); color: var(--text3); font-size: 9px; font-family: var(--mono); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0.6; transition: opacity 0.15s; }
+  .param-label:hover .tip-icon { opacity: 1; border-color: var(--accent); color: var(--accent); }
+  .param-label .tip-box { visibility: hidden; opacity: 0; position: absolute; left: 0; top: calc(100% + 6px); z-index: 999; background: #1a2540; border: 1px solid var(--accent); border-radius: 7px; padding: 8px 10px; width: 220px; font-size: 10px; font-family: var(--mono); color: var(--text); line-height: 1.5; pointer-events: none; transition: opacity 0.15s; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+  .param-label .tip-box .tip-unit { color: var(--accent); font-weight: 700; margin-bottom: 3px; display: block; }
+  .param-label:hover .tip-box { visibility: visible; opacity: 1; }
   .send-btn { width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px; border: 1px solid var(--accent); background: rgba(0,200,255,0.08); color: var(--accent); font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
   .send-btn:hover { background: rgba(0,200,255,0.18); box-shadow: 0 0 10px rgba(0,200,255,0.12); }
   .send-btn:active { transform: scale(0.98); }
@@ -684,62 +692,63 @@ header {
       </div>
     </div>
 
-    <div class="ctrl-card">
+    <div class="ctrl-card physics-card">
       <div class="section-title">Physics Data (Daily Averages)</div>
+      <style>.physics-card .step-input { width: 72px; font-size: 12px; }</style>
       <div class="sub-label" style="margin-top:0;">Sent to Solver (Overridable)</div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label">Heat Produced (kWh)</span>
+        <span class="ctrl-label param-label">Heat Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total heat energy produced yesterday in heating mode. DHW excluded. Used to calculate COP.</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-heat', -0.1)">−</button><input type="number" class="step-input" id="raw-heat-val" onchange="manualInput('raw-heat', this.value)" /><button class="step-btn" onclick="step('raw-heat', +0.1)">+</button></div>
       </div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label">Elec Consumed (kWh)</span>
+        <span class="ctrl-label param-label">Elec Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump yesterday in heating mode. DHW excluded. COP = Heat / Elec.</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-elec-val" onchange="manualInput('raw-elec', this.value)" /><button class="step-btn" onclick="step('raw-elec', +0.1)">+</button></div>
       </div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label">Runtime (Hours)</span>
+        <span class="ctrl-label param-label">Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in heating mode yesterday. Used to derive thermal mass.</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-run', -0.1)">−</button><input type="number" class="step-input" id="raw-run-val" onchange="manualInput('raw-run', this.value)" /><button class="step-btn" onclick="step('raw-run', +0.1)">+</button></div>
       </div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label">Avg Outside Temp (°C)</span>
+        <span class="ctrl-label param-label">Avg Outside Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature yesterday. Used to calculate heat loss and COP correction.</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-out', -0.1)">−</button><input type="number" class="step-input" id="raw-out-val" onchange="manualInput('raw-out', this.value)" /><button class="step-btn" onclick="step('raw-out', +0.1)">+</button></div>
       </div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label">Avg Room Temp (°C)</span>
+        <span class="ctrl-label param-label">Avg Room Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average room temperature yesterday. Together with outside temp, determines heat loss coefficient.</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-room', -0.1)">−</button><input type="number" class="step-input" id="raw-room-val" onchange="manualInput('raw-room', this.value)" /><button class="step-btn" onclick="step('raw-room', +0.1)">+</button></div>
       </div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label">Delta Room Temp (°C)</span>
+        <span class="ctrl-label param-label">Delta Room Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C (daily swing)</span>Difference between max and min room temp yesterday. Small delta = high thermal mass (house holds heat well).</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-delta', -0.1)">−</button><input type="number" class="step-input" id="raw-delta-val" onchange="manualInput('raw-delta', this.value)" /><button class="step-btn" onclick="step('raw-delta', +0.1)">+</button></div>
       </div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label">Max Output (kW)</span>
+        <span class="ctrl-label param-label">Max Output<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kW thermal</span>Maximum heat the HP can deliver. Solver will never plan above this. Set to HP rated output at typical outdoor temp.</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-max-out', -0.1)">−</button><input type="number" class="step-input" id="raw-max-out-val" onchange="manualInput('raw-max-out', this.value)" /><button class="step-btn" onclick="step('raw-max-out', +0.1)">+</button></div>
       </div>
       
       <div class="ctrl-row">
-        <span class="ctrl-label">HL × TM Product</span>
+        <span class="ctrl-label param-label">HL × TM Product<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours (Tau)</span>Thermal time constant of your house. Higher = house holds heat longer. Learned automatically. Typical: 50–150h.</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-hl-tm', -0.5)">−</button><input type="number" class="step-input" id="raw-hl-tm-val" onchange="manualInput('raw-hl-tm', this.value)" /><button class="step-btn" onclick="step('raw-hl-tm', +0.5)">+</button></div>
       </div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label">Passive Solar Factor <small style="opacity:0.6">(kWh/W/m²)</small></span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-solar-factor', -0.005)">−</button><input type="number" class="step-input" id="raw-solar-factor-val" onchange="manualInput('raw-solar-factor', this.value)" /><button class="step-btn" onclick="step('raw-solar-factor', +0.005)">+</button></div>
+        <span class="ctrl-label param-label">Passive Solar Factor<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh per W/m² irradiance</span>Heat entering through windows from solar irradiance. Independent of PV panels. Typical: 0.010–0.030. Learned automatically.</span></span>
+        <div class="stepper"><button class="step-btn" onclick="step('raw-solar-factor', -0.0025)">−</button><input type="number" class="step-input" id="raw-solar-factor-val" onchange="manualInput('raw-solar-factor', this.value)" /><button class="step-btn" onclick="step('raw-solar-factor', +0.0025)">+</button></div>
       </div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label">Battery SoC (kWh)</span>
+        <span class="ctrl-label param-label">Battery SoC<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh</span>Current battery state of charge. Solver assigns discharge to most expensive HP hours. Set 0 if no battery.</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('batt-soc', -0.1)">−</button><input type="number" class="step-input" id="batt-soc-val" onchange="manualInput('batt-soc', this.value)" /><button class="step-btn" onclick="step('batt-soc', +0.1)">+</button></div>
       </div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label">Battery Max Discharge (kW)</span>
+        <span class="ctrl-label param-label">Battery Max Discharge<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kW</span>Maximum discharge rate of your battery. Limits how much power solver can assign per hour.</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('batt-max-dis', -0.1)">−</button><input type="number" class="step-input" id="batt-max-dis-val" onchange="manualInput('batt-max-dis', this.value)" /><button class="step-btn" onclick="step('batt-max-dis', +0.1)">+</button></div>
       </div>
 
@@ -885,7 +894,7 @@ const LIMITS = {
   'raw-delta': { min: 0.0, max: 10.0, step: 0.1 },
   'raw-max-out': { min: 1.0, max: 20.0, step: 0.1 },
   'raw-hl-tm': { min: 0.0, max: 100.0, step: 0.5 },
-  'raw-solar-factor': { min: 0.001, max: 0.5, step: 0.005 },
+  'raw-solar-factor': { min: 0.001, max: 0.05, step: 0.0025 },
   'batt-soc': { min: 0.0, max: 30.0, step: 0.1 },
   'batt-max-dis': { min: 0.5, max: 15.0, step: 0.1 },
   'cool-start-z1': { min: 16.0, max: 22.0, step: 0.5 },
