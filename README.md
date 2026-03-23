@@ -48,6 +48,7 @@ Select the language in the `ecodan-esphome.yaml` file.
 | Swedish | sv |
 | Danish | da |
 | Polish | pl |
+| Slovak | sk |
 
 If you want to contribute a translation: copy the file `ecodan-labels-en.yaml` to `ecodan-labels-xx.yaml` (replace `xx` with your language code), fill in all the labels, and submit a pull request.
 
