@@ -676,18 +676,18 @@ header {
       </div>
 
       <div id="run-stats-block" style="display:none; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px;">
-        <div class="sub-label" style="margin:0 0 6px 0; font-size:9px; letter-spacing:1px;">LAST RUN RESULT</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:3px 10px;">
-          <span class="ctrl-label" style="font-size:9px;">Execution time</span>   <span id="rs-exec"    class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Heat loss</span>    <span id="rs-hloss"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Base COP</span>     <span id="rs-cop"     class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Thermal mass</span> <span id="rs-tmass"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Expected consumption</span>   <span id="rs-econs"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Expected production</span>   <span id="rs-eprod"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Expected solar used</span>   <span id="rs-solar"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Expected total solar generation</span>   <span id="rs-solar-total"   class="ctrl-value" style="font-size:10px; text-align:right;">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Expected total cost</span>   <span id="rs-cost"    class="ctrl-value" style="font-size:10px; text-align:right; color:var(--accent2);">—</span>
-          <span class="ctrl-label" style="font-size:9px;">Expected total cost incl. tax</span> <span id="rs-costtax" class="ctrl-value" style="font-size:10px; text-align:right; color:#c084fc;">—</span>
+        <div class="sub-label" style="margin:0 0 6px 0;">LAST RUN RESULT</div>
+        <div style="display:grid; grid-template-columns:1fr auto; gap:4px 10px; align-items:center;">
+          <span class="ctrl-label">Execution time</span>   <span id="rs-exec"    class="ctrl-value" style="text-align:right;">—</span>
+          <span class="ctrl-label">Heat loss</span>        <span id="rs-hloss"   class="ctrl-value" style="text-align:right;">—</span>
+          <span class="ctrl-label">Base COP</span>         <span id="rs-cop"     class="ctrl-value" style="text-align:right;">—</span>
+          <span class="ctrl-label">Thermal mass</span>     <span id="rs-tmass"   class="ctrl-value" style="text-align:right;">—</span>
+          <span class="ctrl-label">Expected consumption</span>  <span id="rs-econs"   class="ctrl-value" style="text-align:right;">—</span>
+          <span class="ctrl-label">Expected production</span>   <span id="rs-eprod"   class="ctrl-value" style="text-align:right;">—</span>
+          <span class="ctrl-label">Solar used by HP</span>      <span id="rs-solar"   class="ctrl-value" style="text-align:right;">—</span>
+          <span class="ctrl-label">Total solar generation</span><span id="rs-solar-total" class="ctrl-value" style="text-align:right;">—</span>
+          <span class="ctrl-label">Expected cost</span>         <span id="rs-cost"    class="ctrl-value" style="text-align:right; color:var(--accent2);">—</span>
+          <span class="ctrl-label">Expected cost incl. tax</span><span id="rs-costtax" class="ctrl-value" style="text-align:right; color:#c084fc;">—</span>
         </div>
       </div>
     </div>
@@ -728,7 +728,7 @@ header {
       </div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label param-label">Max Output<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kW thermal</span>Maximum heat the HP can deliver. Solver will never plan above this. Set to HP rated output at typical outdoor temp.</span></span>
+        <span class="ctrl-label param-label">Max Output<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kW thermal</span>Output cap sent to the solver. Set to rated HP output, or lower to limit noise or reduce peak load. E.g. 7 on a 10 kW unit = max 70% load.</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-max-out', -0.1)">−</button><input type="number" class="step-input" id="raw-max-out-val" onchange="manualInput('raw-max-out', this.value)" /><button class="step-btn" onclick="step('raw-max-out', +0.1)">+</button></div>
       </div>
       
