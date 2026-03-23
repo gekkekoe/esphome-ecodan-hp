@@ -72,6 +72,7 @@ namespace esphome
       uint32_t last_check_ms_               = 0;
       int      last_processed_day_          = -1;
       int      last_processed_hour_         {-1};
+      int      last_pre_hour_triggered_      {-1};
       float    last_total_heating_produced_ = 0.0f;
       float    last_total_heating_consumed_ = 0.0f;
       bool     last_was_heating_            = false;
