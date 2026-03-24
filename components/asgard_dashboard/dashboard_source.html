@@ -1593,9 +1593,13 @@ function updateOdinCharts() {
 
         const currentLocalHour = new Date().getHours();
         for (let h = 24; h < 48; h++) {
-            if ((h - 24) > currentLocalHour) {
+            // Hide incomplete energy bars for both the current AND future hours
+            if ((h - 24) >= currentLocalHour) {
                 actualConsByHour[h] = null;
                 actualProdByHour[h] = null;
+            }
+            // Hide the temperature line ONLY for strictly future hours
+            if ((h - 24) > currentLocalHour) {
                 actualTempByHour[h] = null;
             }
         }
@@ -2369,7 +2373,7 @@ async function runOdinSolver() {
             avg_room_temp: pending['raw-room'] || latestState.raw_avg_room_temp || 20,
             delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
             max_output: pending['raw-max-out'] || latestState.raw_max_output || 8.0,
-            hl_tm_product: pending['hl_tm_product'] ?? latestState.raw_hl_tm_product ?? 0.0,
+            hl_tm_product: pending['raw-hl-tm'] ?? latestState.raw_hl_tm_product ?? 0.0,
             passive_solar_gain_factor: pending['raw-solar-factor'] || latestState.raw_solar_factor || 0.015,
             current_room_temp: latestState.z1_current_temp || 20.0,
             current_hour: solveHour,
