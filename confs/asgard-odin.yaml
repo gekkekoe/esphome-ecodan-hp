@@ -34,8 +34,8 @@ script:
                   }
 
                   float solar_factor = id(num_raw_solar_factor).state;
-                  if (std::isnan(solar_factor) || solar_factor <= 0.01f) {
-                      solar_factor = 1.2f; // default
+                  if (std::isnan(solar_factor) || solar_factor <= 0.001f) {
+                      solar_factor = 0.015f; // default
                   }
 
                   int _cur_hour = id(optimizer_ptr)->get_current_ecodan_hour();
@@ -51,7 +51,7 @@ script:
                       "\"delta_room_temp\":%.2f,"
                       "\"max_output\":%.2f,"
                       "\"hl_tm_product\":%.4f,"
-                      "\"passive_solar_gain_factor\":%.2f,"
+                      "\"passive_solar_gain_factor\":%.4f,"
                       "\"current_hour\":%d,"
                       "\"current_room_temp\":%.2f,"
                       "\"battery_soc_kwh\":%.2f,"
