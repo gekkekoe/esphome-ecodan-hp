@@ -80,6 +80,13 @@ namespace esphome
                 return;
             }
 
+            // FIX: Always update the stored day when fresh data arrives!
+            // This prevents the 5-minute loop from incorrectly rejecting fresh hour 0 data.
+            int _day = this->get_current_ecodan_day();
+            if (_day >= 0) {
+                this->odin_data_day_ = _day;
+            }
+
             // First run or size mismatch — full replace
             if (!this->odin_data_ready_ || this->odin_production_.size() != 24) {
                 this->odin_production_ = prod;
@@ -87,8 +94,6 @@ namespace esphome
                 this->odin_solar_forecast_ = solar;
                 this->odin_production_.resize(24);
                 this->odin_energy_.resize(24);
-                int _day = this->get_current_ecodan_day();
-                this->odin_data_day_   = (_day >= 0) ? _day : -1;
                 this->odin_data_ready_ = true;
             }
 
