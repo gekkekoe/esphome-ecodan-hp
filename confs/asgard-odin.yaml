@@ -40,6 +40,18 @@ script:
 
                   int _cur_hour = id(optimizer_ptr)->get_current_ecodan_hour();
 
+                  // If we are fetching in the last 10 minutes of the hour (the pre-trigger),
+                  // shift the solve target to the NEXT hour. This prevents ODIN from 
+                  // overwriting the current hour's running plan.
+                  time_t now;
+                  time(&now);
+                  struct tm t;
+                  localtime_r(&now, &t);
+                  
+                  if (t.tm_min >= 50) {
+                      _cur_hour = (_cur_hour + 1) % 24;
+                  }
+
                   snprintf(payload, sizeof(payload),
                       "{\"params\":{"
                       "\"heating_profile\":\"%s\","
@@ -73,7 +85,7 @@ script:
                       id(num_battery_max_discharge_kw).state
                   );
                   return std::string(payload);
-                
+
                 on_response:
                   then:
                     - lambda: |-
@@ -149,19 +161,24 @@ interval:
   - interval: 60s
     then:
       - lambda: |-
-          // Ensure we load NVS data once, and only when the Ecodan time is valid
+          // Ensure we load NVS data once, as soon as the Ecodan time is valid
           static bool nvs_loaded = false;
           int cur_day = id(optimizer_ptr)->get_current_ecodan_day();
+          
           if (!nvs_loaded && cur_day != -1) {
               id(asgard_dashboard_id)->load_odin_data(cur_day);
               nvs_loaded = true;
-              ESP_LOGI("ODIN", "Initinal load: fetching MPC optimization.");
-              id(fetch_odin_optimization)->execute();
           }
 
-          if (id(optimizer_ptr)->check_and_clear_odin_fetch_request()) {
-            ESP_LOGI("ODIN", "Hour transition: fetching MPC optimization.");
-            id(fetch_odin_optimization)->execute();
+          // Ensure the initial boot-fetch happens reliably
+          static bool initial_fetch_done = false;
+          
+          if (nvs_loaded && !initial_fetch_done) {
+              if (id(bin_solver_connected).state) {
+                  ESP_LOGI("asgard", "Initial load: Server is ONLINE. Fetching MPC optimization.");
+                  id(fetch_odin_optimization)->execute();
+                  initial_fetch_done = true;
+              }
           }
 
           {
