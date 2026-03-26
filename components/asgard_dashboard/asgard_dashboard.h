@@ -296,6 +296,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
                        const std::vector<float>& weather,
                        const std::vector<float>& solar,
                        const std::vector<float>& prices,
+                       const std::vector<float>& op_mode,
                        const LastRunStats& run_stats);
   void load_odin_data(int current_day);
 
@@ -461,6 +462,8 @@ private:
   std::vector<float> odin_weather_;        // outside temp forecast °C (not NVS persisted)
   std::vector<float> odin_solar_;          // effective solar irradiance W/m² (not NVS persisted)
   std::vector<float> odin_prices_;         // electricity prices EUR/MWh (not NVS persisted)
+  std::vector<float> odin_operation_mode_;
+
   bool odin_data_ready_{false};
   int odin_stored_day_{-1};
   bool odin_nvs_dirty_{false};

@@ -43,7 +43,7 @@ namespace esphome
           bool has_data = false;
           
           if (xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
-              has_data = (odin_data_ready_ && odin_energy_.size() == 24);
+              has_data = (odin_data_ready_ && odin_production_.size() == 24);
               xSemaphoreGive(this->odin_mutex_);
           }
           return has_data;
@@ -70,8 +70,8 @@ namespace esphome
 
         void Optimizer::store_odin_data(int current_hour,
                                         const std::vector<float>& prod,
-                                        const std::vector<float>& energy,
-                                        const std::vector<float>& solar) {
+                                        const std::vector<float>& solar,
+                                        const std::vector<float>& op_mode) {
             if (current_hour == -1) return;
 
             if (this->odin_mutex_ == NULL ||
@@ -90,19 +90,21 @@ namespace esphome
             // First run or size mismatch — full replace
             if (!this->odin_data_ready_ || this->odin_production_.size() != 24) {
                 this->odin_production_ = prod;
-                this->odin_energy_     = energy;
                 this->odin_solar_forecast_ = solar;
+                this->odin_operation_mode_ = op_mode;
                 this->odin_production_.resize(24);
-                this->odin_energy_.resize(24);
+                this->odin_solar_forecast_.resize(24);
+                this->odin_operation_mode_.resize(24);
                 this->odin_data_ready_ = true;
             }
 
             // Partial update: overwrite current hour onward
             if (current_hour >= 0 && current_hour < 24) {
                 for (int i = current_hour; i < 24; i++) {
-                    if (i < prod.size() && i < energy.size()) {
+                    if (i < prod.size() && i < solar.size() && i < op_mode.size()) {
                         this->odin_production_[i] = prod[i];
-                        this->odin_energy_[i]     = energy[i];
+                        this->odin_solar_forecast_[i] = solar[i];
+                        this->odin_operation_mode_[i] = op_mode[i];
                     } else {
                         ESP_LOGW(OPTIMIZER_TAG, "ODIN payload shorter than expected, stopping partial update at hour %d", i);
                         break; 

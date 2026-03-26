@@ -68,7 +68,7 @@ namespace esphome
         // ODIN solver bias — mutex-safe, returns {bias, heating_off}
         // ─────────────────────────────────────────────────────────────────
         Optimizer::SolverResult Optimizer::resolve_solver_result_(float room_target_temp, float current_room_temp) {
-            SolverResult result{-1.0f, false};
+            SolverResult result{-1.0f, false, OptimizerOperationMode::UNAVAILABLE, -1 };
 
             if (this->state_.sw_use_solver == nullptr || !this->state_.sw_use_solver->state)
                 return result;
@@ -77,7 +77,7 @@ namespace esphome
                 return result;
 
             // Check if we have both energy (for on/off) and production (for scaling)
-            if (this->odin_data_ready_ && !this->odin_production_.empty() && !this->odin_energy_.empty()) {
+            if (this->odin_data_ready_ && !this->odin_production_.empty() && !this->odin_operation_mode_.empty()) {
                 int current_day  = this->get_current_ecodan_day();
                 int current_hour = this->get_current_ecodan_hour();
 
@@ -89,16 +89,18 @@ namespace esphome
                 }
 
                 if (current_hour >= 0 && current_hour < 24) {
-                    float odin_energy = this->odin_energy_[current_hour];
+                    auto mode = to_operation_mode(this->odin_operation_mode_[current_hour]);
                     float odin_prod   = this->odin_production_[current_hour];
                     xSemaphoreGive(this->odin_mutex_);
 
-                    if (std::isnan(odin_energy) || std::isnan(odin_prod)) {
+                    if (mode != OptimizerOperationMode::UNAVAILABLE && std::isnan(odin_prod)) {
                         ESP_LOGW(OPTIMIZER_TAG, "ODIN data is NAN at hour %d. Forcing fallback.", current_hour);
                         return result;
                     }
 
-                    result.heating_off = (odin_energy < 0.05f);
+                    result.current_hour = current_hour;
+                    result.mode = mode;
+                    result.heating_off = (odin_prod < 0.1f);
                     if (result.heating_off) {
                         apply_solver_soft_stop(true);
                         return result;
@@ -121,7 +123,7 @@ namespace esphome
                     // Calculate how hard ODIN wants the heat pump to work (Ratio between 0.0 and 1.0)
                     result.load_ratio = std::clamp(odin_prod / max_out, 0.0f, 1.0f);
                     
-                    ESP_LOGD(OPTIMIZER_TAG, "ODIN -> Hour %d | Prod: %.1f/%.1f | factor: %.2f", current_hour, odin_prod, max_out, result.load_ratio);
+                    ESP_LOGD(OPTIMIZER_TAG, "ODIN -> Hour %d | Prod: %.1f/%.1f | factor: %.2f | mode: %d", current_hour, odin_prod, max_out, result.load_ratio, static_cast<uint8_t>(mode));
                     
                     return result;
                 }
@@ -323,7 +325,23 @@ namespace esphome
             bool solver_enabled = this->solver_enabled();
 
             if (solver_enabled) {
-                auto [solver_load_ratio, solver_heating_off] = this->resolve_solver_result_(room_target_temp, room_temp);                
+                static int odin_last_executed_dhw_hour_ = -1;
+
+                auto [solver_load_ratio, solver_heating_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(room_target_temp, room_temp);
+                if (solver_operating_mode == OptimizerOperationMode::DHW_ON) {
+                    if (this->state_.sw_force_dhw != nullptr && !this->state_.sw_force_dhw->state) {
+                        if (odin_last_executed_dhw_hour_ != current_hour) {
+                            ESP_LOGD(OPTIMIZER_TAG, "ODIN Starting executing planned DHW");
+                            this->state_.sw_force_dhw->turn_on();
+                            odin_last_executed_dhw_hour_ = current_hour;
+                        }
+                    } else {
+                        ESP_LOGD(OPTIMIZER_TAG, "ODIN DHW planned, but not configured");
+                    }
+                } else {
+                    odin_last_executed_dhw_hour_ = -1;
+                }
+
                 if (solver_load_ratio < 0.0f && !solver_heating_off) {
                     if (millis() < 2*60000) {
                         ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN enabled but data not ready. Skipping one AA iteration.", (i + 1));
@@ -335,8 +353,8 @@ namespace esphome
                 } 
                 else if (solver_heating_off) {
                     ESP_LOGD(OPTIMIZER_TAG,
-                        "Z%d ODIN heating stopped, solver_load_ratio: %.2f",
-                        (i + 1), solver_load_ratio);
+                        "Z%d ODIN heating stopped, solver_load_ratio: %.2f, mode: %d",
+                        (i + 1), solver_load_ratio, static_cast<uint8_t>(solver_operating_mode));
                     return;
                 } 
                 else {

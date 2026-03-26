@@ -27,6 +27,17 @@ namespace esphome
         SINGLE = 0
     };
 
+    enum class OptimizerOperationMode : uint8_t
+    {
+        UNAVAILABLE = 255,
+        OFF = 0,
+        DHW_ON = 1,
+        HEAT_ON = 2, // Heating
+        COOL_ON = 3, // Cooling
+        FROST_PROTECT = 5,
+        LEGIONELLA_PREVENTION = 6
+    }; 
+
     struct FlowLimits {
         float min;
         float max;
@@ -45,15 +56,16 @@ namespace esphome
     {
         esphome::ecodan::EcodanHeatpump *ecodan_instance;
 
-        esphome::switch_::Switch *auto_adaptive_control_enabled;
-        esphome::switch_::Switch *predictive_short_cycle_control_enabled;
-        esphome::switch_::Switch *defrost_risk_handling_enabled;
-        esphome::switch_::Switch *smart_boost_enabled;
-        esphome::switch_::Switch *sw_use_solver;
+        esphome::switch_::Switch *auto_adaptive_control_enabled{nullptr};
+        esphome::switch_::Switch *predictive_short_cycle_control_enabled{nullptr};
+        esphome::switch_::Switch *defrost_risk_handling_enabled{nullptr};
+        esphome::switch_::Switch *smart_boost_enabled{nullptr};
+        esphome::switch_::Switch *sw_use_solver{nullptr};
         esphome::switch_::Switch *relay_switch_z1{nullptr};
         esphome::switch_::Switch *relay_switch_z2{nullptr};
         esphome::switch_::Switch *sw_odin_override_z1{nullptr};
         esphome::switch_::Switch *sw_odin_override_z2{nullptr};
+        esphome::switch_::Switch *sw_force_dhw{nullptr};
 
         esphome::binary_sensor::BinarySensor *status_short_cycle_lockout;
         esphome::binary_sensor::BinarySensor *status_predictive_boost_active;

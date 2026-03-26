@@ -1009,6 +1009,7 @@ void EcodanDashboard::nvs_persist_odin_() {
     save_arr("prices",     this->odin_prices_);
     save_arr("weather",    this->odin_weather_);
     save_arr("solar",      this->odin_solar_);
+    save_arr("op_mode",    this->odin_operation_mode_);
     save_arr("sb",         this->odin_sched_base_);
     save_arr("smn",        this->odin_sched_min_);
     save_arr("smx",        this->odin_sched_max_);
@@ -1088,6 +1089,7 @@ void EcodanDashboard::load_odin_data(int current_day) {
     if (!load_arr("prices",  this->odin_prices_))   this->odin_prices_.assign(48, 0.0f);
     if (!load_arr("weather", this->odin_weather_))  this->odin_weather_.assign(48, 0.0f);
     if (!load_arr("solar",   this->odin_solar_))    this->odin_solar_.assign(48, 0.0f);
+    if (!load_arr("op_mode", this->odin_operation_mode_)) this->odin_operation_mode_.assign(48, 0.0f);
     if (!load_arr("sb",      this->odin_sched_base_)) this->odin_sched_base_.assign(48, 0.0f);
     if (!load_arr("smn",     this->odin_sched_min_))  this->odin_sched_min_.assign(48, 0.0f);
     if (!load_arr("smx",     this->odin_sched_max_))  this->odin_sched_max_.assign(48, 0.0f);
@@ -1124,6 +1126,7 @@ void EcodanDashboard::load_odin_data(int current_day) {
                 shift_arr(this->odin_weather_, 0.0f);
                 shift_arr(this->odin_solar_, 0.0f);
                 shift_arr(this->odin_prices_, 0.0f);
+                shift_arr(this->odin_operation_mode_, 0.0f);
             } else {
                 ESP_LOGI(TAG, "NVS Load: Day jump (%d -> %d), clearing stale actuals", this->odin_stored_day_, current_day);
                 this->odin_actual_cons_.assign(48, NAN);
@@ -1156,6 +1159,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
                                       const std::vector<float>& weather,
                                       const std::vector<float>& solar,
                                       const std::vector<float>& prices,
+                                      const std::vector<float>& op_mode,
                                       const LastRunStats& run_stats) {
     if (current_hour < 0) return;
 
@@ -1186,6 +1190,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
     ensure_48(this->odin_weather_, 0.0f);
     ensure_48(this->odin_solar_, 0.0f);
     ensure_48(this->odin_prices_, 0.0f);
+    ensure_48(this->odin_operation_mode_, 0.0f);
 
     if (!this->odin_data_ready_) {
         this->odin_data_ready_ = true;
@@ -1214,6 +1219,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             shift_arr(this->odin_weather_, 0.0f);
             shift_arr(this->odin_solar_, 0.0f);
             shift_arr(this->odin_prices_, 0.0f);
+            shift_arr(this->odin_operation_mode_, 0.0f);
             shift_arr(this->odin_actual_cons_, NAN);
             shift_arr(this->odin_actual_prod_, NAN);
             shift_arr(this->odin_actual_room_, NAN);
@@ -1235,6 +1241,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             if (i < (int)cost.size()       && !std::isnan(cost[i]))        this->odin_cost_[target_idx]              = cost[i];
             if (i < (int)cost_tax.size()   && !std::isnan(cost_tax[i]))    this->odin_cost_tax_[target_idx]          = cost_tax[i];
             if (i < (int)battery_discharge.size() && !std::isnan(battery_discharge[i])) this->odin_battery_discharge_[target_idx] = battery_discharge[i];
+            if (i < (int)op_mode.size() && !std::isnan(op_mode[i])) this->odin_operation_mode_[target_idx] = op_mode[i];
             
             bool preserve_current = (i == current_hour && current_hour != 0);
             if (!preserve_current && i < (int)exp_temp.size() && !std::isnan(exp_temp[i])) {
@@ -1253,6 +1260,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         if (i < (int)weather.size()    && !std::isnan(weather[i]))     this->odin_weather_[target_idx]    = weather[i];
         if (i < (int)solar.size()      && !std::isnan(solar[i]))       this->odin_solar_[target_idx]      = solar[i];
         if (i < (int)prices.size()     && !std::isnan(prices[i]))      this->odin_prices_[target_idx]     = prices[i];
+        if (i < (int)op_mode.size()    && !std::isnan(op_mode[i]))     this->odin_operation_mode_[target_idx] = op_mode[i];
     }
 
     this->last_run_stats_ = run_stats;
@@ -1297,7 +1305,8 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
       print_arr("prices",                 this->odin_prices_);
       print_arr("actual_cons",            this->odin_actual_cons_);
       print_arr("actual_prod",            this->odin_actual_prod_);
-      print_arr("actual_room_temp",       this->odin_actual_room_, /*last=*/false);
+      print_arr("actual_room_temp",       this->odin_actual_room_);
+      print_arr("operation_mode",         this->odin_operation_mode_, /*last=*/false);
 
       // Run stats
       response->printf(

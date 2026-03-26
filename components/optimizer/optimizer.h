@@ -43,6 +43,22 @@ namespace esphome
             return locked_return_temp_;
         }
       };
+
+      OptimizerOperationMode to_operation_mode(float val) {
+          if (std::isnan(val)) return OptimizerOperationMode::OFF;
+          
+          int int_val = static_cast<int>(std::round(val));
+          switch (int_val) {
+              case 1:   return OptimizerOperationMode::DHW_ON;
+              case 2:   return OptimizerOperationMode::HEAT_ON;
+              //case 3:   return OptimizerOperationMode::COOL_ON;
+              //case 5:   return OptimizerOperationMode::FROST_PROTECT;
+              //case 6:   return OptimizerOperationMode::LEGIONELLA_PREVENTION;
+              case 255: return OptimizerOperationMode::UNAVAILABLE;
+              default:  return OptimizerOperationMode::OFF;
+          }
+      };
+
       uint32_t compressor_start_time_ = 0;
       uint32_t last_defrost_time_     = 0;
       DefrostState state_before_defrost_;
@@ -88,9 +104,9 @@ namespace esphome
       
       // ODIN solver data
       std::atomic<bool> odin_fetch_requested_{false};
-      std::vector<float> odin_energy_;
       std::vector<float> odin_production_;
       std::vector<float> odin_solar_forecast_;
+      std::vector<float> odin_operation_mode_;
 
       int      odin_data_day_   {-1};
       bool     odin_data_ready_ {false};
@@ -104,7 +120,7 @@ namespace esphome
 
       // ── adaptive_loop.cpp ──────────────────────────────────────────────
       HeatingProfile   get_heating_profile_(int type_index);
-      struct SolverResult { float load_ratio; bool heating_off; };
+      struct SolverResult { float load_ratio; bool heating_off; OptimizerOperationMode mode{OptimizerOperationMode::UNAVAILABLE}; int current_hour{-1}; };
       DefrostState resolve_defrost_state_();
       SolverResult resolve_solver_result_(float room_target_temp, float current_room_temp);
       float            calculate_heating_flow_(std::size_t zone_i,
@@ -195,7 +211,7 @@ namespace esphome
       int  get_current_ecodan_hour();
       int  get_current_ecodan_day();
       bool has_old_odin_data();
-      void store_odin_data(int current_hour, const std::vector<float>& prod, const std::vector<float>& energy, const std::vector<float>& solar);
+      void store_odin_data(int current_hour, const std::vector<float>& prod, const std::vector<float>& solar, const std::vector<float>& op_mode);
       bool check_and_clear_odin_fetch_request() {
           return odin_fetch_requested_.exchange(false);
       }

@@ -81,7 +81,7 @@ script:
                           esphome::json::parse_json(body, [](JsonObject root) {
                             if (root["success"].as<bool>()) {
                               // Pre-allocate all vectors with exactly 24 slots to prevent memory fragmentation
-                              std::vector<float> exp_end_t(24), nrg(24), prod(24), exp_t(24), cost(24), cost_tax(24), batt(24), sb(24), smn(24), smx(24), wth(24), sol(24), prc(24);
+                              std::vector<float> exp_end_t(24), nrg(24), prod(24), exp_t(24), cost(24), cost_tax(24), batt(24), sb(24), smn(24), smx(24), wth(24), sol(24), prc(24), op_mode(24);
 
                               JsonArray j_eet = root["expected_end_temp"];
                               JsonArray j_e  = root["energy_consumption"];
@@ -96,6 +96,7 @@ script:
                               JsonArray j_wth = root["weather"];
                               JsonArray j_sol = root["solar"];
                               JsonArray j_prc = root["prices"];
+                              JsonArray j_op  = root["operation_mode"];
 
                               bool has_sb  = !j_sb.isNull();
                               bool has_smn = !j_smn.isNull();
@@ -103,6 +104,7 @@ script:
                               bool has_wth = !j_wth.isNull();
                               bool has_sol = !j_sol.isNull();
                               bool has_prc = !j_prc.isNull();
+                              bool has_op  = !j_op.isNull();
 
                               for (int i = 0; i < 24; i++) {
                                 // Assign directly to the index instead of using push_back
@@ -119,12 +121,13 @@ script:
                                 wth[i]      = has_wth ? j_wth[i].as<float>() : 0.0f;
                                 sol[i]      = has_sol ? j_sol[i].as<float>() : 0.0f;
                                 prc[i]      = has_prc ? j_prc[i].as<float>() : 0.0f;
+                                op_mode[i]  = has_op ? j_op[i].as<float>() : 0.0f;
                               }
 
                               int cur_hr = root["current_hour"].is<int>() ? root["current_hour"].as<int>() : id(optimizer_ptr)->get_current_ecodan_hour();
                               int cur_day = id(optimizer_ptr)->get_current_ecodan_day();
 
-                              id(optimizer_ptr)->store_odin_data(cur_hr, prod, nrg, sol);
+                              id(optimizer_ptr)->store_odin_data(cur_hr, prod, sol, op_mode);
 
                               esphome::asgard_dashboard::EcodanDashboard::LastRunStats stats;
                               stats.execution_ms    = root["execution_ms"].as<uint32_t>();
@@ -139,7 +142,7 @@ script:
                               stats.total_cost_tax  = root["total_cost_with_tax_eur"].as<float>();
 
                               id(asgard_dashboard_id)->store_odin_data(
-                                  cur_hr, cur_day, exp_end_t, nrg, prod, exp_t, cost, cost_tax, batt, sb, smn, smx, wth, sol, prc, stats);
+                                cur_hr, cur_day, exp_end_t, nrg, prod, exp_t, cost, cost_tax, batt, sb, smn, smx, wth, sol, prc, op_mode, stats);
                             }
                             return true;
                           });

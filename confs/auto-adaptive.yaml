@@ -32,6 +32,8 @@ esphome:
             state.status_short_cycle_lockout = id(status_short_cycle_lockout);
             state.status_predictive_boost_active = id(status_predictive_boost_active);
 
+            state.sw_force_dhw = id(heatpump_switch_force_dhw);
+
             state.operation_mode = id(operation_mode);
             state.hp_feed_temp = id(hp_feed_temp);
             state.z1_feed_temp = id(z1_feed_temp);
