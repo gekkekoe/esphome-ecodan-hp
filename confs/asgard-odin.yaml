@@ -155,8 +155,17 @@ interval:
           if (!nvs_loaded && cur_day != -1) {
               id(asgard_dashboard_id)->load_odin_data(cur_day);
               nvs_loaded = true;
-              ESP_LOGI("asgard_dashboard", "Initinal load: requesting fetching MPC optimization.");
-              id(optimizer_ptr)->set_odin_fetch_request();
+          }
+
+          // BOOT FETCH: Retry every 60s until the server is actually online
+          static bool initial_fetch_done = false;
+          if (nvs_loaded && !initial_fetch_done) {
+              // Wait until the solver is enabled AND the ping task confirms it is online
+              if (id(sw_use_solver).state && id(bin_solver_connected).state) {
+                  ESP_LOGI("asgard_dashboard", "Initial load: Server is ONLINE. Fetching MPC optimization.");
+                  id(fetch_odin_optimization)->execute();
+                  initial_fetch_done = true;
+              }
           }
 
           if (id(optimizer_ptr)->check_and_clear_odin_fetch_request()) {
