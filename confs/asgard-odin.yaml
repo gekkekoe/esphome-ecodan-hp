@@ -208,6 +208,7 @@ interval:
               }
             }
           }
+
   - interval: 60s
     then:
       - lambda: |-
@@ -216,22 +217,57 @@ interval:
             return;
           }
 
-          //ESP_LOGD("asgard", "Starting background task for ODIN connection check...");
+          static uint32_t last_ping_time = 0;
+          uint32_t now = millis();
           
+          // If the server is currently ONLINE, we only need to check every 5 minutes (300000 ms).
+          // If OFFLINE, we keep checking every 60 seconds to quickly reconnect.
+          if (id(bin_solver_connected).state && last_ping_time != 0 && (now - last_ping_time < 300000)) {
+            return;
+          }
+          last_ping_time = now;
+
+          static volatile int ping_status = -1; // -1: idle/busy, 0: offline, 1: online
+          static char ping_ip[32] = {0};
+          static volatile bool ping_ip_ready = false;
+          static volatile bool task_running = false;
+
+          if (ping_status != -1) {
+            bool is_alive = (ping_status == 1);
+            if (id(bin_solver_connected).state != is_alive) {
+              id(bin_solver_connected).publish_state(is_alive);
+            }
+            ping_status = -1; // Reset for the next run
+          }
+
+          if (ping_ip_ready) {
+            std::string new_ip(ping_ip);
+            if (id(txt_solver_ip).state != new_ip) {
+              id(txt_solver_ip).publish_state(new_ip);
+            }
+            ping_ip_ready = false; // Reset
+          }
+          
+          // Prevent starting multiple tasks if the network is extremely slow
+          if (task_running) return;
+          task_running = true;
+
+          // Safely copy the IP state before entering the thread
+          static char current_ip_buf[32] = {0};
+          strncpy(current_ip_buf, id(txt_solver_ip).state.c_str(), sizeof(current_ip_buf) - 1);
+
           xTaskCreate([](void *pvParameters) {
-            std::string target_ip = id(txt_solver_ip).state;
+            std::string target_ip(current_ip_buf);
             bool is_alive = false;
 
             if (target_ip == "" || target_ip == "0.0.0.0" || target_ip == "odin.local") {
               struct hostent *he = gethostbyname("odin.local");
               if (he != nullptr && he->h_addr_list[0] != nullptr) {
                 target_ip = inet_ntoa(*((struct in_addr **)he->h_addr_list)[0]);
-                //ESP_LOGI("asgard", "mDNS Success! Resolved odin.local to: %s", target_ip.c_str());
                 
-                // Safely update the IP address text sensor via the main thread scheduler
-                esphome::App.scheduler.set_timeout(nullptr, "update_ip", 0, [target_ip]() {
-                  id(txt_solver_ip).publish_state(target_ip);
-                });
+                // Safely write the resolved mDNS IP
+                strncpy(ping_ip, target_ip.c_str(), sizeof(ping_ip) - 1);
+                ping_ip_ready = true;
               } else {
                 ESP_LOGD("asgard", "mDNS lookup failed.");
               }
@@ -270,13 +306,10 @@ interval:
               }
             }
 
-            esphome::App.scheduler.set_timeout(nullptr, "update_conn", 0, [is_alive]() {
-              if (id(bin_solver_connected).state != is_alive) {
-                id(bin_solver_connected).publish_state(is_alive);
-              }
-            });
-
-            // Task is finished, clean up gracefully
+            // Write the status. The ESPHome main thread will pick this up on the next loop!
+            ping_status = is_alive ? 1 : 0;
+            task_running = false;
+            
             vTaskDelete(NULL);
             
           }, "odin_ping_task", 8192, NULL, 1, NULL);
