@@ -238,10 +238,8 @@ namespace esphome
             // HOURLY MPC TRIGGER
             if (this->solver_enabled()) {
                 if (current_hour != this->last_processed_hour_) {
-                    ESP_LOGI(OPTIMIZER_TAG, "Hour transition detected (%d -> %d). Requesting ODIN hourly course-correction...", 
-                            this->last_processed_hour_, current_hour);
-                            
-                    this->odin_fetch_requested_ = true; // Signal YAML to fetch
+                    ESP_LOGD(OPTIMIZER_TAG, "Hour transition detected (%d -> %d).", this->last_processed_hour_, current_hour);
+                    this->odin_fetch_requested_ = true; 
                     this->last_processed_hour_ = current_hour;
                 } else {
                     time_t ts = this->state_.ecodan_instance->get_status().timestamp();
