@@ -1629,24 +1629,14 @@ function updateOdinCharts() {
         });
     }
 
-    const mapToXY = (arr) => arr ? arr.map((v, i) => ({x: i, y: v})) : [];
-
-    // Temp chart: schedule band (max/min), base setpoint, expected temp
-    odinTempChart.data.datasets[0].data = mapToXY(schedMax);
-    odinTempChart.data.datasets[1].data = mapToXY(schedMin);
-    odinTempChart.data.datasets[2].data = mapToXY(schedBase);
-    odinTempChart.data.datasets[3].data = mapToXY(expTemp);
-
-    // The actualTempByHour array already contains the perfectly merged NVS + Live data.
-    // We simply map it to strict 1-hour X-coordinates to remove any decimal/30m offsets.
-    let fineActualTemp = [];
-    for (let h = 0; h < 48; h++) {
-        if (actualTempByHour[h] !== null) {
-            fineActualTemp.push({ x: h, y: actualTempByHour[h] });
-        }
-    }
-
-    odinTempChart.data.datasets[4].data = fineActualTemp;
+    // Temp chart: direct array mapping for standard category axis
+    odinTempChart.data.datasets[0].data = schedMax;
+    odinTempChart.data.datasets[1].data = schedMin;
+    odinTempChart.data.datasets[2].data = schedBase;
+    odinTempChart.data.datasets[3].data = expTemp;
+    
+    // actualTempByHour already contains the perfectly merged NVS + Live data (with proper nulls)!
+    odinTempChart.data.datasets[4].data = actualTempByHour;
     odinTempChart.update('none');
 
     // Battery chart — only show when there is discharge planned

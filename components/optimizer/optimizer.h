@@ -199,6 +199,9 @@ namespace esphome
       bool check_and_clear_odin_fetch_request() {
           return odin_fetch_requested_.exchange(false);
       }
+      void set_odin_fetch_request() {
+        this->odin_fetch_requested_ = true;
+      }
     };
 
     // Dummy ESPHome component — triggers codegen, stays empty

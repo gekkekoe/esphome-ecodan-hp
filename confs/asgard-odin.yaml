@@ -73,7 +73,7 @@ script:
                       id(num_battery_max_discharge_kw).state
                   );
                   return std::string(payload);
-                
+
                 on_response:
                   then:
                     - lambda: |-
@@ -155,12 +155,12 @@ interval:
           if (!nvs_loaded && cur_day != -1) {
               id(asgard_dashboard_id)->load_odin_data(cur_day);
               nvs_loaded = true;
-              ESP_LOGI("ODIN", "Initinal load: fetching MPC optimization.");
-              id(fetch_odin_optimization)->execute();
+              ESP_LOGI("asgard_dashboard", "Initinal load: requesting fetching MPC optimization.");
+              id(optimizer_ptr)->set_odin_fetch_request();
           }
 
           if (id(optimizer_ptr)->check_and_clear_odin_fetch_request()) {
-            ESP_LOGI("ODIN", "Hour transition: fetching MPC optimization.");
+            ESP_LOGI("asgard_dashboard", "fetching MPC optimization...");
             id(fetch_odin_optimization)->execute();
           }
 
@@ -269,7 +269,7 @@ interval:
                 strncpy(ping_ip, target_ip.c_str(), sizeof(ping_ip) - 1);
                 ping_ip_ready = true;
               } else {
-                ESP_LOGD("asgard", "mDNS lookup failed.");
+                ESP_LOGD("asgard_dashboard", "mDNS lookup failed.");
               }
             }
 
@@ -300,7 +300,7 @@ interval:
                   while (::recv(sock, drain, sizeof(drain), 0) > 0) {}
                   is_alive = true;
                 } else {
-                  ESP_LOGD("asgard", "ODIN server is OFFLINE (Connection refused/timeout).");
+                  ESP_LOGD("asgard_dashboard", "ODIN server is OFFLINE (Connection refused/timeout).");
                 }
                 ::close(sock);
               }

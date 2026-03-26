@@ -218,7 +218,7 @@ namespace esphome
                 this->update_learning_model(this->last_processed_day_);
 
                 // trigger new data fetch
-                this->odin_fetch_requested_ = true;
+                this->set_odin_fetch_request();
 
                 // Reset variables for the new day
                 this->last_processed_day_ = current_day;
@@ -238,10 +238,8 @@ namespace esphome
             // HOURLY MPC TRIGGER
             if (this->solver_enabled()) {
                 if (current_hour != this->last_processed_hour_) {
-                    ESP_LOGI(OPTIMIZER_TAG, "Hour transition detected (%d -> %d). Requesting ODIN hourly course-correction...", 
-                            this->last_processed_hour_, current_hour);
-                            
-                    this->odin_fetch_requested_ = true; // Signal YAML to fetch
+                    ESP_LOGD(OPTIMIZER_TAG, "Hour transition detected (%d -> %d).", this->last_processed_hour_, current_hour);
+                    this->set_odin_fetch_request();
                     this->last_processed_hour_ = current_hour;
                 } else {
                     time_t ts = this->state_.ecodan_instance->get_status().timestamp();
@@ -253,7 +251,7 @@ namespace esphome
                             this->last_pre_hour_triggered_ = current_hour;
                             ESP_LOGI(OPTIMIZER_TAG, "Pre-hour trigger at %02d:55 — requesting ODIN solve for hour %d.",
                                     current_hour, (current_hour + 1) % 24);
-                            this->odin_fetch_requested_ = true;
+                            this->set_odin_fetch_request();
                         }
                     }
                 }
