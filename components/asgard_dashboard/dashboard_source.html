@@ -1239,9 +1239,8 @@ function initCharts() {
   const labels48 = Array.from({length: 48}, (_, i) => `${i % 24}:00`);
   const monoFont = { family: "'JetBrains Mono'", size: 11 };
   const xAxis = { 
-      min: 24, 
-      max: 47,
-      offset: false, 
+      min: 23.5, 
+      max: 47.5,
       ticks: { 
           autoSkip: false,
           color: '#8295b8',
@@ -1251,28 +1250,6 @@ function initCharts() {
           callback: function(val, index) {
               if (window.innerWidth < 768 && index % 2 !== 0) return '';
               return this.getLabelForValue(val);
-          }
-      }, 
-      grid: { color: '#1e2d4a' } 
-  };
-
-  const linearXAxis = {
-      type: 'linear',
-      min: 24, 
-      max: 47,
-      ticks: { 
-          autoSkip: false,
-          stepSize: 1, 
-          color: '#8295b8',
-          font: monoFont,
-          maxRotation: 45,
-          minRotation: 45,
-          callback: function(value) {
-              if (value % 1 !== 0) return ''; 
-              let h = Math.floor(value) % 24;
-              if (h < 0) h += 24; 
-              if (window.innerWidth < 768 && h % 2 !== 0) return '';
-              return h + ':00';
           }
       }, 
       grid: { color: '#1e2d4a' } 
@@ -1441,7 +1418,7 @@ odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2
               }
           },
           scales: { 
-              x: linearXAxis, 
+              x: xAxis, 
               y: { 
                   ticks: { color: '#8295b8', font: monoFont }, 
                   grid: { color: '#1e2d4a' },
@@ -1643,6 +1620,15 @@ function updateOdinCharts() {
     odinCostChart.data.datasets[1].data = actualCost;
     odinCostChart.update('none');
 
+    // Bar charts ignore x min/max from axis config after data update — re-apply zoom.
+    // Without this, bar charts reset to full 0-47 range on every data refresh,
+    // causing index 24 (hour 0 today) to appear off-screen until the user scrolls.
+    if (!odinZoomed) {
+        [odinConsChart, odinProdChart, odinCostChart, odinBattChart].forEach(c => {
+            if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
+        });
+    }
+
     const mapToXY = (arr) => arr ? arr.map((v, i) => ({x: i, y: v})) : [];
 
     // Temp chart: schedule band (max/min), base setpoint, expected temp
@@ -1700,7 +1686,7 @@ function updateOdinCharts() {
     if (!odinZoomed) {
         [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
         odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-            if (c) c.zoomScale('x', {min: 24, max: 47}, 'none');
+            if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
         });
     }
 }
@@ -2651,7 +2637,7 @@ function resetOdinZoom() {
     odinZoomed = false;
     [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
      odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-        if (c) c.zoomScale('x', {min: 24, max: 47}, 'none');
+        if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
     });
     document.getElementById('btn-reset-zoom-odin').style.display = 'none';
 }
