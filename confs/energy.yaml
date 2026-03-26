@@ -1,4 +1,42 @@
+# lambda: in the template sensors are causing reboots, so remove them and seed them on boot.
+esphome:
+  on_boot:
+    priority: -10 
+    then:
+      - lambda: |-
+          id(sensor_heating_consumed_total).publish_state(id(total_heating_consumed));
+          id(sensor_heating_produced_total).publish_state(id(total_heating_produced));
+          id(sensor_cooling_consumed_total).publish_state(id(total_cooling_consumed));
+          id(sensor_cooling_produced_total).publish_state(id(total_cooling_produced));
+          id(sensor_dhw_consumed_total).publish_state(id(total_dhw_consumed));
+          id(sensor_dhw_produced_total).publish_state(id(total_dhw_produced));
+
 globals:
+  - id: total_heating_consumed
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: total_heating_produced
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: total_cooling_consumed
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: total_cooling_produced
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: total_dhw_consumed
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: total_dhw_produced
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+
   - id: last_heating_consumed_update_day
     type: int
     restore_value: yes
@@ -48,17 +86,15 @@ sensor:
             if (today == -1) return;
 
             int last_day = id(last_cooling_consumed_update_day);
-
             if (last_day == -1) {
               id(last_cooling_consumed_update_day) = today;
               last_day = today;
             }
 
             if (today != last_day) {
-              float current = id(sensor_cooling_consumed_total).state;
-              if (std::isnan(current)) current = 0.0f;
-              id(sensor_cooling_consumed_total).publish_state(current + x);
+              id(total_cooling_consumed) += x;
               id(last_cooling_consumed_update_day) = today;
+              id(sensor_cooling_consumed_total).publish_state(id(total_cooling_consumed));
             }
 
     cool_delivered:
@@ -73,17 +109,15 @@ sensor:
             if (today == -1) return;
 
             int last_day = id(last_cooling_produced_update_day);
-
             if (last_day == -1) {
               id(last_cooling_produced_update_day) = today;
               last_day = today;
             }
 
             if (today != last_day) {
-              float current = id(sensor_cooling_produced_total).state;
-              if (std::isnan(current)) current = 0.0f;
-              id(sensor_cooling_produced_total).publish_state(current + x);
+              id(total_cooling_produced) += x;
               id(last_cooling_produced_update_day) = today;
+              id(sensor_cooling_produced_total).publish_state(id(total_cooling_produced));
             }
 
     heating_consumed:
@@ -98,17 +132,15 @@ sensor:
             if (today == -1) return;
 
             int last_day = id(last_heating_consumed_update_day);
-
             if (last_day == -1) {
               id(last_heating_consumed_update_day) = today;
               last_day = today;
             }
 
             if (today != last_day) {
-              float current = id(sensor_heating_consumed_total).state;
-              if (std::isnan(current)) current = 0.0f;
-              id(sensor_heating_consumed_total).publish_state(current + x);
+              id(total_heating_consumed) += x;
               id(last_heating_consumed_update_day) = today;
+              id(sensor_heating_consumed_total).publish_state(id(total_heating_consumed));
             }
 
     heating_delivered:
@@ -123,17 +155,15 @@ sensor:
             if (today == -1) return;
 
             int last_day = id(last_heating_produced_update_day);
-
             if (last_day == -1) {
               id(last_heating_produced_update_day) = today;
               last_day = today;
             }
 
             if (today != last_day) {
-              float current = id(sensor_heating_produced_total).state;
-              if (std::isnan(current)) current = 0.0f;
-              id(sensor_heating_produced_total).publish_state(current + x);
+              id(total_heating_produced) += x;
               id(last_heating_produced_update_day) = today;
+              id(sensor_heating_produced_total).publish_state(id(total_heating_produced));
             }
 
     dhw_consumed:
@@ -148,17 +178,15 @@ sensor:
             if (today == -1) return;
 
             int last_day = id(last_dhw_consumed_update_day);
-
             if (last_day == -1) {
               id(last_dhw_consumed_update_day) = today;
               last_day = today;
             }
 
             if (today != last_day) {
-              float current = id(sensor_dhw_consumed_total).state;
-              if (std::isnan(current)) current = 0.0f;
-              id(sensor_dhw_consumed_total).publish_state(current + x);
+              id(total_dhw_consumed) += x;
               id(last_dhw_consumed_update_day) = today;
+              id(sensor_dhw_consumed_total).publish_state(id(total_dhw_consumed));
             }
 
     dhw_delivered:
@@ -173,17 +201,15 @@ sensor:
             if (today == -1) return;
 
             int last_day = id(last_dhw_produced_update_day);
-
             if (last_day == -1) {
               id(last_dhw_produced_update_day) = today;
               last_day = today;
             }
 
             if (today != last_day) {
-              float current = id(sensor_dhw_produced_total).state;
-              if (std::isnan(current)) current = 0.0f;
-              id(sensor_dhw_produced_total).publish_state(current + x);
+              id(total_dhw_produced) += x;
               id(last_dhw_produced_update_day) = today;
+              id(sensor_dhw_produced_total).publish_state(id(total_dhw_produced));
             }
 
   - platform: template
