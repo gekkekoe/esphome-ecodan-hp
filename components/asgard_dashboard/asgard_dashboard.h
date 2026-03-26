@@ -144,6 +144,8 @@ struct DashboardSnapshot {
   NumData num_battery_soc_kwh;
   NumData num_battery_max_discharge_kw;
 
+  NumData num_dhw_start_threshold;
+
   char txt_solver_ip[32]{0};
 };
 
@@ -226,6 +228,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_hysteresis_z2(number::Number *n)               { num_hysteresis_z2_ = n; }
   void set_pred_sc_time(number::Number *n)                    { pred_sc_time_ = n; }
   void set_pred_sc_delta(number::Number *n)                   { pred_sc_delta_ = n; }
+  void set_num_dhw_start_threshold(number::Number *n)         { num_dhw_start_threshold_ = n; }
 
   // Cooling Settings (Numbers)
   void set_num_cooling_smart_start_z1(number::Number *n)      { num_cooling_smart_start_z1_ = n; }
@@ -423,6 +426,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   number::Number *num_battery_soc_kwh_{nullptr};
   number::Number *num_battery_max_discharge_kw_{nullptr};
+
+  number::Number *num_dhw_start_threshold_{nullptr};
 
 
 private:

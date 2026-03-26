@@ -649,6 +649,16 @@ header {
           <span class="toggle-slider"></span>
         </label>
       </div>
+      
+      <div class="ctrl-row">
+        <span class="ctrl-label param-label">DHW Threshold<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>If DHW temp drops below (Target - Drop) + Threshold, Odin schedules DHW during a cheap/sunny hour. 0 = disabled.</span></span>
+        <div class="stepper">
+          <button class="step-btn" onclick="step('dhw-thresh', -0.5)">−</button>
+          <input type="number" class="step-input" id="dhw-thresh-val" onchange="manualInput('dhw-thresh', this.value)" />
+          <button class="step-btn" onclick="step('dhw-thresh', +0.5)">+</button>
+        </div>
+      </div>
+
       <div class="ctrl-row">
         <span class="ctrl-label">Connection Status</span>
         <span class="ctrl-value" id="badge-solver-conn" style="font-weight:600;">—</span>
@@ -662,6 +672,9 @@ header {
       <div style="display: flex; gap: 8px; margin-top: 8px;">
         <button class="send-btn" style="margin-top: 0; flex: 1; border-color: var(--text3); color: var(--text3); background: rgba(130,149,184,0.1);" onclick="sendInputString('solver_ip_address', 'ui-solver-ip')">
           Save IP
+        </button>
+        <button class="send-btn" style="margin-top: 0; flex: 1;" onclick="sendOdinThresh(this)">
+          Apply Threshold
         </button>
         <button id="btn-odin" class="send-btn" style="margin-top: 0; flex: 1; display: none;" onclick="openOdin()">
           Open ODIN
@@ -854,7 +867,7 @@ const pending = {
   'raw-heat': null, 'raw-elec': null, 'raw-run': null,
   'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-max-out': null, 'raw-solar-factor': null,
   'batt-soc': null, 'batt-max-dis': null,
-  'cool-start-z1': null, 'cool-min-z1': null
+  'cool-start-z1': null, 'cool-min-z1': null, 'dhw-thresh': null
 };
 
 const lastEdit = {};
@@ -898,7 +911,8 @@ const LIMITS = {
   'batt-soc': { min: 0.0, max: 30.0, step: 0.1 },
   'batt-max-dis': { min: 0.5, max: 15.0, step: 0.1 },
   'cool-start-z1': { min: 16.0, max: 22.0, step: 0.5 },
-  'cool-min-z1':   { min: 10.0, max: 25.0, step: 0.5 }
+  'cool-min-z1':   { min: 10.0, max: 25.0, step: 0.5 },
+  'dhw-thresh':    { min: 0.0, max: 20.0, step: 0.5 }
 };
 
 const STEP_EL = { 
@@ -916,7 +930,8 @@ const STEP_EL = {
   'raw-max-out': 'raw-max-out-val', 'raw-hl-tm': 'raw-hl-tm-val','raw-solar-factor': 'raw-solar-factor-val',
   'batt-soc': 'batt-soc-val',
   'batt-max-dis': 'batt-max-dis-val',
-  'cool-start-z1': 'cool-start-z1-val', 'cool-min-z1': 'cool-min-z1-val'
+  'cool-start-z1': 'cool-start-z1-val', 'cool-min-z1': 'cool-min-z1-val',
+  'dhw-thresh': 'dhw-thresh-val'
 };
 
 let lastGraphUpdate = 0;
@@ -2040,6 +2055,7 @@ function render(d) {
   
   seedPending('cool-start-z1', d.cooling_smart_start_z1);
   seedPending('cool-min-z1', d.minimum_cooling_flow_z1);
+  seedPending('dhw-thresh', d.dhw_start_threshold);
 
   toggleCoolingUI();
 
@@ -2233,6 +2249,18 @@ async function sendDHW(btn) {
   btn.classList.remove('sending');
 }
 
+async function sendOdinThresh(btn) {
+    btn.classList.add('sending');
+    try {
+        if (hasChanged('dhw-thresh')) {
+            await apiPost({ key: 'dhw_start_threshold', value: pending['dhw-thresh'] });
+            serverState['dhw-thresh'] = pending['dhw-thresh'];
+            showToast('✓ DHW Threshold updated');
+        } else { showToast('No changes'); }
+    } catch(e) { showToast('✗ ' + e.message, true); }
+    btn.classList.remove('sending');
+}
+
 async function sendZone(zone, btn) {
   btn.classList.add('sending');
   let c = 0;
@@ -2354,7 +2382,11 @@ async function runOdinSolver() {
             current_room_temp: latestState.z1_current_temp || 20.0,
             current_hour: solveHour,
             battery_soc_kwh: pending['batt-soc'] ?? latestState.battery_soc_kwh ?? 0.0,
-            battery_max_discharge_kw: pending['batt-max-dis'] ?? latestState.battery_max_discharge_kw ?? 3.0
+            battery_max_discharge_kw: pending['batt-max-dis'] ?? latestState.battery_max_discharge_kw ?? 3.0,
+            dhw_temp: latestState.dhw_temp || 0,
+            dhw_target: latestState.dhw_flow_temp_target || 0,
+            dhw_drop: latestState.dhw_flow_temp_drop || 0,
+            dhw_start_threshold: pending['dhw-thresh'] ?? latestState.dhw_start_threshold ?? 0.0
         }
     };
 

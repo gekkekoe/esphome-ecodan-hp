@@ -130,3 +130,16 @@ number:
     min_value: 0.001
     max_value: 0.05
     step: 0.001
+
+  - platform: template
+    name: "Odin DHW Start Threshold"
+    id: dhw_start_threshold
+    internal: ${is_internal_asgard_only}
+    min_value: 0.0
+    max_value: 20.0
+    step: 0.5
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    icon: "mdi:thermometer-water"
+    entity_category: "config"

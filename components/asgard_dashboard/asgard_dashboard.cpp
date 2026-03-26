@@ -305,6 +305,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "raw_solar_factor") { doNumber(num_raw_solar_factor_); return; }
   if (key == "battery_soc_kwh") { doNumber(num_battery_soc_kwh_); return; }
   if (key == "battery_max_discharge_kw") { doNumber(num_battery_max_discharge_kw_); return; }
+  if (key == "dhw_start_threshold") { doNumber(num_dhw_start_threshold_); return; }
 
   if (key == "predictive_short_cycle_high_delta_time_window")    { doNumber(pred_sc_time_);    return; }
   if (key == "predictive_short_cycle_high_delta_threshold")    { doNumber(pred_sc_delta_);    return; }
@@ -475,6 +476,8 @@ void EcodanDashboard::update_snapshot_() {
 
   get_n(num_battery_soc_kwh_, current_snapshot_.num_battery_soc_kwh);
   get_n(num_battery_max_discharge_kw_, current_snapshot_.num_battery_max_discharge_kw);
+
+  get_n(num_dhw_start_threshold_, current_snapshot_.num_dhw_start_threshold);
 
   if (txt_solver_ip_ && txt_solver_ip_->has_state()) {
     strncpy(current_snapshot_.txt_solver_ip, txt_solver_ip_->state.c_str(), sizeof(current_snapshot_.txt_solver_ip) - 1);
@@ -723,6 +726,9 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
 
   p_n("battery_max_discharge_kw", snap.num_battery_max_discharge_kw.val);
   p_lim("battery_max_discharge_kw_lim", snap.num_battery_max_discharge_kw);
+
+  p_n("dhw_start_threshold", snap.num_dhw_start_threshold.val);
+  p_lim("dhw_start_threshold_lim", snap.num_dhw_start_threshold);
 
   response->print("\"solver_ip_address\":\"");
   for (char *c = snap.txt_solver_ip; *c != '\0'; ++c) {

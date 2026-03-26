@@ -31,6 +31,7 @@ asgard_dashboard:
   dhw_temp_id:                       dhw_temp
   dhw_flow_temp_target_id:           dhw_flow_temp_target
   dhw_flow_temp_drop_id:             dhw_flow_temp_drop
+  num_dhw_start_threshold_id:        dhw_start_threshold
   dhw_consumed_id:                   dhw_consumed
   dhw_delivered_id:                  dhw_delivered
   dhw_cop_id:                        ddhw_cop
