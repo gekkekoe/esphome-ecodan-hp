@@ -69,7 +69,7 @@ namespace esphome
                         // Base quality gates (need enough time and a decent inside/outside delta)
                         if (t_hours >= 2.0f && delta_T_avg > 2.0f) {
                             
-                            if (avg_sol < 50.0f) {
+                            if (avg_sol < 150.0f) {
                                 // NO SIGNIFICANT SOLAR: Learn pure thermal time constant (Tau).
                                 // Happens at night or during heavily overcast days.
                                 // Strictly require the room to have cooled down to calculate physics.
