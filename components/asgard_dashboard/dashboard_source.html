@@ -746,7 +746,7 @@ header {
       </div>
       
       <div class="ctrl-row">
-        <span class="ctrl-label param-label">HL × TM Product<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours (Tau)</span>Thermal time constant of your house. Higher = house holds heat longer. Learned automatically. Typical: 50–150h.</span></span>
+        <span class="ctrl-label param-label">HL × TM Product<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours (Tau)</span>Thermal time constant of your house. Higher = house holds heat longer. Learned automatically. Typical: 50–300h.</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-hl-tm', -0.5)">−</button><input type="number" class="step-input" id="raw-hl-tm-val" onchange="manualInput('raw-hl-tm', this.value)" /><button class="step-btn" onclick="step('raw-hl-tm', +0.5)">+</button></div>
       </div>
 
@@ -906,7 +906,7 @@ const LIMITS = {
   'raw-room': { min: 10.0, max: 35.0, step: 0.1 },
   'raw-delta': { min: 0.0, max: 10.0, step: 0.1 },
   'raw-max-out': { min: 1.0, max: 20.0, step: 0.1 },
-  'raw-hl-tm': { min: 0.0, max: 100.0, step: 0.5 },
+  'raw-hl-tm': { min: 0.0, max: 300.0, step: 0.5 },
   'raw-solar-factor': { min: 0.001, max: 0.05, step: 0.0025 },
   'batt-soc': { min: 0.0, max: 30.0, step: 0.1 },
   'batt-max-dis': { min: 0.5, max: 15.0, step: 0.1 },

@@ -177,46 +177,63 @@ interval:
           }
 
           {
-            // Track hourly heating actuals (DHW excluded via get_heating_*_kwh()).
-            // Two snapshots per hour:
-            //   prev_start_* = value at start of previous hour
-            //   cur_start_*  = value at start of current hour (refreshed on hour change)
-            // Diff for completed hour = cur_start - prev_start (both are clean boundaries).
-            static int   last_actual_hour = -1;
-            static float prev_start_cons  = 0.0f;
-            static float prev_start_prod  = 0.0f;
-            static float cur_start_cons   = 0.0f;
-            static float cur_start_prod   = 0.0f;
-            static int   snapped_hour     = -1;
+            // Robust Hourly Data Collector (Handles sensor drops without rebooting)
+            static int   last_actual_hour   = -1;
+            static float start_of_hour_cons = -1.0f;
+            static float start_of_hour_prod = -1.0f;
+            static float max_cons_in_hour   = -1.0f;
+            static float max_prod_in_hour   = -1.0f;
 
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
+            float current_cons = id(optimizer_ptr)->get_heating_consumed_kwh();
+            float current_prod = id(optimizer_ptr)->get_heating_produced_kwh();
+
+            // Immediately ignore invalid (NaN) readings
+            if (std::isnan(current_cons) || std::isnan(current_prod)) return;
 
             if (nvs_loaded && cur_hr >= 0 && cur_hr < 24) {
-
-              // On hour change: promote cur_start → prev_start, take new cur_start snapshot.
-              if (snapped_hour != cur_hr) {
-                prev_start_cons = cur_start_cons;
-                prev_start_prod = cur_start_prod;
-                cur_start_cons  = id(optimizer_ptr)->get_heating_consumed_kwh();
-                cur_start_prod  = id(optimizer_ptr)->get_heating_produced_kwh();
-                snapped_hour    = cur_hr;
-              }
+              
+              // Track the absolute peak to completely ignore temporary drops to 0.0
+              if (current_cons > max_cons_in_hour) max_cons_in_hour = current_cons;
+              if (current_prod > max_prod_in_hour) max_prod_in_hour = current_prod;
 
               if (last_actual_hour == -1) {
+                // Initialize on first valid run
                 last_actual_hour = cur_hr;
+                start_of_hour_cons = current_cons;
+                start_of_hour_prod = current_prod;
+                max_cons_in_hour = current_cons;
+                max_prod_in_hour = current_prod;
 
               } else if (cur_hr != last_actual_hour) {
-                int completed_hr = (cur_hr == 0) ? 23 : cur_hr - 1;
+                int completed_hr = last_actual_hour;
                 float room = id(virtual_climate_z1).current_temperature;
 
-                // diff = cur_start (= end of completed hour) - prev_start (= start of completed hour)
-                float cons = cur_start_cons - prev_start_cons;
-                float prod = cur_start_prod - prev_start_prod;
+                // Calculate energy used in the completed hour
+                float cons = max_cons_in_hour - start_of_hour_cons;
+                float prod = max_prod_in_hour - start_of_hour_prod;
+                
                 if (cons < 0.0f) cons = 0.0f;
                 if (prod < 0.0f) prod = 0.0f;
 
                 id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, prod, room);
+
+                // Prepare tracking for the new hour
                 last_actual_hour = cur_hr;
+                
+                // To prevent "total energy" spikes on sensor drops,
+                // the start of the new hour MUST be the max value of the previous hour!
+                // The ONLY exception is midnight (hour 0), where the heat pump resets the daily total.
+                if (cur_hr == 0) {
+                  start_of_hour_cons = 0.0f;
+                  start_of_hour_prod = 0.0f;
+                  max_cons_in_hour = current_cons;
+                  max_prod_in_hour = current_prod;
+                } else {
+                  start_of_hour_cons = max_cons_in_hour;
+                  start_of_hour_prod = max_prod_in_hour;
+                  // We deliberately do not reset max_cons_in_hour here, as the daily total only grows
+                }
               }
             }
           }
