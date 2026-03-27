@@ -1244,8 +1244,9 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             if (i < (int)op_mode.size() && !std::isnan(op_mode[i])) this->odin_operation_mode_[target_idx] = op_mode[i];
             
             bool preserve_current = (i == current_hour && current_hour != 0);
-            if (!preserve_current && i < (int)exp_temp.size() && !std::isnan(exp_temp[i])) {
-                this->odin_expected_temp_[target_idx] = exp_temp[i];
+            if (!preserve_current) {
+              if (i < (int)op_mode.size() && !std::isnan(op_mode[i])) this->odin_operation_mode_[target_idx] = op_mode[i];
+              if (i < (int)exp_temp.size() && !std::isnan(exp_temp[i])) this->odin_expected_temp_[target_idx] = exp_temp[i];
             }
         }
     }
