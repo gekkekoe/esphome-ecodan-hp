@@ -30,7 +30,7 @@ namespace ecodan
         buffer.append_byte(byte);
 
         if (buffer.get_write_offset() == buffer.header_size() && !buffer.verify_header()) {
-            ESP_LOGW(TAG, "Invalid packet header. Discarding message.");
+            //ESP_LOGW(TAG, "Invalid packet header. Discarding message.");
             buffer.reset();
             return;
         }
@@ -57,8 +57,6 @@ namespace ecodan
                     if (xSemaphoreTake(this->uart_tx_mutex_, (TickType_t)10) == pdTRUE) {
                         this->uart_->write_array(buffer.buffer(), buffer.get_write_offset());
                         xSemaphoreGive(this->uart_tx_mutex_);
-                    } else {
-                        ESP_LOGE(TAG, "Could not acquire uart_tx_mutex");
                     }
 
                     // handle handshake cached
@@ -87,12 +85,10 @@ namespace ecodan
                     if (uxQueueSpacesAvailable(this->rx_message_queue_) == 0) {
                         Message discarded_message;
                         xQueueReceive(this->rx_message_queue_, &discarded_message, (TickType_t)0);
-                        ESP_LOGW(TAG, "Message queue was full. Discarded oldest message.");
+                        //ESP_LOGW(TAG, "Message queue was full. Discarded oldest message.");
                     }
                     xQueueSend(this->rx_message_queue_, &buffer, (TickType_t)0);
                 }
-            } else {
-                ESP_LOGW(TAG, "Invalid packet checksum. Discarding message.");
             }
             
             buffer.reset();

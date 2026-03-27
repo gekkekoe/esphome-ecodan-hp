@@ -248,6 +248,12 @@ interval:
             bool is_alive = (ping_status == 1);
             if (id(bin_solver_connected).state != is_alive) {
               id(bin_solver_connected).publish_state(is_alive);
+              // Log state changes safely from the MAIN thread
+              if (is_alive) {
+                ESP_LOGI("asgard_dashboard", "ODIN server is now ONLINE.");
+              } else {
+                ESP_LOGW("asgard_dashboard", "ODIN server is OFFLINE.");
+              }
             }
             ping_status = -1; // Reset for the next run
           }
@@ -281,19 +287,18 @@ interval:
 
               if (getaddrinfo("odin.local", NULL, &hints, &res) == 0 && res != nullptr) {
                 struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
+                
                 uint8_t *ip_bytes = (uint8_t *)&(ipv4->sin_addr.s_addr);
                 char ip_buf[32];
                 snprintf(ip_buf, sizeof(ip_buf), "%d.%d.%d.%d", ip_bytes[0], ip_bytes[1], ip_bytes[2], ip_bytes[3]);
                 
                 target_ip = std::string(ip_buf);
                 
-                // Safely write the resolved mDNS IP
                 strncpy(ping_ip, target_ip.c_str(), sizeof(ping_ip) - 1);
                 ping_ip_ready = true;
                 freeaddrinfo(res);
-              } else {
-                ESP_LOGD("asgard_dashboard", "mDNS lookup failed.");
-              }
+              } 
+              // Removed the ESP_LOGD for mDNS failure here
             }
 
             if (target_ip != "" && target_ip != "0.0.0.0" && target_ip != "odin.local") {
@@ -304,7 +309,6 @@ interval:
                 serverAddress.sin_port = htons(80);
                 serverAddress.sin_addr.s_addr = inet_addr(target_ip.c_str());
 
-                // Set a 2-second timeout to prevent the task from hanging indefinitely
                 struct timeval tv;
                 tv.tv_sec = 2;
                 tv.tv_usec = 0;
@@ -313,27 +317,20 @@ interval:
 
                 int res = ::connect(sock, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
                 if (res >= 0) {
-                  // Send a proper HTTP request so the server can respond cleanly.
-                  // A bare connect() + close() causes an abrupt TCP RST which can
-                  // trigger a lwIP assert in recv_tcp on the ODIN side.
                   std::string http_req = "GET /api/version HTTP/1.0\r\nHost: " + target_ip + "\r\nConnection: close\r\n\r\n";
                   ::send(sock, http_req.c_str(), http_req.size(), 0);
-                  // Drain response to allow clean TCP teardown
+                  
                   char drain[128];
                   while (::recv(sock, drain, sizeof(drain), 0) > 0) {}
                   is_alive = true;
-                } else {
-                  ESP_LOGD("asgard_dashboard", "ODIN server is OFFLINE (Connection refused/timeout).");
                 }
                 ::close(sock);
               }
             }
 
-            // Write the status. The ESPHome main thread will pick this up on the next loop!
             ping_status = is_alive ? 1 : 0;
             task_running = false;
 
-            ESP_LOGD("asgard", "odin_ping_task stack watermark: %d bytes", uxTaskGetStackHighWaterMark(NULL));
             vTaskDelete(NULL);
             
-          }, "odin_ping_task", 12288, NULL, 1, NULL);
+          }, "odin_ping_task", 12288, NULL, 1, NULL); 
