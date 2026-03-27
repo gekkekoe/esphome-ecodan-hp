@@ -1258,11 +1258,32 @@ function initCharts() {
       max: 47.5,
       ticks: { 
           autoSkip: false,
-          color: '#8295b8',
-          font: monoFont,
+          color: function(context) {
+              if (odinDataCache && odinDataCache.operation_mode && context.tick && context.tick.value !== undefined) {
+                  const dataIndex = context.tick.value;
+                  const mode = odinDataCache.operation_mode[dataIndex];
+                  if (mode === 1) return '#ffb020'; // DHW (Yellow)
+                  if (mode === 2) return '#ff6b35'; // Heating (Orange/Red)
+                  if (mode === 3) return '#00c8ff'; // Cooling (Blue)
+              }
+              return '#8295b8'; // Default text color
+          },
+          
+          // Make active hours bold
+          font: function(context) {
+              let weight = 'normal';
+              if (odinDataCache && odinDataCache.operation_mode && context.tick && context.tick.value !== undefined) {
+                  const dataIndex = context.tick.value; // <--- DIT IS DE FIX
+                  const mode = odinDataCache.operation_mode[dataIndex];
+                  if (mode === 1 || mode === 2 || mode === 3) weight = 'bold';
+              }
+              return { family: "'JetBrains Mono'", size: 11, weight: weight };
+          },
+          
           maxRotation: 45,
           minRotation: 45,
           callback: function(val, index) {
+              // Hide odd hours on small screens for readability
               if (window.innerWidth < 768 && index % 2 !== 0) return '';
               return this.getLabelForValue(val);
           }
@@ -2435,7 +2456,8 @@ async function runOdinSolver() {
             inject48('heat_production', data.heat_production);
             inject48('expected_cost', data.expected_cost);
             inject48('expected_cost_with_tax', data.expected_cost_with_tax);
-            inject48('battery_discharge', data.battery_discharge);  
+            inject48('battery_discharge', data.battery_discharge); 
+            inject48('operation_mode', data.operation_mode);
 
             odinDataCache.last_run = {
                 execution_ms:    data.execution_ms                 || 0,
