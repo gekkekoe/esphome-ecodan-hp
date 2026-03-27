@@ -649,43 +649,37 @@ header {
           <span class="toggle-slider"></span>
         </label>
       </div>
-      
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">DHW Threshold<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>If DHW temp drops below (Target - Drop) + Threshold, Odin schedules DHW during a cheap/sunny hour. 0 = disabled.</span></span>
-        <div class="stepper">
-          <button class="step-btn" onclick="step('dhw-thresh', -0.5)">−</button>
-          <input type="number" class="step-input" id="dhw-thresh-val" onchange="manualInput('dhw-thresh', this.value)" />
-          <button class="step-btn" onclick="step('dhw-thresh', +0.5)">+</button>
-        </div>
-      </div>
 
       <div class="ctrl-row">
         <span class="ctrl-label">Connection Status</span>
         <span class="ctrl-value" id="badge-solver-conn" style="font-weight:600;">—</span>
       </div>
 
-      <div class="ctrl-row" style="border-bottom: none;">
+      <div class="ctrl-row">
         <span class="ctrl-label">Odin IP Address</span>
-        <input type="text" id="ui-solver-ip" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 110px; text-align: right; outline: none;" placeholder="0.0.0.0">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <input type="text" id="ui-solver-ip" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 110px; text-align: right; outline: none;" placeholder="0.0.0.0">
+          <button class="step-btn" style="width: 26px; border-color: var(--text3); color: var(--text3);" onclick="sendInputString('solver_ip_address', 'ui-solver-ip')" title="Save IP">✓</button>
+        </div>
+      </div>
+
+      <div class="ctrl-row" style="border-bottom: none;">
+        <span class="ctrl-label param-label">DHW Threshold<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>If DHW temp drops below (Target - Drop) + Threshold, Odin schedules DHW during a cheap/sunny hour. 0 = disabled.</span></span>
+        <div class="stepper">
+          <button class="step-btn" onclick="step('dhw-thresh', -0.5)">−</button>
+          <input type="number" class="step-input" id="dhw-thresh-val" onchange="manualInput('dhw-thresh', this.value)" />
+          <button class="step-btn" onclick="step('dhw-thresh', +0.5)">+</button>
+          <button class="step-btn" style="margin-left: 6px; border-color: var(--accent); color: var(--accent);" onclick="sendOdinThresh(this)" title="Apply Threshold">✓</button>
+        </div>
       </div>
       
-      <div style="display: flex; gap: 8px; margin-top: 8px;">
-        <button class="send-btn" style="margin-top: 0; flex: 1; border-color: var(--text3); color: var(--text3); background: rgba(130,149,184,0.1);" onclick="sendInputString('solver_ip_address', 'ui-solver-ip')">
-          Save IP
-        </button>
-        <button class="send-btn" style="margin-top: 0; flex: 1;" onclick="sendOdinThresh(this)">
-          Apply Threshold
-        </button>
-        <button id="btn-odin" class="send-btn" style="margin-top: 0; flex: 1; display: none;" onclick="openOdin()">
-          Open ODIN
-        </button>
-      </div>
-      <div id="run-solver-row" style="display:none; margin-top: 8px; gap: 8px; align-items: center; flex-wrap: nowrap;">
-        <button id="btn-run-solver" class="send-btn" style="border-color: var(--accent3); color: var(--accent3); background: rgba(127,255,127,0.1); flex: 1;" onclick="runOdinSolver()">Run Optimization</button>
-        <div style="display: flex; align-items: center; gap: 5px; flex-shrink: 0;">
-          <label style="font-size: 10px; color: var(--text3); white-space: nowrap;">From hour</label>
-          <input id="ui-solver-hour" type="number" min="0" max="23" step="1" class="step-input" style="width: 36px;" title="Override start hour (default = current hour)">
+      <div id="run-solver-row" style="display:none; margin-top: 12px; gap: 8px; align-items: stretch; flex-wrap: nowrap;">
+        <div style="display: flex; align-items: center; gap: 5px; flex-shrink: 0; background: var(--bg2); padding: 0 8px; border: 1px solid var(--border); border-radius: 8px;">
+          <label style="font-size: 9px; color: var(--text3); white-space: nowrap; text-transform: uppercase;">From hour</label>
+          <input id="ui-solver-hour" type="number" min="0" max="23" step="1" class="step-input" style="width: 30px; font-size: 12px;" title="Override start hour (default = current hour)">
         </div>
+        <button id="btn-run-solver" class="send-btn" style="margin-top: 0; border-color: var(--accent3); color: var(--accent3); background: rgba(127,255,127,0.1); flex: 1;" onclick="runOdinSolver()">Run Optimization</button>
+        <button id="btn-odin" class="send-btn" style="margin-top: 0; flex: 0.5; display: none;" onclick="openOdin()">Open ODIN</button>
       </div>
 
       <div id="run-stats-block" style="display:none; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px;">
