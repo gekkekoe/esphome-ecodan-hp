@@ -272,14 +272,25 @@ interval:
             std::string target_ip(current_ip_buf);
             bool is_alive = false;
 
+            // cannot use gethostbyname and inet_ntoa in task, not thread safe
             if (target_ip == "" || target_ip == "0.0.0.0" || target_ip == "odin.local") {
-              struct hostent *he = gethostbyname("odin.local");
-              if (he != nullptr && he->h_addr_list[0] != nullptr) {
-                target_ip = inet_ntoa(*((struct in_addr **)he->h_addr_list)[0]);
+              struct addrinfo hints = {};
+              hints.ai_family = AF_INET;
+              hints.ai_socktype = SOCK_STREAM;
+              struct addrinfo *res = nullptr;
+
+              if (getaddrinfo("odin.local", NULL, &hints, &res) == 0 && res != nullptr) {
+                struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
+                uint8_t *ip_bytes = (uint8_t *)&(ipv4->sin_addr.s_addr);
+                char ip_buf[32];
+                snprintf(ip_buf, sizeof(ip_buf), "%d.%d.%d.%d", ip_bytes[0], ip_bytes[1], ip_bytes[2], ip_bytes[3]);
+                
+                target_ip = std::string(ip_buf);
                 
                 // Safely write the resolved mDNS IP
                 strncpy(ping_ip, target_ip.c_str(), sizeof(ping_ip) - 1);
                 ping_ip_ready = true;
+                freeaddrinfo(res);
               } else {
                 ESP_LOGD("asgard_dashboard", "mDNS lookup failed.");
               }
@@ -321,7 +332,8 @@ interval:
             // Write the status. The ESPHome main thread will pick this up on the next loop!
             ping_status = is_alive ? 1 : 0;
             task_running = false;
-            
+
+            ESP_LOGD("asgard", "odin_ping_task stack watermark: %d bytes", uxTaskGetStackHighWaterMark(NULL));
             vTaskDelete(NULL);
             
-          }, "odin_ping_task", 8192, NULL, 1, NULL);
+          }, "odin_ping_task", 12288, NULL, 1, NULL);
