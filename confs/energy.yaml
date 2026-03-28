@@ -1,7 +1,7 @@
 # lambda: in the template sensors are causing reboots, so remove them and seed them on boot.
 esphome:
   on_boot:
-    priority: -10 
+    priority: 600 
     then:
       - lambda: |-
           id(sensor_heating_consumed_total).publish_state(id(total_heating_consumed));

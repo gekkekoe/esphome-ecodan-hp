@@ -113,7 +113,6 @@ void EcodanDashboard::send_chunked_(AsyncWebServerRequest *request, const char *
     httpd_resp_set_hdr(req, "Cache-Control", cache_control);
   }
 
-  // Send the compressed array in safe chunks
   size_t index = 0;
   size_t remaining = length;
   const size_t chunk_size = 2048;
@@ -121,7 +120,10 @@ void EcodanDashboard::send_chunked_(AsyncWebServerRequest *request, const char *
   while (remaining > 0) {
     size_t to_send = (remaining < chunk_size) ? remaining : chunk_size;
     
-    httpd_resp_send_chunk(req, (const char*)(data + index), to_send);
+    // Prevent lwIP crash by checking if the client disconnected
+    if (httpd_resp_send_chunk(req, (const char*)(data + index), to_send) != ESP_OK) {
+        return; 
+    }
     
     index += to_send;
     remaining -= to_send;
@@ -859,7 +861,7 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
 
-  // Snapshot count/head under lock — record_history_() writes from main loop task
+  // Snapshot count/head under lock
   size_t current_count, current_head;
   if (history_mutex_ == NULL || xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(200)) != pdTRUE) {
       ESP_LOGW(TAG, "handle_history_request_: failed to acquire history_mutex_");
@@ -881,7 +883,7 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
   size_t step = (current_count > 360) ? (current_count / 360) : 1;
   if (step < 1) step = 1;
 
-  httpd_resp_send_chunk(req, "[", 1);
+  if (httpd_resp_send_chunk(req, "[", 1) != ESP_OK) return;
 
   bool first = true;
   for (size_t i = 0; i < current_count; i += step) {
@@ -895,7 +897,9 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
         continue;
     }
 
-    if (!first) httpd_resp_send_chunk(req, ",", 1);
+    if (!first) {
+        if (httpd_resp_send_chunk(req, ",", 1) != ESP_OK) return;
+    }
     first = false;
 
     char item[128];
@@ -905,11 +909,17 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
       rec.z1_flow, rec.z2_flow, rec.freq, rec.flags,
       rec.cons, rec.prod
     );
-    httpd_resp_send_chunk(req, item, len);
+    
+    // Abort loop immediately if client drops the connection
+    if (httpd_resp_send_chunk(req, item, len) != ESP_OK) {
+        return; 
+    }
   }
-  httpd_resp_send_chunk(req, "]", 1);
-  // Send 0-length chunk to signal the end of the transmission
-  httpd_resp_send_chunk(req, nullptr, 0);
+  
+  if (httpd_resp_send_chunk(req, "]", 1) == ESP_OK) {
+      // Send 0-length chunk to signal the end of the transmission
+      httpd_resp_send_chunk(req, nullptr, 0);
+  }
 }
 
 // solver

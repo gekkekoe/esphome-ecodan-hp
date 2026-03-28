@@ -501,7 +501,7 @@ sensor:
     id: hp_delta_t
     name: "Delta T"
     lambda: |-
-      if (isnan(id(hp_feed_temp).state) || isnan(id(hp_return_temp).state)) return NAN;
+      if (isnan(id(hp_feed_temp).state) || isnan(id(hp_return_temp).state)) return {};
       return id(hp_feed_temp).state - id(hp_return_temp).state;
     accuracy_decimals: 1
     unit_of_measurement: "°C"
@@ -533,7 +533,7 @@ sensor:
       int controller_day = status.day_of_year();
 
       if (controller_day == -1) {
-        return NAN;
+        return {};
       }
 
       float previous_day_float = id(heatpump_day_of_year).state;
