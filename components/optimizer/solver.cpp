@@ -80,7 +80,6 @@ namespace esphome
                 return;
             }
 
-            // FIX: Always update the stored day when fresh data arrives!
             // This prevents the 5-minute loop from incorrectly rejecting fresh hour 0 data.
             int _day = this->get_current_ecodan_day();
             if (_day >= 0) {

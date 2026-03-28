@@ -19,7 +19,7 @@ script:
                 max_response_buffer_size: 6144
                 
                 body: !lambda |-
-                  char payload[600];
+                  char payload[800];
                   
                   // Get the active index from your specific select component
                   int heating_idx = id(heating_system_type).active_index().value_or(0);
@@ -37,6 +37,11 @@ script:
                   if (std::isnan(solar_factor) || solar_factor <= 0.001f) {
                       solar_factor = 0.015f; // default
                   }
+                  
+                  float _dhw_temp = std::isnan(id(dhw_temp).state) ? 0.0f : id(dhw_temp).state;
+                  float _dhw_target = std::isnan(id(dhw_flow_temp_target).state) ? 0.0f : id(dhw_flow_temp_target).state;
+                  float _dhw_drop = std::isnan(id(dhw_flow_temp_drop).state) ? 0.0f : id(dhw_flow_temp_drop).state;
+                  float _dhw_thresh = std::isnan(id(dhw_start_threshold).state) ? 0.0f : id(dhw_start_threshold).state;
 
                   int _cur_hour = id(optimizer_ptr)->get_current_ecodan_hour();
 
@@ -55,7 +60,11 @@ script:
                       "\"current_hour\":%d,"
                       "\"current_room_temp\":%.2f,"
                       "\"battery_soc_kwh\":%.2f,"
-                      "\"battery_max_discharge_kw\":%.2f"
+                      "\"battery_max_discharge_kw\":%.2f,"
+                      "\"dhw_temp\":%.2f,"
+                      "\"dhw_target\":%.2f,"
+                      "\"dhw_drop\":%.2f,"
+                      "\"dhw_start_threshold\":%.2f"
                       "}}",
                       profile_str,
                       id(num_raw_heat_produced).state,
@@ -70,7 +79,11 @@ script:
                       _cur_hour,
                       id(virtual_climate_z1).current_temperature,
                       id(num_battery_soc_kwh).state,
-                      id(num_battery_max_discharge_kw).state
+                      id(num_battery_max_discharge_kw).state,
+                      _dhw_temp,
+                      _dhw_target,
+                      _dhw_drop,
+                      _dhw_thresh
                   );
                   return std::string(payload);
 
@@ -177,12 +190,14 @@ interval:
           }
 
           {
-            // Robust Hourly Data Collector (Handles sensor drops without rebooting)
+            // Robust Hourly Data Collector (Handles sensor drops and daily resets)
             static int   last_actual_hour   = -1;
             static float start_of_hour_cons = -1.0f;
             static float start_of_hour_prod = -1.0f;
             static float max_cons_in_hour   = -1.0f;
             static float max_prod_in_hour   = -1.0f;
+            static int   drop_counter_cons  = 0;
+            static int   drop_counter_prod  = 0;
 
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
             float current_cons = id(optimizer_ptr)->get_heating_consumed_kwh();
@@ -191,50 +206,55 @@ interval:
             // Immediately ignore invalid (NaN) readings
             if (std::isnan(current_cons) || std::isnan(current_prod)) return;
 
-            if (nvs_loaded && cur_hr >= 0 && cur_hr < 24) {
-              
-              // Track the absolute peak to completely ignore temporary drops to 0.0
-              if (current_cons > max_cons_in_hour) max_cons_in_hour = current_cons;
-              if (current_prod > max_prod_in_hour) max_prod_in_hour = current_prod;
+            if (last_actual_hour == -1) {
+              // Initialize on first valid run or after reboot
+              last_actual_hour = cur_hr;
+              start_of_hour_cons = current_cons;
+              start_of_hour_prod = current_prod;
+              max_cons_in_hour = current_cons;
+              max_prod_in_hour = current_prod;
+            }
 
-              if (last_actual_hour == -1) {
-                // Initialize on first valid run
-                last_actual_hour = cur_hr;
-                start_of_hour_cons = current_cons;
-                start_of_hour_prod = current_prod;
-                max_cons_in_hour = current_cons;
-                max_prod_in_hour = current_prod;
-
-              } else if (cur_hr != last_actual_hour) {
-                int completed_hr = last_actual_hour;
-                float room = id(virtual_climate_z1).current_temperature;
-
-                // Calculate energy used in the completed hour
-                float cons = max_cons_in_hour - start_of_hour_cons;
-                float prod = max_prod_in_hour - start_of_hour_prod;
-                
-                if (cons < 0.0f) cons = 0.0f;
-                if (prod < 0.0f) prod = 0.0f;
-
-                id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, prod, room);
-
-                // Prepare tracking for the new hour
-                last_actual_hour = cur_hr;
-                
-                // To prevent "total energy" spikes on sensor drops,
-                // the start of the new hour MUST be the max value of the previous hour!
-                // The ONLY exception is midnight (hour 0), where the heat pump resets the daily total.
-                if (cur_hr == 0) {
-                  start_of_hour_cons = 0.0f;
-                  start_of_hour_prod = 0.0f;
-                  max_cons_in_hour = current_cons;
-                  max_prod_in_hour = current_prod;
-                } else {
-                  start_of_hour_cons = max_cons_in_hour;
-                  start_of_hour_prod = max_prod_in_hour;
-                  // We deliberately do not reset max_cons_in_hour here, as the daily total only grows
+            if (current_cons < max_cons_in_hour - 2.0f) {
+                if (++drop_counter_cons >= 3) {
+                    max_cons_in_hour = current_cons;
+                    start_of_hour_cons = current_cons; // Reset start to prevent massive spikes
+                    drop_counter_cons = 0;
                 }
-              }
+            } else {
+                drop_counter_cons = 0;
+                if (current_cons > max_cons_in_hour) max_cons_in_hour = current_cons;
+            }
+
+            if (current_prod < max_prod_in_hour - 2.0f) {
+                if (++drop_counter_prod >= 3) {
+                    max_prod_in_hour = current_prod;
+                    start_of_hour_prod = current_prod;
+                    drop_counter_prod = 0;
+                }
+            } else {
+                drop_counter_prod = 0;
+                if (current_prod > max_prod_in_hour) max_prod_in_hour = current_prod;
+            }
+
+            if (cur_hr != last_actual_hour) {
+              int completed_hr = last_actual_hour;
+              float room = id(virtual_climate_z1).current_temperature;
+
+              // Calculate energy used in the completed hour
+              float cons = max_cons_in_hour - start_of_hour_cons;
+              float prod = max_prod_in_hour - start_of_hour_prod;
+              
+              if (cons < 0.0f) cons = 0.0f;
+              if (prod < 0.0f) prod = 0.0f;
+
+              id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, prod, room);
+
+              last_actual_hour = cur_hr;
+              
+              // Prepare tracking for the new hour
+              start_of_hour_cons = max_cons_in_hour;
+              start_of_hour_prod = max_prod_in_hour;
             }
           }
 
