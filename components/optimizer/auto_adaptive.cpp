@@ -331,9 +331,11 @@ namespace esphome
                 if (solver_operating_mode == OptimizerOperationMode::DHW_ON) {
                     if (this->state_.sw_force_dhw != nullptr && !this->state_.sw_force_dhw->state) {
                         if (odin_last_executed_dhw_hour_ != current_hour) {
-                            ESP_LOGD(OPTIMIZER_TAG, "ODIN Starting executing planned DHW");
-                            this->state_.sw_force_dhw->turn_on();
-                            odin_last_executed_dhw_hour_ = current_hour;
+                            if (!this->is_dhw_active(status)) {
+                                ESP_LOGD(OPTIMIZER_TAG, "ODIN Starting executing planned DHW");
+                                this->state_.sw_force_dhw->turn_on();
+                                odin_last_executed_dhw_hour_ = current_hour;
+                            }
                         }
                     } else {
                         ESP_LOGD(OPTIMIZER_TAG, "ODIN DHW planned, but not configured");
@@ -351,7 +353,7 @@ namespace esphome
                         ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN data still pending (+5m). Falling back to auto adaptive.", (i + 1));
                     }
                 } 
-                else if (solver_heating_off) {
+                else if (solver_heating_off || solver_operating_mode == OptimizerOperationMode::OFF) {
                     ESP_LOGD(OPTIMIZER_TAG,
                         "Z%d ODIN heating stopped, solver_load_ratio: %.2f, mode: %d",
                         (i + 1), solver_load_ratio, static_cast<uint8_t>(solver_operating_mode));

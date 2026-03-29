@@ -237,24 +237,38 @@ namespace esphome
 
             // HOURLY MPC TRIGGER
             if (this->solver_enabled()) {
-                if (current_hour != this->last_processed_hour_) {
-                    ESP_LOGD(OPTIMIZER_TAG, "Hour transition detected (%d -> %d).", this->last_processed_hour_, current_hour);
-                    //this->set_odin_fetch_request();
-                    this->last_processed_hour_ = current_hour;
-                } else {
-                    time_t ts = this->state_.ecodan_instance->get_status().timestamp();
-                    if (ts > 0) {
-                        struct tm t;
-                        localtime_r(&ts, &t);
-                        int cur_min = t.tm_min;
-                        if (cur_min >= 55 && current_hour != this->last_pre_hour_triggered_) {
-                            this->last_pre_hour_triggered_ = current_hour;
-                            ESP_LOGI(OPTIMIZER_TAG, "Pre-hour trigger at %02d:55 — requesting ODIN solve for hour %d.",
-                                    current_hour, (current_hour + 1) % 24);
-                            this->set_odin_fetch_request();
-                        }
+                time_t ts = this->state_.ecodan_instance->get_status().timestamp();
+                if (ts > 0) {
+                    struct tm t;
+                    localtime_r(&ts, &t);
+                    int cur_min = t.tm_min;
+                    if (cur_min >= 55 && current_hour != this->last_pre_hour_triggered_) {
+                        this->last_pre_hour_triggered_ = current_hour;
+                        ESP_LOGI(OPTIMIZER_TAG, "Pre-hour trigger at %02d:55 — requesting ODIN solve for hour %d.",
+                                current_hour, (current_hour + 1) % 24);
+                        this->set_odin_fetch_request();
                     }
                 }
+
+                // if (current_hour != this->last_processed_hour_) {
+                //     ESP_LOGD(OPTIMIZER_TAG, "Hour transition detected (%d -> %d).", this->last_processed_hour_, current_hour);
+                //     //this->set_odin_fetch_request();
+                //     this->last_processed_hour_ = current_hour;
+                // } 
+                // else {
+                //     time_t ts = this->state_.ecodan_instance->get_status().timestamp();
+                //     if (ts > 0) {
+                //         struct tm t;
+                //         localtime_r(&ts, &t);
+                //         int cur_min = t.tm_min;
+                //         if (cur_min >= 55 && current_hour != this->last_pre_hour_triggered_) {
+                //             this->last_pre_hour_triggered_ = current_hour;
+                //             ESP_LOGI(OPTIMIZER_TAG, "Pre-hour trigger at %02d:55 — requesting ODIN solve for hour %d.",
+                //                     current_hour, (current_hour + 1) % 24);
+                //             this->set_odin_fetch_request();
+                //         }
+                //     }
+                // }
             }
 
             // Set latest energy snapshots

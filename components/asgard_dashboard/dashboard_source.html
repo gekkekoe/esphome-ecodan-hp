@@ -2440,6 +2440,7 @@ async function runOdinSolver() {
 
             inject48('expected_end_temp', data.expected_end_temp);
             inject48('expected_begin_temp', data.expected_begin_temp, true); // true = lock current hour
+            inject48('operation_mode', data.operation_mode, true);
             inject48('prices', data.prices);
             inject48('sched_base', data.sched_base);
             inject48('sched_min', data.sched_min);
@@ -2451,7 +2452,6 @@ async function runOdinSolver() {
             inject48('expected_cost', data.expected_cost);
             inject48('expected_cost_with_tax', data.expected_cost_with_tax);
             inject48('battery_discharge', data.battery_discharge); 
-            inject48('operation_mode', data.operation_mode);
 
             odinDataCache.last_run = {
                 execution_ms:    data.execution_ms                 || 0,

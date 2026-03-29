@@ -111,6 +111,8 @@ script:
                               JsonArray j_prc = root["prices"];
                               JsonArray j_op  = root["operation_mode"];
 
+                              bool has_p   = !j_p.isNull();
+                              bool has_b   = !j_b.isNull();
                               bool has_sb  = !j_sb.isNull();
                               bool has_smn = !j_smn.isNull();
                               bool has_smx = !j_smx.isNull();
@@ -120,21 +122,20 @@ script:
                               bool has_op  = !j_op.isNull();
 
                               for (int i = 0; i < 24; i++) {
-                                // Assign directly to the index instead of using push_back
-                                exp_end_t[i] = j_eet[i].as<float>();
-                                nrg[i]      = j_e[i].as<float>();
-                                prod[i]     = j_p.isNull() ? 0.0f : j_p[i].as<float>();
-                                exp_t[i]    = j_t[i].as<float>();
-                                cost[i]     = j_c[i].as<float>();
-                                cost_tax[i] = j_ct[i].as<float>();
-                                batt[i]     = j_b.isNull() ? 0.0f : j_b[i].as<float>();
-                                sb[i]       = has_sb  ? j_sb[i].as<float>()  : 0.0f;
-                                smn[i]      = has_smn ? j_smn[i].as<float>() : 0.0f;
-                                smx[i]      = has_smx ? j_smx[i].as<float>() : 0.0f;
-                                wth[i]      = has_wth ? j_wth[i].as<float>() : 0.0f;
-                                sol[i]      = has_sol ? j_sol[i].as<float>() : 0.0f;
-                                prc[i]      = has_prc ? j_prc[i].as<float>() : 0.0f;
-                                op_mode[i]  = has_op ? j_op[i].as<float>() : 0.0f;
+                                exp_end_t[i] = j_eet[i].isNull() ? NAN : j_eet[i].as<float>();
+                                nrg[i]      = j_e[i].isNull() ? 0.0f : j_e[i].as<float>();
+                                prod[i]     = (!has_p || j_p[i].isNull()) ? 0.0f : j_p[i].as<float>();
+                                exp_t[i]    = j_t[i].isNull() ? NAN : j_t[i].as<float>();
+                                cost[i]     = j_c[i].isNull() ? 0.0f : j_c[i].as<float>();
+                                cost_tax[i] = j_ct[i].isNull() ? 0.0f : j_ct[i].as<float>();
+                                batt[i]     = (!has_b || j_b[i].isNull()) ? 0.0f : j_b[i].as<float>();
+                                sb[i]       = (!has_sb || j_sb[i].isNull()) ? NAN : j_sb[i].as<float>();
+                                smn[i]      = (!has_smn || j_smn[i].isNull()) ? NAN : j_smn[i].as<float>();
+                                smx[i]      = (!has_smx || j_smx[i].isNull()) ? NAN : j_smx[i].as<float>();
+                                wth[i]      = (!has_wth || j_wth[i].isNull()) ? NAN : j_wth[i].as<float>();
+                                sol[i]      = (!has_sol || j_sol[i].isNull()) ? NAN : j_sol[i].as<float>();
+                                prc[i]      = (!has_prc || j_prc[i].isNull()) ? NAN : j_prc[i].as<float>();
+                                op_mode[i]  = (!has_op || j_op[i].isNull()) ? NAN : j_op[i].as<float>();
                               }
 
                               int cur_hr = root["current_hour"].is<int>() ? root["current_hour"].as<int>() : id(optimizer_ptr)->get_current_ecodan_hour();
@@ -190,7 +191,7 @@ interval:
           }
 
           {
-            // Robust Hourly Data Collector (Handles sensor drops and daily resets)
+            // Robust Hourly Data Collector (Handles sensor drops, spikes, and daily resets)
             static int   last_actual_hour   = -1;
             static float start_of_hour_cons = -1.0f;
             static float start_of_hour_prod = -1.0f;
@@ -215,24 +216,42 @@ interval:
               max_prod_in_hour = current_prod;
             }
 
-            if (current_cons < max_cons_in_hour - 2.0f) {
+            // --- CONSUMPTION LOGIC ---
+            // Spike detection: if value jumps up unrealistically (>2.0 kWh in 1 min), 
+            // it's a late initialization or a recovery from a sensor drop. Set a new baseline.
+            if (current_cons > max_cons_in_hour + 2.0f) {
+                start_of_hour_cons = current_cons;
+                max_cons_in_hour = current_cons;
+                drop_counter_cons = 0;
+            }
+            // Drop detection: if value drops (midnight reset or temporary sensor failure)
+            else if (current_cons < max_cons_in_hour - 2.0f) {
                 if (++drop_counter_cons >= 3) {
                     max_cons_in_hour = current_cons;
                     start_of_hour_cons = current_cons; // Reset start to prevent massive spikes
                     drop_counter_cons = 0;
                 }
-            } else {
+            } 
+            // Normal growth
+            else {
                 drop_counter_cons = 0;
                 if (current_cons > max_cons_in_hour) max_cons_in_hour = current_cons;
             }
 
-            if (current_prod < max_prod_in_hour - 2.0f) {
+            // --- PRODUCTION LOGIC ---
+            if (current_prod > max_prod_in_hour + 2.0f) {
+                start_of_hour_prod = current_prod;
+                max_prod_in_hour = current_prod;
+                drop_counter_prod = 0;
+            }
+            else if (current_prod < max_prod_in_hour - 2.0f) {
                 if (++drop_counter_prod >= 3) {
                     max_prod_in_hour = current_prod;
                     start_of_hour_prod = current_prod;
                     drop_counter_prod = 0;
                 }
-            } else {
+            } 
+            else {
                 drop_counter_prod = 0;
                 if (current_prod > max_prod_in_hour) max_prod_in_hour = current_prod;
             }
