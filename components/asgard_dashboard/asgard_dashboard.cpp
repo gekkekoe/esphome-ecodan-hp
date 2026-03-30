@@ -1241,38 +1241,33 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         }
         this->odin_stored_day_ = current_day;
     }
+    
+    // 3. Unified Data Update (Indexes 24-47, covering hour 0-23 of the target day)
+    for (int i = 0; i < 24; i++) {
+        int target_idx = i + 24;
 
-    // 3. Forward-only updates (Indexes 24-47 from current hour)
-    if (current_hour < 24) {
-        for (int i = current_hour; i < 24; i++) {
-            int target_idx = i + 24;
+        // Static data
+        if (i < (int)sched_base.size() && !std::isnan(sched_base[i]))  this->odin_sched_base_[target_idx] = sched_base[i];
+        if (i < (int)sched_min.size()  && !std::isnan(sched_min[i]))   this->odin_sched_min_[target_idx]  = sched_min[i];
+        if (i < (int)sched_max.size()  && !std::isnan(sched_max[i]))   this->odin_sched_max_[target_idx]  = sched_max[i];
+        if (i < (int)weather.size()    && !std::isnan(weather[i]))     this->odin_weather_[target_idx]    = weather[i];
+        if (i < (int)solar.size()      && !std::isnan(solar[i]))       this->odin_solar_[target_idx]      = solar[i];
+        if (i < (int)prices.size()     && !std::isnan(prices[i]))      this->odin_prices_[target_idx]     = prices[i];
+
+        // calculated data
+        bool is_future = (i > current_hour);
+        bool is_empty_slot = std::isnan(this->odin_production_[target_idx]);
+
+        if (is_future || is_empty_slot) {
             if (i < (int)energy.size()     && !std::isnan(energy[i]))      this->odin_energy_[target_idx]            = energy[i];
             if (i < (int)production.size() && !std::isnan(production[i]))  this->odin_production_[target_idx]        = production[i];
             if (i < (int)cost.size()       && !std::isnan(cost[i]))        this->odin_cost_[target_idx]              = cost[i];
             if (i < (int)cost_tax.size()   && !std::isnan(cost_tax[i]))    this->odin_cost_tax_[target_idx]          = cost_tax[i];
             if (i < (int)battery_discharge.size() && !std::isnan(battery_discharge[i])) this->odin_battery_discharge_[target_idx] = battery_discharge[i];
-
-            bool preserve_current = (i == current_hour && current_hour != 0);
-            if (!preserve_current) {
-              if (i < (int)op_mode.size() && !std::isnan(op_mode[i])) this->odin_operation_mode_[target_idx] = op_mode[i];
-              if (i < (int)exp_temp.size() && !std::isnan(exp_temp[i])) this->odin_expected_temp_[target_idx] = exp_temp[i];
-            }
+            if (i < (int)op_mode.size()    && !std::isnan(op_mode[i]))     this->odin_operation_mode_[target_idx]    = op_mode[i];
+            if (i < (int)exp_temp.size()   && !std::isnan(exp_temp[i]))    this->odin_expected_temp_[target_idx]     = exp_temp[i];
+            if (i < (int)expected_end_temp.size() && !std::isnan(expected_end_temp[i])) this->odin_expected_end_temp_[target_idx] = expected_end_temp[i];
         }
-    }
-
-    // 4. FULL DAY updates (Indexes 24-47 covering 0-23)
-    // we don't want to save data for 23h unless it was rebooted
-    if (current_hour < 23 || this->odin_prices_[24] == 0.0f) {
-      for (int i = 0; i < 24; i++) {
-          int target_idx = i + 24;
-          if (i < (int)expected_end_temp.size() && !std::isnan(expected_end_temp[i])) this->odin_expected_end_temp_[target_idx] = expected_end_temp[i];
-          if (i < (int)sched_base.size() && !std::isnan(sched_base[i]))  this->odin_sched_base_[target_idx] = sched_base[i];
-          if (i < (int)sched_min.size()  && !std::isnan(sched_min[i]))   this->odin_sched_min_[target_idx]  = sched_min[i];
-          if (i < (int)sched_max.size()  && !std::isnan(sched_max[i]))   this->odin_sched_max_[target_idx]  = sched_max[i];
-          if (i < (int)weather.size()    && !std::isnan(weather[i]))     this->odin_weather_[target_idx]    = weather[i];
-          if (i < (int)solar.size()      && !std::isnan(solar[i]))       this->odin_solar_[target_idx]      = solar[i];
-          if (i < (int)prices.size()     && !std::isnan(prices[i]))      this->odin_prices_[target_idx]     = prices[i];
-      }
     }
 
     this->last_run_stats_ = run_stats;
