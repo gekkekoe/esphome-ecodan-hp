@@ -24,8 +24,11 @@ namespace esphome
             if (this->state_.ecodan_instance == nullptr) return -1;
             time_t ts = this->state_.ecodan_instance->get_status().timestamp();
             if (ts == -1) return -1;
+            // Ecodan reports local time; timestamp() uses mktime() which interprets
+            // ControllerDateTime as local time → epoch. Use localtime_r to get back
+            // the correct local hour. gmtime_r would give UTC = wrong hour.
             struct tm t;
-            gmtime_r(&ts, &t);
+            localtime_r(&ts, &t);
             return t.tm_hour;
         }
 
@@ -34,7 +37,7 @@ namespace esphome
             time_t ts = this->state_.ecodan_instance->get_status().timestamp();
             if (ts == -1) return -1;
             struct tm t;
-            gmtime_r(&ts, &t);
+            localtime_r(&ts, &t);
             return t.tm_yday;
         }
 

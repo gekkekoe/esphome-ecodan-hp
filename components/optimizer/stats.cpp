@@ -217,7 +217,7 @@ namespace esphome
                 
                 this->update_learning_model(this->last_processed_day_);
 
-                // trigger new data fetch
+                // trigger new data fetch on day transition
                 this->set_odin_fetch_request();
 
                 // Reset variables for the new day
@@ -242,7 +242,8 @@ namespace esphome
                     struct tm t;
                     localtime_r(&ts, &t);
                     int cur_min = t.tm_min;
-                    if (cur_min >= 55 && current_hour != this->last_pre_hour_triggered_) {
+                    // don't trigger for 23:55 since day transition will trigger MPC
+                    if (current_hour != 23 && cur_min >= 55 && current_hour != this->last_pre_hour_triggered_) {
                         this->last_pre_hour_triggered_ = current_hour;
                         ESP_LOGI(OPTIMIZER_TAG, "Pre-hour trigger at %02d:55 — requesting ODIN solve for hour %d.",
                                 current_hour, (current_hour + 1) % 24);
