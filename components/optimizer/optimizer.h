@@ -89,6 +89,7 @@ namespace esphome
       int      last_processed_day_          = -1;
       int      last_processed_hour_         {-1};
       int      last_pre_hour_triggered_      {-1};
+      uint32_t odin_fetch_pending_ms_        {0};   // deferred day-transition fetch
       float    last_total_heating_produced_ = 0.0f;
       float    last_total_heating_consumed_ = 0.0f;
       bool     last_was_heating_            = false;

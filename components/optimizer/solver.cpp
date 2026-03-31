@@ -89,28 +89,20 @@ namespace esphome
                 this->odin_data_day_ = _day;
             }
 
-            // First run or size mismatch — full replace
+            // Ensure arrays are initialised to 24 slots on first run
             if (!this->odin_data_ready_ || this->odin_production_.size() != 24) {
-                this->odin_production_ = prod;
-                this->odin_solar_forecast_ = solar;
-                this->odin_operation_mode_ = op_mode;
-                this->odin_production_.resize(24);
-                this->odin_solar_forecast_.resize(24);
-                this->odin_operation_mode_.resize(24);
+                this->odin_production_.assign(24, 0.0f);
+                this->odin_solar_forecast_.assign(24, 0.0f);
+                this->odin_operation_mode_.assign(24, 0.0f);
                 this->odin_data_ready_ = true;
             }
 
-            // Partial update: overwrite current hour onward
+            // Always overwrite from current_hour onward
             if (current_hour >= 0 && current_hour < 24) {
                 for (int i = current_hour; i < 24; i++) {
-                    if (i < prod.size() && i < solar.size() && i < op_mode.size()) {
-                        this->odin_production_[i] = prod[i];
-                        this->odin_solar_forecast_[i] = solar[i];
-                        this->odin_operation_mode_[i] = op_mode[i];
-                    } else {
-                        ESP_LOGW(OPTIMIZER_TAG, "ODIN payload shorter than expected, stopping partial update at hour %d", i);
-                        break; 
-                    }
+                    if (i < (int)prod.size())    this->odin_production_[i]     = prod[i];
+                    if (i < (int)solar.size())   this->odin_solar_forecast_[i] = solar[i];
+                    if (i < (int)op_mode.size()) this->odin_operation_mode_[i] = op_mode[i];
                 }
             }
 

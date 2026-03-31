@@ -217,8 +217,10 @@ namespace esphome
                 
                 this->update_learning_model(this->last_processed_day_);
 
-                // trigger new data fetch on day transition
-                this->set_odin_fetch_request();
+                // Delay the fetch by 30s so NVS writes from update_learning_model
+                // finish before the HTTP call starts — both on the main loop,
+                // immediate trigger risks watchdog timeout at midnight.
+                this->odin_fetch_pending_ms_ = millis() + 300000; // fire after 5 min — waits for ODIN 00:05 refresh
 
                 // Reset variables for the new day
                 this->last_processed_day_ = current_day;
@@ -233,6 +235,13 @@ namespace esphome
                 this->daily_max_output_power_ = 0.0f;
                 
                 this->daily_runtime_global = 0.0f;
+            }
+
+            // PENDING FETCH: fired by day transition after 30s delay
+            if (this->odin_fetch_pending_ms_ > 0 && millis() >= this->odin_fetch_pending_ms_) {
+                this->odin_fetch_pending_ms_ = 0;
+                this->set_odin_fetch_request();
+                ESP_LOGI(OPTIMIZER_TAG, "Day transition: delayed fetch now firing.");
             }
 
             // HOURLY MPC TRIGGER
