@@ -83,6 +83,19 @@ number:
     icon: "mdi:flash"
 
   - platform: template
+    name: "Raw Min Output Power"
+    id: num_raw_min_output
+    internal: ${is_internal_asgard_only}
+    initial_value: 3.0
+    min_value: 0.5
+    max_value: 5.0
+    step: 0.1
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: "kW"
+    icon: "mdi:flash-outline"
+
+  - platform: template
     id: num_battery_soc_kwh
     name: ${num_battery_soc_kwh}
     internal: ${is_internal_asgard_only}

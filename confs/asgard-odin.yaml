@@ -55,6 +55,7 @@ script:
                       "\"avg_room_temp\":%.2f,"
                       "\"delta_room_temp\":%.2f,"
                       "\"max_output\":%.2f,"
+                      "\"min_output\":%.2f,"
                       "\"hl_tm_product\":%.4f,"
                       "\"passive_solar_gain_factor\":%.4f,"
                       "\"current_hour\":%d,"
@@ -74,6 +75,7 @@ script:
                       id(num_raw_avg_room_temp).state,
                       id(num_raw_delta_room_temp).state,
                       id(num_raw_max_output).state,
+                      id(num_raw_min_output).state,
                       id(num_raw_hl_tm_product).state,
                       solar_factor,
                       _cur_hour,

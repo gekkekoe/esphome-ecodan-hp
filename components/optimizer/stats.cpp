@@ -220,7 +220,7 @@ namespace esphome
                 // Delay the fetch by 30s so NVS writes from update_learning_model
                 // finish before the HTTP call starts — both on the main loop,
                 // immediate trigger risks watchdog timeout at midnight.
-                this->odin_fetch_pending_ms_ = millis() + 300000; // fire after 5 min — waits for ODIN 00:05 refresh
+                this->odin_fetch_pending_ms_ = millis() + 180000; // fire after 3 min — waits for ODIN 00:01 refresh
 
                 // Reset variables for the new day
                 this->last_processed_day_ = current_day;
