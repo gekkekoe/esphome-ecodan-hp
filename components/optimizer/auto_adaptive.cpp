@@ -93,7 +93,8 @@ namespace esphome
                     float odin_prod   = this->odin_production_[current_hour];
                     xSemaphoreGive(this->odin_mutex_);
 
-                    if (mode != OptimizerOperationMode::UNAVAILABLE && std::isnan(odin_prod)) {
+                    // NAN = no data for this hour yet — fall back to AA, no soft-stop
+                    if (std::isnan(odin_prod) || mode == OptimizerOperationMode::UNAVAILABLE) {
                         ESP_LOGW(OPTIMIZER_TAG, "ODIN data is NAN at hour %d. Forcing fallback.", current_hour);
                         return result;
                     }
