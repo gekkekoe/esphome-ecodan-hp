@@ -2386,12 +2386,8 @@ async function runOdinSolver() {
         if (!isNaN(parsed) && parsed >= 0 && parsed <= 23) solveHour = parsed;
     }
 
-    const profileMap = ["ufh", "radiators", "fancoil"];
-    const profileStr = profileMap[latestState.sel_heating_system_type] || "ufh";
-
     const payload = {
         params: {
-            heating_profile: profileStr,
             heat_produced: pending['raw-heat'] || latestState.raw_heat_produced || 0,
             elec_consumed: pending['raw-elec'] || latestState.raw_elec_consumed || 0,
             runtime_hours: pending['raw-run'] || latestState.raw_runtime_hours || 0,
