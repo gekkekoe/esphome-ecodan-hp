@@ -159,6 +159,11 @@ script:
 
                               id(asgard_dashboard_id)->store_odin_data(
                                 cur_hr, cur_day, exp_end_t, nrg, prod, exp_t, cost, cost_tax, batt, sb, smn, smx, wth, sol, prc, op_mode, stats);
+                            } else {
+                              ESP_LOGE("asgard_dashboard", "Solver failed to find a valid solution path!");
+                              if (root["error"].is<const char*>()) {
+                                  ESP_LOGE("ODIN_API", "Reason: %s", root["error"].as<const char*>());
+                              }
                             }
                             return true;
                           });

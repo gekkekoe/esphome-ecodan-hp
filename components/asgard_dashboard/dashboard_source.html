@@ -2477,7 +2477,8 @@ async function runOdinSolver() {
             updateOdinCharts();
             showToast(`✓ Optimized from hour ${solveHour}`);
         } else {
-            showToast("✗ Solver failed", true);
+          const errorMsg = data.error ? data.error : `HTTP ${res.status}`;
+          showToast("✗ Solver failed: " + errorMsg, true);
         }
     } catch (err) {
         showToast("✗ Request failed: " + err.message, true);
