@@ -20,7 +20,17 @@ script:
                 
                 body: !lambda |-
                   char payload[800];
+                  // Get the active index from your specific select component
+                  int heating_idx = id(heating_system_type).active_index().value_or(0);
+                  const char* profile_str = "ufh"; // Default fallback
                   
+                  if (heating_idx == 0 || heating_idx == 1) {
+                      profile_str = "ufh";
+                  } else if (heating_idx == 2 || heating_idx == 3) {
+                      profile_str = "hybrid";
+                  } else if (heating_idx == 4 || heating_idx == 5) {
+                      profile_str = "radiators";
+                  }
                   float solar_factor = id(num_raw_solar_factor).state;
                   if (std::isnan(solar_factor) || solar_factor <= 0.001f) {
                       solar_factor = 0.015f; // default
@@ -35,6 +45,7 @@ script:
 
                   snprintf(payload, sizeof(payload),
                       "{\"params\":{"
+                      "\"heating_profile\":\"%s\","
                       "\"heat_produced\":%.3f,"
                       "\"elec_consumed\":%.3f,"
                       "\"runtime_hours\":%.2f,"
@@ -54,6 +65,7 @@ script:
                       "\"dhw_drop\":%.2f,"
                       "\"dhw_start_threshold\":%.2f"
                       "}}",
+                      profile_str,
                       id(num_raw_heat_produced).state,
                       id(num_raw_elec_consumed).state,
                       id(num_raw_runtime_hours).state,
