@@ -574,6 +574,20 @@ header {
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Z1/Z2 Settings</div>
+        
+        <div class="ctrl-row">
+          <span class="ctrl-label">Heating System Type</span>
+          <select class="ctrl-select" id="sel-hst" onchange="sendSelect('heating_system_type', this)">
+            <option value="0">UFH</option>
+            <option value="1">UFH *</option>
+            <option value="2">UFH + Radiators</option>
+            <option value="3">UFH + Radiators *</option>
+            <option value="4">Radiators</option>
+            <option value="5">Radiators *</option>
+          </select>
+        </div>
+
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Setpoint Bias</span><div class="stepper"><button class="step-btn" onclick="step('aa-bias', -0.1)">−</button><div class="step-val" id="aa-bias-val">—</div><button class="step-btn" onclick="step('aa-bias', +0.1)">+</button></div></div>
         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Setpoint Bias</span><div class="stepper"><button class="step-btn" onclick="step('aa-bias', -0.1)">−</button><div class="step-val" id="aa-bias-val">—</div><button class="step-btn" onclick="step('aa-bias', +0.1)">+</button></div></div>
 
         <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Short Cycle Protection</div>
