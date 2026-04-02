@@ -280,7 +280,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
       uint32_t execution_ms{0};
       float heat_loss{0.0f}, base_cop{0.0f}, thermal_mass{0.0f};
       float exp_consumption{0.0f}, exp_production{0.0f}, exp_solar{0.0f}, exp_solar_total{0.0f};
-      float total_cost{0.0f}, total_cost_tax{0.0f};
+      float total_cost{0.0f}, total_cost_tax{0.0f}; 
+      float used_solar_kwp{0.0f};
   } last_run_stats_;
 
   // Called from YAML after each successful solver response

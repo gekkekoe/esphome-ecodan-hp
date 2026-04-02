@@ -154,6 +154,7 @@ script:
                               stats.exp_solar_total = root["total_solar_total_kwh"].is<float>() ? root["total_solar_total_kwh"].as<float>() : stats.exp_solar;
                               stats.total_cost      = root["total_cost_eur"].as<float>();
                               stats.total_cost_tax  = root["total_cost_with_tax_eur"].as<float>();
+                              stats.used_solar_kwp  = root["used_solar_kwp"].is<float>() ? root["used_solar_kwp"].as<float>() : 0.0f;
 
                               id(asgard_dashboard_id)->store_odin_data(
                                 cur_hr, cur_day, exp_end_t, nrg, prod, exp_t, cost, cost_tax, batt, sb, smn, smx, wth, sol, prc, op_mode, stats);

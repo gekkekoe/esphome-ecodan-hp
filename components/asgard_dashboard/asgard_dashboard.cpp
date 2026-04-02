@@ -1323,7 +1323,7 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
       response->printf(
           "\"last_run\":{\"execution_ms\":%u,\"heat_loss\":%.3f,\"base_cop\":%.2f,"
           "\"thermal_mass\":%.1f,\"exp_consumption\":%.2f,\"exp_production\":%.2f,"
-          "\"exp_solar\":%.2f,\"exp_solar_total\":%.2f,\"total_cost\":%.4f,\"total_cost_tax\":%.4f}}",
+          "\"exp_solar\":%.2f,\"exp_solar_total\":%.2f,\"used_solar_kwp\":%.2f,\"total_cost\":%.4f,\"total_cost_tax\":%.4f}}",
           this->last_run_stats_.execution_ms,
           this->last_run_stats_.heat_loss,
           this->last_run_stats_.base_cop,
@@ -1332,6 +1332,7 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
           this->last_run_stats_.exp_production,
           this->last_run_stats_.exp_solar,
           this->last_run_stats_.exp_solar_total,
+          this->last_run_stats_.used_solar_kwp, 
           this->last_run_stats_.total_cost,
           this->last_run_stats_.total_cost_tax);
     } else {

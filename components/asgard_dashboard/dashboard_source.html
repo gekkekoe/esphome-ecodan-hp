@@ -1646,11 +1646,17 @@ function updateOdinCharts() {
     const pricesKwh     = prices.map(p => p !== null ? parseFloat((p / 1000).toFixed(5)) : null);
 
     const actualCost = new Array(48).fill(null);
+    const solarKwp = odinDataCache?.last_run?.used_solar_kwp || 0;
+
     for (let h = 0; h < 48; h++) {
         const cons  = actualConsByHour[h];
         const price = prices[h];
-        if (cons !== null && cons > 0 && price !== null && price > 0) {
-            actualCost[h] = parseFloat((cons * price / 1000).toFixed(4));
+        const sol_wm2 = solar[h] || 0; 
+        
+        if (cons !== null && price !== null) {
+            const expected_solar_kwh = sol_wm2 * (solarKwp / 1000);
+            const net_cons = Math.max(0, cons - expected_solar_kwh);            
+            actualCost[h] = parseFloat((net_cons * price / 1000).toFixed(4));
         }
     }
 
