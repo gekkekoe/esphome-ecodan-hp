@@ -1,4 +1,11 @@
-# easy install
+## ⚠️ WARNING flashing factory image resets all your settings to default
+> **Recovery mode**:
+>
+> Only use the **factory** variant of the firmware when flashing via the web.esphome.io site.
+> If you use the ota image, your unit will go into bootloop and you need to enter recovery mode to recover from this.
+> Flash the ota image via http://ecodan-heatpump.local or http://ip)
+
+
 ## Get the factory.bin firmware for initial flash
 * Go to https://github.com/gekkekoe/esphome-ecodan-hp/releases/latest and download one of the factory.bin files. 
 ```
