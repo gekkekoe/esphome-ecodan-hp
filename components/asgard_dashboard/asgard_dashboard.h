@@ -39,6 +39,9 @@ struct HistoryRecord {
   uint16_t flags; // Bit 0-5 = booleans, Bit 6-9 = mode
   int16_t cons;
   int16_t prod;
+  int16_t outside;
+  int16_t liquid_pipe;
+  int16_t condensing;
 };
 
 struct DashboardSnapshot {
@@ -62,6 +65,8 @@ struct DashboardSnapshot {
   float hp_feed_temp{NAN};
   float hp_return_temp{NAN};
   float outside_temp{NAN};
+  float liquid_pipe_temp{NAN};
+  float condensing_temp{NAN};
   float compressor_frequency{NAN};
   float flow_rate{NAN};
   float computed_output_power{NAN};
@@ -163,6 +168,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_hp_feed_temp(sensor::Sensor *s)                    { hp_feed_temp_ = s; }
   void set_hp_return_temp(sensor::Sensor *s)                  { hp_return_temp_ = s; }
   void set_outside_temp(sensor::Sensor *s)                    { outside_temp_ = s; }
+  void set_liquid_pipe_temp(sensor::Sensor *s)               { liquid_pipe_temp_ = s; }
+  void set_condensing_temp(sensor::Sensor *s)                { condensing_temp_ = s; }
   void set_compressor_frequency(sensor::Sensor *s)            { compressor_frequency_ = s; }
   void set_flow_rate(sensor::Sensor *s)                       { flow_rate_ = s; }
   void set_computed_output_power(sensor::Sensor *s)           { computed_output_power_ = s; }
@@ -323,6 +330,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   sensor::Sensor *hp_feed_temp_{nullptr};
   sensor::Sensor *hp_return_temp_{nullptr};
   sensor::Sensor *outside_temp_{nullptr};
+  sensor::Sensor *liquid_pipe_temp_{nullptr};
+  sensor::Sensor *condensing_temp_{nullptr};
   sensor::Sensor *compressor_frequency_{nullptr};
   sensor::Sensor *flow_rate_{nullptr};
   sensor::Sensor *computed_output_power_{nullptr};

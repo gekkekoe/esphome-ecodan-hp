@@ -391,6 +391,18 @@ header {
     <div class="chart-container"><canvas id="freqChart"></canvas></div>
   </div>
 
+  <div class="chart-card full-width">
+    <div class="chart-header">
+      <div class="section-title" style="margin:0">Temperatures</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#00c8ff"></div>Outside</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ffb020"></div>Liquid Pipe1</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div>Condensing</div>
+      </div>
+    </div>
+    <div class="chart-container"><canvas id="outsideTempChart"></canvas></div>
+  </div>
+
   <div class="ctrl-card">
     <div class="section-title">Performance</div>
     
@@ -865,7 +877,8 @@ const MODE_MAP = {
 const history = {
   timestamps: [], feed: [], ret: [], z1sp: [], z2sp: [], z1curr: [], z2curr: [],
   z1flow: [], z2flow: [], freq: [], mode: [], bin_comp: [], bin_boost: [], 
-  bin_defrost: [], bin_pump: [], bin_in1: [], bin_in6: [], cons: [], prod: []
+  bin_defrost: [], bin_pump: [], bin_in1: [], bin_in6: [], cons: [], prod: [],
+  outside: [], liquid_pipe: [], condensing: []
 };
 
 const pending = { 
@@ -950,7 +963,7 @@ const STEP_EL = {
 let lastGraphUpdate = 0;
 let initialZoomDone = false;
 let userZoomed = false;
-let tempChart = null, freqChart = null, statusChart = null;
+let tempChart = null, freqChart = null, statusChart = null, outsideTempChart = null;
 
 // Manual Upload
 function triggerUpload() { document.getElementById('ota-file').click(); }
@@ -1164,6 +1177,39 @@ function initCharts() {
               return l;
             }
           }
+        }
+      }
+    }
+  });
+
+  // Outside Temperature Chart
+  outsideTempChart = new Chart(document.getElementById('outsideTempChart').getContext('2d'), {
+    type: 'line',
+    data: { labels: [], datasets: [
+      { label: 'Outside',    data: [], borderColor: '#00c8ff', borderWidth: 2, pointRadius: 0, tension: 0.25, fill: false },
+      { label: 'Liquid Pipe', data: [], borderColor: '#ffb020', borderWidth: 2, pointRadius: 0, tension: 0.25, fill: false },
+      { label: 'Condensing', data: [], borderColor: '#c084fc', borderWidth: 2, pointRadius: 0, tension: 0.25, fill: false }
+    ]},
+    options: {
+      ...commonOptions,
+      plugins: {
+        ...commonOptions.plugins,
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f1525', borderColor: '#1e2d4a', borderWidth: 1, titleColor: '#8899bb', bodyColor: '#e2eaff',
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) : '—'}°C` }
+        }
+      },
+      scales: {
+        x: commonOptions.scales.x,
+        y: { 
+            ticks: { 
+                stepSize: 0.5,
+                color: '#8295b8', 
+                font: { family: "'JetBrains Mono', monospace", size: 10 }, 
+                callback: v => v.toFixed(1) + '°C'
+            }, 
+            grid: { color: '#1e2d4a' } 
         }
       }
     }
@@ -1755,6 +1801,7 @@ function updateCharts(d) {
     history.bin_comp.shift(); history.bin_boost.shift(); history.bin_defrost.shift();
     history.bin_pump.shift(); history.bin_in1.shift(); history.bin_in6.shift();
     history.cons.shift(); history.prod.shift();
+    history.outside.shift(); history.liquid_pipe.shift(); history.condensing.shift();
   }
 
   history.timestamps.push(now);
@@ -1767,6 +1814,9 @@ function updateCharts(d) {
   history.z1flow.push(d.z1_flow_temp_target ?? null);
   history.z2flow.push(d.z2_flow_temp_target ?? null);
   history.freq.push(d.compressor_frequency ?? null);
+  history.outside.push(d.outside_temp ?? null);
+  history.liquid_pipe.push(d.liquid_pipe_temp ?? null);
+  history.condensing.push(d.condensing_temp ?? null);
   history.cons.push(d.daily_total_energy_consumption ?? null);
   history.prod.push(d.daily_computed_output_power ?? null);
   
@@ -1781,7 +1831,7 @@ function updateCharts(d) {
 
   const labels = history.timestamps.map(t => new Date(t).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }));
 
-  [tempChart, freqChart, statusChart].forEach(c => c.data.labels = labels);
+  [tempChart, freqChart, outsideTempChart, statusChart].forEach(c => c.data.labels = labels);
 
   tempChart.data.datasets[0].data = history.feed;
   tempChart.data.datasets[1].data = history.ret;
@@ -1807,6 +1857,10 @@ function updateCharts(d) {
   
   freqChart.data.datasets[0].data = history.freq;
 
+  outsideTempChart.data.datasets[0].data = history.outside;
+  outsideTempChart.data.datasets[1].data = history.liquid_pipe;
+  outsideTempChart.data.datasets[2].data = history.condensing;
+
   statusChart.data.datasets[0].data = history.mode.map(() => 7);
   statusChart.data.datasets[1].data = history.bin_comp.map(() => 6);
   statusChart.data.datasets[2].data = history.bin_boost.map(() => 5);
@@ -1821,7 +1875,7 @@ function updateCharts(d) {
     
     if (startIndex !== -1 && startIndex < labels.length) {
       const minLabel = labels[startIndex];
-      [tempChart, freqChart, statusChart].forEach(c => {
+      [tempChart, freqChart, outsideTempChart, statusChart].forEach(c => {
         c.options.scales.x.min = minLabel;
         c.options.scales.x.max = null; 
       });
@@ -1831,6 +1885,7 @@ function updateCharts(d) {
 
   tempChart.update();
   freqChart.update();
+  outsideTempChart.update();
   statusChart.update();
   updateOdinCharts();
 }
@@ -2666,7 +2721,7 @@ function updateStatus(text, color) {
 }
 
 function syncScales(chart, min, max) {
-  [tempChart, freqChart, statusChart].forEach(c => {
+  [tempChart, freqChart, statusChart, outsideTempChart].forEach(c => {
     if (c && c !== chart) {
       c.options.scales.x.min = min;
       c.options.scales.x.max = max;
@@ -2677,7 +2732,7 @@ function syncScales(chart, min, max) {
 
 function resetAllZoom() {
   userZoomed = false;
-  [tempChart, freqChart, statusChart].forEach(c => {
+  [tempChart, freqChart, statusChart, outsideTempChart].forEach(c => {
     if (c) {
       c.options.scales.x.min = null; 
       c.options.scales.x.max = null;
@@ -2730,6 +2785,7 @@ async function loadServerHistory() {
     history.z1flow = []; history.z2flow = []; history.freq = []; history.mode = [];
     history.bin_comp = []; history.bin_boost = []; history.bin_defrost = [];
     history.bin_pump = []; history.bin_in1 = []; history.bin_in6 = []; history.cons = []; history.prod = [];
+    history.outside = []; history.liquid_pipe = []; history.condensing = [];
 
     const serverLastTs = data[data.length - 1][0] * 1000; 
     const browserNow = Date.now();
@@ -2764,12 +2820,15 @@ async function loadServerHistory() {
       history.bin_in6.push((flags & (1 << 5)) ? 1 : 0);
       history.cons.push(row.length > 11 ? getF(row[11]) : null);
       history.prod.push(row.length > 12 ? getF(row[12]) : null);
+      history.outside.push(row.length > 13 ? getF(row[13]) : null);
+      history.liquid_pipe.push(row.length > 14 ? getF(row[14]) : null);
+      history.condensing.push(row.length > 15 ? getF(row[15]) : null);
       
       const modeNum = (flags >> 6) & 0x0F;
       history.mode.push(MODE_MAP[modeNum] || "Unknown");
     });
     
-    tempChart.update('none'); freqChart.update('none'); statusChart.update('none');
+    tempChart.update('none'); freqChart.update('none'); statusChart.update('none'); outsideTempChart.update('none');
   } catch(e) { console.error("History fetch failed", e); }
 }
 

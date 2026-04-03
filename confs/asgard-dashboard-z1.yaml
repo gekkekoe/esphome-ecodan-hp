@@ -109,3 +109,7 @@ asgard_dashboard:
 # ── Cooling Z1
   num_cooling_smart_start_z1_id:     cooling_smart_start_temp
   num_min_cooling_flow_z1_id:        minimum_cooling_flow_temp
+
+# ── Outside unit
+  liquid_pipe_temp_id:                ou_liquid_pipe_temp
+  condensing_temp_id:                 hp_refrigerant_condensing_temp

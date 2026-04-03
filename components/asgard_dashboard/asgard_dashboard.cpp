@@ -426,6 +426,8 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.hp_feed_temp = get_f(hp_feed_temp_);
   current_snapshot_.hp_return_temp = get_f(hp_return_temp_);
   current_snapshot_.outside_temp = get_f(outside_temp_);
+  current_snapshot_.liquid_pipe_temp = get_f(liquid_pipe_temp_);
+  current_snapshot_.condensing_temp = get_f(condensing_temp_);
   current_snapshot_.compressor_frequency = get_f(compressor_frequency_);
   current_snapshot_.flow_rate = get_f(flow_rate_);
   current_snapshot_.computed_output_power = get_f(computed_output_power_);
@@ -601,6 +603,8 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_f("hp_feed_temp", snap.hp_feed_temp);
   p_f("hp_return_temp", snap.hp_return_temp);
   p_f("outside_temp", snap.outside_temp);
+  p_f("liquid_pipe_temp", snap.liquid_pipe_temp);
+  p_f("condensing_temp", snap.condensing_temp);
   p_f("compressor_frequency", snap.compressor_frequency);
   p_f("flow_rate", snap.flow_rate);
   p_f("computed_output_power", snap.computed_output_power);
@@ -795,6 +799,9 @@ void EcodanDashboard::record_history_() {
   rec.z1_flow   = pack_temp_(get_sensor(z1_flow_temp_target_));
   rec.z2_flow   = pack_temp_(get_sensor(z2_flow_temp_target_));
   rec.freq      = pack_temp_(get_sensor(compressor_frequency_));
+  rec.outside     = pack_temp_(get_sensor(outside_temp_));
+  rec.liquid_pipe = pack_temp_(get_sensor(liquid_pipe_temp_));
+  rec.condensing  = pack_temp_(get_sensor(condensing_temp_));
   
   // Determine if the system is actively running AND heating (Mode 2 = HEAT_ON)
   bool is_running = bin_state_(status_compressor_) || (get_sensor(compressor_frequency_) > 0.0f);
@@ -906,12 +913,12 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
     }
     first = false;
 
-    char item[128];
-    int len = snprintf(item, sizeof(item), "[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u,%d,%d]",
+    char item[160]; 
+    int len = snprintf(item, sizeof(item), "[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u,%d,%d,%d,%d,%d]",
       rec.timestamp, rec.hp_feed, rec.hp_return,
       rec.z1_sp, rec.z2_sp, rec.z1_curr, rec.z2_curr,
       rec.z1_flow, rec.z2_flow, rec.freq, rec.flags,
-      rec.cons, rec.prod
+      rec.cons, rec.prod, rec.outside, rec.liquid_pipe, rec.condensing
     );
     
     // Abort loop immediately if client drops the connection
