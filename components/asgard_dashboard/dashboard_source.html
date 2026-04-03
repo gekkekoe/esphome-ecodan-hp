@@ -589,6 +589,11 @@ header {
 
         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Setpoint Bias</span><div class="stepper"><button class="step-btn" onclick="step('aa-bias', -0.1)">−</button><div class="step-val" id="aa-bias-val">—</div><button class="step-btn" onclick="step('aa-bias', +0.1)">+</button></div></div>
 
+        <div id="cool-settings-z1" style="display:none;">
+          <div class="ctrl-row"><span class="ctrl-label">Global Smart Start Temp</span><div class="stepper"><button class="step-btn" onclick="step('cool-start-z1', -0.5)">−</button><div class="step-val" id="cool-start-z1-val">—</div><button class="step-btn" onclick="step('cool-start-z1', +0.5)">+</button></div></div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Cool Flow</span><div class="stepper"><button class="step-btn" onclick="step('cool-min-z1', -0.5)">−</button><div class="step-val" id="cool-min-z1-val">—</div><button class="step-btn" onclick="step('cool-min-z1', +0.5)">+</button></div></div>
+        </div>
+
         <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Short Cycle Protection</div>
         <div class="ctrl-row"><span class="ctrl-label">Predictive Control</span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
         <div class="ctrl-row"><span class="ctrl-label">Time Window (min)</span><div class="stepper"><button class="step-btn" onclick="step('psc-win', -0.5)">−</button><div class="step-val" id="psc-win-val">—</div><button class="step-btn" onclick="step('psc-win', +0.5)">+</button></div></div>
@@ -600,11 +605,6 @@ header {
         <div id="heat-settings-z1">
           <div class="ctrl-row"><span class="ctrl-label">Max Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -0.1)">−</button><div class="step-val" id="aa-max-val">—</div><button class="step-btn" onclick="step('aa-max', +0.1)">+</button></div></div>
           <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -0.1)">−</button><div class="step-val" id="aa-min-val">—</div><button class="step-btn" onclick="step('aa-min', +0.1)">+</button></div></div>
-        </div>
-
-        <div id="cool-settings-z1" style="display:none;">
-          <div class="ctrl-row"><span class="ctrl-label">Global Smart Start Temp</span><div class="stepper"><button class="step-btn" onclick="step('cool-start-z1', -0.5)">−</button><div class="step-val" id="cool-start-z1-val">—</div><button class="step-btn" onclick="step('cool-start-z1', +0.5)">+</button></div></div>
-          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Cool Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('cool-min-z1', -0.5)">−</button><div class="step-val" id="cool-min-z1-val">—</div><button class="step-btn" onclick="step('cool-min-z1', +0.5)">+</button></div></div>
         </div>
         
         <div id="aa-z2-container" style="display:none;">
@@ -1919,18 +1919,25 @@ function updateDot(id, action) {
 }
 
 function toggleCoolingUI() {
-  const modeZ1 = document.getElementById('sel-z1mode')?.selectedIndex;
-  const z1IsCooling = (modeZ1 === 3 || modeZ1 === 4 || modeZ1 === 6);
+  // --- Zone 1 ---
+  const opModeZ1 = document.getElementById('sel-z1mode')?.selectedIndex;
+  const vModeZ1 = document.getElementById('sel-z1-vmode')?.value;
+  const z1IsCooling = (opModeZ1 === 3 || opModeZ1 === 4 || opModeZ1 === 6) || (vModeZ1 === 'cool');
+  
   const h1 = document.getElementById('heat-settings-z1');
-  const c1 = document.getElementById('cool-settings-z1');
   if (h1) h1.style.display = z1IsCooling ? 'none' : 'block';
-  if (c1) c1.style.display = z1IsCooling ? 'block' : 'none';
+
+  // --- Zone 2 ---
+  const opModeZ2 = document.getElementById('sel-z2mode')?.selectedIndex;
+  const vModeZ2 = document.getElementById('sel-z2-vmode')?.value;
+  const z2IsCooling = (opModeZ2 === 3 || opModeZ2 === 4 || opModeZ2 === 6) || (vModeZ2 === 'cool');
   
-  const modeZ2 = document.getElementById('sel-z2mode')?.selectedIndex;
-  const z2IsCooling = (modeZ2 === 3 || modeZ2 === 4 || modeZ2 === 6);
-  const h2 = document.getElementById('heat-settings-z2');
-  
+  const h2 = document.getElementById('heat-settings-z2');  
   if (h2) h2.style.display = z2IsCooling ? 'none' : 'block';
+  
+  // --- Global Cooling ---
+  const cGlobal = document.getElementById('cool-settings-z1');
+  if (cGlobal) cGlobal.style.display = (z1IsCooling || z2IsCooling) ? 'block' : 'none';
 }
 
 function render(d) {
