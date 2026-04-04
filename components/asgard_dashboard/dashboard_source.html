@@ -265,7 +265,7 @@ header {
     <div class="badge">
       <span class="badge-label">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"></path><line x1="12" y1="2" x2="12" y2="9"></line><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"></line><line x1="1" y1="18" x2="3" y2="18"></line><line x1="21" y1="18" x2="23" y2="18"></line><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"></line><line x1="23" y1="22" x2="1" y2="22"></line><polyline points="8 22 8 18 16 18 16 22"></polyline></svg>
-        Outside
+        Ambient
       </span>
       <span class="badge-value cool" id="b-outside">—</span>
     </div>
@@ -393,9 +393,9 @@ header {
 
   <div class="chart-card full-width">
     <div class="chart-header">
-      <div class="section-title" style="margin:0">Temperatures</div>
+      <div class="section-title" style="margin:0">Condenser Performance</div>
       <div class="chart-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#00c8ff"></div>Outside</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#00c8ff"></div>Ambient</div>
         <div class="legend-item"><div class="legend-dot" style="background:#ffb020"></div>Liquid Pipe1</div>
         <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div>Condensing</div>
       </div>
@@ -745,7 +745,7 @@ header {
       </div>
 
       <div class="ctrl-row">
-        <span class="ctrl-label param-label">Avg Outside Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature yesterday. Used to calculate heat loss and COP correction.</span></span>
+        <span class="ctrl-label param-label">Avg Ambient Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature yesterday. Used to calculate heat loss and COP correction.</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-out', -0.1)">−</button><input type="number" class="step-input" id="raw-out-val" onchange="manualInput('raw-out', this.value)" /><button class="step-btn" onclick="step('raw-out', +0.1)">+</button></div>
       </div>
 
@@ -1186,7 +1186,7 @@ function initCharts() {
   outsideTempChart = new Chart(document.getElementById('outsideTempChart').getContext('2d'), {
     type: 'line',
     data: { labels: [], datasets: [
-      { label: 'Outside',    data: [], borderColor: '#00c8ff', borderWidth: 2, pointRadius: 0, tension: 0.25, fill: false },
+      { label: 'Ambient',    data: [], borderColor: '#00c8ff', borderWidth: 2, pointRadius: 0, tension: 0.25, fill: false },
       { label: 'Liquid Pipe', data: [], borderColor: '#ffb020', borderWidth: 2, pointRadius: 0, tension: 0.25, fill: false },
       { label: 'Condensing', data: [], borderColor: '#c084fc', borderWidth: 2, pointRadius: 0, tension: 0.25, fill: false }
     ]},
@@ -1568,7 +1568,7 @@ odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2
       data: {
           labels: labels48,
           datasets: [
-              { label: 'Outside Temp (°C)', data: [], borderColor: '#38bdf8', borderWidth: 2,
+              { label: 'Ambient Temp (°C)', data: [], borderColor: '#38bdf8', borderWidth: 2,
                 backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, spanGaps: true,
                 yAxisID: 'yTemp' },
               { label: 'Solar Irradiance (W/m²)', data: [], borderColor: '#fde68a', borderWidth: 2,
