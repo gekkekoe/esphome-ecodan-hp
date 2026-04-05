@@ -99,7 +99,6 @@ namespace esphome
         esphome::number::Number *num_raw_avg_outside_temp;
         esphome::number::Number *num_raw_avg_room_temp;
         esphome::number::Number *num_raw_delta_room_temp;
-        esphome::number::Number *num_raw_max_output;
         esphome::number::Number *num_raw_hl_tm_product;  // heat_loss × thermal_mass from night cooling
         esphome::number::Number *num_raw_solar_factor;
         esphome::number::Number *num_battery_soc_kwh;

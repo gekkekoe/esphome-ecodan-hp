@@ -24,6 +24,14 @@ esp32:
       CONFIG_ESP_MAIN_TASK_STACK_SIZE: "8192"
       CONFIG_LWIP_TCPIP_TASK_STACK_SIZE: "12288"
 
+      # Replace the crashing assert with a graceful return
+      CONFIG_LWIP_NETCONN_FULLDUPLEX: y        # prevents use-after-close race on netconn
+      CONFIG_LWIP_TCP_CLOSE_TIMEOUT_MS: "2000" # don't linger too long on broken connections
+      CONFIG_LWIP_MAX_ACTIVE_TCP: "8"          # reduce concurrent TCP connections (default 16)
+      CONFIG_LWIP_TCP_RECVMBOX_SIZE: "8"
+      CONFIG_LWIP_TCPIP_RECVMBOX_SIZE: "32"
+      CONFIG_LWIP_SO_RCVBUF: y 
+
 uart:
   - id: uart_ecodan
     rx_pin:

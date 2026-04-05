@@ -758,16 +758,6 @@ header {
         <span class="ctrl-label param-label">Delta Room Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C (daily swing)</span>Difference between max and min room temp yesterday. Small delta = high thermal mass (house holds heat well).</span></span>
         <div class="stepper"><button class="step-btn" onclick="step('raw-delta', -0.1)">−</button><input type="number" class="step-input" id="raw-delta-val" onchange="manualInput('raw-delta', this.value)" /><button class="step-btn" onclick="step('raw-delta', +0.1)">+</button></div>
       </div>
-
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">Min Output<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kW thermal</span>Minimum modulation your heat pump can run at. Solver will never plan below this when heating is needed. Default 3 kW.</span></span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-min-out', -0.1)">−</button><input type="number" class="step-input" id="raw-min-out-val" onchange="manualInput('raw-min-out', this.value)" /><button class="step-btn" onclick="step('raw-min-out', +0.1)">+</button></div>
-      </div>
-
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">Max Output<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kW thermal</span>Output cap sent to the solver. Set to rated HP output, or lower to limit noise or reduce peak load. E.g. 7 on a 10 kW unit = max 70% load.</span></span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-max-out', -0.1)">−</button><input type="number" class="step-input" id="raw-max-out-val" onchange="manualInput('raw-max-out', this.value)" /><button class="step-btn" onclick="step('raw-max-out', +0.1)">+</button></div>
-      </div>
       
       <div class="ctrl-row">
         <span class="ctrl-label param-label">HL × TM Product<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours (Tau)</span>Thermal time constant of your house. Higher = house holds heat longer. Learned automatically. Typical: 50–300h.</span></span>
@@ -890,7 +880,7 @@ const pending = {
   'z2-sp': null, 'z2-hyst': null, 'room-z2-sp': null,
   'flow-z1-sp': null, 'flow-z2-sp': null,
   'raw-heat': null, 'raw-elec': null, 'raw-run': null,
-  'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-max-out': null, 'raw-min-out': null, 'raw-solar-factor': null,
+  'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-solar-factor': null,
   'batt-soc': null, 'batt-max-dis': null,
   'cool-start-z1': null, 'cool-min-z1': null, 'dhw-thresh': null
 };
@@ -930,8 +920,6 @@ const LIMITS = {
   'raw-out': { min: -25.0, max: 40.0, step: 0.1 },
   'raw-room': { min: 10.0, max: 35.0, step: 0.1 },
   'raw-delta': { min: 0.0, max: 10.0, step: 0.1 },
-  'raw-max-out': { min: 1.0, max: 20.0, step: 0.1 },
-  'raw-min-out': { min: 0.5, max: 5.0, step: 0.1 },
   'raw-hl-tm': { min: 0.0, max: 300.0, step: 0.5 },
   'raw-solar-factor': { min: 0.001, max: 0.05, step: 0.0025 },
   'batt-soc': { min: 0.0, max: 30.0, step: 0.1 },
@@ -953,7 +941,7 @@ const STEP_EL = {
   'flow-z1-sp': 'flow-z1-sp-val', 'flow-z2-sp': 'flow-z2-sp-val',
   'raw-heat': 'raw-heat-val', 'raw-elec': 'raw-elec-val', 'raw-run': 'raw-run-val',
   'raw-out': 'raw-out-val', 'raw-room': 'raw-room-val', 'raw-delta': 'raw-delta-val',
-  'raw-max-out': 'raw-max-out-val', 'raw-min-out': 'raw-min-out-val', 'raw-hl-tm': 'raw-hl-tm-val','raw-solar-factor': 'raw-solar-factor-val',
+  'raw-hl-tm': 'raw-hl-tm-val','raw-solar-factor': 'raw-solar-factor-val',
   'batt-soc': 'batt-soc-val',
   'batt-max-dis': 'batt-max-dis-val',
   'cool-start-z1': 'cool-start-z1-val', 'cool-min-z1': 'cool-min-z1-val',
@@ -2219,8 +2207,6 @@ function render(d) {
   seedPending('raw-out', d.raw_avg_outside_temp);
   seedPending('raw-room', d.raw_avg_room_temp);
   seedPending('raw-delta', d.raw_delta_room_temp);
-  seedPending('raw-max-out', d.raw_max_output);
-  seedPending('raw-min-out', d.raw_min_output ?? 3.0);
   seedPending('raw-hl-tm', d.raw_hl_tm_product);
   seedPending('raw-solar-factor', d.raw_solar_factor);
   seedPending('batt-soc', d.battery_soc_kwh);
@@ -2436,10 +2422,10 @@ async function sendPhysics(btn) {
   btn.classList.add('sending');
   let c = 0;
   try {
-    const physicsKeys = ['raw-heat','raw-elec','raw-run','raw-out','raw-room','raw-delta','raw-max-out','raw-min-out','raw-hl-tm','raw-solar-factor','batt-soc','batt-max-dis'];
+    const physicsKeys = ['raw-heat','raw-elec','raw-run','raw-out','raw-room','raw-delta','raw-hl-tm','raw-solar-factor','batt-soc','batt-max-dis'];
     const physicsMap = { 'raw-heat': 'raw_heat_produced', 'raw-elec': 'raw_elec_consumed', 'raw-run': 'raw_runtime_hours',
       'raw-out': 'raw_avg_outside_temp', 'raw-room': 'raw_avg_room_temp', 'raw-delta': 'raw_delta_room_temp',
-      'raw-max-out': 'raw_max_output', 'raw-min-out': 'raw_min_output', 'raw-hl-tm': 'raw_hl_tm_product', 'raw-solar-factor': 'raw_solar_factor',
+      'raw-hl-tm': 'raw_hl_tm_product', 'raw-solar-factor': 'raw_solar_factor',
       'batt-soc': 'battery_soc_kwh', 'batt-max-dis': 'battery_max_discharge_kw' };
     for (const k of physicsKeys) {
       if (hasChanged(k)) {
@@ -2467,20 +2453,14 @@ async function runOdinSolver() {
         if (!isNaN(parsed) && parsed >= 0 && parsed <= 23) solveHour = parsed;
     }
 
-    const profileMap = ["ufh", "radiators", "fancoil"];
-    const profileStr = profileMap[latestState.sel_heating_system_type] || "ufh";
-
     const payload = {
         params: {
-            heating_profile: profileStr,
             heat_produced: pending['raw-heat'] || latestState.raw_heat_produced || 0,
             elec_consumed: pending['raw-elec'] || latestState.raw_elec_consumed || 0,
             runtime_hours: pending['raw-run'] || latestState.raw_runtime_hours || 0,
             avg_outside_temp: pending['raw-out'] || latestState.raw_avg_outside_temp || 7,
             avg_room_temp: pending['raw-room'] || latestState.raw_avg_room_temp || 20,
             delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
-            max_output: pending['raw-max-out'] || latestState.raw_max_output || 8.0,
-            min_output: pending['raw-min-out'] ?? latestState.raw_min_output ?? 3.0,
             hl_tm_product: pending['raw-hl-tm'] ?? latestState.raw_hl_tm_product ?? 0.0,
             passive_solar_gain_factor: pending['raw-solar-factor'] || latestState.raw_solar_factor || 0.015,
             current_room_temp: latestState.z1_current_temp || 20.0,

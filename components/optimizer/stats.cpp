@@ -366,7 +366,6 @@ namespace esphome
             }
             update_ema_num(this->state_.num_raw_avg_room_temp, avg_room, ALPHA);
             update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
-            //update_ema_num(this->state_.num_raw_max_output, max_out_kw, ALPHA);
 
             ESP_LOGI(OPTIMIZER_TAG, "Numbers updated (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
                      this->state_.num_raw_heat_produced->state, this->state_.num_raw_elec_consumed->state, 

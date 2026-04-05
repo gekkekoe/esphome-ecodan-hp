@@ -116,8 +116,8 @@ namespace esphome
                     HeatingProfile prof = this->get_heating_profile_(heating_type_index);
 
                     float max_out = 7.0f;
-                    if (this->state_.num_raw_max_output != nullptr && this->state_.num_raw_max_output->has_state()) {
-                        max_out = this->state_.num_raw_max_output->state;
+                    if (this->odin_max_output_ != 0) {
+                        max_out = this->odin_max_output_;
                     }
                     if (max_out < 1.0f) max_out = 7.0f;
                     
@@ -367,8 +367,8 @@ namespace esphome
                     // Otherwise, fall back to the heuristic load-ratio mapping.
                     if (flow_rate > 5.0f) {
                         float max_out = 7.0f;
-                        if (this->state_.num_raw_max_output != nullptr && this->state_.num_raw_max_output->has_state()) {
-                            max_out = this->state_.num_raw_max_output->state;
+                        if (this->odin_max_output_ != 0) {
+                            max_out = this->odin_max_output_;
                         }
                         
                         // kW = (flow / 60) * (delta T) * 4.18

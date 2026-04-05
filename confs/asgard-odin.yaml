@@ -1,9 +1,10 @@
 http_request:
   verify_ssl: false
-  timeout: 5s
+  timeout: 3s
 
 script:
   - id: fetch_odin_optimization
+    mode: single
     then:
       - if:
           condition:
@@ -19,18 +20,8 @@ script:
                 max_response_buffer_size: 6144
                 
                 body: !lambda |-
-                  char payload[800];
-                  // Get the active index from your specific select component
-                  int heating_idx = id(heating_system_type).active_index().value_or(0);
-                  const char* profile_str = "ufh"; // Default fallback
-                  
-                  if (heating_idx == 0 || heating_idx == 1) {
-                      profile_str = "ufh";
-                  } else if (heating_idx == 2 || heating_idx == 3) {
-                      profile_str = "hybrid";
-                  } else if (heating_idx == 4 || heating_idx == 5) {
-                      profile_str = "radiators";
-                  }
+                  static char payload[1024];
+
                   float solar_factor = id(num_raw_solar_factor).state;
                   if (std::isnan(solar_factor) || solar_factor <= 0.001f) {
                       solar_factor = 0.015f; // default
@@ -45,15 +36,12 @@ script:
 
                   snprintf(payload, sizeof(payload),
                       "{\"params\":{"
-                      "\"heating_profile\":\"%s\","
                       "\"heat_produced\":%.3f,"
                       "\"elec_consumed\":%.3f,"
                       "\"runtime_hours\":%.2f,"
                       "\"avg_outside_temp\":%.2f,"
                       "\"avg_room_temp\":%.2f,"
                       "\"delta_room_temp\":%.2f,"
-                      "\"max_output\":%.2f,"
-                      "\"min_output\":%.2f,"
                       "\"hl_tm_product\":%.4f,"
                       "\"passive_solar_gain_factor\":%.4f,"
                       "\"current_hour\":%d,"
@@ -65,15 +53,12 @@ script:
                       "\"dhw_drop\":%.2f,"
                       "\"dhw_start_threshold\":%.2f"
                       "}}",
-                      profile_str,
                       id(num_raw_heat_produced).state,
                       id(num_raw_elec_consumed).state,
                       id(num_raw_runtime_hours).state,
                       id(num_raw_avg_outside_temp).state,
                       id(num_raw_avg_room_temp).state,
                       id(num_raw_delta_room_temp).state,
-                      id(num_raw_max_output).state,
-                      id(num_raw_min_output).state,
                       id(num_raw_hl_tm_product).state,
                       solar_factor,
                       _cur_hour,
@@ -141,8 +126,6 @@ script:
                               int cur_hr = root["current_hour"].is<int>() ? root["current_hour"].as<int>() : id(optimizer_ptr)->get_current_ecodan_hour();
                               int cur_day = id(optimizer_ptr)->get_current_ecodan_day();
 
-                              id(optimizer_ptr)->store_odin_data(cur_hr, prod, sol, op_mode);
-
                               esphome::asgard_dashboard::EcodanDashboard::LastRunStats stats;
                               stats.execution_ms    = root["execution_ms"].as<uint32_t>();
                               stats.heat_loss       = root["used_heat_loss"].as<float>();
@@ -155,6 +138,10 @@ script:
                               stats.total_cost      = root["total_cost_eur"].as<float>();
                               stats.total_cost_tax  = root["total_cost_with_tax_eur"].as<float>();
                               stats.used_solar_kwp  = root["used_solar_kwp"].is<float>() ? root["used_solar_kwp"].as<float>() : 0.0f;
+                              stats.min_output      = root["used_min_output"].is<float>() ? root["used_min_output"].as<float>() : 3.0f;
+                              stats.max_output      = root["used_max_output"].is<float>() ? root["used_max_output"].as<float>() : 8.0f;
+
+                              id(optimizer_ptr)->store_odin_data(cur_hr, stats.min_output, stats.max_output, prod, sol, op_mode);
 
                               id(asgard_dashboard_id)->store_odin_data(
                                 cur_hr, cur_day, exp_end_t, nrg, prod, exp_t, cost, cost_tax, batt, sb, smn, smx, wth, sol, prc, op_mode, stats);

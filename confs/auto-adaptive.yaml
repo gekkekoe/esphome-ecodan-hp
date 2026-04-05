@@ -71,7 +71,6 @@ esphome:
             state.daily_heating_produced = id(daily_computed_output_power);
             state.daily_heating_consumed = id(delta_energy_consumed_increasing);
 
-            state.num_raw_max_output = id(num_raw_max_output);
             state.num_raw_heat_produced = id(num_raw_heat_produced);
             state.num_raw_elec_consumed = id(num_raw_elec_consumed);
             state.num_raw_runtime_hours = id(num_raw_runtime_hours);

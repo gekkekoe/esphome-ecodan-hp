@@ -72,6 +72,8 @@ namespace esphome
         // ─────────────────────────────────────────────────────────────────
 
         void Optimizer::store_odin_data(int current_hour,
+                                        float min_output, 
+                                        float max_output, 
                                         const std::vector<float>& prod,
                                         const std::vector<float>& solar,
                                         const std::vector<float>& op_mode) {
@@ -88,6 +90,9 @@ namespace esphome
             if (_day >= 0) {
                 this->odin_data_day_ = _day;
             }
+
+            this->odin_min_output_ = min_output;
+            this->odin_max_output_ = max_output;
 
             // On first run (reboot/init): include current hour — no data exists yet.
             // On subsequent updates (pre-hour solve at :55): skip current hour to avoid

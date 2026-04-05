@@ -108,6 +108,8 @@ namespace esphome
       std::vector<float> odin_production_;
       std::vector<float> odin_solar_forecast_;
       std::vector<float> odin_operation_mode_;
+      float odin_min_output_{0};
+      float odin_max_output_{0};
 
       int      odin_data_day_   {-1};
       bool     odin_data_ready_ {false};
@@ -212,7 +214,7 @@ namespace esphome
       int  get_current_ecodan_hour();
       int  get_current_ecodan_day();
       bool has_old_odin_data();
-      void store_odin_data(int current_hour, const std::vector<float>& prod, const std::vector<float>& solar, const std::vector<float>& op_mode);
+      void store_odin_data(int current_hour, float min_output, float max_output, const std::vector<float>& prod, const std::vector<float>& solar, const std::vector<float>& op_mode);
       bool check_and_clear_odin_fetch_request() {
           return odin_fetch_requested_.exchange(false);
       }
