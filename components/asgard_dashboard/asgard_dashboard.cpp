@@ -1014,7 +1014,6 @@ void EcodanDashboard::nvs_persist_odin_() {
     save_arr("prod",     this->odin_production_);
     save_arr("exp_t",    this->odin_expected_temp_);
     save_arr("cost",     this->odin_cost_);
-    save_arr("cost_tax", this->odin_cost_tax_);
     save_arr("batt",     this->odin_battery_discharge_);
     save_arr("act_cons",   this->odin_actual_cons_);
     save_arr("act_prod",   this->odin_actual_prod_);
@@ -1090,7 +1089,6 @@ void EcodanDashboard::load_odin_data(int current_day) {
            && load_arr("energy",   this->odin_energy_)
            && load_arr("exp_t",    this->odin_expected_temp_)
            && load_arr("cost",     this->odin_cost_)
-           && load_arr("cost_tax", this->odin_cost_tax_)
            && load_arr("batt",     this->odin_battery_discharge_)
            && load_arr("prod",     this->odin_production_);
 
@@ -1127,7 +1125,6 @@ void EcodanDashboard::load_odin_data(int current_day) {
                 shift_arr(this->odin_production_, NAN);
                 shift_arr(this->odin_expected_temp_, NAN);
                 shift_arr(this->odin_cost_, NAN);
-                shift_arr(this->odin_cost_tax_, NAN);
                 shift_arr(this->odin_battery_discharge_, 0.0f);
                 shift_arr(this->odin_actual_cons_, NAN);
                 shift_arr(this->odin_actual_prod_, NAN);
@@ -1164,7 +1161,6 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
                                       const std::vector<float>& production,
                                       const std::vector<float>& exp_temp,
                                       const std::vector<float>& cost,
-                                      const std::vector<float>& cost_tax,
                                       const std::vector<float>& battery_discharge,
                                       const std::vector<float>& sched_base,
                                       const std::vector<float>& sched_min,
@@ -1191,7 +1187,6 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
     ensure_48(this->odin_production_, NAN);
     ensure_48(this->odin_expected_temp_, NAN);
     ensure_48(this->odin_cost_, NAN);
-    ensure_48(this->odin_cost_tax_, NAN);
     ensure_48(this->odin_actual_cons_, NAN);
     ensure_48(this->odin_actual_prod_, NAN);
     ensure_48(this->odin_actual_room_, NAN);
@@ -1224,7 +1219,6 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             shift_arr(this->odin_production_, NAN);
             shift_arr(this->odin_expected_temp_, NAN);
             shift_arr(this->odin_cost_, NAN);
-            shift_arr(this->odin_cost_tax_, NAN);
             shift_arr(this->odin_battery_discharge_, 0.0f);
             shift_arr(this->odin_sched_base_, 0.0f);
             shift_arr(this->odin_sched_min_, 0.0f);
@@ -1265,7 +1259,6 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             if (i < (int)energy.size()     && !std::isnan(energy[i]))      this->odin_energy_[target_idx]            = energy[i];
             if (i < (int)production.size() && !std::isnan(production[i]))  this->odin_production_[target_idx]        = production[i];
             if (i < (int)cost.size()       && !std::isnan(cost[i]))        this->odin_cost_[target_idx]              = cost[i];
-            if (i < (int)cost_tax.size()   && !std::isnan(cost_tax[i]))    this->odin_cost_tax_[target_idx]          = cost_tax[i];
             if (i < (int)battery_discharge.size() && !std::isnan(battery_discharge[i])) this->odin_battery_discharge_[target_idx] = battery_discharge[i];
             if (i < (int)op_mode.size()    && !std::isnan(op_mode[i]))     this->odin_operation_mode_[target_idx]    = op_mode[i];
             if (i < (int)exp_temp.size()   && !std::isnan(exp_temp[i]))    this->odin_expected_temp_[target_idx]     = exp_temp[i];
@@ -1305,7 +1298,6 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
       print_arr("heat_production",        this->odin_production_);
       print_arr("expected_begin_temp",    this->odin_expected_temp_);
       print_arr("expected_cost",          this->odin_cost_);
-      print_arr("expected_cost_with_tax", this->odin_cost_tax_);
       print_arr("battery_discharge",      this->odin_battery_discharge_);
       print_arr("sched_base",             this->odin_sched_base_);
       print_arr("sched_min",              this->odin_sched_min_);
@@ -1322,7 +1314,7 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
       response->printf(
           "\"last_run\":{\"execution_ms\":%u,\"heat_loss\":%.3f,\"base_cop\":%.2f,"
           "\"thermal_mass\":%.1f,\"exp_consumption\":%.2f,\"exp_production\":%.2f,"
-          "\"exp_solar\":%.2f,\"exp_solar_total\":%.2f,\"used_solar_kwp\":%.2f,\"total_cost\":%.4f,\"total_cost_tax\":%.4f}}",
+          "\"exp_solar\":%.2f,\"exp_solar_total\":%.2f,\"used_solar_kwp\":%.2f,\"total_cost\":%.4f}}",
           this->last_run_stats_.execution_ms,
           this->last_run_stats_.heat_loss,
           this->last_run_stats_.base_cop,
@@ -1332,8 +1324,7 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
           this->last_run_stats_.exp_solar,
           this->last_run_stats_.exp_solar_total,
           this->last_run_stats_.used_solar_kwp, 
-          this->last_run_stats_.total_cost,
-          this->last_run_stats_.total_cost_tax);
+          this->last_run_stats_.total_cost);
     } else {
       response->print("{\"success\":false}");
     }

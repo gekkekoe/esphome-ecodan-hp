@@ -719,7 +719,6 @@ header {
           <span class="ctrl-label">Solar used by HP</span>      <span id="rs-solar"   class="ctrl-value" style="text-align:right;">—</span>
           <span class="ctrl-label">Total solar generation</span><span id="rs-solar-total" class="ctrl-value" style="text-align:right;">—</span>
           <span class="ctrl-label">Expected cost</span>         <span id="rs-cost"    class="ctrl-value" style="text-align:right; color:var(--accent2);">—</span>
-          <span class="ctrl-label">Expected cost incl. tax</span><span id="rs-costtax" class="ctrl-value" style="text-align:right; color:#c084fc;">—</span>
         </div>
       </div>
     </div>
@@ -1677,7 +1676,7 @@ function updateOdinCharts() {
     const weather       = odinDataCache ? (odinDataCache.weather    || new Array(48).fill(null)) : new Array(48).fill(null);
     const solar         = odinDataCache ? (odinDataCache.solar      || new Array(48).fill(null)) : new Array(48).fill(null);
     
-    const pricesKwh     = prices.map(p => p !== null ? parseFloat((p / 1000).toFixed(5)) : null);
+    const pricesKwh     = prices.map(p => p !== null ? parseFloat((p).toFixed(5)) : null);
 
     const actualCost = new Array(48).fill(null);
     const solarKwp = odinDataCache?.last_run?.used_solar_kwp || 0;
@@ -1690,7 +1689,7 @@ function updateOdinCharts() {
         if (cons !== null && price !== null) {
             const expected_solar_kwh = sol_wm2 * (solarKwp / 1000);
             const net_cons = Math.max(0, cons - expected_solar_kwh);            
-            actualCost[h] = parseFloat((net_cons * price / 1000).toFixed(4));
+            actualCost[h] = parseFloat((net_cons * price).toFixed(4));
         }
     }
 
@@ -1758,7 +1757,6 @@ function updateOdinCharts() {
         document.getElementById('rs-solar').textContent         = rs.exp_solar.toFixed(2) + ' kWh';
         document.getElementById('rs-solar-total').textContent   = (rs.exp_solar_total || rs.exp_solar).toFixed(2) + ' kWh';
         document.getElementById('rs-cost').textContent    = '€' + rs.total_cost.toFixed(4);
-        document.getElementById('rs-costtax').textContent = '€' + rs.total_cost_tax.toFixed(4);
     }
 
     // Auto-focus to today (index 24-47) unless user has manually zoomed/panned
@@ -2519,7 +2517,6 @@ async function runOdinSolver() {
             inject48('energy_consumption', data.energy_consumption);
             inject48('heat_production', data.heat_production);
             inject48('expected_cost', data.expected_cost);
-            inject48('expected_cost_with_tax', data.expected_cost_with_tax);
             inject48('battery_discharge', data.battery_discharge); 
 
             odinDataCache.last_run = {
@@ -2529,10 +2526,9 @@ async function runOdinSolver() {
                 thermal_mass:    data.used_thermal_mass            || 0,
                 exp_consumption: data.total_consumption_kwh        || 0,
                 exp_production:  data.total_heat_produced_kwh      || 0,
-                exp_solar:       data.total_solar_generation_kwh   || 0,
-                exp_solar_total: data.total_solar_total_kwh        || data.total_solar_generation_kwh || 0,
-                total_cost:      data.total_cost_eur               || 0,
-                total_cost_tax:  data.total_cost_with_tax_eur      || 0
+                exp_solar:       data.total_solar_used_kwh         || 0,
+                exp_solar_total: data.total_solar_kwh              || data.total_solar_used_kwh || 0,
+                total_cost:      data.total_cost_eur               || 0
             };
 
             updateOdinCharts();

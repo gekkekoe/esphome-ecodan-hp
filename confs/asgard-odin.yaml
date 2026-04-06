@@ -6,6 +6,12 @@ script:
   - id: fetch_odin_optimization
     mode: single
     then:
+      - lambda: 'id(odin_retry_count) = 0;'
+      - script.execute: fetch_odin_optimization_attempt
+
+  - id: fetch_odin_optimization_attempt
+    mode: single
+    then:
       - if:
           condition:
             - switch.is_on: sw_use_solver
@@ -76,17 +82,16 @@ script:
                   then:
                     - lambda: |-
                         if (response->status_code == 200) {
-                          esphome::json::parse_json(body, [](JsonObject root) {
+                          bool parse_ok = esphome::json::parse_json(body, [](JsonObject root) {
                             if (root["success"].as<bool>()) {
                               // Pre-allocate all vectors with exactly 24 slots to prevent memory fragmentation
-                              std::vector<float> exp_end_t(24), nrg(24), prod(24), exp_t(24), cost(24), cost_tax(24), batt(24), sb(24), smn(24), smx(24), wth(24), sol(24), prc(24), op_mode(24);
+                              std::vector<float> exp_end_t(24), nrg(24), prod(24), exp_t(24), cost(24), batt(24), sb(24), smn(24), smx(24), wth(24), sol(24), prc(24), op_mode(24);
 
                               JsonArray j_eet = root["expected_end_temp"];
                               JsonArray j_e  = root["energy_consumption"];
                               JsonArray j_p  = root["heat_production"];
                               JsonArray j_t  = root["expected_begin_temp"];
                               JsonArray j_c  = root["expected_cost"];
-                              JsonArray j_ct = root["expected_cost_with_tax"];
                               JsonArray j_b  = root["battery_discharge"];
                               JsonArray j_sb = root["sched_base"];
                               JsonArray j_smn = root["sched_min"];
@@ -112,7 +117,6 @@ script:
                                 prod[i]     = (!has_p || j_p[i].isNull()) ? 0.0f : j_p[i].as<float>();
                                 exp_t[i]    = j_t[i].isNull() ? NAN : j_t[i].as<float>();
                                 cost[i]     = j_c[i].isNull() ? 0.0f : j_c[i].as<float>();
-                                cost_tax[i] = j_ct[i].isNull() ? 0.0f : j_ct[i].as<float>();
                                 batt[i]     = (!has_b || j_b[i].isNull()) ? 0.0f : j_b[i].as<float>();
                                 sb[i]       = (!has_sb || j_sb[i].isNull()) ? NAN : j_sb[i].as<float>();
                                 smn[i]      = (!has_smn || j_smn[i].isNull()) ? NAN : j_smn[i].as<float>();
@@ -133,10 +137,9 @@ script:
                               stats.thermal_mass    = root["used_thermal_mass"].as<float>();
                               stats.exp_consumption = root["total_consumption_kwh"].as<float>();
                               stats.exp_production  = root["total_heat_produced_kwh"].as<float>();
-                              stats.exp_solar       = root["total_solar_generation_kwh"].as<float>();
-                              stats.exp_solar_total = root["total_solar_total_kwh"].is<float>() ? root["total_solar_total_kwh"].as<float>() : stats.exp_solar;
+                              stats.exp_solar       = root["total_solar_used_kwh"].as<float>();
+                              stats.exp_solar_total = root["total_solar_kwh"].is<float>() ? root["total_solar_kwh"].as<float>() : stats.exp_solar;
                               stats.total_cost      = root["total_cost_eur"].as<float>();
-                              stats.total_cost_tax  = root["total_cost_with_tax_eur"].as<float>();
                               stats.used_solar_kwp  = root["used_solar_kwp"].is<float>() ? root["used_solar_kwp"].as<float>() : 0.0f;
                               stats.min_output      = root["used_min_output"].is<float>() ? root["used_min_output"].as<float>() : 3.0f;
                               stats.max_output      = root["used_max_output"].is<float>() ? root["used_max_output"].as<float>() : 8.0f;
@@ -144,16 +147,44 @@ script:
                               id(optimizer_ptr)->store_odin_data(cur_hr, stats.min_output, stats.max_output, prod, sol, op_mode);
 
                               id(asgard_dashboard_id)->store_odin_data(
-                                cur_hr, cur_day, exp_end_t, nrg, prod, exp_t, cost, cost_tax, batt, sb, smn, smx, wth, sol, prc, op_mode, stats);
+                                cur_hr, cur_day, exp_end_t, nrg, prod, exp_t, cost, batt, sb, smn, smx, wth, sol, prc, op_mode, stats);
+
+                              // Mark success so retry logic knows we're done
+                              id(odin_retry_count) = -1;
                             } else {
                               ESP_LOGE("asgard_dashboard", "Solver failed to find a valid solution path!");
                               if (root["error"].is<const char*>()) {
                                   ESP_LOGE("ODIN_API", "Reason: %s", root["error"].as<const char*>());
                               }
+                              // Solver returned success:false — no point retrying
+                              id(odin_retry_count) = -1;
                             }
                             return true;
                           });
+                          if (!parse_ok) {
+                            // JSON parse failed — treat as transient error, allow retry
+                            ESP_LOGW("asgard_dashboard", "JSON parse failed, will retry if attempts remain.");
+                          }
+                        } else {
+                          // Non-200 response — log and allow retry
+                          ESP_LOGW("asgard_dashboard", "ODIN returned HTTP %d, will retry if attempts remain.", response->status_code);
                         }
+                    - lambda: |-
+                        // Retry logic: if not marked as done (-1), schedule another attempt
+                        if (id(odin_retry_count) == -1) return; // success or permanent failure
+                        id(odin_retry_count) += 1;
+                        if (id(odin_retry_count) <= 3) {
+                          ESP_LOGW("asgard_dashboard", "ODIN solve attempt %d failed, retrying in 15s...", id(odin_retry_count));
+                        } else {
+                          ESP_LOGE("asgard_dashboard", "ODIN solve failed after 3 retries, giving up.");
+                          id(odin_retry_count) = -1;
+                        }
+                    - delay: !lambda 'return id(odin_retry_count) > 0 && id(odin_retry_count) <= 3 ? 15000 : 0;'
+                    - if:
+                        condition:
+                          lambda: 'return id(odin_retry_count) > 0 && id(odin_retry_count) <= 3;'
+                        then:
+                          - script.execute: fetch_odin_optimization_attempt
 
 interval:
   - interval: 60s
@@ -315,6 +346,9 @@ interval:
             ping_ip_ready = false; // Reset
           }
           
+          // Don't ping while a solve request is in flight — avoids socket contention
+          if (id(fetch_odin_optimization).is_running() || id(fetch_odin_optimization_attempt).is_running()) return;
+
           // Prevent starting multiple tasks if the network is extremely slow
           if (task_running) return;
           task_running = true;
@@ -347,7 +381,6 @@ interval:
                 ping_ip_ready = true;
                 freeaddrinfo(res);
               } 
-              // Removed the ESP_LOGD for mDNS failure here
             }
 
             if (target_ip != "" && target_ip != "0.0.0.0" && target_ip != "odin.local") {

@@ -28,6 +28,11 @@ globals:
     type: int
     restore_value: true
     initial_value: '0'
+  # retry counter for mpc call
+  - id: odin_retry_count
+    type: int
+    restore_value: false
+    initial_value: '0'
 
 one_wire:
   - platform: gpio
