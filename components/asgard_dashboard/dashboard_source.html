@@ -1371,13 +1371,17 @@ function initCharts() {
       }
   };
 
-  odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2d'), {
+odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2d'), {
       type: 'bar',
       data: {
           labels: labels48,
           datasets: [
-              { label: 'Expected',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
-              { label: 'Actual',    data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
+              // Stack 0: Expected values split into Grid and Solar
+              { label: 'Expected (Grid)',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
+              { label: 'Expected (Solar)', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 0' },
+
+              // Stack 1: Actual values stand next to the expected stack
+              { label: 'Actual',           data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' }
           ]
       },
       options: {
@@ -1387,9 +1391,14 @@ function initCharts() {
               zoom: odinZoomConfig
           },
           scales: {
-              x: xAxis,
-              y: { ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' },
-                   title: { display: true, text: 'kW', color: '#8295b8' } }
+              // Enable stacking on both axes for the stacked layout to work properly
+              x: { ...xAxis, stacked: true },
+              y: { 
+                  stacked: true, 
+                  ticks: { color: '#8295b8', font: monoFont }, 
+                  grid: { color: '#1e2d4a' },
+                  title: { display: true, text: 'kW', color: '#8295b8' } 
+              }
           }
       }
   });
@@ -1678,24 +1687,45 @@ function updateOdinCharts() {
     
     const pricesKwh     = prices.map(p => p !== null ? parseFloat((p).toFixed(5)) : null);
 
+    // Initialize arrays for costs and consumption splits
     const actualCost = new Array(48).fill(null);
+    const expConsGrid = new Array(48).fill(null);
+    const expConsSolar = new Array(48).fill(null);
+    
     const solarKwp = odinDataCache?.last_run?.used_solar_kwp || 0;
 
+    // Single loop to process all hourly data
     for (let h = 0; h < 48; h++) {
-        const cons  = actualConsByHour[h];
-        const price = prices[h];
+        // Calculate the solar production once per hour
         const sol_wm2 = solar[h] || 0; 
+        const expected_solar_kwh = sol_wm2 * (solarKwp / 1000);
+
+        // --- 1. Actual Cost Calculation ---
+        const actual_cons = actualConsByHour[h];
+        const price = prices[h];
         
-        if (cons !== null && price !== null) {
-            const expected_solar_kwh = sol_wm2 * (solarKwp / 1000);
-            const net_cons = Math.max(0, cons - expected_solar_kwh);            
+        if (actual_cons !== null && price !== null) {
+            const net_cons = Math.max(0, actual_cons - expected_solar_kwh);            
             actualCost[h] = parseFloat((net_cons * price).toFixed(4));
+        }
+
+        // --- 2. Expected Consumption Split Calculation ---
+        const exp_cons = expCons[h];
+        
+        if (exp_cons !== null) {
+            // Solar used cannot exceed the total expected consumption for that hour
+            const solar_used = Math.min(exp_cons, expected_solar_kwh);
+            const grid_used = exp_cons - solar_used;
+
+            expConsSolar[h] = parseFloat(solar_used.toFixed(2));
+            expConsGrid[h] = parseFloat(grid_used.toFixed(2));
         }
     }
 
     // Energy Cons chart
-    odinConsChart.data.datasets[0].data = expCons;
-    odinConsChart.data.datasets[1].data = actualConsByHour;
+    odinConsChart.data.datasets[0].data = expConsGrid;
+    odinConsChart.data.datasets[1].data = expConsSolar;
+    odinConsChart.data.datasets[2].data = actualConsByHour;
     odinConsChart.update('none');
     
     // Energy Prod chart
@@ -2528,7 +2558,8 @@ async function runOdinSolver() {
                 exp_production:  data.total_heat_produced_kwh      || 0,
                 exp_solar:       data.total_solar_used_kwh         || 0,
                 exp_solar_total: data.total_solar_kwh              || data.total_solar_used_kwh || 0,
-                total_cost:      data.total_cost_eur               || 0
+                total_cost:      data.total_cost                   || 0,
+                used_solar_kwp:  data.used_solar_kwp               || 0
             };
 
             updateOdinCharts();
