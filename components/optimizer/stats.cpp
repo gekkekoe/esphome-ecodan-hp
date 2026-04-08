@@ -350,12 +350,6 @@ namespace esphome
             const float ALPHA = 0.15f; 
 
             // ALWAYS UPDATE: Passive Data & Building Physics ---
-            // avg_outside_temp is already a daily mean — publish raw so the solver
-            if (this->state_.num_raw_avg_outside_temp != nullptr) {
-                auto outside_call = this->state_.num_raw_avg_outside_temp->make_call();
-                outside_call.set_value(avg_outside);
-                outside_call.perform();
-            }
             update_ema_num(this->state_.num_raw_avg_room_temp, avg_room, ALPHA);
             update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
 
@@ -364,6 +358,7 @@ namespace esphome
                 update_ema_num(this->state_.num_raw_heat_produced, heat_produced_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_elec_consumed, elec_consumed_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_runtime_hours, runtime_hours, ALPHA);
+                update_ema_num(this->state_.num_raw_avg_outside_temp, avg_outside, ALPHA);
 
                 ESP_LOGI(OPTIMIZER_TAG, "Full update (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
                          this->state_.num_raw_heat_produced->state, this->state_.num_raw_elec_consumed->state, 
