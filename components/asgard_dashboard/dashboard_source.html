@@ -1300,7 +1300,7 @@ function initCharts() {
   const labels48 = Array.from({length: 48}, (_, i) => `${i % 24}:00`);
   const monoFont = { family: "'JetBrains Mono'", size: 11 };
   const xAxis = { 
-      min: 23.5, 
+      min: -0.5, 
       max: 47.5,
       ticks: { 
           autoSkip: false,
@@ -1338,7 +1338,7 @@ function initCharts() {
   };
   const odinZoomConfig = {
       limits: {
-          x: { min: 0, max: 47, minRange: 2 }
+          x: { min: -0.5, max: 47.5, minRange: 2 }
       },
       pan: {
           enabled: true, mode: 'x', modifierKey: 'alt', threshold: 10,
@@ -1653,21 +1653,21 @@ function updateOdinCharts() {
         }
 
         for (let h = 0; h < 24; h++) {
-            // Map live history to the "Today" portion of the 48h array (indexes 24-47)
-            if (hourlyDeltaCons[h] !== null) actualConsByHour[h + 24] = hourlyDeltaCons[h];
-            if (hourlyDeltaProd[h] !== null) actualProdByHour[h + 24] = hourlyDeltaProd[h];
-            if (firstTempByHour[h] !== null) actualTempByHour[h + 24] = firstTempByHour[h];
+            // Map live history to the "Today" portion (indexes 0-23)
+            if (hourlyDeltaCons[h] !== null) actualConsByHour[h] = hourlyDeltaCons[h];
+            if (hourlyDeltaProd[h] !== null) actualProdByHour[h] = hourlyDeltaProd[h];
+            if (firstTempByHour[h] !== null) actualTempByHour[h] = firstTempByHour[h];
         }
 
         const currentLocalHour = new Date().getHours();
-        for (let h = 24; h < 48; h++) {
-            // Hide incomplete energy bars for both the current AND future hours
-            if ((h - 24) >= currentLocalHour) {
+        for (let h = 0; h < 48; h++) {
+            // Hide incomplete energy bars for anything equal to or beyond the current hour
+            if (h >= currentLocalHour) {
                 actualConsByHour[h] = null;
                 actualProdByHour[h] = null;
             }
             // Hide the temperature line ONLY for strictly future hours
-            if ((h - 24) > currentLocalHour) {
+            if (h > currentLocalHour) {
                 actualTempByHour[h] = null;
             }
         }
@@ -1743,7 +1743,7 @@ function updateOdinCharts() {
     // causing index 24 (hour 0 today) to appear off-screen until the user scrolls.
     if (!odinZoomed) {
         [odinConsChart, odinProdChart, odinCostChart, odinBattChart].forEach(c => {
-            if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
+            if (c) c.zoomScale('x', {min: -0.5, max: 23.5}, 'none');
         });
     }
 
@@ -1793,7 +1793,7 @@ function updateOdinCharts() {
     if (!odinZoomed) {
         [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
         odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-            if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
+            if (c) c.zoomScale('x', {min: -0.5, max: 23.5}, 'none');
         });
     }
 }
@@ -2514,22 +2514,20 @@ async function runOdinSolver() {
         if (data.success) {
           if (!odinDataCache) odinDataCache = {};
             
-            // Safely inject the 24h solver data into the "Today" (24-47) portion of the cache
-            const inject48 = (key, new24, preserveCurrentHour = false) => {
+            // Safely inject the 48h solver data into the cache directly
+            const inject48 = (key, new48, preserveCurrentHour = false) => {
                 if (!odinDataCache[key] || odinDataCache[key].length !== 48) {
-                    let old = odinDataCache[key] || [];
                     odinDataCache[key] = new Array(48).fill(null);
-                    if (old.length === 24) {
-                        for(let i=0; i<24; i++) odinDataCache[key][i+24] = old[i];
-                    }
                 }
-                if (new24 && new24.length >= 24) {
-                    for (let i = 0; i < 24; i++) {
-                        let isCurrent = (i === solveHour && solveHour !== 0);
-                        if (preserveCurrentHour && isCurrent) continue;
+                if (new48 && new48.length >= 48) {
+                    for (let i = 0; i < 48; i++) {
+                        let isCurrent = (i === solveHour);
+                        
+                        // Protect the current hour from jumping mid-hour if requested
+                        if (preserveCurrentHour && isCurrent && odinDataCache[key][i] !== null) continue;
 
-                        if (new24[i] !== null && new24[i] !== undefined) {
-                            odinDataCache[key][i + 24] = new24[i];
+                        if (new48[i] !== null && new48[i] !== undefined) {
+                            odinDataCache[key][i] = new48[i];
                         }
                     }
                 }
@@ -2772,7 +2770,7 @@ function resetOdinZoom() {
     odinZoomed = false;
     [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
      odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-        if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
+        if (c) c.zoomScale('x', {min: -0.5, max: 23.5}, 'none');
     });
     document.getElementById('btn-reset-zoom-odin').style.display = 'none';
 }

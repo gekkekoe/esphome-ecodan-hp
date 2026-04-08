@@ -953,8 +953,9 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 static const char* NVS_ODIN_NS = "odin_cache";
 
 void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float actual_room_temp) {
-    // Always write to slot hour+24 (today half). Shift in store_odin_data moves it to yesterday.
-    int target_idx = hour + 24;
+    // Write directly to the current hour (0-23 represents Today)
+    int target_idx = hour; 
+    
     if (target_idx < 0 || target_idx >= 48) return;
     if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
 
@@ -1271,9 +1272,10 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         this->odin_stored_day_ = current_day;
     }
     
-    // 3. Unified Data Update (Indexes 24-47, covering hour 0-23 of the target day)
-    for (int i = 0; i < 24; i++) {
-        int target_idx = i + 24;
+    // 3. Unified Data Update (Indexes 0-47, covering Today and Tomorrow)
+    for (int i = 0; i < 48; i++) {
+        // We no longer add 24. Index maps 1:1 with the 48h solver output
+        int target_idx = i;
 
         // Static data
         if (i < (int)sched_base.size() && !std::isnan(sched_base[i]))  this->odin_sched_base_[target_idx] = sched_base[i];
@@ -1283,8 +1285,8 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         if (i < (int)solar.size()      && !std::isnan(solar[i]))       this->odin_solar_[target_idx]      = solar[i];
         if (i < (int)prices.size()     && !std::isnan(prices[i]))      this->odin_prices_[target_idx]     = prices[i];
 
-        // calculated data
-        bool is_future = (i > current_hour);
+        // Calculated data (Only overwrite future hours or empty slots)
+        bool is_future = (i > current_hour); // Note: current_hour is still 0-23
         bool is_empty_slot = std::isnan(this->odin_production_[target_idx]);
 
         if (is_future || is_empty_slot) {

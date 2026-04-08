@@ -84,8 +84,7 @@ script:
                         if (response->status_code == 200) {
                           bool parse_ok = esphome::json::parse_json(body, [](JsonObject root) {
                             if (root["success"].as<bool>()) {
-                              // Pre-allocate all vectors with exactly 24 slots to prevent memory fragmentation
-                              std::vector<float> exp_end_t(24), nrg(24), prod(24), exp_t(24), cost(24), batt(24), sb(24), smn(24), smx(24), wth(24), sol(24), prc(24), op_mode(24);
+                              std::vector<float> exp_end_t(48), nrg(48), prod(48), exp_t(48), cost(48), batt(48), sb(48), smn(48), smx(48), wth(48), sol(48), prc(48), op_mode(48);
 
                               JsonArray j_eet = root["expected_end_temp"];
                               JsonArray j_e  = root["energy_consumption"];
@@ -111,7 +110,7 @@ script:
                               bool has_prc = !j_prc.isNull();
                               bool has_op  = !j_op.isNull();
 
-                              for (int i = 0; i < 24; i++) {
+                              for (int i = 0; i < 48; i++) {
                                 exp_end_t[i] = j_eet[i].isNull() ? NAN : j_eet[i].as<float>();
                                 nrg[i]      = j_e[i].isNull() ? 0.0f : j_e[i].as<float>();
                                 prod[i]     = (!has_p || j_p[i].isNull()) ? 0.0f : j_p[i].as<float>();
@@ -156,17 +155,14 @@ script:
                               if (root["error"].is<const char*>()) {
                                   ESP_LOGE("ODIN_API", "Reason: %s", root["error"].as<const char*>());
                               }
-                              // Solver returned success:false — no point retrying
                               id(odin_retry_count) = -1;
                             }
                             return true;
                           });
                           if (!parse_ok) {
-                            // JSON parse failed — treat as transient error, allow retry
                             ESP_LOGW("asgard_dashboard", "JSON parse failed, will retry if attempts remain.");
                           }
                         } else {
-                          // Non-200 response — log and allow retry
                           ESP_LOGW("asgard_dashboard", "ODIN returned HTTP %d, will retry if attempts remain.", response->status_code);
                         }
                     - lambda: |-
