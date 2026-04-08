@@ -1,8 +1,10 @@
 #pragma once
-#include <vector> 
+#include <vector>
+#include <atomic>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "freertos/task.h"
 #include "esphome/core/component.h"
 #include "esphome/components/web_server_base/web_server_base.h"
 #include "esphome/components/sensor/sensor.h"
@@ -475,9 +477,13 @@ private:
   int odin_stored_day_{-1};
   bool odin_nvs_dirty_{false};
   uint32_t odin_nvs_last_write_ms_{0};
+  std::atomic<bool> nvs_show_tab_cache_{false};  // cached copy of sw_show_solver_tab_->state, safe to read from NVS task
 
   void record_history_();
   void nvs_persist_odin_();
+  static void nvs_task_(void *arg);  // dedicated low-priority task for NVS flash writes
+  TaskHandle_t nvs_task_handle_{nullptr};
+  SemaphoreHandle_t nvs_trigger_{nullptr};  // binary semaphore to signal the NVS task
   void handle_history_request_(AsyncWebServerRequest *request);
   void handle_js_(AsyncWebServerRequest *request);
   void send_chunked_(AsyncWebServerRequest *request, const char *content_type, const uint8_t *data, size_t length, const char *cache_control);

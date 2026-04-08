@@ -333,12 +333,6 @@ namespace esphome
 
             ESP_LOGI(OPTIMIZER_TAG, "Daily Raw Stats: Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, MaxOut=%.1fkW, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
                      heat_produced_kwh, elec_consumed_kwh, runtime_hours, max_out_kw, avg_outside, avg_room, delta_room);
-            
-            // Only update the globals if significant heating occurred (> 2 kWh produced, > 1 hour run)
-            if (heat_produced_kwh < 2.0f || runtime_hours < 1.0f) {
-                ESP_LOGD(OPTIMIZER_TAG, "Stats Collection: Skipped. Insufficient heating data today.");
-                return;
-            }
 
             // Helper for Exponential Moving Average (EMA) on Number components
             auto update_ema_num = [](esphome::number::Number *comp, float observed, float alpha) {
@@ -355,9 +349,7 @@ namespace esphome
 
             const float ALPHA = 0.15f; 
 
-            update_ema_num(this->state_.num_raw_heat_produced, heat_produced_kwh, ALPHA);
-            update_ema_num(this->state_.num_raw_elec_consumed, elec_consumed_kwh, ALPHA);
-            update_ema_num(this->state_.num_raw_runtime_hours, runtime_hours, ALPHA);
+            // ALWAYS UPDATE: Passive Data & Building Physics ---
             // avg_outside_temp is already a daily mean — publish raw so the solver
             if (this->state_.num_raw_avg_outside_temp != nullptr) {
                 auto outside_call = this->state_.num_raw_avg_outside_temp->make_call();
@@ -367,10 +359,23 @@ namespace esphome
             update_ema_num(this->state_.num_raw_avg_room_temp, avg_room, ALPHA);
             update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
 
-            ESP_LOGI(OPTIMIZER_TAG, "Numbers updated (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
-                     this->state_.num_raw_heat_produced->state, this->state_.num_raw_elec_consumed->state, 
-                     this->state_.num_raw_runtime_hours->state, this->state_.num_raw_avg_outside_temp->state,
-                     this->state_.num_raw_avg_room_temp->state, this->state_.num_raw_delta_room_temp->state);
+            // ONLY UPDATE WHEN HEATING: System Performance ---
+            if (heat_produced_kwh >= 2.0f && runtime_hours >= 1.0f) {
+                update_ema_num(this->state_.num_raw_heat_produced, heat_produced_kwh, ALPHA);
+                update_ema_num(this->state_.num_raw_elec_consumed, elec_consumed_kwh, ALPHA);
+                update_ema_num(this->state_.num_raw_runtime_hours, runtime_hours, ALPHA);
+
+                ESP_LOGI(OPTIMIZER_TAG, "Full update (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
+                         this->state_.num_raw_heat_produced->state, this->state_.num_raw_elec_consumed->state, 
+                         this->state_.num_raw_runtime_hours->state, this->state_.num_raw_avg_outside_temp->state,
+                         this->state_.num_raw_avg_room_temp->state, this->state_.num_raw_delta_room_temp->state);
+            } else {
+                // Output a log message, but do not abort before passive stats are saved
+                ESP_LOGI(OPTIMIZER_TAG, "Passive stats saved (AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC). Heating skipped (<2kWh or <1h).",
+                         this->state_.num_raw_avg_outside_temp->state, 
+                         this->state_.num_raw_avg_room_temp->state, 
+                         this->state_.num_raw_delta_room_temp->state);
+            }
         }
 
     } // namespace optimizer

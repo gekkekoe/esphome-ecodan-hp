@@ -27,6 +27,17 @@ void EcodanDashboard::setup() {
   // prevent premature nvs flushes
   this->odin_nvs_last_write_ms_ = millis();
 
+  // NVS writes run in a dedicated low-priority task to avoid blocking lwIP
+  this->nvs_trigger_ = xSemaphoreCreateBinary();
+  xTaskCreate(
+      EcodanDashboard::nvs_task_,
+      "nvs_persist",
+      4096,
+      this,
+      1,                           // priority 1 = lowest above idle, well below lwIP (18)
+      &this->nvs_task_handle_
+  );
+
   base_->init();
   base_->add_handler(this);
 }
@@ -45,13 +56,20 @@ void EcodanDashboard::loop() {
     update_snapshot_();
   }
 
-  // Flush ODIN arrays to NVS if dirty, max once per 10 minutes
+  // Signal the NVS task — never call nvs_persist_odin_() directly from loop()
+  // as flash writes block the CPU and cause lwIP TCP assert crashes.
   if (this->odin_nvs_dirty_) {
     const uint32_t NVS_FLUSH_INTERVAL_MS = 10 * 60 * 1000;
     if (this->odin_nvs_last_write_ms_ == 0 || (now - this->odin_nvs_last_write_ms_) >= NVS_FLUSH_INTERVAL_MS) {
-      this->nvs_persist_odin_();
       this->odin_nvs_dirty_ = false;
       this->odin_nvs_last_write_ms_ = now;
+      // Snapshot switch state here (loop task context) so nvs_persist_odin_()
+      // can read it safely from the NVS task without touching ESPHome objects.
+      this->nvs_show_tab_cache_.store(
+          this->sw_show_solver_tab_ != nullptr && this->sw_show_solver_tab_->state);
+      if (this->nvs_trigger_ != nullptr) {
+        xSemaphoreGive(this->nvs_trigger_);  // wake the NVS task
+      }
     }
   }
 
@@ -952,16 +970,28 @@ void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float 
     this->odin_nvs_dirty_ = true;
 }
 
+void EcodanDashboard::nvs_task_(void *arg) {
+    EcodanDashboard *self = static_cast<EcodanDashboard *>(arg);
+    while (true) {
+        // Block indefinitely until loop() signals a write is needed.
+        // This task runs at priority 1 so flash writes never preempt lwIP (prio 18)
+        // or the ESPHome loop task (prio ~5).
+        if (xSemaphoreTake(self->nvs_trigger_, portMAX_DELAY) == pdTRUE) {
+            self->nvs_persist_odin_();
+        }
+    }
+}
+
 void EcodanDashboard::nvs_persist_odin_() {
     nvs_handle_t h;
     if (nvs_open("odin_cache", NVS_READWRITE, &h) != ESP_OK) {
-        ESP_LOGW(TAG, "NVS: failed to open odin_cache for write");
+        esp_log_write(ESP_LOG_WARN, TAG, "NVS: failed to open odin_cache for write\n");
         return;
     }
 
     // 1. Lock the mutex only briefly to read the data
     if (this->snapshot_mutex_ == NULL || xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(200)) != pdTRUE) {
-        ESP_LOGW(TAG, "NVS persist: failed to acquire snapshot mutex, skipping");
+        esp_log_write(ESP_LOG_WARN, TAG, "NVS persist: failed to acquire snapshot mutex, skipping\n");
         nvs_close(h);
         return;
     }
@@ -974,7 +1004,9 @@ void EcodanDashboard::nvs_persist_odin_() {
         has_changes = true;
     }
 
-    uint8_t current_show_tab = (this->sw_show_solver_tab_ != nullptr && this->sw_show_solver_tab_->state) ? 1 : 0;
+    // Read show_tab from the atomic cache — safe to access from this task context.
+    // The cache is updated in loop() (main task) just before signalling this task.
+    uint8_t current_show_tab = this->nvs_show_tab_cache_.load() ? 1 : 0;
     uint8_t stored_show_tab = 0;
     if (nvs_get_u8(h, "show_tab", &stored_show_tab) != ESP_OK || stored_show_tab != current_show_tab) {
         nvs_set_u8(h, "show_tab", current_show_tab);
@@ -1031,9 +1063,9 @@ void EcodanDashboard::nvs_persist_odin_() {
 
     if (has_changes) {
         nvs_commit(h);
-        ESP_LOGI(TAG, "NVS: ODIN arrays updated and persisted (day=%d)", log_day);
+        esp_log_write(ESP_LOG_INFO, TAG, "NVS: ODIN arrays updated and persisted (day=%d)\n", log_day);
     } else {
-        ESP_LOGD(TAG, "NVS: ODIN arrays match NVS exact state, skipping physical write (day=%d)", log_day);
+        esp_log_write(ESP_LOG_DEBUG, TAG, "NVS: ODIN arrays match NVS exact state, skipping physical write (day=%d)\n", log_day);
     }
     nvs_close(h);
 }
