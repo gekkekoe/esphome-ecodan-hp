@@ -302,117 +302,51 @@ interval:
           }
 
   - interval: 60s
+    id: odin_ping_interval
     then:
-      - lambda: |-
-          if (!id(sw_use_solver).state) {
-            if (id(bin_solver_connected).state) id(bin_solver_connected).publish_state(false);
-            return;
-          }
-
-          static uint32_t last_ping_time = 0;
-          uint32_t now = millis();
-          
-          // If the server is currently ONLINE, we only need to check every 5 minutes (300000 ms).
-          // If OFFLINE, we keep checking every 60 seconds to quickly reconnect.
-          if (id(bin_solver_connected).state && last_ping_time != 0 && (now - last_ping_time < 300000)) {
-            return;
-          }
-          last_ping_time = now;
-
-          static volatile int ping_status = -1; // -1: idle/busy, 0: offline, 1: online
-          static char ping_ip[32] = {0};
-          static volatile bool ping_ip_ready = false;
-          static volatile bool task_running = false;
-
-          if (ping_status != -1) {
-            bool is_alive = (ping_status == 1);
-            if (id(bin_solver_connected).state != is_alive) {
-              id(bin_solver_connected).publish_state(is_alive);
-              // Log state changes safely from the MAIN thread
-              if (is_alive) {
-                ESP_LOGI("asgard_dashboard", "ODIN server is now ONLINE.");
-              } else {
-                ESP_LOGW("asgard_dashboard", "ODIN server is OFFLINE.");
+      - if:
+          condition:
+            lambda: |-
+              // 1. Check if the solver is allowed to run
+              if (!id(sw_use_solver).state) {
+                if (id(bin_solver_connected).state) id(bin_solver_connected).publish_state(false);
+                return false; // Stop ping
               }
-            }
-            ping_status = -1; // Reset for the next run
-          }
 
-          if (ping_ip_ready) {
-            std::string new_ip(ping_ip);
-            if (id(txt_solver_ip).state != new_ip) {
-              id(txt_solver_ip).publish_state(new_ip);
-            }
-            ping_ip_ready = false; // Reset
-          }
-          
-          // Don't ping while a solve request is in flight — avoids socket contention
-          if (id(fetch_odin_optimization).is_running() || id(fetch_odin_optimization_attempt).is_running()) return;
-
-          // Prevent starting multiple tasks if the network is extremely slow
-          if (task_running) return;
-          task_running = true;
-
-          // Safely copy the IP state before entering the thread
-          static char current_ip_buf[32] = {0};
-          strncpy(current_ip_buf, id(txt_solver_ip).state.c_str(), sizeof(current_ip_buf) - 1);
-
-          xTaskCreate([](void *pvParameters) {
-            std::string target_ip(current_ip_buf);
-            bool is_alive = false;
-
-            // cannot use gethostbyname and inet_ntoa in task, not thread safe
-            if (target_ip == "" || target_ip == "0.0.0.0" || target_ip == "odin.local") {
-              struct addrinfo hints = {};
-              hints.ai_family = AF_INET;
-              hints.ai_socktype = SOCK_STREAM;
-              struct addrinfo *res = nullptr;
-
-              if (getaddrinfo("odin.local", NULL, &hints, &res) == 0 && res != nullptr) {
-                struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
-                
-                uint8_t *ip_bytes = (uint8_t *)&(ipv4->sin_addr.s_addr);
-                char ip_buf[32];
-                snprintf(ip_buf, sizeof(ip_buf), "%d.%d.%d.%d", ip_bytes[0], ip_bytes[1], ip_bytes[2], ip_bytes[3]);
-                
-                target_ip = std::string(ip_buf);
-                
-                strncpy(ping_ip, target_ip.c_str(), sizeof(ping_ip) - 1);
-                ping_ip_ready = true;
-                freeaddrinfo(res);
-              } 
-            }
-
-            if (target_ip != "" && target_ip != "0.0.0.0" && target_ip != "odin.local") {
-              int sock = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-              if (sock >= 0) {
-                struct sockaddr_in serverAddress;
-                serverAddress.sin_family = AF_INET;
-                serverAddress.sin_port = htons(80);
-                serverAddress.sin_addr.s_addr = inet_addr(target_ip.c_str());
-
-                struct timeval tv;
-                tv.tv_sec = 2;
-                tv.tv_usec = 0;
-                ::setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-                ::setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
-
-                int res = ::connect(sock, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
-                if (res >= 0) {
-                  std::string http_req = "GET /api/version HTTP/1.0\r\nHost: " + target_ip + "\r\nConnection: close\r\n\r\n";
-                  ::send(sock, http_req.c_str(), http_req.size(), 0);
-                  
-                  char drain[128];
-                  while (::recv(sock, drain, sizeof(drain), 0) > 0) {}
-                  is_alive = true;
-                }
-                ::close(sock);
+              // 2. Pause ping if an optimization data fetch is running
+              if (id(fetch_odin_optimization).is_running() || id(fetch_odin_optimization_attempt).is_running()) {
+                return false; // Stop ping
               }
-            }
+              
+              // 3. Dynamic timer (5 min if online, 1 min if offline)
+              static uint32_t last_ping_time = 0;
+              uint32_t now = millis();
+              if (id(bin_solver_connected).state && last_ping_time != 0 && (now - last_ping_time < 300000)) {
+                return false; // Stop ping, we are online and 5 minutes haven't passed yet
+              }
+              last_ping_time = now; // Proceed with ping, update the timer
+              
+              // We hoeven het IP niet meer handmatig op te lossen met getaddrinfo!
+              // We geven de URL gewoon direct door aan http_request, die lost het op de achtergrond op.
+              return true;
 
-            ping_status = is_alive ? 1 : 0;
-            task_running = false;
-
-            vTaskDelete(NULL);
-            
-          }, "odin_ping_task", 12288, NULL, 1, NULL); 
+          then:
+            - http_request.get:
+                url: !lambda |-
+                  std::string target = id(txt_solver_ip).state;
+                  if (target == "" || target == "0.0.0.0") target = "odin.local";
+                  return "http://" + target + "/api/version";
+                on_response:
+                  then:
+                    - lambda: |-
+                        if (!id(bin_solver_connected).state) {
+                          id(bin_solver_connected).publish_state(true);
+                          ESP_LOGI("asgard_dashboard", "ODIN server is now ONLINE.");
+                        }
+                on_error:
+                  then:
+                    - lambda: |-
+                        if (id(bin_solver_connected).state) {
+                          id(bin_solver_connected).publish_state(false);
+                          ESP_LOGW("asgard_dashboard", "ODIN server is OFFLINE.");
+                        }
