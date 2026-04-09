@@ -709,19 +709,24 @@ header {
 
       <div id="run-stats-block" style="display:none; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px;">
         <div class="sub-label" style="margin:0 0 6px 0;">LAST RUN RESULT</div>
-        <div style="display:grid; grid-template-columns:1fr auto; gap:4px 10px; align-items:center;">
-          <span class="ctrl-label">Execution time</span>   <span id="rs-exec"    class="ctrl-value" style="text-align:right;">—</span>
-          <span class="ctrl-label">Heat loss</span>        <span id="rs-hloss"   class="ctrl-value" style="text-align:right;">—</span>
-          <span class="ctrl-label">Base COP</span>         <span id="rs-cop"     class="ctrl-value" style="text-align:right;">—</span>
-          <span class="ctrl-label">Thermal mass</span>     <span id="rs-tmass"   class="ctrl-value" style="text-align:right;">—</span>
-          <span class="ctrl-label">Expected consumption</span>  <span id="rs-econs"   class="ctrl-value" style="text-align:right;">—</span>
-          <span class="ctrl-label">Expected production</span>   <span id="rs-eprod"   class="ctrl-value" style="text-align:right;">—</span>
-          <span class="ctrl-label">Solar used by HP</span>      <span id="rs-solar"   class="ctrl-value" style="text-align:right;">—</span>
-          <span class="ctrl-label">Total solar generation</span><span id="rs-solar-total" class="ctrl-value" style="text-align:right;">—</span>
-          <span class="ctrl-label">Expected cost</span>         <span id="rs-cost"    class="ctrl-value" style="text-align:right; color:var(--accent2);">—</span>
+          <div style="display:grid; grid-template-columns:1fr auto; gap:4px 10px; align-items:center;">  
+            <span class="ctrl-label">Last result time</span> <span id="rs-time" class="ctrl-value" style="text-align:right;">—</span>
+  
+            <span class="ctrl-label">Execution time</span>   <span id="rs-exec"    class="ctrl-value" style="text-align:right;">—</span>
+            <span class="ctrl-label">Heat loss</span>        <span id="rs-hloss"   class="ctrl-value" style="text-align:right;">—</span>
+            <span class="ctrl-label">Base COP</span>         <span id="rs-cop"     class="ctrl-value" style="text-align:right;">—</span>
+            <span class="ctrl-label">Thermal mass</span>     <span id="rs-tmass"   class="ctrl-value" style="text-align:right;">—</span>
+            
+            <div class="sub-label" style="grid-column: 1 / -1; margin: 12px 0 4px 0;">EXPECTED TOTALS</div>
+
+            <span class="ctrl-label">Consumption</span>           <span id="rs-econs"   class="ctrl-value" style="text-align:right;">—</span>
+            <span class="ctrl-label">Production</span>            <span id="rs-eprod"   class="ctrl-value" style="text-align:right;">—</span>
+            <span class="ctrl-label">Solar used by HP</span>      <span id="rs-solar"   class="ctrl-value" style="text-align:right;">—</span>
+            <span class="ctrl-label">Total solar generation</span><span id="rs-solar-total" class="ctrl-value" style="text-align:right;">—</span>
+            <span class="ctrl-label">Cost</span>                  <span id="rs-cost"    class="ctrl-value" style="text-align:right; color:var(--accent);">—</span>
+          </div>
         </div>
       </div>
-    </div>
 
     <div class="ctrl-card physics-card">
       <div class="section-title">Physics Data (Daily Averages)</div>
@@ -1777,16 +1782,7 @@ function updateOdinCharts() {
     const rs = odinDataCache && odinDataCache.last_run;
     const statsBlock = document.getElementById('run-stats-block');
     if (rs && statsBlock && rs.execution_ms > 0) {
-        statsBlock.style.display = '';
-        document.getElementById('rs-exec').textContent    = rs.execution_ms + ' ms';
-        document.getElementById('rs-hloss').textContent   = rs.heat_loss.toFixed(3) + ' kW/K';
-        document.getElementById('rs-cop').textContent     = rs.base_cop.toFixed(2);
-        document.getElementById('rs-tmass').textContent   = rs.thermal_mass.toFixed(1) + ' kWh/K';
-        document.getElementById('rs-econs').textContent   = rs.exp_consumption.toFixed(2) + ' kWh';
-        document.getElementById('rs-eprod').textContent   = rs.exp_production.toFixed(2) + ' kWh';
-        document.getElementById('rs-solar').textContent         = rs.exp_solar.toFixed(2) + ' kWh';
-        document.getElementById('rs-solar-total').textContent   = (rs.exp_solar_total || rs.exp_solar).toFixed(2) + ' kWh';
-        document.getElementById('rs-cost').textContent    = '€' + rs.total_cost.toFixed(4);
+        updateRunStatsUI(rs);
     }
 
     // Auto-focus to today (index 24-47) unless user has manually zoomed/panned
@@ -2752,7 +2748,29 @@ function showResetButton() {
   document.getElementById('btn-reset-zoom').style.display = 'block';
 }
 
-let odinZoomed = false;
+let lastRunSignature = "";
+
+function updateRunStatsUI(lr) {
+    if (!lr) return;
+    document.getElementById('run-stats-block').style.display = 'block';
+
+    const currentSig = `${lr.execution_ms}-${lr.total_cost}-${lr.exp_consumption}`;
+    if (currentSig !== lastRunSignature) {
+        lastRunSignature = currentSig;
+        const now = new Date();
+        document.getElementById('rs-time').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    }
+
+    document.getElementById('rs-exec').innerText = lr.execution_ms + " ms";
+    document.getElementById('rs-hloss').innerText = lr.heat_loss.toFixed(3) + " kW/K";
+    document.getElementById('rs-cop').innerText = lr.base_cop.toFixed(2);
+    document.getElementById('rs-tmass').innerText = lr.thermal_mass.toFixed(1) + " kWh/K";
+    document.getElementById('rs-econs').innerText = lr.exp_consumption.toFixed(2) + " kWh";
+    document.getElementById('rs-eprod').innerText = lr.exp_production.toFixed(2) + " kWh";
+    document.getElementById('rs-solar').innerText = lr.exp_solar.toFixed(2) + " kWh";
+    document.getElementById('rs-solar-total').innerText = lr.exp_solar_total.toFixed(2) + " kWh";
+    document.getElementById('rs-cost').innerHTML = "&euro;" + lr.total_cost.toFixed(4);
+}
 
 function syncOdinScales(sourceChart) {
   const min = sourceChart.scales.x.min;
@@ -2765,6 +2783,8 @@ function syncOdinScales(sourceChart) {
   });
   showOdinResetButton();
 }
+
+let odinZoomed = false;
 
 function resetOdinZoom() {
     odinZoomed = false;
