@@ -37,6 +37,8 @@ script:
                   float _dhw_target = std::isnan(id(dhw_flow_temp_target).state) ? 0.0f : id(dhw_flow_temp_target).state;
                   float _dhw_drop = std::isnan(id(dhw_flow_temp_drop).state) ? 0.0f : id(dhw_flow_temp_drop).state;
                   float _dhw_thresh = std::isnan(id(dhw_start_threshold).state) ? 0.0f : id(dhw_start_threshold).state;
+                  // Mirrors Asgard OperationMode enum: 0=OFF,1=DHW,2=HEAT,3=COOL,5=FROST,6=LEGIONELLA,255=UNAVAIL
+                  uint8_t _op_mode = static_cast<uint8_t>(id(optimizer_ptr)->get_current_operation_mode());
 
                   int _cur_hour = id(optimizer_ptr)->get_current_ecodan_hour();
 
@@ -57,7 +59,8 @@ script:
                       "\"dhw_temp\":%.2f,"
                       "\"dhw_target\":%.2f,"
                       "\"dhw_drop\":%.2f,"
-                      "\"dhw_start_threshold\":%.2f"
+                      "\"dhw_start_threshold\":%.2f,"
+                      "\"current_operation_mode\":%u"
                       "}}",
                       id(num_raw_heat_produced).state,
                       id(num_raw_elec_consumed).state,
@@ -74,7 +77,8 @@ script:
                       _dhw_temp,
                       _dhw_target,
                       _dhw_drop,
-                      _dhw_thresh
+                      _dhw_thresh,
+                      _op_mode
                   );
                   return std::string(payload);
 

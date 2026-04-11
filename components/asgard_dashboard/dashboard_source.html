@@ -2494,7 +2494,9 @@ async function runOdinSolver() {
             dhw_temp: latestState.dhw_temp || 0,
             dhw_target: latestState.dhw_flow_temp_target || 0,
             dhw_drop: latestState.dhw_flow_temp_drop || 0,
-            dhw_start_threshold: pending['dhw-thresh'] ?? latestState.dhw_start_threshold ?? 0.0
+            dhw_start_threshold: pending['dhw-thresh'] ?? latestState.dhw_start_threshold ?? 0.0,
+            // 0=OFF,1=DHW_ON,2=HEAT_ON,3=COOL_ON,5=FROST_PROTECT,6=LEGIONELLA,255=UNAVAILABLE
+            current_operation_mode: latestState.operation_mode ?? 0
         }
     };
 

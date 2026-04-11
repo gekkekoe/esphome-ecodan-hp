@@ -67,6 +67,15 @@ namespace esphome
             return current_solar;
         }
 
+        // get numeric operating mode for mpc call
+        uint8_t Optimizer::get_current_operation_mode() {
+
+            if (this->state_.ecodan_instance == nullptr) return 0;
+            auto &status = this->state_.ecodan_instance->get_status();
+            
+            return static_cast<uint8_t>(status.Operation);
+        }
+
         // ─────────────────────────────────────────────────────────────────
         // ODIN production store (called from YAML after fetch completes)
         // ─────────────────────────────────────────────────────────────────

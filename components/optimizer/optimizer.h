@@ -208,6 +208,7 @@ namespace esphome
       // Solver / ODIN
       bool aa_enabled() const;
       bool solver_enabled() const;
+      uint8_t get_current_operation_mode();
       float get_current_solar_irradiance();
       float get_heating_produced_kwh() const { return last_total_heating_produced_; }
       float get_heating_consumed_kwh() const { return last_total_heating_consumed_; }
