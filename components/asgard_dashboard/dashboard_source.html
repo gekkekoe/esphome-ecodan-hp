@@ -1376,17 +1376,15 @@ function initCharts() {
       }
   };
 
-odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2d'), {
+  odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2d'), {
       type: 'bar',
       data: {
           labels: labels48,
           datasets: [
-              // Stack 0: Expected values split into Grid and Solar
               { label: 'Expected (Grid)',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
               { label: 'Expected (Solar)', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 0' },
-
-              // Stack 1: Actual values stand next to the expected stack
-              { label: 'Actual',           data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' }
+              { label: 'Actual Heat',      data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
+              { label: 'Actual DHW',       data: [], backgroundColor: 'rgba(255,107,53,0.35)',  borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' }
           ]
       },
       options: {
@@ -1396,25 +1394,20 @@ odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2
               zoom: odinZoomConfig
           },
           scales: {
-              // Enable stacking on both axes for the stacked layout to work properly
               x: { ...xAxis, stacked: true },
-              y: { 
-                  stacked: true, 
-                  ticks: { color: '#8295b8', font: monoFont }, 
-                  grid: { color: '#1e2d4a' },
-                  title: { display: true, text: 'kW', color: '#8295b8' } 
-              }
+              y: { stacked: true, ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' }, title: { display: true, text: 'kW', color: '#8295b8' } }
           }
       }
   });
 
-odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2d'), {
+  odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2d'), {
       type: 'bar',
       data: {
           labels: labels48,
           datasets: [
-              { label: 'Expected',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
-              { label: 'Actual',    data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
+              { label: 'Expected',   data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
+              { label: 'Actual Heat',data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
+              { label: 'Actual DHW', data: [], backgroundColor: 'rgba(255,107,53,0.35)',  borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' }
           ]
       },
       options: {
@@ -1424,9 +1417,8 @@ odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2
               zoom: odinZoomConfig
           },
           scales: {
-              x: xAxis,
-              y: { ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' },
-                   title: { display: true, text: 'kW', color: '#8295b8' } }
+              x: { ...xAxis, stacked: true },
+              y: { stacked: true, ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' }, title: { display: true, text: 'kW', color: '#8295b8' } }
           }
       }
   });
@@ -1597,85 +1589,82 @@ odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2
 function updateOdinCharts() {
     if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart || !odinPriceChart || !odinWeatherChart || !odinProdChart) return;
 
-    // NVS actual data: already stored as per-hour deltas by the YAML (cur_start - prev_start).
-    // No delta calculation needed here — use values directly.
     const rawNvsCons = odinDataCache ? (odinDataCache.actual_cons || new Array(48).fill(null)) : new Array(48).fill(null);
     const rawNvsProd = odinDataCache ? (odinDataCache.actual_prod || new Array(48).fill(null)) : new Array(48).fill(null);
 
-    const actualConsByHour = rawNvsCons.map(v => v != null ? parseFloat(Math.max(0, v).toFixed(2)) : null);
-    const actualProdByHour = rawNvsProd.map(v => v != null ? parseFloat(Math.max(0, v).toFixed(2)) : null);
+    const actualConsHeatByHour = new Array(48).fill(null);
+    const actualConsDhwByHour = new Array(48).fill(null);
+    const actualProdHeatByHour = new Array(48).fill(null);
+    const actualProdDhwByHour = new Array(48).fill(null);
     const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(48).fill(null))] : new Array(48).fill(null);
 
-    // Live history overlay
-    if (history.timestamps) {
-        const firstConsByHour = new Array(24).fill(null);
-        const lastConsByHour  = new Array(24).fill(null);
-        
-        const firstProdByHour = new Array(24).fill(null);
-        const lastProdByHour  = new Array(24).fill(null);
-        
+    // Live history overlay: Bereken incrementele deltas per modus (Heat vs DHW)
+    if (history.timestamps && history.timestamps.length > 0) {
+        const hConsHeat = new Array(24).fill(0);
+        const hConsDhw = new Array(24).fill(0);
+        const hProdHeat = new Array(24).fill(0);
+        const hProdDhw = new Array(24).fill(0);
+        const hHasData = new Array(24).fill(false);
         const firstTempByHour = new Array(24).fill(null);
+
+        let prevCons = null;
+        let prevProd = null;
 
         for (let i = 0; i < history.timestamps.length; i++) {
             const d = new Date(history.timestamps[i]);
-            if (d.toDateString() === new Date().toDateString()) {
-                const h = d.getHours();
-                if (history.cons[i] != null && history.mode[i] === 'Heating') {
-                    if (firstConsByHour[h] === null) firstConsByHour[h] = history.cons[i];
-                    lastConsByHour[h] = history.cons[i];
-                }
-                if (history.prod[i] != null && history.mode[i] === 'Heating') {
-                    if (firstProdByHour[h] === null) firstProdByHour[h] = history.prod[i];
-                    lastProdByHour[h] = history.prod[i];
-                }
-                if (history.z1curr[i] != null && firstTempByHour[h] === null)
-                    firstTempByHour[h] = history.z1curr[i];
-            }
-        }
+            const isToday = d.toDateString() === new Date().toDateString();
+            if (!isToday) continue;
 
-        const hourlyDeltaCons = new Array(24).fill(null);
-        const hourlyDeltaProd = new Array(24).fill(null);
-        
-        for (let h = 0; h < 24; h++) {
-            if (lastConsByHour[h] !== null) {
-                let prevMax = null;
-                for (let prev = h - 1; prev >= 0; prev--) {
-                    if (lastConsByHour[prev] !== null) { prevMax = lastConsByHour[prev]; break; }
+            const h = d.getHours();
+            const mode = history.mode[i];
+
+            if (history.z1curr[i] != null && firstTempByHour[h] === null) firstTempByHour[h] = history.z1curr[i];
+
+            if (history.cons[i] !== null) {
+                if (prevCons !== null) {
+                    let delta = history.cons[i] - prevCons;
+                    if (delta < 0) delta = history.cons[i]; 
+                    if (delta > 0) {
+                        hHasData[h] = true;
+                        if (mode === 'Heating') hConsHeat[h] += delta;
+                        else if (mode === 'Hot Water' || mode === 'Legionella') hConsDhw[h] += delta;
+                    }
                 }
-                let delta = (prevMax !== null) ? (lastConsByHour[h] - prevMax) : (lastConsByHour[h] - firstConsByHour[h]);
-                if (delta < 0) delta = lastConsByHour[h];
-                hourlyDeltaCons[h] = parseFloat(Math.max(0, delta).toFixed(2));
+                prevCons = history.cons[i];
             }
-            if (lastProdByHour[h] !== null) {
-                let prevMax = null;
-                for (let prev = h - 1; prev >= 0; prev--) {
-                    if (lastProdByHour[prev] !== null) { prevMax = lastProdByHour[prev]; break; }
+
+            if (history.prod[i] !== null) {
+                if (prevProd !== null) {
+                    let delta = history.prod[i] - prevProd;
+                    if (delta < 0) delta = history.prod[i];
+                    if (delta > 0) {
+                        hHasData[h] = true;
+                        if (mode === 'Heating') hProdHeat[h] += delta;
+                        else if (mode === 'Hot Water' || mode === 'Legionella') hProdDhw[h] += delta;
+                    }
                 }
-                let delta = (prevMax !== null) ? (lastProdByHour[h] - prevMax) : (lastProdByHour[h] - firstProdByHour[h]);
-                if (delta < 0) delta = lastProdByHour[h];
-                hourlyDeltaProd[h] = parseFloat(Math.max(0, delta).toFixed(2));
+                prevProd = history.prod[i];
             }
         }
 
         for (let h = 0; h < 24; h++) {
-            // Map live history to the "Today" portion (indexes 0-23)
-            if (hourlyDeltaCons[h] !== null) actualConsByHour[h] = hourlyDeltaCons[h];
-            if (hourlyDeltaProd[h] !== null) actualProdByHour[h] = hourlyDeltaProd[h];
+            if (hHasData[h]) {
+                actualConsHeatByHour[h] = parseFloat(hConsHeat[h].toFixed(2));
+                actualConsDhwByHour[h]  = parseFloat(hConsDhw[h].toFixed(2));
+                actualProdHeatByHour[h] = parseFloat(hProdHeat[h].toFixed(2));
+                actualProdDhwByHour[h]  = parseFloat(hProdDhw[h].toFixed(2));
+            }
             if (firstTempByHour[h] !== null) actualTempByHour[h] = firstTempByHour[h];
         }
+    }
 
-        const currentLocalHour = new Date().getHours();
-        for (let h = 0; h < 48; h++) {
-            // Hide incomplete energy bars for anything equal to or beyond the current hour
-            if (h >= currentLocalHour) {
-                actualConsByHour[h] = null;
-                actualProdByHour[h] = null;
-            }
-            // Hide the temperature line ONLY for strictly future hours
-            if (h > currentLocalHour) {
-                actualTempByHour[h] = null;
-            }
+    const currentLocalHour = new Date().getHours();
+    for (let h = 0; h < 48; h++) {
+        if (h >= currentLocalHour) {
+            actualConsHeatByHour[h] = null; actualConsDhwByHour[h] = null;
+            actualProdHeatByHour[h] = null; actualProdDhwByHour[h] = null;
         }
+        if (h > currentLocalHour) actualTempByHour[h] = null;
     }
 
     const expCons       = odinDataCache ? odinDataCache.energy_consumption         : new Array(48).fill(null);
@@ -1701,41 +1690,39 @@ function updateOdinCharts() {
 
     // Single loop to process all hourly data
     for (let h = 0; h < 48; h++) {
-        // Calculate the solar production once per hour
         const sol_wm2 = solar[h] || 0; 
         const expected_solar_kwh = sol_wm2 * (solarKwp / 1000);
 
-        // --- 1. Actual Cost Calculation ---
-        const actual_cons = actualConsByHour[h];
-        const price = prices[h];
+        // Heat + DHW
+        let total_actual_cons = null;
+        if (actualConsHeatByHour[h] !== null || actualConsDhwByHour[h] !== null) {
+            total_actual_cons = (actualConsHeatByHour[h] || 0) + (actualConsDhwByHour[h] || 0);
+        }
         
-        if (actual_cons !== null && price !== null) {
-            const net_cons = Math.max(0, actual_cons - expected_solar_kwh);            
+        const price = prices[h];
+        if (total_actual_cons !== null && price !== null) {
+            const net_cons = Math.max(0, total_actual_cons - expected_solar_kwh);            
             actualCost[h] = parseFloat((net_cons * price).toFixed(4));
         }
 
-        // --- 2. Expected Consumption Split Calculation ---
         const exp_cons = expCons[h];
-        
         if (exp_cons !== null) {
-            // Solar used cannot exceed the total expected consumption for that hour
             const solar_used = Math.min(exp_cons, expected_solar_kwh);
             const grid_used = exp_cons - solar_used;
-
             expConsSolar[h] = parseFloat(solar_used.toFixed(2));
             expConsGrid[h] = parseFloat(grid_used.toFixed(2));
         }
     }
 
-    // Energy Cons chart
     odinConsChart.data.datasets[0].data = expConsGrid;
     odinConsChart.data.datasets[1].data = expConsSolar;
-    odinConsChart.data.datasets[2].data = actualConsByHour;
+    odinConsChart.data.datasets[2].data = actualConsHeatByHour;
+    odinConsChart.data.datasets[3].data = actualConsDhwByHour;
     odinConsChart.update('none');
     
-    // Energy Prod chart
     odinProdChart.data.datasets[0].data = expProd;
-    odinProdChart.data.datasets[1].data = actualProdByHour;
+    odinProdChart.data.datasets[1].data = actualProdHeatByHour;
+    odinProdChart.data.datasets[2].data = actualProdDhwByHour;
     odinProdChart.update('none');
 
     // Cost chart: Exp Cost, Actual Cost
