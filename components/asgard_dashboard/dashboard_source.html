@@ -1591,10 +1591,11 @@ function updateOdinCharts() {
 
     const rawNvsCons = odinDataCache ? (odinDataCache.actual_cons || new Array(48).fill(null)) : new Array(48).fill(null);
     const rawNvsProd = odinDataCache ? (odinDataCache.actual_prod || new Array(48).fill(null)) : new Array(48).fill(null);
+    const rawNvsDhwCons = odinDataCache ? (odinDataCache.actual_dhw_cons || new Array(48).fill(null)) : new Array(48).fill(null);
 
-    const actualConsHeatByHour = new Array(48).fill(null);
-    const actualConsDhwByHour = new Array(48).fill(null);
-    const actualProdHeatByHour = new Array(48).fill(null);
+    const actualConsHeatByHour = [...rawNvsCons];
+    const actualConsDhwByHour  = [...rawNvsDhwCons];
+    const actualProdHeatByHour = [...rawNvsProd];
     const actualProdDhwByHour = new Array(48).fill(null);
     const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(48).fill(null))] : new Array(48).fill(null);
 

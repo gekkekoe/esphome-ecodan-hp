@@ -310,7 +310,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void load_odin_data(int current_day);
 
   // Called each hour by YAML to track actual consumption and room temp per-hour slot
-  void update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float actual_room_temp);
+  void update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float actual_room_temp);
 
  protected:
   void handle_root_(AsyncWebServerRequest *request);
@@ -462,6 +462,7 @@ private:
   std::vector<float> odin_expected_temp_;
   std::vector<float> odin_cost_;
   std::vector<float> odin_battery_discharge_;
+  std::vector<float> odin_actual_dhw_cons_; // actual kWh consumed
   std::vector<float> odin_actual_cons_;    // actual kWh consumed per hour (NVS persisted)
   std::vector<float> odin_actual_prod_;    // actual kWh produced per hour (NVS persisted)
   std::vector<float> odin_actual_room_;    // actual room temp at start of each hour (NVS persisted)

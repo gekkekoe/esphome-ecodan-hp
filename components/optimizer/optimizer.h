@@ -93,6 +93,7 @@ namespace esphome
       float    last_total_heating_produced_ = 0.0f;
       float    last_total_heating_consumed_ = 0.0f;
       bool     last_was_heating_            = false;
+      float last_total_all_consumed_ = 0.0f;  // raw meter, all modes incl. DHW
 
       // Free cooling window tracking (HP-off period, any time of day)
       // Measures HL×TM product from unregulated cooldown, free of solar/DHW contamination.
@@ -212,6 +213,7 @@ namespace esphome
       float get_current_solar_irradiance();
       float get_heating_produced_kwh() const { return last_total_heating_produced_; }
       float get_heating_consumed_kwh() const { return last_total_heating_consumed_; }
+      float get_total_consumed_kwh() const { return this->last_total_all_consumed_; }
       int  get_current_ecodan_hour();
       int  get_current_ecodan_day();
       bool has_old_odin_data();

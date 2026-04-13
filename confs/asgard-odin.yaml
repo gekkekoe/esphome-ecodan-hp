@@ -88,7 +88,7 @@ script:
                         if (response->status_code == 200) {
                           bool parse_ok = esphome::json::parse_json(body, [](JsonObject root) {
                             if (root["success"].as<bool>()) {
-                              std::vector<float> exp_end_t(48), nrg(48), prod(48), exp_t(48), cost(48), batt(48), sb(48), smn(48), smx(48), wth(48), sol(48), prc(48), op_mode(48);
+                              static std::vector<float> exp_end_t(48), nrg(48), prod(48), exp_t(48), cost(48), batt(48), sb(48), smn(48), smx(48), wth(48), sol(48), prc(48), op_mode(48);
 
                               JsonArray j_eet = root["expected_end_temp"];
                               JsonArray j_e  = root["energy_consumption"];
@@ -215,89 +215,68 @@ interval:
           }
 
           {
-            // Robust Hourly Data Collector (Handles sensor drops, spikes, and daily resets)
-            static int   last_actual_hour   = -1;
-            static float start_of_hour_cons = -1.0f;
-            static float start_of_hour_prod = -1.0f;
-            static float max_cons_in_hour   = -1.0f;
-            static float max_prod_in_hour   = -1.0f;
-            static int   drop_counter_cons  = 0;
-            static int   drop_counter_prod  = 0;
+            // Robust Minute-by-Minute Energy Accumulator
+            static int   last_hour = -1;
+            static float last_tot  = -1.0f;
+            static float last_prod = -1.0f;
+            
+            // Accumulators for the current hour
+            static float acc_h_cons = 0.0f;
+            static float acc_h_prod = 0.0f;
+            static float acc_d_cons = 0.0f;
 
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
-            float current_cons = id(optimizer_ptr)->get_heating_consumed_kwh();
-            float current_prod = id(optimizer_ptr)->get_heating_produced_kwh();
+            float cur_tot  = id(optimizer_ptr)->get_total_consumed_kwh();
+            float cur_prod = id(optimizer_ptr)->get_heating_produced_kwh();
 
-            // Immediately ignore invalid (NaN) readings
-            if (std::isnan(current_cons) || std::isnan(current_prod)) return;
+            if (std::isnan(cur_tot) || std::isnan(cur_prod)) return;
 
-            if (last_actual_hour == -1) {
-              // Initialize on first valid run or after reboot
-              last_actual_hour = cur_hr;
-              start_of_hour_cons = current_cons;
-              start_of_hour_prod = current_prod;
-              max_cons_in_hour = current_cons;
-              max_prod_in_hour = current_prod;
+            // Initial run or recovery after reboot
+            if (last_hour == -1) {
+              last_hour = cur_hr;
+              last_tot  = cur_tot;
+              last_prod = cur_prod;
+              return;
             }
 
-            // --- CONSUMPTION LOGIC ---
-            // Spike detection: if value jumps up unrealistically (>2.0 kWh in 1 min), 
-            // it's a late initialization or a recovery from a sensor drop. Set a new baseline.
-            if (current_cons > max_cons_in_hour + 2.0f) {
-                start_of_hour_cons = current_cons;
-                max_cons_in_hour = current_cons;
-                drop_counter_cons = 0;
-            }
-            // Drop detection: if value drops (midnight reset or temporary sensor failure)
-            else if (current_cons < max_cons_in_hour - 2.0f) {
-                if (++drop_counter_cons >= 3) {
-                    max_cons_in_hour = current_cons;
-                    start_of_hour_cons = current_cons; // Reset start to prevent massive spikes
-                    drop_counter_cons = 0;
-                }
-            } 
-            // Normal growth
-            else {
-                drop_counter_cons = 0;
-                if (current_cons > max_cons_in_hour) max_cons_in_hour = current_cons;
+            // Calculate delta since last minute
+            float d_tot  = cur_tot - last_tot;
+            float d_prod = cur_prod - last_prod;
+
+            // Handle daily meter resets (if delta is negative, assume 0 or the current value)
+            if (d_tot < 0)  d_tot = 0; 
+            if (d_prod < 0) d_prod = 0;
+
+            // Attribute the delta to a specific bucket based on current operation mode
+            uint8_t mode = static_cast<uint8_t>(id(optimizer_ptr)->get_current_operation_mode());
+            bool is_dhw = (mode == 1 || mode == 6); // DHW or Legionella
+
+            if (d_tot < 5.0f) { // Ignore impossible spikes (>5kWh in 1 min)
+              if (is_dhw) {
+                acc_d_cons += d_tot;
+              } else if (mode == 2) { // HEAT_ON
+                acc_h_cons += d_tot;
+                acc_h_prod += d_prod;
+              }
+              // Note: Standby power when mode is OFF (0) is simply not accumulated,
+              // keeping your COP calculations pure for the active modes.
             }
 
-            // --- PRODUCTION LOGIC ---
-            if (current_prod > max_prod_in_hour + 2.0f) {
-                start_of_hour_prod = current_prod;
-                max_prod_in_hour = current_prod;
-                drop_counter_prod = 0;
-            }
-            else if (current_prod < max_prod_in_hour - 2.0f) {
-                if (++drop_counter_prod >= 3) {
-                    max_prod_in_hour = current_prod;
-                    start_of_hour_prod = current_prod;
-                    drop_counter_prod = 0;
-                }
-            } 
-            else {
-                drop_counter_prod = 0;
-                if (current_prod > max_prod_in_hour) max_prod_in_hour = current_prod;
-            }
+            last_tot  = cur_tot;
+            last_prod = cur_prod;
 
-            if (cur_hr != last_actual_hour) {
-              int completed_hr = last_actual_hour;
+            // Hour transition: Push accumulated totals to dashboard and reset
+            if (cur_hr != last_hour && cur_hr != -1) {
               float room = id(virtual_climate_z1).current_temperature;
-
-              // Calculate energy used in the completed hour
-              float cons = max_cons_in_hour - start_of_hour_cons;
-              float prod = max_prod_in_hour - start_of_hour_prod;
               
-              if (cons < 0.0f) cons = 0.0f;
-              if (prod < 0.0f) prod = 0.0f;
+              // Push the final accumulated values for the completed hour
+              id(asgard_dashboard_id)->update_actual_data(last_hour, acc_h_cons, acc_h_prod, acc_d_cons, room);
 
-              id(asgard_dashboard_id)->update_actual_data(completed_hr, cons, prod, room);
-
-              last_actual_hour = cur_hr;
-              
-              // Prepare tracking for the new hour
-              start_of_hour_cons = max_cons_in_hour;
-              start_of_hour_prod = max_prod_in_hour;
+              // Reset buckets for the new hour
+              acc_h_cons = 0.0f;
+              acc_h_prod = 0.0f;
+              acc_d_cons = 0.0f;
+              last_hour  = cur_hr;
             }
           }
 
@@ -307,18 +286,18 @@ interval:
       - if:
           condition:
             lambda: |-
-              // 1. Check if the solver is allowed to run
+              // Check if the solver is allowed to run
               if (!id(sw_use_solver).state) {
                 if (id(bin_solver_connected).state) id(bin_solver_connected).publish_state(false);
                 return false; // Stop ping
               }
 
-              // 2. Pause ping if an optimization data fetch is running
+              // Pause ping if an optimization data fetch is running
               if (id(fetch_odin_optimization).is_running() || id(fetch_odin_optimization_attempt).is_running()) {
                 return false; // Stop ping
               }
               
-              // 3. Dynamic timer (5 min if online, 1 min if offline)
+              // Dynamic timer (5 min if online, 1 min if offline)
               static uint32_t last_ping_time = 0;
               uint32_t now = millis();
               if (id(bin_solver_connected).state && last_ping_time != 0 && (now - last_ping_time < 300000)) {

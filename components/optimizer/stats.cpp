@@ -295,6 +295,18 @@ namespace esphome
                 }
             };
 
+            // Always keep a snapshot of the raw total meter (all modes, incl. DHW/Legionella).
+            // Used by get_total_consumed_kwh() so the YAML hourly collector can capture
+            // consumption during DHW/Legionella hours correctly.
+            if (this->state_.solver_kwh_meter_feedback_source == nullptr ||
+                this->state_.solver_kwh_meter_feedback_source->active_index().value_or(0) == 0) {
+                if (this->state_.daily_heating_consumed != nullptr && this->state_.daily_heating_consumed->has_state())
+                    this->last_total_all_consumed_ = this->state_.daily_heating_consumed->state;
+            } else {
+                if (this->state_.solver_kwh_meter_feedback != nullptr && this->state_.solver_kwh_meter_feedback->has_state())
+                    this->last_total_all_consumed_ = this->state_.solver_kwh_meter_feedback->state;
+            }
+
             if (heating_now) {
                 snap_energy();
                 this->last_was_heating_ = true;
