@@ -1589,14 +1589,15 @@ function initCharts() {
 function updateOdinCharts() {
     if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart || !odinPriceChart || !odinWeatherChart || !odinProdChart) return;
 
-    const rawNvsCons = odinDataCache ? (odinDataCache.actual_cons || new Array(48).fill(null)) : new Array(48).fill(null);
-    const rawNvsProd = odinDataCache ? (odinDataCache.actual_prod || new Array(48).fill(null)) : new Array(48).fill(null);
-    const rawNvsDhwCons = odinDataCache ? (odinDataCache.actual_dhw_cons || new Array(48).fill(null)) : new Array(48).fill(null);
+    const rawNvsCons    = odinDataCache ? (odinDataCache.actual_cons      || new Array(48).fill(null)) : new Array(48).fill(null);
+    const rawNvsProd    = odinDataCache ? (odinDataCache.actual_prod      || new Array(48).fill(null)) : new Array(48).fill(null);
+    const rawNvsDhwCons = odinDataCache ? (odinDataCache.actual_dhw_cons  || new Array(48).fill(null)) : new Array(48).fill(null);
+    const rawNvsDhwProd = odinDataCache ? (odinDataCache.actual_dhw_prod  || new Array(48).fill(null)) : new Array(48).fill(null);
 
     const actualConsHeatByHour = [...rawNvsCons];
     const actualConsDhwByHour  = [...rawNvsDhwCons];
     const actualProdHeatByHour = [...rawNvsProd];
-    const actualProdDhwByHour = new Array(48).fill(null);
+    const actualProdDhwByHour  = [...rawNvsDhwProd];
     const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(48).fill(null))] : new Array(48).fill(null);
 
     // Live history overlay: Bereken incrementele deltas per modus (Heat vs DHW)

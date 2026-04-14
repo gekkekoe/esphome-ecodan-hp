@@ -224,6 +224,7 @@ interval:
             static float acc_h_cons = 0.0f;
             static float acc_h_prod = 0.0f;
             static float acc_d_cons = 0.0f;
+            static float acc_d_prod = 0.0f;
 
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
             float cur_tot  = id(optimizer_ptr)->get_total_consumed_kwh();
@@ -254,6 +255,7 @@ interval:
             if (d_tot < 5.0f) { // Ignore impossible spikes (>5kWh in 1 min)
               if (is_dhw) {
                 acc_d_cons += d_tot;
+                acc_d_prod += d_prod;
               } else if (mode == 2) { // HEAT_ON
                 acc_h_cons += d_tot;
                 acc_h_prod += d_prod;
@@ -270,12 +272,13 @@ interval:
               float room = id(virtual_climate_z1).current_temperature;
               
               // Push the final accumulated values for the completed hour
-              id(asgard_dashboard_id)->update_actual_data(last_hour, acc_h_cons, acc_h_prod, acc_d_cons, room);
+              id(asgard_dashboard_id)->update_actual_data(last_hour, acc_h_cons, acc_h_prod, acc_d_cons, acc_d_prod, room);
 
               // Reset buckets for the new hour
               acc_h_cons = 0.0f;
               acc_h_prod = 0.0f;
               acc_d_cons = 0.0f;
+              acc_d_prod = 0.0f;
               last_hour  = cur_hr;
             }
           }
@@ -286,18 +289,18 @@ interval:
       - if:
           condition:
             lambda: |-
-              // Check if the solver is allowed to run
+              // 1. Check if the solver is allowed to run
               if (!id(sw_use_solver).state) {
                 if (id(bin_solver_connected).state) id(bin_solver_connected).publish_state(false);
                 return false; // Stop ping
               }
 
-              // Pause ping if an optimization data fetch is running
+              // 2. Pause ping if an optimization data fetch is running
               if (id(fetch_odin_optimization).is_running() || id(fetch_odin_optimization_attempt).is_running()) {
                 return false; // Stop ping
               }
               
-              // Dynamic timer (5 min if online, 1 min if offline)
+              // 3. Dynamic timer (5 min if online, 1 min if offline)
               static uint32_t last_ping_time = 0;
               uint32_t now = millis();
               if (id(bin_solver_connected).state && last_ping_time != 0 && (now - last_ping_time < 300000)) {

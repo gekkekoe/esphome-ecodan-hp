@@ -952,22 +952,23 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 // ---------------------------------------------------------------------------
 static const char* NVS_ODIN_NS = "odin_cache";
 
-void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float actual_room_temp) {
-    // Write directly to the current hour (0-23 represents Today)
+void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp) {
     int target_idx = hour; 
     
     if (target_idx < 0 || target_idx >= 48) return;
     if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
 
     if (odin_actual_dhw_cons_.size() != 48) odin_actual_dhw_cons_.assign(48, NAN);
+    if (odin_actual_dhw_prod_.size() != 48) odin_actual_dhw_prod_.assign(48, NAN);
     if (odin_actual_cons_.size() != 48) odin_actual_cons_.assign(48, NAN);
     if (odin_actual_prod_.size() != 48) odin_actual_prod_.assign(48, NAN);
     if (odin_actual_room_.size() != 48) odin_actual_room_.assign(48, NAN);
 
-    odin_actual_cons_[target_idx] = actual_cons_kwh;
-    odin_actual_prod_[target_idx] = actual_prod_kwh;
-    odin_actual_room_[target_idx] = actual_room_temp;
+    odin_actual_cons_[target_idx]     = actual_cons_kwh;
+    odin_actual_prod_[target_idx]     = actual_prod_kwh;
     odin_actual_dhw_cons_[target_idx] = dhw_cons;
+    odin_actual_dhw_prod_[target_idx] = dhw_prod;
+    odin_actual_room_[target_idx]     = actual_room_temp;
 
     xSemaphoreGive(snapshot_mutex_);
     this->odin_nvs_dirty_ = true;
@@ -1051,6 +1052,7 @@ void EcodanDashboard::nvs_persist_odin_() {
     save_arr("cost",     this->odin_cost_);
     save_arr("batt",     this->odin_battery_discharge_);
     save_arr("act_dhw_cons", this->odin_actual_dhw_cons_);
+    save_arr("act_dhw_prod", this->odin_actual_dhw_prod_);
     save_arr("act_cons",   this->odin_actual_cons_);
     save_arr("act_prod",   this->odin_actual_prod_);
     save_arr("act_room",   this->odin_actual_room_);
@@ -1136,6 +1138,7 @@ void EcodanDashboard::load_odin_data(int current_day) {
            && load_arr("prod",     this->odin_production_);
 
     load_arr("act_dhw_cons", this->odin_actual_dhw_cons_, NAN);
+    load_arr("act_dhw_prod", this->odin_actual_dhw_prod_, NAN);
     load_arr("act_cons", this->odin_actual_cons_, NAN);
     load_arr("act_prod", this->odin_actual_prod_, NAN);
     load_arr("act_room", this->odin_actual_room_, NAN);
@@ -1171,6 +1174,7 @@ void EcodanDashboard::load_odin_data(int current_day) {
                 shift_arr(this->odin_cost_, NAN);
                 shift_arr(this->odin_battery_discharge_, 0.0f);
                 shift_arr(this->odin_actual_dhw_cons_, NAN);
+                shift_arr(this->odin_actual_dhw_prod_, NAN);
                 shift_arr(this->odin_actual_cons_, NAN);
                 shift_arr(this->odin_actual_prod_, NAN);
                 shift_arr(this->odin_actual_room_, NAN);
@@ -1185,6 +1189,7 @@ void EcodanDashboard::load_odin_data(int current_day) {
             } else {
                 ESP_LOGI(TAG, "NVS Load: Day jump (%d -> %d), clearing stale actuals", this->odin_stored_day_, current_day);
                 this->odin_actual_dhw_cons_.assign(48, NAN);
+                this->odin_actual_dhw_prod_.assign(48, NAN);
                 this->odin_actual_cons_.assign(48, NAN);
                 this->odin_actual_prod_.assign(48, NAN);
                 this->odin_actual_room_.assign(48, NAN);
@@ -1236,6 +1241,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
     ensure_48(this->odin_expected_temp_, NAN);
     ensure_48(this->odin_cost_, NAN);
     ensure_48(this->odin_actual_dhw_cons_, NAN);
+    ensure_48(this->odin_actual_dhw_prod_, NAN);
     ensure_48(this->odin_actual_cons_, NAN);
     ensure_48(this->odin_actual_prod_, NAN);
     ensure_48(this->odin_actual_room_, NAN);
@@ -1277,12 +1283,14 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             shift_arr(this->odin_prices_, 0.0f);
             shift_arr(this->odin_operation_mode_, 0.0f);
             shift_arr(this->odin_actual_dhw_cons_, NAN);
+            shift_arr(this->odin_actual_dhw_prod_, NAN);
             shift_arr(this->odin_actual_cons_, NAN);
             shift_arr(this->odin_actual_prod_, NAN);
             shift_arr(this->odin_actual_room_, NAN);
         } else {
             ESP_LOGI(TAG, "ODIN day jump (%d -> %d): clearing old actuals", this->odin_stored_day_, current_day);
             this->odin_actual_dhw_cons_.assign(48, NAN);
+            this->odin_actual_dhw_prod_.assign(48, NAN);
             this->odin_actual_cons_.assign(48, NAN);
             this->odin_actual_prod_.assign(48, NAN);
             this->odin_actual_room_.assign(48, NAN);
@@ -1361,7 +1369,7 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
       if (!got_data) return true;
 
       std::string chunk;
-      chunk.reserve(768);
+      chunk.reserve(768); 
       chunk += "\""; chunk += name; chunk += "\":[";
       
       char val_buf[32]; // Veilige restrictie per float
@@ -1392,6 +1400,7 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
   if (!send_arr_chunk("solar",                  &this->odin_solar_, false)) return;
   if (!send_arr_chunk("prices",                 &this->odin_prices_, false)) return;
   if (!send_arr_chunk("actual_dhw_cons",        &this->odin_actual_dhw_cons_, false)) return;
+  if (!send_arr_chunk("actual_dhw_prod",        &this->odin_actual_dhw_prod_, false)) return;
   if (!send_arr_chunk("actual_cons",            &this->odin_actual_cons_, false)) return;
   if (!send_arr_chunk("actual_prod",            &this->odin_actual_prod_, false)) return;
   if (!send_arr_chunk("actual_room_temp",       &this->odin_actual_room_, false)) return;
