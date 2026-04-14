@@ -32,7 +32,7 @@ void EcodanDashboard::setup() {
   xTaskCreate(
       EcodanDashboard::nvs_task_,
       "nvs_persist",
-      4096,
+      8192,
       this,
       1,                           // priority 1 = lowest above idle, well below lwIP (18)
       &this->nvs_task_handle_
@@ -953,6 +953,7 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 static const char* NVS_ODIN_NS = "odin_cache";
 
 void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp) {
+    // Write directly to the current hour (0-23 represents Today)
     int target_idx = hour; 
     
     if (target_idx < 0 || target_idx >= 48) return;
@@ -993,85 +994,104 @@ void EcodanDashboard::nvs_persist_odin_() {
         return;
     }
 
-    // 1. Lock the mutex only briefly to read the data
-    if (this->snapshot_mutex_ == NULL || xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(200)) != pdTRUE) {
+    // snapshot all data under mutex (fast memcpy only, no NVS I/O) ---
+    // The mutex is held for the shortest possible time — just copying vectors to local arrays.
+    // All slow NVS reads and writes happen AFTER the mutex is released.
+    static const int N = 48;
+    static const int NUM_ARRS = 18;
+
+    // Local stack copies — 18 × 48 × 4 = 3456 bytes on NVS task stack.
+    // NVS task was created with 8192 bytes stack so this is safe.
+    float snap[NUM_ARRS][N];
+    int32_t snap_day = -1;
+    bool snap_show_tab = false;
+
+    if (this->snapshot_mutex_ != NULL && xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(200)) == pdTRUE) {
+        snap_day      = this->odin_stored_day_;
+        snap_show_tab = this->nvs_show_tab_cache_.load();
+
+        auto copy_arr = [&](int idx, const std::vector<float>& v) {
+            if (v.size() == N) memcpy(snap[idx], v.data(), N * sizeof(float));
+            else               for (int i = 0; i < N; i++) snap[idx][i] = NAN;
+        };
+        copy_arr(0,  this->odin_expected_end_temp_);
+        copy_arr(1,  this->odin_energy_);
+        copy_arr(2,  this->odin_production_);
+        copy_arr(3,  this->odin_expected_temp_);
+        copy_arr(4,  this->odin_cost_);
+        copy_arr(5,  this->odin_battery_discharge_);
+        copy_arr(6,  this->odin_actual_dhw_cons_);
+        copy_arr(7,  this->odin_actual_dhw_prod_);
+        copy_arr(8,  this->odin_actual_cons_);
+        copy_arr(9,  this->odin_actual_prod_);
+        copy_arr(10, this->odin_actual_room_);
+        copy_arr(11, this->odin_prices_);
+        copy_arr(12, this->odin_weather_);
+        copy_arr(13, this->odin_solar_);
+        copy_arr(14, this->odin_operation_mode_);
+        copy_arr(15, this->odin_sched_base_);
+        copy_arr(16, this->odin_sched_min_);
+        copy_arr(17, this->odin_sched_max_);
+
+        xSemaphoreGive(this->snapshot_mutex_);
+    } else {
         esp_log_write(ESP_LOG_WARN, TAG, "NVS persist: failed to acquire snapshot mutex, skipping\n");
         nvs_close(h);
         return;
     }
 
+    // write to NVS — no mutex held, safe to take as long as needed ---
     bool has_changes = false;
 
     int32_t stored_day = -1;
-    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK || stored_day != this->odin_stored_day_) {
-        nvs_set_i32(h, "day", this->odin_stored_day_);
+    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK || stored_day != snap_day) {
+        nvs_set_i32(h, "day", snap_day);
         has_changes = true;
     }
 
-    // Read show_tab from the atomic cache — safe to access from this task context.
-    // The cache is updated in loop() (main task) just before signalling this task.
-    uint8_t current_show_tab = this->nvs_show_tab_cache_.load() ? 1 : 0;
+    uint8_t current_show_tab = snap_show_tab ? 1 : 0;
     uint8_t stored_show_tab = 0;
     if (nvs_get_u8(h, "show_tab", &stored_show_tab) != ESP_OK || stored_show_tab != current_show_tab) {
         nvs_set_u8(h, "show_tab", current_show_tab);
         has_changes = true;
     }
 
-    // Smart lambda without heap memory allocations
-    auto save_arr = [&](const char* key, const std::vector<float>& v) {
-        if (v.size() != 48) return;
+    static const char* KEYS[NUM_ARRS] = {
+        "exp_end", "energy",  "prod",    "exp_t",   "cost",    "batt",
+        "act_dhw_cons", "act_dhw_prod",
+        "act_cons", "act_prod", "act_room",
+        "prices", "weather", "solar", "op_mode", "sb", "smn", "smx"
+    };
+
+    for (int k = 0; k < NUM_ARRS; k++) {
         size_t required_size = 0;
         bool needs_write = true;
-        
-        if (nvs_get_blob(h, key, NULL, &required_size) == ESP_OK && required_size == 48 * sizeof(float)) {
-            float temp[48];
-            if (nvs_get_blob(h, key, temp, &required_size) == ESP_OK) {
+
+        if (nvs_get_blob(h, KEYS[k], NULL, &required_size) == ESP_OK && required_size == N * sizeof(float)) {
+            float temp[N];
+            if (nvs_get_blob(h, KEYS[k], temp, &required_size) == ESP_OK) {
                 needs_write = false;
-                for (int i = 0; i < 48; i++) {
-                    // Check if one is NAN and the other isn't, OR if the numerical difference > 0.001
-                    bool temp_is_nan = std::isnan(temp[i]);
-                    bool v_is_nan = std::isnan(v[i]);
-                    
-                    if (temp_is_nan != v_is_nan || (!temp_is_nan && std::abs(temp[i] - v[i]) > 0.001f)) { 
-                        needs_write = true; 
-                        break; 
+                for (int i = 0; i < N; i++) {
+                    bool t_nan = std::isnan(temp[i]);
+                    bool s_nan = std::isnan(snap[k][i]);
+                    if (t_nan != s_nan || (!t_nan && std::abs(temp[i] - snap[k][i]) > 0.001f)) {
+                        needs_write = true;
+                        break;
                     }
                 }
             }
         }
-        if (needs_write) { 
-            nvs_set_blob(h, key, v.data(), 48 * sizeof(float)); 
-            has_changes = true; 
+        if (needs_write) {
+            nvs_set_blob(h, KEYS[k], snap[k], N * sizeof(float));
+            has_changes = true;
         }
-    };
-
-    save_arr("exp_end",  this->odin_expected_end_temp_);  // new key (legacy: "sched")
-    save_arr("energy",   this->odin_energy_);
-    save_arr("prod",     this->odin_production_);
-    save_arr("exp_t",    this->odin_expected_temp_);
-    save_arr("cost",     this->odin_cost_);
-    save_arr("batt",     this->odin_battery_discharge_);
-    save_arr("act_dhw_cons", this->odin_actual_dhw_cons_);
-    save_arr("act_dhw_prod", this->odin_actual_dhw_prod_);
-    save_arr("act_cons",   this->odin_actual_cons_);
-    save_arr("act_prod",   this->odin_actual_prod_);
-    save_arr("act_room",   this->odin_actual_room_);
-    save_arr("prices",     this->odin_prices_);
-    save_arr("weather",    this->odin_weather_);
-    save_arr("solar",      this->odin_solar_);
-    save_arr("op_mode",    this->odin_operation_mode_);
-    save_arr("sb",         this->odin_sched_base_);
-    save_arr("smn",        this->odin_sched_min_);
-    save_arr("smx",        this->odin_sched_max_);
-
-    int32_t log_day = this->odin_stored_day_;
-    xSemaphoreGive(this->snapshot_mutex_); 
+    }
 
     if (has_changes) {
         nvs_commit(h);
-        esp_log_write(ESP_LOG_INFO, TAG, "NVS: ODIN arrays updated and persisted (day=%d)\n", log_day);
+        esp_log_write(ESP_LOG_INFO, TAG, "NVS: ODIN arrays persisted (day=%d)\n", snap_day);
     } else {
-        esp_log_write(ESP_LOG_DEBUG, TAG, "NVS: ODIN arrays match NVS exact state, skipping physical write (day=%d)\n", log_day);
+        esp_log_write(ESP_LOG_DEBUG, TAG, "NVS: no changes, skipping write (day=%d)\n", snap_day);
     }
     nvs_close(h);
 }
