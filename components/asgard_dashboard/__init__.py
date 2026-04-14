@@ -8,7 +8,7 @@ AUTO_LOAD = ["web_server_base"]
 
 CONF_WEB_SERVER_BASE_ID = "web_server_base_id"
 
-from esphome.components import sensor, binary_sensor, text_sensor, climate, number, switch, select, globals
+from esphome.components import sensor, binary_sensor, text_sensor, text, climate, number, switch, select, globals
 
 asgard_dashboard_ns = cg.esphome_ns.namespace("asgard_dashboard")
 EcodanDashboard = asgard_dashboard_ns.class_("EcodanDashboard", cg.Component)
@@ -60,7 +60,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("bin_solver_connected_id"):            cv.use_id(binary_sensor.BinarySensor),
 
         cv.Optional("version_id"):                         cv.use_id(text_sensor.TextSensor),
-        cv.Optional("txt_solver_ip_id"):                   cv.use_id(text_sensor.TextSensor),
+        cv.Optional("txt_solver_ip_id"):                   cv.use_id(text.Text),
 
         cv.Optional("sw_auto_adaptive_id"):                cv.use_id(switch.Switch),
         cv.Optional("sw_defrost_mit_id"):                  cv.use_id(switch.Switch),

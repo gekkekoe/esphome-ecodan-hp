@@ -340,10 +340,16 @@ binary_sensor:
     id: bin_solver_connected
     name: ${bin_solver_connected}
 
-text_sensor:
+text:
   - platform: template
     id: txt_solver_ip
     name: "Solver IP Address"
+    mode: text
+    optimistic: true
+    restore_value: true
+    initial_value: ""
+    min_length: 7
+    max_length: 15
     on_value:
       - logger.log:
           format: "Solver IP changed to: %s"

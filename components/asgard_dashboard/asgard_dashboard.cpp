@@ -370,10 +370,11 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "ui_use_room_z1" && ui_use_room_z1_) { ui_use_room_z1_->value() = (fval > 0.5); return; }
   if (key == "ui_use_room_z2" && ui_use_room_z2_) { ui_use_room_z2_->value() = (fval > 0.5); return; }
 
-  // Add support for updating TextSensors via the dashboard
   if (key == "solver_ip_address" && txt_solver_ip_ != nullptr && is_string) {
-    txt_solver_ip_->publish_state(sval);
-    ESP_LOGI(TAG, "Solver IP Address set to: %s", sval.c_str());
+    auto call = txt_solver_ip_->make_call();
+    call.set_value(sval);
+    call.perform();
+    ESP_LOGI(TAG, "Solver IP Address set and saved to: %s", sval.c_str());
     return;
   }
 
