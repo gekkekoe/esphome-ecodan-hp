@@ -32,7 +32,7 @@ void EcodanDashboard::setup() {
   xTaskCreate(
       EcodanDashboard::nvs_task_,
       "nvs_persist",
-      8192,
+      12288,
       this,
       1,                           // priority 1 = lowest above idle, well below lwIP (18)
       &this->nvs_task_handle_
