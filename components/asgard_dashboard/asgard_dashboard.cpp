@@ -1412,14 +1412,22 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
       xSemaphoreGive(snapshot_mutex_);
   }
 
-  char stats_buf[512];
-  int offset = snprintf(stats_buf, sizeof(stats_buf),
-      "\"last_run\":{\"execution_ms\":%u,\"heat_loss\":%.3f,\"base_cop\":%.2f,"
-      "\"thermal_mass\":%.1f,\"exp_consumption\":%.2f,\"exp_production\":%.2f,"
-      "\"exp_solar\":%.2f,\"exp_solar_total\":%.2f,\"used_solar_kwp\":%.2f,\"total_cost\":%.4f}}",
-      stats.execution_ms, stats.heat_loss, stats.base_cop,
-      stats.thermal_mass, stats.exp_consumption, stats.exp_production,
-      stats.exp_solar, stats.exp_solar_total, stats.used_solar_kwp, stats.total_cost);
+  char stats_buf[640];
+      int offset = snprintf(stats_buf, sizeof(stats_buf),
+          "\"last_run\":{\"execution_ms\":%u,\"bidding_zone\":\"%s\",\"heat_loss\":%.3f,\"base_cop\":%.2f,"
+          "\"thermal_mass\":%.1f,\"exp_consumption\":%.2f,\"exp_production\":%.2f,"
+          "\"exp_solar\":%.2f,\"exp_solar_total\":%.2f,\"used_solar_kwp\":%.2f,\"total_cost\":%.4f}}",
+          stats.execution_ms, 
+          stats.bidding_zone.c_str(),
+          stats.heat_loss, 
+          stats.base_cop,
+          stats.thermal_mass, 
+          stats.exp_consumption, 
+          stats.exp_production,
+          stats.exp_solar, 
+          stats.exp_solar_total, 
+          stats.used_solar_kwp, 
+          stats.total_cost);
 
   if (offset > 0 && offset < (int)sizeof(stats_buf)) {
       if (httpd_resp_send_chunk(req, stats_buf, offset) != ESP_OK) return;

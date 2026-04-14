@@ -146,6 +146,7 @@ script:
                               stats.used_solar_kwp  = root["used_solar_kwp"].is<float>() ? root["used_solar_kwp"].as<float>() : 0.0f;
                               stats.min_output      = root["used_min_output"].is<float>() ? root["used_min_output"].as<float>() : 3.0f;
                               stats.max_output      = root["used_max_output"].is<float>() ? root["used_max_output"].as<float>() : 8.0f;
+                              stats.bidding_zone    = root["bidding_zone"].is<std::string>() ? root["bidding_zone"].as<std::string>() : "NL";
 
                               id(optimizer_ptr)->store_odin_data(cur_hr, stats.min_output, stats.max_output, prod, sol, op_mode);
 

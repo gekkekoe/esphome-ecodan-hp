@@ -957,6 +957,18 @@ let initialZoomDone = false;
 let userZoomed = false;
 let tempChart = null, freqChart = null, statusChart = null, outsideTempChart = null;
 
+// currency symbol helper
+function getCurrencySymbol(bzn) {
+    const zone = (bzn || "NL").toUpperCase();
+    if (zone.startsWith("SE") || zone.startsWith("NO") || zone.startsWith("DK")) return "kr";
+    if (zone === "GB" || zone === "UK") return "£";
+    if (zone === "PL") return "zł";
+    if (zone === "CZ") return "Kč";
+    if (zone === "HU") return "Ft";
+    if (zone === "CH") return "CHF";
+    return "€"; // Standaard Fallback
+}
+
 // Manual Upload
 function triggerUpload() { document.getElementById('ota-file').click(); }
 function performUpload() {
@@ -1382,7 +1394,7 @@ function initCharts() {
           labels: labels48,
           datasets: [
               { label: 'Expected (Grid)',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
-              { label: 'Expected (Solar)', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 0' },
+              { label: 'Expected (Solar)', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 0' },          
               { label: 'Actual Heat',      data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
               { label: 'Actual DHW',       data: [], backgroundColor: 'rgba(255,107,53,0.35)',  borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' }
           ]
@@ -1395,7 +1407,7 @@ function initCharts() {
           },
           scales: {
               x: { ...xAxis, stacked: true },
-              y: { stacked: true, ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' }, title: { display: true, text: 'kW', color: '#8295b8' } }
+              y: { stacked: true, ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' }, title: { display: true, text: 'kWh', color: '#8295b8' } }
           }
       }
   });
@@ -1405,9 +1417,10 @@ function initCharts() {
       data: {
           labels: labels48,
           datasets: [
-              { label: 'Expected',   data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
-              { label: 'Actual Heat',data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
-              { label: 'Actual DHW', data: [], backgroundColor: 'rgba(255,107,53,0.35)',  borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' }
+              { label: 'Expected Heat',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
+              { label: 'Expected Solar', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 2' },
+              { label: 'Actual Heat',    data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
+              { label: 'Actual DHW',     data: [], backgroundColor: 'rgba(255,107,53,0.35)',  borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' }
           ]
       },
       options: {
@@ -1418,7 +1431,7 @@ function initCharts() {
           },
           scales: {
               x: { ...xAxis, stacked: true },
-              y: { stacked: true, ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' }, title: { display: true, text: 'kW', color: '#8295b8' } }
+              y: { stacked: true, ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' }, title: { display: true, text: 'kWh', color: '#8295b8' } }
           }
       }
   });
@@ -1551,7 +1564,7 @@ function initCharts() {
           scales: {
               x: xAxis,
               y: { ticks: { color: '#818cf8', font: monoFont }, grid: { color: '#1e2d4a' },
-                   title: { display: true, text: 'EUR/kWh', color: '#818cf8' } }
+                   title: { display: true, text: 'Currency/kWh', color: '#818cf8' } }
           }
       }
   });
@@ -1687,6 +1700,7 @@ function updateOdinCharts() {
     const actualCost = new Array(48).fill(null);
     const expConsGrid = new Array(48).fill(null);
     const expConsSolar = new Array(48).fill(null);
+    const expProdSolar = new Array(48).fill(null);
     
     const solarKwp = odinDataCache?.last_run?.used_solar_kwp || 0;
 
@@ -1694,6 +1708,7 @@ function updateOdinCharts() {
     for (let h = 0; h < 48; h++) {
         const sol_wm2 = solar[h] || 0; 
         const expected_solar_kwh = sol_wm2 * (solarKwp / 1000);
+        expProdSolar[h] = parseFloat(expected_solar_kwh.toFixed(2));
 
         // Heat + DHW
         let total_actual_cons = null;
@@ -1723,14 +1738,24 @@ function updateOdinCharts() {
     odinConsChart.update('none');
     
     odinProdChart.data.datasets[0].data = expProd;
-    odinProdChart.data.datasets[1].data = actualProdHeatByHour;
-    odinProdChart.data.datasets[2].data = actualProdDhwByHour;
+    odinProdChart.data.datasets[1].data = expProdSolar;
+    odinProdChart.data.datasets[2].data = actualProdHeatByHour;
+    odinProdChart.data.datasets[3].data = actualProdDhwByHour;
     odinProdChart.update('none');
 
-    // Cost chart: Exp Cost, Actual Cost
+    // Update Valuta Symbolen voor beide grafieken
+    const currSym = getCurrencySymbol(odinDataCache?.last_run?.bidding_zone);
+    
+    // Cost Graph Y-as (bijv. "€" of "kr")
+    odinCostChart.options.scales.y.title.text = currSym;
     odinCostChart.data.datasets[0].data = expCost;
     odinCostChart.data.datasets[1].data = actualCost;
     odinCostChart.update('none');
+
+    // Price Graph Y-as (bijv. "€/kWh" of "kr/kWh")
+    odinPriceChart.options.scales.y.title.text = currSym + '/kWh';
+    odinPriceChart.data.datasets[0].data = pricesKwh;
+    odinPriceChart.update('none');
 
     // Bar charts ignore x min/max from axis config after data update — re-apply zoom.
     // Without this, bar charts reset to full 0-47 range on every data refresh,
@@ -2760,7 +2785,9 @@ function updateRunStatsUI(lr) {
     document.getElementById('rs-eprod').innerText = lr.exp_production.toFixed(2) + " kWh";
     document.getElementById('rs-solar').innerText = lr.exp_solar.toFixed(2) + " kWh";
     document.getElementById('rs-solar-total').innerText = lr.exp_solar_total.toFixed(2) + " kWh";
-    document.getElementById('rs-cost').innerHTML = "&euro;" + lr.total_cost.toFixed(4);
+    
+    const curr = getCurrencySymbol(lr.bidding_zone);
+    document.getElementById('rs-cost').innerHTML = curr + " " + lr.total_cost.toFixed(4);
 }
 
 function syncOdinScales(sourceChart) {

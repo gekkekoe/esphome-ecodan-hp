@@ -289,6 +289,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
       float used_solar_kwp{0.0f};
       float min_output{0.0f};
       float max_output{0.0f};
+      std::string bidding_zone;
   } last_run_stats_;
 
   // Called from YAML after each successful solver response
