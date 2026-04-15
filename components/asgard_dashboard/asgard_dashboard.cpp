@@ -32,7 +32,7 @@ void EcodanDashboard::setup() {
   xTaskCreate(
       EcodanDashboard::nvs_task_,
       "nvs_persist",
-      12288,
+      8192,
       this,
       1,                           // priority 1 = lowest above idle, well below lwIP (18)
       &this->nvs_task_handle_
@@ -1002,7 +1002,6 @@ void EcodanDashboard::nvs_persist_odin_() {
     static const int NUM_ARRS = 18;
 
     // Local stack copies — 18 × 48 × 4 = 3456 bytes on NVS task stack.
-    // NVS task was created with 8192 bytes stack so this is safe.
     float snap[NUM_ARRS][N];
     int32_t snap_day = -1;
     bool snap_show_tab = false;
@@ -1355,6 +1354,9 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
 }
 
 void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
+  constexpr size_t JSON_BUFFER_SIZE = 1200;
+  constexpr size_t ODIN_HOURS = 48;
+
   httpd_req_t *req = *request;
   httpd_resp_set_status(req, "200 OK");
   httpd_resp_set_type(req, "application/json");
@@ -1375,13 +1377,19 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
 
   if (httpd_resp_send_chunk(req, "{\"success\":true,", 16) != ESP_OK) return;
 
-  auto send_arr_chunk = [&](const char* name, std::vector<float>* src_arr, bool last) -> bool {
-      float temp[48];
+  // pre allocate buffer
+  std::vector<char> buffer_vec(JSON_BUFFER_SIZE);
+  char* json_buf = buffer_vec.data();
+
+  // single array, do not put in lambda due to inlining duplication
+  float temp_arr[ODIN_HOURS];
+
+  auto send_arr_chunk = [&](const char* name, std::vector<float>* src_arr, bool last) __attribute__((noinline)) -> bool {
       bool got_data = false;
 
       if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
-          if (src_arr->size() == 48) {
-              memcpy(temp, src_arr->data(), 48 * sizeof(float));
+          if (src_arr->size() == ODIN_HOURS) {
+              memcpy(temp_arr, src_arr->data(), ODIN_HOURS * sizeof(float));
               got_data = true;
           }
           xSemaphoreGive(snapshot_mutex_);
@@ -1389,56 +1397,53 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
 
       if (!got_data) return true;
 
-      std::string chunk;
-      chunk.reserve(768); 
-      chunk += "\""; chunk += name; chunk += "\":[";
-      
-      char val_buf[32]; // Veilige restrictie per float
-      for (int i = 0; i < 48; i++) {
-          if (std::isnan(temp[i])) {
-              chunk += "null";
+      int offset = snprintf(json_buf, JSON_BUFFER_SIZE, "\"%s\":[", name);
+      for (size_t i = 0; i < ODIN_HOURS; i++) {
+          if (std::isnan(temp_arr[i])) {
+              offset += snprintf(json_buf + offset, JSON_BUFFER_SIZE - offset, "null");
           } else {
-              snprintf(val_buf, sizeof(val_buf), "%.2f", temp[i]);
-              chunk += val_buf;
+              offset += snprintf(json_buf + offset, JSON_BUFFER_SIZE - offset, "%.2f", temp_arr[i]);
           }
-          if (i < 47) chunk += ",";
+          if (i < ODIN_HOURS - 1) offset += snprintf(json_buf + offset, JSON_BUFFER_SIZE - offset, ",");
       }
-      chunk += last ? "]" : "],";
+      offset += snprintf(json_buf + offset, JSON_BUFFER_SIZE - offset, last ? "]" : "],");
 
-      return (httpd_resp_send_chunk(req, chunk.c_str(), chunk.length()) == ESP_OK);
+      return (httpd_resp_send_chunk(req, json_buf, offset) == ESP_OK);
   };
 
-  if (!send_arr_chunk("expected_end_temp",      &this->odin_expected_end_temp_, false)) return;
-  if (!send_arr_chunk("energy_consumption",     &this->odin_energy_, false)) return;
-  if (!send_arr_chunk("heat_production",        &this->odin_production_, false)) return;
-  if (!send_arr_chunk("expected_begin_temp",    &this->odin_expected_temp_, false)) return;
-  if (!send_arr_chunk("expected_cost",          &this->odin_cost_, false)) return;
-  if (!send_arr_chunk("battery_discharge",      &this->odin_battery_discharge_, false)) return;
-  if (!send_arr_chunk("sched_base",             &this->odin_sched_base_, false)) return;
-  if (!send_arr_chunk("sched_min",              &this->odin_sched_min_, false)) return;
-  if (!send_arr_chunk("sched_max",              &this->odin_sched_max_, false)) return;
-  if (!send_arr_chunk("weather",                &this->odin_weather_, false)) return;
-  if (!send_arr_chunk("solar",                  &this->odin_solar_, false)) return;
-  if (!send_arr_chunk("prices",                 &this->odin_prices_, false)) return;
-  if (!send_arr_chunk("actual_dhw_cons",        &this->odin_actual_dhw_cons_, false)) return;
-  if (!send_arr_chunk("actual_dhw_prod",        &this->odin_actual_dhw_prod_, false)) return;
-  if (!send_arr_chunk("actual_cons",            &this->odin_actual_cons_, false)) return;
-  if (!send_arr_chunk("actual_prod",            &this->odin_actual_prod_, false)) return;
-  if (!send_arr_chunk("actual_room_temp",       &this->odin_actual_room_, false)) return;
-  if (!send_arr_chunk("operation_mode",         &this->odin_operation_mode_, false)) return;
+  bool success = 
+    send_arr_chunk("expected_end_temp",      &this->odin_expected_end_temp_, false) &&
+    send_arr_chunk("energy_consumption",     &this->odin_energy_, false)            &&
+    send_arr_chunk("heat_production",        &this->odin_production_, false)        &&
+    send_arr_chunk("expected_begin_temp",    &this->odin_expected_temp_, false)     &&
+    send_arr_chunk("expected_cost",          &this->odin_cost_, false)              &&
+    send_arr_chunk("battery_discharge",      &this->odin_battery_discharge_, false) &&
+    send_arr_chunk("sched_base",             &this->odin_sched_base_, false)        &&
+    send_arr_chunk("sched_min",              &this->odin_sched_min_, false)         &&
+    send_arr_chunk("sched_max",              &this->odin_sched_max_, false)         &&
+    send_arr_chunk("weather",                &this->odin_weather_, false)           &&
+    send_arr_chunk("solar",                  &this->odin_solar_, false)             &&
+    send_arr_chunk("prices",                 &this->odin_prices_, false)            &&
+    send_arr_chunk("actual_dhw_cons",        &this->odin_actual_dhw_cons_, false)   &&
+    send_arr_chunk("actual_dhw_prod",        &this->odin_actual_dhw_prod_, false)   &&
+    send_arr_chunk("actual_cons",            &this->odin_actual_cons_, false)       &&
+    send_arr_chunk("actual_prod",            &this->odin_actual_prod_, false)       &&
+    send_arr_chunk("actual_room_temp",       &this->odin_actual_room_, false)       &&
+    send_arr_chunk("operation_mode",         &this->odin_operation_mode_, false);
 
-  LastRunStats stats;
-  if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
-      stats = this->last_run_stats_;
-      xSemaphoreGive(snapshot_mutex_);
-  }
+  if (success) {
+      LastRunStats stats;
+      if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
+          stats = this->last_run_stats_;
+          xSemaphoreGive(snapshot_mutex_);
+      }
 
-  char stats_buf[640];
-      int offset = snprintf(stats_buf, sizeof(stats_buf),
-          "\"last_run\":{\"execution_ms\":%u,\"bidding_zone\":\"%s\",\"heat_loss\":%.3f,\"base_cop\":%.2f,"
+      int offset = snprintf(json_buf, JSON_BUFFER_SIZE,
+          "\"last_run\":{\"execution_ms\":%u,\"evaluated_nodes\":%u,\"bidding_zone\":\"%s\",\"heat_loss\":%.3f,\"base_cop\":%.2f,"
           "\"thermal_mass\":%.1f,\"exp_consumption\":%.2f,\"exp_production\":%.2f,"
           "\"exp_solar\":%.2f,\"exp_solar_total\":%.2f,\"used_solar_kwp\":%.2f,\"total_cost\":%.4f}}",
-          stats.execution_ms, 
+          stats.execution_ms,
+          stats.evaluated_nodes,
           stats.bidding_zone.c_str(),
           stats.heat_loss, 
           stats.base_cop,
@@ -1450,10 +1455,11 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
           stats.used_solar_kwp, 
           stats.total_cost);
 
-  if (offset > 0 && offset < (int)sizeof(stats_buf)) {
-      if (httpd_resp_send_chunk(req, stats_buf, offset) != ESP_OK) return;
+      if (offset > 0 && offset < JSON_BUFFER_SIZE) {
+          httpd_resp_send_chunk(req, json_buf, offset);
+      }
   }
-  
+
   httpd_resp_send_chunk(req, nullptr, 0);
 }
 

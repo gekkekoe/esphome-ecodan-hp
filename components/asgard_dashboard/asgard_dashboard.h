@@ -283,6 +283,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   // Solver run stats populated from YAML after each solve
   struct LastRunStats {
       uint32_t execution_ms{0};
+      uint32_t evaluated_nodes{0};
       float heat_loss{0.0f}, base_cop{0.0f}, thermal_mass{0.0f};
       float exp_consumption{0.0f}, exp_production{0.0f}, exp_solar{0.0f}, exp_solar_total{0.0f};
       float total_cost{0.0f};

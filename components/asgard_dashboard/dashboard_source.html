@@ -713,6 +713,7 @@ header {
             <span class="ctrl-label">Last result time</span> <span id="rs-time" class="ctrl-value" style="text-align:right;">—</span>
   
             <span class="ctrl-label">Execution time</span>   <span id="rs-exec"    class="ctrl-value" style="text-align:right;">—</span>
+            <span class="ctrl-label">Evaluated nodes</span>  <span id="rs-nodes"   class="ctrl-value" style="text-align:right;">—</span>
             <span class="ctrl-label">Heat loss</span>        <span id="rs-hloss"   class="ctrl-value" style="text-align:right;">—</span>
             <span class="ctrl-label">Base COP</span>         <span id="rs-cop"     class="ctrl-value" style="text-align:right;">—</span>
             <span class="ctrl-label">Thermal mass</span>     <span id="rs-tmass"   class="ctrl-value" style="text-align:right;">—</span>
@@ -2561,6 +2562,7 @@ async function runOdinSolver() {
 
             odinDataCache.last_run = {
                 execution_ms:    data.execution_ms                 || 0,
+                evaluated_nodes: data.evaluated_nodes              || 0,
                 heat_loss:       data.used_heat_loss               || 0,
                 base_cop:        data.used_base_cop                || 0,
                 thermal_mass:    data.used_thermal_mass            || 0,
@@ -2778,6 +2780,9 @@ function updateRunStatsUI(lr) {
     }
 
     document.getElementById('rs-exec').innerText = lr.execution_ms + " ms";
+    if (document.getElementById('rs-nodes')) {
+        document.getElementById('rs-nodes').innerText = lr.evaluated_nodes ? lr.evaluated_nodes.toLocaleString('nl-NL') : "0";
+    }
     document.getElementById('rs-hloss').innerText = lr.heat_loss.toFixed(3) + " kW/K";
     document.getElementById('rs-cop').innerText = lr.base_cop.toFixed(2);
     document.getElementById('rs-tmass').innerText = lr.thermal_mass.toFixed(1) + " kWh/K";

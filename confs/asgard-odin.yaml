@@ -135,6 +135,7 @@ script:
 
                               esphome::asgard_dashboard::EcodanDashboard::LastRunStats stats;
                               stats.execution_ms    = root["execution_ms"].as<uint32_t>();
+                              stats.evaluated_nodes = root["evaluated_nodes"].as<uint32_t>();
                               stats.heat_loss       = root["used_heat_loss"].as<float>();
                               stats.base_cop        = root["used_base_cop"].as<float>();
                               stats.thermal_mass    = root["used_thermal_mass"].as<float>();
