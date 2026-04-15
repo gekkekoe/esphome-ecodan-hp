@@ -9,6 +9,26 @@ script:
       - lambda: 'id(odin_retry_count) = 0;'
       - script.execute: fetch_odin_optimization_attempt
 
+  - id: process_odin_retry
+    mode: single
+    then:
+      - lambda: |-
+          // Retry logic: if not marked as done (-1), schedule another attempt
+          if (id(odin_retry_count) == -1) return; // success or permanent failure
+          id(odin_retry_count) += 1;
+          if (id(odin_retry_count) <= 3) {
+            ESP_LOGW("asgard_dashboard", "ODIN solve attempt %d failed, retrying in 15s...", id(odin_retry_count));
+          } else {
+            ESP_LOGE("asgard_dashboard", "ODIN solve failed after 3 retries, giving up.");
+            id(odin_retry_count) = -1;
+          }
+      - if:
+          condition:
+            lambda: 'return id(odin_retry_count) > 0 && id(odin_retry_count) <= 3;'
+          then:
+            - delay: 15s
+            - script.execute: fetch_odin_optimization_attempt
+
   - id: fetch_odin_optimization_attempt
     mode: single
     then:
@@ -171,22 +191,7 @@ script:
                         } else {
                           ESP_LOGW("asgard_dashboard", "ODIN returned HTTP %d, will retry if attempts remain.", response->status_code);
                         }
-                    - lambda: |-
-                        // Retry logic: if not marked as done (-1), schedule another attempt
-                        if (id(odin_retry_count) == -1) return; // success or permanent failure
-                        id(odin_retry_count) += 1;
-                        if (id(odin_retry_count) <= 3) {
-                          ESP_LOGW("asgard_dashboard", "ODIN solve attempt %d failed, retrying in 15s...", id(odin_retry_count));
-                        } else {
-                          ESP_LOGE("asgard_dashboard", "ODIN solve failed after 3 retries, giving up.");
-                          id(odin_retry_count) = -1;
-                        }
-                    - delay: !lambda 'return id(odin_retry_count) > 0 && id(odin_retry_count) <= 3 ? 15000 : 0;'
-                    - if:
-                        condition:
-                          lambda: 'return id(odin_retry_count) > 0 && id(odin_retry_count) <= 3;'
-                        then:
-                          - script.execute: fetch_odin_optimization_attempt
+                    - script.execute: process_odin_retry
 
 interval:
   - interval: 60s

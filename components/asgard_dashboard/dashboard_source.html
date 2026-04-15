@@ -1704,11 +1704,12 @@ function updateOdinCharts() {
     const expProdSolar = new Array(48).fill(null);
     
     const solarKwp = odinDataCache?.last_run?.used_solar_kwp || 0;
+    const solarCorrection = odinDataCache?.last_run?.used_solar_correction || 1.0;
 
     // Single loop to process all hourly data
     for (let h = 0; h < 48; h++) {
         const sol_wm2 = solar[h] || 0; 
-        const expected_solar_kwh = sol_wm2 * (solarKwp / 1000);
+        const expected_solar_kwh = (sol_wm2 / 1000) * solarKwp * solarCorrection;
         expProdSolar[h] = parseFloat(expected_solar_kwh.toFixed(2));
 
         // Heat + DHW
@@ -2571,7 +2572,8 @@ async function runOdinSolver() {
                 exp_solar:       data.total_solar_used_kwh         || 0,
                 exp_solar_total: data.total_solar_kwh              || data.total_solar_used_kwh || 0,
                 total_cost:      data.total_cost                   || 0,
-                used_solar_kwp:  data.used_solar_kwp               || 0
+                used_solar_kwp:  data.used_solar_kwp               || 0,
+                used_solar_correction: data.used_solar_correction  || 1.0
             };
 
             updateOdinCharts();
