@@ -90,10 +90,15 @@ namespace esphome
       int      last_processed_hour_         {-1};
       int      last_pre_hour_triggered_      {-1};
       uint32_t odin_fetch_pending_ms_        {0};   // deferred day-transition fetch
+
+      // Strict energy separation buckets
+      float    last_global_prod_            = -1.0f;
+      float    last_global_cons_            = -1.0f;
       float    last_total_heating_produced_ = 0.0f;
       float    last_total_heating_consumed_ = 0.0f;
-      bool     last_was_heating_            = false;
-      float last_total_all_consumed_ = 0.0f;  // raw meter, all modes incl. DHW
+      float    last_total_dhw_produced_     = 0.0f;
+      float    last_total_dhw_consumed_     = 0.0f;
+      float    last_total_all_consumed_     = 0.0f;
 
       // Free cooling window tracking (HP-off period, any time of day)
       // Measures HL×TM product from unregulated cooldown, free of solar/DHW contamination.
@@ -211,9 +216,13 @@ namespace esphome
       bool solver_enabled() const;
       uint8_t get_current_operation_mode();
       float get_current_solar_irradiance();
+      
       float get_heating_produced_kwh() const { return last_total_heating_produced_; }
       float get_heating_consumed_kwh() const { return last_total_heating_consumed_; }
+      float get_dhw_produced_kwh() const { return last_total_dhw_produced_; }
+      float get_dhw_consumed_kwh() const { return last_total_dhw_consumed_; }
       float get_total_consumed_kwh() const { return this->last_total_all_consumed_; }
+
       int  get_current_ecodan_hour();
       int  get_current_ecodan_day();
       bool has_old_odin_data();

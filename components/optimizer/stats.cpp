@@ -235,6 +235,16 @@ namespace esphome
                 this->daily_max_output_power_ = 0.0f;
                 
                 this->daily_runtime_global = 0.0f;
+
+                // Reset daily accumulators
+                this->last_total_heating_produced_ = 0.0f;
+                this->last_total_heating_consumed_ = 0.0f;
+                this->last_total_dhw_produced_ = 0.0f;
+                this->last_total_dhw_consumed_ = 0.0f;
+                
+                // Reset global trackers to prevent false deltas across midnight
+                this->last_global_prod_ = -1.0f;
+                this->last_global_cons_ = -1.0f;
             }
 
             // PENDING FETCH: fired by day transition after 30s delay
@@ -281,42 +291,58 @@ namespace esphome
                 // }
             }
 
-            // Set latest energy snapshots
+            // Determine active modes
             bool heating_now = is_running && is_heating_active;
+            bool dhw_now = is_running && (status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON || 
+                                          status.Operation == esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION);
 
-            auto snap_energy = [&]() {
-                this->last_total_heating_produced_ = this->state_.daily_heating_produced->state;
-                if (this->state_.solver_kwh_meter_feedback_source == nullptr ||
-                    this->state_.solver_kwh_meter_feedback_source->active_index().value_or(0) == 0) {
-                    this->last_total_heating_consumed_ = this->state_.daily_heating_consumed->state;
-                } else {
-                    this->last_total_heating_consumed_ = (this->state_.solver_kwh_meter_feedback != nullptr) ?
-                                                        this->state_.solver_kwh_meter_feedback->state : 0.0f;
-                }
-            };
-
-            // Always keep a snapshot of the raw total meter (all modes, incl. DHW/Legionella).
-            // Used by get_total_consumed_kwh() so the YAML hourly collector can capture
-            // consumption during DHW/Legionella hours correctly.
+            // Fetch current global meter states
+            float current_global_prod = (this->state_.daily_heating_produced != nullptr && this->state_.daily_heating_produced->has_state()) 
+                                        ? this->state_.daily_heating_produced->state : NAN;
+            
+            // This pulls directly from your delta_energy_consumed_increasing sensor
+            float current_global_cons = NAN;
             if (this->state_.solver_kwh_meter_feedback_source == nullptr ||
                 this->state_.solver_kwh_meter_feedback_source->active_index().value_or(0) == 0) {
                 if (this->state_.daily_heating_consumed != nullptr && this->state_.daily_heating_consumed->has_state())
-                    this->last_total_all_consumed_ = this->state_.daily_heating_consumed->state;
+                    current_global_cons = this->state_.daily_heating_consumed->state;
             } else {
                 if (this->state_.solver_kwh_meter_feedback != nullptr && this->state_.solver_kwh_meter_feedback->has_state())
-                    this->last_total_all_consumed_ = this->state_.solver_kwh_meter_feedback->state;
+                    current_global_cons = this->state_.solver_kwh_meter_feedback->state;
             }
 
-            if (heating_now) {
-                snap_energy();
-                this->last_was_heating_ = true;
-            } else if (this->last_was_heating_) {
-                // Transition: heating → DHW/idle. Snap clean baseline before DHW contaminates meter.
-                snap_energy();
-                this->last_was_heating_ = false;
-                ESP_LOGD(OPTIMIZER_TAG, "Heating stopped — clean energy baseline saved: cons=%.3f prod=%.3f",
-                         this->last_total_heating_consumed_, this->last_total_heating_produced_);
+            // Calculate deltas and bucket them accurately
+            if (!std::isnan(current_global_prod) && !std::isnan(current_global_cons)) {
+                
+                if (this->last_global_prod_ < 0) {
+                    this->last_global_prod_ = current_global_prod;
+                    this->last_global_cons_ = current_global_cons;
+                }
+
+                float delta_prod = current_global_prod - this->last_global_prod_;
+                float delta_cons = current_global_cons - this->last_global_cons_; // Extracts the 1-minute consumption slice
+
+                // Handle midnight sensor resets safely
+                if (delta_prod < 0) delta_prod = current_global_prod;
+                if (delta_cons < 0) delta_cons = current_global_cons;
+
+                // Ignore impossible hardware spikes (>50kWh in a minute)
+                if (delta_prod < 50.0f && delta_cons < 50.0f) { 
+                    if (heating_now) {
+                        this->last_total_heating_produced_ += delta_prod;
+                        this->last_total_heating_consumed_ += delta_cons;
+                    } else if (dhw_now) {
+                        this->last_total_dhw_produced_ += delta_prod;
+                        this->last_total_dhw_consumed_ += delta_cons;
+                    }
+                }
+
+                this->last_global_prod_ = current_global_prod;
+                this->last_global_cons_ = current_global_cons;
             }
+            
+            // Maintain total raw consumption for YAML dashboard tracking
+            this->last_total_all_consumed_ = current_global_cons;
         }
 
         void Optimizer::update_learning_model(int day_of_year)

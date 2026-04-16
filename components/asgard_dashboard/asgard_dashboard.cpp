@@ -814,11 +814,14 @@ void EcodanDashboard::record_history_() {
   rec.liquid_pipe = pack_temp_(get_sensor(liquid_pipe_temp_));
   rec.condensing  = pack_temp_(get_sensor(condensing_temp_));
   
-  // Determine if the system is actively running AND heating (Mode 2 = HEAT_ON)
+  // Determine if the system is actively running AND in a thermal output mode
   bool is_running = bin_state_(status_compressor_) || (get_sensor(compressor_frequency_) > 0.0f);
-  bool is_heating = false;
+  bool is_thermal_active = false;
+  
   if (operation_mode_ && operation_mode_->has_state() && !std::isnan(operation_mode_->state)) {
-      is_heating = ((int)operation_mode_->state == 2); 
+      int mode_val = (int)operation_mode_->state;
+      // Mode 2 = HEAT_ON, 1 = DHW, 6 = LEGIONELLA
+      is_thermal_active = (mode_val == 2 || mode_val == 1 || mode_val == 6); 
   }
 
   float current_cons = NAN;
@@ -828,7 +831,7 @@ void EcodanDashboard::record_history_() {
       current_cons = get_sensor(daily_total_energy_consumption_);
   }
 
-  if (is_running && is_heating) {
+  if (is_running && is_thermal_active) {
       rec.cons = pack_temp_(current_cons);
       rec.prod = pack_temp_(get_sensor(daily_computed_output_power_));
   } else {

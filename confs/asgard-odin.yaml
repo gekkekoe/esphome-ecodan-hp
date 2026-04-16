@@ -222,71 +222,55 @@ interval:
           }
 
           {
-            // Robust Minute-by-Minute Energy Accumulator
+            // Hourly Accumulator
             static int   last_hour = -1;
-            static float last_tot  = -1.0f;
-            static float last_prod = -1.0f;
             
-            // Accumulators for the current hour
-            static float acc_h_cons = 0.0f;
-            static float acc_h_prod = 0.0f;
-            static float acc_d_cons = 0.0f;
-            static float acc_d_prod = 0.0f;
+            static float last_h_cons = -1.0f;
+            static float last_h_prod = -1.0f;
+            static float last_d_cons = -1.0f;
+            static float last_d_prod = -1.0f;
 
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
-            float cur_tot  = id(optimizer_ptr)->get_total_consumed_kwh();
-            float cur_prod = id(optimizer_ptr)->get_heating_produced_kwh();
+            float cur_h_cons = id(optimizer_ptr)->get_heating_consumed_kwh();
+            float cur_h_prod = id(optimizer_ptr)->get_heating_produced_kwh();
+            float cur_d_cons = id(optimizer_ptr)->get_dhw_consumed_kwh();
+            float cur_d_prod = id(optimizer_ptr)->get_dhw_produced_kwh();
 
-            if (std::isnan(cur_tot) || std::isnan(cur_prod)) return;
+            if (std::isnan(cur_h_cons) || std::isnan(cur_h_prod) || std::isnan(cur_d_cons) || std::isnan(cur_d_prod)) return;
 
-            // Initial run or recovery after reboot
+            // Initial run or recovery
             if (last_hour == -1) {
               last_hour = cur_hr;
-              last_tot  = cur_tot;
-              last_prod = cur_prod;
+              last_h_cons = cur_h_cons;
+              last_h_prod = cur_h_prod;
+              last_d_cons = cur_d_cons;
+              last_d_prod = cur_d_prod;
               return;
             }
 
-            // Calculate delta since last minute
-            float d_tot  = cur_tot - last_tot;
-            float d_prod = cur_prod - last_prod;
-
-            // Handle daily meter resets (if delta is negative, assume 0 or the current value)
-            if (d_tot < 0)  d_tot = 0; 
-            if (d_prod < 0) d_prod = 0;
-
-            // Attribute the delta to a specific bucket based on current operation mode
-            uint8_t mode = static_cast<uint8_t>(id(optimizer_ptr)->get_current_operation_mode());
-            bool is_dhw = (mode == 1 || mode == 6); // DHW or Legionella
-
-            if (d_tot < 5.0f) { // Ignore impossible spikes (>5kWh in 1 min)
-              if (is_dhw) {
-                acc_d_cons += d_tot;
-                acc_d_prod += d_prod;
-              } else if (mode == 2) { // HEAT_ON
-                acc_h_cons += d_tot;
-                acc_h_prod += d_prod;
-              }
-              // Note: Standby power when mode is OFF (0) is simply not accumulated,
-              // keeping your COP calculations pure for the active modes.
-            }
-
-            last_tot  = cur_tot;
-            last_prod = cur_prod;
-
-            // Hour transition: Push accumulated totals to dashboard and reset
+            // Hour transition detected
             if (cur_hr != last_hour && cur_hr != -1) {
+              float d_h_cons = cur_h_cons - last_h_cons;
+              float d_h_prod = cur_h_prod - last_h_prod;
+              float d_d_cons = cur_d_cons - last_d_cons;
+              float d_d_prod = cur_d_prod - last_d_prod;
+
+              // Handle midnight resets (if the C++ buckets drop to 0)
+              if (d_h_cons < 0) d_h_cons = cur_h_cons;
+              if (d_h_prod < 0) d_h_prod = cur_h_prod;
+              if (d_d_cons < 0) d_d_cons = cur_d_cons;
+              if (d_d_prod < 0) d_d_prod = cur_d_prod;
+
               float room = id(virtual_climate_z1).current_temperature;
               
-              // Push the final accumulated values for the completed hour
-              id(asgard_dashboard_id)->update_actual_data(last_hour, acc_h_cons, acc_h_prod, acc_d_cons, acc_d_prod, room);
+              id(asgard_dashboard_id)->update_actual_data(last_hour, d_h_cons, d_h_prod, d_d_cons, d_d_prod, room);
 
-              // Reset buckets for the new hour
-              acc_h_cons = 0.0f;
-              acc_h_prod = 0.0f;
-              acc_d_cons = 0.0f;
-              acc_d_prod = 0.0f;
-              last_hour  = cur_hr;
+              // Save the new baseline for the next hour
+              last_h_cons = cur_h_cons;
+              last_h_prod = cur_h_prod;
+              last_d_cons = cur_d_cons;
+              last_d_prod = cur_d_prod;
+              last_hour   = cur_hr;
             }
           }
 
