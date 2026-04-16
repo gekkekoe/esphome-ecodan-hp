@@ -145,7 +145,7 @@ substitutions:
   cooling_smart_start_temp: 'Inteligentný štart chladenia'
   temperature_feedback_source: 'Zdroj teploty miestnosti'
   temperature_feedback_option_room: 'Miestny termostat'
-  select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant or REST API'
   select_feedback_option_asgard_vt: 'Virtuálny termostat Asgard'
   heating_system_type: 'Typ vykurovacieho systému'
   heating_system_type_option_ufh: 'Podlahové kúrenie'

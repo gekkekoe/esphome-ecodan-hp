@@ -36,7 +36,7 @@ substitutions:
   heatpump_climate_room_z1: Zone 1 Rumtemp
   z1_room_temp_target: Zone 1 rum indstilling
   z1_room_temp: Zone 1 rumtemperatur
-  heatpump_number_z2_set_flow_temperature: Zone 2 H/C indstilling
+  heatpump_number_z2_set_flow_temperature: Zone 2 indstilling
   z2_flow_temp_target: Zone 2 indstillet værdi
   status_prohibit_cool_z2: Zone 2 køling forbudt
   status_prohibit_heating_z2: Zone 2 opvarmning forbudt
@@ -142,7 +142,7 @@ substitutions:
   cooling_smart_start_temp: 'Auto-Adaptiv: Smart Start Temp Køling'
   temperature_feedback_source: 'Auto-Adaptiv: Kilde til Rumtemperatur'
   temperature_feedback_option_room: 'Rumtermostat'
-  select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant or REST API'
   select_feedback_option_asgard_vt: 'Asgard Virtuel Termostat'
   heating_system_type: 'Auto-Adaptiv: Varmesystemtype'
   heating_system_type_option_ufh: 'Gulvvarme'

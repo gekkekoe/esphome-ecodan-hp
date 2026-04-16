@@ -37,7 +37,7 @@ substitutions:
   z1_room_temp_target: Z1 T. Ambiente Desiderata
   z1_room_temp: Z1 T. Ambiente
   heatpump_number_z2_set_flow_temperature: Z2 Mandata
-  z2_flow_temp_target: Z2 C/F T. Mandata
+  z2_flow_temp_target: Z2 T. Mandata
   status_prohibit_cool_z2: Z2 Raff. Proibito
   status_prohibit_heating_z2: Z2 Risc. Proibito
   heatpump_number_z2_set_room_temperature: Z2 T. Ambiente
@@ -143,7 +143,7 @@ substitutions:
   cooling_smart_start_temp: 'Autoadattivo: Temp. di Avvio Intelligente Raffrescamento'
   temperature_feedback_source: 'Autoadattivo: Fonte Temperatura Ambiente'
   temperature_feedback_option_room: 'Termostato Ambiente'
-  select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant or REST API'
   select_feedback_option_asgard_vt: 'Termostato Virtuale Asgard'
   heating_system_type: 'Autoadattivo: Tipo di Impianto'
   heating_system_type_option_ufh: 'Riscaldamento a Pavimento'

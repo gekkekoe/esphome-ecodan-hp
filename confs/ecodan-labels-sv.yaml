@@ -38,7 +38,7 @@ substitutions:
   z1_room_temp_target: Zon 1 rum inställt värde
   z1_room_temp: Zon 1 rumstemperatur
   heatpump_number_z2_set_flow_temperature: Zon 2 inställning
-  z2_flow_temp_target: Zon 2 H/C inställt värde
+  z2_flow_temp_target: Zon 2 inställt värde
   status_prohibit_cool_z2: Zon 2 kylning förbjudet
   status_prohibit_heating_z2: Zon 2 uppvärmning förbjudet
   heatpump_number_z2_set_room_temperature: Zon 2 rum inställt värde
@@ -143,7 +143,7 @@ substitutions:
   cooling_smart_start_temp: 'Autoadaptiv: Smart Starttemp Kyla'
   temperature_feedback_source: 'Autoadaptiv: Källa för Rumstemperatur'
   temperature_feedback_option_room: 'Rumstermostat'
-  select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant or REST API'
   select_feedback_option_asgard_vt: 'Asgard Virtuell Termostat'
   heating_system_type: 'Autoadaptiv: Typ av Värmesystem'
   heating_system_type_option_ufh: 'Golvvärme'
