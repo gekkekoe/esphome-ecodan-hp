@@ -1397,7 +1397,8 @@ function initCharts() {
               { label: 'Expected (Grid)',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
               { label: 'Expected (Solar)', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 0' },          
               { label: 'Actual Heat',      data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
-              { label: 'Actual DHW',       data: [], backgroundColor: 'rgba(255,107,53,0.35)',  borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' }
+              { label: 'Actual DHW',       data: [], backgroundColor: 'rgba(255,107,53,0.35)',  borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' },
+              { label: 'Actual Standby',   data: [], backgroundColor: 'rgba(74,90,122,0.35)',   borderColor: '#4a5a7a', borderWidth: 1, stack: 'Stack 1' }
           ]
       },
       options: {
@@ -1608,16 +1609,18 @@ function updateOdinCharts() {
     const rawNvsDhwCons = odinDataCache ? (odinDataCache.actual_dhw_cons  || new Array(48).fill(null)) : new Array(48).fill(null);
     const rawNvsDhwProd = odinDataCache ? (odinDataCache.actual_dhw_prod  || new Array(48).fill(null)) : new Array(48).fill(null);
 
-    const actualConsHeatByHour = [...rawNvsCons];
-    const actualConsDhwByHour  = [...rawNvsDhwCons];
+    const actualConsHeatByHour    = [...rawNvsCons];
+    const actualConsDhwByHour     = [...rawNvsDhwCons];
+    const actualConsStandbyByHour = new Array(48).fill(null);
     const actualProdHeatByHour = [...rawNvsProd];
     const actualProdDhwByHour  = [...rawNvsDhwProd];
     const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(48).fill(null))] : new Array(48).fill(null);
 
     // Live history overlay: Bereken incrementele deltas per modus (Heat vs DHW)
     if (history.timestamps && history.timestamps.length > 0) {
-        const hConsHeat = new Array(24).fill(0);
-        const hConsDhw = new Array(24).fill(0);
+        const hConsHeat  = new Array(24).fill(0);
+        const hConsDhw   = new Array(24).fill(0);
+        const hConsTotal = new Array(24).fill(0);
         const hProdHeat = new Array(24).fill(0);
         const hProdDhw = new Array(24).fill(0);
         const hHasData = new Array(24).fill(false);
@@ -1639,9 +1642,10 @@ function updateOdinCharts() {
             if (history.cons[i] !== null) {
                 if (prevCons !== null) {
                     let delta = history.cons[i] - prevCons;
-                    if (delta < 0) delta = history.cons[i]; 
-                    if (delta > 0) {
+                    // Filter: only normal increments (< 5 kWh/min). Ignores midnight resets and spikes.
+                    if (delta >= 0 && delta < 5.0) {
                         hHasData[h] = true;
+                        hConsTotal[h] += delta;
                         if (mode === 'Heating') hConsHeat[h] += delta;
                         else if (mode === 'Hot Water' || mode === 'Legionella') hConsDhw[h] += delta;
                     }
@@ -1652,8 +1656,10 @@ function updateOdinCharts() {
             if (history.prod[i] !== null) {
                 if (prevProd !== null) {
                     let delta = history.prod[i] - prevProd;
-                    if (delta < 0) delta = history.prod[i];
-                    if (delta > 0) {
+                    
+                    // Filter: Only accept normal minute-by-minute increments (< 5kWh/min).
+                    // This safely ignores midnight resets (delta < 0) AND glitch recoveries (delta > 5).
+                    if (delta >= 0 && delta < 5.0) {
                         hHasData[h] = true;
                         if (mode === 'Heating') hProdHeat[h] += delta;
                         else if (mode === 'Hot Water' || mode === 'Legionella') hProdDhw[h] += delta;
@@ -1662,13 +1668,14 @@ function updateOdinCharts() {
                 prevProd = history.prod[i];
             }
         }
-
+        
         for (let h = 0; h < 24; h++) {
             if (hHasData[h]) {
-                actualConsHeatByHour[h] = parseFloat(hConsHeat[h].toFixed(2));
-                actualConsDhwByHour[h]  = parseFloat(hConsDhw[h].toFixed(2));
-                actualProdHeatByHour[h] = parseFloat(hProdHeat[h].toFixed(2));
-                actualProdDhwByHour[h]  = parseFloat(hProdDhw[h].toFixed(2));
+                actualConsHeatByHour[h]    = parseFloat(hConsHeat[h].toFixed(2));
+                actualConsDhwByHour[h]     = parseFloat(hConsDhw[h].toFixed(2));
+                actualConsStandbyByHour[h] = parseFloat(Math.max(0, hConsTotal[h] - hConsHeat[h] - hConsDhw[h]).toFixed(2));
+                actualProdHeatByHour[h]    = parseFloat(hProdHeat[h].toFixed(2));
+                actualProdDhwByHour[h]     = parseFloat(hProdDhw[h].toFixed(2));
             }
             if (firstTempByHour[h] !== null) actualTempByHour[h] = firstTempByHour[h];
         }
@@ -1677,7 +1684,7 @@ function updateOdinCharts() {
     const currentLocalHour = new Date().getHours();
     for (let h = 0; h < 48; h++) {
         if (h >= currentLocalHour) {
-            actualConsHeatByHour[h] = null; actualConsDhwByHour[h] = null;
+            actualConsHeatByHour[h] = null; actualConsDhwByHour[h] = null; actualConsStandbyByHour[h] = null;
             actualProdHeatByHour[h] = null; actualProdDhwByHour[h] = null;
         }
         if (h > currentLocalHour) actualTempByHour[h] = null;
@@ -1737,6 +1744,7 @@ function updateOdinCharts() {
     odinConsChart.data.datasets[1].data = expConsSolar;
     odinConsChart.data.datasets[2].data = actualConsHeatByHour;
     odinConsChart.data.datasets[3].data = actualConsDhwByHour;
+    odinConsChart.data.datasets[4].data = actualConsStandbyByHour;
     odinConsChart.update('none');
     
     odinProdChart.data.datasets[0].data = expProd;
@@ -1779,7 +1787,7 @@ function updateOdinCharts() {
     odinTempChart.update('none');
 
     // Battery chart — only show when there is discharge planned
-    const hasBatt = battDischarge.some(v => v > 0.01);
+    const hasBatt = (odinDataCache?.last_run?.used_battery_soc_kwh || 0) > 0;
     const battCard = document.getElementById('odin-batt-card');
     if (battCard) battCard.style.display = hasBatt ? '' : 'none';
     odinBattChart.data.datasets[0].data = battDischarge;
@@ -2573,7 +2581,8 @@ async function runOdinSolver() {
                 exp_solar_total: data.total_solar_kwh              || data.total_solar_used_kwh || 0,
                 total_cost:      data.total_cost                   || 0,
                 used_solar_kwp:  data.used_solar_kwp               || 0,
-                used_solar_correction: data.used_solar_correction  || 1.0
+                used_solar_correction: data.used_solar_correction  || 1.0,
+                used_battery_soc_kwh:  data.used_battery_soc_kwh   || 0
             };
 
             updateOdinCharts();

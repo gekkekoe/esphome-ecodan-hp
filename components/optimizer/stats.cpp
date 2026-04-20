@@ -245,6 +245,11 @@ namespace esphome
                 // Reset global trackers to prevent false deltas across midnight
                 this->last_global_prod_ = -1.0f;
                 this->last_global_cons_ = -1.0f;
+
+                // Reset wind-down window — any session spanning midnight gets cleanly cut off
+                this->last_was_dhw_     = false;
+                this->last_was_heating_ = false;
+                this->last_run_time_    = UINT32_MAX - 700000UL;
             }
 
             // PENDING FETCH: fired by day transition after 30s delay
@@ -291,16 +296,34 @@ namespace esphome
                 // }
             }
 
-            // Determine active modes
-            bool heating_now = is_running && is_heating_active;
-            bool dhw_now = is_running && (status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON || 
-                                          status.Operation == esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION);
+            // Track the last active mode persistently to catch delayed meter updates and wind-down.
+            // Uses member variables (not statics) so state is tied to the Optimizer instance
+            // and resets correctly on day rollover.
+            if (is_running) {
+                this->last_run_time_ = millis();
+                this->last_was_dhw_ = (status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON ||
+                                       status.Operation == esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION);
+                this->last_was_heating_ = is_heating_active;
+            }
+
+            // Keep the buckets open for 10 minutes after the compressor stops to catch delayed ticks.
+            // After that, pure standby power falls into the void.
+            bool dhw_active_window = false;
+            bool heat_active_window = false;
+
+            if (is_running || (millis() - this->last_run_time_ <= 600000)) {
+                if (this->last_was_dhw_)          dhw_active_window  = true;
+                else if (this->last_was_heating_) heat_active_window = true;
+            } else {
+                // Window expired — clear so next session starts clean
+                this->last_was_dhw_     = false;
+                this->last_was_heating_ = false;
+            }
 
             // Fetch current global meter states
             float current_global_prod = (this->state_.daily_heating_produced != nullptr && this->state_.daily_heating_produced->has_state()) 
                                         ? this->state_.daily_heating_produced->state : NAN;
             
-            // This pulls directly from your delta_energy_consumed_increasing sensor
             float current_global_cons = NAN;
             if (this->state_.solver_kwh_meter_feedback_source == nullptr ||
                 this->state_.solver_kwh_meter_feedback_source->active_index().value_or(0) == 0) {
@@ -311,39 +334,65 @@ namespace esphome
                     current_global_cons = this->state_.solver_kwh_meter_feedback->state;
             }
 
-            // Calculate deltas and bucket them accurately
-            if (!std::isnan(current_global_prod) && !std::isnan(current_global_cons)) {
-                
+            // 1. Process Production Delta.
+            // On midnight reset the sensor drops back to 0, giving a negative delta.
+            // Re-anchor the baseline without emitting a delta so the next tick is correct.
+            float delta_prod = 0.0f;
+            if (!std::isnan(current_global_prod)) {
                 if (this->last_global_prod_ < 0) {
+                    // First valid reading after boot — anchor, emit nothing
                     this->last_global_prod_ = current_global_prod;
+                } else {
+                    float raw_prod = current_global_prod - this->last_global_prod_;
+                    if (raw_prod >= 0) {
+                        delta_prod = raw_prod;
+                    } else {
+                        // Midnight reset detected — re-anchor silently
+                        ESP_LOGD(OPTIMIZER_TAG, "Prod meter reset (%.2f -> %.2f), re-anchoring",
+                                 this->last_global_prod_, current_global_prod);
+                    }
+                    this->last_global_prod_ = current_global_prod;
+                }
+            }
+
+            // 2. Process Consumption Delta.
+            // Same midnight reset handling: re-anchor without emitting a delta.
+            // Standby power accumulated since midnight is correctly ignored.
+            float delta_cons = 0.0f;
+            if (!std::isnan(current_global_cons)) {
+                if (this->last_global_cons_ < 0) {
+                    // First valid reading after boot — anchor, emit nothing
+                    this->last_global_cons_ = current_global_cons;
+                } else {
+                    float raw_cons = current_global_cons - this->last_global_cons_;
+                    if (raw_cons >= 0) {
+                        delta_cons = raw_cons;
+                    } else {
+                        // Midnight reset detected — re-anchor silently
+                        ESP_LOGD(OPTIMIZER_TAG, "Cons meter reset (%.2f -> %.2f), re-anchoring",
+                                 this->last_global_cons_, current_global_cons);
+                    }
                     this->last_global_cons_ = current_global_cons;
                 }
-
-                float delta_prod = current_global_prod - this->last_global_prod_;
-                float delta_cons = current_global_cons - this->last_global_cons_; // Extracts the 1-minute consumption slice
-
-                // Handle midnight sensor resets safely
-                if (delta_prod < 0) delta_prod = current_global_prod;
-                if (delta_cons < 0) delta_cons = current_global_cons;
-
-                // Ignore impossible hardware spikes (>50kWh in a minute)
-                if (delta_prod < 50.0f && delta_cons < 50.0f) { 
-                    if (heating_now) {
-                        this->last_total_heating_produced_ += delta_prod;
-                        this->last_total_heating_consumed_ += delta_cons;
-                    } else if (dhw_now) {
-                        this->last_total_dhw_produced_ += delta_prod;
-                        this->last_total_dhw_consumed_ += delta_cons;
-                    }
-                }
-
-                this->last_global_prod_ = current_global_prod;
-                this->last_global_cons_ = current_global_cons;
             }
-            
+
+            // 3. Bucket the deltas accurately.
+            // Ignore physically impossible hardware spikes (>50 kWh in a minute).
+            if (delta_prod < 50.0f && delta_cons < 50.0f) {
+                if (heat_active_window) {
+                    this->last_total_heating_produced_ += delta_prod;
+                    this->last_total_heating_consumed_ += delta_cons;
+                } else if (dhw_active_window) {
+                    this->last_total_dhw_produced_ += delta_prod;
+                    this->last_total_dhw_consumed_ += delta_cons;
+                }
+                // Pure standby (no active window) falls through and is safely ignored
+            }
+
             // Maintain total raw consumption for YAML dashboard tracking
             this->last_total_all_consumed_ = current_global_cons;
         }
+
 
         void Optimizer::update_learning_model(int day_of_year)
         {

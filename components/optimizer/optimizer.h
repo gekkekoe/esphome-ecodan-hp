@@ -100,6 +100,13 @@ namespace esphome
       float    last_total_dhw_consumed_     = 0.0f;
       float    last_total_all_consumed_     = 0.0f;
 
+      // 10-minute wind-down window: keeps buckets open after compressor stops
+      // to catch delayed meter ticks. Initialised to UINT32_MAX - 700000 so the
+      // window is guaranteed expired at boot regardless of millis() value.
+      bool     last_was_dhw_                = false;
+      bool     last_was_heating_            = false;
+      uint32_t last_run_time_               = UINT32_MAX - 700000UL;
+
       // Free cooling window tracking (HP-off period, any time of day)
       // Measures HL×TM product from unregulated cooldown, free of solar/DHW contamination.
       bool     fc_active_        = false;

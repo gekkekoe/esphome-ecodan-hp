@@ -116,7 +116,10 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
     handle_js_(request);
   }
   else {
-    request->send(404, "text/plain", "Not found");
+    httpd_req_t *req_404 = *request;
+    httpd_resp_set_status(req_404, "404 Not Found");
+    httpd_resp_set_type(req_404, "text/plain");
+    httpd_resp_send(req_404, "Not found", HTTPD_RESP_USE_STRLEN);
   }
 }
 
@@ -171,7 +174,10 @@ void EcodanDashboard::handle_js_(AsyncWebServerRequest *request) {
     file_data = ZOOMJS_GZ;
     file_len = ZOOMJS_GZ_LEN;
   } else {
-    request->send(404, "text/plain", "File not found");
+    httpd_req_t *req_404 = *request;
+    httpd_resp_set_status(req_404, "404 Not Found");
+    httpd_resp_set_type(req_404, "text/plain");
+    httpd_resp_send(req_404, "File not found", HTTPD_RESP_USE_STRLEN);
     return;
   }
 
@@ -179,22 +185,29 @@ void EcodanDashboard::handle_js_(AsyncWebServerRequest *request) {
 }
 
 void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
+  httpd_req_t *req = *request;
+
   if (request->method() != HTTP_POST) {
-    request->send(405, "text/plain", "Method Not Allowed");
+    httpd_resp_set_status(req, "405 Method Not Allowed");
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_send(req, "Method Not Allowed", HTTPD_RESP_USE_STRLEN);
     return;
   }
 
-  httpd_req_t *req = *request;
   size_t content_len = req->content_len;
   if (content_len == 0 || content_len > 1024) {
-    request->send(400, "text/plain", "Bad Request");
+    httpd_resp_set_status(req, "400 Bad Request");
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_send(req, "Bad Request", HTTPD_RESP_USE_STRLEN);
     return;
   }
 
   // Memory-safe allocation on the heap instead of the stack
   char *body = (char *)malloc(content_len + 1);
   if (body == nullptr) {
-    request->send(500, "text/plain", "Out of Memory");
+    httpd_resp_set_status(req, "500 Internal Server Error");
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_send(req, "Out of Memory", HTTPD_RESP_USE_STRLEN);
     return;
   }
   memset(body, 0, content_len + 1);
@@ -202,7 +215,9 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   int received = httpd_req_recv(req, body, content_len);
   if (received <= 0) {
     free(body);
-    request->send(400, "text/plain", "Read failed");
+    httpd_resp_set_status(req, "400 Bad Request");
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_send(req, "Read failed", HTTPD_RESP_USE_STRLEN);
     return;
   }
   body[received] = '\0';
@@ -218,11 +233,13 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
     int i = 0;
     while (*kp && *kp != '"' && i < 63) key[i++] = *kp++;
   }
-  
-  if (strlen(key) == 0) { 
+
+  if (strlen(key) == 0) {
     free(body);
-    request->send(400, "text/plain", "Missing key"); 
-    return; 
+    httpd_resp_set_status(req, "400 Bad Request");
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_send(req, "Missing key", HTTPD_RESP_USE_STRLEN);
+    return;
   }
 
   char strval[128] = {0};
@@ -244,7 +261,7 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   }
 
   // Always free heap memory immediately after extracting values
-  free(body); 
+  free(body);
 
   ESP_LOGI(TAG, "Dashboard set: key=%s value=%s/%.2f", key,
            is_string ? strval : "-", is_string ? 0.0f : fval);
@@ -258,10 +275,15 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
         is_string
     });
     xSemaphoreGive(action_lock_);
-    request->send(200, "application/json", "{\"ok\":true}");
+    httpd_resp_set_status(req, "200 OK");
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    httpd_resp_send(req, "{\"ok\":true}", HTTPD_RESP_USE_STRLEN);
   } else {
     ESP_LOGW(TAG, "Failed to acquire action_lock_ in handle_set_ (Timeout)");
-    request->send(503, "text/plain", "System busy, try again");
+    httpd_resp_set_status(req, "503 Service Unavailable");
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_send(req, "System busy, try again", HTTPD_RESP_USE_STRLEN);
   }
 }
 
@@ -544,243 +566,242 @@ void EcodanDashboard::update_snapshot_() {
 }
 
 void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
-  // uint32_t free_heap = esp_get_free_heap_size();
-  // uint32_t max_block = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
-  // ESP_LOGI(TAG, "handle_state_: \t\t\tMemory Stats | Total Free: %u bytes | Largest Block: %u bytes", free_heap, max_block);
-
   DashboardSnapshot snap;
-  
+
   if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(500)) == pdTRUE) {
     snap = current_snapshot_;
     xSemaphoreGive(snapshot_mutex_);
   } else {
     ESP_LOGW(TAG, "Failed to acquire snapshot_mutex_ in handle_state_ (Timeout)");
-    request->send(503, "text/plain", "System busy, try again");
+    httpd_req_t *req_err = *request;
+    httpd_resp_set_status(req_err, "503 Service Unavailable");
+    httpd_resp_set_type(req_err, "text/plain");
+    httpd_resp_send(req_err, "System busy, try again", HTTPD_RESP_USE_STRLEN);
     return;
   }
 
-  AsyncResponseStream *response = request->beginResponseStream("application/json");
-  if (response == nullptr) {
-    request->send(500, "text/plain", "Stream allocation failed");
-    return;
-  }
+  httpd_req_t *req = *request;
+  httpd_resp_set_status(req, "200 OK");
+  httpd_resp_set_type(req, "application/json");
+  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+  httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
 
-  response->addHeader("Access-Control-Allow-Origin", "*");
-  response->addHeader("Cache-Control", "no-cache");
-  response->print("{");
+  // Shared 2KB heap buffer — flushed per logical block to stay well within limits.
+  // Each block is at most ~600 bytes so there is comfortable headroom.
+  constexpr size_t BUF_SIZE = 2048;
+  std::vector<char> buf(BUF_SIZE);
+  int off = 0;
 
-  // Helper lambdas for outputting JSON using the snapshot struct
+  // Send current buffer contents and reset offset. Returns false on TCP error.
+  auto flush = [&]() -> bool {
+    if (off <= 0) return true;
+    bool ok = (httpd_resp_send_chunk(req, buf.data(), off) == ESP_OK);
+    off = 0;
+    return ok;
+  };
+
+  // Append helpers — write into buf[], flush automatically when >75% full.
   auto p_f = [&](const char* k, float v) {
-    if (!std::isnan(v)) response->printf("\"%s\":%.2f,", k, v);
-    else response->printf("\"%s\":null,", k);
+    if (!std::isnan(v)) off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":%.2f,", k, v);
+    else                off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":null,", k);
+    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
   };
-
   auto p_b = [&](const char* k, bool v) {
-    response->printf("\"%s\":%s,", k, v ? "true" : "false");
+    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":%s,", k, v ? "true" : "false");
+    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
   };
-
-
   auto p_n = [&](const char* k, float v) {
-    if (!std::isnan(v)) response->printf("\"%s\":%.4g,", k, v);
-    else response->printf("\"%s\":null,", k);
+    if (!std::isnan(v)) off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":%.4g,", k, v);
+    else                off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":null,", k);
+    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
   };
-  
   auto p_lim = [&](const char* k, const DashboardSnapshot::NumData& d) {
-    if (!std::isnan(d.min)) response->printf("\"%s\":{\"min\":%.4g,\"max\":%.4g,\"step\":%.4g},", k, d.min, d.max, d.step);
-    else response->printf("\"%s\":null,", k);
+    if (!std::isnan(d.min)) off += snprintf(buf.data() + off, BUF_SIZE - off,
+                                "\"%s\":{\"min\":%.4g,\"max\":%.4g,\"step\":%.4g},", k, d.min, d.max, d.step);
+    else                    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":null,", k);
+    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
   };
-  
   auto p_sel = [&](const char* k, int v) {
-    if (v >= 0) response->printf("\"%s\":\"%d\",", k, v);
-    else response->printf("\"%s\":null,", k);
+    if (v >= 0) off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":\"%d\",", k, v);
+    else        off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":null,", k);
+    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
   };
-  
   auto p_act = [&](const char* k, int a) {
-    if (a < 0) response->printf("\"%s\":\"off\",", k);
-    else if (a == climate::CLIMATE_ACTION_OFF) response->printf("\"%s\":\"off\",", k);
-    else if (a == climate::CLIMATE_ACTION_COOLING) response->printf("\"%s\":\"cooling\",", k);
-    else if (a == climate::CLIMATE_ACTION_HEATING) response->printf("\"%s\":\"heating\",", k);
-    else if (a == climate::CLIMATE_ACTION_DRYING) response->printf("\"%s\":\"drying\",", k);
-    else response->printf("\"%s\":\"idle\",", k);
+    const char* s = "idle";
+    if      (a < 0)                                  s = "off";
+    else if (a == climate::CLIMATE_ACTION_OFF)        s = "off";
+    else if (a == climate::CLIMATE_ACTION_COOLING)    s = "cooling";
+    else if (a == climate::CLIMATE_ACTION_HEATING)    s = "heating";
+    else if (a == climate::CLIMATE_ACTION_DRYING)     s = "drying";
+    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":\"%s\",", k, s);
+    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
   };
-  
   auto p_mod = [&](const char* k, int m) {
-    if (m < 0) response->printf("\"%s\":\"off\",", k);
-    else if (m == climate::CLIMATE_MODE_HEAT) response->printf("\"%s\":\"heat\",", k);
-    else if (m == climate::CLIMATE_MODE_COOL) response->printf("\"%s\":\"cool\",", k);
-    else if (m == climate::CLIMATE_MODE_AUTO) response->printf("\"%s\":\"auto\",", k);
-    else response->printf("\"%s\":\"off\",", k);
+    const char* s = "off";
+    if      (m == climate::CLIMATE_MODE_HEAT) s = "heat";
+    else if (m == climate::CLIMATE_MODE_COOL) s = "cool";
+    else if (m == climate::CLIMATE_MODE_AUTO) s = "auto";
+    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":\"%s\",", k, s);
+    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
   };
 
-  response->printf("\"ui_use_room_z1\":%s,", snap.ui_use_room_z1 ? "true" : "false");
-  response->printf("\"ui_use_room_z2\":%s,", snap.ui_use_room_z2 ? "true" : "false");
+  // --- Opening brace + ui flags ---
+  off += snprintf(buf.data() + off, BUF_SIZE - off,
+    "{\"ui_use_room_z1\":%s,\"ui_use_room_z2\":%s,",
+    snap.ui_use_room_z1 ? "true" : "false",
+    snap.ui_use_room_z2 ? "true" : "false");
 
-  p_f("hp_feed_temp", snap.hp_feed_temp);
-  p_f("hp_return_temp", snap.hp_return_temp);
-  p_f("outside_temp", snap.outside_temp);
-  p_f("liquid_pipe_temp", snap.liquid_pipe_temp);
-  p_f("condensing_temp", snap.condensing_temp);
-  p_f("compressor_frequency", snap.compressor_frequency);
-  p_f("flow_rate", snap.flow_rate);
-  p_f("computed_output_power", snap.computed_output_power);
-  p_f("daily_computed_output_power", snap.daily_computed_output_power);
-  p_f("daily_total_energy_consumption", snap.daily_total_energy_consumption);
-  p_f("compressor_starts", snap.compressor_starts);
-  p_f("runtime", snap.runtime);
-  p_f("wifi_signal_db", snap.wifi_signal_db);
+  // --- HP sensor floats ---
+  p_f("hp_feed_temp",                  snap.hp_feed_temp);
+  p_f("hp_return_temp",                snap.hp_return_temp);
+  p_f("outside_temp",                  snap.outside_temp);
+  p_f("liquid_pipe_temp",              snap.liquid_pipe_temp);
+  p_f("condensing_temp",               snap.condensing_temp);
+  p_f("compressor_frequency",          snap.compressor_frequency);
+  p_f("flow_rate",                     snap.flow_rate);
+  p_f("computed_output_power",         snap.computed_output_power);
+  p_f("daily_computed_output_power",   snap.daily_computed_output_power);
+  p_f("daily_total_energy_consumption",snap.daily_total_energy_consumption);
+  p_f("compressor_starts",             snap.compressor_starts);
+  p_f("runtime",                       snap.runtime);
+  p_f("wifi_signal_db",                snap.wifi_signal_db);
+  if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  p_f("dhw_temp", snap.dhw_temp);
-  p_f("dhw_flow_temp_target", snap.dhw_flow_temp_target);
-  p_f("dhw_flow_temp_drop", snap.dhw_flow_temp_drop);
-  p_f("dhw_consumed", snap.dhw_consumed);
-  p_f("dhw_delivered", snap.dhw_delivered);
-  p_f("dhw_cop", snap.dhw_cop);
+  // --- DHW ---
+  p_f("dhw_temp",              snap.dhw_temp);
+  p_f("dhw_flow_temp_target",  snap.dhw_flow_temp_target);
+  p_f("dhw_flow_temp_drop",    snap.dhw_flow_temp_drop);
+  p_f("dhw_consumed",          snap.dhw_consumed);
+  p_f("dhw_delivered",         snap.dhw_delivered);
+  p_f("dhw_cop",               snap.dhw_cop);
 
-  p_f("heating_consumed", snap.heating_consumed);
-  p_f("heating_produced", snap.heating_produced);
-  p_f("heating_cop", snap.heating_cop);
-  p_f("cooling_consumed", snap.cooling_consumed);
-  p_f("cooling_produced", snap.cooling_produced);
-  p_f("cooling_cop", snap.cooling_cop);
-
+  // --- Heating / cooling ---
+  p_f("heating_consumed",  snap.heating_consumed);
+  p_f("heating_produced",  snap.heating_produced);
+  p_f("heating_cop",       snap.heating_cop);
+  p_f("cooling_consumed",  snap.cooling_consumed);
+  p_f("cooling_produced",  snap.cooling_produced);
+  p_f("cooling_cop",       snap.cooling_cop);
   p_f("z1_flow_temp_target", snap.z1_flow_temp_target);
   p_f("z2_flow_temp_target", snap.z2_flow_temp_target);
+  if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  p_n("auto_adaptive_setpoint_bias", snap.num_aa_setpoint_bias.val);
-  p_lim("aa_bias_lim", snap.num_aa_setpoint_bias);
+  // --- Number settings ---
+  p_n("auto_adaptive_setpoint_bias",   snap.num_aa_setpoint_bias.val);
+  p_lim("aa_bias_lim",                 snap.num_aa_setpoint_bias);
+  p_n("maximum_heating_flow_temp",     snap.num_max_flow_temp.val);
+  p_lim("max_flow_lim",                snap.num_max_flow_temp);
+  p_n("minimum_heating_flow_temp",     snap.num_min_flow_temp.val);
+  p_lim("min_flow_lim",                snap.num_min_flow_temp);
+  p_n("maximum_heating_flow_temp_z2",  snap.num_max_flow_temp_z2.val);
+  p_lim("max_flow_z2_lim",             snap.num_max_flow_temp_z2);
+  p_n("minimum_heating_flow_temp_z2",  snap.num_min_flow_temp_z2.val);
+  p_lim("min_flow_z2_lim",             snap.num_min_flow_temp_z2);
+  p_n("thermostat_hysteresis_z1",      snap.num_hysteresis_z1.val);
+  p_lim("hysteresis_z1_lim",           snap.num_hysteresis_z1);
+  p_n("thermostat_hysteresis_z2",      snap.num_hysteresis_z2.val);
+  p_lim("hysteresis_z2_lim",           snap.num_hysteresis_z2);
+  p_n("pred_sc_time",                  snap.pred_sc_time.val);
+  p_lim("pred_sc_time_lim",            snap.pred_sc_time);
+  p_n("pred_sc_delta",                 snap.pred_sc_delta.val);
+  p_lim("pred_sc_delta_lim",           snap.pred_sc_delta);
+  if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  p_n("maximum_heating_flow_temp", snap.num_max_flow_temp.val);
-  p_lim("max_flow_lim", snap.num_max_flow_temp);
-  p_n("minimum_heating_flow_temp", snap.num_min_flow_temp.val);
-  p_lim("min_flow_lim", snap.num_min_flow_temp);
-
-  p_n("maximum_heating_flow_temp_z2", snap.num_max_flow_temp_z2.val);
-  p_lim("max_flow_z2_lim", snap.num_max_flow_temp_z2);
-  p_n("minimum_heating_flow_temp_z2", snap.num_min_flow_temp_z2.val);
-  p_lim("min_flow_z2_lim", snap.num_min_flow_temp_z2);
-
-  p_n("thermostat_hysteresis_z1", snap.num_hysteresis_z1.val);
-  p_lim("hysteresis_z1_lim", snap.num_hysteresis_z1);
-
-  p_n("thermostat_hysteresis_z2", snap.num_hysteresis_z2.val);
-  p_lim("hysteresis_z2_lim", snap.num_hysteresis_z2);
-
-  p_n("pred_sc_time", snap.pred_sc_time.val);
-  p_lim("pred_sc_time_lim", snap.pred_sc_time);
-  p_n("pred_sc_delta", snap.pred_sc_delta.val);
-  p_lim("pred_sc_delta_lim", snap.pred_sc_delta);
-
-  p_n("z1_current_temp", snap.virt_z1.curr);
-  p_n("z1_setpoint", snap.virt_z1.tar);
-  p_act("z1_action", snap.virt_z1.action);
-  p_mod("z1_mode", snap.virt_z1.mode);
-
-  p_n("z2_current_temp", snap.virt_z2.curr);
-  p_n("z2_setpoint", snap.virt_z2.tar);
-  p_act("z2_action", snap.virt_z2.action);
-  p_mod("z2_mode", snap.virt_z2.mode);
-
-  p_n("room_z1_current", snap.room_z1.curr);
-  p_n("room_z1_setpoint", snap.room_z1.tar);
+  // --- Climate zones ---
+  p_n("z1_current_temp", snap.virt_z1.curr);  p_n("z1_setpoint", snap.virt_z1.tar);
+  p_act("z1_action", snap.virt_z1.action);    p_mod("z1_mode", snap.virt_z1.mode);
+  p_n("z2_current_temp", snap.virt_z2.curr);  p_n("z2_setpoint", snap.virt_z2.tar);
+  p_act("z2_action", snap.virt_z2.action);    p_mod("z2_mode", snap.virt_z2.mode);
+  p_n("room_z1_current", snap.room_z1.curr);  p_n("room_z1_setpoint", snap.room_z1.tar);
   p_act("room_z1_action", snap.room_z1.action);
-
-  p_n("room_z2_current", snap.room_z2.curr);
-  p_n("room_z2_setpoint", snap.room_z2.tar);
+  p_n("room_z2_current", snap.room_z2.curr);  p_n("room_z2_setpoint", snap.room_z2.tar);
   p_act("room_z2_action", snap.room_z2.action);
+  p_n("flow_z1_current", snap.flow_z1.curr);  p_n("flow_z1_setpoint", snap.flow_z1.tar);
+  p_n("flow_z2_current", snap.flow_z2.curr);  p_n("flow_z2_setpoint", snap.flow_z2.tar);
+  if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  p_n("flow_z1_current", snap.flow_z1.curr);
-  p_n("flow_z1_setpoint", snap.flow_z1.tar);
-
-  p_n("flow_z2_current", snap.flow_z2.curr);
-  p_n("flow_z2_setpoint", snap.flow_z2.tar);
-
-  p_b("status_compressor", snap.status_compressor);
-  p_b("status_booster", snap.status_booster);
-  p_b("status_defrost", snap.status_defrost);
-  p_b("status_water_pump", snap.status_water_pump);
-  p_b("status_in1_request", snap.status_in1_request);
-  p_b("status_in6_request", snap.status_in6_request);
-  p_b("zone2_enabled", snap.status_zone2_enabled);
-
-  p_b("pred_sc_en", snap.pred_sc_switch);
+  // --- Binary / switch status ---
+  p_b("status_compressor",           snap.status_compressor);
+  p_b("status_booster",              snap.status_booster);
+  p_b("status_defrost",              snap.status_defrost);
+  p_b("status_water_pump",           snap.status_water_pump);
+  p_b("status_in1_request",          snap.status_in1_request);
+  p_b("status_in6_request",          snap.status_in6_request);
+  p_b("zone2_enabled",               snap.status_zone2_enabled);
+  p_b("pred_sc_en",                  snap.pred_sc_switch);
   p_b("auto_adaptive_control_enabled", snap.sw_auto_adaptive);
   p_b("defrost_risk_handling_enabled", snap.sw_defrost_mit);
-  p_b("smart_boost_enabled", snap.sw_smart_boost);
-  p_b("force_dhw", snap.sw_force_dhw);
+  p_b("smart_boost_enabled",         snap.sw_smart_boost);
+  p_b("force_dhw",                   snap.sw_force_dhw);
 
-  // cooling settings
-  p_n("cooling_smart_start_z1", snap.num_cooling_smart_start_z1.val);
-  p_lim("cool_smart_z1_lim", snap.num_cooling_smart_start_z1);
+  // --- Cooling settings ---
+  p_n("cooling_smart_start_z1",  snap.num_cooling_smart_start_z1.val);
+  p_lim("cool_smart_z1_lim",     snap.num_cooling_smart_start_z1);
   p_n("minimum_cooling_flow_z1", snap.num_min_cooling_flow_z1.val);
-  p_lim("min_cool_flow_z1_lim", snap.num_min_cooling_flow_z1);
+  p_lim("min_cool_flow_z1_lim",  snap.num_min_cooling_flow_z1);
+  if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // solver switches
+  // --- Solver ---
   p_b("use_dynamic_cost_solver", snap.sw_use_solver);
-  p_b("show_solver_tab", snap.sw_show_solver_tab);
-  p_b("solver_connected", snap.bin_solver_connected);
+  p_b("show_solver_tab",         snap.sw_show_solver_tab);
+  p_b("solver_connected",        snap.bin_solver_connected);
 
-  p_n("raw_heat_produced", snap.num_raw_heat_produced.val);
-  p_lim("raw_heat_produced_lim", snap.num_raw_heat_produced);
-
-  p_n("raw_elec_consumed", snap.num_raw_elec_consumed.val);
-  p_lim("raw_elec_consumed_lim", snap.num_raw_elec_consumed);
-
-  p_n("raw_runtime_hours", snap.num_raw_runtime_hours.val);
-  p_lim("raw_runtime_hours_lim", snap.num_raw_runtime_hours);
-
-  p_n("raw_avg_outside_temp", snap.num_raw_avg_outside_temp.val);
+  // --- Raw physics EMA numbers ---
+  p_n("raw_heat_produced",      snap.num_raw_heat_produced.val);
+  p_lim("raw_heat_produced_lim",snap.num_raw_heat_produced);
+  p_n("raw_elec_consumed",      snap.num_raw_elec_consumed.val);
+  p_lim("raw_elec_consumed_lim",snap.num_raw_elec_consumed);
+  p_n("raw_runtime_hours",      snap.num_raw_runtime_hours.val);
+  p_lim("raw_runtime_hours_lim",snap.num_raw_runtime_hours);
+  p_n("raw_avg_outside_temp",   snap.num_raw_avg_outside_temp.val);
   p_lim("raw_avg_outside_temp_lim", snap.num_raw_avg_outside_temp);
-
-  p_n("raw_avg_room_temp", snap.num_raw_avg_room_temp.val);
-  p_lim("raw_avg_room_temp_lim", snap.num_raw_avg_room_temp);
-
-  p_n("raw_delta_room_temp", snap.num_raw_delta_room_temp.val);
+  p_n("raw_avg_room_temp",      snap.num_raw_avg_room_temp.val);
+  p_lim("raw_avg_room_temp_lim",snap.num_raw_avg_room_temp);
+  p_n("raw_delta_room_temp",    snap.num_raw_delta_room_temp.val);
   p_lim("raw_delta_room_temp_lim", snap.num_raw_delta_room_temp);
-
-  p_n("raw_hl_tm_product", snap.num_raw_hl_tm_product.val);
-
-  p_n("raw_solar_factor", snap.num_raw_solar_factor.val);
+  p_n("raw_hl_tm_product",      snap.num_raw_hl_tm_product.val);
+  p_n("raw_solar_factor",       snap.num_raw_solar_factor.val);
   p_lim("raw_solar_factor_lim", snap.num_raw_solar_factor);
-
-  p_n("battery_soc_kwh", snap.num_battery_soc_kwh.val);
-  p_lim("battery_soc_kwh_lim", snap.num_battery_soc_kwh);
-
-  p_n("battery_max_discharge_kw", snap.num_battery_max_discharge_kw.val);
+  p_n("battery_soc_kwh",        snap.num_battery_soc_kwh.val);
+  p_lim("battery_soc_kwh_lim",  snap.num_battery_soc_kwh);
+  p_n("battery_max_discharge_kw",     snap.num_battery_max_discharge_kw.val);
   p_lim("battery_max_discharge_kw_lim", snap.num_battery_max_discharge_kw);
-
-  p_n("dhw_start_threshold", snap.num_dhw_start_threshold.val);
+  p_n("dhw_start_threshold",    snap.num_dhw_start_threshold.val);
   p_lim("dhw_start_threshold_lim", snap.num_dhw_start_threshold);
+  if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  response->print("\"solver_ip_address\":\"");
+  // --- String fields (solver IP, version) — escape inline into buf ---
+  off += snprintf(buf.data() + off, BUF_SIZE - off, "\"solver_ip_address\":\"");
   for (char *c = snap.txt_solver_ip; *c != '\0'; ++c) {
-    if (*c == '"') response->print("\\\"");
-    else if (*c == '\\') response->print("\\\\");
-    else response->printf("%c", *c);
+    if      (*c == '"')  { buf[off++] = '\\'; buf[off++] = '"'; }
+    else if (*c == '\\') { buf[off++] = '\\'; buf[off++] = '\\'; }
+    else                 { buf[off++] = *c; }
   }
-  response->print("\","); 
-
-  // Output strings safely
-  response->print("\"latest_version\":\"");
+  off += snprintf(buf.data() + off, BUF_SIZE - off, "\",\"latest_version\":\"");
   for (char *c = snap.version; *c != '\0'; ++c) {
-    if (*c == '"') response->print("\\\"");
-    else if (*c == '\\') response->print("\\\\");
-    else response->printf("%c", *c);
+    if      (*c == '"')  { buf[off++] = '\\'; buf[off++] = '"'; }
+    else if (*c == '\\') { buf[off++] = '\\'; buf[off++] = '\\'; }
+    else                 { buf[off++] = *c; }
   }
-  response->print("\",");
+  off += snprintf(buf.data() + off, BUF_SIZE - off, "\",");
 
-  if (!std::isnan(snap.operation_mode)) response->printf("\"operation_mode\":%d,", (int)snap.operation_mode);
-  else response->print("\"operation_mode\":null,");
+  // --- operation_mode + selects + closing ---
+  if (!std::isnan(snap.operation_mode))
+    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"operation_mode\":%d,", (int)snap.operation_mode);
+  else
+    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"operation_mode\":null,");
 
-  p_sel("heating_system_type", snap.sel_heating_system_type);
-  p_sel("room_temp_source_z1", snap.sel_room_temp_source_z1);
-  p_sel("room_temp_source_z2", snap.sel_room_temp_source_z2);
-  p_sel("operating_mode_z1", snap.sel_operating_mode_z1);
-  p_sel("operating_mode_z2", snap.sel_operating_mode_z2);
+  p_sel("heating_system_type",   snap.sel_heating_system_type);
+  p_sel("room_temp_source_z1",   snap.sel_room_temp_source_z1);
+  p_sel("room_temp_source_z2",   snap.sel_room_temp_source_z2);
+  p_sel("operating_mode_z1",     snap.sel_operating_mode_z1);
+  p_sel("operating_mode_z2",     snap.sel_operating_mode_z2);
   p_sel("temp_sensor_source_z1", snap.sel_temp_source_z1);
   p_sel("temp_sensor_source_z2", snap.sel_temp_source_z2);
 
-  response->printf("\"_uptime_ms\":%u}", millis());
-  request->send(response);
+  off += snprintf(buf.data() + off, BUF_SIZE - off, "\"_uptime_ms\":%u}", millis());
+  flush();
+  httpd_resp_send_chunk(req, nullptr, 0);
 }
 
 // History handling
