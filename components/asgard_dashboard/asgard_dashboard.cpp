@@ -852,24 +852,21 @@ void EcodanDashboard::record_history_() {
       current_cons = get_sensor(daily_total_energy_consumption_);
   }
 
+  rec.cons = pack_temp_(current_cons);
+
   if (is_running && is_thermal_active) {
-      rec.cons = pack_temp_(current_cons);
       rec.prod = pack_temp_(get_sensor(daily_computed_output_power_));
   } else {
-      // Not heating: carry over the last recorded value from the history array
+      // Not heating: carry over the last recorded production value from the history array
       if (history_count_ > 0) {
           if (history_mutex_ != NULL && xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
               size_t prev_idx = (history_head_ + MAX_HISTORY - 1) % MAX_HISTORY;
-              rec.cons = history_buffer_[prev_idx].cons;
               rec.prod = history_buffer_[prev_idx].prod;
               xSemaphoreGive(history_mutex_);
           } else {
-              rec.cons = pack_temp_(current_cons);
               rec.prod = pack_temp_(get_sensor(daily_computed_output_power_));
           }
       } else {
-          // Edge case: literally the first minute after boot
-          rec.cons = pack_temp_(current_cons);
           rec.prod = pack_temp_(get_sensor(daily_computed_output_power_));
       }
   }
@@ -977,24 +974,26 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 // ---------------------------------------------------------------------------
 static const char* NVS_ODIN_NS = "odin_cache";
 
-void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp) {
+void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons) {
     // Write directly to the current hour (0-23 represents Today)
-    int target_idx = hour; 
-    
+    int target_idx = hour;
+
     if (target_idx < 0 || target_idx >= 48) return;
     if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
 
-    if (odin_actual_dhw_cons_.size() != 48) odin_actual_dhw_cons_.assign(48, NAN);
-    if (odin_actual_dhw_prod_.size() != 48) odin_actual_dhw_prod_.assign(48, NAN);
-    if (odin_actual_cons_.size() != 48) odin_actual_cons_.assign(48, NAN);
-    if (odin_actual_prod_.size() != 48) odin_actual_prod_.assign(48, NAN);
-    if (odin_actual_room_.size() != 48) odin_actual_room_.assign(48, NAN);
+    if (odin_actual_dhw_cons_.size() != 48)     odin_actual_dhw_cons_.assign(48, NAN);
+    if (odin_actual_dhw_prod_.size() != 48)     odin_actual_dhw_prod_.assign(48, NAN);
+    if (odin_actual_cons_.size() != 48)         odin_actual_cons_.assign(48, NAN);
+    if (odin_actual_prod_.size() != 48)         odin_actual_prod_.assign(48, NAN);
+    if (odin_actual_room_.size() != 48)         odin_actual_room_.assign(48, NAN);
+    if (odin_actual_standby_cons_.size() != 48) odin_actual_standby_cons_.assign(48, NAN);
 
-    odin_actual_cons_[target_idx]     = actual_cons_kwh;
-    odin_actual_prod_[target_idx]     = actual_prod_kwh;
-    odin_actual_dhw_cons_[target_idx] = dhw_cons;
-    odin_actual_dhw_prod_[target_idx] = dhw_prod;
-    odin_actual_room_[target_idx]     = actual_room_temp;
+    odin_actual_cons_[target_idx]         = actual_cons_kwh;
+    odin_actual_prod_[target_idx]         = actual_prod_kwh;
+    odin_actual_dhw_cons_[target_idx]     = dhw_cons;
+    odin_actual_dhw_prod_[target_idx]     = dhw_prod;
+    odin_actual_room_[target_idx]         = actual_room_temp;
+    odin_actual_standby_cons_[target_idx] = standby_cons;
 
     xSemaphoreGive(snapshot_mutex_);
     this->odin_nvs_dirty_ = true;
@@ -1023,7 +1022,7 @@ void EcodanDashboard::nvs_persist_odin_() {
     // The mutex is held for the shortest possible time — just copying vectors to local arrays.
     // All slow NVS reads and writes happen AFTER the mutex is released.
     static const int N = 48;
-    static const int NUM_ARRS = 18;
+    static const int NUM_ARRS = 19;
 
     // Local stack copies — 18 × 48 × 4 = 3456 bytes on NVS task stack.
     float snap[NUM_ARRS][N];
@@ -1056,6 +1055,7 @@ void EcodanDashboard::nvs_persist_odin_() {
         copy_arr(15, this->odin_sched_base_);
         copy_arr(16, this->odin_sched_min_);
         copy_arr(17, this->odin_sched_max_);
+        copy_arr(18, this->odin_actual_standby_cons_);
 
         xSemaphoreGive(this->snapshot_mutex_);
     } else {
@@ -1084,7 +1084,8 @@ void EcodanDashboard::nvs_persist_odin_() {
         "exp_end", "energy",  "prod",    "exp_t",   "cost",    "batt",
         "act_dhw_cons", "act_dhw_prod",
         "act_cons", "act_prod", "act_room",
-        "prices", "weather", "solar", "op_mode", "sb", "smn", "smx"
+        "prices", "weather", "solar", "op_mode", "sb", "smn", "smx",
+        "act_standby"
     };
 
     for (int k = 0; k < NUM_ARRS; k++) {
@@ -1185,7 +1186,8 @@ void EcodanDashboard::load_odin_data(int current_day) {
     load_arr("act_dhw_prod", this->odin_actual_dhw_prod_, NAN);
     load_arr("act_cons", this->odin_actual_cons_, NAN);
     load_arr("act_prod", this->odin_actual_prod_, NAN);
-    load_arr("act_room", this->odin_actual_room_, NAN);
+    load_arr("act_room",     this->odin_actual_room_,         NAN);
+    load_arr("act_standby", this->odin_actual_standby_cons_, NAN);
     
     // Optional — not in "ok" chain, fall back to 0 if missing
     if (!load_arr("prices",  this->odin_prices_))   this->odin_prices_.assign(48, 0.0f);
@@ -1222,6 +1224,7 @@ void EcodanDashboard::load_odin_data(int current_day) {
                 shift_arr(this->odin_actual_cons_, NAN);
                 shift_arr(this->odin_actual_prod_, NAN);
                 shift_arr(this->odin_actual_room_, NAN);
+                shift_arr(this->odin_actual_standby_cons_, NAN);
                 
                 shift_arr(this->odin_sched_base_, 0.0f);
                 shift_arr(this->odin_sched_min_, 0.0f);
@@ -1237,6 +1240,7 @@ void EcodanDashboard::load_odin_data(int current_day) {
                 this->odin_actual_cons_.assign(48, NAN);
                 this->odin_actual_prod_.assign(48, NAN);
                 this->odin_actual_room_.assign(48, NAN);
+                this->odin_actual_standby_cons_.assign(48, NAN);
             }
             this->odin_stored_day_ = current_day;
         }
@@ -1289,6 +1293,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
     ensure_48(this->odin_actual_cons_, NAN);
     ensure_48(this->odin_actual_prod_, NAN);
     ensure_48(this->odin_actual_room_, NAN);
+    ensure_48(this->odin_actual_standby_cons_, NAN);
 
     ensure_48(this->odin_battery_discharge_, 0.0f);
     ensure_48(this->odin_sched_base_, 0.0f);
@@ -1331,6 +1336,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             shift_arr(this->odin_actual_cons_, NAN);
             shift_arr(this->odin_actual_prod_, NAN);
             shift_arr(this->odin_actual_room_, NAN);
+            shift_arr(this->odin_actual_standby_cons_, NAN);
         } else {
             ESP_LOGI(TAG, "ODIN day jump (%d -> %d): clearing old actuals", this->odin_stored_day_, current_day);
             this->odin_actual_dhw_cons_.assign(48, NAN);
@@ -1338,6 +1344,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             this->odin_actual_cons_.assign(48, NAN);
             this->odin_actual_prod_.assign(48, NAN);
             this->odin_actual_room_.assign(48, NAN);
+            this->odin_actual_standby_cons_.assign(48, NAN);
         }
         this->odin_stored_day_ = current_day;
     }
@@ -1453,6 +1460,7 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
     send_arr_chunk("actual_cons",            &this->odin_actual_cons_, false)       &&
     send_arr_chunk("actual_prod",            &this->odin_actual_prod_, false)       &&
     send_arr_chunk("actual_room_temp",       &this->odin_actual_room_, false)       &&
+    send_arr_chunk("actual_standby_cons",    &this->odin_actual_standby_cons_, false) &&
     send_arr_chunk("operation_mode",         &this->odin_operation_mode_, false);
 
   if (success) {

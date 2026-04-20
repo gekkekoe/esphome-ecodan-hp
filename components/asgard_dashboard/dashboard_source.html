@@ -1604,14 +1604,15 @@ function initCharts() {
 function updateOdinCharts() {
     if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart || !odinPriceChart || !odinWeatherChart || !odinProdChart) return;
 
-    const rawNvsCons    = odinDataCache ? (odinDataCache.actual_cons      || new Array(48).fill(null)) : new Array(48).fill(null);
+    const rawNvsCons        = odinDataCache ? (odinDataCache.actual_cons          || new Array(48).fill(null)) : new Array(48).fill(null);
+    const rawNvsStandbyCons = odinDataCache ? (odinDataCache.actual_standby_cons  || new Array(48).fill(null)) : new Array(48).fill(null);
     const rawNvsProd    = odinDataCache ? (odinDataCache.actual_prod      || new Array(48).fill(null)) : new Array(48).fill(null);
     const rawNvsDhwCons = odinDataCache ? (odinDataCache.actual_dhw_cons  || new Array(48).fill(null)) : new Array(48).fill(null);
     const rawNvsDhwProd = odinDataCache ? (odinDataCache.actual_dhw_prod  || new Array(48).fill(null)) : new Array(48).fill(null);
 
     const actualConsHeatByHour    = [...rawNvsCons];
     const actualConsDhwByHour     = [...rawNvsDhwCons];
-    const actualConsStandbyByHour = new Array(48).fill(null);
+    const actualConsStandbyByHour = [...rawNvsStandbyCons];
     const actualProdHeatByHour = [...rawNvsProd];
     const actualProdDhwByHour  = [...rawNvsDhwProd];
     const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(48).fill(null))] : new Array(48).fill(null);
@@ -1646,8 +1647,12 @@ function updateOdinCharts() {
                     if (delta >= 0 && delta < 5.0) {
                         hHasData[h] = true;
                         hConsTotal[h] += delta;
-                        if (mode === 'Heating') hConsHeat[h] += delta;
-                        else if (mode === 'Hot Water' || mode === 'Legionella') hConsDhw[h] += delta;
+                        
+                        const isRunning = history.bin_comp[i] === 1 || history.freq[i] > 0;
+                        if (isRunning) {
+                            if (mode === 'Heating') hConsHeat[h] += delta;
+                            else if (mode === 'Hot Water' || mode === 'Legionella') hConsDhw[h] += delta;
+                        }
                     }
                 }
                 prevCons = history.cons[i];
@@ -1657,33 +1662,47 @@ function updateOdinCharts() {
                 if (prevProd !== null) {
                     let delta = history.prod[i] - prevProd;
                     
-                    // Filter: Only accept normal minute-by-minute increments (< 5kWh/min).
-                    // This safely ignores midnight resets (delta < 0) AND glitch recoveries (delta > 5).
                     if (delta >= 0 && delta < 5.0) {
                         hHasData[h] = true;
-                        if (mode === 'Heating') hProdHeat[h] += delta;
-                        else if (mode === 'Hot Water' || mode === 'Legionella') hProdDhw[h] += delta;
+                        
+                        const isRunning = history.bin_comp[i] === 1 || history.freq[i] > 0;
+                        if (isRunning) {
+                            if (mode === 'Heating') hProdHeat[h] += delta;
+                            else if (mode === 'Hot Water' || mode === 'Legionella') hProdDhw[h] += delta;
+                        }
                     }
                 }
                 prevProd = history.prod[i];
             }
         }
         
+        const currentLocalHour = new Date().getHours();
+        
         for (let h = 0; h < 24; h++) {
             if (hHasData[h]) {
-                actualConsHeatByHour[h]    = parseFloat(hConsHeat[h].toFixed(2));
-                actualConsDhwByHour[h]     = parseFloat(hConsDhw[h].toFixed(2));
-                actualConsStandbyByHour[h] = parseFloat(Math.max(0, hConsTotal[h] - hConsHeat[h] - hConsDhw[h]).toFixed(2));
-                actualProdHeatByHour[h]    = parseFloat(hProdHeat[h].toFixed(2));
-                actualProdDhwByHour[h]     = parseFloat(hProdDhw[h].toFixed(2));
+                const isCurrentHour = (h === currentLocalHour);
+                const isNvsMissing = (rawNvsCons[h] === null);
+
+                if (isCurrentHour || isNvsMissing) {
+                    actualConsHeatByHour[h]    = parseFloat(hConsHeat[h].toFixed(2));
+                    actualConsDhwByHour[h]     = parseFloat(hConsDhw[h].toFixed(2));
+                    actualConsStandbyByHour[h] = parseFloat(Math.max(0, hConsTotal[h] - hConsHeat[h] - hConsDhw[h]).toFixed(2));
+                    actualProdHeatByHour[h]    = parseFloat(hProdHeat[h].toFixed(2));
+                    actualProdDhwByHour[h]     = parseFloat(hProdDhw[h].toFixed(2));
+                }
             }
-            if (firstTempByHour[h] !== null) actualTempByHour[h] = firstTempByHour[h];
+            if (firstTempByHour[h] !== null) {
+                if (h === currentLocalHour || actualTempByHour[h] === null) {
+                    actualTempByHour[h] = firstTempByHour[h];
+                }
+            }
         }
+    } else {
+        var currentLocalHour = new Date().getHours();
     }
 
-    const currentLocalHour = new Date().getHours();
     for (let h = 0; h < 48; h++) {
-        if (h >= currentLocalHour) {
+        if (h > currentLocalHour) {
             actualConsHeatByHour[h] = null; actualConsDhwByHour[h] = null; actualConsStandbyByHour[h] = null;
             actualProdHeatByHour[h] = null; actualProdDhwByHour[h] = null;
         }

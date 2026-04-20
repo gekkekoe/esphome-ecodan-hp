@@ -224,27 +224,30 @@ interval:
           {
             // Hourly Accumulator
             static int   last_hour = -1;
-            
+
             static float last_h_cons = -1.0f;
             static float last_h_prod = -1.0f;
             static float last_d_cons = -1.0f;
             static float last_d_prod = -1.0f;
+            static float last_t_cons = -1.0f;
 
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
             float cur_h_cons = id(optimizer_ptr)->get_heating_consumed_kwh();
             float cur_h_prod = id(optimizer_ptr)->get_heating_produced_kwh();
             float cur_d_cons = id(optimizer_ptr)->get_dhw_consumed_kwh();
             float cur_d_prod = id(optimizer_ptr)->get_dhw_produced_kwh();
+            float cur_t_cons = id(optimizer_ptr)->get_total_consumed_kwh();
 
             if (std::isnan(cur_h_cons) || std::isnan(cur_h_prod) || std::isnan(cur_d_cons) || std::isnan(cur_d_prod)) return;
 
             // Initial run or recovery
             if (last_hour == -1) {
-              last_hour = cur_hr;
+              last_hour   = cur_hr;
               last_h_cons = cur_h_cons;
               last_h_prod = cur_h_prod;
               last_d_cons = cur_d_cons;
               last_d_prod = cur_d_prod;
+              last_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons;
               return;
             }
 
@@ -254,22 +257,28 @@ interval:
               float d_h_prod = cur_h_prod - last_h_prod;
               float d_d_cons = cur_d_cons - last_d_cons;
               float d_d_prod = cur_d_prod - last_d_prod;
+              float d_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons - last_t_cons;
 
               // Handle midnight resets (if the C++ buckets drop to 0)
               if (d_h_cons < 0) d_h_cons = cur_h_cons;
               if (d_h_prod < 0) d_h_prod = cur_h_prod;
               if (d_d_cons < 0) d_d_cons = cur_d_cons;
               if (d_d_prod < 0) d_d_prod = cur_d_prod;
+              if (d_t_cons < 0) d_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons;
+
+              // Standby = total consumed minus the bucketed modes, floor at 0
+              float d_standby = std::max(0.0f, d_t_cons - d_h_cons - d_d_cons);
 
               float room = id(virtual_climate_z1).current_temperature;
-              
-              id(asgard_dashboard_id)->update_actual_data(last_hour, d_h_cons, d_h_prod, d_d_cons, d_d_prod, room);
+
+              id(asgard_dashboard_id)->update_actual_data(last_hour, d_h_cons, d_h_prod, d_d_cons, d_d_prod, room, d_standby);
 
               // Save the new baseline for the next hour
               last_h_cons = cur_h_cons;
               last_h_prod = cur_h_prod;
               last_d_cons = cur_d_cons;
               last_d_prod = cur_d_prod;
+              last_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons;
               last_hour   = cur_hr;
             }
           }
