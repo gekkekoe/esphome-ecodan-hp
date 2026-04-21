@@ -480,7 +480,7 @@ private:
 
   bool odin_data_ready_{false};
   int odin_stored_day_{-1};
-  bool odin_nvs_dirty_{false};
+  std::atomic<bool> odin_nvs_dirty_{false};
   uint32_t odin_nvs_last_write_ms_{0};
   std::atomic<bool> nvs_show_tab_cache_{false};  // cached copy of sw_show_solver_tab_->state, safe to read from NVS task
 
