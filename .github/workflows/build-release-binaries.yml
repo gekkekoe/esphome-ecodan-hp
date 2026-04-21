@@ -85,8 +85,17 @@ jobs:
 
           cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.ota.bin $PREFIX.ota.bin
           cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.factory.bin $PREFIX.factory.bin
+          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.elf $PREFIX.elf
           gh release upload --clobber ${{github.event.release.tag_name}} $PREFIX.ota.bin
           gh release upload --clobber ${{github.event.release.tag_name}} $PREFIX.factory.bin
+      
+      - name: Upload ELF for debugging
+        if: matrix.lang == 'en'
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        run: |
+          gzip $PREFIX.elf
+          gh release upload --clobber ${{github.event.release.tag_name}} $PREFIX.elf.gz
 
       - name: Create manifest.json for firmware
         env:
