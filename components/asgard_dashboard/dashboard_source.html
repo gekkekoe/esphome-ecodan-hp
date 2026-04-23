@@ -213,6 +213,23 @@ header {
   .toast.show { opacity: 1; transform: translateY(0); }
   .toast.error { border-color: var(--danger); color: var(--danger); }
 
+  /* Drag and Drop visual feedback */
+  .ctrl-card.dragging {
+    opacity: 0.5;
+    transform: scale(0.98);
+    border: 1px dashed var(--accent);
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
+  #settings-card-container .section-title {
+    cursor: grab;
+    /* Add a little padding to make the grab area slightly larger */
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  #settings-card-container .section-title:active {
+    cursor: grabbing;
+  }
+
   @media (min-width: 768px) { .chart-container { height: 200px; } .full-width { grid-column: 1 / -1; } }
   @media (max-width: 480px) {
       header { flex-wrap: wrap; }
@@ -462,9 +479,9 @@ header {
 </div>
 
 <div id="view-settings" class="view-section">
-  <div style="display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+  <div id="settings-card-container" style="display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
     
-    <div class="ctrl-card">
+    <div class="ctrl-card" id="card-z1">
       <div class="section-title">Zone 1</div>
       <div class="ctrl-row"><span class="ctrl-label">Operating Mode</span><select class="ctrl-select" id="sel-z1mode" onchange="sendSelect('operating_mode_z1', this)"><option>Heat Target Temperature</option><option>Heat Flow Temperature</option><option>Heat Compensation Curve</option><option>Cool Target Temperature</option><option>Cool Flow Temperature</option><option>Floor Dry Up</option><option>Cool Compensation Curve</option></select></div>
       
@@ -562,7 +579,32 @@ header {
       </div>
     </div>
 
-    <div class="ctrl-card">
+    <div class="ctrl-card" id="card-dhw">
+      <div class="section-title">DHW</div>
+      
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
+        <div class="ctrl-row" style="border-bottom: none; padding: 0;"><span class="ctrl-label">Force DHW Now</span><label class="toggle-wrap"><input type="checkbox" id="sw-fdhw" onchange="sendSwitch('force_dhw', this.checked)"><span class="toggle-slider"></span></label></div>
+      </div>
+
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="stat-row" style="margin-top: 0;">
+          <div class="stat-item"><span class="stat-label">Setpoint</span><span class="stat-value" id="dhw-setpoint">—</span></div>
+          <div class="stat-item"><span class="stat-label">Drop</span><span class="stat-value" id="dhw-drop">—</span></div>
+          <div class="stat-item"><span class="stat-label">Consumed</span><span class="stat-value" id="dhw-cons">—</span></div>
+          <div class="stat-item"><span class="stat-label">Produced</span><span class="stat-value" id="dhw-prod">—</span></div>
+        </div>
+      </div>
+
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+          <div><div class="stat-label">Tank Temp</div><div class="big-temp" id="dhw-current">—<span>°C</span></div></div>
+          <div style="flex:1;"><div class="stat-label">Target</div><div class="stepper"><button class="step-btn" onclick="step('dhw-sp', -0.5)">−</button><div class="step-val" id="dhw-sp-val">—</div><button class="step-btn" onclick="step('dhw-sp', +0.5)">+</button></div></div>
+        </div>
+        <button class="send-btn" onclick="sendDHW(this)" style="margin-bottom:0;">Apply DHW</button>
+      </div>
+    </div>
+
+    <div class="ctrl-card" id="card-aa">
       <div class="section-title">Auto Adaptive</div>
       
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
@@ -633,31 +675,6 @@ header {
       </div>
     </div>  
 
-    <div class="ctrl-card">
-      <div class="section-title">DHW</div>
-      
-      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
-        <div class="ctrl-row" style="border-bottom: none; padding: 0;"><span class="ctrl-label">Force DHW Now</span><label class="toggle-wrap"><input type="checkbox" id="sw-fdhw" onchange="sendSwitch('force_dhw', this.checked)"><span class="toggle-slider"></span></label></div>
-      </div>
-
-      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="stat-row" style="margin-top: 0;">
-          <div class="stat-item"><span class="stat-label">Setpoint</span><span class="stat-value" id="dhw-setpoint">—</span></div>
-          <div class="stat-item"><span class="stat-label">Drop</span><span class="stat-value" id="dhw-drop">—</span></div>
-          <div class="stat-item"><span class="stat-label">Consumed</span><span class="stat-value" id="dhw-cons">—</span></div>
-          <div class="stat-item"><span class="stat-label">Produced</span><span class="stat-value" id="dhw-prod">—</span></div>
-        </div>
-      </div>
-
-      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
-          <div><div class="stat-label">Tank Temp</div><div class="big-temp" id="dhw-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Target</div><div class="stepper"><button class="step-btn" onclick="step('dhw-sp', -0.5)">−</button><div class="step-val" id="dhw-sp-val">—</div><button class="step-btn" onclick="step('dhw-sp', +0.5)">+</button></div></div>
-        </div>
-        <button class="send-btn" onclick="sendDHW(this)" style="margin-bottom:0;">Apply DHW</button>
-      </div>
-    </div>
-    
     <div class="ctrl-card" id="card-server-control">
       <div class="section-title">Server Control</div>
 
@@ -3011,6 +3028,82 @@ document.addEventListener('touchstart', function(e) {
   }
 }, { passive: true });
 
+function initSettingsDragAndDrop() {
+  const container = document.getElementById('settings-card-container');
+  if (!container) return;
+
+  // 1. Restore the saved order from LocalStorage
+  const savedOrder = JSON.parse(localStorage.getItem('settingsCardOrder'));
+  if (savedOrder && Array.isArray(savedOrder)) {
+    savedOrder.forEach(id => {
+      const el = document.getElementById(id);
+      // Append moves the element to the end of the container, reordering them
+      if (el) container.appendChild(el); 
+    });
+  }
+
+  // 2. Setup Drag and Drop event listeners
+  const cards = container.querySelectorAll('.ctrl-card');
+  let draggedCard = null;
+
+  cards.forEach(card => {
+    const title = card.querySelector('.section-title');
+    
+    // Only allow dragging from the title area to protect inputs/sliders
+    if (title) {
+      const makeDraggable = () => card.setAttribute('draggable', 'true');
+      const makeUndraggable = () => card.removeAttribute('draggable');
+      
+      title.addEventListener('mouseenter', makeDraggable);
+      title.addEventListener('mouseleave', makeUndraggable);
+      title.addEventListener('touchstart', makeDraggable, {passive: true});
+      title.addEventListener('touchend', makeUndraggable, {passive: true});
+    }
+
+    card.addEventListener('dragstart', (e) => {
+      draggedCard = card;
+      // setTimeout ensures the drag image captures the normal state before applying transparency
+      setTimeout(() => card.classList.add('dragging'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.id);
+    });
+
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      draggedCard = null;
+      card.removeAttribute('draggable');
+      
+      // Save the new DOM order to LocalStorage
+      const newOrder = Array.from(container.querySelectorAll('.ctrl-card')).map(c => c.id);
+      localStorage.setItem('settingsCardOrder', JSON.stringify(newOrder));
+    });
+
+    card.addEventListener('dragover', (e) => {
+      e.preventDefault(); // Required to allow dropping
+      if (!draggedCard || card === draggedCard) return;
+
+      const rect = card.getBoundingClientRect();
+      const isGridMulticolumn = window.innerWidth > 768; 
+
+      // Determine whether to insert before or after the hovered card
+      let insertBefore = false;
+      if (isGridMulticolumn) {
+        // Multi-column grid logic (Desktop)
+        insertBefore = e.clientX < rect.left + rect.width / 2;
+      } else {
+        // Single column stack logic (Mobile)
+        insertBefore = e.clientY < rect.top + rect.height / 2;
+      }
+
+      if (insertBefore) {
+        container.insertBefore(draggedCard, card);
+      } else {
+        container.insertBefore(draggedCard, card.nextSibling);
+      }
+    });
+  });
+}
+
 (function loadChartJS() {
   const s = document.createElement('script');
   s.src = '/js/chart.js';
@@ -3023,6 +3116,7 @@ document.addEventListener('touchstart', function(e) {
       
       z.onload = async () => {
         initCharts(); 
+        initSettingsDragAndDrop();
         await loadServerHistory(); 
         fetchState(); 
         startLog(); 
