@@ -89,6 +89,9 @@ select:
           if (index.has_value() && index.value() != active_index.value()) {
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(index.value()), esphome::ecodan::Zone::ZONE_1);
           }
+ecodan:
+  id: ecodan_instance
+  operating_mode_z1: heatpump_select_operating_mode
 
 text_sensor:
   - platform: template

@@ -34,6 +34,26 @@ namespace ecodan
         return fault_code;
     }
 
+    inline void sync_mode_select(select::Select* select_cmp, Status::HpMode current_mode) {
+        if (select_cmp == nullptr)
+            return;
+
+        // Do not update the select box if the zone is OFF
+        if (current_mode == Status::HpMode::OFF) {
+            ESP_LOGD(TAG, "Zone is OFF, skipping select component update.");
+            return;
+        }
+
+        const auto &options = select_cmp->traits.get_options();
+        size_t index = static_cast<size_t>(current_mode);
+
+        if (index < options.size()) {
+            select_cmp->publish_state(std::string(options[index]));
+        } else {
+            ESP_LOGW(TAG, "Received unknown mode index: %zu", index);
+        }
+    }
+
     void EcodanHeatpump::handle_get_response(Message& res)
     {
         switch (res.payload_type<GetType>())
@@ -372,6 +392,13 @@ namespace ecodan
             status.HeatingCoolingModeZone2 = static_cast<Status::HpMode>(res[7]);
             status.DhwFlowTemperatureSetPoint = res.get_float16(8);
             //status.RadiatorFlowTemperatureSetPoint = res.get_float16(12);
+
+            // update operating mode selections
+            if (this->selects.count("operating_mode_z1"))
+                sync_mode_select(this->selects["operating_mode_z1"], status.HeatingCoolingMode);
+    
+            if (this->selects.count("operating_mode_z2"))
+                sync_mode_select(this->selects["operating_mode_z2"], status.HeatingCoolingModeZone2);
 
             publish_state("status_power", status.Power == Status::PowerMode::ON);
             publish_state("status_dhw_eco", status.HotWaterMode == Status::DhwMode::ECO);

@@ -3,6 +3,9 @@ import esphome.config_validation as cv
 from esphome.components import climate, uart
 from esphome import pins
 from esphome.const import CONF_ID
+import esphome.codegen as cg
+import esphome.config_validation as cv
+from esphome.components import select
 
 CODEOWNERS = ["@gekkekoe"]
 
@@ -12,6 +15,9 @@ CONF_ECODAN_ID = "ecodan_id"
 CONF_PROXY_UART_ID = "proxy_uart_id"
 CONF_SPECIFIC_HEAT_CONSTANT = "specific_heat_constant_override"
 CONF_POLLING_INTERVAL_OVERRIDE = "polling_interval_override"
+CONF_OPERATING_MODE_Z1 = "operating_mode_z1"
+CONF_OPERATING_MODE_Z2 = "operating_mode_z2"
+
 
 uart_ns = cg.esphome_ns.namespace("uart")
 UARTComponent = uart_ns.class_("UARTComponent")
@@ -27,6 +33,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_PROXY_UART_ID): cv.use_id(UARTComponent),
         cv.Optional(CONF_SPECIFIC_HEAT_CONSTANT): cv.float_,
         cv.Optional(CONF_POLLING_INTERVAL_OVERRIDE): cv.uint32_t,
+        cv.Optional(CONF_OPERATING_MODE_Z1): cv.use_id(select.Select),
+        cv.Optional(CONF_OPERATING_MODE_Z2): cv.use_id(select.Select),
     }
     ).extend(cv.polling_component_schema('500ms')
     .extend(uart.UART_DEVICE_SCHEMA))
@@ -43,3 +51,11 @@ async def to_code(config):
         cg.add(hp.set_specific_heat_constant(config[CONF_SPECIFIC_HEAT_CONSTANT]))
     if CONF_POLLING_INTERVAL_OVERRIDE in config:
         cg.add(hp.set_polling_interval(config[CONF_POLLING_INTERVAL_OVERRIDE]))
+    
+    if CONF_OPERATING_MODE_Z1 in config:
+        sel = await cg.get_variable(config[CONF_OPERATING_MODE_Z1])
+        cg.add(hp.register_select(CONF_OPERATING_MODE_Z1, sel))
+        
+    if CONF_OPERATING_MODE_Z2 in config:
+        sel = await cg.get_variable(config[CONF_OPERATING_MODE_Z2])
+        cg.add(hp.register_select(CONF_OPERATING_MODE_Z2, sel))

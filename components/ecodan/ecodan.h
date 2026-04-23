@@ -14,6 +14,7 @@
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#include "esphome/components/select/select.h"
 #include "esphome/components/thermostat/thermostat_climate.h"
 
 #include "freertos/FreeRTOS.h"
@@ -60,6 +61,11 @@ namespace ecodan
             }
         }
 
+        void register_select(const std::string &key, select::Select *obj) {
+            if (obj != nullptr) 
+                this->selects[key] = obj;
+        }
+
         void enable_request_code_sensors() {
             hasRequestCodeSensors = true;
         }
@@ -94,6 +100,7 @@ namespace ecodan
         std::map<std::string, sensor::Sensor*> sensors;
         std::map<std::string, text_sensor::TextSensor*> textSensors;
         std::map<std::string, binary_sensor::BinarySensor*> binarySensors;
+        std::map<std::string, select::Select*> selects;
 
         // publish func
         void publish_state(const std::string& sensorKey, float sensorValue);
