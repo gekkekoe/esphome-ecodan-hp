@@ -69,6 +69,14 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("sw_use_solver_id"):                   cv.use_id(switch.Switch),
         cv.Optional("sw_show_solver_tab_id"):              cv.use_id(switch.Switch),
 
+        # Server control
+        cv.Optional("sw_server_control_id"):               cv.use_id(switch.Switch),
+        cv.Optional("sw_sc_prohibit_dhw_id"):              cv.use_id(switch.Switch),
+        cv.Optional("sw_sc_prohibit_z1_heating_id"):       cv.use_id(switch.Switch),
+        cv.Optional("sw_sc_prohibit_z1_cooling_id"):       cv.use_id(switch.Switch),
+        cv.Optional("sw_sc_prohibit_z2_heating_id"):       cv.use_id(switch.Switch),
+        cv.Optional("sw_sc_prohibit_z2_cooling_id"):       cv.use_id(switch.Switch),
+
         cv.Optional("sel_heating_system_type_id"):         cv.use_id(select.Select),
         cv.Optional("sel_room_temp_source_z1_id"):         cv.use_id(select.Select),
         cv.Optional("sel_room_temp_source_z2_id"):         cv.use_id(select.Select),
@@ -217,6 +225,14 @@ async def to_code(config):
         ("num_cooling_smart_start_z1_id",     "set_num_cooling_smart_start_z1"),
         ("num_min_cooling_flow_z1_id",        "set_num_min_cooling_flow_z1"),
         ("sw_show_solver_tab_id",             "set_sw_show_solver_tab"), 
+
+        # Server control
+        ("sw_server_control_id",              "set_sw_server_control"),
+        ("sw_sc_prohibit_dhw_id",             "set_sw_sc_prohibit_dhw"),
+        ("sw_sc_prohibit_z1_heating_id",      "set_sw_sc_prohibit_z1_heating"),
+        ("sw_sc_prohibit_z1_cooling_id",      "set_sw_sc_prohibit_z1_cooling"),
+        ("sw_sc_prohibit_z2_heating_id",      "set_sw_sc_prohibit_z2_heating"),
+        ("sw_sc_prohibit_z2_cooling_id",      "set_sw_sc_prohibit_z2_cooling"),
     ]
 
     for conf_key, setter in pairs:

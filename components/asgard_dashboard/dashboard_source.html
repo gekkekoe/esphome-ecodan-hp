@@ -657,6 +657,62 @@ header {
         <button class="send-btn" onclick="sendDHW(this)" style="margin-bottom:0;">Apply DHW</button>
       </div>
     </div>
+    
+    <div class="ctrl-card" id="card-server-control">
+      <div class="section-title">Server Control</div>
+
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Ecodan Server Control</div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Enable Server Control</span>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="sw-sc-enable" onchange="onServerControlToggle(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div id="sc-prohibit-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Prohibit Controls</div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Prohibit DHW</span>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="sw-sc-prohibit-dhw" onchange="sendSwitch('server_control_prohibit_dhw', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Prohibit Z1 Heating</span>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="sw-sc-prohibit-z1-heat" onchange="sendSwitch('server_control_prohibit_z1_heating', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="ctrl-row" id="sc-prohibit-z1-cool-row">
+          <span class="ctrl-label">Prohibit Z1 Cooling</span>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="sw-sc-prohibit-z1-cool" onchange="sendSwitch('server_control_prohibit_z1_cooling', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="sc-z2-prohibits" style="display:none;">
+          <div class="ctrl-row">
+            <span class="ctrl-label">Prohibit Z2 Heating</span>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="sw-sc-prohibit-z2-heat" onchange="sendSwitch('server_control_prohibit_z2_heating', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">Prohibit Z2 Cooling</span>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="sw-sc-prohibit-z2-cool" onchange="sendSwitch('server_control_prohibit_z2_cooling', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div>
 </div>
@@ -2302,6 +2358,23 @@ function render(d) {
   const elPerfDhw = document.getElementById('icon-perf-dhw');
   if(elPerfDhw) elPerfDhw.classList.toggle('anim-pulse', isRunning && isDHW);
 
+  // --- SERVER CONTROL ---
+  if (d.server_control_enabled !== undefined) {
+    const enableCb = document.getElementById('sw-sc-enable');
+    if (enableCb && document.activeElement !== enableCb) enableCb.checked = d.server_control_enabled;
+    const section = document.getElementById('sc-prohibit-section');
+    if (section) section.classList.toggle('disabled-box', !d.server_control_enabled);
+  }
+  if (d.server_control_prohibit_dhw !== undefined)       setToggle('sw-sc-prohibit-dhw',    d.server_control_prohibit_dhw);
+  if (d.server_control_prohibit_z1_heating !== undefined) setToggle('sw-sc-prohibit-z1-heat', d.server_control_prohibit_z1_heating);
+  if (d.server_control_prohibit_z1_cooling !== undefined) setToggle('sw-sc-prohibit-z1-cool', d.server_control_prohibit_z1_cooling);
+  if (d.server_control_prohibit_z2_heating !== undefined) setToggle('sw-sc-prohibit-z2-heat', d.server_control_prohibit_z2_heating);
+  if (d.server_control_prohibit_z2_cooling !== undefined) setToggle('sw-sc-prohibit-z2-cool', d.server_control_prohibit_z2_cooling);
+
+  // Show Z2 prohibit rows only when zone 2 is present
+  const scZ2 = document.getElementById('sc-z2-prohibits');
+  if (scZ2) scZ2.style.display = isZ2 ? 'block' : 'none';
+
   setText('disp-ver', d.latest_version || '—');
   setText('lastUpdate', formatUptime(d._uptime_ms));
 }
@@ -2352,6 +2425,18 @@ async function apiPost(payload) {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);
+}
+
+async function onServerControlToggle(val) {
+  // Update the greyed-out state of the prohibit section immediately
+  const section = document.getElementById('sc-prohibit-section');
+  if (section) {
+    section.classList.toggle('disabled-box', !val);
+  }
+  try {
+    await apiPost({ key: 'server_control_enabled', value: val ? 1 : 0 });
+    showToast('✓ Server Control ' + (val ? 'enabled' : 'disabled'));
+  } catch(e) { showToast('✗ ' + e.message, true); }
 }
 
 async function sendSwitch(key, val) {

@@ -301,6 +301,14 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "use_dynamic_cost_solver")       { doSwitch(sw_use_solver_);    return; }
   if (key == "show_solver_tab_enabled")       { doSwitch(sw_show_solver_tab_); this->odin_nvs_dirty_ = true; return; }
 
+  // Server control
+  if (key == "server_control_enabled")             { doSwitch(sw_server_control_);          return; }
+  if (key == "server_control_prohibit_dhw")        { doSwitch(sw_sc_prohibit_dhw_);         return; }
+  if (key == "server_control_prohibit_z1_heating") { doSwitch(sw_sc_prohibit_z1_heating_);  return; }
+  if (key == "server_control_prohibit_z1_cooling") { doSwitch(sw_sc_prohibit_z1_cooling_);  return; }
+  if (key == "server_control_prohibit_z2_heating") { doSwitch(sw_sc_prohibit_z2_heating_);  return; }
+  if (key == "server_control_prohibit_z2_cooling") { doSwitch(sw_sc_prohibit_z2_cooling_);  return; }
+
   auto doSelect = [&](select::Select *sel) {
     if (!sel) { ESP_LOGW(TAG, "Select not configured"); return; }
     auto call = sel->make_call();
@@ -460,6 +468,14 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.sw_force_dhw = get_sw(sw_force_dhw_);
   current_snapshot_.sw_use_solver = get_sw(sw_use_solver_);
   current_snapshot_.sw_show_solver_tab = get_sw(sw_show_solver_tab_);
+
+  // Server control
+  current_snapshot_.sw_server_control        = get_sw(sw_server_control_);
+  current_snapshot_.sw_sc_prohibit_dhw       = get_sw(sw_sc_prohibit_dhw_);
+  current_snapshot_.sw_sc_prohibit_z1_heating = get_sw(sw_sc_prohibit_z1_heating_);
+  current_snapshot_.sw_sc_prohibit_z1_cooling = get_sw(sw_sc_prohibit_z1_cooling_);
+  current_snapshot_.sw_sc_prohibit_z2_heating = get_sw(sw_sc_prohibit_z2_heating_);
+  current_snapshot_.sw_sc_prohibit_z2_cooling = get_sw(sw_sc_prohibit_z2_cooling_);
 
   // Populate Floats
   current_snapshot_.hp_feed_temp = get_f(hp_feed_temp_);
@@ -745,6 +761,14 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("use_dynamic_cost_solver", snap.sw_use_solver);
   p_b("show_solver_tab",         snap.sw_show_solver_tab);
   p_b("solver_connected",        snap.bin_solver_connected);
+
+  // --- Server control ---
+  p_b("server_control_enabled",          snap.sw_server_control);
+  p_b("server_control_prohibit_dhw",     snap.sw_sc_prohibit_dhw);
+  p_b("server_control_prohibit_z1_heating", snap.sw_sc_prohibit_z1_heating);
+  p_b("server_control_prohibit_z1_cooling", snap.sw_sc_prohibit_z1_cooling);
+  p_b("server_control_prohibit_z2_heating", snap.sw_sc_prohibit_z2_heating);
+  p_b("server_control_prohibit_z2_cooling", snap.sw_sc_prohibit_z2_cooling);
 
   // --- Raw physics EMA numbers ---
   p_n("raw_heat_produced",      snap.num_raw_heat_produced.val);

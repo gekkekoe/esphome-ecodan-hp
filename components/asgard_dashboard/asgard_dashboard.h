@@ -137,6 +137,14 @@ struct DashboardSnapshot {
   bool sw_use_solver{false};
   bool sw_show_solver_tab{false};
   bool bin_solver_connected{false};
+
+  // Server control
+  bool sw_server_control{false};
+  bool sw_sc_prohibit_dhw{false};
+  bool sw_sc_prohibit_z1_heating{false};
+  bool sw_sc_prohibit_z1_cooling{false};
+  bool sw_sc_prohibit_z2_heating{false};
+  bool sw_sc_prohibit_z2_cooling{false};
   
   NumData num_raw_heat_produced;
   NumData num_raw_elec_consumed;
@@ -216,6 +224,14 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_sw_smart_boost(switch_::Switch *s)                 { sw_smart_boost_ = s; }
   void set_sw_force_dhw(switch_::Switch *s)                   { sw_force_dhw_ = s; } 
   void set_pred_sc_switch(switch_::Switch *s)                 { pred_sc_switch_ = s; }
+
+  // Server control
+  void set_sw_server_control(switch_::Switch *s)              { sw_server_control_ = s; }
+  void set_sw_sc_prohibit_dhw(switch_::Switch *s)             { sw_sc_prohibit_dhw_ = s; }
+  void set_sw_sc_prohibit_z1_heating(switch_::Switch *s)      { sw_sc_prohibit_z1_heating_ = s; }
+  void set_sw_sc_prohibit_z1_cooling(switch_::Switch *s)      { sw_sc_prohibit_z1_cooling_ = s; }
+  void set_sw_sc_prohibit_z2_heating(switch_::Switch *s)      { sw_sc_prohibit_z2_heating_ = s; }
+  void set_sw_sc_prohibit_z2_cooling(switch_::Switch *s)      { sw_sc_prohibit_z2_cooling_ = s; }
 
   // Selects
   void set_sel_heating_system_type(select::Select *s)         { sel_heating_system_type_ = s; }
@@ -424,6 +440,14 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   switch_::Switch *sw_use_solver_{nullptr};
   switch_::Switch *sw_show_solver_tab_{nullptr};
   binary_sensor::BinarySensor *bin_solver_connected_{nullptr};
+
+  // Server control switches
+  switch_::Switch *sw_server_control_{nullptr};
+  switch_::Switch *sw_sc_prohibit_dhw_{nullptr};
+  switch_::Switch *sw_sc_prohibit_z1_heating_{nullptr};
+  switch_::Switch *sw_sc_prohibit_z1_cooling_{nullptr};
+  switch_::Switch *sw_sc_prohibit_z2_heating_{nullptr};
+  switch_::Switch *sw_sc_prohibit_z2_cooling_{nullptr};
   text::Text *txt_solver_ip_{nullptr};
   select::Select *solver_kwh_meter_feedback_source_{nullptr};
   number::Number *solver_kwh_meter_feedback_{nullptr};
