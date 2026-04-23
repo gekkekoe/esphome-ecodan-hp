@@ -3,6 +3,55 @@ http_request:
   timeout: 3s
 
 script:
+  - id: odin_ping_script
+    mode: single
+    then:
+      - if:
+          condition:
+            lambda: |-
+              // 1. Check if the solver is allowed to run
+              if (!id(sw_use_solver).state) {
+                if (id(bin_solver_connected).state) id(bin_solver_connected).publish_state(false);
+                return false;
+              }
+
+              // 2. Pause ping if an optimization data fetch is running
+              if (id(fetch_odin_optimization).is_running() || id(fetch_odin_optimization_attempt).is_running()) {
+                return false;
+              }
+
+              // 3. Dynamic timer (5 min if online, 1 min if offline)
+              static uint32_t last_ping_time = 0;
+              uint32_t now = millis();
+              if (id(bin_solver_connected).state && last_ping_time != 0 && (now - last_ping_time < 300000)) {
+                return false;
+              }
+              last_ping_time = now;
+              return true;
+
+          then:
+            - http_request.get:
+                url: !lambda |-
+                  std::string target = id(txt_solver_ip).state;
+                  if (target == "" || target == "0.0.0.0") target = "odin.local";
+                  return "http://" + target + "/api/version";
+                request_headers:
+                  Connection: close
+                on_response:
+                  then:
+                    - lambda: |-
+                        if (!id(bin_solver_connected).state) {
+                          id(bin_solver_connected).publish_state(true);
+                          ESP_LOGI("asgard_dashboard", "ODIN server is now ONLINE.");
+                        }
+                on_error:
+                  then:
+                    - lambda: |-
+                        if (id(bin_solver_connected).state) {
+                          id(bin_solver_connected).publish_state(false);
+                          ESP_LOGW("asgard_dashboard", "ODIN server is OFFLINE.");
+                        }
+
   - id: fetch_odin_optimization
     mode: single
     then:
@@ -35,7 +84,7 @@ script:
       - if:
           condition:
             - switch.is_on: sw_use_solver
-            - lambda: 'return id(optimizer_ptr)->get_current_ecodan_hour() >= 0 && id(bin_solver_connected).state && id(txt_solver_ip).state != "0.0.0.0" && id(txt_solver_ip).state != "";'
+            - lambda: 'return id(optimizer_ptr)->get_current_ecodan_hour() >= 0 && id(bin_solver_connected).state && id(txt_solver_ip).state != "0.0.0.0" && id(txt_solver_ip).state != "" && !id(odin_ping_script).is_running();'
           then:
             - http_request.post:
                 url: !lambda 'return "http://" + id(txt_solver_ip).state + "/api/solve";'
@@ -284,51 +333,5 @@ interval:
           }
 
   - interval: 60s
-    id: odin_ping_interval
     then:
-      - if:
-          condition:
-            lambda: |-
-              // 1. Check if the solver is allowed to run
-              if (!id(sw_use_solver).state) {
-                if (id(bin_solver_connected).state) id(bin_solver_connected).publish_state(false);
-                return false; // Stop ping
-              }
-
-              // 2. Pause ping if an optimization data fetch is running
-              if (id(fetch_odin_optimization).is_running() || id(fetch_odin_optimization_attempt).is_running()) {
-                return false; // Stop ping
-              }
-              
-              // 3. Dynamic timer (5 min if online, 1 min if offline)
-              static uint32_t last_ping_time = 0;
-              uint32_t now = millis();
-              if (id(bin_solver_connected).state && last_ping_time != 0 && (now - last_ping_time < 300000)) {
-                return false; // Stop ping, we are online and 5 minutes haven't passed yet
-              }
-              last_ping_time = now; // Proceed with ping, update the timer
-              
-              // We hoeven het IP niet meer handmatig op te lossen met getaddrinfo!
-              // We geven de URL gewoon direct door aan http_request, die lost het op de achtergrond op.
-              return true;
-
-          then:
-            - http_request.get:
-                url: !lambda |-
-                  std::string target = id(txt_solver_ip).state;
-                  if (target == "" || target == "0.0.0.0") target = "odin.local";
-                  return "http://" + target + "/api/version";
-                on_response:
-                  then:
-                    - lambda: |-
-                        if (!id(bin_solver_connected).state) {
-                          id(bin_solver_connected).publish_state(true);
-                          ESP_LOGI("asgard_dashboard", "ODIN server is now ONLINE.");
-                        }
-                on_error:
-                  then:
-                    - lambda: |-
-                        if (id(bin_solver_connected).state) {
-                          id(bin_solver_connected).publish_state(false);
-                          ESP_LOGW("asgard_dashboard", "ODIN server is OFFLINE.");
-                        }
+      - script.execute: odin_ping_script
