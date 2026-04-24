@@ -23,10 +23,9 @@ namespace esphome
                 this->state_.status_short_cycle_lockout->state) return true;
             
             if (status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON ||
-                status.Operation == esphome::ecodan::Status::OperationMode::FROST_PROTECT ||
                 status.Operation == esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION)
             {
-                //ESP_LOGD(OPTIMIZER_TAG, "System is busy (DHW, Frost, etc.)");
+                //ESP_LOGD(OPTIMIZER_TAG, "System is busy (DHW, etc.)");
                 return true;
             }
             return false;
