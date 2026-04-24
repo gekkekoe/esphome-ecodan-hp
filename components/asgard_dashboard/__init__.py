@@ -85,6 +85,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("sel_temp_source_z1_id"):              cv.use_id(select.Select),
         cv.Optional("sel_temp_source_z2_id"):              cv.use_id(select.Select),
         cv.Optional("solver_kwh_meter_feedback_source_id"): cv.use_id(select.Select),
+        cv.Optional("solver_dhw_mode_id"):                 cv.use_id(select.Select),
 
         cv.Optional("num_aa_setpoint_bias_id"):            cv.use_id(number.Number),
         cv.Optional("num_max_flow_temp_id"):               cv.use_id(number.Number),
@@ -219,7 +220,8 @@ async def to_code(config):
         ("num_raw_hl_tm_product_id",          "set_num_raw_hl_tm_product"),
         ("num_raw_solar_factor_id",           "set_num_raw_solar_factor"),
         ("solver_kwh_meter_feedback_source_id", "set_solver_kwh_meter_feedback_source"),
-        ("solver_kwh_meter_feedback_id", "set_solver_kwh_meter_feedback"),
+        ("solver_dhw_mode_id",                "set_solver_dhw_mode"),
+        ("solver_kwh_meter_feedback_id",      "set_solver_kwh_meter_feedback"),
         ("num_battery_soc_kwh_id",            "set_num_battery_soc_kwh"),
         ("num_battery_max_discharge_kw_id",   "set_num_battery_max_discharge_kw"),
         ("num_cooling_smart_start_z1_id",     "set_num_cooling_smart_start_z1"),

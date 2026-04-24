@@ -178,6 +178,10 @@ substitutions:
   solver_kwh_meter_option_internal: Interný elektromer
   solver_kwh_meter_feedback: Spätná väzba elektromera
 
+  solver_dhw_mode: Režim TÚV solvera
+  solver_dhw_mode_option_regular: Bežný
+  solver_dhw_mode_option_forced: Vynútený
+
   asgard_vt_temp_sensor_source: Zdroj virtuálneho termostatu
 
   # solver settings

@@ -327,6 +327,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "operating_mode_z2")     { doSelect(sel_operating_mode_z2_); return; }
   if (key == "temp_sensor_source_z1") { doSelect(sel_temp_source_z1_); return; } 
   if (key == "temp_sensor_source_z2") { doSelect(sel_temp_source_z2_); return; } 
+  if (key == "solver_dhw_mode")       { doSelect(solver_dhw_mode_); return; }
 
   auto doNumber = [&](number::Number *n) {
     if (!n) { ESP_LOGW(TAG, "Number not configured"); return; }
@@ -497,6 +498,7 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.dhw_consumed = get_f(dhw_consumed_);
   current_snapshot_.dhw_delivered = get_f(dhw_delivered_);
   current_snapshot_.dhw_cop = get_f(dhw_cop_);
+  current_snapshot_.solver_dhw_mode = get_sel(solver_dhw_mode_);
 
   current_snapshot_.heating_consumed = get_f(heating_consumed_);
   current_snapshot_.heating_produced = get_f(heating_produced_);
@@ -761,6 +763,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("use_dynamic_cost_solver", snap.sw_use_solver);
   p_b("show_solver_tab",         snap.sw_show_solver_tab);
   p_b("solver_connected",        snap.bin_solver_connected);
+  p_sel("solver_dhw_mode", snap.solver_dhw_mode);
 
   // --- Server control ---
   p_b("server_control_enabled",          snap.sw_server_control);

@@ -168,6 +168,10 @@ substitutions:
   solver_kwh_meter_option_internal: "Wewnętrzny licznik energii"
   solver_kwh_meter_feedback: "Sprzężenie zwrotne licznika"
 
+  solver_dhw_mode: Tryb CWU solvera
+  solver_dhw_mode_option_regular: Normalny
+  solver_dhw_mode_option_forced: Wymuszony
+
   asgard_vt_temp_sensor_source: 'Źródło Wirtualnego Termostatu'
 
   sw_use_solver: "Włącz dynamiczny kalkulator kosztów"

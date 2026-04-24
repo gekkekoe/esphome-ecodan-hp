@@ -168,6 +168,10 @@ substitutions:
   solver_kwh_meter_option_internal: "Intern energimåler"
   solver_kwh_meter_feedback: "kWh-måler tilbakemelding"
 
+  solver_dhw_mode: Solver varmtvannsmodus
+  solver_dhw_mode_option_regular: Normal
+  solver_dhw_mode_option_forced: Tvunget
+
   asgard_vt_temp_sensor_source: 'Kilde Virtuell Termostat'
 
   sw_use_solver: "Aktiver dynamisk kostnadsberegner"

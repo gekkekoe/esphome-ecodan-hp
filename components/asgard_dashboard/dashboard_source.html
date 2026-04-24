@@ -123,7 +123,8 @@ header {
     color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; 
     cursor: pointer; outline: none; 
     flex: 1; max-width: 220px; margin-left: 10px;
-    text-align: left; 
+    text-align: right;
+    text-align-last: right; /* This forces Safari/Chrome to respect the alignment */
   }
   .ctrl-select:focus { border-color: var(--accent); }
   
@@ -583,7 +584,24 @@ header {
       <div class="section-title">DHW</div>
       
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
-        <div class="ctrl-row" style="border-bottom: none; padding: 0;"><span class="ctrl-label">Force DHW Now</span><label class="toggle-wrap"><input type="checkbox" id="sw-fdhw" onchange="sendSwitch('force_dhw', this.checked)"><span class="toggle-slider"></span></label></div>
+        
+        <div class="ctrl-row" style="border-bottom: 1px solid var(--border); padding: 0 0 12px 0;">
+          <span class="ctrl-label">Force DHW Now</span>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="sw-fdhw" onchange="sendSwitch('force_dhw', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+        <div class="ctrl-row" style="border-bottom: none; padding: 12px 0 0 0;">
+          <span class="ctrl-label param-label">Trigger Regular DHW<span class="tip-icon">?</span>
+          <span class="tip-box">Temporarily bumps the DHW target by max drop + 1°C to trigger a normal DHW heating cycle.</span></span>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="sw-regular-dhw" onchange="sendBool('sw_regular_dhw', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
       </div>
 
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
@@ -761,7 +779,7 @@ header {
         </div>
       </div>
 
-      <div class="ctrl-row" style="border-bottom: none;">
+      <div class="ctrl-row">
         <span class="ctrl-label param-label">DHW Threshold<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>If DHW temp drops below (Target - Drop) + Threshold, Odin schedules DHW during a cheap/sunny hour. 0 = disabled.</span></span>
         <div class="stepper">
           <button class="step-btn" onclick="step('dhw-thresh', -0.5)">−</button>
@@ -769,6 +787,15 @@ header {
           <button class="step-btn" onclick="step('dhw-thresh', +0.5)">+</button>
           <button class="step-btn" style="margin-left: 6px; border-color: var(--accent); color: var(--accent);" onclick="sendOdinThresh(this)" title="Apply Threshold">✓</button>
         </div>
+      </div>
+      
+      <div class="ctrl-row" style="border-bottom: none;">
+        <span class="ctrl-label param-label">ODIN DHW Trigger<span class="tip-icon">?</span><span class="tip-box">
+          <span class="tip-unit">Mode</span>Method used when ODIN schedules DHW. Regular bumps the setpoint by max drop + 1°C, Forced is faster but at the cost of higher consumption</span></span>
+        <select class="ctrl-select" id="sel-odin-dhw-mode" onchange="sendSelect('solver_dhw_mode', this)">
+          <option>Regular</option>
+          <option>Forced</option>
+        </select>
       </div>
       
       <div id="run-solver-row" style="display:none; margin-top: 12px; gap: 8px; align-items: stretch; flex-wrap: nowrap;">
@@ -2212,6 +2239,7 @@ function render(d) {
   setText('dhw-prod',     fmt1(d.dhw_delivered) + ' kWh');
   seedPending('dhw-sp', d.dhw_flow_temp_target);
   setToggle('sw-fdhw', d.force_dhw); 
+  setToggle('sw-regular-dhw', d.sw_regular_dhw);
 
   setText('perf-h-in',  fmt2(d.heating_consumed));
   setText('perf-h-out', fmt2(d.heating_produced));
@@ -2274,6 +2302,7 @@ function render(d) {
   setSelect('sel-z2mode', d.operating_mode_z2);
   setSelect('sel-z1ts',   d.temp_sensor_source_z1);
   setSelect('sel-z2ts',   d.temp_sensor_source_z2);
+  setSelect('sel-odin-dhw-mode', d.solver_dhw_mode);
   
   updateDot('dot-z1', d.z1_action);
   updateDot('dot-room-z1', d.room_z1_action);

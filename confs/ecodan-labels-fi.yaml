@@ -169,6 +169,10 @@ substitutions:
   solver_kwh_meter_option_internal: "Sisäinen energiamittari"
   solver_kwh_meter_feedback: "kWh-mittarin palaute"
 
+  solver_dhw_mode: Ratkaisimen käyttövesitila
+  solver_dhw_mode_option_regular: Normaali
+  solver_dhw_mode_option_forced: Pakotettu
+
   asgard_vt_temp_sensor_source: 'Virtuaalisen Termostaatin Lähde'
 
   sw_use_solver: "Ota käyttöön dynaaminen kustannusratkaisija"

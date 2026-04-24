@@ -169,6 +169,10 @@ substitutions:
   solver_kwh_meter_option_internal: "Interne energiemeter"
   solver_kwh_meter_feedback: "kWh-meter terugkoppeling"
 
+  solver_dhw_mode: Solver tapwatermodus
+  solver_dhw_mode_option_regular: Normaal
+  solver_dhw_mode_option_forced: Geforceerd
+
   asgard_vt_temp_sensor_source: 'Bron Virtuele Thermostaat'
 
   sw_use_solver: "Activeer Dynamische Kosten Solver"

@@ -285,3 +285,14 @@ select:
             id(idx_z1) = 0; 
             id(ow_sel_z1).publish_state("None"); 
           }
+
+  # --- Odin DHW mode selection ---
+  - platform: template
+    id: solver_dhw_mode
+    name: ${solver_dhw_mode}
+    optimistic: true
+    restore_value: true
+    options:
+      - ${solver_dhw_mode_option_regular}
+      - ${solver_dhw_mode_option_forced}
+    initial_option: ${solver_dhw_mode_option_regular}

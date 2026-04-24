@@ -64,8 +64,9 @@ asgard_dashboard:
   # ── Selects 
   sel_heating_system_type_id:        heating_system_type 
   sel_room_temp_source_z1_id:        temperature_feedback_source_z1
-  operating_mode_z1_id: heatpump_select_operating_mode
-  sel_temp_source_z1_id: asgard_vt_temp_sensor_source_z1
+  operating_mode_z1_id:              heatpump_select_operating_mode
+  sel_temp_source_z1_id:             asgard_vt_temp_sensor_source_z1
+  solver_dhw_mode_id:                solver_dhw_mode
  
   # ── Numbers 
   num_aa_setpoint_bias_id:           auto_adaptive_setpoint_bias

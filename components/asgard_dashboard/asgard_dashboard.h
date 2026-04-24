@@ -84,6 +84,7 @@ struct DashboardSnapshot {
   float dhw_consumed{NAN};
   float dhw_delivered{NAN};
   float dhw_cop{NAN};
+  int solver_dhw_mode{-1};
 
   float heating_consumed{NAN};
   float heating_produced{NAN};
@@ -193,6 +194,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_dhw_consumed(sensor::Sensor *s)                    { dhw_consumed_ = s; }
   void set_dhw_delivered(sensor::Sensor *s)                   { dhw_delivered_ = s; }
   void set_dhw_cop(sensor::Sensor *s)                         { dhw_cop_ = s; }
+  void set_solver_dhw_mode(select::Select *s)                 { solver_dhw_mode_ = s; }
 
   void set_heating_consumed(sensor::Sensor *s)                { heating_consumed_ = s; }
   void set_heating_produced(sensor::Sensor *s)                { heating_produced_ = s; }
@@ -408,6 +410,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   select::Select *sel_operating_mode_z2_{nullptr};
   select::Select *sel_temp_source_z1_{nullptr};
   select::Select *sel_temp_source_z2_{nullptr};
+  select::Select *solver_dhw_mode_{nullptr};
 
   // Numbers
   number::Number *num_aa_setpoint_bias_{nullptr};

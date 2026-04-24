@@ -66,6 +66,7 @@ namespace esphome
         esphome::switch_::Switch *sw_odin_override_z1{nullptr};
         esphome::switch_::Switch *sw_odin_override_z2{nullptr};
         esphome::switch_::Switch *sw_force_dhw{nullptr};
+        esphome::switch_::Switch *sw_regular_dhw{nullptr};
 
         esphome::binary_sensor::BinarySensor *status_short_cycle_lockout;
         esphome::binary_sensor::BinarySensor *status_predictive_boost_active;
@@ -109,6 +110,7 @@ namespace esphome
         esphome::select::Select *temperature_feedback_source_z2;
         esphome::select::Select *lockout_duration;
         esphome::select::Select *solver_kwh_meter_feedback_source;
+        esphome::select::Select *solver_dhw_mode{nullptr};
 
         esphome::thermostat::ThermostatClimate *asgard_vt_z1;
         esphome::thermostat::ThermostatClimate *asgard_vt_z2;

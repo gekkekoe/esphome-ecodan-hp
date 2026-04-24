@@ -177,6 +177,9 @@ substitutions:
   solver_kwh_meter_feedback_source: Energy Meter Source
   solver_kwh_meter_option_internal: Internal Energy Meter
   solver_kwh_meter_feedback: kWh meter feedback
+  solver_dhw_mode: Solver DHW Mode
+  solver_dhw_mode_option_regular: Regular
+  solver_dhw_mode_option_forced: Forced
 
   asgard_vt_temp_sensor_source: Virtual Thermostat Source
 

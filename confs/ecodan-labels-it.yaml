@@ -169,6 +169,10 @@ substitutions:
   solver_kwh_meter_option_internal: "Contatore interno"
   solver_kwh_meter_feedback: "Feedback contatore kWh"
 
+  solver_dhw_mode: Modalità ACS del Solver
+  solver_dhw_mode_option_regular: Normale
+  solver_dhw_mode_option_forced: Forzato
+
   asgard_vt_temp_sensor_source: 'Sorgente Termostato Virtuale'
 
   sw_use_solver: "Abilita risolutore di costi dinamici"

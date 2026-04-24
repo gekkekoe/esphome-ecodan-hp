@@ -718,7 +718,7 @@ script:
           then:
             - logger.log:
                 format: "DHW is already running. Skipping script."
-                tag: "ecodan"
+                tag: "asgard"
                 level: INFO
             - switch.turn_off: heatpump_switch_regular_dhw
             - script.stop: trigger_dhw_script
@@ -738,7 +738,7 @@ script:
             # Increase dhw setpoint to trigger regular dhw (compensating for the drop)
             - logger.log:
                 format: "Triggering DHW: Setting temporary target."
-                tag: "ecodan"
+                tag: "asgard"
                 level: INFO
             - climate.control:
                 id: heatpump_climate_dhw
@@ -754,7 +754,7 @@ script:
             # Restore old setpoint
             - logger.log:
                 format: "DHW started. Restoring the original target temperature."
-                tag: "ecodan"
+                tag: "asgard"
                 level: INFO
             - climate.control:
                 id: heatpump_climate_dhw
