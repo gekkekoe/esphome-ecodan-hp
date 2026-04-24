@@ -24,6 +24,7 @@ substitutions:
   version: ESP Versione
   led_brightness: LED Luminosità
   led_switch: LED
+  heatpump_switch_regular_dhw: ACS normale
   heatpump_switch_force_dhw: Forza ACS
   heatpump_switch_power_mode: Ecodan
   heatpump_switch_holiday: Modalità Vacanza

@@ -24,6 +24,7 @@ substitutions:
   version: ESP versie
   led_brightness: Led helderheid
   led_switch: Led schakelaar
+  heatpump_switch_regular_dhw: Normaal sww
   heatpump_switch_force_dhw: Forceer sww
   heatpump_switch_power_mode: Warmtepomp
   heatpump_switch_holiday: Vakantie modus

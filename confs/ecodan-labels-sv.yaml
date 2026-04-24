@@ -25,6 +25,7 @@ substitutions:
   version: ESP version
   led_brightness: LED ljusstyrka
   led_switch: LED
+  heatpump_switch_regular_dhw: Normalt varmvatten
   heatpump_switch_force_dhw: Tvinga varmvatten
   heatpump_switch_power_mode: Värmepump
   heatpump_switch_holiday: Semesterläge kontroll

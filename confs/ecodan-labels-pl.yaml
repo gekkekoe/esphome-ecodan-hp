@@ -24,6 +24,7 @@ substitutions:
   version: Wersja ESP
   led_brightness: Jasność LED
   led_switch: LED
+  heatpump_switch_regular_dhw: Normalne CWU
   heatpump_switch_force_dhw: Wymuszenie CWU
   heatpump_switch_power_mode: Tryb grzania
   heatpump_switch_holiday: Tryb wakacyjny (sterowanie)

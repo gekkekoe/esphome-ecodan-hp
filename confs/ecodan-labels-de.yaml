@@ -56,6 +56,7 @@ substitutions:
   heatpump_number_z2_set_room_temperature: Zone 2 Raum-Sollwert
   heatpump_select_dhw_mode: TWW-Modus
   heatpump_select_operating_mode: Betriebsmodus
+  heatpump_switch_regular_dhw: Normales Warmwasser
   heatpump_switch_force_dhw: TWW erzwingen
   heatpump_switch_holiday: Urlaubsmodus
   heatpump_switch_power_mode: Wärmepumpe

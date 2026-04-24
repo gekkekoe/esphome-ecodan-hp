@@ -24,6 +24,7 @@ substitutions:
   version: ESP-versjon
   led_brightness: LED lysstyrke
   led_switch: LED
+  heatpump_switch_regular_dhw: Normalt DHW
   heatpump_switch_force_dhw: Tving DHW
   heatpump_switch_power_mode: Varmepumpe
   heatpump_switch_holiday: Ferie-modus kontroll
