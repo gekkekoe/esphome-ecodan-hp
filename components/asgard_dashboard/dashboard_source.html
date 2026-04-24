@@ -1415,11 +1415,14 @@ function initCharts() {
   });
   
   // --- Initialize ODIN Charts (Empty on load) ---
-  const labels48 = Array.from({length: 48}, (_, i) => `${i % 24}:00`);
+  const labels72 = Array.from({length: 72}, (_, i) => {
+      const hour = i % 24;
+      return `${String(hour).padStart(2,'0')}:00`;
+  });
   const monoFont = { family: "'JetBrains Mono'", size: 11 };
   const xAxis = { 
       min: -0.5, 
-      max: 47.5,
+      max: 71.5,
       ticks: { 
           autoSkip: false,
           color: function(context) {
@@ -1456,7 +1459,7 @@ function initCharts() {
   };
   const odinZoomConfig = {
       limits: {
-          x: { min: -0.5, max: 47.5, minRange: 2 }
+          x: { min: -0.5, max: 71.5, minRange: 2 }
       },
       pan: {
           enabled: true, mode: 'x', modifierKey: 'alt', threshold: 10,
@@ -1492,7 +1495,7 @@ function initCharts() {
   odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2d'), {
       type: 'bar',
       data: {
-          labels: labels48,
+          labels: labels72,
           datasets: [
               { label: 'Expected (Grid)',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
               { label: 'Expected (Solar)', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 0' },          
@@ -1517,7 +1520,7 @@ function initCharts() {
   odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2d'), {
       type: 'bar',
       data: {
-          labels: labels48,
+          labels: labels72,
           datasets: [
               { label: 'Expected Heat',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
               { label: 'Expected Solar', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 2' },
@@ -1541,7 +1544,7 @@ function initCharts() {
   odinCostChart = new Chart(document.getElementById('odinCostChart').getContext('2d'), {
       type: 'bar',
       data: {
-          labels: labels48,
+          labels: labels72,
           datasets: [
               { label: 'Expected',    data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
               { label: 'Actual',  data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
@@ -1564,7 +1567,7 @@ function initCharts() {
   odinTempChart = new Chart(document.getElementById('odinTempChart').getContext('2d'), {
       type: 'line',
       data: {
-          labels: labels48,
+          labels: labels72,
           datasets: [
               // [0] Band top — fill down to dataset[1]
               { label: 'Schedule Max (°C)',
@@ -1608,14 +1611,8 @@ function initCharts() {
                   callbacks: {
                       title: function(ctx) {
                           if (!ctx || !ctx.length) return '';
-                          let val = ctx[0].parsed.x;
-                          let h = Math.floor(val) % 24;
-                          if (h < 0) h += 24; 
-                          
-
-                          let m = Math.round((val - Math.floor(val)) * 60);
-                          
-                          return h + ':' + (m < 10 ? '0' + m : m);
+                          const index = ctx[0].dataIndex;
+                          return labels72[index] || '';
                       }
                   }
               }
@@ -1634,7 +1631,7 @@ function initCharts() {
   odinBattChart = new Chart(document.getElementById('odinBattChart').getContext('2d'), {
       type: 'bar',
       data: {
-          labels: labels48,
+          labels: labels72,
           datasets: [{ label: 'Battery Discharge (kWh)', data: [], backgroundColor: 'rgba(251,191,36,0.45)', borderColor: '#fbbf24', borderWidth: 1 }]
       },
       options: {
@@ -1654,7 +1651,7 @@ function initCharts() {
   odinPriceChart = new Chart(document.getElementById('odinPriceChart').getContext('2d'), {
       type: 'bar',
       data: {
-          labels: labels48,
+          labels: labels72,
           datasets: [{ label: 'Price (EUR/kWh)', data: [], backgroundColor: 'rgba(129,140,248,0.45)', borderColor: '#818cf8', borderWidth: 1 }]
       },
       options: {
@@ -1674,7 +1671,7 @@ function initCharts() {
   odinWeatherChart = new Chart(document.getElementById('odinWeatherChart').getContext('2d'), {
       type: 'line',
       data: {
-          labels: labels48,
+          labels: labels72,
           datasets: [
               { label: 'Ambient Temp (°C)', data: [], borderColor: '#38bdf8', borderWidth: 2,
                 backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, spanGaps: true,
@@ -1704,20 +1701,22 @@ function initCharts() {
 function updateOdinCharts() {
     if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart || !odinPriceChart || !odinWeatherChart || !odinProdChart) return;
 
-    const rawNvsCons        = odinDataCache ? (odinDataCache.actual_cons          || new Array(48).fill(null)) : new Array(48).fill(null);
-    const rawNvsStandbyCons = odinDataCache ? (odinDataCache.actual_standby_cons  || new Array(48).fill(null)) : new Array(48).fill(null);
-    const rawNvsProd    = odinDataCache ? (odinDataCache.actual_prod      || new Array(48).fill(null)) : new Array(48).fill(null);
-    const rawNvsDhwCons = odinDataCache ? (odinDataCache.actual_dhw_cons  || new Array(48).fill(null)) : new Array(48).fill(null);
-    const rawNvsDhwProd = odinDataCache ? (odinDataCache.actual_dhw_prod  || new Array(48).fill(null)) : new Array(48).fill(null);
+    const rawNvsCons        = odinDataCache ? (odinDataCache.actual_cons          || new Array(72).fill(null)) : new Array(72).fill(null);
+    const rawNvsStandbyCons = odinDataCache ? (odinDataCache.actual_standby_cons  || new Array(72).fill(null)) : new Array(72).fill(null);
+    const rawNvsProd    = odinDataCache ? (odinDataCache.actual_prod      || new Array(72).fill(null)) : new Array(72).fill(null);
+    const rawNvsDhwCons = odinDataCache ? (odinDataCache.actual_dhw_cons  || new Array(72).fill(null)) : new Array(72).fill(null);
+    const rawNvsDhwProd = odinDataCache ? (odinDataCache.actual_dhw_prod  || new Array(72).fill(null)) : new Array(72).fill(null);
 
     const actualConsHeatByHour    = [...rawNvsCons];
     const actualConsDhwByHour     = [...rawNvsDhwCons];
     const actualConsStandbyByHour = [...rawNvsStandbyCons];
     const actualProdHeatByHour = [...rawNvsProd];
     const actualProdDhwByHour  = [...rawNvsDhwProd];
-    const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(48).fill(null))] : new Array(48).fill(null);
+    const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(72).fill(null))] : new Array(72).fill(null);
 
     // Live history overlay: Bereken incrementele deltas per modus (Heat vs DHW)
+    // In the 72-slot window, today occupies slots 24-47. The live history uses
+    // today's local hour (0-23); we write results at offset 24+h.
     if (history.timestamps && history.timestamps.length > 0) {
         const hConsHeat  = new Array(24).fill(0);
         const hConsDhw   = new Array(24).fill(0);
@@ -1779,21 +1778,22 @@ function updateOdinCharts() {
         const currentLocalHour = new Date().getHours();
         
         for (let h = 0; h < 24; h++) {
+            const idx = 24 + h; // today's slot in the 72-element window
             if (hHasData[h]) {
                 const isCurrentHour = (h === currentLocalHour);
-                const isNvsMissing = (rawNvsCons[h] === null);
+                const isNvsMissing = (rawNvsCons[idx] === null);
 
                 if (isCurrentHour || isNvsMissing) {
-                    actualConsHeatByHour[h]    = parseFloat(hConsHeat[h].toFixed(2));
-                    actualConsDhwByHour[h]     = parseFloat(hConsDhw[h].toFixed(2));
-                    actualConsStandbyByHour[h] = parseFloat(Math.max(0, hConsTotal[h] - hConsHeat[h] - hConsDhw[h]).toFixed(2));
-                    actualProdHeatByHour[h]    = parseFloat(hProdHeat[h].toFixed(2));
-                    actualProdDhwByHour[h]     = parseFloat(hProdDhw[h].toFixed(2));
+                    actualConsHeatByHour[idx]    = parseFloat(hConsHeat[h].toFixed(2));
+                    actualConsDhwByHour[idx]     = parseFloat(hConsDhw[h].toFixed(2));
+                    actualConsStandbyByHour[idx] = parseFloat(Math.max(0, hConsTotal[h] - hConsHeat[h] - hConsDhw[h]).toFixed(2));
+                    actualProdHeatByHour[idx]    = parseFloat(hProdHeat[h].toFixed(2));
+                    actualProdDhwByHour[idx]     = parseFloat(hProdDhw[h].toFixed(2));
                 }
             }
             if (firstTempByHour[h] !== null) {
-                if (h === currentLocalHour || actualTempByHour[h] === null) {
-                    actualTempByHour[h] = firstTempByHour[h];
+                if (h === currentLocalHour || actualTempByHour[idx] === null) {
+                    actualTempByHour[idx] = firstTempByHour[h];
                 }
             }
         }
@@ -1801,39 +1801,39 @@ function updateOdinCharts() {
         var currentLocalHour = new Date().getHours();
     }
 
-    for (let h = 0; h < 48; h++) {
-        if (h > currentLocalHour) {
-            actualConsHeatByHour[h] = null; actualConsDhwByHour[h] = null; actualConsStandbyByHour[h] = null;
-            actualProdHeatByHour[h] = null; actualProdDhwByHour[h] = null;
-        }
-        if (h > currentLocalHour) actualTempByHour[h] = null;
+    // Null-out future slots: tomorrow (slots 48-71) and the remainder of today (slots 24+currentLocalHour+1 .. 47)
+    const todayFutureStart = 24 + currentLocalHour + 1;
+    for (let s = todayFutureStart; s < 72; s++) {
+        actualConsHeatByHour[s] = null; actualConsDhwByHour[s] = null; actualConsStandbyByHour[s] = null;
+        actualProdHeatByHour[s] = null; actualProdDhwByHour[s] = null;
+        actualTempByHour[s] = null;
     }
 
-    const expCons       = odinDataCache ? odinDataCache.energy_consumption         : new Array(48).fill(null);
-    const expProd       = odinDataCache ? odinDataCache.heat_production            : new Array(48).fill(null);
-    const expCost       = odinDataCache ? odinDataCache.expected_cost              : new Array(48).fill(null);
-    const expTemp       = odinDataCache ? odinDataCache.expected_begin_temp        : new Array(48).fill(null);
-    const battDischarge = odinDataCache ? (odinDataCache.battery_discharge || new Array(48).fill(0)) : new Array(48).fill(0);
-    const prices        = odinDataCache ? (odinDataCache.prices || new Array(48).fill(null)) : new Array(48).fill(null);
-    const schedBase     = odinDataCache ? (odinDataCache.sched_base || new Array(48).fill(null)) : new Array(48).fill(null);
-    const schedMin      = odinDataCache ? (odinDataCache.sched_min  || new Array(48).fill(null)) : new Array(48).fill(null);
-    const schedMax      = odinDataCache ? (odinDataCache.sched_max  || new Array(48).fill(null)) : new Array(48).fill(null);
-    const weather       = odinDataCache ? (odinDataCache.weather    || new Array(48).fill(null)) : new Array(48).fill(null);
-    const solar         = odinDataCache ? (odinDataCache.solar      || new Array(48).fill(null)) : new Array(48).fill(null);
+    const expCons       = odinDataCache ? odinDataCache.energy_consumption         : new Array(72).fill(null);
+    const expProd       = odinDataCache ? odinDataCache.heat_production            : new Array(72).fill(null);
+    const expCost       = odinDataCache ? odinDataCache.expected_cost              : new Array(72).fill(null);
+    const expTemp       = odinDataCache ? odinDataCache.expected_begin_temp        : new Array(72).fill(null);
+    const battDischarge = odinDataCache ? (odinDataCache.battery_discharge || new Array(72).fill(0)) : new Array(72).fill(0);
+    const prices        = odinDataCache ? (odinDataCache.prices || new Array(72).fill(null)) : new Array(72).fill(null);
+    const schedBase     = odinDataCache ? (odinDataCache.sched_base || new Array(72).fill(null)) : new Array(72).fill(null);
+    const schedMin      = odinDataCache ? (odinDataCache.sched_min  || new Array(72).fill(null)) : new Array(72).fill(null);
+    const schedMax      = odinDataCache ? (odinDataCache.sched_max  || new Array(72).fill(null)) : new Array(72).fill(null);
+    const weather       = odinDataCache ? (odinDataCache.weather    || new Array(72).fill(null)) : new Array(72).fill(null);
+    const solar         = odinDataCache ? (odinDataCache.solar      || new Array(72).fill(null)) : new Array(72).fill(null);
     
     const pricesKwh     = prices.map(p => p !== null ? parseFloat((p).toFixed(5)) : null);
 
     // Initialize arrays for costs and consumption splits
-    const actualCost = new Array(48).fill(null);
-    const expConsGrid = new Array(48).fill(null);
-    const expConsSolar = new Array(48).fill(null);
-    const expProdSolar = new Array(48).fill(null);
+    const actualCost = new Array(72).fill(null);
+    const expConsGrid = new Array(72).fill(null);
+    const expConsSolar = new Array(72).fill(null);
+    const expProdSolar = new Array(72).fill(null);
     
     const solarKwp = odinDataCache?.last_run?.used_solar_kwp || 0;
     const solarCorrection = odinDataCache?.last_run?.used_solar_correction || 1.0;
 
     // Single loop to process all hourly data
-    for (let h = 0; h < 48; h++) {
+    for (let h = 0; h < 72; h++) {
         const sol_wm2 = solar[h] || 0; 
         const expected_solar_kwh = (sol_wm2 / 1000) * solarKwp * solarCorrection;
         expProdSolar[h] = parseFloat(expected_solar_kwh.toFixed(2));
@@ -1887,11 +1887,11 @@ function updateOdinCharts() {
     odinPriceChart.update('none');
 
     // Bar charts ignore x min/max from axis config after data update — re-apply zoom.
-    // Without this, bar charts reset to full 0-47 range on every data refresh,
-    // causing index 24 (hour 0 today) to appear off-screen until the user scrolls.
+    // Without this, bar charts reset to full 0-71 range on every data refresh.
+    // Default view: today (slots 24-47).
     if (!odinZoomed) {
         [odinConsChart, odinProdChart, odinCostChart, odinBattChart].forEach(c => {
-            if (c) c.zoomScale('x', {min: -0.5, max: 23.5}, 'none');
+            if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
         });
     }
 
@@ -1928,11 +1928,11 @@ function updateOdinCharts() {
         updateRunStatsUI(rs);
     }
 
-    // Auto-focus to today (index 24-47) unless user has manually zoomed/panned
+    // Auto-focus to today (slots 24-47) unless user has manually zoomed/panned
     if (!odinZoomed) {
         [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
         odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-            if (c) c.zoomScale('x', {min: -0.5, max: 23.5}, 'none');
+            if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
         });
     }
 }
@@ -2686,38 +2686,40 @@ async function runOdinSolver() {
         if (data.success) {
           if (!odinDataCache) odinDataCache = {};
             
-            // Safely inject the 48h solver data into the cache directly
-            const inject48 = (key, new48, preserveCurrentHour = false) => {
-                if (!odinDataCache[key] || odinDataCache[key].length !== 48) {
-                    odinDataCache[key] = new Array(48).fill(null);
+            // Inject the 48h solver response into today+tomorrow slots (24-71) of the 72-slot cache.
+            // slot 24+i = today/tomorrow hour i from the solver's perspective.
+            const inject72 = (key, new48, preserveCurrentHour = false) => {
+                if (!odinDataCache[key] || odinDataCache[key].length !== 72) {
+                    odinDataCache[key] = new Array(72).fill(null);
                 }
                 if (new48 && new48.length >= 48) {
                     for (let i = 0; i < 48; i++) {
+                        const slot = 24 + i; // map solver index into 72-slot window
                         let isCurrent = (i === solveHour);
                         
                         // Protect the current hour from jumping mid-hour if requested
-                        if (preserveCurrentHour && isCurrent && odinDataCache[key][i] !== null) continue;
+                        if (preserveCurrentHour && isCurrent && odinDataCache[key][slot] !== null) continue;
 
                         if (new48[i] !== null && new48[i] !== undefined) {
-                            odinDataCache[key][i] = new48[i];
+                            odinDataCache[key][slot] = new48[i];
                         }
                     }
                 }
             };
 
-            inject48('expected_end_temp', data.expected_end_temp);
-            inject48('expected_begin_temp', data.expected_begin_temp, true); // true = lock current hour
-            inject48('operation_mode', data.operation_mode, true);
-            inject48('prices', data.prices);
-            inject48('sched_base', data.sched_base);
-            inject48('sched_min', data.sched_min);
-            inject48('sched_max', data.sched_max);
-            inject48('weather', data.weather);
-            inject48('solar', data.solar);
-            inject48('energy_consumption', data.energy_consumption);
-            inject48('heat_production', data.heat_production);
-            inject48('expected_cost', data.expected_cost);
-            inject48('battery_discharge', data.battery_discharge); 
+            inject72('expected_end_temp', data.expected_end_temp);
+            inject72('expected_begin_temp', data.expected_begin_temp, true); // true = lock current hour
+            inject72('operation_mode', data.operation_mode, true);
+            inject72('prices', data.prices);
+            inject72('sched_base', data.sched_base);
+            inject72('sched_min', data.sched_min);
+            inject72('sched_max', data.sched_max);
+            inject72('weather', data.weather);
+            inject72('solar', data.solar);
+            inject72('energy_consumption', data.energy_consumption);
+            inject72('heat_production', data.heat_production);
+            inject72('expected_cost', data.expected_cost);
+            inject72('battery_discharge', data.battery_discharge); 
 
             odinDataCache.last_run = {
                 execution_ms:    data.execution_ms                 || 0,
@@ -2974,7 +2976,7 @@ function resetOdinZoom() {
     odinZoomed = false;
     [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
      odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-        if (c) c.zoomScale('x', {min: -0.5, max: 23.5}, 'none');
+        if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
     });
     document.getElementById('btn-reset-zoom-odin').style.display = 'none';
 }

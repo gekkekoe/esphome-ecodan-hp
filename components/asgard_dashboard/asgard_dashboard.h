@@ -302,6 +302,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   struct LastRunStats {
       uint32_t execution_ms{0};
       uint32_t evaluated_nodes{0};
+      int current_hour{-1};
       float heat_loss{0.0f}, base_cop{0.0f}, thermal_mass{0.0f};
       float exp_consumption{0.0f}, exp_production{0.0f}, exp_solar{0.0f}, exp_solar_total{0.0f};
       float total_cost{0.0f};
@@ -329,7 +330,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
                        const LastRunStats& run_stats);
   void load_odin_data(int current_day);
 
-  // Called each hour by YAML to track actual consumption and room temp per-hour slot
+  // Called each hour by YAML to track actual consumption and room temp per-hour slot.
+  // hour is 0-23 (today's hour); internally stored at index 24+hour in the 72-slot window.
   void update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons);
 
  protected:
