@@ -9,11 +9,11 @@
 
 
 # Ordering & Availability
-* **Product:** Asgard PCB in 3d printed casing + Connector cable
+* **Product:** Asgard PCB in 3d printed casing + **50cm** Connector cable
 * **Price:** € 65,- (including VAT)
 * **Delivery:** Shipped within 3 business days from The Netherlands (When in stock)
 
-![Asgard Bundle](img/asgard-bundle.jpg) 
+![Asgard Bundle](img/asgard-50cm-bundle.jpg) 
 
 # ⚡ Asgard is Now Shipping!
 
