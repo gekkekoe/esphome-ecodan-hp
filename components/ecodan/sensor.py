@@ -375,7 +375,7 @@ CONFIG_SCHEMA = cv.Schema(
             unit_of_measurement=UNIT_REVOLUTIONS_PER_MINUTE,
             icon="mdi:fan",
             accuracy_decimals=0,
-            device_class=DEVICE_CLASS_FREQUENCY,
+            # device_class=DEVICE_CLASS_FREQUENCY,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         cv.Optional("pump_speed"): sensor.sensor_schema(
