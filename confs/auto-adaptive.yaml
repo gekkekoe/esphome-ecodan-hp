@@ -34,7 +34,7 @@ esphome:
 
             state.sw_force_dhw = id(heatpump_switch_force_dhw);
             state.sw_regular_dhw = id(heatpump_switch_regular_dhw);
-            state.solver_dhw_mode = id(solver_dhw_mode);
+            ${asgard_prefix} state.solver_dhw_mode = id(solver_dhw_mode);
 
             state.operation_mode = id(operation_mode);
             state.hp_feed_temp = id(hp_feed_temp);
