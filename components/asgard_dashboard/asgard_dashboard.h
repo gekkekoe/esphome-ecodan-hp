@@ -332,7 +332,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   // Called each hour by YAML to track actual consumption and room temp per-hour slot.
   // hour is 0-23 (today's hour); internally stored at index 24+hour in the 72-slot window.
-  void update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons);
+  void update_actual_data(int hour, int current_hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons);
 
  protected:
   void handle_root_(AsyncWebServerRequest *request);

@@ -1001,11 +1001,20 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 // ---------------------------------------------------------------------------
 static const char* NVS_ODIN_NS = "odin_cache";
 
-void EcodanDashboard::update_actual_data(int hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons) {
-    // hour is 0-23 (today's hour). In the 72-slot window: 0-23=yesterday, 24-47=today, 48-71=tomorrow.
+void EcodanDashboard::update_actual_data(int hour, int current_hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons) {
+    // hour is last_hour (0-23, the hour just completed).
+    // current_hour is the live Ecodan hour (0-23) passed from YAML.
+    // In the 72-slot window: 0-23=yesterday, 24-47=today, 48-71=tomorrow.
     int target_idx = 24 + hour;
 
-    if (target_idx < 24 || target_idx >= 72) return;
+    // Post-midnight guard: last_hour=23 but Ecodan is already at 00:00 means the day
+    // has rolled over and this data belongs in yesterday's slot (23), not today's (47).
+    if (hour == 23 && current_hour == 0) {
+        target_idx = 23;
+        esp_log_write(ESP_LOG_DEBUG, TAG, "update_actual_data: post-midnight write for hour 23 → slot 23 (yesterday)\n");
+    }
+
+    if (target_idx < 0 || target_idx >= 72) return;
     if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
 
     if (odin_actual_dhw_cons_.size() != 72)     odin_actual_dhw_cons_.assign(72, NAN);
