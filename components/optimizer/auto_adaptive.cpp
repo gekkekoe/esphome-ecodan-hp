@@ -65,7 +65,7 @@ namespace esphome
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // ODIN solver bias — mutex-safe, returns {bias, heating_off}
+        // ODIN solver bias — mutex-safe, returns {bias, heatpump_off}
         // ─────────────────────────────────────────────────────────────────
         Optimizer::SolverResult Optimizer::resolve_solver_result_(float room_target_temp, float current_room_temp) {
             SolverResult result{-1.0f, false, OptimizerOperationMode::UNAVAILABLE, -1 };
@@ -101,8 +101,11 @@ namespace esphome
 
                     result.current_hour = current_hour;
                     result.mode = mode;
-                    result.heating_off = (odin_prod < 0.1f);
-                    if (result.heating_off) {
+                    result.heatpump_off = (odin_prod < 0.1f &&
+                                          mode != OptimizerOperationMode::COOL_ON &&
+                                          mode != OptimizerOperationMode::DHW_ON);
+
+                    if (result.heatpump_off) {
                         apply_solver_soft_stop(true);
                         return result;
                     }
@@ -121,10 +124,12 @@ namespace esphome
                     }
                     if (max_out < 1.0f) max_out = 7.0f;
                     
-                    // Calculate how hard ODIN wants the heat pump to work (Ratio between 0.0 and 1.0)
+                    // Calculate how hard ODIN wants the heat pump to work (ratio 0.0–1.0).
+                    // For cooling mode odin_prod carries the cooling load in the same unit (kWh thermal).
                     result.load_ratio = std::clamp(odin_prod / max_out, 0.0f, 1.0f);
                     
-                    ESP_LOGD(OPTIMIZER_TAG, "ODIN -> Hour %d | Prod: %.1f/%.1f | factor: %.2f | mode: %d", current_hour, odin_prod, max_out, result.load_ratio, static_cast<uint8_t>(mode));
+                    ESP_LOGD(OPTIMIZER_TAG, "ODIN -> Hour %d | Prod: %.1f/%.1f | factor: %.2f | mode: %d",
+                             current_hour, odin_prod, max_out, result.load_ratio, static_cast<uint8_t>(mode));
                     
                     return result;
                 }
@@ -328,7 +333,7 @@ namespace esphome
             if (solver_enabled) {
                 static int odin_last_executed_dhw_hour_ = -1;
 
-                auto [solver_load_ratio, solver_heating_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(room_target_temp, room_temp);
+                auto [solver_load_ratio, solver_heatpump_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(room_target_temp, room_temp);
                 if (solver_operating_mode == OptimizerOperationMode::DHW_ON) {
                     int dhw_mode = 0; // 0 = Regular, 1 = Forced
                     if (this->state_.solver_dhw_mode != nullptr && this->state_.solver_dhw_mode->active_index().has_value()) {
@@ -360,7 +365,7 @@ namespace esphome
                     odin_last_executed_dhw_hour_ = -1;
                 }
 
-                if (solver_load_ratio < 0.0f && !solver_heating_off) {
+                if (solver_load_ratio < 0.0f && !solver_heatpump_off) {
                     if (millis() < 2*60000) {
                         ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN enabled but data not ready. Skipping one AA iteration.", (i + 1));
                         return;
@@ -369,12 +374,31 @@ namespace esphome
                         ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN data still pending (+5m). Falling back to auto adaptive.", (i + 1));
                     }
                 } 
-                else if (solver_heating_off || solver_operating_mode == OptimizerOperationMode::OFF) {
+                else if (solver_heatpump_off || solver_operating_mode == OptimizerOperationMode::OFF) {
                     ESP_LOGD(OPTIMIZER_TAG,
-                        "Z%d ODIN heating stopped, solver_load_ratio: %.2f, mode: %d",
+                        "Z%d ODIN heating/cooling stopped, solver_load_ratio: %.2f, mode: %d",
                         (i + 1), solver_load_ratio, static_cast<uint8_t>(solver_operating_mode));
                     return;
-                } 
+                }
+                else if (solver_operating_mode == OptimizerOperationMode::COOL_ON) {
+                    // ODIN says cooling this hour. Use load_ratio to scale the cooling delta-T.
+                    // Cooling delta-T range: 0 = smart_start_temp (minimum cooling), 
+                    // max delta = (smart_start_temp - min_cooling_flow_temp).
+                    if (!is_cooling_mode) {
+                        ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN wants cooling but zone is not in cooling mode — skip.", (i + 1));
+                        return;
+                    }
+                    float cool_min = this->state_.minimum_cooling_flow_temp->state;
+                    float cool_max = this->state_.cooling_smart_start_temp->state;
+                    float max_cool_delta = std::max(0.0f, cool_max - cool_min);
+                    // load_ratio=1.0 → maximum cooling (min flow temp), load_ratio=0 → smart start
+                    float target_cool_delta = solver_load_ratio * max_cool_delta;
+                    out_flow_cool = this->calculate_cooling_flow_(i, status, target_cool_delta);
+                    ESP_LOGD(OPTIMIZER_TAG,
+                        "Z%d ODIN COOLING: load_ratio=%.2f delta=%.1f → flow=%.1f°C",
+                        (i + 1), solver_load_ratio, target_cool_delta, out_flow_cool);
+                    return;
+                }
                 else {
                     float desired_delta = 0.0f;
 

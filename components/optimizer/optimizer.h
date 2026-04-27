@@ -136,7 +136,7 @@ namespace esphome
 
       // ── adaptive_loop.cpp ──────────────────────────────────────────────
       HeatingProfile   get_heating_profile_(int type_index);
-      struct SolverResult { float load_ratio; bool heating_off; OptimizerOperationMode mode{OptimizerOperationMode::UNAVAILABLE}; int current_hour{-1}; };
+      struct SolverResult { float load_ratio; bool heatpump_off; OptimizerOperationMode mode{OptimizerOperationMode::UNAVAILABLE}; int current_hour{-1}; };
       DefrostState resolve_defrost_state_();
       SolverResult resolve_solver_result_(float room_target_temp, float current_room_temp);
       float            calculate_heating_flow_(std::size_t zone_i,
