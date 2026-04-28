@@ -1001,20 +1001,13 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
 // ---------------------------------------------------------------------------
 static const char* NVS_ODIN_NS = "odin_cache";
 
-void EcodanDashboard::update_actual_data(int hour, int current_hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons) {
+void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons) {
     // hour is last_hour (0-23, the hour just completed).
-    // current_hour is the live Ecodan hour (0-23) passed from YAML.
     // In the 72-slot window: 0-23=yesterday, 24-47=today, 48-71=tomorrow.
-    int target_idx = 24 + hour;
+    //   stored_day == current ecodan day → shift has happened → write to slot 23
+    //   stored_day != current ecodan day → shift not yet done → write to slot 47
+    //                                       (shift will carry it to slot 23)
 
-    // Post-midnight guard: last_hour=23 but Ecodan is already at 00:00 means the day
-    // has rolled over and this data belongs in yesterday's slot (23), not today's (47).
-    if (hour == 23 && current_hour == 0) {
-        target_idx = 23;
-        esp_log_write(ESP_LOG_DEBUG, TAG, "update_actual_data: post-midnight write for hour 23 → slot 23 (yesterday)\n");
-    }
-
-    if (target_idx < 0 || target_idx >= 72) return;
     if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
 
     if (odin_actual_dhw_cons_.size() != 72)     odin_actual_dhw_cons_.assign(72, NAN);
@@ -1023,6 +1016,25 @@ void EcodanDashboard::update_actual_data(int hour, int current_hour, float actua
     if (odin_actual_prod_.size() != 72)         odin_actual_prod_.assign(72, NAN);
     if (odin_actual_room_.size() != 72)         odin_actual_room_.assign(72, NAN);
     if (odin_actual_standby_cons_.size() != 72) odin_actual_standby_cons_.assign(72, NAN);
+
+    int target_idx = 24 + hour;
+
+    if (hour == 23) {
+        if (day >= 0 && this->odin_stored_day_ == day) {
+            // Shift has already happened: slot 23 is yesterday's last hour
+            target_idx = 23;
+            esp_log_write(ESP_LOG_DEBUG, TAG, "update_actual_data: hour 23 post-shift -> slot 23 (yesterday)\n");
+        } else {
+            // Shift not yet happened: write to slot 47, shift will carry it to slot 23
+            target_idx = 47;
+            esp_log_write(ESP_LOG_DEBUG, TAG, "update_actual_data: hour 23 pre-shift -> slot 47 (shift will move to 23)\n");
+        }
+    }
+
+    if (target_idx < 0 || target_idx >= 72) {
+        xSemaphoreGive(snapshot_mutex_);
+        return;
+    }
 
     odin_actual_cons_[target_idx]         = actual_cons_kwh;
     odin_actual_prod_[target_idx]         = actual_prod_kwh;

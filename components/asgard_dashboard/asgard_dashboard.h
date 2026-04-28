@@ -173,6 +173,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   // Web server
   void set_web_server_base(web_server_base::WebServerBase *b) { base_ = b; }
 
+
   // Sensors
   void set_hp_feed_temp(sensor::Sensor *s)                    { hp_feed_temp_ = s; }
   void set_hp_return_temp(sensor::Sensor *s)                  { hp_return_temp_ = s; }
@@ -332,7 +333,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   // Called each hour by YAML to track actual consumption and room temp per-hour slot.
   // hour is 0-23 (today's hour); internally stored at index 24+hour in the 72-slot window.
-  void update_actual_data(int hour, int current_hour, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons);
+  void update_actual_data(int hour, int day, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons);
 
  protected:
   void handle_root_(AsyncWebServerRequest *request);

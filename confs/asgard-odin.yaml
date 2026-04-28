@@ -321,7 +321,7 @@ interval:
 
               float room = id(virtual_climate_z1).current_temperature;
 
-              id(asgard_dashboard_id)->update_actual_data(last_hour, cur_hr, d_h_cons, d_h_prod, d_d_cons, d_d_prod, room, d_standby);
+              id(asgard_dashboard_id)->update_actual_data(last_hour, cur_day, d_h_cons, d_h_prod, d_d_cons, d_d_prod, room, d_standby);
 
               // Save the new baseline for the next hour
               last_h_cons = cur_h_cons;
