@@ -108,6 +108,11 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("num_cooling_smart_start_z1_id"):      cv.use_id(number.Number),
         cv.Optional("num_min_cooling_flow_z1_id"):         cv.use_id(number.Number),
 
+        cv.Optional("num_raw_cool_produced_id"):           cv.use_id(number.Number),
+        cv.Optional("num_raw_cool_elec_consumed_id"):      cv.use_id(number.Number),
+        cv.Optional("num_raw_cool_runtime_hours_id"):      cv.use_id(number.Number),
+        cv.Optional("num_raw_cool_avg_outside_temp_id"):   cv.use_id(number.Number),
+
         cv.Optional("dhw_climate_id"):                     cv.use_id(climate.Climate),
         cv.Optional("virtual_climate_z1_id"):              cv.use_id(climate.Climate),
         cv.Optional("virtual_climate_z2_id"):              cv.use_id(climate.Climate),
@@ -219,6 +224,10 @@ async def to_code(config):
         ("num_raw_delta_room_temp_id",        "set_num_raw_delta_room_temp"),
         ("num_raw_hl_tm_product_id",          "set_num_raw_hl_tm_product"),
         ("num_raw_solar_factor_id",           "set_num_raw_solar_factor"),
+        ("num_raw_cool_produced_id",          "set_num_raw_cool_produced"),
+        ("num_raw_cool_elec_consumed_id",     "set_num_raw_cool_elec_consumed"),
+        ("num_raw_cool_runtime_hours_id",     "set_num_raw_cool_runtime_hours"),
+        ("num_raw_cool_avg_outside_temp_id",  "set_num_raw_cool_avg_outside_temp"),
         ("solver_kwh_meter_feedback_source_id", "set_solver_kwh_meter_feedback_source"),
         ("solver_dhw_mode_id",                "set_solver_dhw_mode"),
         ("solver_kwh_meter_feedback_id",      "set_solver_kwh_meter_feedback"),

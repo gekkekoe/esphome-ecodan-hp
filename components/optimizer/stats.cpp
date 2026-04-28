@@ -14,15 +14,15 @@ namespace esphome
         {
             if (this->state_.ecodan_instance == nullptr) return;
             auto &status = this->state_.ecodan_instance->get_status();
+            
             uint32_t now = millis();
             bool is_running = (status.CompressorFrequency > 0) || status.CompressorOn;
             bool is_heating_active = status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
+            bool is_cooling_active = status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON; // ADD THIS
 
             if (this->last_check_ms_ != 0) {    
                 float minutes_passed = (now - this->last_check_ms_) / 60000.0f;
 
-                // If gap > 10 minutes (reboot/reconnect), reset free cooling window
-                // to avoid accumulating stale time into the measurement.
                 if (minutes_passed > 10.0f) {
                     if (this->fc_active_) {
                         ESP_LOGD(OPTIMIZER_TAG, "Free heating/cooling window reset after %.0f min gap (reconnect/reboot)", minutes_passed);
@@ -32,13 +32,19 @@ namespace esphome
                     return;
                 }
 
+                // Track runtimes separately
                 if (is_running && is_heating_active) {
                     this->daily_runtime_global += minutes_passed;
+                }
+                if (is_running && is_cooling_active) {
+                    this->daily_runtime_cool_ += minutes_passed;
                 }
 
                 // --- Free cooling window (HP-off period, any time of day) ---
                 float current_room_tmp = this->get_room_current_temp(OptimizerZone::ZONE_1);
-                bool hp_off = !is_running || !is_heating_active;
+                
+                // The HP is only "off" for passive drift learning if it's NOT heating AND NOT cooling.
+                bool hp_off = !is_running || (!is_heating_active && !is_cooling_active);
 
                 if (!isnan(current_room_tmp) && !isnan(status.OutsideTemperature)) {
                     if (hp_off && !this->fc_active_) {
@@ -235,10 +241,14 @@ namespace esphome
                 this->daily_max_output_power_ = 0.0f;
                 
                 this->daily_runtime_global = 0.0f;
+                this->daily_runtime_cool_ = 0.0f;
 
                 // Reset daily accumulators
                 this->last_total_heating_produced_ = 0.0f;
                 this->last_total_heating_consumed_ = 0.0f;
+                this->last_total_cooling_produced_ = 0.0f;
+                this->last_total_cooling_consumed_ = 0.0f;
+
                 this->last_total_dhw_produced_ = 0.0f;
                 this->last_total_dhw_consumed_ = 0.0f;
                 
@@ -304,20 +314,22 @@ namespace esphome
                 this->last_was_dhw_ = (status.Operation == esphome::ecodan::Status::OperationMode::DHW_ON ||
                                        status.Operation == esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION);
                 this->last_was_heating_ = is_heating_active;
+                this->last_was_cooling_ = is_cooling_active;
             }
 
-            // Keep the buckets open for 10 minutes after the compressor stops to catch delayed ticks.
-            // After that, pure standby power falls into the void.
             bool dhw_active_window = false;
             bool heat_active_window = false;
+            bool cool_active_window = false;
 
             if (is_running || (millis() - this->last_run_time_ <= 600000)) {
                 if (this->last_was_dhw_)          dhw_active_window  = true;
                 else if (this->last_was_heating_) heat_active_window = true;
+                else if (this->last_was_cooling_) cool_active_window = true;
             } else {
                 // Window expired — clear so next session starts clean
                 this->last_was_dhw_     = false;
                 this->last_was_heating_ = false;
+                this->last_was_cooling_ = false;
             }
 
             // Fetch current global meter states
@@ -382,6 +394,9 @@ namespace esphome
                 if (heat_active_window) {
                     this->last_total_heating_produced_ += delta_prod;
                     this->last_total_heating_consumed_ += delta_cons;
+                } else if (cool_active_window) {
+                    this->last_total_cooling_produced_ += delta_prod;
+                    this->last_total_cooling_consumed_ += delta_cons;
                 } else if (dhw_active_window) {
                     this->last_total_dhw_produced_ += delta_prod;
                     this->last_total_dhw_consumed_ += delta_cons;
@@ -418,6 +433,11 @@ namespace esphome
             float elec_consumed_kwh = this->last_total_heating_consumed_;
             float max_out_kw = this->daily_max_output_power_;
 
+            // Cooling local variables
+            float cool_runtime_hours = this->daily_runtime_cool_ / 60.0f;
+            float cool_produced_kwh = this->last_total_cooling_produced_;
+            float cool_elec_consumed_kwh = this->last_total_cooling_consumed_;
+
             ESP_LOGI(OPTIMIZER_TAG, "Daily Raw Stats: Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, MaxOut=%.1fkW, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
                      heat_produced_kwh, elec_consumed_kwh, runtime_hours, max_out_kw, avg_outside, avg_room, delta_room);
 
@@ -440,20 +460,32 @@ namespace esphome
             update_ema_num(this->state_.num_raw_avg_room_temp, avg_room, ALPHA);
             update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
 
-            // ONLY UPDATE WHEN HEATING: System Performance ---
+            // ONLY UPDATE WHEN HEATING OR COOLING: System Performance ---
             if (heat_produced_kwh >= 2.0f && runtime_hours >= 1.0f) {
                 update_ema_num(this->state_.num_raw_heat_produced, heat_produced_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_elec_consumed, elec_consumed_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_runtime_hours, runtime_hours, ALPHA);
                 update_ema_num(this->state_.num_raw_avg_outside_temp, avg_outside, ALPHA);
 
-                ESP_LOGI(OPTIMIZER_TAG, "Full update (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
+                ESP_LOGI(OPTIMIZER_TAG, "Full Heating update (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC",
                          this->state_.num_raw_heat_produced->state, this->state_.num_raw_elec_consumed->state, 
                          this->state_.num_raw_runtime_hours->state, this->state_.num_raw_avg_outside_temp->state,
-                         this->state_.num_raw_avg_room_temp->state, this->state_.num_raw_delta_room_temp->state);
+                         this->state_.num_raw_avg_room_temp->state);
+
+            } else if (cool_produced_kwh >= 2.0f && cool_runtime_hours >= 1.0f) {
+                // Separate parallel track for cooling statistics (Energy Efficiency Ratio / EER modeling)
+                update_ema_num(this->state_.num_raw_cool_produced, cool_produced_kwh, ALPHA);
+                update_ema_num(this->state_.num_raw_cool_elec_consumed, cool_elec_consumed_kwh, ALPHA);
+                update_ema_num(this->state_.num_raw_cool_runtime_hours, cool_runtime_hours, ALPHA);
+                update_ema_num(this->state_.num_raw_cool_avg_outside_temp, avg_outside, ALPHA);
+
+                ESP_LOGI(OPTIMIZER_TAG, "Full Cooling update (15%% EMA): CoolProd=%.1fkWh, CoolElec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC",
+                         this->state_.num_raw_cool_produced->state, this->state_.num_raw_cool_elec_consumed->state, 
+                         this->state_.num_raw_cool_runtime_hours->state, this->state_.num_raw_cool_avg_outside_temp->state);
+
             } else {
                 // Output a log message, but do not abort before passive stats are saved
-                ESP_LOGI(OPTIMIZER_TAG, "Passive stats saved (AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC). Heating skipped (<2kWh or <1h).",
+                ESP_LOGI(OPTIMIZER_TAG, "Passive stats saved (AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC). Heating/Cooling skipped (<2kWh or <1h).",
                          this->state_.num_raw_avg_outside_temp->state, 
                          this->state_.num_raw_avg_room_temp->state, 
                          this->state_.num_raw_delta_room_temp->state);

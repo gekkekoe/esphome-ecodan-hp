@@ -106,8 +106,19 @@ script:
                   float _dhw_target = std::isnan(id(dhw_flow_temp_target).state) ? 0.0f : id(dhw_flow_temp_target).state;
                   float _dhw_drop = std::isnan(id(dhw_flow_temp_drop).state) ? 0.0f : id(dhw_flow_temp_drop).state;
                   float _dhw_thresh = std::isnan(id(dhw_start_threshold).state) ? 0.0f : id(dhw_start_threshold).state;
-                  // Mirrors Asgard OperationMode enum: 0=OFF,1=DHW,2=HEAT,3=COOL,5=FROST,6=LEGIONELLA,255=UNAVAIL
-                  uint8_t _op_mode = static_cast<uint8_t>(id(optimizer_ptr)->get_current_operation_mode());
+                  
+                  uint8_t _op_mode = 0; 
+                  // use selected operating mode to derive heating/cooling
+                  auto hc_mode = id(ecodan_instance).get_status().HeatingCoolingMode;
+                  if (hc_mode == ecodan::Status::HpMode::HEAT_FLOW_TEMP) {
+                      _op_mode = 2; // Heating
+                  } 
+                  else if (hc_mode == ecodan::Status::HpMode::COOL_FLOW_TEMP) {
+                      _op_mode = 3; // Cooling
+                  } else {
+                      // fallback to operating mode (for DHW/Legionella)
+                      _op_mode = static_cast<uint8_t>(id(optimizer_ptr)->get_current_operation_mode());
+                  }
 
                   int _cur_hour = id(optimizer_ptr)->get_current_ecodan_hour();
 
@@ -117,6 +128,10 @@ script:
                       "\"elec_consumed\":%.3f,"
                       "\"runtime_hours\":%.2f,"
                       "\"avg_outside_temp\":%.2f,"
+                      "\"cool_produced\":%.2f,"
+                      "\"cool_elec_consumed\":%.2f,"
+                      "\"cool_runtime_hours\":%.2f,"
+                      "\"cool_avg_outside_temp\":%.2f,"
                       "\"avg_room_temp\":%.2f,"
                       "\"delta_room_temp\":%.2f,"
                       "\"hl_tm_product\":%.4f,"
@@ -135,6 +150,10 @@ script:
                       id(num_raw_elec_consumed).state,
                       id(num_raw_runtime_hours).state,
                       id(num_raw_avg_outside_temp).state,
+                      id(num_raw_cool_produced).state,
+                      id(num_raw_cool_elec_consumed).state,
+                      id(num_raw_cool_runtime_hours).state,
+                      id(num_raw_cool_avg_outside_temp).state,
                       id(num_raw_avg_room_temp).state,
                       id(num_raw_delta_room_temp).state,
                       id(num_raw_hl_tm_product).state,
@@ -277,6 +296,8 @@ interval:
 
             static float last_h_cons = -1.0f;
             static float last_h_prod = -1.0f;
+            static float last_c_cons = -1.0f; // NEW: Cooling Tracker
+            static float last_c_prod = -1.0f; // NEW: Cooling Tracker
             static float last_d_cons = -1.0f;
             static float last_d_prod = -1.0f;
             static float last_t_cons = -1.0f;
@@ -284,6 +305,8 @@ interval:
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
             float cur_h_cons = id(optimizer_ptr)->get_heating_consumed_kwh();
             float cur_h_prod = id(optimizer_ptr)->get_heating_produced_kwh();
+            float cur_c_cons = id(optimizer_ptr)->get_cooling_consumed_kwh(); // NEW
+            float cur_c_prod = id(optimizer_ptr)->get_cooling_produced_kwh(); // NEW
             float cur_d_cons = id(optimizer_ptr)->get_dhw_consumed_kwh();
             float cur_d_prod = id(optimizer_ptr)->get_dhw_produced_kwh();
             float cur_t_cons = id(optimizer_ptr)->get_total_consumed_kwh();
@@ -295,6 +318,8 @@ interval:
               last_hour   = cur_hr;
               last_h_cons = cur_h_cons;
               last_h_prod = cur_h_prod;
+              last_c_cons = cur_c_cons;
+              last_c_prod = cur_c_prod;
               last_d_cons = cur_d_cons;
               last_d_prod = cur_d_prod;
               last_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons;
@@ -305,6 +330,8 @@ interval:
             if (cur_hr != last_hour && cur_hr != -1) {
               float d_h_cons = cur_h_cons - last_h_cons;
               float d_h_prod = cur_h_prod - last_h_prod;
+              float d_c_cons = cur_c_cons - last_c_cons;
+              float d_c_prod = cur_c_prod - last_c_prod;
               float d_d_cons = cur_d_cons - last_d_cons;
               float d_d_prod = cur_d_prod - last_d_prod;
               float d_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons - last_t_cons;
@@ -312,20 +339,29 @@ interval:
               // Handle midnight resets (if the C++ buckets drop to 0)
               if (d_h_cons < 0) d_h_cons = cur_h_cons;
               if (d_h_prod < 0) d_h_prod = cur_h_prod;
+              if (d_c_cons < 0) d_c_cons = cur_c_cons;
+              if (d_c_prod < 0) d_c_prod = cur_c_prod;
               if (d_d_cons < 0) d_d_cons = cur_d_cons;
               if (d_d_prod < 0) d_d_prod = cur_d_prod;
               if (d_t_cons < 0) d_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons;
 
               // Standby = total consumed minus the bucketed modes, floor at 0
-              float d_standby = std::max(0.0f, d_t_cons - d_h_cons - d_d_cons);
+              // Now subtracting cooling as well so standby remains accurate!
+              float d_standby = std::max(0.0f, d_t_cons - d_h_cons - d_c_cons - d_d_cons);
 
               float room = id(virtual_climate_z1).current_temperature;
 
-              id(asgard_dashboard_id)->update_actual_data(last_hour, cur_day, d_h_cons, d_h_prod, d_d_cons, d_d_prod, room, d_standby);
+              // Combine heating and cooling for the dashboard charts so you don't need a massive C++ rewrite
+              float combined_climate_cons = d_h_cons + d_c_cons;
+              float combined_climate_prod = d_h_prod + d_c_prod;
+
+              id(asgard_dashboard_id)->update_actual_data(last_hour, cur_day, combined_climate_cons, combined_climate_prod, d_d_cons, d_d_prod, room, d_standby);
 
               // Save the new baseline for the next hour
               last_h_cons = cur_h_cons;
               last_h_prod = cur_h_prod;
+              last_c_cons = cur_c_cons;
+              last_c_prod = cur_c_prod;
               last_d_cons = cur_d_cons;
               last_d_prod = cur_d_prod;
               last_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons;

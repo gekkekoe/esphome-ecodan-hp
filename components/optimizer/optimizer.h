@@ -90,12 +90,15 @@ namespace esphome
       int      last_processed_hour_         {-1};
       int      last_pre_hour_triggered_      {-1};
       uint32_t odin_fetch_pending_ms_        {0};   // deferred day-transition fetch
+      float    daily_runtime_cool_          = 0.0f;
 
       // Strict energy separation buckets
       float    last_global_prod_            = -1.0f;
       float    last_global_cons_            = -1.0f;
       float    last_total_heating_produced_ = 0.0f;
       float    last_total_heating_consumed_ = 0.0f;
+      float    last_total_cooling_produced_ = 0.0f;
+      float    last_total_cooling_consumed_ = 0.0f;
       float    last_total_dhw_produced_     = 0.0f;
       float    last_total_dhw_consumed_     = 0.0f;
       float    last_total_all_consumed_     = 0.0f;
@@ -105,6 +108,7 @@ namespace esphome
       // window is guaranteed expired at boot regardless of millis() value.
       bool     last_was_dhw_                = false;
       bool     last_was_heating_            = false;
+      bool     last_was_cooling_            = false;
       uint32_t last_run_time_               = UINT32_MAX - 700000UL;
 
       // Free cooling window tracking (HP-off period, any time of day)
@@ -226,6 +230,8 @@ namespace esphome
       
       float get_heating_produced_kwh() const { return last_total_heating_produced_; }
       float get_heating_consumed_kwh() const { return last_total_heating_consumed_; }
+      float get_cooling_produced_kwh() const { return last_total_cooling_produced_; }
+      float get_cooling_consumed_kwh() const { return last_total_cooling_consumed_; }
       float get_dhw_produced_kwh() const { return last_total_dhw_produced_; }
       float get_dhw_consumed_kwh() const { return last_total_dhw_consumed_; }
       float get_total_consumed_kwh() const { return this->last_total_all_consumed_; }

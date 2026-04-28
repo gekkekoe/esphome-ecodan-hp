@@ -107,6 +107,11 @@ asgard_dashboard:
   num_battery_max_discharge_kw_id:   num_battery_max_discharge_kw
   num_raw_solar_factor_id: num_raw_solar_factor
 
+  num_raw_cool_produced_id:          num_raw_cool_produced
+  num_raw_cool_elec_consumed_id:     num_raw_cool_elec_consumed
+  num_raw_cool_runtime_hours_id:     num_raw_cool_runtime_hours
+  num_raw_cool_avg_outside_temp_id:  num_raw_cool_avg_outside_temp
+
   solver_kwh_meter_feedback_source_id: solver_kwh_meter_feedback_source
   solver_kwh_meter_feedback_id: solver_kwh_meter_feedback
   

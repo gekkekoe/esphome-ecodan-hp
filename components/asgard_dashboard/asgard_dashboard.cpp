@@ -357,6 +357,11 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "battery_max_discharge_kw") { doNumber(num_battery_max_discharge_kw_); return; }
   if (key == "dhw_start_threshold") { doNumber(num_dhw_start_threshold_); return; }
 
+  if (key == "raw_cool_produced") { doNumber(num_raw_cool_produced_); return; }
+  if (key == "raw_cool_elec_consumed") { doNumber(num_raw_cool_elec_consumed_); return; }
+  if (key == "raw_cool_runtime_hours") { doNumber(num_raw_cool_runtime_hours_); return; }
+  if (key == "raw_cool_avg_outside_temp") { doNumber(num_raw_cool_avg_outside_temp_); return; }
+
   if (key == "predictive_short_cycle_high_delta_time_window")    { doNumber(pred_sc_time_);    return; }
   if (key == "predictive_short_cycle_high_delta_threshold")    { doNumber(pred_sc_delta_);    return; }
 
@@ -534,6 +539,11 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_raw_delta_room_temp_, current_snapshot_.num_raw_delta_room_temp);
   get_n(num_raw_hl_tm_product_, current_snapshot_.num_raw_hl_tm_product);
   get_n(num_raw_solar_factor_, current_snapshot_.num_raw_solar_factor);
+
+  get_n(num_raw_cool_produced_, current_snapshot_.num_raw_cool_produced);
+  get_n(num_raw_cool_elec_consumed_, current_snapshot_.num_raw_cool_elec_consumed);
+  get_n(num_raw_cool_runtime_hours_, current_snapshot_.num_raw_cool_runtime_hours);
+  get_n(num_raw_cool_avg_outside_temp_, current_snapshot_.num_raw_cool_avg_outside_temp);
 
   get_n(num_battery_soc_kwh_, current_snapshot_.num_battery_soc_kwh);
   get_n(num_battery_max_discharge_kw_, current_snapshot_.num_battery_max_discharge_kw);
@@ -795,6 +805,16 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_lim("battery_max_discharge_kw_lim", snap.num_battery_max_discharge_kw);
   p_n("dhw_start_threshold",    snap.num_dhw_start_threshold.val);
   p_lim("dhw_start_threshold_lim", snap.num_dhw_start_threshold);
+
+  p_n("raw_cool_produced",      snap.num_raw_cool_produced.val);
+  p_lim("raw_cool_produced_lim",snap.num_raw_cool_produced);
+  p_n("raw_cool_elec_consumed", snap.num_raw_cool_elec_consumed.val);
+  p_lim("raw_cool_elec_consumed_lim",snap.num_raw_cool_elec_consumed);
+  p_n("raw_cool_runtime_hours", snap.num_raw_cool_runtime_hours.val);
+  p_lim("raw_cool_runtime_hours_lim",snap.num_raw_cool_runtime_hours);
+  p_n("raw_cool_avg_outside_temp",   snap.num_raw_cool_avg_outside_temp.val);
+  p_lim("raw_cool_avg_outside_temp_lim", snap.num_raw_cool_avg_outside_temp);
+  
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
   // --- String fields (solver IP, version) — escape inline into buf ---

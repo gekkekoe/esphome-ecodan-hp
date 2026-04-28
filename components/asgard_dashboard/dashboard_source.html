@@ -239,6 +239,12 @@ header {
       .stat-row { gap: 8px; justify-content: space-between; }
       .ctrl-label { font-size: 10px; }
     }
+  /* ── Physics Card Tabs & Steppers ── */
+  .physics-card .step-input { width: 72px; font-size: 12px; }
+  .phys-tabs { display: flex; background: var(--bg); border-radius: 8px; margin-bottom: 18px; padding: 4px; gap: 4px; }
+  .phys-tabs button { flex: 1; background: transparent; border: none; color: var(--text3); padding: 8px 0; border-radius: 6px; cursor: pointer; font-family: var(--sans); font-size: 13px; transition: 0.2s; }
+  .phys-tabs button.active-heat { background: var(--heat); color: #fff; font-weight: 600; }
+  .phys-tabs button.active-cool { background: var(--cool); color: #fff; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -829,30 +835,58 @@ header {
         </div>
       </div>
 
-    <div class="ctrl-card physics-card">
+      <div class="ctrl-card physics-card">
       <div class="section-title">Physics Data (Daily Averages)</div>
-      <style>.physics-card .step-input { width: 72px; font-size: 12px; }</style>
-      <div class="sub-label" style="margin-top:0;">Sent to Solver (Overridable)</div>
-
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">Heat Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total heat energy produced yesterday in heating mode. DHW excluded. Used to calculate COP.</span></span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-heat', -0.1)">−</button><input type="number" class="step-input" id="raw-heat-val" onchange="manualInput('raw-heat', this.value)" /><button class="step-btn" onclick="step('raw-heat', +0.1)">+</button></div>
+      <div class="phys-tabs">
+        <button id="tab-btn-heat" class="active-heat" onclick="togglePhysicsTab('heat')">Heating Profile</button>
+        <button id="tab-btn-cool" onclick="togglePhysicsTab('cool')">Cooling Profile</button>
       </div>
 
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">Elec Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump yesterday in heating mode. DHW excluded. COP = Heat / Elec.</span></span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-elec-val" onchange="manualInput('raw-elec', this.value)" /><button class="step-btn" onclick="step('raw-elec', +0.1)">+</button></div>
+      <div id="phys-group-heat">
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Heat Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total heat energy produced yesterday in heating mode. DHW excluded. Used to calculate COP.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('raw-heat', -0.1)">−</button><input type="number" class="step-input" id="raw-heat-val" onchange="manualInput('raw-heat', this.value)" /><button class="step-btn" onclick="step('raw-heat', +0.1)">+</button></div>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Elec Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump yesterday in heating mode. DHW excluded. COP = Heat / Elec.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('raw-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-elec-val" onchange="manualInput('raw-elec', this.value)" /><button class="step-btn" onclick="step('raw-elec', +0.1)">+</button></div>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in heating mode yesterday. Used to derive thermal mass.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('raw-run', -0.1)">−</button><input type="number" class="step-input" id="raw-run-val" onchange="manualInput('raw-run', this.value)" /><button class="step-btn" onclick="step('raw-run', +0.1)">+</button></div>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Avg Ambient Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature yesterday. Used to calculate heat loss and COP correction.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('raw-out', -0.1)">−</button><input type="number" class="step-input" id="raw-out-val" onchange="manualInput('raw-out', this.value)" /><button class="step-btn" onclick="step('raw-out', +0.1)">+</button></div>
+        </div>
       </div>
 
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in heating mode yesterday. Used to derive thermal mass.</span></span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-run', -0.1)">−</button><input type="number" class="step-input" id="raw-run-val" onchange="manualInput('raw-run', this.value)" /><button class="step-btn" onclick="step('raw-run', +0.1)">+</button></div>
+      <div id="phys-group-cool" style="display: none;">
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Cooling Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total cooling energy produced yesterday. Used to calculate EER.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('raw-cool-prod', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-prod-val" onchange="manualInput('raw-cool-prod', this.value)" /><button class="step-btn" onclick="step('raw-cool-prod', +0.1)">+</button></div>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Cool Elec Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump yesterday in cooling mode. EER = Cool / Elec.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('raw-cool-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-elec-val" onchange="manualInput('raw-cool-elec', this.value)" /><button class="step-btn" onclick="step('raw-cool-elec', +0.1)">+</button></div>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Cooling Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in cooling mode yesterday.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('raw-cool-run', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-run-val" onchange="manualInput('raw-cool-run', this.value)" /><button class="step-btn" onclick="step('raw-cool-run', +0.1)">+</button></div>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Cooling Avg Ambient<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature yesterday during cooling.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('raw-cool-out', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-out-val" onchange="manualInput('raw-cool-out', this.value)" /><button class="step-btn" onclick="step('raw-cool-out', +0.1)">+</button></div>
+        </div>
       </div>
 
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">Avg Ambient Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature yesterday. Used to calculate heat loss and COP correction.</span></span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-out', -0.1)">−</button><input type="number" class="step-input" id="raw-out-val" onchange="manualInput('raw-out', this.value)" /><button class="step-btn" onclick="step('raw-out', +0.1)">+</button></div>
-      </div>
+      <div class="sub-label" style="margin-top:20px;">Universal Building Physics</div>
 
       <div class="ctrl-row">
         <span class="ctrl-label param-label">Avg Room Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average room temperature yesterday. Together with outside temp, determines heat loss coefficient.</span></span>
@@ -885,7 +919,7 @@ header {
       </div>
 
       <button class="send-btn" onclick="sendPhysics(this)" style="margin-bottom:0; margin-top:24px;">Apply Physics Data</button>
-    </div>    
+    </div>
 
   </div>
   
@@ -987,7 +1021,8 @@ const pending = {
   'raw-heat': null, 'raw-elec': null, 'raw-run': null,
   'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-solar-factor': null,
   'batt-soc': null, 'batt-max-dis': null,
-  'cool-start-z1': null, 'cool-min-z1': null, 'dhw-thresh': null
+  'cool-start-z1': null, 'cool-min-z1': null, 'dhw-thresh': null,
+  'raw-cool-prod': null, 'raw-cool-elec': null, 'raw-cool-run': null, 'raw-cool-out': null
 };
 
 const lastEdit = {};
@@ -1031,7 +1066,11 @@ const LIMITS = {
   'batt-max-dis': { min: 0.5, max: 15.0, step: 0.1 },
   'cool-start-z1': { min: 16.0, max: 22.0, step: 0.5 },
   'cool-min-z1':   { min: 10.0, max: 25.0, step: 0.5 },
-  'dhw-thresh':    { min: 0.0, max: 20.0, step: 0.5 }
+  'dhw-thresh':    { min: 0.0, max: 20.0, step: 0.5 },
+  'raw-cool-prod': { min: 0.0, max: 200.0, step: 0.1 },
+  'raw-cool-elec': { min: 0.0, max: 100.0, step: 0.1 },
+  'raw-cool-run':  { min: 0.0, max: 24.0, step: 0.1 },
+  'raw-cool-out':  { min: -25.0, max: 50.0, step: 0.1 }
 };
 
 const STEP_EL = { 
@@ -1050,7 +1089,8 @@ const STEP_EL = {
   'batt-soc': 'batt-soc-val',
   'batt-max-dis': 'batt-max-dis-val',
   'cool-start-z1': 'cool-start-z1-val', 'cool-min-z1': 'cool-min-z1-val',
-  'dhw-thresh': 'dhw-thresh-val'
+  'dhw-thresh': 'dhw-thresh-val',
+  'raw-cool-prod': 'raw-cool-prod-val', 'raw-cool-elec': 'raw-cool-elec-val', 'raw-cool-run': 'raw-cool-run-val', 'raw-cool-out': 'raw-cool-out-val'
 };
 
 let lastGraphUpdate = 0;
@@ -1492,6 +1532,12 @@ function initCharts() {
       }
   };
 
+  const getMode = (ctx) => {
+      if (ctx.dataIndex !== undefined && odinDataCache && odinDataCache.operation_mode) return odinDataCache.operation_mode[ctx.dataIndex];
+      if (typeof latestState !== 'undefined' && latestState.operation_mode !== undefined) return latestState.operation_mode;
+      return 2;
+  };
+
   odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2d'), {
       type: 'bar',
       data: {
@@ -1499,7 +1545,7 @@ function initCharts() {
           datasets: [
               { label: 'Expected (Grid)',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
               { label: 'Expected (Solar)', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 0' },          
-              { label: 'Actual Heat',      data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
+              { label: 'Actual Climate',   data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
               { label: 'Actual DHW',       data: [], backgroundColor: 'rgba(255,107,53,0.35)',  borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' },
               { label: 'Actual Standby',   data: [], backgroundColor: 'rgba(74,90,122,0.35)',   borderColor: '#4a5a7a', borderWidth: 1, stack: 'Stack 1' }
           ]
@@ -1522,10 +1568,10 @@ function initCharts() {
       data: {
           labels: labels72,
           datasets: [
-              { label: 'Expected Heat',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
-              { label: 'Expected Solar', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 2' },
-              { label: 'Actual Heat',    data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
-              { label: 'Actual DHW',     data: [], backgroundColor: 'rgba(255,107,53,0.35)',  borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' }
+              { label: 'Expected Climate',  data: [], backgroundColor: 'rgba(255,176,32,0.35)', borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
+              { label: 'Expected Solar',    data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)', borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 2' },
+              { label: 'Actual Climate',    data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
+              { label: 'Actual DHW',        data: [], backgroundColor: 'rgba(255,107,53,0.35)', borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' }
           ]
       },
       options: {
@@ -1546,8 +1592,8 @@ function initCharts() {
       data: {
           labels: labels72,
           datasets: [
-              { label: 'Expected',    data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1 },
-              { label: 'Actual',  data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
+              { label: 'Expected', data: [], backgroundColor: 'rgba(255,176,32,0.35)', borderColor: '#ffb020', borderWidth: 1 },
+              { label: 'Actual',   data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
           ]
       },
       options: {
@@ -1749,7 +1795,7 @@ function updateOdinCharts() {
                         
                         const isRunning = history.bin_comp[i] === 1 || history.freq[i] > 0;
                         if (isRunning) {
-                            if (mode === 'Heating') hConsHeat[h] += delta;
+                            if (mode === 'Heating' || mode === 'Cooling') hConsHeat[h] += delta;
                             else if (mode === 'Hot Water' || mode === 'Legionella') hConsDhw[h] += delta;
                         }
                     }
@@ -1766,7 +1812,7 @@ function updateOdinCharts() {
                         
                         const isRunning = history.bin_comp[i] === 1 || history.freq[i] > 0;
                         if (isRunning) {
-                            if (mode === 'Heating') hProdHeat[h] += delta;
+                            if (mode === 'Heating' || mode === 'Cooling') hProdHeat[h] += delta;
                             else if (mode === 'Hot Water' || mode === 'Legionella') hProdDhw[h] += delta;
                         }
                     }
@@ -2128,6 +2174,24 @@ function updateDot(id, action) {
   }
 }
 
+let physTabUserToggled = false;
+
+function togglePhysicsTab(mode) {
+  physTabUserToggled = true;
+  
+  if (mode === 'cool') {
+    document.getElementById('phys-group-heat').style.display = 'none';
+    document.getElementById('phys-group-cool').style.display = 'block';
+    document.getElementById('tab-btn-heat').classList.remove('active-heat');
+    document.getElementById('tab-btn-cool').classList.add('active-cool');
+  } else {
+    document.getElementById('phys-group-heat').style.display = 'block';
+    document.getElementById('phys-group-cool').style.display = 'none';
+    document.getElementById('tab-btn-heat').classList.add('active-heat');
+    document.getElementById('tab-btn-cool').classList.remove('active-cool');
+  }
+}
+
 function toggleCoolingUI() {
   // --- Zone 1 ---
   const opModeZ1 = document.getElementById('sel-z1mode')?.selectedIndex;
@@ -2198,6 +2262,11 @@ function render(d) {
   if (d.min_flow_z2_lim) { LIMITS['aa-min-z2'].min = d.min_flow_z2_lim.min; LIMITS['aa-min-z2'].max = d.min_flow_z2_lim.max; LIMITS['aa-min-z2'].step = 0.1; }
   if (d.pred_sc_time_lim) { LIMITS['psc-win'].min = d.pred_sc_time_lim.min; LIMITS['psc-win'].max = d.pred_sc_time_lim.max; LIMITS['psc-win'].step = d.pred_sc_time_lim.step; }
   if (d.pred_sc_delta_lim) { LIMITS['psc-delta'].min = d.pred_sc_delta_lim.min; LIMITS['psc-delta'].max = d.pred_sc_delta_lim.max; LIMITS['psc-delta'].step = d.pred_sc_delta_lim.step; }
+
+  if (d.raw_cool_produced_lim) { LIMITS['raw-cool-prod'].min = d.raw_cool_produced_lim.min; LIMITS['raw-cool-prod'].max = d.raw_cool_produced_lim.max; LIMITS['raw-cool-prod'].step = d.raw_cool_produced_lim.step; }
+  if (d.raw_cool_elec_consumed_lim) { LIMITS['raw-cool-elec'].min = d.raw_cool_elec_consumed_lim.min; LIMITS['raw-cool-elec'].max = d.raw_cool_elec_consumed_lim.max; LIMITS['raw-cool-elec'].step = d.raw_cool_elec_consumed_lim.step; }
+  if (d.raw_cool_runtime_hours_lim) { LIMITS['raw-cool-run'].min = d.raw_cool_runtime_hours_lim.min; LIMITS['raw-cool-run'].max = d.raw_cool_runtime_hours_lim.max; LIMITS['raw-cool-run'].step = d.raw_cool_runtime_hours_lim.step; }
+  if (d.raw_cool_avg_outside_temp_lim) { LIMITS['raw-cool-out'].min = d.raw_cool_avg_outside_temp_lim.min; LIMITS['raw-cool-out'].max = d.raw_cool_avg_outside_temp_lim.max; LIMITS['raw-cool-out'].step = d.raw_cool_avg_outside_temp_lim.step; }
 
   if (d.hysteresis_z1_lim) {
     const el = document.getElementById('z1-hyst');
@@ -2312,6 +2381,17 @@ function render(d) {
   if (d.cool_smart_z1_lim) { LIMITS['cool-start-z1'].min = d.cool_smart_z1_lim.min; LIMITS['cool-start-z1'].max = d.cool_smart_z1_lim.max; LIMITS['cool-start-z1'].step = d.cool_smart_z1_lim.step || 0.5; }
   if (d.min_cool_flow_z1_lim) { LIMITS['cool-min-z1'].min = d.min_cool_flow_z1_lim.min; LIMITS['cool-min-z1'].max = d.min_cool_flow_z1_lim.max; LIMITS['cool-min-z1'].step = d.min_cool_flow_z1_lim.step || 0.5; }
   
+  // Auto-switch physics tabs based on actual heat pump mode (if user hasn't clicked yet)
+  if (!physTabUserToggled && d.operation_mode !== undefined) {
+    if (d.operation_mode === 3) { // 3 = COOL_ON
+      togglePhysicsTab('cool');
+      physTabUserToggled = false; // Reset flag so it keeps tracking auto-changes
+    } else if (d.operation_mode === 2) { // 2 = HEAT_ON
+      togglePhysicsTab('heat');
+      physTabUserToggled = false;
+    }
+  }
+
   seedPending('cool-start-z1', d.cooling_smart_start_z1);
   seedPending('cool-min-z1', d.minimum_cooling_flow_z1);
   seedPending('dhw-thresh', d.dhw_start_threshold);
@@ -2380,6 +2460,11 @@ function render(d) {
   seedPending('raw-solar-factor', d.raw_solar_factor);
   seedPending('batt-soc', d.battery_soc_kwh);
   seedPending('batt-max-dis', d.battery_max_discharge_kw);
+
+  seedPending('raw-cool-prod', d.raw_cool_produced);
+  seedPending('raw-cool-elec', d.raw_cool_elec_consumed);
+  seedPending('raw-cool-run',  d.raw_cool_runtime_hours);
+  seedPending('raw-cool-out',  d.raw_cool_avg_outside_temp);
 
   const isRunning = d.status_compressor;
   const isFlowing = (d.flow_rate && d.flow_rate > 2) || d.status_water_pump;
@@ -2620,11 +2705,16 @@ async function sendPhysics(btn) {
   btn.classList.add('sending');
   let c = 0;
   try {
-    const physicsKeys = ['raw-heat','raw-elec','raw-run','raw-out','raw-room','raw-delta','raw-hl-tm','raw-solar-factor','batt-soc','batt-max-dis'];
-    const physicsMap = { 'raw-heat': 'raw_heat_produced', 'raw-elec': 'raw_elec_consumed', 'raw-run': 'raw_runtime_hours',
+    const physicsKeys = ['raw-heat','raw-elec','raw-run','raw-out','raw-room','raw-delta','raw-hl-tm','raw-solar-factor','batt-soc','batt-max-dis', 'raw-cool-prod', 'raw-cool-elec', 'raw-cool-run', 'raw-cool-out'];
+    
+    const physicsMap = { 
+      'raw-heat': 'raw_heat_produced', 'raw-elec': 'raw_elec_consumed', 'raw-run': 'raw_runtime_hours',
       'raw-out': 'raw_avg_outside_temp', 'raw-room': 'raw_avg_room_temp', 'raw-delta': 'raw_delta_room_temp',
       'raw-hl-tm': 'raw_hl_tm_product', 'raw-solar-factor': 'raw_solar_factor',
-      'batt-soc': 'battery_soc_kwh', 'batt-max-dis': 'battery_max_discharge_kw' };
+      'batt-soc': 'battery_soc_kwh', 'batt-max-dis': 'battery_max_discharge_kw',
+      'raw-cool-prod': 'raw_cool_produced', 'raw-cool-elec': 'raw_cool_elec_consumed', 
+      'raw-cool-run': 'raw_cool_runtime_hours', 'raw-cool-out': 'raw_cool_avg_outside_temp'
+    };
     for (const k of physicsKeys) {
       if (hasChanged(k)) {
         await apiPost({ key: physicsMap[k], value: pending[k] });
@@ -2651,12 +2741,28 @@ async function runOdinSolver() {
         if (!isNaN(parsed) && parsed >= 0 && parsed <= 23) solveHour = parsed;
     }
 
+    const elMode = document.getElementById('sel-z1mode');
+    const opModeZ1 = elMode ? elMode.selectedIndex : -1;
+    
+    let selectedMode = 0; 
+
+    // Index 3, 4 en 6 are cooling modes (Target, Flow, Curve)
+    if (opModeZ1 === 3 || opModeZ1 === 4 || opModeZ1 === 6) {
+        selectedMode = 3; // COOL_ON
+    } else if (opModeZ1 === 0 || opModeZ1 === 1 || opModeZ1 === 2 || opModeZ1 === 5) {
+        selectedMode = 2; // HEAT_ON
+    }
+
     const payload = {
         params: {
             heat_produced: pending['raw-heat'] || latestState.raw_heat_produced || 0,
             elec_consumed: pending['raw-elec'] || latestState.raw_elec_consumed || 0,
             runtime_hours: pending['raw-run'] || latestState.raw_runtime_hours || 0,
             avg_outside_temp: pending['raw-out'] || latestState.raw_avg_outside_temp || 7,
+            cool_produced: pending['raw-cool-prod'] || latestState.raw_cool_produced || 0,
+            cool_elec_consumed: pending['raw-cool-elec'] || latestState.raw_cool_elec_consumed || 0,
+            cool_runtime_hours: pending['raw-cool-run'] || latestState.raw_cool_runtime_hours || 0,
+            cool_avg_outside_temp: pending['raw-cool-out'] || latestState.raw_cool_avg_outside_temp || 20,
             avg_room_temp: pending['raw-room'] || latestState.raw_avg_room_temp || 20,
             delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
             hl_tm_product: pending['raw-hl-tm'] ?? latestState.raw_hl_tm_product ?? 0.0,
@@ -2670,7 +2776,7 @@ async function runOdinSolver() {
             dhw_drop: latestState.dhw_flow_temp_drop || 0,
             dhw_start_threshold: pending['dhw-thresh'] ?? latestState.dhw_start_threshold ?? 0.0,
             // 0=OFF,1=DHW_ON,2=HEAT_ON,3=COOL_ON,5=FROST_PROTECT,6=LEGIONELLA,255=UNAVAILABLE
-            current_operation_mode: latestState.operation_mode ?? 0
+            current_operation_mode: selectedMode
         }
     };
 

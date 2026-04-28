@@ -196,3 +196,7 @@ substitutions:
   num_battery_max_discharge_kw: "Battery Max Discharge (kW)"
   num_raw_hl_tm_product: "Raw HL×TM Product"
   num_raw_solar_factor: "Passive Solar Gain Factor"
+  num_raw_cool_produced: "Raw Cool Produced"
+  num_raw_cool_elec_consumed: "Raw Cool Elec Consumed"
+  num_raw_cool_runtime_hours: "Raw Cool Runtime"
+  num_raw_cool_avg_outside_temp: "Raw Cool Avg Outside Temp"
