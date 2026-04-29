@@ -309,7 +309,20 @@ Temp C	specific heat (J/Kg. K)
         void update_output_power_estimation(float specific_heat_constant_override = NAN) {
             if (!std::isnan(HpFeedTemperature) && !std::isnan(HpReturnTemperature) && FlowRate > 0) {
                 float specific_heat_constant = std::isnan(specific_heat_constant_override) ? estimate_water_constant(HpFeedTemperature) : specific_heat_constant_override;
-                ComputedOutputPower = (FlowRate/60.0) * (HpFeedTemperature - HpReturnTemperature) * specific_heat_constant;
+
+                float delta_t = 0.0f;
+
+                if (this->Operation == ecodan::Status::OperationMode::COOL_ON) {
+                    delta_t = HpReturnTemperature - HpFeedTemperature;
+                } 
+                else {
+                    delta_t = HpFeedTemperature - HpReturnTemperature;
+                }
+
+                if (delta_t < 0.0f)
+                    delta_t = 0.0f;
+
+                ComputedOutputPower = (FlowRate/60.0) * delta_t * specific_heat_constant;
             }
             else {
                 ComputedOutputPower = 0.0f;

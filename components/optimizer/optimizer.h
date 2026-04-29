@@ -51,7 +51,7 @@ namespace esphome
           switch (int_val) {
               case 1:   return OptimizerOperationMode::DHW_ON;
               case 2:   return OptimizerOperationMode::HEAT_ON;
-              //case 3:   return OptimizerOperationMode::COOL_ON;
+              case 3:   return OptimizerOperationMode::COOL_ON;
               //case 5:   return OptimizerOperationMode::FROST_PROTECT;
               //case 6:   return OptimizerOperationMode::LEGIONELLA_PREVENTION;
               case 255: return OptimizerOperationMode::UNAVAILABLE;

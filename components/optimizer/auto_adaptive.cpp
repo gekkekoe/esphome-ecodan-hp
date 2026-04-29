@@ -260,7 +260,8 @@ namespace esphome
             calculated_flow = this->clamp_flow_temp(calculated_flow,
                                                     this->state_.minimum_cooling_flow_temp->state,
                                                     this->state_.cooling_smart_start_temp->state);
-            return this->round_nearest_half(calculated_flow);
+            
+            return calculated_flow;
         }
 
         // ─────────────────────────────────────────────────────────────────
@@ -366,11 +367,10 @@ namespace esphome
                 }
 
                 if (solver_load_ratio < 0.0f && !solver_heatpump_off) {
-                    if (millis() < 2*60000) {
+                    if (millis() < 2 * 60000) {
                         ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN enabled but data not ready. Skipping one AA iteration.", (i + 1));
                         return;
-                    }
-                    else {
+                    } else {
                         ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN data still pending (+5m). Falling back to auto adaptive.", (i + 1));
                     }
                 } 
@@ -380,41 +380,16 @@ namespace esphome
                         (i + 1), solver_load_ratio, static_cast<uint8_t>(solver_operating_mode));
                     return;
                 }
-                else if (solver_operating_mode == OptimizerOperationMode::COOL_ON) {
-                    // ODIN says cooling this hour. Use load_ratio to scale the cooling delta-T.
-                    // Cooling delta-T range: 0 = smart_start_temp (minimum cooling), 
-                    // max delta = (smart_start_temp - min_cooling_flow_temp).
-                    if (!is_cooling_mode) {
-                        ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN wants cooling but zone is not in cooling mode — skip.", (i + 1));
-                        return;
-                    }
-                    float cool_min = this->state_.minimum_cooling_flow_temp->state;
-                    float cool_max = this->state_.cooling_smart_start_temp->state;
-                    float max_cool_delta = std::max(0.0f, cool_max - cool_min);
-                    // load_ratio=1.0 → maximum cooling (min flow temp), load_ratio=0 → smart start
-                    float target_cool_delta = solver_load_ratio * max_cool_delta;
-                    out_flow_cool = this->calculate_cooling_flow_(i, status, target_cool_delta);
-                    ESP_LOGD(OPTIMIZER_TAG,
-                        "Z%d ODIN COOLING: load_ratio=%.2f delta=%.1f → flow=%.1f°C",
-                        (i + 1), solver_load_ratio, target_cool_delta, out_flow_cool);
-                    return;
-                }
                 else {
+                    // --- UNIFIED PHYSICAL MODEL FOR HEATING & COOLING ---
                     float desired_delta = 0.0f;
+                    float max_out = (this->odin_max_output_ != 0) ? this->odin_max_output_ : 7.0f;
+                    float target_kw = solver_load_ratio * max_out;
 
-                    // If we have a reliable flow rate, use the deterministic physical formula.
-                    // Otherwise, fall back to the heuristic load-ratio mapping.
+                    // Calculate required Delta T using physics if flow is reliable
                     if (flow_rate > 5.0f) {
-                        float max_out = 7.0f;
-                        if (this->odin_max_output_ != 0) {
-                            max_out = this->odin_max_output_;
-                        }
-                        
-                        // kW = (flow / 60) * (delta T) * 4.18
-                        // delta T = (kW * 60) / (flow * 4.18)
                         float shc_override = this->state_.ecodan_instance->get_specific_heat_constant();
                         float specific_heat_constant = std::isnan(shc_override) ? status.estimate_water_constant(actual_flow_temp) : shc_override;
-                        float target_kw = solver_load_ratio * max_out;
                         float physical_delta = (target_kw * 60.0f) / (flow_rate * specific_heat_constant);
                         desired_delta = std::clamp(physical_delta, prof.base_min_delta_t, prof.max_delta_t);
 
@@ -422,29 +397,42 @@ namespace esphome
                             "Z%d ODIN (Physical) demands %.1fkW. Flow: %.1f L/min -> \u0394T: %.2f (Clamped: %.2f)",
                             (i + 1), target_kw, flow_rate, physical_delta, desired_delta);
                     } else {
-                        // Fallback: Heuristic linear mapping when flow is too low/starting up
+                        // Fallback heuristic when flow is too low
                         desired_delta = prof.base_min_delta_t + solver_load_ratio * (prof.max_delta_t - prof.base_min_delta_t);
                         
                         ESP_LOGD(OPTIMIZER_TAG,
                             "Z%d ODIN (Heuristic) Low Flow (%.1f L/min). Load Ratio: %.2f -> \u0394T: %.2f",
                             (i + 1), flow_rate, solver_load_ratio, desired_delta);
                     }
-                    
-                    // Reverse-engineer the error_factor so calculate_heating_flow_ produces the exact desired Delta T
-                    if (prof.max_delta_t > dynamic_min) {
-                        error_factor = (desired_delta - dynamic_min) / (prof.max_delta_t - dynamic_min);
-                        error_factor = std::max(0.0f, error_factor); // Allow > 1.0 if physical demand is higher than profile max
-                    } else {
-                        error_factor = 1.0f;
-                    }
-                    
-                    // Disable local smart boost, and setpoint reached
-                    smart_boost = 1.0f; 
-                    set_point_reached = false;
 
-                    ESP_LOGD(OPTIMIZER_TAG,
-                        "Z%d ODIN Final mapped error_factor: %.2f",
-                        (i + 1), error_factor);
+                    // --- APPLY TO SPECIFIC OPERATION MODE ---
+                    if (solver_operating_mode == OptimizerOperationMode::COOL_ON) {
+                        if (!is_cooling_mode) {
+                            ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN wants cooling but zone is not in cooling mode — skip.", (i + 1));
+                            return;
+                        }
+                        
+                        // Apply the physical delta directly to the cooling calculation
+                        out_flow_cool = this->calculate_cooling_flow_(i, status, desired_delta);
+                        ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN COOLING: delta=%.1f → flow=%.1f°C", (i + 1), desired_delta, out_flow_cool);
+                        return; // Done with this zone for cooling
+                    } 
+                    else {
+                        // Heating mode: Reverse-engineer the error_factor so the rest of the function
+                        // can apply its defrost recovery and step-down logic correctly.
+                        if (prof.max_delta_t > dynamic_min) {
+                            error_factor = (desired_delta - dynamic_min) / (prof.max_delta_t - dynamic_min);
+                            error_factor = std::max(0.0f, error_factor); // Allow > 1.0 if physical demand is high
+                        } else {
+                            error_factor = 1.0f;
+                        }
+                        
+                        // Disable local smart boost, and setpoint reached
+                        smart_boost = 1.0f; 
+                        set_point_reached = false;
+
+                        ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN HEATING mapped error_factor: %.2f", (i + 1), error_factor);
+                    }
                 }
             }
 
