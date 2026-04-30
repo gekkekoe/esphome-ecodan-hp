@@ -456,6 +456,10 @@ namespace esphome
 
             const float ALPHA = 0.15f; 
 
+            auto safe_get = [](esphome::number::Number *comp, float fallback) {
+                return comp != nullptr ? comp->state : fallback;
+            };
+
             // ALWAYS UPDATE: Passive Data & Building Physics ---
             update_ema_num(this->state_.num_raw_avg_room_temp, avg_room, ALPHA);
             update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
@@ -468,27 +472,30 @@ namespace esphome
                 update_ema_num(this->state_.num_raw_avg_outside_temp, avg_outside, ALPHA);
 
                 ESP_LOGI(OPTIMIZER_TAG, "Full Heating update (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC",
-                         this->state_.num_raw_heat_produced->state, this->state_.num_raw_elec_consumed->state, 
-                         this->state_.num_raw_runtime_hours->state, this->state_.num_raw_avg_outside_temp->state,
-                         this->state_.num_raw_avg_room_temp->state);
+                         safe_get(this->state_.num_raw_heat_produced, heat_produced_kwh), 
+                         safe_get(this->state_.num_raw_elec_consumed, elec_consumed_kwh), 
+                         safe_get(this->state_.num_raw_runtime_hours, runtime_hours), 
+                         safe_get(this->state_.num_raw_avg_outside_temp, avg_outside),
+                         safe_get(this->state_.num_raw_avg_room_temp, avg_room));
 
             } else if (cool_produced_kwh >= 2.0f && cool_runtime_hours >= 1.0f) {
-                // Separate parallel track for cooling statistics (Energy Efficiency Ratio / EER modeling)
                 update_ema_num(this->state_.num_raw_cool_produced, cool_produced_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_cool_elec_consumed, cool_elec_consumed_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_cool_runtime_hours, cool_runtime_hours, ALPHA);
                 update_ema_num(this->state_.num_raw_cool_avg_outside_temp, avg_outside, ALPHA);
 
                 ESP_LOGI(OPTIMIZER_TAG, "Full Cooling update (15%% EMA): CoolProd=%.1fkWh, CoolElec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC",
-                         this->state_.num_raw_cool_produced->state, this->state_.num_raw_cool_elec_consumed->state, 
-                         this->state_.num_raw_cool_runtime_hours->state, this->state_.num_raw_cool_avg_outside_temp->state);
+                         safe_get(this->state_.num_raw_cool_produced, cool_produced_kwh), 
+                         safe_get(this->state_.num_raw_cool_elec_consumed, cool_elec_consumed_kwh), 
+                         safe_get(this->state_.num_raw_cool_runtime_hours, cool_runtime_hours), 
+                         safe_get(this->state_.num_raw_cool_avg_outside_temp, avg_outside));
 
             } else {
                 // Output a log message, but do not abort before passive stats are saved
                 ESP_LOGI(OPTIMIZER_TAG, "Passive stats saved (AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC). Heating/Cooling skipped (<2kWh or <1h).",
-                         this->state_.num_raw_avg_outside_temp->state, 
-                         this->state_.num_raw_avg_room_temp->state, 
-                         this->state_.num_raw_delta_room_temp->state);
+                         safe_get(this->state_.num_raw_avg_outside_temp, avg_outside), 
+                         safe_get(this->state_.num_raw_avg_room_temp, avg_room), 
+                         safe_get(this->state_.num_raw_delta_room_temp, delta_room));
             }
         }
 

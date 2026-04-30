@@ -2210,8 +2210,19 @@ function toggleCoolingUI() {
   if (h2) h2.style.display = z2IsCooling ? 'none' : 'block';
   
   // --- Global Cooling ---
+  const isCoolingMode = z1IsCooling || z2IsCooling;
   const cGlobal = document.getElementById('cool-settings-z1');
-  if (cGlobal) cGlobal.style.display = (z1IsCooling || z2IsCooling) ? 'block' : 'none';
+  if (cGlobal) cGlobal.style.display = isCoolingMode ? 'block' : 'none';
+
+  if (!physTabUserToggled) {
+    if (isCoolingMode) {
+      togglePhysicsTab('cool');
+      physTabUserToggled = false; // Reset flag to maintain auto-tracking
+    } else {
+      togglePhysicsTab('heat');
+      physTabUserToggled = false; // Reset flag to maintain auto-tracking
+    }
+  }
 }
 
 function render(d) {
@@ -2380,17 +2391,6 @@ function render(d) {
 
   if (d.cool_smart_z1_lim) { LIMITS['cool-start-z1'].min = d.cool_smart_z1_lim.min; LIMITS['cool-start-z1'].max = d.cool_smart_z1_lim.max; LIMITS['cool-start-z1'].step = d.cool_smart_z1_lim.step || 0.5; }
   if (d.min_cool_flow_z1_lim) { LIMITS['cool-min-z1'].min = d.min_cool_flow_z1_lim.min; LIMITS['cool-min-z1'].max = d.min_cool_flow_z1_lim.max; LIMITS['cool-min-z1'].step = d.min_cool_flow_z1_lim.step || 0.5; }
-  
-  // Auto-switch physics tabs based on actual heat pump mode (if user hasn't clicked yet)
-  if (!physTabUserToggled && d.operation_mode !== undefined) {
-    if (d.operation_mode === 3) { // 3 = COOL_ON
-      togglePhysicsTab('cool');
-      physTabUserToggled = false; // Reset flag so it keeps tracking auto-changes
-    } else if (d.operation_mode === 2) { // 2 = HEAT_ON
-      togglePhysicsTab('heat');
-      physTabUserToggled = false;
-    }
-  }
 
   seedPending('cool-start-z1', d.cooling_smart_start_z1);
   seedPending('cool-min-z1', d.minimum_cooling_flow_z1);
