@@ -2195,21 +2195,19 @@ function togglePhysicsTab(mode) {
 function toggleCoolingUI() {
   // --- Zone 1 ---
   const opModeZ1 = document.getElementById('sel-z1mode')?.selectedIndex;
-  const vModeZ1 = document.getElementById('sel-z1-vmode')?.value;
-  const z1IsCooling = (opModeZ1 === 3 || opModeZ1 === 4 || opModeZ1 === 6) || (vModeZ1 === 'cool');
+  const z1IsCooling = (opModeZ1 === 3 || opModeZ1 === 4 || opModeZ1 === 6);
   
   const h1 = document.getElementById('heat-settings-z1');
   if (h1) h1.style.display = z1IsCooling ? 'none' : 'block';
 
   // --- Zone 2 ---
   const opModeZ2 = document.getElementById('sel-z2mode')?.selectedIndex;
-  const vModeZ2 = document.getElementById('sel-z2-vmode')?.value;
-  const z2IsCooling = (opModeZ2 === 3 || opModeZ2 === 4 || opModeZ2 === 6) || (vModeZ2 === 'cool');
+  const z2IsCooling = (opModeZ2 === 3 || opModeZ2 === 4 || opModeZ2 === 6);
   
   const h2 = document.getElementById('heat-settings-z2');  
   if (h2) h2.style.display = z2IsCooling ? 'none' : 'block';
   
-  // --- Global Cooling ---
+  // --- Global Cooling (voor Auto Adaptive UI) ---
   const isCoolingMode = z1IsCooling || z2IsCooling;
   const cGlobal = document.getElementById('cool-settings-z1');
   if (cGlobal) cGlobal.style.display = isCoolingMode ? 'block' : 'none';
@@ -2217,10 +2215,10 @@ function toggleCoolingUI() {
   if (!physTabUserToggled) {
     if (isCoolingMode) {
       togglePhysicsTab('cool');
-      physTabUserToggled = false; // Reset flag to maintain auto-tracking
+      physTabUserToggled = false;
     } else {
       togglePhysicsTab('heat');
-      physTabUserToggled = false; // Reset flag to maintain auto-tracking
+      physTabUserToggled = false;
     }
   }
 }
