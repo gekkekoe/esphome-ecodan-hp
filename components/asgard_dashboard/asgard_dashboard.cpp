@@ -1,5 +1,6 @@
 #include "asgard_dashboard.h"
 #include "dashboard_html.h"
+#include "setup_html.h"
 #include "dashboard_js.h"
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
@@ -98,6 +99,7 @@ bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
   char url_buf[AsyncWebServerRequest::URL_BUF_SIZE];
   auto url = request->url_to(url_buf);
   return (url == "/dashboard" || url == "/dashboard/" ||
+          url == "/dashboard/setup" ||
           url == "/dashboard/state" || url == "/dashboard/set" ||
           url == "/dashboard/history" || url == "/dashboard/odin" ||
           url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js"); 
@@ -108,6 +110,7 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
   auto url = request->url_to(url_buf);
   
   if      (url == "/dashboard" || url == "/dashboard/") handle_root_(request);
+  else if (url == "/dashboard/setup")                   handle_setup_(request);
   else if (url == "/dashboard/state")                   handle_state_(request);
   else if (url == "/dashboard/set")                     handle_set_(request);
   else if (url == "/dashboard/history")                 handle_history_request_(request);
@@ -155,6 +158,10 @@ void EcodanDashboard::send_chunked_(AsyncWebServerRequest *request, const char *
 
 void EcodanDashboard::handle_root_(AsyncWebServerRequest *request) {
   send_chunked_(request, "text/html", DASHBOARD_HTML_GZ, DASHBOARD_HTML_GZ_LEN, "no-cache");
+}
+
+void EcodanDashboard::handle_setup_(AsyncWebServerRequest *request) {
+  send_chunked_(request, "text/html", SETUP_HTML_GZ, SETUP_HTML_GZ_LEN, "no-cache");
 }
 
 void EcodanDashboard::handle_js_(AsyncWebServerRequest *request) {

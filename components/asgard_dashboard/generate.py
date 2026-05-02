@@ -2,7 +2,7 @@ import gzip
 import os
 import re
 
-def generate_header(source_file, output_file):
+def generate_header(source_file, output_file, array_name):
     if not os.path.exists(source_file):
         print(f"Error: {source_file} not found!")
         return
@@ -10,7 +10,7 @@ def generate_header(source_file, output_file):
     with open(source_file, 'r', encoding='utf-8') as f:
         content_str = f.read()
 
-    content_str = re.sub(r'', '', content_str)
+    content_str = re.sub(r'<!--[\s\S]*?-->', '', content_str)
     content_str = re.sub(r'/\*[\s\S]*?\*/', '', content_str)
     content_str = re.sub(r'^\s*//.*\n', '', content_str, flags=re.MULTILINE)
 
@@ -33,10 +33,10 @@ def generate_header(source_file, output_file):
 namespace esphome {{
 namespace asgard_dashboard {{
 
-static const uint8_t DASHBOARD_HTML_GZ[] = {{
+static const uint8_t {array_name}[] = {{
 {",\n".join(rows)}
 }};
-static const size_t DASHBOARD_HTML_GZ_LEN = {len(compressed)};
+static const size_t {array_name}_LEN = {len(compressed)};
 
 }} // namespace asgard_dashboard
 }} // namespace esphome
@@ -48,4 +48,6 @@ static const size_t DASHBOARD_HTML_GZ_LEN = {len(compressed)};
     print(f"Success! {output_file} generated. Size reduced from {len(content)} to {len(compressed)} bytes.")
 
 if __name__ == "__main__":
-    generate_header("dashboard_source.html", "dashboard_html.h")
+    # Ensure you name your source file "setup.html" in the same folder
+    generate_header("dashboard_source.html", "dashboard_html.h", "DASHBOARD_HTML_GZ")
+    generate_header("setup.html", "setup_html.h", "SETUP_HTML_GZ")

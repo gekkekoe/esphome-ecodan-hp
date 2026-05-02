@@ -347,6 +347,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
  protected:
   void handle_root_(AsyncWebServerRequest *request);
+  void handle_setup_(AsyncWebServerRequest *request);
   void handle_state_(AsyncWebServerRequest *request);
   void handle_set_(AsyncWebServerRequest *request);
   void handle_odin_request_(AsyncWebServerRequest *request);
