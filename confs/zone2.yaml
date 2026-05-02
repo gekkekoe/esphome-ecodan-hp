@@ -95,20 +95,28 @@ select:
             uint8_t new_idx = index.value();
             id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(new_idx), esphome::ecodan::Zone::ZONE_2);
 
-            // Sync the virtual thermostat (only if it is not currently OFF)
-            if (virtual_climate_z2 != nullptr && id(virtual_climate_z2).mode != climate::CLIMATE_MODE_OFF) {
-              auto call = id(virtual_climate_z2).make_call();
+            climate::Climate *v_climate = nullptr;
+            for (auto *c : App.get_climates()) {
+              if (c->get_name() == "Virtual Thermostat z2") {
+                v_climate = c;
+                break;
+              }
+            }
+
+            // Sync the virtual thermostat (if it exists in this build AND is not OFF)
+            if (v_climate != nullptr && v_climate->mode != climate::CLIMATE_MODE_OFF) {
+              auto call = v_climate->make_call();
               
               // Heating modes: Target (0), Flow (1), Curve (2), Floor Dry Up (5)
               if (new_idx == 0 || new_idx == 1 || new_idx == 2 || new_idx == 5) {
-                if (id(virtual_climate_z2).mode != climate::CLIMATE_MODE_HEAT) {
+                if (v_climate->mode != climate::CLIMATE_MODE_HEAT) {
                   call.set_mode(climate::CLIMATE_MODE_HEAT);
                   call.perform();
                 }
               }
               // Cooling modes: Target (3), Flow (4), Curve (6)
               else if (new_idx == 3 || new_idx == 4 || new_idx == 6) {
-                if (id(virtual_climate_z2).mode != climate::CLIMATE_MODE_COOL) {
+                if (v_climate->mode != climate::CLIMATE_MODE_COOL) {
                   call.set_mode(climate::CLIMATE_MODE_COOL);
                   call.perform();
                 }
