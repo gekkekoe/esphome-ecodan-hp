@@ -1305,13 +1305,6 @@ void EcodanDashboard::load_odin_data(int current_day) {
         return;
     }
 
-    // Restore show_tab — calling ESPHome objects is safe from the loop task
-    if (this->sw_show_solver_tab_ != nullptr) {
-        if (stored_show_tab) this->sw_show_solver_tab_->turn_on();
-        else                 this->sw_show_solver_tab_->turn_off();
-        ESP_LOGI(TAG, "NVS: show_solver_tab restored to %d", stored_show_tab);
-    }
-
     if (ok) {
         // Copy local snap buffers into member vectors
         auto copy_snap = [&](int idx, std::vector<float>& v) {
@@ -1347,6 +1340,13 @@ void EcodanDashboard::load_odin_data(int current_day) {
     }
 
     xSemaphoreGive(this->snapshot_mutex_);
+
+    // Restore show_tab AFTER releasing the mutex.
+    if (this->sw_show_solver_tab_ != nullptr) {
+        if (stored_show_tab) this->sw_show_solver_tab_->turn_on();
+        else                 this->sw_show_solver_tab_->turn_off();
+        ESP_LOGI(TAG, "NVS: show_solver_tab restored to %d", stored_show_tab);
+    }
 }
 
 void EcodanDashboard::store_odin_data(int current_hour, int current_day,
@@ -1572,19 +1572,22 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
           "\"today_start_index\":24,"
           "\"last_run\":{\"execution_ms\":%u,\"evaluated_nodes\":%u,\"bidding_zone\":\"%s\",\"heat_loss\":%.3f,\"base_cop\":%.2f,"
           "\"thermal_mass\":%.1f,\"exp_consumption\":%.2f,\"exp_production\":%.2f,"
-          "\"exp_solar\":%.2f,\"exp_solar_total\":%.2f,\"used_solar_kwp\":%.2f,\"total_cost\":%.4f}}",
+          "\"exp_solar\":%.2f,\"exp_solar_total\":%.2f,\"used_solar_kwp\":%.2f,"
+          "\"used_solar_correction\":%.3f,\"used_battery_soc_kwh\":%.2f,\"total_cost\":%.4f}}",
           stats.current_hour,
           stats.execution_ms,
           stats.evaluated_nodes,
           stats.bidding_zone.c_str(),
-          stats.heat_loss, 
+          stats.heat_loss,
           stats.base_cop,
-          stats.thermal_mass, 
-          stats.exp_consumption, 
+          stats.thermal_mass,
+          stats.exp_consumption,
           stats.exp_production,
-          stats.exp_solar, 
-          stats.exp_solar_total, 
-          stats.used_solar_kwp, 
+          stats.exp_solar,
+          stats.exp_solar_total,
+          stats.used_solar_kwp,
+          stats.used_solar_correction,
+          stats.used_battery_soc_kwh,
           stats.total_cost);
 
       if (offset > 0 && offset < JSON_BUFFER_SIZE) {

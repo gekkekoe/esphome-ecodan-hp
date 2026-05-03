@@ -318,6 +318,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
       float exp_consumption{0.0f}, exp_production{0.0f}, exp_solar{0.0f}, exp_solar_total{0.0f};
       float total_cost{0.0f};
       float used_solar_kwp{0.0f};
+      float used_solar_correction{1.0f};
+      float used_battery_soc_kwh{0.0f};
       float min_output{0.0f};
       float max_output{0.0f};
       std::string bidding_zone;
