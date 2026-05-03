@@ -268,7 +268,7 @@ namespace ecodan
         loopIndex = (loopIndex + 1) % MAX_STATUS_CMD_SIZE;
 
         // only execute when we have sensors and a ftc version is known, since ftc7 gets a lot for free
-        if (hasRequestCodeSensors && requestCodesEnabled && initialCmdCompleted() && loopIndex == 0) {
+        if (hasRequestCodeSensors && requestCodesEnabled && this->is_connected() && initialCmdCompleted() && loopIndex == 0) {
             int counter = 0;
             while (counter <= MAX_SERVICE_CODE_CMD_SIZE && activeRequestCode == Status::REQUEST_CODE::NONE) {
                 counter++;
@@ -310,7 +310,7 @@ namespace ecodan
         const unsigned long REQUEST_RETRY_INTERVAL = 1*1000; 
         static unsigned long last_svc_request_time = 0;
 
-        if (activeRequestCode != Status::REQUEST_CODE::NONE) {
+        if (this->is_connected() && this->requestCodesEnabled && activeRequestCode != Status::REQUEST_CODE::NONE) {
             unsigned long current_time = millis();
             if (current_time - last_svc_request_time >= REQUEST_RETRY_INTERVAL) {
                 ESP_LOGD(TAG, "Sending active service request (code %d)...", activeRequestCode);
