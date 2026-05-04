@@ -5,6 +5,7 @@ venv
 build.yaml
 proxy.yaml
 asgard.yaml
+factory.yaml
 mqtt.yaml
 Firmware.bin
 sdkconfig.esp32dev
