@@ -186,3 +186,8 @@ substitutions:
   num_battery_max_discharge_kw: "Maks. rozładowanie baterii (kW)"
   num_raw_hl_tm_product: "Surowy iloczyn HL×TM"
   num_raw_solar_factor: "Współczynnik pasywnych zysków słonecznych"
+
+  num_raw_cool_produced: "Wyprodukowane chłodzenie (Surowe)"
+  num_raw_cool_elec_consumed: "Zużycie prądu chłodzenie (Surowe)"
+  num_raw_cool_runtime_hours: "Czas pracy chłodzenia (Surowe)"
+  num_raw_cool_avg_outside_temp: "Śr. temp. zewn. chłodzenia (Surowe)"

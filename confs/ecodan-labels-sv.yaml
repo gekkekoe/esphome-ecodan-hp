@@ -187,3 +187,8 @@ substitutions:
   num_battery_max_discharge_kw: "Max. batteriurladdning (kW)"
   num_raw_hl_tm_product: "Rå HL×TM-produkt"
   num_raw_solar_factor: "Passiv solvärmefaktor"
+
+  num_raw_cool_produced: "Producerad kyla (Rådata)"
+  num_raw_cool_elec_consumed: "Elförbrukning kyla (Rådata)"
+  num_raw_cool_runtime_hours: "Drifttid kyla (Rådata)"
+  num_raw_cool_avg_outside_temp: "Genomsnittlig utetemp. kyla (Rådata)"

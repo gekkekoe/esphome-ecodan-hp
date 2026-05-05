@@ -197,3 +197,8 @@ substitutions:
   num_battery_max_discharge_kw: "Max. vybíjací výkon batérie (kW)"
   num_raw_hl_tm_product: "Hrubý súčin HL×TM"
   num_raw_solar_factor: "Faktor pasívnych solárnych ziskov"
+
+  num_raw_cool_produced: "Vyrobené chladenie (Surové)"
+  num_raw_cool_elec_consumed: "Spotreba elektriny chladenie (Surové)"
+  num_raw_cool_runtime_hours: "Čas behu chladenia (Surové)"
+  num_raw_cool_avg_outside_temp: "Priem. vonk. tepl. chladenia (Surové)"

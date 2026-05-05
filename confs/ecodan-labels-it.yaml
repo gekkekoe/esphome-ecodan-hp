@@ -187,3 +187,8 @@ substitutions:
   num_battery_max_discharge_kw: "Scarica max batteria (kW)"
   num_raw_hl_tm_product: "Prodotto HL×TM grezzo"
   num_raw_solar_factor: "Fattore di guadagno solare passivo"
+
+  num_raw_cool_produced: "Raffreddamento prodotto (Grezzo)"
+  num_raw_cool_elec_consumed: "Consumo elet. raffredd. (Grezzo)"
+  num_raw_cool_runtime_hours: "Tempo funz. raffreddamento (Grezzo)"
+  num_raw_cool_avg_outside_temp: "Temp. est. media raffredd. (Grezzo)"

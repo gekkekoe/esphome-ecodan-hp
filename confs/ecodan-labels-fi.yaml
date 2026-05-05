@@ -187,3 +187,8 @@ substitutions:
   num_battery_max_discharge_kw: "Akun maksimipurkaus (kW)"
   num_raw_hl_tm_product: "Raaka HL×TM-tulo"
   num_raw_solar_factor: "Passiivisen aurinkolämmön kerroin"
+
+  num_raw_cool_produced: "Tuotettu jäähdytys (Raaka)"
+  num_raw_cool_elec_consumed: "Jäähdytyksen sähkönkulutus (Raaka)"
+  num_raw_cool_runtime_hours: "Jäähdytyksen käyntiaika (Raaka)"
+  num_raw_cool_avg_outside_temp: "Keskim. ulkolämpötila jäähd. (Raaka)"

@@ -186,3 +186,8 @@ substitutions:
   num_battery_max_discharge_kw: "Max. Batterieentladung (kW)"
   num_raw_hl_tm_product: "Rohes HL×TM-Produkt"
   num_raw_solar_factor: "Passiver Solargewinnfaktor"
+
+  num_raw_cool_produced: "Erzeugte Kälte (Rohdaten)"
+  num_raw_cool_elec_consumed: "Stromverbrauch Kühlen (Rohdaten)"
+  num_raw_cool_runtime_hours: "Laufzeit Kühlen (Rohdaten)"
+  num_raw_cool_avg_outside_temp: "Mittl. Außentemp. Kühlen (Rohdaten)"

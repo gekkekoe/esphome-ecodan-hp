@@ -187,3 +187,8 @@ substitutions:
   num_battery_max_discharge_kw: "Décharge max. de la batterie (kW)"
   num_raw_hl_tm_product: "Produit HL×TM brut"
   num_raw_solar_factor: "Facteur de gain solaire passif"
+
+  num_raw_cool_produced: "Refroidissement produit (Brut)"
+  num_raw_cool_elec_consumed: "Élec. consommée refroid. (Brut)"
+  num_raw_cool_runtime_hours: "Temps fonct. refroid. (Brut)"
+  num_raw_cool_avg_outside_temp: "Temp. ext. moyenne refroid. (Brut)"

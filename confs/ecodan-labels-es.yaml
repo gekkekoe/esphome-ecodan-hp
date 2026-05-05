@@ -187,3 +187,8 @@ substitutions:
   num_battery_max_discharge_kw: "Descarga máx. de la batería (kW)"
   num_raw_hl_tm_product: "Producto HL×TM bruto"
   num_raw_solar_factor: "Factor de ganancia solar pasiva"
+
+  num_raw_cool_produced: "Refrigeración producida (Bruto)"
+  num_raw_cool_elec_consumed: "Consumo eléct. refrigeración (Bruto)"
+  num_raw_cool_runtime_hours: "Tiempo func. refrigeración (Bruto)"
+  num_raw_cool_avg_outside_temp: "Temp. ext. media refrig. (Bruto)"
