@@ -332,38 +332,10 @@ namespace esphome
             bool solver_enabled = this->solver_enabled();
 
             if (solver_enabled) {
-                static int odin_last_executed_dhw_hour_ = -1;
-
                 auto [solver_load_ratio, solver_heatpump_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(room_target_temp, room_temp);
+                
                 if (solver_operating_mode == OptimizerOperationMode::DHW_ON) {
-                    int dhw_mode = 0; // 0 = Regular, 1 = Forced
-                    if (this->state_.solver_dhw_mode != nullptr && this->state_.solver_dhw_mode->active_index().has_value()) {
-                        dhw_mode = this->state_.solver_dhw_mode->active_index().value();
-                    }
-
-                    if (odin_last_executed_dhw_hour_ != current_hour) {
-                        if (!this->is_dhw_active(status)) {
-                            ESP_LOGD(OPTIMIZER_TAG, "ODIN Starting executing planned DHW (Mode: %s)", dhw_mode == 0 ? "Regular" : "Forced");
-                            
-                            if (dhw_mode == 1) { // Forced
-                                if (this->state_.sw_force_dhw != nullptr) {
-                                    if (!this->state_.sw_force_dhw->state) this->state_.sw_force_dhw->turn_on();
-                                    odin_last_executed_dhw_hour_ = current_hour;
-                                } else {
-                                    ESP_LOGD(OPTIMIZER_TAG, "ODIN DHW Forced planned, but not configured");
-                                }
-                            } else { // Regular
-                                if (this->state_.sw_regular_dhw != nullptr) {
-                                    if (!this->state_.sw_regular_dhw->state) this->state_.sw_regular_dhw->turn_on();
-                                    odin_last_executed_dhw_hour_ = current_hour;
-                                } else {
-                                    ESP_LOGD(OPTIMIZER_TAG, "ODIN DHW Regular planned, but not configured");
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    odin_last_executed_dhw_hour_ = -1;
+                    return; 
                 }
 
                 if (solver_load_ratio < 0.0f && !solver_heatpump_off) {
@@ -490,6 +462,42 @@ namespace esphome
             }
 
             auto &status = this->state_.ecodan_instance->get_status();
+
+            if (solver_enabled) {
+                static int odin_last_executed_dhw_hour_ = -1;
+                auto [solver_load_ratio, solver_heatpump_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(0.0f, 0.0f);
+                
+                if (solver_operating_mode == OptimizerOperationMode::DHW_ON) {
+                    int dhw_mode = 0; // 0 = Regular, 1 = Forced
+                    if (this->state_.solver_dhw_mode != nullptr && this->state_.solver_dhw_mode->active_index().has_value()) {
+                        dhw_mode = this->state_.solver_dhw_mode->active_index().value();
+                    }
+
+                    if (odin_last_executed_dhw_hour_ != current_hour) {
+                        if (!this->is_dhw_active(status)) {
+                            ESP_LOGI(OPTIMIZER_TAG, "ODIN Starting executing planned DHW (Mode: %s)", dhw_mode == 0 ? "Regular" : "Forced");
+                            
+                            if (dhw_mode == 1) { // Forced
+                                if (this->state_.sw_force_dhw != nullptr) {
+                                    if (!this->state_.sw_force_dhw->state) this->state_.sw_force_dhw->turn_on();
+                                    odin_last_executed_dhw_hour_ = current_hour;
+                                } else {
+                                    ESP_LOGD(OPTIMIZER_TAG, "ODIN DHW Forced planned, but not configured");
+                                }
+                            } else { // Regular
+                                if (this->state_.sw_regular_dhw != nullptr) {
+                                    if (!this->state_.sw_regular_dhw->state) this->state_.sw_regular_dhw->turn_on();
+                                    odin_last_executed_dhw_hour_ = current_hour;
+                                } else {
+                                    ESP_LOGD(OPTIMIZER_TAG, "ODIN DHW Regular planned, but not configured");
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    odin_last_executed_dhw_hour_ = -1;
+                }
+            }
 
             if (this->is_system_hands_off(status)) {
                 ESP_LOGD(OPTIMIZER_TAG, "System is busy (DHW/Defrost/Lockout). Exiting.");
