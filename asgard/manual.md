@@ -1,19 +1,19 @@
-# Asgard PCB - User Manual
 
-Welcome to the manual for the Asgard PCB for Ecodan heatpumps. This board allows you to directly integrate your Mitsubishi Ecodan heat pump into Home Assistant via ESPHome, utilizing the CN105 port.
+# Asgard PCB - Technical Integration Manual
 
 > [!IMPORTANT]
-> **Warranty & Liability**
-> While this hardware is professionally built, it is sold as a **Do-It-Yourself (DIY) component**.
+> **Warranty & Liability (Component Level)**
+> This hardware is professionally manufactured but is classified as a **Do-It-Yourself (DIY) Sub-assembly**.
 > 
-> * **Limited Warranty:** I provide a **1-year warranty** against manufacturing defects.
-> * **Exclusions:** The warranty is **VOID** if failure is caused by user error, such as:
->   * Improper wiring (e.g. short circuits, high voltage on data pins).
->   * Physical modification or soldering by the user.
->   * Water damage or incorrect placement inside the heat pump.
->   * **Accidental damage (e.g. dropping the unit, cracking the 3D printed casing).**
-> * **Liability:** Installation is entirely at your own risk. The seller is **not responsible** for any damage to your heat pump, property, or consequential damages resulting from the use or installation of this interface.
+> * **Module Warranty:** A **1-year warranty** covers manufacturing defects of the PCB itself.
+> * **Liability Limitation:** As the manufacturer of this sub-assembly, I have no control over the final installation environment. Installation is performed entirely at the user's risk. The seller is **not liable** for damage to the heat pump, property, or any consequential damages (e.g., loss of heating) resulting from the use or installation of this component.
+> * **System Integrity:** Integrating third-party hardware may void your Mitsubishi Electric manufacturer warranty.
 
+## Prerequisites for Installation
+To safely integrate this module, you should be familiar with:
+1. **Basic Electrical Safety:** Specifically working around 230V mains voltage.
+2. **ESD Protection:** Handling sensitive electronics without causing static damage.
+3. **ESPHome/Home Assistant:** Configuring and deploying YAML-based firmware.
 ---
 
 ## Compatibility
@@ -34,7 +34,7 @@ The Asgard PCB features a **pass-through (slave) port**, allowing you to retain 
 ## Contents
 
 Please check if your package contains:
-* 1x Asgard PCB (Pre-flashed) in 3D Printed Casing
+* 1x Asgard PCB in 3D Printed Casing
 * 1x Connection Cable (JST-PA to CN105)
 
 ---
