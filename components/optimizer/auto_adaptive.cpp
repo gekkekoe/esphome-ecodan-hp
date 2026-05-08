@@ -486,7 +486,12 @@ namespace esphome
                                 }
                             } else { // Regular
                                 if (this->state_.sw_regular_dhw != nullptr) {
-                                    if (!this->state_.sw_regular_dhw->state) this->state_.sw_regular_dhw->turn_on();
+                                    if (this->state_.sw_regular_dhw->state)  {
+                                        this->state_.sw_regular_dhw->turn_off();
+                                        ESP_LOGD(OPTIMIZER_TAG, "ODIN DHW Regular planned, switch was still on, toggle to off first");
+                                    }
+                                    
+                                    this->state_.sw_regular_dhw->turn_on();
                                     odin_last_executed_dhw_hour_ = current_hour;
                                 } else {
                                     ESP_LOGD(OPTIMIZER_TAG, "ODIN DHW Regular planned, but not configured");

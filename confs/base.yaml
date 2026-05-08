@@ -760,7 +760,10 @@ script:
                 id: heatpump_climate_dhw
                 target_temperature: !lambda 'return id(stored_dhw_target);'
 
-      # Turn off switch when done
-      - switch.turn_off: heatpump_switch_regular_dhw
+            - logger.log:
+                format: "DHW activation completed. Turning off switch."
+                tag: "asgard"
+                level: INFO
+            - switch.turn_off: heatpump_switch_regular_dhw
 
 <<: !include stats.yaml
