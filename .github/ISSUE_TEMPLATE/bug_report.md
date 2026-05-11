@@ -24,8 +24,8 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Heatpump model**
-Add heatpump model here.
+**Heatpump model (inside and outside unit, FTC version)**
+unit model, FTC version
 
 **Esphome version**
 Add esphome version here.
