@@ -19,6 +19,11 @@
 
 ![Asgard Bundle](img/asgard-50cm-bundle.jpg) 
 
+> [!IMPORTANT]
+> **The following FTC controller boards are supported:**
+> * **FTC4 (firmware >= 13.00):** Not all commands are supported
+> * **FTC5:** Missing `real time` energy consumption estimation 
+> * **FTC6/7:** 
 
 | Standard Order (NL/EU) | UK Special Bundle (3 Units) |
 | :--- | :--- |
