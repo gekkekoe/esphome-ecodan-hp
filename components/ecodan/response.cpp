@@ -63,6 +63,7 @@ namespace ecodan
                 auto res_request_code = static_cast<Status::REQUEST_CODE>(res.get_int16(1));
                 if (activeRequestCode == res_request_code) {
                     activeRequestCode = Status::REQUEST_CODE::NONE;
+                    activeRequestCodeRetries = 0;
                 }
 
                 if (res[3] == 2 || res[3] == 1) {

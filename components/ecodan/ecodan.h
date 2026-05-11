@@ -129,6 +129,7 @@ namespace ecodan
         bool hasRequestCodeSensors = false;
         bool requestCodesEnabled = true;
         Status::REQUEST_CODE activeRequestCode = Status::REQUEST_CODE::NONE;
+        uint8_t activeRequestCodeRetries = 0;
 
         std::optional<CONTROLLER_FLAG> serverControlFlagBeforeLockout = {};
         std::queue<QueuedCommand> cmdQueue;
