@@ -27,7 +27,7 @@ The remote thermostat protocol CNRF is supported by [esphome-ecodan-remote-therm
 | Virtual Thermostat** | A software thermostat that controls IN1/IN6. This can replace CNRF, but allows 0.1c temp resolution |
 | Stand alone mode** | Can run without Home Assistant providing basic controls and Auto Adaptive Control |
 
-\* <sup><i>These features are not available in proxy, since we are observing only. Newer FTC7 will report the `Outdoor unit thermistors`.</i></sup>
+\* <sup><i>These features are not available in proxy, since we are observing only. Newer FTC7 will report the `Outdoor unit thermistors`. Additionally service codes are not available on some `SUZ` units</i></sup>
 
 \*\* <sup><i>These features are only available with the Asgard PCB (requires hardware)</i></sup>
 
