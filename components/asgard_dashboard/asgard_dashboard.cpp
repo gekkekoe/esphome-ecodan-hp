@@ -1007,6 +1007,8 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
       rec.cons, rec.prod, rec.outside, rec.liquid_pipe, rec.condensing
     );
     
+    if (len >= sizeof(item)) len = sizeof(item) - 1;
+
     // Abort loop immediately if client drops the connection
     if (httpd_resp_send_chunk(req, item, len) != ESP_OK) {
         return; 
@@ -1482,7 +1484,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
 }
 
 void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
-  constexpr size_t JSON_BUFFER_SIZE = 1200;
+  constexpr int JSON_BUFFER_SIZE = 4096;
   constexpr size_t ODIN_HOURS = 72;
 
   httpd_req_t *req = *request;
@@ -1527,14 +1529,22 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
 
       int offset = snprintf(json_buf, JSON_BUFFER_SIZE, "\"%s\":[", name);
       for (size_t i = 0; i < ODIN_HOURS; i++) {
+          int space_left = (JSON_BUFFER_SIZE > offset) ? (JSON_BUFFER_SIZE - offset) : 0;
+          
           if (std::isnan(temp_arr[i])) {
-              offset += snprintf(json_buf + offset, JSON_BUFFER_SIZE - offset, "null");
+              offset += snprintf(json_buf + offset, space_left, "null");
           } else {
-              offset += snprintf(json_buf + offset, JSON_BUFFER_SIZE - offset, "%.2f", temp_arr[i]);
+              offset += snprintf(json_buf + offset, space_left, "%.2f", temp_arr[i]);
           }
-          if (i < ODIN_HOURS - 1) offset += snprintf(json_buf + offset, JSON_BUFFER_SIZE - offset, ",");
+          
+          space_left = (JSON_BUFFER_SIZE > offset) ? (JSON_BUFFER_SIZE - offset) : 0;
+          if (i < ODIN_HOURS - 1) offset += snprintf(json_buf + offset, space_left, ",");
       }
-      offset += snprintf(json_buf + offset, JSON_BUFFER_SIZE - offset, last ? "]" : "],");
+      
+      int space_left = (JSON_BUFFER_SIZE > offset) ? (JSON_BUFFER_SIZE - offset) : 0;
+      offset += snprintf(json_buf + offset, space_left, last ? "]" : "],");
+      
+      if (offset >= JSON_BUFFER_SIZE) offset = JSON_BUFFER_SIZE - 1;
 
       return (httpd_resp_send_chunk(req, json_buf, offset) == ESP_OK);
   };

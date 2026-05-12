@@ -844,44 +844,44 @@ header {
 
       <div id="phys-group-heat">
         <div class="ctrl-row">
-          <span class="ctrl-label param-label">Heat Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total heat energy produced yesterday in heating mode. DHW excluded. Used to calculate COP.</span></span>
+          <span class="ctrl-label param-label">Heat Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total heat energy produced (last session) in heating mode. DHW excluded. Used to calculate COP.</span></span>
           <div class="stepper"><button class="step-btn" onclick="step('raw-heat', -0.1)">−</button><input type="number" class="step-input" id="raw-heat-val" onchange="manualInput('raw-heat', this.value)" /><button class="step-btn" onclick="step('raw-heat', +0.1)">+</button></div>
         </div>
 
         <div class="ctrl-row">
-          <span class="ctrl-label param-label">Elec Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump yesterday in heating mode. DHW excluded. COP = Heat / Elec.</span></span>
+          <span class="ctrl-label param-label">Elec Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump (last session) in heating mode. DHW excluded. COP = Heat / Elec.</span></span>
           <div class="stepper"><button class="step-btn" onclick="step('raw-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-elec-val" onchange="manualInput('raw-elec', this.value)" /><button class="step-btn" onclick="step('raw-elec', +0.1)">+</button></div>
         </div>
 
         <div class="ctrl-row">
-          <span class="ctrl-label param-label">Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in heating mode yesterday. Used to derive thermal mass.</span></span>
+          <span class="ctrl-label param-label">Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in heating mode (last session). Used to derive thermal mass.</span></span>
           <div class="stepper"><button class="step-btn" onclick="step('raw-run', -0.1)">−</button><input type="number" class="step-input" id="raw-run-val" onchange="manualInput('raw-run', this.value)" /><button class="step-btn" onclick="step('raw-run', +0.1)">+</button></div>
         </div>
 
         <div class="ctrl-row">
-          <span class="ctrl-label param-label">Avg Ambient Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature yesterday. Used to calculate heat loss and COP correction.</span></span>
+          <span class="ctrl-label param-label">Avg Ambient Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average ambient temperature (last session). Used to calculate heat loss and COP correction.</span></span>
           <div class="stepper"><button class="step-btn" onclick="step('raw-out', -0.1)">−</button><input type="number" class="step-input" id="raw-out-val" onchange="manualInput('raw-out', this.value)" /><button class="step-btn" onclick="step('raw-out', +0.1)">+</button></div>
         </div>
       </div>
 
       <div id="phys-group-cool" style="display: none;">
         <div class="ctrl-row">
-          <span class="ctrl-label param-label">Cooling Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total cooling energy produced yesterday. Used to calculate EER.</span></span>
+          <span class="ctrl-label param-label">Cooling Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total cooling energy produced (last session). Used to calculate EER.</span></span>
           <div class="stepper"><button class="step-btn" onclick="step('raw-cool-prod', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-prod-val" onchange="manualInput('raw-cool-prod', this.value)" /><button class="step-btn" onclick="step('raw-cool-prod', +0.1)">+</button></div>
         </div>
 
         <div class="ctrl-row">
-          <span class="ctrl-label param-label">Cool Elec Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump yesterday in cooling mode. EER = Cool / Elec.</span></span>
+          <span class="ctrl-label param-label">Cool Elec Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump (last session) in cooling mode. EER = Cool / Elec.</span></span>
           <div class="stepper"><button class="step-btn" onclick="step('raw-cool-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-elec-val" onchange="manualInput('raw-cool-elec', this.value)" /><button class="step-btn" onclick="step('raw-cool-elec', +0.1)">+</button></div>
         </div>
 
         <div class="ctrl-row">
-          <span class="ctrl-label param-label">Cooling Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in cooling mode yesterday.</span></span>
+          <span class="ctrl-label param-label">Cooling Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in cooling mode (last session).</span></span>
           <div class="stepper"><button class="step-btn" onclick="step('raw-cool-run', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-run-val" onchange="manualInput('raw-cool-run', this.value)" /><button class="step-btn" onclick="step('raw-cool-run', +0.1)">+</button></div>
         </div>
 
         <div class="ctrl-row">
-          <span class="ctrl-label param-label">Cooling Avg Ambient<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature yesterday during cooling.</span></span>
+          <span class="ctrl-label param-label">Cooling Avg Ambient<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature (last session) during cooling.</span></span>
           <div class="stepper"><button class="step-btn" onclick="step('raw-cool-out', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-out-val" onchange="manualInput('raw-cool-out', this.value)" /><button class="step-btn" onclick="step('raw-cool-out', +0.1)">+</button></div>
         </div>
       </div>
