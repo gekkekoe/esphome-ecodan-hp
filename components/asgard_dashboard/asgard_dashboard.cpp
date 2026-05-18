@@ -1102,7 +1102,11 @@ void EcodanDashboard::nvs_persist_odin_() {
     static const int NUM_ARRS = 19;
 
     // Local stack copies — 19 × 72 × 4 = 5472 bytes on NVS task stack (fits in 8192).
-    float snap[NUM_ARRS][N];
+    std::vector<float> snap_buffer(NUM_ARRS * N, NAN);
+    float* snap[NUM_ARRS];
+    for (int k = 0; k < NUM_ARRS; k++) {
+        snap[k] = &snap_buffer[k * N];
+    }
     int32_t snap_day = -1;
     bool snap_show_tab = false;
 
@@ -1165,12 +1169,14 @@ void EcodanDashboard::nvs_persist_odin_() {
         "act_standby"
     };
 
+    std::vector<float> temp_vec(N);
+    float* temp = temp_vec.data();
+
     for (int k = 0; k < NUM_ARRS; k++) {
         size_t required_size = 0;
         bool needs_write = true;
 
         if (nvs_get_blob(h, KEYS[k], NULL, &required_size) == ESP_OK && required_size == N * sizeof(float)) {
-            float temp[N];
             if (nvs_get_blob(h, KEYS[k], temp, &required_size) == ESP_OK) {
                 needs_write = false;
                 for (int i = 0; i < N; i++) {
@@ -1193,7 +1199,7 @@ void EcodanDashboard::nvs_persist_odin_() {
     if (has_changes) {
         nvs_commit(h);
         vTaskDelay(pdMS_TO_TICKS(30));
-        esp_log_write(ESP_LOG_INFO, TAG, "NVS: ODIN arrays persisted (day=%d)\n", snap_day);
+        esp_log_write(ESP_LOG_INFO, TAG, "NVS: ODIN arrays persisted (day=%d, stack: %u words)\n", snap_day, uxTaskGetStackHighWaterMark(NULL));
     } else {
         esp_log_write(ESP_LOG_DEBUG, TAG, "NVS: no changes, skipping write (day=%d)\n", snap_day);
     }
@@ -1248,7 +1254,11 @@ void EcodanDashboard::load_odin_data(int current_day) {
     bool has_day = (nvs_get_i32(h, "day", &stored_day) == ESP_OK);
 
     // Read all arrays into local snap buffers
-    float snap[NUM_ARRS][N];
+    std::vector<float> snap_buffer(NUM_ARRS * N, NAN);
+    float* snap[NUM_ARRS];
+    for (int k = 0; k < NUM_ARRS; k++) {
+        snap[k] = &snap_buffer[k * N];
+    }
     bool snap_ok[NUM_ARRS];
 
     // Index 0 = exp_end: try new key first, fall back to legacy "sched"
