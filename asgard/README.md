@@ -17,6 +17,15 @@
 * **Price:** € 65,- (including VAT)
 * **Delivery:** Shipped within 3 business days from The Netherlands (When in stock)
 
+<div align="center">
+  <h2>Order via the link/button below:</h2>
+
+| Standard Order (NL/EU) | UK Special Bundle (3 Units) |
+| :--- | :--- |
+| [![Order Asgard](https://img.shields.io/badge/Order-Single%20Unit-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFa6oIblrcIPaNN3Wq4AU00) | [![Order UK Bundle](https://img.shields.io/badge/Order-UK%203--Unit%20Bundle-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/14AeVefBH8sz9JJ0Ke4AU01) |
+
+</div>
+
 ![Asgard Bundle](img/asgard-50cm-bundle.jpg) 
 
 > [!IMPORTANT]
@@ -24,10 +33,6 @@
 > * **FTC4 (firmware >= 12.01):** Not all commands are supported
 > * **FTC5:** Missing `real time` energy consumption estimation 
 > * **FTC6/7:**
-
-| Standard Order (NL/EU) | UK Special Bundle (3 Units) |
-| :--- | :--- |
-| [![Order Asgard](https://img.shields.io/badge/Order-Single%20Unit-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFa6oIblrcIPaNN3Wq4AU00) | [![Order UK Bundle](https://img.shields.io/badge/Order-UK%203--Unit%20Bundle-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/14AeVefBH8sz9JJ0Ke4AU01) |
 
 > [!IMPORTANT]
 > **Shipping Selection Notice**
