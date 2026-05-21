@@ -30,13 +30,14 @@ void EcodanDashboard::setup() {
 
   // NVS writes run in a dedicated low-priority task to avoid blocking lwIP
   this->nvs_trigger_ = xSemaphoreCreateBinary();
-  xTaskCreate(
-      EcodanDashboard::nvs_task_,
-      "nvs_persist",
-      8192,
-      this,
-      1,                           // priority 1 = lowest above idle, well below lwIP (18)
-      &this->nvs_task_handle_
+  xTaskCreatePinnedToCore(
+    EcodanDashboard::nvs_task_,
+    "nvs_persist",
+    8192,
+    this,
+    1,                          // priority 1 = lowest above idle, well below lwIP (18)
+    &this->nvs_task_handle_,
+    1                           // avoid core 0 (lwIP)
   );
 
   base_->init();
@@ -620,6 +621,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   httpd_resp_set_type(req, "application/json");
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+  httpd_resp_set_hdr(req, "Connection", "close");
 
   // Shared 2KB heap buffer — flushed per logical block to stay well within limits.
   // Each block is at most ~600 bytes so there is comfortable headroom.
@@ -957,6 +959,7 @@ void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
   httpd_resp_set_type(req, "application/json");
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+  httpd_resp_set_hdr(req, "Connection", "close");
 
   // Snapshot count/head under lock
   size_t current_count, current_head;
@@ -1091,9 +1094,11 @@ void EcodanDashboard::nvs_task_(void *arg) {
 void EcodanDashboard::nvs_persist_odin_() {
     nvs_handle_t h;
     if (nvs_open("odin_cache", NVS_READWRITE, &h) != ESP_OK) {
-        esp_log_write(ESP_LOG_WARN, TAG, "NVS: failed to open odin_cache for write\n");
+        printf("NVS: failed to open odin_cache for write\n");
         return;
     }
+
+    printf("[NVS] enter, stack HWM: %u words\n", uxTaskGetStackHighWaterMark(NULL));
 
     // snapshot all data under mutex (fast memcpy only, no NVS I/O) ---
     // The mutex is held for the shortest possible time — just copying vectors to local arrays.
@@ -1140,10 +1145,12 @@ void EcodanDashboard::nvs_persist_odin_() {
 
         xSemaphoreGive(this->snapshot_mutex_);
     } else {
-        esp_log_write(ESP_LOG_WARN, TAG, "NVS persist: failed to acquire snapshot mutex, skipping\n");
+        printf("NVS persist: failed to acquire snapshot mutex, skipping\n");
         nvs_close(h);
         return;
     }
+
+    printf("[NVS] snapshot done, day=%d\n", snap_day);
 
     // write to NVS — no mutex held, safe to take as long as needed ---
     bool has_changes = false;
@@ -1192,6 +1199,7 @@ void EcodanDashboard::nvs_persist_odin_() {
         if (needs_write) {
             nvs_set_blob(h, KEYS[k], snap[k], N * sizeof(float));
             has_changes = true;
+            printf("[NVS] wrote array %d/%d\n", k+1, NUM_ARRS);
             vTaskDelay(pdMS_TO_TICKS(30));
         }
     }
@@ -1199,10 +1207,8 @@ void EcodanDashboard::nvs_persist_odin_() {
     if (has_changes) {
         nvs_commit(h);
         vTaskDelay(pdMS_TO_TICKS(30));
-        esp_log_write(ESP_LOG_INFO, TAG, "NVS: ODIN arrays persisted (day=%d, stack: %u words)\n", snap_day, uxTaskGetStackHighWaterMark(NULL));
-    } else {
-        esp_log_write(ESP_LOG_DEBUG, TAG, "NVS: no changes, skipping write (day=%d)\n", snap_day);
-    }
+        printf("[NVS] commit done\n");
+    } 
     nvs_close(h);
 }
 
@@ -1502,6 +1508,7 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
   httpd_resp_set_type(req, "application/json");
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+  httpd_resp_set_hdr(req, "Connection", "close");
 
   bool is_ready = false;
   if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
