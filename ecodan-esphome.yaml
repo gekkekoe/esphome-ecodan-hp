@@ -48,13 +48,13 @@ api:
 #  adaptive: !include confs/auto-adaptive.yaml
 
 external_components:
-  - source: github://gekkekoe/esphome-ecodan-hp@main
+  - source: github://mkrum001/esphome-ecodan-hp@main
     components: [ ecodan, optimizer ]
     refresh: always
 
 packages:
   remote_package:
-    url: https://github.com/gekkekoe/esphome-ecodan-hp/
+    url: https://github.com/mkrum001/esphome-ecodan-hp/
     ref: main
     refresh: always
     files: [ 

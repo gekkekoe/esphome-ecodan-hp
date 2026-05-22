@@ -18,7 +18,7 @@ namespace esphome
             HeatingProfile p;
             if (type_index <= 1) {
                 // UFH
-                p.base_min_delta_t    = 2.0f;
+                p.base_min_delta_t    = 1.5f;
                 p.min_delta_cold_limit = 4.0f;
                 p.max_delta_t         = 6.5f;
                 p.max_error_range     = 2.0f;
@@ -543,7 +543,7 @@ namespace esphome
             auto prof = this->get_heating_profile_(heating_type_index);
 
             // Cold factor: quadratic, expanded to 1.5
-            const float MILD = 15.0f, COLD = -5.0f;
+            const float MILD = -5.0f, COLD = -15.0f;
             float cf_raw   = (MILD - std::clamp(actual_outside_temp, COLD, MILD)) / (MILD - COLD);
             float cold_factor = cf_raw * cf_raw * 1.5f;
 
