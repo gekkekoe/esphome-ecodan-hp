@@ -51,7 +51,7 @@ namespace esphome
                 }
             }
             else if (post_dhw_window) {
-                if (!this->is_heating_active(status)) {
+                if (!this->is_heating_active(status) && !this->is_cooling_active(status)) {
                     // no demand, restore saved setpoint
                     float restore_val = (zone == OptimizerZone::ZONE_2) ? this->dhw_old_z2_setpoint_ : this->dhw_old_z1_setpoint_;
                     
