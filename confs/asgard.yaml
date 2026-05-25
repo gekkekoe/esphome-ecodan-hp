@@ -16,6 +16,38 @@ substitutions:
       gpio: "GPIO41"
 
 <<: !include proxy-base.yaml
+
+# override
+esp32:
+  board: esp32-s3-devkitc-1
+  flash_size: 16MB
+  cpu_frequency: 240MHz
+  partitions: partitions_16mb.csv   # Custom table; adds 8 MB LittleFS at 0x800000
+  framework:
+    type: esp-idf
+    version: recommended
+    sdkconfig_options:
+      COMPILER_OPTIMIZATION_SIZE: y
+      CONFIG_BT_ENABLED: n
+      CONFIG_FREERTOS_USE_TRACE_FACILITY: y
+      CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS: y
+      CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS: y
+      CONFIG_ESP_MAIN_TASK_STACK_SIZE: "8192"
+      CONFIG_LWIP_TCPIP_TASK_STACK_SIZE: "12288"
+      CONFIG_HTTPD_TASK_STACK_SIZE: "16384" 
+
+      CONFIG_LWIP_NETCONN_FULLDUPLEX: y        # prevents use-after-close race on netconn
+      CONFIG_LWIP_TCP_CLOSE_TIMEOUT_MS: "2000" # don't linger too long on broken connections
+      CONFIG_LWIP_MAX_ACTIVE_TCP: "16" 
+      CONFIG_LWIP_TCP_RECVMBOX_SIZE: "8"
+      CONFIG_LWIP_TCPIP_RECVMBOX_SIZE: "32"
+      CONFIG_LWIP_SO_RCVBUF: y 
+
+      # LittleFS — required for esp_vfs_littlefs_register()
+      CONFIG_LFS_BLOCK_CYCLES: "512"           # wear levelling aggressiveness
+      CONFIG_LITTLEFS_MAX_PARTITIONS: "1"
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "60"
+
 <<: !include asgard-sensors.yaml
 <<: !include slave.yaml
 <<: !include asgard-odin.yaml

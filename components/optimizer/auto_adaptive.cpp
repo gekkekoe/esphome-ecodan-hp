@@ -257,8 +257,17 @@ namespace esphome
                          (zone_i + 1), calculated_flow, actual_return_temp, target_delta_t);
             }
 
+            float min_cool_target = 18.0f;
+            if (zone_i == 0) {
+                if (this->state_.minimum_cooling_flow_temp_z1 != nullptr)
+                    min_cool_target = state_.minimum_cooling_flow_temp_z1->state;
+            } else {
+                if (state_.minimum_cooling_flow_temp_z2 != nullptr)
+                    min_cool_target = state_.minimum_cooling_flow_temp_z2->state;
+            }
+
             calculated_flow = this->clamp_flow_temp(calculated_flow,
-                                                    this->state_.minimum_cooling_flow_temp->state,
+                                                    min_cool_target,
                                                     this->state_.cooling_smart_start_temp->state);
             
             return calculated_flow;

@@ -10,6 +10,7 @@ globals:
 
 asgard_dashboard:
   id: asgard_dashboard_id
+  ecodan_id: ecodan_instance
   version_id:                        current_fw_version
   ui_use_room_z1_id:                 ui_use_room_z1
   # ── Header badge sensors 
@@ -118,8 +119,11 @@ asgard_dashboard:
 
 # ── Cooling Z1
   num_cooling_smart_start_z1_id:     cooling_smart_start_temp
-  num_min_cooling_flow_z1_id:        minimum_cooling_flow_temp
+  num_min_cooling_flow_z1_id:        minimum_cooling_flow_temp_z1
 
 # ── Outside unit
   liquid_pipe_temp_id:                ou_liquid_pipe_temp
   condensing_temp_id:                 hp_refrigerant_condensing_temp
+
+  # power mode switch
+  sw_power_mode_id: heatpump_switch_power_mode

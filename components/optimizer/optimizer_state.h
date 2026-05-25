@@ -89,7 +89,8 @@ namespace esphome
         esphome::number::Number *minimum_heating_flow_temp;
         esphome::number::Number *maximum_heating_flow_temp_z2;
         esphome::number::Number *minimum_heating_flow_temp_z2;
-        esphome::number::Number *minimum_cooling_flow_temp;
+        esphome::number::Number *minimum_cooling_flow_temp_z1;
+        esphome::number::Number *minimum_cooling_flow_temp_z2;
         esphome::number::Number *cooling_smart_start_temp;
         esphome::number::Number *minimum_compressor_on_time;
         esphome::number::Number *predictive_short_cycle_high_delta_time_window;

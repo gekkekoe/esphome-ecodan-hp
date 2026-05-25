@@ -14,3 +14,5 @@ asgard_dashboard:
   # ── Server Control Z2
   sw_sc_prohibit_z2_heating_id:      heatpump_switch_server_control_prohibit_z2_heating
   sw_sc_prohibit_z2_cooling_id:      heatpump_switch_server_control_prohibit_z2_cooling
+
+  num_min_cooling_flow_z2_id: minimum_cooling_flow_temp_z2

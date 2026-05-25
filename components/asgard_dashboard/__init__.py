@@ -2,21 +2,27 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import web_server_base
 from esphome.const import CONF_ID
+from esphome.components import esp32
 
 DEPENDENCIES = ["web_server_base", "network"]
 AUTO_LOAD = ["web_server_base"]
 
 CONF_WEB_SERVER_BASE_ID = "web_server_base_id"
+CONF_ECODAN_ID = "ecodan_id"
 
 from esphome.components import sensor, binary_sensor, text_sensor, text, climate, number, switch, select, globals
 
 asgard_dashboard_ns = cg.esphome_ns.namespace("asgard_dashboard")
 EcodanDashboard = asgard_dashboard_ns.class_("EcodanDashboard", cg.Component)
 
+ecodan_ns = cg.esphome_ns.namespace("ecodan")
+EcodanHeatpump = ecodan_ns.class_("EcodanHeatpump", cg.PollingComponent)
+
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(EcodanDashboard),
         cv.GenerateID(CONF_WEB_SERVER_BASE_ID): cv.use_id(web_server_base.WebServerBase),
+        cv.Required(CONF_ECODAN_ID): cv.use_id(EcodanHeatpump),
 
         cv.Optional("hp_feed_temp_id"):                    cv.use_id(sensor.Sensor),
         cv.Optional("hp_return_temp_id"):                  cv.use_id(sensor.Sensor),
@@ -68,6 +74,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("sw_force_dhw_id"):                    cv.use_id(switch.Switch),
         cv.Optional("sw_use_solver_id"):                   cv.use_id(switch.Switch),
         cv.Optional("sw_show_solver_tab_id"):              cv.use_id(switch.Switch),
+        cv.Optional("sw_power_mode_id"):                   cv.use_id(switch.Switch),
 
         # Server control
         cv.Optional("sw_server_control_id"):               cv.use_id(switch.Switch),
@@ -107,6 +114,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("num_battery_max_discharge_kw_id"):    cv.use_id(number.Number),
         cv.Optional("num_cooling_smart_start_z1_id"):      cv.use_id(number.Number),
         cv.Optional("num_min_cooling_flow_z1_id"):         cv.use_id(number.Number),
+        cv.Optional("num_min_cooling_flow_z2_id"):         cv.use_id(number.Number),
 
         cv.Optional("num_raw_cool_produced_id"):           cv.use_id(number.Number),
         cv.Optional("num_raw_cool_elec_consumed_id"):      cv.use_id(number.Number),
@@ -139,11 +147,20 @@ async def _wire(config, var, conf_key, setter):
 
 
 async def to_code(config):
+
+    esp32.add_idf_component(
+        name="esp_littlefs",
+        repo="https://github.com/joltwallet/esp_littlefs.git"
+    )
+    
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
 
     wsb = await cg.get_variable(config[CONF_WEB_SERVER_BASE_ID])
     cg.add(var.set_web_server_base(wsb))
+
+    ecodan_var = await cg.get_variable(config[CONF_ECODAN_ID])
+    cg.add(var.set_ecodan(ecodan_var))
 
     pairs = [
         ("version_id",                        "set_version"),
@@ -235,6 +252,8 @@ async def to_code(config):
         ("num_battery_max_discharge_kw_id",   "set_num_battery_max_discharge_kw"),
         ("num_cooling_smart_start_z1_id",     "set_num_cooling_smart_start_z1"),
         ("num_min_cooling_flow_z1_id",        "set_num_min_cooling_flow_z1"),
+        ("num_min_cooling_flow_z2_id",        "set_num_min_cooling_flow_z2"),
+        ("sw_power_mode_id",                  "set_sw_power_mode"),
         ("sw_show_solver_tab_id",             "set_sw_show_solver_tab"), 
 
         # Server control

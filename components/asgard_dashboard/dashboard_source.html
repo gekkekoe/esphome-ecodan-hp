@@ -239,6 +239,25 @@ header {
       .stat-row { gap: 8px; justify-content: space-between; }
       .ctrl-label { font-size: 10px; }
     }
+  
+  .section-header-toggle {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    transition: color 0.2s;
+  }
+  .section-header-toggle:hover { color: var(--text); }
+  .collapse-icon {
+    font-family: var(--sans);
+    font-size: 10px;
+    color: var(--text3);
+    transition: transform 0.2s ease;
+  }
+  .ctrl-card.collapsed .collapse-icon { transform: rotate(-90deg); }
+  .ctrl-card.collapsed .collapsible-content { display: none; }
+
   /* ── Physics Card Tabs & Steppers ── */
   .physics-card .step-input { width: 72px; font-size: 12px; }
   .phys-tabs { display: flex; background: var(--bg); border-radius: 8px; margin-bottom: 18px; padding: 4px; gap: 4px; }
@@ -375,6 +394,25 @@ header {
 </div>
 
 <div id="view-monitor" class="view-section active">
+  <div class="ctrl-card full-width" style="margin-bottom: 20px; padding: 15px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="ctrl-label" style="font-weight: 600;">Time View:</span>
+        <div style="background: var(--bg); padding: 3px; border-radius: 7px; display: inline-flex; border: 1px solid var(--border);">
+          <button id="monitor-btn-live" onclick="setMonitorMode('live')" class="log-btn active" style="border: none; padding: 4px 10px;">Live</button>
+          <button id="monitor-btn-hist" onclick="setMonitorMode('history')" class="log-btn" style="border: none; padding: 4px 10px; margin-left: 4px;">Calendar</button>
+        </div>
+      </div>
+      <div id="monitor-calendar-container" style="display: none; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px;">
+        <span style="color: var(--text3);">Date:</span>
+        <input type="date" id="monitor-hist-date" onchange="onMonitorDateChanged()" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 7px; outline: none; cursor: pointer;">
+        <span style="color: var(--text3); margin-left: 5px;">Range:</span>
+        <select id="monitor-hist-range" onchange="onMonitorDateChanged()" class="ctrl-select" style="max-width: 90px; margin-left: 0; padding: 4px 8px;">
+          <option value="1">1 Day</option><option value="2">2 Days</option><option value="3">3 Days</option>
+        </select>
+      </div>
+    </div>
+  </div>
   <div class="chart-card full-width">
     <div class="chart-header"><div class="section-title" style="margin:0">System Status Timeline</div></div>
     <div class="chart-container"><canvas id="statusChart"></canvas></div>
@@ -638,21 +676,11 @@ header {
         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Smart Boost</span><label class="toggle-wrap"><input type="checkbox" id="sw-sb" onchange="sendSwitch('smart_boost_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
       </div>
 
-      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Odin Solver</div>
-        <div class="ctrl-row">
-          <span class="ctrl-label">Show Solver Tab</span>
-          <label class="toggle-wrap">
-            <input type="checkbox" id="sw-show-solver" onchange="sendSwitch('show_solver_tab_enabled', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-      
+
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         
-        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Z1/Z2 Settings</div>
-        
+
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">General Zone Settings</div>
         <div class="ctrl-row">
           <span class="ctrl-label">Heating System Type</span>
           <select class="ctrl-select" id="sel-hst" onchange="sendSelect('heating_system_type', this)">
@@ -666,24 +694,18 @@ header {
         </div>
 
         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Setpoint Bias</span><div class="stepper"><button class="step-btn" onclick="step('aa-bias', -0.1)">−</button><div class="step-val" id="aa-bias-val">—</div><button class="step-btn" onclick="step('aa-bias', +0.1)">+</button></div></div>
-
-        <div id="cool-settings-z1" style="display:none;">
-          <div class="ctrl-row"><span class="ctrl-label">Global Smart Start Temp</span><div class="stepper"><button class="step-btn" onclick="step('cool-start-z1', -0.5)">−</button><div class="step-val" id="cool-start-z1-val">—</div><button class="step-btn" onclick="step('cool-start-z1', +0.5)">+</button></div></div>
-          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Cool Flow</span><div class="stepper"><button class="step-btn" onclick="step('cool-min-z1', -0.5)">−</button><div class="step-val" id="cool-min-z1-val">—</div><button class="step-btn" onclick="step('cool-min-z1', +0.5)">+</button></div></div>
-        </div>
-
-        <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Short Cycle Protection</div>
-        <div class="ctrl-row"><span class="ctrl-label">Predictive Control</span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
-        <div class="ctrl-row"><span class="ctrl-label">Time Window (min)</span><div class="stepper"><button class="step-btn" onclick="step('psc-win', -0.5)">−</button><div class="step-val" id="psc-win-val">—</div><button class="step-btn" onclick="step('psc-win', +0.5)">+</button></div></div>
-        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Delta Threshold (°C)</span><div class="stepper"><button class="step-btn" onclick="step('psc-delta', -0.5)">−</button><div class="step-val" id="psc-delta-val">—</div><button class="step-btn" onclick="step('psc-delta', +0.5)">+</button></div></div>
-
+        <div class="ctrl-row"><span class="ctrl-label">Global Smart Start Temp</span><div class="stepper"><button class="step-btn" onclick="step('cool-start-z1', -0.5)">−</button><div class="step-val" id="cool-start-z1-val">—</div><button class="step-btn" onclick="step('cool-start-z1', +0.5)">+</button></div></div>
         <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Settings Z1</div>
+
         <div class="ctrl-row"><span class="ctrl-label">Room Temp Source Z1</span><select class="ctrl-select" id="sel-z1src" onchange="sendSelect('room_temp_source_z1', this)"><option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option></select></div>
         
         <div id="heat-settings-z1">
           <div class="ctrl-row"><span class="ctrl-label">Max Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -0.1)">−</button><div class="step-val" id="aa-max-val">—</div><button class="step-btn" onclick="step('aa-max', +0.1)">+</button></div></div>
           <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -0.1)">−</button><div class="step-val" id="aa-min-val">—</div><button class="step-btn" onclick="step('aa-min', +0.1)">+</button></div></div>
         </div>
+        <div id="cool-settings-z1" style="display:none;">
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Cool Flow</span><div class="stepper"><button class="step-btn" onclick="step('cool-min-z1', -0.1)">−</button><div class="step-val" id="cool-min-z1-val">—</div><button class="step-btn" onclick="step('cool-min-z1', +0.1)">+</button></div></div>
+        </div>        
         
         <div id="aa-z2-container" style="display:none;">
           <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Settings Z2</div>
@@ -693,14 +715,45 @@ header {
             <div class="ctrl-row"><span class="ctrl-label">Max Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><div class="step-val" id="aa-max-z2-val">—</div><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
             <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><div class="step-val" id="aa-min-z2-val">—</div><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
           </div>
+          <div id="cool-settings-z2" style="display:none;">
+            <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Cool Flow</span><div class="stepper"><button class="step-btn" onclick="step('cool-min-z2', -0.1)">−</button><div class="step-val" id="cool-min-z2-val">—</div><button class="step-btn" onclick="step('cool-min-z2', +0.1)">+</button></div></div>
+          </div>
         </div>
 
-        <button class="send-btn" onclick="sendAA(this)" style="margin-bottom:0; margin-top:24px;">Apply Auto Adaptive</button>
+        <div id="heat-short-cycle">
+          <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Short Cycle Protection</div>
+          <div class="ctrl-row"><span class="ctrl-label">Predictive Control</span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
+          <div class="ctrl-row"><span class="ctrl-label">Time Window (min)</span><div class="stepper"><button class="step-btn" onclick="step('psc-win', -0.5)">−</button><div class="step-val" id="psc-win-val">—</div><button class="step-btn" onclick="step('psc-win', +0.5)">+</button></div></div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Delta Threshold (°C)</span><div class="stepper"><button class="step-btn" onclick="step('psc-delta', -0.5)">−</button><div class="step-val" id="psc-delta-val">—</div><button class="step-btn" onclick="step('psc-delta', +0.5)">+</button></div></div>
+        </div>
+
+        <button class="send-btn" onclick="sendAA(this)" style="margin-bottom:0; margin-top:24px;">Apply Settings</button>
       </div>
     </div>  
 
     <div class="ctrl-card" id="card-server-control">
-      <div class="section-title">Server Control</div>
+      <div class="section-title">ADVANCED CONTROL</div>
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
+      <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Power Mode</div>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+          <span class="ctrl-label">Enable</span>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="sw-power-mode" onchange="sendSwitch('power_mode', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Odin Solver</div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Show Solver Tab</span>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="sw-show-solver" onchange="sendSwitch('show_solver_tab_enabled', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
 
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Ecodan Server Control</div>
@@ -716,21 +769,21 @@ header {
       <div id="sc-prohibit-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Prohibit Controls</div>
         <div class="ctrl-row">
-          <span class="ctrl-label">Prohibit DHW</span>
+          <span class="ctrl-label">DHW</span>
           <label class="toggle-wrap">
             <input type="checkbox" id="sw-sc-prohibit-dhw" onchange="sendSwitch('server_control_prohibit_dhw', this.checked)">
             <span class="toggle-slider"></span>
           </label>
         </div>
         <div class="ctrl-row">
-          <span class="ctrl-label">Prohibit Z1 Heating</span>
+          <span class="ctrl-label">Z1 Heating</span>
           <label class="toggle-wrap">
             <input type="checkbox" id="sw-sc-prohibit-z1-heat" onchange="sendSwitch('server_control_prohibit_z1_heating', this.checked)">
             <span class="toggle-slider"></span>
           </label>
         </div>
         <div class="ctrl-row" id="sc-prohibit-z1-cool-row">
-          <span class="ctrl-label">Prohibit Z1 Cooling</span>
+          <span class="ctrl-label">Z1 Cooling</span>
           <label class="toggle-wrap">
             <input type="checkbox" id="sw-sc-prohibit-z1-cool" onchange="sendSwitch('server_control_prohibit_z1_cooling', this.checked)">
             <span class="toggle-slider"></span>
@@ -738,14 +791,14 @@ header {
         </div>
         <div id="sc-z2-prohibits" style="display:none;">
           <div class="ctrl-row">
-            <span class="ctrl-label">Prohibit Z2 Heating</span>
+            <span class="ctrl-label">Z2 Heating</span>
             <label class="toggle-wrap">
               <input type="checkbox" id="sw-sc-prohibit-z2-heat" onchange="sendSwitch('server_control_prohibit_z2_heating', this.checked)">
               <span class="toggle-slider"></span>
             </label>
           </div>
           <div class="ctrl-row">
-            <span class="ctrl-label">Prohibit Z2 Cooling</span>
+            <span class="ctrl-label">Z2 Cooling</span>
             <label class="toggle-wrap">
               <input type="checkbox" id="sw-sc-prohibit-z2-cool" onchange="sendSwitch('server_control_prohibit_z2_cooling', this.checked)">
               <span class="toggle-slider"></span>
@@ -759,168 +812,177 @@ header {
 </div>
 
 <div id="view-solver" class="view-section">
-  <div style="display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-    
-    <div class="ctrl-card">
-      <div class="section-title">Odin Settings</div>
-      
-      <div class="ctrl-row">
-        <span class="ctrl-label">Enable Dynamic Cost Solver</span>
-        <label class="toggle-wrap">
-          <input type="checkbox" id="sw-solver" onchange="sendSwitch('use_dynamic_cost_solver', this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-
-      <div class="ctrl-row">
-        <span class="ctrl-label">Connection Status</span>
-        <span class="ctrl-value" id="badge-solver-conn" style="font-weight:600;">—</span>
-      </div>
-
-      <div class="ctrl-row">
-        <span class="ctrl-label">Odin IP Address</span>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <input type="text" id="ui-solver-ip" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 110px; text-align: right; outline: none;" placeholder="0.0.0.0">
-          <button class="step-btn" style="width: 26px; border-color: var(--text3); color: var(--text3);" onclick="sendInputString('solver_ip_address', 'ui-solver-ip')" title="Save IP">✓</button>
+  <div class="ctrl-card" style="margin-bottom: 20px; padding: 15px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="ctrl-label" style="font-weight: 600;">Time View:</span>
+        <div style="background: var(--bg); padding: 3px; border-radius: 7px; display: inline-flex; border: 1px solid var(--border);">
+          <button id="solver-btn-live" onclick="setSolverMode('live')" class="log-btn active" style="border: none; padding: 4px 10px;">Live</button>
+          <button id="solver-btn-hist" onclick="setSolverMode('history')" class="log-btn" style="border: none; padding: 4px 10px; margin-left: 4px;">Calendar</button>
         </div>
       </div>
-
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">DHW Threshold<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>If DHW temp drops below (Target - Drop) + Threshold, Odin schedules DHW during a cheap/sunny hour. 0 = disabled.</span></span>
-        <div class="stepper">
-          <button class="step-btn" onclick="step('dhw-thresh', -0.5)">−</button>
-          <input type="number" class="step-input" id="dhw-thresh-val" onchange="manualInput('dhw-thresh', this.value)" />
-          <button class="step-btn" onclick="step('dhw-thresh', +0.5)">+</button>
-          <button class="step-btn" style="margin-left: 6px; border-color: var(--accent); color: var(--accent);" onclick="sendOdinThresh(this)" title="Apply Threshold">✓</button>
-        </div>
-      </div>
-      
-      <div class="ctrl-row" style="border-bottom: none;">
-        <span class="ctrl-label param-label">ODIN DHW Trigger<span class="tip-icon">?</span><span class="tip-box">
-          <span class="tip-unit">Mode</span>Method used when ODIN schedules DHW. Regular bumps the setpoint by max drop + 1°C, Forced is faster but at the cost of higher consumption</span></span>
-        <select class="ctrl-select" id="sel-odin-dhw-mode" onchange="sendSelect('solver_dhw_mode', this)">
-          <option>Regular</option>
-          <option>Forced</option>
+      <div id="solver-calendar-container" style="display: none; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px;">
+        <span style="color: var(--text3);">Date:</span>
+        <input type="date" id="solver-hist-date" onchange="onSolverDateChanged()" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 7px; outline: none; cursor: pointer;">
+        <span style="color: var(--text3); margin-left: 5px;">Range:</span>
+        <select id="solver-hist-range" onchange="onSolverDateChanged()" class="ctrl-select" style="max-width: 90px; margin-left: 0; padding: 4px 8px;">
+          <option value="1">1 Day</option><option value="2">2 Days</option><option value="3">3 Days</option>
         </select>
       </div>
-      
-      <div id="run-solver-row" style="display:none; margin-top: 12px; gap: 8px; align-items: stretch; flex-wrap: nowrap;">
-        <div style="display: flex; align-items: center; gap: 5px; flex-shrink: 0; background: var(--bg2); padding: 0 8px; border: 1px solid var(--border); border-radius: 8px;">
-          <label style="font-size: 9px; color: var(--text3); white-space: nowrap; text-transform: uppercase;">From hour</label>
-          <input id="ui-solver-hour" type="number" min="0" max="23" step="1" class="step-input" style="width: 30px; font-size: 12px;" title="Override start hour (default = current hour)">
-        </div>
-        <button id="btn-run-solver" class="send-btn" style="margin-top: 0; border-color: var(--accent3); color: var(--accent3); background: rgba(127,255,127,0.1); flex: 1;" onclick="runOdinSolver()">Run Optimization</button>
-        <button id="btn-odin" class="send-btn" style="margin-top: 0; flex: 0.5; display: none;" onclick="openOdin()">Open ODIN</button>
-      </div>
-
-      <div id="run-stats-block" style="display:none; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px;">
-        <div class="sub-label" style="margin:0 0 6px 0;">LAST RUN RESULT</div>
-          <div style="display:grid; grid-template-columns:1fr auto; gap:4px 10px; align-items:center;">  
-            <span class="ctrl-label">Last result time</span> <span id="rs-time" class="ctrl-value" style="text-align:right;">—</span>
+    </div>
+  </div>
   
-            <span class="ctrl-label">Execution time</span>   <span id="rs-exec"    class="ctrl-value" style="text-align:right;">—</span>
-            <span class="ctrl-label">Evaluated nodes</span>  <span id="rs-nodes"   class="ctrl-value" style="text-align:right;">—</span>
-            <span class="ctrl-label">Heat loss</span>        <span id="rs-hloss"   class="ctrl-value" style="text-align:right;">—</span>
-            <span class="ctrl-label">Base COP</span>         <span id="rs-cop"     class="ctrl-value" style="text-align:right;">—</span>
-            <span class="ctrl-label">Thermal mass</span>     <span id="rs-tmass"   class="ctrl-value" style="text-align:right;">—</span>
-            
-            <div class="sub-label" style="grid-column: 1 / -1; margin: 12px 0 4px 0;">EXPECTED TOTALS</div>
+  <div style="display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+    
+    <div class="ctrl-card" id="card-odin-settings">
+      <div class="section-title section-header-toggle" onclick="toggleCard('card-odin-settings')">
+        <span>Odin Settings</span>
+        <span class="collapse-icon">▼</span>
+      </div>
+      <div class="collapsible-content">
+      
+        <div class="ctrl-row">
+          <span class="ctrl-label">Enable Dynamic Cost Solver</span>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="sw-solver" onchange="sendSwitch('use_dynamic_cost_solver', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
 
-            <span class="ctrl-label">Consumption</span>           <span id="rs-econs"   class="ctrl-value" style="text-align:right;">—</span>
-            <span class="ctrl-label">Production</span>            <span id="rs-eprod"   class="ctrl-value" style="text-align:right;">—</span>
-            <span class="ctrl-label">Solar used by HP</span>      <span id="rs-solar"   class="ctrl-value" style="text-align:right;">—</span>
-            <span class="ctrl-label">Total solar generation</span><span id="rs-solar-total" class="ctrl-value" style="text-align:right;">—</span>
-            <span class="ctrl-label">Cost</span>                  <span id="rs-cost"    class="ctrl-value" style="text-align:right; color:var(--accent);">—</span>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Connection Status</span>
+          <span class="ctrl-value" id="badge-solver-conn" style="font-weight:600;">—</span>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label">Odin IP Address</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <input type="text" id="ui-solver-ip" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 110px; text-align: right; outline: none;" placeholder="0.0.0.0">
+            <button class="step-btn" style="width: 26px; border-color: var(--text3); color: var(--text3);" onclick="sendInputString('solver_ip_address', 'ui-solver-ip')" title="Save IP">✓</button>
           </div>
         </div>
-      </div>
 
-      <div class="ctrl-card physics-card">
-      <div class="section-title">Physics Data (Daily Averages)</div>
-      <div class="phys-tabs">
-        <button id="tab-btn-heat" class="active-heat" onclick="togglePhysicsTab('heat')">Heating Profile</button>
-        <button id="tab-btn-cool" onclick="togglePhysicsTab('cool')">Cooling Profile</button>
-      </div>
-
-      <div id="phys-group-heat">
         <div class="ctrl-row">
-          <span class="ctrl-label param-label">Heat Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total heat energy produced (last session) in heating mode. DHW excluded. Used to calculate COP.</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('raw-heat', -0.1)">−</button><input type="number" class="step-input" id="raw-heat-val" onchange="manualInput('raw-heat', this.value)" /><button class="step-btn" onclick="step('raw-heat', +0.1)">+</button></div>
+          <span class="ctrl-label param-label">DHW Threshold<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>If DHW temp drops below (Target - Drop) + Threshold, Odin schedules DHW during a cheap/sunny hour. 0 = disabled.</span></span>
+          <div class="stepper">
+            <button class="step-btn" onclick="step('dhw-thresh', -0.5)">−</button>
+            <input type="number" class="step-input" id="dhw-thresh-val" onchange="manualInput('dhw-thresh', this.value)" />
+            <button class="step-btn" onclick="step('dhw-thresh', +0.5)">+</button>
+            <button class="step-btn" style="margin-left: 6px; border-color: var(--accent); color: var(--accent);" onclick="sendOdinThresh(this)" title="Apply Threshold">✓</button>
+          </div>
         </div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Elec Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump (last session) in heating mode. DHW excluded. COP = Heat / Elec.</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('raw-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-elec-val" onchange="manualInput('raw-elec', this.value)" /><button class="step-btn" onclick="step('raw-elec', +0.1)">+</button></div>
+        
+        <div class="ctrl-row" style="border-bottom: none;">
+          <span class="ctrl-label param-label">ODIN DHW Trigger<span class="tip-icon">?</span><span class="tip-box">
+            <span class="tip-unit">Mode</span>Method used when ODIN schedules DHW. Regular bumps the setpoint by max drop + 1°C, Forced is faster but at the cost of higher consumption</span></span>
+          <select class="ctrl-select" id="sel-odin-dhw-mode" onchange="sendSelect('solver_dhw_mode', this)">
+            <option>Regular</option>
+            <option>Forced</option>
+          </select>
         </div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in heating mode (last session). Used to derive thermal mass.</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('raw-run', -0.1)">−</button><input type="number" class="step-input" id="raw-run-val" onchange="manualInput('raw-run', this.value)" /><button class="step-btn" onclick="step('raw-run', +0.1)">+</button></div>
+        
+        <div id="run-solver-row" style="display:none; margin-top: 12px; gap: 8px; align-items: stretch; flex-wrap: nowrap;">
+          <div style="display: flex; align-items: center; gap: 5px; flex-shrink: 0; background: var(--bg2); padding: 0 8px; border: 1px solid var(--border); border-radius: 8px;">
+            <label style="font-size: 9px; color: var(--text3); white-space: nowrap; text-transform: uppercase;">From hour</label>
+            <input id="ui-solver-hour" type="number" min="0" max="23" step="1" class="step-input" style="width: 30px; font-size: 12px;" title="Override start hour (default = current hour)">
+          </div>
+          <button id="btn-run-solver" class="send-btn" style="margin-top: 0; border-color: var(--accent3); color: var(--accent3); background: rgba(127,255,127,0.1); flex: 1;" onclick="runOdinSolver()">Run Optimization</button>
+          <button id="btn-odin" class="send-btn" style="margin-top: 0; flex: 0.5; display: none;" onclick="openOdin()">Open ODIN</button>
         </div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Avg Ambient Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average ambient temperature (last session). Used to calculate heat loss and COP correction.</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('raw-out', -0.1)">−</button><input type="number" class="step-input" id="raw-out-val" onchange="manualInput('raw-out', this.value)" /><button class="step-btn" onclick="step('raw-out', +0.1)">+</button></div>
-        </div>
-      </div>
-
-      <div id="phys-group-cool" style="display: none;">
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Cooling Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total cooling energy produced (last session). Used to calculate EER.</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('raw-cool-prod', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-prod-val" onchange="manualInput('raw-cool-prod', this.value)" /><button class="step-btn" onclick="step('raw-cool-prod', +0.1)">+</button></div>
-        </div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Cool Elec Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump (last session) in cooling mode. EER = Cool / Elec.</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('raw-cool-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-elec-val" onchange="manualInput('raw-cool-elec', this.value)" /><button class="step-btn" onclick="step('raw-cool-elec', +0.1)">+</button></div>
-        </div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Cooling Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in cooling mode (last session).</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('raw-cool-run', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-run-val" onchange="manualInput('raw-cool-run', this.value)" /><button class="step-btn" onclick="step('raw-cool-run', +0.1)">+</button></div>
-        </div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Cooling Avg Ambient<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature (last session) during cooling.</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('raw-cool-out', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-out-val" onchange="manualInput('raw-cool-out', this.value)" /><button class="step-btn" onclick="step('raw-cool-out', +0.1)">+</button></div>
         </div>
       </div>
 
-      <div class="sub-label" style="margin-top:20px;">Universal Building Physics</div>
-
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">Avg Room Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average room temperature yesterday. Together with outside temp, determines heat loss coefficient.</span></span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-room', -0.1)">−</button><input type="number" class="step-input" id="raw-room-val" onchange="manualInput('raw-room', this.value)" /><button class="step-btn" onclick="step('raw-room', +0.1)">+</button></div>
+      <div class="ctrl-card physics-card" id="card-physics-data">
+      <div class="section-title section-header-toggle" onclick="toggleCard('card-physics-data')">
+        <span>Physics Data (Daily Averages)</span>
+        <span class="collapse-icon">▼</span>
       </div>
+      <div class="collapsible-content">
 
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">Delta Room Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C (daily swing)</span>Difference between max and min room temp yesterday. Small delta = high thermal mass (house holds heat well).</span></span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-delta', -0.1)">−</button><input type="number" class="step-input" id="raw-delta-val" onchange="manualInput('raw-delta', this.value)" /><button class="step-btn" onclick="step('raw-delta', +0.1)">+</button></div>
-      </div>
-      
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">HL × TM Product<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours (Tau)</span>Thermal time constant of your house. Higher = house holds heat longer. Learned automatically. Typical: 50–300h.</span></span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-hl-tm', -0.5)">−</button><input type="number" class="step-input" id="raw-hl-tm-val" onchange="manualInput('raw-hl-tm', this.value)" /><button class="step-btn" onclick="step('raw-hl-tm', +0.5)">+</button></div>
-      </div>
+        <div class="phys-tabs">
+          <button id="tab-btn-heat" class="active-heat" onclick="togglePhysicsTab('heat')">Heating Profile</button>
+          <button id="tab-btn-cool" onclick="togglePhysicsTab('cool')">Cooling Profile</button>
+        </div>
 
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">Passive Solar Factor<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh per W/m² irradiance</span>Heat entering through windows from solar irradiance. Independent of PV panels. Typical: 0.010–0.030. Learned automatically.</span></span>
-        <div class="stepper"><button class="step-btn" onclick="step('raw-solar-factor', -0.0025)">−</button><input type="number" class="step-input" id="raw-solar-factor-val" onchange="manualInput('raw-solar-factor', this.value)" /><button class="step-btn" onclick="step('raw-solar-factor', +0.0025)">+</button></div>
-      </div>
+        <div id="phys-group-heat">
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Heat Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total heat energy produced (last session) in heating mode. DHW excluded. Used to calculate COP.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-heat', -0.1)">−</button><input type="number" class="step-input" id="raw-heat-val" onchange="manualInput('raw-heat', this.value)" /><button class="step-btn" onclick="step('raw-heat', +0.1)">+</button></div>
+          </div>
 
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">Battery SoC<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh</span>Current battery state of charge. Solver assigns discharge to most expensive HP hours. Set 0 if no battery.</span></span>
-        <div class="stepper"><button class="step-btn" onclick="step('batt-soc', -0.1)">−</button><input type="number" class="step-input" id="batt-soc-val" onchange="manualInput('batt-soc', this.value)" /><button class="step-btn" onclick="step('batt-soc', +0.1)">+</button></div>
-      </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Elec Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump (last session) in heating mode. DHW excluded. COP = Heat / Elec.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-elec-val" onchange="manualInput('raw-elec', this.value)" /><button class="step-btn" onclick="step('raw-elec', +0.1)">+</button></div>
+          </div>
 
-      <div class="ctrl-row">
-        <span class="ctrl-label param-label">Battery Max Discharge<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kW</span>Maximum discharge rate of your battery. Limits how much power solver can assign per hour.</span></span>
-        <div class="stepper"><button class="step-btn" onclick="step('batt-max-dis', -0.1)">−</button><input type="number" class="step-input" id="batt-max-dis-val" onchange="manualInput('batt-max-dis', this.value)" /><button class="step-btn" onclick="step('batt-max-dis', +0.1)">+</button></div>
-      </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in heating mode (last session). Used to derive thermal mass.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-run', -0.1)">−</button><input type="number" class="step-input" id="raw-run-val" onchange="manualInput('raw-run', this.value)" /><button class="step-btn" onclick="step('raw-run', +0.1)">+</button></div>
+          </div>
 
-      <button class="send-btn" onclick="sendPhysics(this)" style="margin-bottom:0; margin-top:24px;">Apply Physics Data</button>
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Avg Ambient Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average ambient temperature (last session). Used to calculate heat loss and COP correction.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-out', -0.1)">−</button><input type="number" class="step-input" id="raw-out-val" onchange="manualInput('raw-out', this.value)" /><button class="step-btn" onclick="step('raw-out', +0.1)">+</button></div>
+          </div>
+        </div>
+
+        <div id="phys-group-cool" style="display: none;">
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Cooling Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total cooling energy produced (last session). Used to calculate EER.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-prod', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-prod-val" onchange="manualInput('raw-cool-prod', this.value)" /><button class="step-btn" onclick="step('raw-cool-prod', +0.1)">+</button></div>
+          </div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Cool Elec Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump (last session) in cooling mode. EER = Cool / Elec.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-elec-val" onchange="manualInput('raw-cool-elec', this.value)" /><button class="step-btn" onclick="step('raw-cool-elec', +0.1)">+</button></div>
+          </div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Cooling Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in cooling mode (last session).</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-run', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-run-val" onchange="manualInput('raw-cool-run', this.value)" /><button class="step-btn" onclick="step('raw-cool-run', +0.1)">+</button></div>
+          </div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Cooling Avg Ambient<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature (last session) during cooling.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-out', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-out-val" onchange="manualInput('raw-cool-out', this.value)" /><button class="step-btn" onclick="step('raw-cool-out', +0.1)">+</button></div>
+          </div>
+        </div>
+
+        <div class="sub-label" style="margin-top:20px;">Universal Building Physics</div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Avg Room Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average room temperature yesterday. Together with outside temp, determines heat loss coefficient.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('raw-room', -0.1)">−</button><input type="number" class="step-input" id="raw-room-val" onchange="manualInput('raw-room', this.value)" /><button class="step-btn" onclick="step('raw-room', +0.1)">+</button></div>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Delta Room Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C (daily swing)</span>Difference between max and min room temp yesterday. Small delta = high thermal mass (house holds heat well).</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('raw-delta', -0.1)">−</button><input type="number" class="step-input" id="raw-delta-val" onchange="manualInput('raw-delta', this.value)" /><button class="step-btn" onclick="step('raw-delta', +0.1)">+</button></div>
+        </div>
+        
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">HL × TM Product<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours (Tau)</span>Thermal time constant of your house. Higher = house holds heat longer. Learned automatically. Typical: 50–300h.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('raw-hl-tm', -0.5)">−</button><input type="number" class="step-input" id="raw-hl-tm-val" onchange="manualInput('raw-hl-tm', this.value)" /><button class="step-btn" onclick="step('raw-hl-tm', +0.5)">+</button></div>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Passive Solar Factor<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh per W/m² irradiance</span>Heat entering through windows from solar irradiance. Independent of PV panels. Typical: 0.010–0.030. Learned automatically.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('raw-solar-factor', -0.0025)">−</button><input type="number" class="step-input" id="raw-solar-factor-val" onchange="manualInput('raw-solar-factor', this.value)" /><button class="step-btn" onclick="step('raw-solar-factor', +0.0025)">+</button></div>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Battery SoC<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh</span>Current battery state of charge. Solver assigns discharge to most expensive HP hours. Set 0 if no battery.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('batt-soc', -0.1)">−</button><input type="number" class="step-input" id="batt-soc-val" onchange="manualInput('batt-soc', this.value)" /><button class="step-btn" onclick="step('batt-soc', +0.1)">+</button></div>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Battery Max Discharge<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kW</span>Maximum discharge rate of your battery. Limits how much power solver can assign per hour.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('batt-max-dis', -0.1)">−</button><input type="number" class="step-input" id="batt-max-dis-val" onchange="manualInput('batt-max-dis', this.value)" /><button class="step-btn" onclick="step('batt-max-dis', +0.1)">+</button></div>
+        </div>
+
+        <button class="send-btn" onclick="sendPhysics(this)" style="margin-bottom:0; margin-top:24px;">Apply Physics Data</button>
+      </div>
     </div>
-
   </div>
   
   <div class="chart-card full-width" style="margin-top: 15px; grid-column: 1 / -1;">
@@ -1021,13 +1083,14 @@ const pending = {
   'raw-heat': null, 'raw-elec': null, 'raw-run': null,
   'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-solar-factor': null,
   'batt-soc': null, 'batt-max-dis': null,
-  'cool-start-z1': null, 'cool-min-z1': null, 'dhw-thresh': null,
+  'cool-start-z1': null, 'cool-min-z1': null, 'cool-min-z2': null, 'dhw-thresh': null,
   'raw-cool-prod': null, 'raw-cool-elec': null, 'raw-cool-run': null, 'raw-cool-out': null
 };
 
 const lastEdit = {};
 const serverState = {};
 
+let hourlyHistory = [];
 let latestState = {};
 let odinDataCache = null;
 let odinConsChart = null;
@@ -1037,7 +1100,6 @@ let odinTempChart = null;
 let odinBattChart = null;
 let odinPriceChart = null;
 let odinWeatherChart = null;
-let odinAutoEnabled = false;
 
 const LIMITS = { 
   'aa-bias': { min: -5, max: 5, step: 0.1 }, 
@@ -1065,7 +1127,8 @@ const LIMITS = {
   'batt-soc': { min: 0.0, max: 30.0, step: 0.1 },
   'batt-max-dis': { min: 0.5, max: 15.0, step: 0.1 },
   'cool-start-z1': { min: 16.0, max: 22.0, step: 0.5 },
-  'cool-min-z1':   { min: 5.0, max: 25.0, step: 0.5 },
+  'cool-min-z1':   { min: 5.0, max: 25.0, step: 0.1 },
+  'cool-min-z2':   { min: 5.0, max: 25.0, step: 0.1 },
   'dhw-thresh':    { min: 0.0, max: 20.0, step: 0.5 },
   'raw-cool-prod': { min: 0.0, max: 200.0, step: 0.1 },
   'raw-cool-elec': { min: 0.0, max: 100.0, step: 0.1 },
@@ -1088,15 +1151,94 @@ const STEP_EL = {
   'raw-hl-tm': 'raw-hl-tm-val','raw-solar-factor': 'raw-solar-factor-val',
   'batt-soc': 'batt-soc-val',
   'batt-max-dis': 'batt-max-dis-val',
-  'cool-start-z1': 'cool-start-z1-val', 'cool-min-z1': 'cool-min-z1-val',
+  'cool-start-z1': 'cool-start-z1-val', 'cool-min-z1': 'cool-min-z1-val', 'cool-min-z2': 'cool-min-z2-val',
   'dhw-thresh': 'dhw-thresh-val',
   'raw-cool-prod': 'raw-cool-prod-val', 'raw-cool-elec': 'raw-cool-elec-val', 'raw-cool-run': 'raw-cool-run-val', 'raw-cool-out': 'raw-cool-out-val'
 };
 
 let lastGraphUpdate = 0;
-let initialZoomDone = false;
 let userZoomed = false;
 let tempChart = null, freqChart = null, statusChart = null, outsideTempChart = null;
+
+
+// Toggles the visibility of a card and saves the state to localStorage
+function toggleCard(cardId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  
+  card.classList.toggle('collapsed');
+  const isCollapsed = card.classList.contains('collapsed');
+  localStorage.setItem('collapseState_' + cardId, isCollapsed ? 'true' : 'false');
+}
+
+// Restores the collapsed state on page load
+function initCollapsibleCards() {
+  const cards = ['card-odin-settings', 'card-physics-data'];
+  cards.forEach(id => {
+    const isCollapsed = localStorage.getItem('collapseState_' + id) === 'true';
+    if (isCollapsed) {
+      const card = document.getElementById(id);
+      if (card) card.classList.add('collapsed');
+    }
+  });
+}
+
+// Shared reference to all four monitor-tab charts (lazy — safe to call before init).
+function monitorCharts() {
+  return [tempChart, freqChart, outsideTempChart, statusChart].filter(Boolean);
+}
+
+/**
+ * Build x-axis label array from history.timestamps.
+ * In multi-day mode ("Mon 14:00"), in single-day mode ("14:00").
+ */
+function buildMinuteLabels() {
+  if (!history.timestamps.length) return [];
+  const span = history.timestamps[history.timestamps.length - 1] - history.timestamps[0];
+  const multiDay = span > 24 * 60 * 60 * 1000;
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  return history.timestamps.map(t => {
+    const d = new Date(t);
+    const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+    return multiDay ? `${days[d.getUTCDay()]} ${time}` : time;
+  });
+}
+
+/**
+ * Push all history arrays into the four monitor charts and call update('none').
+ * Does NOT add new data — callers are responsible for populating history.* first.
+ */
+function renderMinuteCharts() {
+  if (!tempChart || !freqChart || !statusChart || !outsideTempChart) return;
+
+  const labels = buildMinuteLabels();
+  monitorCharts().forEach(c => { c.data.labels = labels; });
+
+  tempChart.data.datasets[0].data = history.feed;
+  tempChart.data.datasets[1].data = history.ret;
+  tempChart.data.datasets[2].data = history.z1sp;
+  tempChart.data.datasets[3].data = history.z2sp;
+  tempChart.data.datasets[4].data = history.z1curr;
+  tempChart.data.datasets[5].data = history.z2curr;
+  tempChart.data.datasets[6].data = history.z1flow;
+  tempChart.data.datasets[7].data = history.z2flow;
+
+  freqChart.data.datasets[0].data = history.freq;
+
+  outsideTempChart.data.datasets[0].data = history.outside;
+  outsideTempChart.data.datasets[1].data = history.liquid_pipe;
+  outsideTempChart.data.datasets[2].data = history.condensing;
+
+  statusChart.data.datasets[0].data = history.mode.map(() => 7);
+  statusChart.data.datasets[1].data = history.bin_comp.map(() => 6);
+  statusChart.data.datasets[2].data = history.bin_boost.map(() => 5);
+  statusChart.data.datasets[3].data = history.bin_defrost.map(() => 4);
+  statusChart.data.datasets[4].data = history.bin_pump.map(() => 3);
+  statusChart.data.datasets[5].data = history.bin_in1.map(() => 2);
+  statusChart.data.datasets[6].data = history.bin_in6.map(() => 1);
+
+  monitorCharts().forEach(c => c.update('none'));
+}
 
 // currency symbol helper
 function getCurrencySymbol(bzn) {
@@ -1480,7 +1622,7 @@ function initCharts() {
           font: function(context) {
               let weight = 'normal';
               if (odinDataCache && odinDataCache.operation_mode && context.tick && context.tick.value !== undefined) {
-                  const dataIndex = context.tick.value; // <--- DIT IS DE FIX
+                  const dataIndex = context.tick.value;
                   const mode = odinDataCache.operation_mode[dataIndex];
                   if (mode === 1 || mode === 2 || mode === 3) weight = 'bold';
               }
@@ -1743,9 +1885,310 @@ function initCharts() {
       }
   });
 }
+let monitorMode = 'live';
+let solverMode = 'live';
+
+function setMonitorMode(mode) {
+    monitorMode = mode;
+    const btnLive = document.getElementById('monitor-btn-live');
+    const btnHist = document.getElementById('monitor-btn-hist');
+    const calCont = document.getElementById('monitor-calendar-container');
+
+    if (mode === 'live') {
+        btnLive.classList.add('active'); btnHist.classList.remove('active');
+        calCont.style.display = 'none';
+        loadServerHistory(null, null, 'min'); 
+    } else {
+        btnLive.classList.remove('active'); btnHist.classList.add('active');
+        calCont.style.display = 'flex';
+        const dateInput = document.getElementById('monitor-hist-date');
+        if (!dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+        onMonitorDateChanged();
+    }
+}
+
+async function onMonitorDateChanged() {
+    if (monitorMode !== 'history') return;
+    const dateVal = document.getElementById('monitor-hist-date').value;
+    const rangeDays = parseInt(document.getElementById('monitor-hist-range').value) || 1;
+    if (!dateVal) return;
+
+    const startDate = new Date(dateVal + 'T00:00:00Z');
+    const fromTs = Math.floor(startDate.getTime() / 1000);
+    const toTs = fromTs + (rangeDays * 24 * 60 * 60);
+    
+    monitorCharts().forEach(c => {
+        if (c) { 
+            c.resetZoom('none');
+            c.options.scales.x.min = null; c.options.scales.x.max = null; 
+            c.data.labels = []; c.data.datasets.forEach(d => d.data = []); 
+            c.update('none'); 
+        }
+    });
+    
+    await loadServerHistory(fromTs, toTs, 'min');
+}
+
+function setSolverMode(mode) {
+    solverMode = mode;
+    const btnLive = document.getElementById('solver-btn-live');
+    const btnHist = document.getElementById('solver-btn-hist');
+    const calCont = document.getElementById('solver-calendar-container');
+    const battCard = document.getElementById('odin-batt-card');
+
+    if (mode === 'live') {
+        btnLive.classList.add('active'); btnHist.classList.remove('active');
+        calCont.style.display = 'none';
+        if (battCard) battCard.style.display = 'block';
+        
+        renderOdinLive();
+        fetchOdinData();
+    } else {
+        btnLive.classList.remove('active'); btnHist.classList.add('active');
+        calCont.style.display = 'flex';
+        if (battCard) battCard.style.display = 'none';
+        const dateInput = document.getElementById('solver-hist-date');
+        if (!dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+        onSolverDateChanged();
+    }
+}
+
+async function onSolverDateChanged() {
+    if (solverMode !== 'history') return;
+    const dateVal = document.getElementById('solver-hist-date').value;
+    const rangeDays = parseInt(document.getElementById('solver-hist-range').value) || 1;
+    if (!dateVal) return;
+
+    const startDate = new Date(dateVal + 'T00:00:00Z');
+    const fromTs = Math.floor(startDate.getTime() / 1000);
+    const toTs = fromTs + (rangeDays * 24 * 60 * 60);
+    
+    [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
+     odinPriceChart, odinWeatherChart, odinBattChart].forEach(c => {
+        if (c) { 
+            c.resetZoom('none');
+            c.options.scales.x.min = null; c.options.scales.x.max = null; 
+            c.data.labels = []; c.data.datasets.forEach(d => d.data = []); 
+            c.update('none'); 
+        }
+    });
+    
+    await loadServerHistory(fromTs, toTs, 'hour');
+}
+/**
+ * Custom historical layout rendering engine that replaces the 72h fixed slots with an elastic timeline.
+ */
+function renderOdinHistory() {
+    if (!hourlyHistory || hourlyHistory.length === 0) {
+      [odinConsChart, odinProdChart, odinCostChart, odinTempChart, odinPriceChart, odinWeatherChart].forEach(c => {
+          if (c) { 
+              c.data.labels = []; 
+              c.data.datasets.forEach(d => d.data = []); 
+              c.update('none'); 
+          }
+      });
+      const battCard = document.getElementById('odin-batt-card');
+      if (battCard) battCard.style.display = 'none';
+      return;
+    }
+
+    // 1. Generate multi-day descriptive X-axis labels from Unix indices (in English)
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const labels = hourlyHistory.map(r => {
+        const d = new Date(r.timestamp);
+        return `${days[d.getUTCDay()]} ${String(d.getUTCHours()).padStart(2,'0')}:00`;
+    });
+    
+    // Flexible configurations without constraints, matching your exact typography
+    const dynamicXAxis = getOdinXAxisConfig(false);
+    [odinConsChart, odinProdChart, odinCostChart, odinTempChart, odinPriceChart, odinWeatherChart].forEach(c => {
+        if (c) {
+            c.resetZoom('none');
+            c.options.scales.x.min = null;
+            c.options.scales.x.max = null;
+        }
+    });
+
+    const expConsGrid = [];
+    const expConsSolar = [];
+    const expProdSolar = [];
+
+    hourlyHistory.forEach(r => {
+        const expected_solar_kwh = r.exp_solar_kwh ?? 0;
+        expProdSolar.push(parseFloat(expected_solar_kwh.toFixed(2)));
+
+        if (r.exp_cons !== null) {
+            const solar_used = Math.min(r.exp_cons, expected_solar_kwh);
+            const grid_used = r.exp_cons - solar_used;
+            expConsSolar.push(parseFloat(solar_used.toFixed(2)));
+            expConsGrid.push(parseFloat(grid_used.toFixed(2)));
+        } else {
+            expConsSolar.push(null);
+            expConsGrid.push(null);
+        }
+    });
+
+    // --- 2. Consumption Datasets Mapping ---
+    odinConsChart.data.labels = labels;
+    odinConsChart.options.scales.x = dynamicXAxis;
+    odinConsChart.data.datasets[0].data = expConsGrid;
+    odinConsChart.data.datasets[1].data = expConsSolar;
+    
+    odinConsChart.data.datasets[2].data = hourlyHistory.map(r => {
+        if (r.total_cons === null) return null;
+        
+        const dhw = r.actual_dhw_cons ?? 0;
+        const standby = r.actual_standby_cons ?? 0;
+        return parseFloat(Math.max(0, r.total_cons - dhw - standby).toFixed(2));
+    }); 
+    
+    odinConsChart.data.datasets[3].data = hourlyHistory.map(r => r.actual_dhw_cons ?? null);
+    odinConsChart.data.datasets[4].data = hourlyHistory.map(r => r.actual_standby_cons ?? null);
+    odinConsChart.update('none');
+
+    // --- 3. Thermal Production Datasets Mapping ---
+    odinProdChart.data.labels = labels;
+    odinProdChart.options.scales.x = dynamicXAxis;
+    odinProdChart.data.datasets[0].data = hourlyHistory.map(r => r.exp_prod);
+    odinProdChart.data.datasets[1].data = expProdSolar; 
+    
+    odinProdChart.data.datasets[2].data = hourlyHistory.map(r => {
+        if (r.total_prod === null) return null;
+        
+        const dhw = r.actual_dhw_prod ?? 0;
+        return parseFloat(Math.max(0, r.total_prod - dhw).toFixed(2));
+    });
+    odinProdChart.data.datasets[3].data = hourlyHistory.map(r => r.actual_dhw_prod ?? null);
+    odinProdChart.update('none');
+
+    // --- 4. Cost Evaluation Mapping ---
+    const currSym = typeof getCurrencySymbol === 'function' ? getCurrencySymbol(odinDataCache?.last_run?.bidding_zone) : '€';
+    odinCostChart.data.labels = labels;
+    odinCostChart.options.scales.x = dynamicXAxis;
+    odinCostChart.options.scales.y.title.text = currSym;
+    odinCostChart.data.datasets[0].data = hourlyHistory.map(r => r.odin_cost);
+    odinCostChart.data.datasets[1].data = hourlyHistory.map(r => {
+        if (r.total_cons === null || r.price === null) return null;
+        const net_cons = Math.max(0, r.total_cons - (r.exp_solar_kwh ?? 0));
+        return parseFloat((net_cons * r.price).toFixed(4));
+    });
+    odinCostChart.update('none');
+
+    // --- 5. Temperature Envelope Bounds Mapping ---
+    odinTempChart.data.labels = labels;
+    odinTempChart.options.scales.x = dynamicXAxis;
+    odinTempChart.data.datasets[0].data = hourlyHistory.map(r => r.sched_max);
+    odinTempChart.data.datasets[1].data = hourlyHistory.map(r => r.sched_min);
+    odinTempChart.data.datasets[2].data = hourlyHistory.map(r => r.sched_base);
+    odinTempChart.data.datasets[3].data = hourlyHistory.map(r => r.exp_room_temp);
+    odinTempChart.data.datasets[4].data = hourlyHistory.map(r => r.actual_room_temp);
+    odinTempChart.update('none');
+    
+    // --- 6. Grid Tariffs Mapping ---
+    odinPriceChart.data.labels = labels;
+    odinPriceChart.options.scales.x = dynamicXAxis;
+    odinPriceChart.options.scales.y.title.text = currSym + '/kWh';
+    odinPriceChart.data.datasets[0].data = hourlyHistory.map(r => r.price);
+    odinPriceChart.update('none');
+
+    // --- 7. Irradiance & Climate Mapping ---
+    odinWeatherChart.data.labels = labels;
+    odinWeatherChart.options.scales.x = dynamicXAxis;
+    odinWeatherChart.data.datasets[0].data = hourlyHistory.map(r => r.weather);
+    odinWeatherChart.data.datasets[1].data = hourlyHistory.map(r => r.odin_solar);
+    odinWeatherChart.update('none');
+
+    // Completely hide live solver simulation cards from history mode
+    const battCard = document.getElementById('odin-batt-card');
+    if (battCard) battCard.style.display = 'none';
+}
+
+function getOdinXAxisConfig(isLive) {
+    // Helper function to extract the operation mode depending on the active data source
+    const getOpMode = (ctx) => {
+        if (!ctx.tick || ctx.tick.value === undefined) return null;
+        const idx = ctx.tick.value;
+        
+        if (isLive && odinDataCache && odinDataCache.operation_mode) {
+            return odinDataCache.operation_mode[idx];
+        } else if (!isLive && typeof hourlyHistory !== 'undefined' && hourlyHistory[idx]) {
+            return hourlyHistory[idx].op_mode;
+        }
+        return null;
+    };
+
+    return {
+        min: isLive ? -0.5 : null,
+        max: isLive ? 71.5 : null,
+        ticks: {
+            autoSkip: !isLive, // Only auto-skip ticks on the elastic history timeline
+            maxTicksLimit: 24,
+            maxRotation: 45,
+            minRotation: 45,
+            color: function(context) {
+                const mode = getOpMode(context);
+                if (mode === 1 || mode === 6) return '#ffb020'; // DHW / Legionella (Yellow)
+                if (mode === 2 || mode === 5) return '#ff6b35'; // Heating / Frost (Orange)
+                if (mode === 3) return '#00c8ff';               // Cooling (Blue)
+                return '#8295b8';                               // Default monitor tab text color
+            },
+            font: function(context) {
+                const mode = getOpMode(context);
+                const isBold = (mode === 1 || mode === 2 || mode === 3 || mode === 5 || mode === 6);
+                return { 
+                    family: "'JetBrains Mono', monospace", 
+                    size: 10, 
+                    weight: isBold ? 'bold' : 'normal' 
+                };
+            },
+            callback: function(val, index) {
+                // Hide odd hours on small mobile screens in live view to prevent crowding
+                if (isLive && window.innerWidth < 768 && index % 2 !== 0) return '';
+                return this.getLabelForValue(val);
+            }
+        },
+        grid: { color: '#1e2d4a' }
+    };
+}
 
 function updateOdinCharts() {
+    if (!odinConsChart) return;
+    if (solverMode === 'live') {
+        renderOdinLive(); 
+    } else {
+        renderOdinHistory(); 
+    }
+}
+
+function renderOdinLive() {
     if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart || !odinPriceChart || !odinWeatherChart || !odinProdChart) return;
+
+    let currentZMin = null;
+    let currentZMax = null;
+    if (odinZoomed && odinTempChart && odinTempChart.scales.x) {
+        currentZMin = odinTempChart.scales.x.min;
+        currentZMax = odinTempChart.scales.x.max;
+    }
+
+    const labels72 = Array.from({length: 72}, (_, i) => {
+        const hour = i % 24;
+        return `${String(hour).padStart(2,'0')}:00`;
+    });
+    
+    // Restore original fixed 72-hour X-axis configuration
+    const staticXAxis = getOdinXAxisConfig(true);
+
+    // Re-apply static constraints to all 7 core optimization components
+    [odinConsChart, odinProdChart, odinCostChart, odinTempChart, odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
+        if (c) {
+            c.data.labels = labels72;
+            c.options.scales.x = { ...staticXAxis };
+            if (odinZoomed && currentZMin !== null) {
+                c.options.scales.x.min = currentZMin;
+                c.options.scales.x.max = currentZMax;
+            }
+        }
+    });
 
     const rawNvsCons        = odinDataCache ? (odinDataCache.actual_cons          || new Array(72).fill(null)) : new Array(72).fill(null);
     const rawNvsStandbyCons = odinDataCache ? (odinDataCache.actual_standby_cons  || new Array(72).fill(null)) : new Array(72).fill(null);
@@ -1753,23 +2196,35 @@ function updateOdinCharts() {
     const rawNvsDhwCons = odinDataCache ? (odinDataCache.actual_dhw_cons  || new Array(72).fill(null)) : new Array(72).fill(null);
     const rawNvsDhwProd = odinDataCache ? (odinDataCache.actual_dhw_prod  || new Array(72).fill(null)) : new Array(72).fill(null);
 
-    const actualConsHeatByHour    = [...rawNvsCons];
     const actualConsDhwByHour     = [...rawNvsDhwCons];
     const actualConsStandbyByHour = [...rawNvsStandbyCons];
-    const actualProdHeatByHour = [...rawNvsProd];
-    const actualProdDhwByHour  = [...rawNvsDhwProd];
+    const actualProdDhwByHour     = [...rawNvsDhwProd];
+
+    const actualConsHeatByHour = rawNvsCons.map((total, idx) => {
+        if (total === null) return null;
+        const dhw = rawNvsDhwCons[idx] ?? 0;
+        const standby = rawNvsStandbyCons[idx] ?? 0;
+        return parseFloat(Math.max(0, total - dhw - standby).toFixed(2));
+    });
+
+    const actualProdHeatByHour = rawNvsProd.map((total, idx) => {
+        if (total === null) return null;
+        const dhw = rawNvsDhwProd[idx] ?? 0;
+        return parseFloat(Math.max(0, total - dhw).toFixed(2));
+    });
+
     const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(72).fill(null))] : new Array(72).fill(null);
 
-    // Live history overlay: Bereken incrementele deltas per modus (Heat vs DHW)
-    // In the 72-slot window, today occupies slots 24-47. The live history uses
-    // today's local hour (0-23); we write results at offset 24+h.
+    const currentLocalHour = new Date().getHours();
+
+    // In the 72-slot window, today occupies slots 24-47. 
     if (history.timestamps && history.timestamps.length > 0) {
         const hConsHeat  = new Array(24).fill(0);
         const hConsDhw   = new Array(24).fill(0);
         const hConsTotal = new Array(24).fill(0);
-        const hProdHeat = new Array(24).fill(0);
-        const hProdDhw = new Array(24).fill(0);
-        const hHasData = new Array(24).fill(false);
+        const hProdTotal = new Array(24).fill(0);
+        const hProdDhw   = new Array(24).fill(0);
+        const hHasData   = new Array(24).fill(false);
         const firstTempByHour = new Array(24).fill(null);
 
         let prevCons = null;
@@ -1777,10 +2232,13 @@ function updateOdinCharts() {
 
         for (let i = 0; i < history.timestamps.length; i++) {
             const d = new Date(history.timestamps[i]);
-            const isToday = d.toDateString() === new Date().toDateString();
+            
+            const isToday = d.getUTCFullYear() === new Date().getFullYear() &&
+                            d.getUTCMonth() === new Date().getMonth() &&
+                            d.getUTCDate() === new Date().getDate();
             if (!isToday) continue;
 
-            const h = d.getHours();
+            const h = d.getUTCHours();
             const mode = history.mode[i];
 
             if (history.z1curr[i] != null && firstTempByHour[h] === null) firstTempByHour[h] = history.z1curr[i];
@@ -1788,7 +2246,6 @@ function updateOdinCharts() {
             if (history.cons[i] !== null) {
                 if (prevCons !== null) {
                     let delta = history.cons[i] - prevCons;
-                    // Filter: only normal increments (< 5 kWh/min). Ignores midnight resets and spikes.
                     if (delta >= 0 && delta < 5.0) {
                         hHasData[h] = true;
                         hConsTotal[h] += delta;
@@ -1809,32 +2266,36 @@ function updateOdinCharts() {
                     
                     if (delta >= 0 && delta < 5.0) {
                         hHasData[h] = true;
+                        hProdTotal[h] += delta;
                         
                         const isRunning = history.bin_comp[i] === 1 || history.freq[i] > 0;
                         if (isRunning) {
-                            if (mode === 'Heating' || mode === 'Cooling') hProdHeat[h] += delta;
-                            else if (mode === 'Hot Water' || mode === 'Legionella') hProdDhw[h] += delta;
+                            if (mode === 'Hot Water' || mode === 'Legionella') hProdDhw[h] += delta;
                         }
                     }
                 }
                 prevProd = history.prod[i];
             }
         }
-        
-        const currentLocalHour = new Date().getHours();
-        
-        for (let h = 0; h < 24; h++) {
-            const idx = 24 + h; // today's slot in the 72-element window
-            if (hHasData[h]) {
-                const isCurrentHour = (h === currentLocalHour);
-                const isNvsMissing = (rawNvsCons[idx] === null);
 
-                if (isCurrentHour || isNvsMissing) {
-                    actualConsHeatByHour[idx]    = parseFloat(hConsHeat[h].toFixed(2));
-                    actualConsDhwByHour[idx]     = parseFloat(hConsDhw[h].toFixed(2));
-                    actualConsStandbyByHour[idx] = parseFloat(Math.max(0, hConsTotal[h] - hConsHeat[h] - hConsDhw[h]).toFixed(2));
-                    actualProdHeatByHour[idx]    = parseFloat(hProdHeat[h].toFixed(2));
-                    actualProdDhwByHour[idx]     = parseFloat(hProdDhw[h].toFixed(2));
+        for (let h = 0; h < 24; h++) {
+            const idx = 24 + h; 
+            if (hHasData[h]) {
+                // --- 1. CONSUMPTION ---
+                actualConsHeatByHour[idx]    = parseFloat(hConsHeat[h].toFixed(2));
+                actualConsDhwByHour[idx]     = parseFloat(hConsDhw[h].toFixed(2));
+                actualConsStandbyByHour[idx] = parseFloat(Math.max(0, hConsTotal[h] - hConsHeat[h] - hConsDhw[h]).toFixed(2));
+                
+                // --- 2. PRODUCTION ---
+                const isCurrentHour = (h === currentLocalHour);
+                const backendTotalProd = rawNvsProd[idx];
+
+                if (!isCurrentHour && backendTotalProd !== null) {
+                    actualProdDhwByHour[idx]  = parseFloat(hProdDhw[h].toFixed(2));
+                    actualProdHeatByHour[idx] = parseFloat(Math.max(0, backendTotalProd - hProdDhw[h]).toFixed(2));
+                } else {
+                    actualProdHeatByHour[idx] = parseFloat(Math.max(0, hProdTotal[h] - hProdDhw[h]).toFixed(2));
+                    actualProdDhwByHour[idx]  = parseFloat(hProdDhw[h].toFixed(2));
                 }
             }
             if (firstTempByHour[h] !== null) {
@@ -1843,11 +2304,8 @@ function updateOdinCharts() {
                 }
             }
         }
-    } else {
-        var currentLocalHour = new Date().getHours();
-    }
+      }
 
-    // Null-out future slots: tomorrow (slots 48-71) and the remainder of today (slots 24+currentLocalHour+1 .. 47)
     const todayFutureStart = 24 + currentLocalHour + 1;
     for (let s = todayFutureStart; s < 72; s++) {
         actualConsHeatByHour[s] = null; actualConsDhwByHour[s] = null; actualConsStandbyByHour[s] = null;
@@ -1867,9 +2325,19 @@ function updateOdinCharts() {
     const weather       = odinDataCache ? (odinDataCache.weather    || new Array(72).fill(null)) : new Array(72).fill(null);
     const solar         = odinDataCache ? (odinDataCache.solar      || new Array(72).fill(null)) : new Array(72).fill(null);
     
+    // Bridge the gap at 00:00 (index 24) for the expected temperature chart
+    if (expTemp[24] === null) {
+        if (actualTempByHour[24] !== null) {
+            // Use actual measured room temperature if available
+            expTemp[24] = actualTempByHour[24];
+        } else if (expTemp[25] !== null) {
+            // Fallback to 01:00 value if actual is missing
+            expTemp[24] = expTemp[25];
+        }
+    }
+
     const pricesKwh     = prices.map(p => p !== null ? parseFloat((p).toFixed(5)) : null);
 
-    // Initialize arrays for costs and consumption splits
     const actualCost = new Array(72).fill(null);
     const expConsGrid = new Array(72).fill(null);
     const expConsSolar = new Array(72).fill(null);
@@ -1878,13 +2346,11 @@ function updateOdinCharts() {
     const solarKwp = odinDataCache?.last_run?.used_solar_kwp || 0;
     const solarCorrection = odinDataCache?.last_run?.used_solar_correction || 1.0;
 
-    // Single loop to process all hourly data
     for (let h = 0; h < 72; h++) {
         const sol_wm2 = solar[h] || 0; 
         const expected_solar_kwh = (sol_wm2 / 1000) * solarKwp * solarCorrection;
         expProdSolar[h] = parseFloat(expected_solar_kwh.toFixed(2));
 
-        // Heat + DHW
         let total_actual_cons = null;
         if (actualConsHeatByHour[h] !== null || actualConsDhwByHour[h] !== null) {
             total_actual_cons = (actualConsHeatByHour[h] || 0) + (actualConsDhwByHour[h] || 0);
@@ -1918,176 +2384,127 @@ function updateOdinCharts() {
     odinProdChart.data.datasets[3].data = actualProdDhwByHour;
     odinProdChart.update('none');
 
-    // Update Valuta Symbolen voor beide grafieken
     const currSym = getCurrencySymbol(odinDataCache?.last_run?.bidding_zone);
     
-    // Cost Graph Y-as (bijv. "€" of "kr")
     odinCostChart.options.scales.y.title.text = currSym;
     odinCostChart.data.datasets[0].data = expCost;
     odinCostChart.data.datasets[1].data = actualCost;
     odinCostChart.update('none');
 
-    // Price Graph Y-as (bijv. "€/kWh" of "kr/kWh")
     odinPriceChart.options.scales.y.title.text = currSym + '/kWh';
     odinPriceChart.data.datasets[0].data = pricesKwh;
     odinPriceChart.update('none');
 
-    // Bar charts ignore x min/max from axis config after data update — re-apply zoom.
-    // Without this, bar charts reset to full 0-71 range on every data refresh.
-    // Default view: today (slots 24-47).
-    if (!odinZoomed) {
-        [odinConsChart, odinProdChart, odinCostChart, odinBattChart].forEach(c => {
-            if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
-        });
-    }
-
-    // Temp chart: direct array mapping for standard category axis
     odinTempChart.data.datasets[0].data = schedMax;
     odinTempChart.data.datasets[1].data = schedMin;
     odinTempChart.data.datasets[2].data = schedBase;
     odinTempChart.data.datasets[3].data = expTemp;
-    
-    // actualTempByHour already contains the perfectly merged NVS + Live data (with proper nulls)!
     odinTempChart.data.datasets[4].data = actualTempByHour;
     odinTempChart.update('none');
 
-    // Battery chart — only show when there is discharge planned
     const hasBatt = (odinDataCache?.last_run?.used_battery_soc_kwh || 0) > 0;
     const battCard = document.getElementById('odin-batt-card');
     if (battCard) battCard.style.display = hasBatt ? '' : 'none';
     odinBattChart.data.datasets[0].data = battDischarge;
     odinBattChart.update('none');
 
-    // Price chart
-    odinPriceChart.data.datasets[0].data = pricesKwh;
-    odinPriceChart.update('none');
-
-    // Weather & solar chart
     odinWeatherChart.data.datasets[0].data = weather;
     odinWeatherChart.data.datasets[1].data = solar;
     odinWeatherChart.update('none');
 
-    // Run stats card
-    const rs = odinDataCache && odinDataCache.last_run;
-    const statsBlock = document.getElementById('run-stats-block');
-    if (rs && statsBlock && rs.execution_ms > 0) {
-        updateRunStatsUI(rs);
-    }
-
-    // Auto-focus to today (slots 24-47) unless user has manually zoomed/panned
     if (!odinZoomed) {
         [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
         odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
             if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
+        });
+    } else if (currentZMin !== null) {
+        [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
+        odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
+            if (c) c.zoomScale('x', {min: currentZMin, max: currentZMax}, 'none');
         });
     }
 }
 
 function updateCharts(d) {
   if (!tempChart || !freqChart || !statusChart) return;
-  const now = Date.now();
-  if (now - lastGraphUpdate < 4000) return; 
-  lastGraphUpdate = now;
-
-  const cutoff = now - HISTORY_MINUTES * 60 * 1000;
-
-  while (history.timestamps.length && history.timestamps[0] < cutoff) {
-    history.timestamps.shift();
-    history.feed.shift(); history.ret.shift();
-    history.z1sp.shift(); history.z2sp.shift();
-    history.z1curr.shift(); history.z2curr.shift();
-    history.z1flow.shift(); history.z2flow.shift();
-    history.freq.shift(); 
-    history.mode.shift();    
-    history.bin_comp.shift(); history.bin_boost.shift(); history.bin_defrost.shift();
-    history.bin_pump.shift(); history.bin_in1.shift(); history.bin_in6.shift();
-    history.cons.shift(); history.prod.shift();
-    history.outside.shift(); history.liquid_pipe.shift(); history.condensing.shift();
-  }
-
-  history.timestamps.push(now);
-  history.feed.push(d.hp_feed_temp ?? null);
-  history.ret.push(d.hp_return_temp ?? null);
-  history.z1sp.push(d.z1_setpoint ?? null);
-  history.z2sp.push(d.z2_setpoint ?? null);
-  history.z1curr.push(d.z1_current_temp ?? null);
-  history.z2curr.push(d.z2_current_temp ?? null);
-  history.z1flow.push(d.z1_flow_temp_target ?? null);
-  history.z2flow.push(d.z2_flow_temp_target ?? null);
-  history.freq.push(d.compressor_frequency ?? null);
-  history.outside.push(d.outside_temp ?? null);
-  history.liquid_pipe.push(d.liquid_pipe_temp ?? null);
-  history.condensing.push(d.condensing_temp ?? null);
-  history.cons.push(d.daily_total_energy_consumption ?? null);
-  history.prod.push(d.daily_computed_output_power ?? null);
   
-  history.mode.push((d.operation_mode !== undefined && d.operation_mode !== null) ? (MODE_MAP[d.operation_mode] || "Unknown") : '');
+  const realNow = Date.now();
+  if (realNow - lastGraphUpdate < 4000) return; 
+  lastGraphUpdate = realNow;
 
-  history.bin_comp.push(d.status_compressor ? 1 : 0); 
-  history.bin_boost.push(d.status_booster ? 1 : 0); 
-  history.bin_defrost.push(d.status_defrost ? 1 : 0);
-  history.bin_pump.push(d.status_water_pump ? 1 : 0); 
-  history.bin_in1.push(d.status_in1_request ? 1 : 0); 
-  history.bin_in6.push(d.status_in6_request ? 1 : 0);
+  // Convert the browser's True Epoch (UTC) into a Local Epoch to match the heat pump's RTC
+  const now = realNow - (new Date().getTimezoneOffset() * 60000);
 
-  const labels = history.timestamps.map(t => new Date(t).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }));
+  if (monitorMode === 'live') {
+    const cutoff = now - HISTORY_MINUTES * 60 * 1000;
 
-  [tempChart, freqChart, outsideTempChart, statusChart].forEach(c => c.data.labels = labels);
-
-  tempChart.data.datasets[0].data = history.feed;
-  tempChart.data.datasets[1].data = history.ret;
-  tempChart.data.datasets[2].data = history.z1sp;
-  tempChart.data.datasets[3].data = history.z2sp;
-  tempChart.data.datasets[4].data = history.z1curr;
-  tempChart.data.datasets[5].data = history.z2curr;
-  tempChart.data.datasets[6].data = history.z1flow;
-  tempChart.data.datasets[7].data = history.z2flow;
-  
-  const isZ2 = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
-  [3, 5, 7].forEach(idx => {
-      if(tempChart.data.datasets[idx]) {
-          tempChart.data.datasets[idx].hidden = !isZ2;
-      }
-  });
-
-  const z2LegendIds = ['leg-z2', 'leg-z2-curr', 'leg-z2-flow'];
-  z2LegendIds.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = isZ2 ? 'flex' : 'none';
-  });
-  
-  freqChart.data.datasets[0].data = history.freq;
-
-  outsideTempChart.data.datasets[0].data = history.outside;
-  outsideTempChart.data.datasets[1].data = history.liquid_pipe;
-  outsideTempChart.data.datasets[2].data = history.condensing;
-
-  statusChart.data.datasets[0].data = history.mode.map(() => 7);
-  statusChart.data.datasets[1].data = history.bin_comp.map(() => 6);
-  statusChart.data.datasets[2].data = history.bin_boost.map(() => 5);
-  statusChart.data.datasets[3].data = history.bin_defrost.map(() => 4);
-  statusChart.data.datasets[4].data = history.bin_pump.map(() => 3);
-  statusChart.data.datasets[5].data = history.bin_in1.map(() => 2);
-  statusChart.data.datasets[6].data = history.bin_in6.map(() => 1);
-
-  if (!userZoomed && history.timestamps.length > 0) {
-    const fiveHoursAgo = now - (5 * 60 * 60 * 1000);
-    const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
-    
-    if (startIndex !== -1 && startIndex < labels.length) {
-      const minLabel = labels[startIndex];
-      [tempChart, freqChart, outsideTempChart, statusChart].forEach(c => {
-        c.options.scales.x.min = minLabel;
-        c.options.scales.x.max = null; 
-      });
-      if (startIndex > 0) showResetButton();
+    while (history.timestamps.length && history.timestamps[0] < cutoff) {
+      history.timestamps.shift();
+      history.feed.shift(); history.ret.shift();
+      history.z1sp.shift(); history.z2sp.shift();
+      history.z1curr.shift(); history.z2curr.shift();
+      history.z1flow.shift(); history.z2flow.shift();
+      history.freq.shift(); 
+      history.mode.shift();    
+      history.bin_comp.shift(); history.bin_boost.shift(); history.bin_defrost.shift();
+      history.bin_pump.shift(); history.bin_in1.shift(); history.bin_in6.shift();
+      history.cons.shift(); history.prod.shift();
+      history.outside.shift(); history.liquid_pipe.shift(); history.condensing.shift();
     }
-  }
 
-  tempChart.update();
-  freqChart.update();
-  outsideTempChart.update();
-  statusChart.update();
+    history.timestamps.push(now);
+    history.feed.push(d.hp_feed_temp ?? null);
+    history.ret.push(d.hp_return_temp ?? null);
+    history.z1sp.push(d.z1_setpoint ?? null);
+    history.z2sp.push(d.z2_setpoint ?? null);
+    history.z1curr.push(d.z1_current_temp ?? null);
+    history.z2curr.push(d.z2_current_temp ?? null);
+    history.z1flow.push(d.z1_flow_temp_target ?? null);
+    history.z2flow.push(d.z2_flow_temp_target ?? null);
+    history.freq.push(d.compressor_frequency ?? null);
+    history.outside.push(d.outside_temp ?? null);
+    history.liquid_pipe.push(d.liquid_pipe_temp ?? null);
+    history.condensing.push(d.condensing_temp ?? null);
+    history.cons.push(d.daily_total_energy_consumption ?? null);
+    history.prod.push(d.daily_computed_output_power ?? null);
+    
+    history.mode.push((d.operation_mode !== undefined && d.operation_mode !== null) ? (MODE_MAP[d.operation_mode] || "Unknown") : '');
+
+    history.bin_comp.push(d.status_compressor ? 1 : 0); 
+    history.bin_boost.push(d.status_booster ? 1 : 0); 
+    history.bin_defrost.push(d.status_defrost ? 1 : 0);
+    history.bin_pump.push(d.status_water_pump ? 1 : 0); 
+    history.bin_in1.push(d.status_in1_request ? 1 : 0); 
+    history.bin_in6.push(d.status_in6_request ? 1 : 0);
+
+    // Toggle Z2 dataset visibility based on live state
+    const isZ2 = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
+    [3, 5, 7].forEach(idx => {
+        if (tempChart.data.datasets[idx]) tempChart.data.datasets[idx].hidden = !isZ2;
+    });
+    ['leg-z2', 'leg-z2-curr', 'leg-z2-flow'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isZ2 ? 'flex' : 'none';
+    });
+
+    // Populate all four charts from history arrays
+    renderMinuteCharts();
+
+    // Apply 5-hour auto-window when user hasn't manually zoomed.
+    if (!userZoomed && history.timestamps.length > 0) {
+      const labels = buildMinuteLabels();
+      const fiveHoursAgo = now - (5 * 60 * 60 * 1000);
+      const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
+      if (startIndex !== -1 && startIndex < labels.length) {
+        const minLabel = labels[startIndex];
+        monitorCharts().forEach(c => { c.options.scales.x.min = minLabel; c.options.scales.x.max = null; });
+      }
+    }
+
+    // Live mode: re-render with animation after zoom is set
+    monitorCharts().forEach(c => c.update());
+  }
+  
   updateOdinCharts();
 }
 
@@ -2199,18 +2616,38 @@ function toggleCoolingUI() {
   
   const h1 = document.getElementById('heat-settings-z1');
   if (h1) h1.style.display = z1IsCooling ? 'none' : 'block';
-
+  
   // --- Zone 2 ---
   const opModeZ2 = document.getElementById('sel-z2mode')?.selectedIndex;
   const z2IsCooling = (opModeZ2 === 3 || opModeZ2 === 4 || opModeZ2 === 6);
   
   const h2 = document.getElementById('heat-settings-z2');  
   if (h2) h2.style.display = z2IsCooling ? 'none' : 'block';
+
+  const c2 = document.getElementById('cool-settings-z2');
+  if (c2) c2.style.display = z2IsCooling ? 'block' : 'none';
   
-  // --- Global Cooling (voor Auto Adaptive UI) ---
   const isCoolingMode = z1IsCooling || z2IsCooling;
   const cGlobal = document.getElementById('cool-settings-z1');
   if (cGlobal) cGlobal.style.display = isCoolingMode ? 'block' : 'none';
+
+  const short_cycle = document.getElementById('heat-short-cycle');
+  if (short_cycle) short_cycle.style.display = isCoolingMode ? 'none' : 'block';
+
+  // --- Auto Adaptive Validation ---
+  // Check if Zone 2 is active in the UI
+  const z2Card = document.getElementById('card-z2');
+  const isZ2Active = z2Card && z2Card.style.display !== 'none';
+
+  // Index 1 = Heat Flow Temperature, Index 4 = Cool Flow Temperature
+  const z1Valid = (opModeZ1 === 1 || opModeZ1 === 4);
+  const z2Valid = !isZ2Active || (opModeZ2 === 1 || opModeZ2 === 4);
+
+  const aaCard = document.getElementById('card-aa');
+  if (aaCard) {
+    // Disable the Auto Adaptive card if the conditions are not met
+    aaCard.classList.toggle('disabled-box', !(z1Valid && z2Valid));
+  }
 
   if (!physTabUserToggled) {
     if (isCoolingMode) {
@@ -2388,11 +2825,15 @@ function render(d) {
   updateDot('dot-room-z2', d.room_z2_action);
 
   if (d.cool_smart_z1_lim) { LIMITS['cool-start-z1'].min = d.cool_smart_z1_lim.min; LIMITS['cool-start-z1'].max = d.cool_smart_z1_lim.max; LIMITS['cool-start-z1'].step = d.cool_smart_z1_lim.step || 0.5; }
-  if (d.min_cool_flow_z1_lim) { LIMITS['cool-min-z1'].min = d.min_cool_flow_z1_lim.min; LIMITS['cool-min-z1'].max = d.min_cool_flow_z1_lim.max; LIMITS['cool-min-z1'].step = d.min_cool_flow_z1_lim.step || 0.5; }
+  if (d.min_cool_flow_z1_lim) { LIMITS['cool-min-z1'].min = d.min_cool_flow_z1_lim.min; LIMITS['cool-min-z1'].max = d.min_cool_flow_z1_lim.max; LIMITS['cool-min-z1'].step = d.min_cool_flow_z1_lim.step || 0.1; }
+  if (d.min_cool_flow_z2_lim) { LIMITS['cool-min-z2'].min = d.min_cool_flow_z2_lim.min; LIMITS['cool-min-z2'].max = d.min_cool_flow_z2_lim.max; LIMITS['cool-min-z2'].step = d.min_cool_flow_z2_lim.step || 0.1; }
 
   seedPending('cool-start-z1', d.cooling_smart_start_z1);
   seedPending('cool-min-z1', d.minimum_cooling_flow_z1);
+  seedPending('cool-min-z2', d.minimum_cooling_flow_z2);
   seedPending('dhw-thresh', d.dhw_start_threshold);
+  
+  setToggle('sw-power-mode', d.power_mode);
 
   toggleCoolingUI();
 
@@ -2420,29 +2861,22 @@ function render(d) {
   const runSolverRow = document.getElementById('run-solver-row');
   
   if (btnOdin && runSolverRow) {
-    // 1. Check of er überhaupt een IP-adres geconfigureerd is
     const hasValidIP = d.solver_ip_address && d.solver_ip_address !== "" && d.solver_ip_address !== "0.0.0.0";
 
     if (hasValidIP) {
-      // IP is aanwezig: Toon de rij en de knop
       btnOdin.style.display = 'block';
       runSolverRow.style.display = 'flex';
 
-      // 2. Check of de C++ ping-taak heeft bevestigd dat de server online is
       if (d.solver_connected === true) {
         btnOdin.disabled = false;
         btnOdin.style.opacity = '1';
         btnOdin.style.cursor = 'pointer';
-        // Optioneel: btnOdin.textContent = "Run Optimization";
       } else {
-        // Wel een IP, maar (nog) niet online: Maak de knop onklikbaar
         btnOdin.disabled = true;
         btnOdin.style.opacity = '0.5';
         btnOdin.style.cursor = 'not-allowed';
-        // Optioneel: btnOdin.textContent = "Waiting for connection...";
       }
     } else {
-      // Helemaal geen IP geconfigureerd: Verberg alles
       btnOdin.style.display = 'none';
       runSolverRow.style.display = 'none';
     }
@@ -2601,6 +3035,7 @@ async function sendAA(btn) {
     
     if (hasChanged('cool-start-z1')) { await apiPost({ key: 'cooling_smart_start_z1', value: pending['cool-start-z1'] }); c++; }
     if (hasChanged('cool-min-z1'))   { await apiPost({ key: 'minimum_cooling_flow_z1', value: pending['cool-min-z1'] }); c++; }
+    if (hasChanged('cool-min-z2'))   { await apiPost({ key: 'minimum_cooling_flow_z2', value: pending['cool-min-z2'] }); c++; }
 
     if (hasChanged('psc-win'))   { await apiPost({ key: 'predictive_short_cycle_high_delta_time_window', value: pending['psc-win'] }); c++; }
     if (hasChanged('psc-delta')) { await apiPost({ key: 'predictive_short_cycle_high_delta_threshold', value: pending['psc-delta'] }); c++; }
@@ -2744,11 +3179,18 @@ async function runOdinSolver() {
     
     let selectedMode = 0; 
 
-    // Index 3, 4 en 6 are cooling modes (Target, Flow, Curve)
+    // Index 3, 4 and 6 are cooling modes (Target, Flow, Curve)
     if (opModeZ1 === 3 || opModeZ1 === 4 || opModeZ1 === 6) {
         selectedMode = 3; // COOL_ON
     } else if (opModeZ1 === 0 || opModeZ1 === 1 || opModeZ1 === 2 || opModeZ1 === 5) {
         selectedMode = 2; // HEAT_ON
+    }
+
+    
+    let flowTextZ1 = document.getElementById('cool-min-z1-val').innerText;
+    let minCoolFlow = parseFloat(flowTextZ1);
+    if (isNaN(minCoolFlow)) {
+        minCoolFlow = 18.0; 
     }
 
     const payload = {
@@ -2774,7 +3216,8 @@ async function runOdinSolver() {
             dhw_drop: latestState.dhw_flow_temp_drop || 0,
             dhw_start_threshold: pending['dhw-thresh'] ?? latestState.dhw_start_threshold ?? 0.0,
             // 0=OFF,1=DHW_ON,2=HEAT_ON,3=COOL_ON,5=FROST_PROTECT,6=LEGIONELLA,255=UNAVAILABLE
-            current_operation_mode: selectedMode
+            current_operation_mode: selectedMode,
+            min_cool_flow: minCoolFlow
         }
     };
 
@@ -2856,17 +3299,19 @@ async function runOdinSolver() {
 }
 
 async function fetchOdinData() {
-  try {
-    const res = await fetch('/dashboard/odin');
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data.success) {
-      odinDataCache = data;
-      updateOdinCharts();
-    }
-  } catch(e) {
-    console.warn("Failed to load local ODIN cache", e);
-  }
+    if (typeof solverMode !== 'undefined' && solverMode === 'history') return;
+
+    try {
+        const res = await fetch('/dashboard/odin');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success) {
+          odinDataCache = data;
+          updateOdinCharts();
+        }
+    } catch(e) {
+      console.warn("Failed to load local ODIN cache", e);
+    } 
 }
 
 async function fetchState() {
@@ -2958,7 +3403,7 @@ function processStringLog(text) {
 }
 
 function appendLogLine(text, cssClass) {
-  const timeStr = new Date().toLocaleTimeString('nl-NL');
+  const timeStr = new Date().toLocaleTimeString([]);
   logBuffer.push(`[${timeStr}] ${text}`);
   const row = document.createElement('div');
   row.className = 'log-entry ' + cssClass;
@@ -3007,8 +3452,8 @@ function updateStatus(text, color) {
 }
 
 function syncScales(chart, min, max) {
-  [tempChart, freqChart, statusChart, outsideTempChart].forEach(c => {
-    if (c && c !== chart) {
+  monitorCharts().forEach(c => {
+    if (c !== chart) {
       c.options.scales.x.min = min;
       c.options.scales.x.max = max;
       c.update('none');
@@ -3018,48 +3463,37 @@ function syncScales(chart, min, max) {
 
 function resetAllZoom() {
   userZoomed = false;
-  [tempChart, freqChart, statusChart, outsideTempChart].forEach(c => {
-    if (c) {
-      c.options.scales.x.min = null; 
-      c.options.scales.x.max = null;
-      c.resetZoom();
-      c.update(); 
+  if (monitorMode === 'live' && history.timestamps.length > 0) {
+    // Live mode: restore the 5-hour auto-window (same as initial load state)
+    const now = Date.now() - (new Date().getTimezoneOffset() * 60000);
+    const labels = buildMinuteLabels();
+    const fiveHoursAgo = now - (5 * 60 * 60 * 1000);
+    const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
+    if (startIndex !== -1 && startIndex < labels.length) {
+      const minLabel = labels[startIndex];
+      monitorCharts().forEach(c => {
+        c.resetZoom('none');
+        c.options.scales.x.min = minLabel;
+        c.options.scales.x.max = null;
+        c.update('none');
+      });
+    } else {
+      monitorCharts().forEach(c => { c.resetZoom('none'); c.options.scales.x.min = null; c.options.scales.x.max = null; c.update('none'); });
     }
-  });
+  } else {
+    // History mode: show all loaded data at full scale
+    monitorCharts().forEach(c => {
+      c.resetZoom('none');
+      c.options.scales.x.min = null;
+      c.options.scales.x.max = null;
+      c.update('none');
+    });
+  }
   document.getElementById('btn-reset-zoom').style.display = 'none';
 }
 
 function showResetButton() {
   document.getElementById('btn-reset-zoom').style.display = 'block';
-}
-
-let lastRunSignature = "";
-
-function updateRunStatsUI(lr) {
-    if (!lr) return;
-    document.getElementById('run-stats-block').style.display = 'block';
-
-    const currentSig = `${lr.execution_ms}-${lr.total_cost}-${lr.exp_consumption}`;
-    if (currentSig !== lastRunSignature) {
-        lastRunSignature = currentSig;
-        const now = new Date();
-        document.getElementById('rs-time').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-    }
-
-    document.getElementById('rs-exec').innerText = lr.execution_ms + " ms";
-    if (document.getElementById('rs-nodes')) {
-        document.getElementById('rs-nodes').innerText = lr.evaluated_nodes ? lr.evaluated_nodes.toLocaleString('nl-NL') : "0";
-    }
-    document.getElementById('rs-hloss').innerText = lr.heat_loss.toFixed(3) + " kW/K";
-    document.getElementById('rs-cop').innerText = lr.base_cop.toFixed(2);
-    document.getElementById('rs-tmass').innerText = lr.thermal_mass.toFixed(1) + " kWh/K";
-    document.getElementById('rs-econs').innerText = lr.exp_consumption.toFixed(2) + " kWh";
-    document.getElementById('rs-eprod').innerText = lr.exp_production.toFixed(2) + " kWh";
-    document.getElementById('rs-solar').innerText = lr.exp_solar.toFixed(2) + " kWh";
-    document.getElementById('rs-solar-total').innerText = lr.exp_solar_total.toFixed(2) + " kWh";
-    
-    const curr = getCurrencySymbol(lr.bidding_zone);
-    document.getElementById('rs-cost').innerHTML = curr + " " + lr.total_cost.toFixed(4);
 }
 
 function syncOdinScales(sourceChart) {
@@ -3089,61 +3523,153 @@ function showOdinResetButton() {
   document.getElementById('btn-reset-zoom-odin').style.display = 'block';
 }
 
-async function loadServerHistory() {
-  try {
-    const res = await fetch('/dashboard/history');
-    const data = await res.json();
-    if (!data.length) return;
-    
-    history.timestamps = []; history.feed = []; history.ret = [];
-    history.z1sp = []; history.z2sp = []; history.z1curr = []; history.z2curr = [];
-    history.z1flow = []; history.z2flow = []; history.freq = []; history.mode = [];
-    history.bin_comp = []; history.bin_boost = []; history.bin_defrost = [];
-    history.bin_pump = []; history.bin_in1 = []; history.bin_in6 = []; history.cons = []; history.prod = [];
-    history.outside = []; history.liquid_pipe = []; history.condensing = [];
+// Helper function: returns Unix timestamp for 00:00:00 of X days ago
+function getMidnight(daysAgo = 0) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0); 
+    return Math.floor(d.getTime() / 1000) - (daysAgo * 86400);
+}
 
-    const serverLastTs = data[data.length - 1][0] * 1000; 
-    const browserNow = Date.now();
-    let timeOffset = 0;
-    
-    if (Math.abs(browserNow - serverLastTs) > 86400000) {
-      timeOffset = browserNow - serverLastTs;
+async function loadServerHistory(fromTs, toTs, type = 'min') {
+  try {
+    let url = '/dashboard/history?type=' + type;
+    if (fromTs && toTs) {
+      const now = Math.floor(Date.now() / 1000);
+      const f = fromTs || (now - 86400);
+      const t = toTs   || (now + 60);
+      url += '&from=' + f + '&to=' + t;
     }
 
-    data.forEach(row => {
-      const ts = (row[0] * 1000) + timeOffset; 
-      
-      const getF = (val) => val === -32768 ? null : val / 10.0;
-      const flags = row[10];
-      
-      history.timestamps.push(ts);
-      history.feed.push(getF(row[1]));
-      history.ret.push(getF(row[2]));
-      history.z1sp.push(getF(row[3]));
-      history.z2sp.push(getF(row[4]));
-      history.z1curr.push(getF(row[5]));
-      history.z2curr.push(getF(row[6]));
-      history.z1flow.push(getF(row[7]));
-      history.z2flow.push(getF(row[8]));
-      history.freq.push(getF(row[9]));
-      
-      history.bin_comp.push((flags & (1 << 0)) ? 1 : 0);
-      history.bin_boost.push((flags & (1 << 1)) ? 1 : 0);
-      history.bin_defrost.push((flags & (1 << 2)) ? 1 : 0);
-      history.bin_pump.push((flags & (1 << 3)) ? 1 : 0);
-      history.bin_in1.push((flags & (1 << 4)) ? 1 : 0);
-      history.bin_in6.push((flags & (1 << 5)) ? 1 : 0);
-      history.cons.push(row.length > 11 ? getF(row[11]) : null);
-      history.prod.push(row.length > 12 ? getF(row[12]) : null);
-      history.outside.push(row.length > 13 ? getF(row[13]) : null);
-      history.liquid_pipe.push(row.length > 14 ? getF(row[14]) : null);
-      history.condensing.push(row.length > 15 ? getF(row[15]) : null);
-      
-      const modeNum = (flags >> 6) & 0x0F;
-      history.mode.push(MODE_MAP[modeNum] || "Unknown");
-    });
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (!data || data.length === 0) {
+      if (type === 'min') {
+        history.timestamps = []; history.feed = []; history.ret = [];
+        history.z1sp = []; history.z2sp = []; history.z1curr = []; history.z2curr = [];
+        history.z1flow = []; history.z2flow = []; history.freq = []; history.mode = [];
+        history.bin_comp = []; history.bin_boost = []; history.bin_defrost = [];
+        history.bin_pump = []; history.bin_in1 = []; history.bin_in6 = []; history.cons = []; history.prod = [];
+        history.outside = []; history.liquid_pipe = []; history.condensing = [];
+        
+        monitorCharts().forEach(c => {
+          c.data.labels = []; c.data.datasets.forEach(d => d.data = []); c.update('none');
+        });
+      } else if (type === 'hour') {
+        hourlyHistory = [];
+        if (globalMode !== 'live') updateOdinCharts();
+      }
+      return;
+    }
     
-    tempChart.update('none'); freqChart.update('none'); statusChart.update('none'); outsideTempChart.update('none');
+    const serverLastTs = data[data.length - 1][0] * 1000; 
+    let timeOffset = 0;
+    if (serverLastTs < 1577836800000) {
+      // If ESP32 lacks time and sends uptime, align it to Local Epoch
+      const localEpochNow = Date.now() - (new Date().getTimezoneOffset() * 60000);
+      timeOffset = localEpochNow - serverLastTs;
+    }
+
+    if (type === 'min') {
+        history.timestamps = []; history.feed = []; history.ret = [];
+        history.z1sp = []; history.z2sp = []; history.z1curr = []; history.z2curr = [];
+        history.z1flow = []; history.z2flow = []; history.freq = []; history.mode = [];
+        history.bin_comp = []; history.bin_boost = []; history.bin_defrost = [];
+        history.bin_pump = []; history.bin_in1 = []; history.bin_in6 = []; history.cons = []; history.prod = [];
+        history.outside = []; history.liquid_pipe = []; history.condensing = [];
+
+        data.forEach(row => {
+          const ts = (row[0] * 1000) + timeOffset; 
+          const getF = (val) => val === -32768 ? null : val / 10.0;
+          const flags = row[10];
+          
+          history.timestamps.push(ts);
+          history.feed.push(getF(row[1]));
+          history.ret.push(getF(row[2]));
+          history.z1sp.push(getF(row[3]));
+          history.z2sp.push(getF(row[4]));
+          history.z1curr.push(getF(row[5]));
+          history.z2curr.push(getF(row[6]));
+          history.z1flow.push(getF(row[7]));
+          history.z2flow.push(getF(row[8]));
+          history.freq.push(getF(row[9]));
+          
+          history.bin_comp.push((flags & (1 << 0)) ? 1 : 0);
+          history.bin_boost.push((flags & (1 << 1)) ? 1 : 0);
+          history.bin_defrost.push((flags & (1 << 2)) ? 1 : 0);
+          history.bin_pump.push((flags & (1 << 3)) ? 1 : 0);
+          history.bin_in1.push((flags & (1 << 4)) ? 1 : 0);
+          history.bin_in6.push((flags & (1 << 5)) ? 1 : 0);
+          history.cons.push(row.length > 11 ? getF(row[11]) : null);
+          history.prod.push(row.length > 12 ? getF(row[12]) : null);
+          history.outside.push(row.length > 13 ? getF(row[13]) : null);
+          history.liquid_pipe.push(row.length > 14 ? getF(row[14]) : null);
+          history.condensing.push(row.length > 15 ? getF(row[15]) : null);
+          
+          const modeNum = (flags >> 6) & 0x0F;
+          history.mode.push(MODE_MAP[modeNum] || "Unknown");
+        });
+        
+        // Populate chart datasets from the newly-loaded history arrays and repaint.
+        renderMinuteCharts();
+
+        if (monitorMode === 'live' && history.timestamps.length > 0) {
+          // Apply the 5-hour window immediately so the chart never renders at full scale
+          // first and then rescales when the first fetchState() poll fires.
+          const liveNow = Date.now() - (new Date().getTimezoneOffset() * 60000);
+          const liveLabels = buildMinuteLabels();
+          const fiveHoursAgo = liveNow - (5 * 60 * 60 * 1000);
+          const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
+          if (startIndex !== -1 && startIndex < liveLabels.length) {
+            const minLabel = liveLabels[startIndex];
+            monitorCharts().forEach(c => { c.options.scales.x.min = minLabel; c.options.scales.x.max = null; });
+          }
+          monitorCharts().forEach(c => c.update('none'));
+        } else if (monitorMode !== 'live' && history.timestamps.length > 0) {
+          // History mode: maximize scale to show all loaded data 
+          userZoomed = false;
+          monitorCharts().forEach(c => {
+              c.resetZoom('none');
+              c.options.scales.x.min = null;
+              c.options.scales.x.max = null;
+          });
+          monitorCharts().forEach(c => c.update('none'));
+        }
+        
+      } else if (type === 'hour') {
+        console.log(`Loaded ${data.length} hourly records.`);
+        hourlyHistory = data.map(row => {
+            const getF = (val, scale) => val === -32768 ? null : val / scale;
+            return {
+                timestamp: (row[0] * 1000) + timeOffset,
+                avg_outside: getF(row[1], 10.0),
+                total_cons: getF(row[2], 100.0),
+                total_prod: getF(row[3], 100.0),
+                odin_heat_loss: getF(row[4], 100.0),
+                odin_cop: getF(row[5], 100.0),
+                odin_cost: getF(row[6], 100.0),
+                odin_solar: getF(row[7], 10.0),
+                exp_cons: getF(row[8], 100.0),
+                exp_prod: getF(row[9], 100.0),
+                exp_room_temp: getF(row[10], 100.0),
+                actual_room_temp: getF(row[11], 100.0),
+                actual_dhw_cons: getF(row[12], 100.0),
+                actual_dhw_prod: getF(row[13], 100.0),
+                actual_standby_cons: getF(row[14], 100.0),
+                price: getF(row[15], 10000.0),
+                weather: getF(row[16], 100.0),
+                batt_discharge: getF(row[17], 100.0),
+                op_mode: getF(row[18], 1.0),
+                sched_base: getF(row[19], 100.0),
+                sched_min: getF(row[20], 100.0),
+                sched_max: getF(row[21], 100.0),
+                exp_solar_kwh: getF(row[22], 100.0)
+            };
+        });
+        
+        if (solverMode !== 'live') {
+            updateOdinCharts();
+        }
+    }
   } catch(e) { console.error("History fetch failed", e); }
 }
 
@@ -3252,7 +3778,9 @@ function initSettingsDragAndDrop() {
       z.onload = async () => {
         initCharts(); 
         initSettingsDragAndDrop();
-        await loadServerHistory(); 
+        initCollapsibleCards();
+        const now = Math.floor(Date.now() / 1000);
+        await loadServerHistory(null, null);
         fetchState(); 
         startLog(); 
         setInterval(fetchState, POLL_MS); 
