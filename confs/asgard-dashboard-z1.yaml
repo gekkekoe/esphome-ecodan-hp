@@ -61,6 +61,7 @@ asgard_dashboard:
   sw_defrost_mit_id:                 defrost_risk_handling_enabled
   sw_smart_boost_id:                 smart_boost_enabled
   sw_force_dhw_id:                   heatpump_switch_force_dhw
+  sw_regular_dhw_id:                    heatpump_switch_regular_dhw
 
   # ── Selects 
   sel_heating_system_type_id:        heating_system_type 

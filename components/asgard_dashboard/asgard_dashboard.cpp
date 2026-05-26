@@ -341,6 +341,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "defrost_risk_handling_enabled") { doSwitch(sw_defrost_mit_);   return; }
   if (key == "smart_boost_enabled")           { doSwitch(sw_smart_boost_);   return; }
   if (key == "force_dhw")                     { doSwitch(sw_force_dhw_);     return; } 
+  if (key == "sw_regular_dhw")                { doSwitch(sw_regular_dhw_);   return; }
   if (key == "power_mode")                    { doSwitch(sw_power_mode_);    return; }
   if (key == "predictive_short_cycle_control_enabled") { doSwitch(pred_sc_switch_);   return; }
   if (key == "use_dynamic_cost_solver")       { doSwitch(sw_use_solver_);    return; }
@@ -518,6 +519,7 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.sw_defrost_mit = get_sw(sw_defrost_mit_);
   current_snapshot_.sw_smart_boost = get_sw(sw_smart_boost_);
   current_snapshot_.sw_force_dhw = get_sw(sw_force_dhw_);
+  current_snapshot_.sw_regular_dhw = get_sw(sw_regular_dhw_);
   current_snapshot_.sw_use_solver = get_sw(sw_use_solver_);
   current_snapshot_.sw_show_solver_tab = get_sw(sw_show_solver_tab_);
 
@@ -810,6 +812,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("defrost_risk_handling_enabled", snap.sw_defrost_mit);
   p_b("smart_boost_enabled",         snap.sw_smart_boost);
   p_b("force_dhw",                   snap.sw_force_dhw);
+  p_b("sw_regular_dhw",              snap.sw_regular_dhw);
   p_b("power_mode", snap.sw_power_mode);
 
   // --- Cooling settings ---
