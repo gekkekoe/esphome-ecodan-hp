@@ -1199,7 +1199,7 @@ function buildMinuteLabels() {
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   return history.timestamps.map(t => {
     const d = new Date(t);
-    const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+    const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' });
     return multiDay ? `${days[d.getUTCDay()]} ${time}` : time;
   });
 }
@@ -3403,7 +3403,8 @@ function processStringLog(text) {
 }
 
 function appendLogLine(text, cssClass) {
-  const timeStr = new Date().toLocaleTimeString([]);
+  const timeStr = new Date().toLocaleTimeString([], { hour12: false });
+  
   logBuffer.push(`[${timeStr}] ${text}`);
   const row = document.createElement('div');
   row.className = 'log-entry ' + cssClass;
