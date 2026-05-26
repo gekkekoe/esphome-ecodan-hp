@@ -103,7 +103,7 @@ namespace esphome
                     result.mode = mode;
                     result.heatpump_off = (odin_prod < 0.1f &&
                                           mode != OptimizerOperationMode::COOL_ON &&
-                                          mode != OptimizerOperationMode::DHW_ON);
+                                          mode != OptimizerOperationMode::HEAT_ON);
 
                     if (result.heatpump_off) {
                         apply_solver_soft_stop(true);
