@@ -57,7 +57,7 @@ namespace esphome
                     
                     if (!std::isnan(restore_val)) {
                         adjusted_flow = restore_val;
-                        
+
                         // Also stop timer
                         this->dhw_post_run_expiration_ = 0; 
                         this->dhw_old_z1_setpoint_ = NAN;
@@ -207,14 +207,15 @@ namespace esphome
                 return;
 
             auto heating_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::HEAT_ON);
-            auto dhw_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::DHW_ON);
+            auto dhw_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::DHW_ON) 
+                || static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION);
             auto &status = this->state_.ecodan_instance->get_status();
 
-            if (new_mode == dhw_mode && previous_mode == heating_mode) {
+            if (new_mode == dhw_mode && previous_mode != dhw_mode) {
                 this->dhw_old_z1_setpoint_ = status.Zone1FlowTemperatureSetPoint;
                 this->dhw_old_z2_setpoint_ = status.Zone2FlowTemperatureSetPoint;
 
-                ESP_LOGD(OPTIMIZER_TAG, "Switching to DHW. Saved heating setpoints: Z1=%.1f, Z2=%.1f", 
+                ESP_LOGD(OPTIMIZER_TAG, "Switching to DHW/Legionella. Saved heating setpoints: Z1=%.1f, Z2=%.1f", 
                     this->dhw_old_z1_setpoint_, this->dhw_old_z2_setpoint_);
             }
 
