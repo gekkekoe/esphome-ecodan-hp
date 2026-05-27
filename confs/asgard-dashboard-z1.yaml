@@ -128,3 +128,9 @@ asgard_dashboard:
 
   # power mode switch
   sw_power_mode_id: heatpump_switch_power_mode
+
+  # short cycle prevention
+  minimum_compressor_on_time_id: minimum_compressor_on_time
+  lockout_duration_id: lockout_duration
+  status_short_cycle_lockout_id: status_short_cycle_lockout
+  short_cycle_mitigation_button_id: short_cycle_mitigation_button

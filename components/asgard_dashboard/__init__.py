@@ -10,7 +10,7 @@ AUTO_LOAD = ["web_server_base"]
 CONF_WEB_SERVER_BASE_ID = "web_server_base_id"
 CONF_ECODAN_ID = "ecodan_id"
 
-from esphome.components import sensor, binary_sensor, text_sensor, text, climate, number, switch, select, globals
+from esphome.components import sensor, binary_sensor, text_sensor, text, climate, number, switch, select, globals, button
 
 asgard_dashboard_ns = cg.esphome_ns.namespace("asgard_dashboard")
 EcodanDashboard = asgard_dashboard_ns.class_("EcodanDashboard", cg.Component)
@@ -136,6 +136,12 @@ CONFIG_SCHEMA = cv.Schema(
 
         cv.Optional("ui_use_room_z1_id"): cv.use_id(globals.GlobalsComponent),
         cv.Optional("ui_use_room_z2_id"): cv.use_id(globals.GlobalsComponent),
+
+        # Short Cycle Prevention
+        cv.Optional("minimum_compressor_on_time_id"): cv.use_id(number.Number),
+        cv.Optional("lockout_duration_id"): cv.use_id(select.Select),
+        cv.Optional("status_short_cycle_lockout_id"): cv.use_id(binary_sensor.BinarySensor),
+        cv.Optional("short_cycle_mitigation_button_id"): cv.use_id(button.Button),
 
     }
 ).extend(cv.COMPONENT_SCHEMA)
@@ -265,6 +271,12 @@ async def to_code(config):
         ("sw_sc_prohibit_z1_cooling_id",      "set_sw_sc_prohibit_z1_cooling"),
         ("sw_sc_prohibit_z2_heating_id",      "set_sw_sc_prohibit_z2_heating"),
         ("sw_sc_prohibit_z2_cooling_id",      "set_sw_sc_prohibit_z2_cooling"),
+
+        # Short Cycle Prevention mappings
+        ("minimum_compressor_on_time_id",     "set_minimum_compressor_on_time"),
+        ("lockout_duration_id",               "set_lockout_duration"),
+        ("status_short_cycle_lockout_id",     "set_status_short_cycle_lockout"),
+        ("short_cycle_mitigation_button_id",  "set_short_cycle_mitigation_button"),
     ]
 
     for conf_key, setter in pairs:

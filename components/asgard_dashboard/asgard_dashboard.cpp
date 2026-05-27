@@ -333,6 +333,11 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
 
 
 void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &sval, float fval, bool is_string) {
+  if (key == "short_cycle_mitigation_button") {
+      if (short_cycle_mitigation_button_ != nullptr) short_cycle_mitigation_button_->press();
+      return;
+  }
+
   auto doSwitch = [&](switch_::Switch *sw) {
     if (!sw) { ESP_LOGW(TAG, "Switch not configured"); return; }
     fval > 0.5f ? sw->turn_on() : sw->turn_off();
@@ -374,6 +379,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "temp_sensor_source_z1") { doSelect(sel_temp_source_z1_); return; } 
   if (key == "temp_sensor_source_z2") { doSelect(sel_temp_source_z2_); return; } 
   if (key == "solver_dhw_mode")       { doSelect(solver_dhw_mode_); return; }
+  if (key == "lockout_duration")      { doSelect(lockout_duration_); return; }
 
   auto doNumber = [&](number::Number *n) {
     if (!n) { ESP_LOGW(TAG, "Number not configured"); return; }
@@ -389,6 +395,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "cooling_smart_start_z1")       { doNumber(num_cooling_smart_start_z1_); return; }
   if (key == "minimum_cooling_flow_z1")      { doNumber(num_min_cooling_flow_z1_); return; }
   if (key == "minimum_cooling_flow_z2")      { doNumber(num_min_cooling_flow_z2_); return; }
+  if (key == "minimum_compressor_on_time")   { doNumber(minimum_compressor_on_time_); return; }
 
   if (key == "thermostat_hysteresis_z1")    { doNumber(num_hysteresis_z1_);    return; }
   if (key == "thermostat_hysteresis_z2")    { doNumber(num_hysteresis_z2_);    return; }
@@ -512,6 +519,7 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.status_in1_request = get_b(status_in1_request_);
   current_snapshot_.status_in6_request = get_b(status_in6_request_);
   current_snapshot_.status_zone2_enabled = get_b(status_zone2_enabled_);
+  current_snapshot_.status_short_cycle_lockout = get_b(status_short_cycle_lockout_);
   current_snapshot_.bin_solver_connected = get_b(bin_solver_connected_);
 
   current_snapshot_.pred_sc_switch = get_sw(pred_sc_switch_);
@@ -552,6 +560,7 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.dhw_delivered = get_f(dhw_delivered_);
   current_snapshot_.dhw_cop = get_f(dhw_cop_);
   current_snapshot_.solver_dhw_mode = get_sel(solver_dhw_mode_);
+  current_snapshot_.sel_lockout_duration = get_sel(lockout_duration_);
   current_snapshot_.sw_power_mode = get_sw(sw_power_mode_);
 
   current_snapshot_.heating_consumed = get_f(heating_consumed_);
@@ -574,6 +583,7 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_hysteresis_z2_, current_snapshot_.num_hysteresis_z2);
   get_n(pred_sc_time_, current_snapshot_.pred_sc_time);
   get_n(pred_sc_delta_, current_snapshot_.pred_sc_delta);
+  get_n(minimum_compressor_on_time_, current_snapshot_.num_min_compressor_on_time);
 
   // cooling settings
   get_n(num_cooling_smart_start_z1_, current_snapshot_.num_cooling_smart_start_z1);
@@ -784,6 +794,8 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_lim("pred_sc_time_lim",            snap.pred_sc_time);
   p_n("pred_sc_delta",                 snap.pred_sc_delta.val);
   p_lim("pred_sc_delta_lim",           snap.pred_sc_delta);
+  p_n("min_compressor_on_time",        snap.num_min_compressor_on_time.val);
+  p_lim("min_compressor_on_time_lim",  snap.num_min_compressor_on_time);
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
   // --- Climate zones ---
@@ -807,6 +819,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("status_in1_request",          snap.status_in1_request);
   p_b("status_in6_request",          snap.status_in6_request);
   p_b("zone2_enabled",               snap.status_zone2_enabled);
+  p_b("status_short_cycle_lockout",  snap.status_short_cycle_lockout);
   p_b("pred_sc_en",                  snap.pred_sc_switch);
   p_b("auto_adaptive_control_enabled", snap.sw_auto_adaptive);
   p_b("defrost_risk_handling_enabled", snap.sw_defrost_mit);
@@ -830,6 +843,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("show_solver_tab",         snap.sw_show_solver_tab);
   p_b("solver_connected",        snap.bin_solver_connected);
   p_sel("solver_dhw_mode", snap.solver_dhw_mode);
+  p_sel("lockout_duration", snap.sel_lockout_duration);
 
   // --- Server control ---
   p_b("server_control_enabled",          snap.sw_server_control);

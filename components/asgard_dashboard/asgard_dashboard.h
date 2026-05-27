@@ -17,6 +17,7 @@
 #include "esphome/components/select/select.h"
 #include "esphome/components/globals/globals_component.h"
 #include "esphome/components/text/text.h"
+#include "esphome/components/button/button.h"
 
 #include "asgard_lfs.h"
 
@@ -54,6 +55,7 @@ struct DashboardSnapshot {
   bool sw_smart_boost{false};
   bool sw_force_dhw{false};
   bool sw_regular_dhw{false};
+  bool status_short_cycle_lockout{false};
 
   // Float sensors
   float hp_feed_temp{NAN};
@@ -101,6 +103,7 @@ struct DashboardSnapshot {
   NumData num_hysteresis_z2;
   NumData pred_sc_time;
   NumData pred_sc_delta;
+  NumData num_min_compressor_on_time;
 
   // Cooling settings
   NumData num_cooling_smart_start_z1;
@@ -126,6 +129,7 @@ struct DashboardSnapshot {
   int sel_operating_mode_z2{-1};
   int sel_temp_source_z1{-1};
   int sel_temp_source_z2{-1};
+  int sel_lockout_duration{-1};
 
   // Text sensors (fixed-size to avoid heap allocation in snapshot)
   char version[32]{0};
@@ -219,6 +223,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_status_in1_request(binary_sensor::BinarySensor *b) { status_in1_request_ = b; }
   void set_status_in6_request(binary_sensor::BinarySensor *b) { status_in6_request_ = b; }
   void set_status_zone2_enabled(binary_sensor::BinarySensor *b) { status_zone2_enabled_ = b; }
+  void set_status_short_cycle_lockout(binary_sensor::BinarySensor *b) { status_short_cycle_lockout_ = b; }
 
   // Text sensors
   void set_version(text_sensor::TextSensor *t)                { version_ = t; }
@@ -248,6 +253,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_sel_operating_mode_z2(select::Select *s)           { sel_operating_mode_z2_ = s; }
   void set_sel_temp_source_z1(select::Select *s)              { sel_temp_source_z1_ = s; }
   void set_sel_temp_source_z2(select::Select *s)              { sel_temp_source_z2_ = s; }
+  void set_lockout_duration(select::Select *s)                { lockout_duration_ = s; }
 
   // Numbers
   void set_num_aa_setpoint_bias(number::Number *n)            { num_aa_setpoint_bias_ = n; }
@@ -260,6 +266,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_pred_sc_time(number::Number *n)                    { pred_sc_time_ = n; }
   void set_pred_sc_delta(number::Number *n)                   { pred_sc_delta_ = n; }
   void set_num_dhw_start_threshold(number::Number *n)         { num_dhw_start_threshold_ = n; }
+  void set_minimum_compressor_on_time(number::Number *n)      { minimum_compressor_on_time_ = n; }
 
   // Cooling settings (numbers)
   void set_num_cooling_smart_start_z1(number::Number *n)      { num_cooling_smart_start_z1_ = n; }
@@ -278,6 +285,9 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   // Globals
   void set_ui_use_room_z1(esphome::globals::RestoringGlobalsComponent<bool> *g) { ui_use_room_z1_ = g; }
   void set_ui_use_room_z2(esphome::globals::RestoringGlobalsComponent<bool> *g) { ui_use_room_z2_ = g; }
+
+  // Buttons
+  void set_short_cycle_mitigation_button(button::Button *b)   { short_cycle_mitigation_button_ = b; }
 
   // Solver
   void set_sw_use_solver(switch_::Switch *s)                  { sw_use_solver_ = s; }
@@ -411,6 +421,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   binary_sensor::BinarySensor *status_in1_request_{nullptr};
   binary_sensor::BinarySensor *status_in6_request_{nullptr};
   binary_sensor::BinarySensor *status_zone2_enabled_{nullptr};
+  binary_sensor::BinarySensor *status_short_cycle_lockout_{nullptr};
 
   // Text sensors
   text_sensor::TextSensor *version_{nullptr};
@@ -433,6 +444,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   select::Select *sel_temp_source_z1_{nullptr};
   select::Select *sel_temp_source_z2_{nullptr};
   select::Select *solver_dhw_mode_{nullptr};
+  select::Select *lockout_duration_{nullptr};
 
   // Numbers
   number::Number *num_aa_setpoint_bias_{nullptr};
@@ -447,6 +459,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_cooling_smart_start_z1_{nullptr};
   number::Number *num_min_cooling_flow_z1_{nullptr};
   number::Number *num_min_cooling_flow_z2_{nullptr};
+  number::Number *minimum_compressor_on_time_{nullptr};
 
   // Climate
   climate::Climate *dhw_climate_{nullptr};
@@ -492,6 +505,9 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_battery_max_discharge_kw_{nullptr};
   number::Number *num_dhw_start_threshold_{nullptr};
 
+  // Buttons
+  button::Button *short_cycle_mitigation_button_{nullptr};
+
  private:
   // ── LittleFS history buffers ──────────────────────────────────────────────
 
@@ -528,8 +544,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   // Used by lfs_persist_odin_, load_odin_data, and handle_odin_request_.
   struct OdinArrayEntry {
     int                  slot; // LFS cache-slot index (0-18)
-    const char*          name; // JSON key used in the API response
-    std::vector<float>*  vec;  // pointer to the corresponding member vector
+    const char* name; // JSON key used in the API response
+    std::vector<float>* vec;  // pointer to the corresponding member vector
   };
   std::array<OdinArrayEntry, 19> odin_array_map_();
 

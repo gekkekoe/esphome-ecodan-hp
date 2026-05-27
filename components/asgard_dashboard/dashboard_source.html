@@ -806,8 +806,24 @@ header {
           </div>
         </div>
       </div>
-    </div>
+   
+      <div id="sc-prevention-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Short Cycle Lockout</div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Lockout Status</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="ctrl-value" id="badge-lockout-status" style="font-weight:600;">—</span>
+            <button id="btn-cancel-lockout" class="step-btn" style="display: none; width: 24px; height: 24px;" onclick="apiPost({key: 'short_cycle_mitigation_button', value: 1})" title="Cancel Lockout">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        </div>
+        <div class="ctrl-row"><span class="ctrl-label">Lockout Duration (min)</span><select class="ctrl-select" id="sel-lockout-dur" onchange="sendSelect('lockout_duration', this)"><option value="0">0</option><option value="1">15</option><option value="2">30</option><option value="3">45</option><option value="4">60</option></select></div>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Minimum On-Time (min)</span><div class="stepper"><button class="step-btn" onclick="step('min-on-time', -1)">−</button><div class="step-val" id="min-on-time-val">—</div><button class="step-btn" onclick="step('min-on-time', +1)">+</button></div></div>
 
+        <button class="send-btn" onclick="sendSC(this)" style="margin-bottom:0; margin-top:24px;">Apply Lockout Settings</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1084,7 +1100,8 @@ const pending = {
   'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-solar-factor': null,
   'batt-soc': null, 'batt-max-dis': null,
   'cool-start-z1': null, 'cool-min-z1': null, 'cool-min-z2': null, 'dhw-thresh': null,
-  'raw-cool-prod': null, 'raw-cool-elec': null, 'raw-cool-run': null, 'raw-cool-out': null
+  'raw-cool-prod': null, 'raw-cool-elec': null, 'raw-cool-run': null, 'raw-cool-out': null,
+  'min-on-time': null,
 };
 
 const lastEdit = {};
@@ -1133,7 +1150,8 @@ const LIMITS = {
   'raw-cool-prod': { min: 0.0, max: 200.0, step: 0.1 },
   'raw-cool-elec': { min: 0.0, max: 100.0, step: 0.1 },
   'raw-cool-run':  { min: 0.0, max: 24.0, step: 0.1 },
-  'raw-cool-out':  { min: -25.0, max: 50.0, step: 0.1 }
+  'raw-cool-out':  { min: -25.0, max: 50.0, step: 0.1 },
+  'min-on-time': { min: 1, max: 20, step: 1 },
 };
 
 const STEP_EL = { 
@@ -1153,7 +1171,8 @@ const STEP_EL = {
   'batt-max-dis': 'batt-max-dis-val',
   'cool-start-z1': 'cool-start-z1-val', 'cool-min-z1': 'cool-min-z1-val', 'cool-min-z2': 'cool-min-z2-val',
   'dhw-thresh': 'dhw-thresh-val',
-  'raw-cool-prod': 'raw-cool-prod-val', 'raw-cool-elec': 'raw-cool-elec-val', 'raw-cool-run': 'raw-cool-run-val', 'raw-cool-out': 'raw-cool-out-val'
+  'raw-cool-prod': 'raw-cool-prod-val', 'raw-cool-elec': 'raw-cool-elec-val', 'raw-cool-run': 'raw-cool-run-val', 'raw-cool-out': 'raw-cool-out-val',
+  'min-on-time': 'min-on-time-val',
 };
 
 let lastGraphUpdate = 0;
@@ -2323,17 +2342,17 @@ function renderOdinLive() {
         actualTempByHour[s] = null;
     }
 
-    const expCons       = odinDataCache ? odinDataCache.energy_consumption         : new Array(72).fill(null);
-    const expProd       = odinDataCache ? odinDataCache.heat_production            : new Array(72).fill(null);
-    const expCost       = odinDataCache ? odinDataCache.expected_cost              : new Array(72).fill(null);
-    const expTemp       = odinDataCache ? odinDataCache.expected_begin_temp        : new Array(72).fill(null);
-    const battDischarge = odinDataCache ? (odinDataCache.battery_discharge || new Array(72).fill(0)) : new Array(72).fill(0);
-    const prices        = odinDataCache ? (odinDataCache.prices || new Array(72).fill(null)) : new Array(72).fill(null);
-    const schedBase     = odinDataCache ? (odinDataCache.sched_base || new Array(72).fill(null)) : new Array(72).fill(null);
-    const schedMin      = odinDataCache ? (odinDataCache.sched_min  || new Array(72).fill(null)) : new Array(72).fill(null);
-    const schedMax      = odinDataCache ? (odinDataCache.sched_max  || new Array(72).fill(null)) : new Array(72).fill(null);
-    const weather       = odinDataCache ? (odinDataCache.weather    || new Array(72).fill(null)) : new Array(72).fill(null);
-    const solar         = odinDataCache ? (odinDataCache.solar      || new Array(72).fill(null)) : new Array(72).fill(null);
+    const expCons       = odinDataCache?.energy_consumption  ?? new Array(72).fill(null);
+    const expProd       = odinDataCache?.heat_production     ?? new Array(72).fill(null);
+    const expCost       = odinDataCache?.expected_cost       ?? new Array(72).fill(null);
+    const expTemp       = odinDataCache?.expected_begin_temp ?? new Array(72).fill(null);
+    const battDischarge = odinDataCache?.battery_discharge   ?? new Array(72).fill(0);
+    const prices        = odinDataCache?.prices              ?? new Array(72).fill(null);
+    const schedBase     = odinDataCache?.sched_base          ?? new Array(72).fill(null);
+    const schedMin      = odinDataCache?.sched_min           ?? new Array(72).fill(null);
+    const schedMax      = odinDataCache?.sched_max           ?? new Array(72).fill(null);
+    const weather       = odinDataCache?.weather             ?? new Array(72).fill(null);
+    const solar         = odinDataCache?.solar               ?? new Array(72).fill(null);
     
     // Bridge the gap at 00:00 (index 24) for the expected temperature chart
     if (expTemp[24] === null) {
@@ -2724,6 +2743,12 @@ function render(d) {
   if (d.raw_cool_runtime_hours_lim) { LIMITS['raw-cool-run'].min = d.raw_cool_runtime_hours_lim.min; LIMITS['raw-cool-run'].max = d.raw_cool_runtime_hours_lim.max; LIMITS['raw-cool-run'].step = d.raw_cool_runtime_hours_lim.step; }
   if (d.raw_cool_avg_outside_temp_lim) { LIMITS['raw-cool-out'].min = d.raw_cool_avg_outside_temp_lim.min; LIMITS['raw-cool-out'].max = d.raw_cool_avg_outside_temp_lim.max; LIMITS['raw-cool-out'].step = d.raw_cool_avg_outside_temp_lim.step; }
 
+  if (d.min_compressor_on_time_lim) { 
+    LIMITS['min-on-time'].min = d.min_compressor_on_time_lim.min; 
+    LIMITS['min-on-time'].max = d.min_compressor_on_time_lim.max; 
+    LIMITS['min-on-time'].step = d.min_compressor_on_time_lim.step; 
+  }
+
   if (d.hysteresis_z1_lim) {
     const el = document.getElementById('z1-hyst');
     if(el) { el.min = d.hysteresis_z1_lim.min; el.max = d.hysteresis_z1_lim.max; el.step = d.hysteresis_z1_lim.step; }
@@ -2828,7 +2853,8 @@ function render(d) {
   setSelect('sel-z1ts',   d.temp_sensor_source_z1);
   setSelect('sel-z2ts',   d.temp_sensor_source_z2);
   setSelect('sel-odin-dhw-mode', d.solver_dhw_mode);
-  
+  setSelect('sel-lockout-dur', d.lockout_duration);
+
   updateDot('dot-z1', d.z1_action);
   updateDot('dot-room-z1', d.room_z1_action);
   updateDot('dot-z2', d.z2_action);
@@ -2842,10 +2868,26 @@ function render(d) {
   seedPending('cool-min-z1', d.minimum_cooling_flow_z1);
   seedPending('cool-min-z2', d.minimum_cooling_flow_z2);
   seedPending('dhw-thresh', d.dhw_start_threshold);
+
+  seedPending('min-on-time', d.min_compressor_on_time);
   
   setToggle('sw-power-mode', d.power_mode);
 
   toggleCoolingUI();
+
+    // Update lockout status and toggle cancel icon visibility
+  const badgeLockout = document.getElementById('badge-lockout-status');
+  const btnCancelLockout = document.getElementById('btn-cancel-lockout');
+  
+  if (badgeLockout) {
+    badgeLockout.textContent = d.status_short_cycle_lockout ? "Active" : "Clear";
+    badgeLockout.style.color = d.status_short_cycle_lockout ? "var(--warn)" : "var(--accent3)";
+  }
+  
+  if (btnCancelLockout) {
+    // Show the button as a flex item if active, otherwise hide it entirely
+    btnCancelLockout.style.display = d.status_short_cycle_lockout ? "flex" : "none";
+  }
 
   // SOLVER TAB VALUES
   const badgeConn = document.getElementById('badge-solver-conn');
@@ -3115,6 +3157,22 @@ async function sendVMode(zone, el) {
     showToast('✓ Zone ' + zone.toUpperCase() + ' Mode: ' + el.value); 
   } 
   catch(e) { showToast('✗ ' + e.message, true); }
+}
+
+async function sendSC(btn) {
+  btn.classList.add('sending');
+  let c = 0;
+  try {
+    // Check if the number slider has changed and post it
+    if (hasChanged('min-on-time')) { 
+      await apiPost({ key: 'minimum_compressor_on_time', value: pending['min-on-time'] }); 
+      c++; 
+    }
+    showToast(c > 0 ? '✓ Lockout Settings updated' : 'No changes');
+  } catch(e) { 
+    showToast('✗ ' + e.message, true); 
+  }
+  btn.classList.remove('sending');
 }
 
 function toggleThermostatUI(zone, useRoom) {
