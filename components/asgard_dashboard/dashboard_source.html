@@ -1941,6 +1941,14 @@ function setSolverMode(mode) {
         calCont.style.display = 'none';
         if (battCard) battCard.style.display = 'block';
         
+        // Reset zoom before renderOdinLive so it starts with a clean slate.
+        odinZoomed = false;
+        document.getElementById('btn-reset-zoom-odin').style.display = 'none';
+        [odinConsChart, odinProdChart, odinCostChart, odinTempChart,
+         odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
+            if (c) c.resetZoom('none');
+        });
+
         renderOdinLive();
         fetchOdinData();
     } else {
