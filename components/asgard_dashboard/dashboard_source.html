@@ -1920,7 +1920,9 @@ async function onMonitorDateChanged() {
     monitorCharts().forEach(c => {
         if (c) { 
             c.resetZoom('none');
-            c.options.scales.x.min = null; c.options.scales.x.max = null; 
+            // Use delete instead of null to ensure Chart.js properly resets on mobile
+            delete c.options.scales.x.min; 
+            delete c.options.scales.x.max; 
             c.data.labels = []; c.data.datasets.forEach(d => d.data = []); 
             c.update('none'); 
         }
@@ -3478,23 +3480,35 @@ function resetAllZoom() {
     const labels = buildMinuteLabels();
     const fiveHoursAgo = now - (5 * 60 * 60 * 1000);
     const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
+    
     if (startIndex !== -1 && startIndex < labels.length) {
       const minLabel = labels[startIndex];
       monitorCharts().forEach(c => {
         c.resetZoom('none');
         c.options.scales.x.min = minLabel;
-        c.options.scales.x.max = null;
+        delete c.options.scales.x.max;
         c.update('none');
       });
     } else {
-      monitorCharts().forEach(c => { c.resetZoom('none'); c.options.scales.x.min = null; c.options.scales.x.max = null; c.update('none'); });
+      monitorCharts().forEach(c => { 
+        c.resetZoom('none'); 
+        delete c.options.scales.x.min; 
+        delete c.options.scales.x.max; 
+        c.update('none'); 
+      });
     }
   } else {
     // History mode: show all loaded data at full scale
+    const labels = buildMinuteLabels();
     monitorCharts().forEach(c => {
       c.resetZoom('none');
-      c.options.scales.x.min = null;
-      c.options.scales.x.max = null;
+      if (labels && labels.length > 0) {
+        c.options.scales.x.min = labels[0];
+        c.options.scales.x.max = labels[labels.length - 1];
+      } else {
+        delete c.options.scales.x.min;
+        delete c.options.scales.x.max;
+      }
       c.update('none');
     });
   }
@@ -3634,16 +3648,17 @@ async function loadServerHistory(fromTs, toTs, type = 'min') {
           }
           monitorCharts().forEach(c => c.update('none'));
         } else if (monitorMode !== 'live' && history.timestamps.length > 0) {
-          // History mode: maximize scale to show all loaded data 
+          // History mode: maximize scale to show all loaded data
           userZoomed = false;
+          const labels = buildMinuteLabels();
           monitorCharts().forEach(c => {
               c.resetZoom('none');
-              c.options.scales.x.min = null;
-              c.options.scales.x.max = null;
+              // Explicitly bind to the array bounds to fix mobile viewport rendering
+              c.options.scales.x.min = labels[0];
+              c.options.scales.x.max = labels[labels.length - 1];
           });
           monitorCharts().forEach(c => c.update('none'));
-        }
-        
+        }        
       } else if (type === 'hour') {
         console.log(`Loaded ${data.length} hourly records.`);
         hourlyHistory = data.map(row => {
