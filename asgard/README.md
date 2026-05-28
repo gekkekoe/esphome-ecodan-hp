@@ -66,9 +66,15 @@
 > * **Liability:** Installation is entirely at your own risk. The seller is **not responsible** for any damage to your heat pump, property, or consequential damages resulting from the use or installation of this interface.
 
 ## Installation Guides
-[![Hardware Setup](https://img.shields.io/badge/Hardware-Setup-333333?style=for-the-badge&logo=arduino&logoColor=white)](./manual.md)
-[![Software Setup](https://img.shields.io/badge/Standalone-Setup-333333?style=for-the-badge&logo=home-assistant&logoColor=white)](./sa-config.md)
-[![Software Setup](https://img.shields.io/badge/HA-Setup-333333?style=for-the-badge&logo=home-assistant&logoColor=white)](./ha-config.md)
+
+To get started, complete the physical hardware installation, then choose your preferred software configuration.
+
+| Step | User Path | Guide |
+| :--- | :--- | :--- |
+| **1. Hardware** | All Users | [![Hardware Setup](https://img.shields.io/badge/Hardware_Setup-333333?style=for-the-badge&logo=arduino&logoColor=white)](./manual.md) |
+| **2. Software** | Home Assistant | [![HA Setup](https://img.shields.io/badge/Home_Assistant-41BDF5?style=for-the-badge&logo=home-assistant&logoColor=white)](./ha-config.md) |
+| | Standalone (Quick AA Setup) | [![AA Wizard](https://img.shields.io/badge/Auto_Adaptive_Wizard-8A2BE2?style=for-the-badge&logo=smartthings&logoColor=white)](./sa-wizard.md) |
+| | Standalone (Full Config) | [![Standalone Setup](https://img.shields.io/badge/Standalone_Full_Config-02569B?style=for-the-badge&logo=espressif&logoColor=white)](./sa-config.md) |
 
 ---
 
