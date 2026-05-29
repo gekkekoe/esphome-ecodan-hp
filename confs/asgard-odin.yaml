@@ -296,6 +296,7 @@ interval:
           {
             // Hourly Accumulator
             static int   last_hour = -1;
+            static int   last_day  = -1;
 
             static float last_h_cons = -1.0f;
             static float last_h_prod = -1.0f;
@@ -319,6 +320,7 @@ interval:
             // Initial run or recovery
             if (last_hour == -1) {
               last_hour   = cur_hr;
+              last_day    = cur_day;
               last_h_cons = cur_h_cons;
               last_h_prod = cur_h_prod;
               last_c_cons = cur_c_cons;
@@ -358,7 +360,7 @@ interval:
               float combined_climate_cons = d_h_cons + d_c_cons;
               float combined_climate_prod = d_h_prod + d_c_prod;
 
-              id(asgard_dashboard_id)->update_actual_data(last_hour, cur_day, combined_climate_cons, combined_climate_prod, d_d_cons, d_d_prod, room, d_standby);
+              id(asgard_dashboard_id)->update_actual_data(last_hour, last_day, combined_climate_cons, combined_climate_prod, d_d_cons, d_d_prod, room, d_standby);
 
               // Save the new baseline for the next hour
               last_h_cons = cur_h_cons;
@@ -369,6 +371,7 @@ interval:
               last_d_prod = cur_d_prod;
               last_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons;
               last_hour   = cur_hr;
+              last_day    = cur_day;
             }
           }
 

@@ -1990,7 +1990,7 @@ async function onSolverDateChanged() {
 
     const startDate = new Date(dateVal + 'T00:00:00Z');
     const fromTs = Math.floor(startDate.getTime() / 1000);
-    const toTs = fromTs + (rangeDays * 24 * 60 * 60);
+    const toTs = fromTs + (rangeDays * 24 * 60 * 60) + 3600;
     
     [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
      odinPriceChart, odinWeatherChart, odinBattChart].forEach(c => {
