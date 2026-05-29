@@ -37,6 +37,11 @@ namespace esphome
             bool post_dhw_window = this->is_post_dhw_window(status);
 
             if (this->is_dhw_active(status)) {
+                // Only follow flow temp during DHW if we transitioned from heating.
+                float saved_setpoint = (zone == OptimizerZone::ZONE_2) ? this->dhw_old_z2_setpoint_ : this->dhw_old_z1_setpoint_;
+                if (std::isnan(saved_setpoint))
+                    return;
+
                 if (status.DhwFlowTemperatureSetPoint > actual_flow_temp)
                     return;
 
@@ -53,16 +58,23 @@ namespace esphome
             else if (post_dhw_window) {
                 if (!this->is_heating_active(status) && !this->is_cooling_active(status)) {
                     // no demand, restore saved setpoint
-                    float restore_val = (zone == OptimizerZone::ZONE_2) ? this->dhw_old_z2_setpoint_ : this->dhw_old_z1_setpoint_;
-                    
+                    float restore_val = NAN;
+                    if (zone == OptimizerZone::ZONE_2) {
+                        restore_val = this->dhw_old_z2_setpoint_;
+                        this->dhw_old_z2_setpoint_ = NAN;
+                    } else {
+                        restore_val = this->dhw_old_z1_setpoint_;
+                        this->dhw_old_z1_setpoint_ = NAN;
+                        if (!status.has_2zones())
+                            this->dhw_old_z2_setpoint_ = NAN;
+                    }
+
+                    ESP_LOGD(OPTIMIZER_TAG, "Post-DHW: Heat/Cool demand gone. Restoring original setpoint Z%d: %.1f.", static_cast<uint8_t>(zone), restore_val);
+
                     if (!std::isnan(restore_val)) {
                         adjusted_flow = restore_val;
-
-                        // Also stop timer
-                        this->dhw_post_run_expiration_ = 0; 
-                        this->dhw_old_z1_setpoint_ = NAN;
-                        this->dhw_old_z2_setpoint_ = NAN;
-                        ESP_LOGD(OPTIMIZER_TAG, "Post-DHW: Heat demand gone. Restoring original setpoint %.1f and clearing timer.", adjusted_flow);
+                        if (std::isnan(this->dhw_old_z1_setpoint_) && std::isnan(this->dhw_old_z2_setpoint_))
+                            this->dhw_post_run_expiration_ = 0;
                     }
                 }
                 else {
@@ -207,15 +219,20 @@ namespace esphome
                 return;
 
             auto heating_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::HEAT_ON);
-            auto dhw_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::DHW_ON) 
-                || static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION);
+            auto dhw_mode     = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::DHW_ON);
+            auto legionella_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION);
             auto &status = this->state_.ecodan_instance->get_status();
 
-            if (new_mode == dhw_mode && previous_mode != dhw_mode) {
+            bool entering_dhw = (new_mode == dhw_mode || new_mode == legionella_mode)
+                             && (previous_mode != dhw_mode && previous_mode != legionella_mode);
+
+            // Only save heating setpoints when coming from heating — this is the signal
+            // on_feed_temp_change uses to know whether DHW flow-temp following is needed.
+            if (entering_dhw && previous_mode == heating_mode) {
                 this->dhw_old_z1_setpoint_ = status.Zone1FlowTemperatureSetPoint;
                 this->dhw_old_z2_setpoint_ = status.Zone2FlowTemperatureSetPoint;
 
-                ESP_LOGD(OPTIMIZER_TAG, "Switching to DHW/Legionella. Saved heating setpoints: Z1=%.1f, Z2=%.1f", 
+                ESP_LOGD(OPTIMIZER_TAG, "Heating → DHW/Legionella. Saved heating setpoints: Z1=%.1f, Z2=%.1f", 
                     this->dhw_old_z1_setpoint_, this->dhw_old_z2_setpoint_);
             }
 
