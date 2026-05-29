@@ -99,6 +99,10 @@ namespace esphome
 
                     xSemaphoreGive(this->odin_mutex_);
 
+                    if (mode != OptimizerOperationMode::DHW_ON && mode != OptimizerOperationMode::LEGIONELLA_PREVENTION) {
+                        this->odin_last_executed_dhw_hour_ = -1;
+                    }
+
                     // NAN = no data for this hour yet — fall back to AA, no soft-stop
                     if (std::isnan(odin_prod) || mode == OptimizerOperationMode::UNAVAILABLE) {
                         ESP_LOGW(OPTIMIZER_TAG, "ODIN data is NAN at hour %d. Forcing fallback.", current_hour);
@@ -112,7 +116,8 @@ namespace esphome
                                           mode != OptimizerOperationMode::HEAT_ON);
 
                     // Fall-forward logic: if currently off or doing DHW/Legionella, 
-                    if (result.heatpump_off || mode == OptimizerOperationMode::DHW_ON || mode == OptimizerOperationMode::LEGIONELLA_PREVENTION) {
+                    if (odin_last_executed_dhw_hour_ != -1 && (result.heatpump_off || mode == OptimizerOperationMode::DHW_ON || mode == OptimizerOperationMode::LEGIONELLA_PREVENTION)) {
+
                         if (!std::isnan(next_prod) && next_mode != OptimizerOperationMode::UNAVAILABLE) {
                             bool next_off = (next_prod < 0.1f &&
                                             next_mode != OptimizerOperationMode::COOL_ON &&
@@ -492,7 +497,6 @@ namespace esphome
             auto &status = this->state_.ecodan_instance->get_status();
 
             if (solver_enabled) {
-                static int odin_last_executed_dhw_hour_ = -1;
                 auto [solver_load_ratio, solver_heatpump_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(0.0f, 0.0f);
                 
                 if (solver_operating_mode == OptimizerOperationMode::DHW_ON) {
@@ -527,8 +531,6 @@ namespace esphome
                             }
                         }
                     }
-                } else {
-                    odin_last_executed_dhw_hour_ = -1;
                 }
             }
 

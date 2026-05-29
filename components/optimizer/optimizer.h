@@ -63,6 +63,8 @@ namespace esphome
       uint32_t last_defrost_time_     = 0;
       DefrostState state_before_defrost_;
 
+      int odin_last_executed_dhw_hour_ = -1;
+
       // Callback state (detect change before firing)
       float last_hp_feed_temp_      = NAN;
       float last_z1_feed_temp_      = NAN;
