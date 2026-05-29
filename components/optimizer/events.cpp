@@ -53,16 +53,23 @@ namespace esphome
             else if (post_dhw_window) {
                 if (!this->is_heating_active(status) && !this->is_cooling_active(status)) {
                     // no demand, restore saved setpoint
-                    float restore_val = (zone == OptimizerZone::ZONE_2) ? this->dhw_old_z2_setpoint_ : this->dhw_old_z1_setpoint_;
+                    float restore_val = NAN;
+                    if (zone == OptimizerZone::ZONE_2) {
+                        restore_val = this->dhw_old_z2_setpoint_;
+                        this->dhw_old_z2_setpoint_ = NAN;
+                    } else {
+                        restore_val = this->dhw_old_z1_setpoint_;
+                        this->dhw_old_z1_setpoint_ = NAN;
+                    }
                     
+                    ESP_LOGD(OPTIMIZER_TAG, "Post-DHW: Heat/Cool demand gone. Restoring original setpoint Z%d: %.1f.", static_cast<uint8_t>(zone), adjusted_flow);
+
+
                     if (!std::isnan(restore_val)) {
                         adjusted_flow = restore_val;
-
-                        // Also stop timer
-                        this->dhw_post_run_expiration_ = 0; 
-                        this->dhw_old_z1_setpoint_ = NAN;
-                        this->dhw_old_z2_setpoint_ = NAN;
-                        ESP_LOGD(OPTIMIZER_TAG, "Post-DHW: Heat demand gone. Restoring original setpoint %.1f and clearing timer.", adjusted_flow);
+                        // Also stop timer when both zones have been restored
+                        if (this->dhw_old_z1_setpoint_ == NAN && this->dhw_old_z2_setpoint_ == NAN)
+                            this->dhw_post_run_expiration_ = 0;
                     }
                 }
                 else {
