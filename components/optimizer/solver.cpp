@@ -46,7 +46,7 @@ namespace esphome
           bool has_data = false;
           
           if (xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
-              has_data = (odin_data_ready_ && odin_production_.size() == 48);
+              has_data = (odin_data_ready_ && odin_production_.size() == 24);
               xSemaphoreGive(this->odin_mutex_);
           }
           return has_data;
@@ -58,7 +58,7 @@ namespace esphome
             
             if (hr >= 0 && hr < 48) {
                 if (this->odin_mutex_ != NULL && xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(50)) == pdTRUE) {
-                    if (!this->odin_solar_forecast_.empty() && hr < this->odin_solar_forecast_.size()) {
+                    if (!this->odin_solar_forecast_.empty() && hr < (int)this->odin_solar_forecast_.size()) {
                         current_solar = this->odin_solar_forecast_[hr];
                     }
                     xSemaphoreGive(this->odin_mutex_);
@@ -103,21 +103,27 @@ namespace esphome
             this->odin_max_output_ = max_output;
 
             // Change the size check to 48
-            bool is_first_run = (!this->odin_data_ready_ || this->odin_production_.size() != 48);
+            // odin_production_ and odin_operation_mode_ are DP_HOURS=24 (engine only plans today).
+            // odin_solar_forecast_ is kept at 48 — the server passes today+tomorrow solar so
+            bool is_first_run = (!this->odin_data_ready_ || this->odin_production_.size() != 24);
             if (is_first_run) {
-                this->odin_production_.assign(48, NAN);
                 this->odin_solar_forecast_.assign(48, 0.0f);
-                this->odin_operation_mode_.assign(48, NAN);
+                this->odin_operation_mode_.assign(24, NAN);
+                this->odin_production_.assign(24, NAN);
                 this->odin_data_ready_ = true;
             }
 
             int first_update = is_first_run ? current_hour : current_hour + 1;
-            
+            if (first_update >= 0 && first_update < 24) {
+                for (int i = first_update; i < 24; i++) {
+                    if (i < (int)prod.size())    this->odin_production_[i]     = prod[i];
+                    if (i < (int)op_mode.size()) this->odin_operation_mode_[i] = op_mode[i];
+                }
+            }
+
             if (first_update >= 0 && first_update < 48) {
                 for (int i = first_update; i < 48; i++) {
-                    if (i < (int)prod.size())    this->odin_production_[i]     = prod[i];
                     if (i < (int)solar.size())   this->odin_solar_forecast_[i] = solar[i];
-                    if (i < (int)op_mode.size()) this->odin_operation_mode_[i] = op_mode[i];
                 }
             }
 
