@@ -596,6 +596,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   void record_history_();
   void handle_history_request_(AsyncWebServerRequest *request);
+  void send_hourly_history_(httpd_req_t *req, uint32_t from_ts, uint32_t to_ts);
+  void send_minute_history_(httpd_req_t *req, uint32_t from_ts, uint32_t to_ts);
   void handle_js_(AsyncWebServerRequest *request);
   void send_chunked_(AsyncWebServerRequest *request, const char *content_type,
                      const uint8_t *data, size_t length, const char *cache_control);
