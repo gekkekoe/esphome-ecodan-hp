@@ -1562,10 +1562,9 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         if (i < (int)prices.size()     && !std::isnan(prices[i]))      this->odin_prices_[target_idx]     = prices[i];
 
         // Calculated data (only overwrite future hours or empty slots to protect "past" history)
-        bool is_future = (i > current_hour); 
         bool is_empty_slot = std::isnan(this->odin_production_[target_idx]);
 
-        if (is_future || is_empty_slot) {
+        if (i > current_hour || (i == current_hour && is_empty_slot)) {
             if (i < (int)energy.size()     && !std::isnan(energy[i]))      this->odin_energy_[target_idx]            = energy[i];
             if (i < (int)production.size() && !std::isnan(production[i]))  this->odin_production_[target_idx]        = production[i];
             if (i < (int)cost.size()       && !std::isnan(cost[i]))        this->odin_cost_[target_idx]              = cost[i];
