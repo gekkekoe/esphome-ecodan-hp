@@ -2,9 +2,9 @@ import urllib.request
 import gzip
 
 files = {
-    "CHARTJS": "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js",
+    "CHARTJS": "https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js",
     "HAMMERJS": "https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js",
-    "ZOOMJS": "https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"
+    "ZOOMJS": "https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0/dist/chartjs-plugin-zoom.min.js"
 }
 
 with open("dashboard_js.h", "w") as f:
