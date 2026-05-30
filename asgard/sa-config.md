@@ -29,7 +29,7 @@ Open the **Settings** tab. Under **Zone 1**, set **Operating Mode** to `Heat Flo
 
 For 2-zone systems, repeat for **Zone 2**.
 
-> For cooling, select `Cool Flow Temperature` or `Cool Target Temperature` instead. The AA settings panel automatically adjusts to show cooling-specific controls when a cooling mode is active.
+> For cooling, select `Cool Flow Temperature` or `Cool Target Temperature` (Mitsubishi native AA, Asgard AA setting does not apply) instead. The AA settings panel automatically adjusts to show cooling-specific controls when a cooling mode is active.
 
 ---
 
