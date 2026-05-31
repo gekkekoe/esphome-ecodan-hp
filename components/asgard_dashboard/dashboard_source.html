@@ -2353,17 +2353,6 @@ function renderOdinLive() {
     const schedMax      = odinDataCache?.sched_max           ?? new Array(72).fill(null);
     const weather       = odinDataCache?.weather             ?? new Array(72).fill(null);
     const solar         = odinDataCache?.solar               ?? new Array(72).fill(null);
-    
-    // Bridge the gap at 00:00 (index 24) for the expected temperature chart
-    if (expTemp[24] === null) {
-        if (actualTempByHour[24] !== null) {
-            // Use actual measured room temperature if available
-            expTemp[24] = actualTempByHour[24];
-        } else if (expTemp[25] !== null) {
-            // Fallback to 01:00 value if actual is missing
-            expTemp[24] = expTemp[25];
-        }
-    }
 
     const pricesKwh     = prices.map(p => p !== null ? parseFloat((p).toFixed(5)) : null);
 
