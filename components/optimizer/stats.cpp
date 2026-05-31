@@ -223,11 +223,6 @@ namespace esphome
                 
                 this->update_learning_model(this->last_processed_day_);
 
-                // Delay the fetch by 30s so NVS writes from update_learning_model
-                // finish before the HTTP call starts — both on the main loop,
-                // immediate trigger risks watchdog timeout at midnight.
-                this->odin_fetch_pending_ms_ = millis() + 180000; // fire after 3 min — waits for ODIN 00:01 refresh
-
                 // Reset variables for the new day
                 this->last_processed_day_ = current_day;
                 
@@ -262,13 +257,6 @@ namespace esphome
                 this->last_run_time_    = UINT32_MAX - 700000UL;
             }
 
-            // PENDING FETCH: fired by day transition after 30s delay
-            if (this->odin_fetch_pending_ms_ > 0 && millis() >= this->odin_fetch_pending_ms_) {
-                this->odin_fetch_pending_ms_ = 0;
-                this->set_odin_fetch_request();
-                ESP_LOGI(OPTIMIZER_TAG, "Day transition: delayed fetch now firing.");
-            }
-
             // HOURLY MPC TRIGGER
             if (this->solver_enabled()) {
                 time_t ts = this->state_.ecodan_instance->get_status().timestamp();
@@ -276,34 +264,13 @@ namespace esphome
                     struct tm t;
                     localtime_r(&ts, &t);
                     int cur_min = t.tm_min;
-                    // don't trigger for 23:55 since day transition will trigger MPC
-                    if (current_hour != 23 && cur_min >= 55 && current_hour != this->last_pre_hour_triggered_) {
+                    if (cur_min >= 55 && current_hour != this->last_pre_hour_triggered_) {
                         this->last_pre_hour_triggered_ = current_hour;
                         ESP_LOGI(OPTIMIZER_TAG, "Pre-hour trigger at %02d:55 — requesting ODIN solve for hour %d.",
                                 current_hour, (current_hour + 1) % 24);
                         this->set_odin_fetch_request();
                     }
                 }
-
-                // if (current_hour != this->last_processed_hour_) {
-                //     ESP_LOGD(OPTIMIZER_TAG, "Hour transition detected (%d -> %d).", this->last_processed_hour_, current_hour);
-                //     //this->set_odin_fetch_request();
-                //     this->last_processed_hour_ = current_hour;
-                // } 
-                // else {
-                //     time_t ts = this->state_.ecodan_instance->get_status().timestamp();
-                //     if (ts > 0) {
-                //         struct tm t;
-                //         localtime_r(&ts, &t);
-                //         int cur_min = t.tm_min;
-                //         if (cur_min >= 55 && current_hour != this->last_pre_hour_triggered_) {
-                //             this->last_pre_hour_triggered_ = current_hour;
-                //             ESP_LOGI(OPTIMIZER_TAG, "Pre-hour trigger at %02d:55 — requesting ODIN solve for hour %d.",
-                //                     current_hour, (current_hour + 1) % 24);
-                //             this->set_odin_fetch_request();
-                //         }
-                //     }
-                // }
             }
 
             // Track the last active mode persistently to catch delayed meter updates and wind-down.

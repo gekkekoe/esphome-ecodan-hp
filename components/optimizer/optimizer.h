@@ -91,7 +91,6 @@ namespace esphome
       int      last_processed_day_          = -1;
       int      last_processed_hour_         {-1};
       int      last_pre_hour_triggered_      {-1};
-      uint32_t odin_fetch_pending_ms_        {0};   // deferred day-transition fetch
       float    daily_runtime_cool_          = 0.0f;
 
       // Strict energy separation buckets
