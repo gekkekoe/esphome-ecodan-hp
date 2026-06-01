@@ -1431,7 +1431,10 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
                 } else if (inst_mode == 3.0f) {
                     real_mode = 3.0f;
                 } else {
-                    real_mode = 2.0f;
+                    // inst_mode may have reverted to heating/standby mid-hour because
+                    // prohibit stopped cooling before the hour boundary.
+                    float planned_mode = this->odin_operation_mode_[target_idx];
+                    real_mode = (planned_mode == 3.0f) ? 3.0f : 2.0f;
                 }
             }
             this->odin_operation_mode_[target_idx] = real_mode;
