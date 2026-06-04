@@ -81,6 +81,10 @@ namespace esphome
         esphome::sensor::Sensor *daily_heating_produced;
         esphome::sensor::Sensor *daily_heating_consumed;
 
+        //Daily Sensor Fallbacks FTC5/FTC4 - Consumption
+        esphome::sensor::Sensor *ftc_heating_consumed{nullptr};
+        esphome::sensor::Sensor *ftc_cooling_consumed{nullptr};
+
         esphome::number::Number *solver_kwh_meter_feedback;
         esphome::number::Number *auto_adaptive_setpoint_bias;
         esphome::number::Number *temperature_feedback_z1;

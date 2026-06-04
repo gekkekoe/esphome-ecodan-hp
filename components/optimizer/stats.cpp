@@ -220,6 +220,23 @@ namespace esphome
             if (current_day != this->last_processed_day_) {
                 ESP_LOGI(OPTIMIZER_TAG, "Raw Data Collection: Day transition detected (%d -> %d). Saving stats...", 
                          this->last_processed_day_, current_day);
+
+                // FTC4/FTC5 Fallback Logic (Consumption Only)
+                if (this->last_total_heating_consumed_ <= 0.01f && this->daily_runtime_global > 0.0f) {
+                    ESP_LOGI(OPTIMIZER_TAG, "Real-time heating consumption empty. Falling back to daily Ecodan sensor.");
+                    
+                    if (this->state_.ftc_heating_consumed != nullptr && this->state_.ftc_heating_consumed->has_state()) {
+                        this->last_total_heating_consumed_ = this->state_.ftc_heating_consumed->state;
+                    }
+                }
+
+                if (this->last_total_cooling_consumed_ <= 0.01f && this->daily_runtime_cool_ > 0.0f) {
+                    ESP_LOGI(OPTIMIZER_TAG, "Real-time cooling consumption empty. Falling back to daily Ecodan sensor.");
+
+                    if (this->state_.ftc_cooling_consumed != nullptr && this->state_.ftc_cooling_consumed->has_state()) {
+                        this->last_total_cooling_consumed_ = this->state_.ftc_cooling_consumed->state;
+                    }
+                }
                 
                 this->update_learning_model(this->last_processed_day_);
 
