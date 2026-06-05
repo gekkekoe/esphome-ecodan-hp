@@ -635,7 +635,7 @@ Use this checklist after first-time setup to confirm everything is configured co
 
 The **Solver** tab in the Asgard dashboard is where you connect Asgard to ODIN, monitor the optimisation results, and fine-tune the physics parameters that the solver uses to model your house.
 
-> **To show the Solver tab:** go to **Settings → Auto Adaptive → Odin Solver** and enable **Show Solver Tab**. The tab will appear in the navigation bar.
+> **To show the Solver tab:** go to **Settings → ADVANCED CONTROL → Odin Solver** and enable **Show Solver Tab**. The tab will appear in the navigation bar.
 
 ---
 
@@ -660,21 +660,30 @@ Once a valid IP is stored, the **Open ODIN** button appears — click it to open
 
 #### Enable Dynamic Cost Solver
 
-Toggle **Enable Dynamic Cost Solver** to activate ODIN-driven heating control. When enabled, Asgard fetches a new optimisation plan from ODIN every hour and uses it to control the heat pump relay. When disabled, normal thermostat control applies.
+Toggle **Enable Dynamic Cost Solver** to activate ODIN-driven heating or cooling control. When enabled, Asgard fetches a new optimisation plan from ODIN every hour and uses it to control the heat pump relay. When disabled, normal thermostat control applies.
 
 ---
 
 ### 13.2 Running an Optimisation Manually
 
-The **Run Optimization** button triggers an immediate solve without waiting for the next scheduled hour. This is useful after changing settings or to verify the solver is working correctly.
+The **Run Optimization** button triggers an immediate solve to let you preview how setting changes affect the plan. *Note that this is a preview only and will be reset on next refresh.* 
 
 **From hour** field (next to the button): by default, the solve starts from the current hour. You can override this to test what the solver would plan from a different starting hour (0–23). Leave it blank to use the current hour.
 
 ---
 
-### 13.3 Physics Data — Sent to Solver
+### 13.3 Odin Settings
 
-This section shows the values Asgard sends to ODIN with every solve request. These are derived automatically from your heat pump's real measured data over the past day. They represent your house's thermal behaviour.
+This section houses extra parameters specific to how the ODIN solver behaves:
+
+* **DHW Threshold:** If the DHW temperature drops below `(Target - Drop) + Threshold`, ODIN will try to schedule DHW during an upcoming cheap or sunny hour. Setting this to 0 disables ODIN DHW scheduling.
+* **ODIN DHW Trigger:** The method used when ODIN schedules DHW. `Regular` temporarily bumps the DHW target by max drop + 1°C to trigger a normal heating cycle. `Forced` is faster but comes at the cost of higher consumption.
+
+---
+
+### 13.4 Physics Data — Sent to Solver
+
+This section shows the values Asgard sends to ODIN with every solve request. These are derived automatically from your heat pump's real measured data over the past day *(note: these are only automatically populated after a heating or cooling session has actually taken place)*.
 
 You can override any value manually and click **Apply Physics Data** to force specific values for testing. Asgard will use your overridden values until the next automatic daily update.
 
@@ -784,7 +793,7 @@ The maximum rate at which your battery can discharge per hour. ODIN will never a
 
 ---
 
-### 13.4 Heating System Type
+### 13.5 Heating System Type
 
 This selector (in the Asgard Settings tab under Auto Adaptive) tells the solver what kind of heating system you have. It sets the default COP and thermal mass ranges used during the initial learning phase.
 
@@ -802,7 +811,7 @@ The best way to evaluate how well ODIN is working is to watch the **Room Tempera
 
 | Line | Description |
 |------|-------------|
-| **Scheduled** (blue dashed) | Your comfort target temperature (`sched_base`) for each hour |
+| **Scheduled** (blue dashed) | Your scheduled comfort base target temperature for each hour |
 | **Expected** (orange dashed) | What ODIN predicted the temperature would be when it made the plan |
 | **Actual** (yellow solid) | What the room temperature actually measured throughout the day |
 
@@ -814,6 +823,7 @@ The charts show 48 hours of data — yesterday (left half) and today (right half
 - **Actual stays within the comfort band** — the solver is meeting its comfort constraints.
 - **Expected rises during sunny hours without HP running** — passive solar gain is being correctly modelled.
 - **Expected dips slightly during expensive hours, then recovers** — the solver is shifting heating to cheap periods.
+- It is normal that the Actual and Expected temperatures sometimes do not perfectly match for certain hours. Human factors such as standing near the temperature sensor, opening a window, cooking, having extra people in the room, or turning on a fireplace will suddenly change the temperature. When this happens, ODIN will automatically adjust its planning for the next hour. Keep in mind that the system's predictions will also continuously improve after a few days of heating or cooling compared to the very first day.
 
 ### What to look for when tuning
 
@@ -829,8 +839,8 @@ The `Passive Solar Factor` may be too low. Increase it slightly and monitor over
 **Expected shows large swings between hours:**
 The comfort band may be too wide, or `kWh Penalty` is too low. Try increasing the penalty to 0.5–0.7 for more stable planning.
 
-**Actual drops below sched_min:**
-The solver underestimated heat loss or overestimated solar gain. Check that the Tau value is realistic for your house type. You can temporarily increase the `sched_min` offset to give more headroom.
+**Actual drops below Schedule Min:**
+The solver underestimated heat loss or overestimated solar gain. Check that the Tau value is realistic for your house type. You can temporarily increase the Schedule Min offset to give more headroom.
 
 ---
 
@@ -860,13 +870,17 @@ Each hourly plan balances three things simultaneously:
 
 **Cost** — electricity is priced differently each hour. ODIN runs the heat pump harder during cheap hours (especially solar hours where grid cost approaches zero) and less during expensive hours, as long as your comfort limits allow.
 
-**Comfort** — the plan always stays within your schedule's min/max temperature band. ODIN will never let the house drop below your minimum or heat it beyond your maximum, regardless of price.
+**Comfort** — the plan generally stays within your schedule's min/max temperature band. ODIN will almost never let the house drop below your minimum or heat it beyond your maximum, regardless of price. *Exception: in shoulder months (mild weather), in case of solar irradiance, the solver might allow the temperature to dip slightly below the minimum band if it expects to be able to recover this within a few hours.*
 
 **Heat pump health** — frequent compressor starts and sustained very-high or very-low loads are gently discouraged. ODIN prefers steady, efficient operation over rapid cycling.
 
 ### DHW scheduling
 
-ODIN is aware of domestic hot water (DHW) heating. When the hot water tank needs reheating, ODIN picks the cheapest available hour for DHW and locks it in before building the space-heating plan. This ensures both needs are scheduled together efficiently, with DHW prioritised at the cheapest (often solar) hours of the day.
+ODIN is aware of domestic hot water (DHW) heating. How this behaves depends on your DHW Drop and DHW Threshold settings. For instance, a tested setup uses a 300L tank with a 10°C drop, a setpoint of 48°C, and an ODIN threshold of 8.5°C. Since every installation and household uses different amounts of hot water, you will need to experiment with these values yourself.
+
+When the hot water tank needs reheating (based on the threshold), ODIN picks the cheapest available hour for DHW and locks it in before building the space-heating plan. This ensures both needs are scheduled together efficiently, prioritised at the cheapest (often solar) hours.
+
+*Note:* While ODIN creates a plan, if someone takes a long, hot shower in between, the plan for the next hour will change as ODIN looks for the next cheapest reachable point. However, if so much water is used that the temperature hits the physical drop point, ODIN cannot prevent this—the heat pump will simply start automatically due to the drop.
 
 If electricity prices go negative, ODIN will also top up the hot water tank opportunistically — heating is genuinely free at that point.
 
