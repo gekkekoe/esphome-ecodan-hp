@@ -239,10 +239,10 @@ namespace esphome
                 // temperature — sending that setpoint would stop the compressor.
                 // Hold at actual feed instead.
                 if (status.has_independent_zone_temps() && !std::isnan(actual_flow_temp)
-                    && (actual_flow_temp - actual_return_temp) > target_delta
-                    && calculated_flow < actual_flow_temp) {
+                    && (actual_flow_temp - actual_return_temp) > target_delta && calculated_flow < actual_flow_temp) {
+
                     ESP_LOGI(OPTIMIZER_TAG,
-                        "[Buffer] Z%d Short-cycle guard: ΔT actual %.2f > target %.2f — held %.2f → %.2f",
+                        "[Buffer] Z%d Short-cycle guard (Heating): ΔT actual %.2f > target %.2f — held %.2f → %.2f",
                         (zone_i + 1),
                         actual_flow_temp - actual_return_temp, target_delta,
                         calculated_flow, actual_flow_temp);
@@ -293,6 +293,19 @@ namespace esphome
                 calculated_flow = this->state_.cooling_smart_start_temp->state;
             } else {
                 calculated_flow = actual_return_temp - target_delta_t;
+
+                float actual_flow_temp = this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
+                if (status.has_independent_zone_temps() && !std::isnan(actual_flow_temp)
+                    && (actual_return_temp - actual_flow_temp) > target_delta_t && calculated_flow > actual_flow_temp) {
+
+                    ESP_LOGI(OPTIMIZER_TAG,
+                        "[Buffer] Z%d Short-cycle guard (Cooling): ΔT actual %.2f > target %.2f — held %.2f → %.2f",
+                        (zone_i + 1),
+                        actual_return_temp - actual_flow_temp, target_delta_t,
+                        calculated_flow, actual_flow_temp);
+                    calculated_flow = actual_flow_temp;
+                }
+
                 ESP_LOGD(OPTIMIZER_TAG, "Z%d COOLING: calc=%.1f°C (return %.1f - delta %.1f)",
                          (zone_i + 1), calculated_flow, actual_return_temp, target_delta_t);
             }
