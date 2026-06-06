@@ -1621,7 +1621,7 @@ function initCharts() {
       return `${String(hour).padStart(2,'0')}:00`;
   });
   const monoFont = { family: "'JetBrains Mono'", size: 11 };
-  const xAxis = { 
+const xAxis = { 
       min: -0.5, 
       max: 71.5,
       ticks: { 
@@ -1629,6 +1629,12 @@ function initCharts() {
           color: function(context) {
               if (odinDataCache && odinDataCache.operation_mode && context.tick && context.tick.value !== undefined) {
                   const dataIndex = context.tick.value;
+                  
+                  // Force idle color if nothing is planned
+                  const expCons = odinDataCache.energy_consumption?.[dataIndex] || 0;
+                  const expProd = odinDataCache.heat_production?.[dataIndex] || 0;
+                  if (expCons === 0 && expProd === 0) return '#8295b8';
+
                   const mode = odinDataCache.operation_mode[dataIndex];
                   if (mode === 1) return '#ffb020'; // DHW (Yellow)
                   if (mode === 2) return '#ff6b35'; // Heating (Orange/Red)
@@ -1642,6 +1648,12 @@ function initCharts() {
               let weight = 'normal';
               if (odinDataCache && odinDataCache.operation_mode && context.tick && context.tick.value !== undefined) {
                   const dataIndex = context.tick.value;
+                  
+                  // Force normal weight if nothing is planned
+                  const expCons = odinDataCache.energy_consumption?.[dataIndex] || 0;
+                  const expProd = odinDataCache.heat_production?.[dataIndex] || 0;
+                  if (expCons === 0 && expProd === 0) return { family: "'JetBrains Mono'", size: 11, weight: 'normal' };
+
                   const mode = odinDataCache.operation_mode[dataIndex];
                   if (mode === 1 || mode === 2 || mode === 3) weight = 'bold';
               }
@@ -2137,11 +2149,22 @@ function getOdinXAxisConfig(isLive) {
     const getOpMode = (ctx) => {
         if (!ctx.tick || ctx.tick.value === undefined) return null;
         const idx = ctx.tick.value;
-        
+
         if (isLive && odinDataCache && odinDataCache.operation_mode) {
+            // left overs of previous hours, register as idle
+            const expCons = odinDataCache.energy_consumption?.[idx] || 0;
+            const expProd = odinDataCache.heat_production?.[idx] || 0;
+            if (expCons === 0 && expProd === 0) return 0; // Return Idle
+
             return odinDataCache.operation_mode[idx];
         } else if (!isLive && typeof hourlyHistory !== 'undefined' && hourlyHistory[idx]) {
-            return hourlyHistory[idx].op_mode;
+            // Check history array for planned activity
+            const r = hourlyHistory[idx];
+            const expCons = r.exp_cons || 0;
+            const expProd = r.exp_prod || 0;
+            if (expCons === 0 && expProd === 0) return 0; // Return Idle
+
+            return r.op_mode;
         }
         return null;
     };
