@@ -7,21 +7,23 @@
 ## Table of Contents
 
 1. [What You Need](#1-what-you-need)
-2. [First Boot — Wi-Fi Setup](#2-first-boot--wi-fi-setup)
-3. [Setup Wizard](#3-setup-wizard)
-4. [Navigating the Dashboard](#4-navigating-the-dashboard)
-5. [Firmware Updates (OTA)](#5-firmware-updates-ota)
-6. [Settings — Location & Energy](#6-settings--location--energy)
-7. [Settings — Solver Tuning](#7-settings--solver-tuning)
-8. [Settings — 24h Schedule Profile](#8-settings--24h-schedule-profile)
-9. [Settings — Energy Constraints](#9-settings--energy-constraints)
-10. [Environmental Data Tab](#10-environmental-data-tab)
-11. [Monitor Tab](#11-monitor-tab)
-12. [Quick-Start Checklist](#12-quick-start-checklist)
-13. [Asgard — Solver Tab](#13-asgard--solver-tab)
-14. [Monitoring Performance — Room Temperature Charts](#14-monitoring-performance--room-temperature-charts)
-15. [How the Optimizer Works](#15-how-the-optimizer-works)
-16. [API Data Feeds — Pushing Prices & Weather](#16-api-data-feeds--pushing-prices--weather)
+2. [Known Limitations & Expectations](#2-known-limitations--expectations)
+3. [License & Usage Conditions](#3-license--usage-conditions)
+4. [First Boot — Wi-Fi Setup](#4-first-boot--wi-fi-setup)
+5. [Setup Wizard](#5-setup-wizard)
+6. [Navigating the Dashboard](#6-navigating-the-dashboard)
+7. [Firmware Updates (OTA)](#7-firmware-updates-ota)
+8. [Settings — Location & Energy](#8-settings--location--energy)
+9. [Settings — Solver Tuning](#9-settings--solver-tuning)
+10. [Settings — 24h Schedule Profile](#10-settings--24h-schedule-profile)
+11. [Settings — Energy Constraints](#11-settings--energy-constraints)
+12. [Environmental Data Tab](#12-environmental-data-tab)
+13. [Monitor Tab](#13-monitor-tab)
+14. [Quick-Start Checklist](#14-quick-start-checklist)
+15. [Asgard — Solver Tab](#15-asgard--solver-tab)
+16. [Monitoring Performance — Room Temperature Charts](#16-monitoring-performance--room-temperature-charts)
+17. [How the Optimizer Works](#17-how-the-optimizer-works)
+18. [API Data Feeds — Pushing Prices & Weather](#18-api-data-feeds--pushing-prices--weather)
 
 ---
 
@@ -37,7 +39,35 @@
 
 ---
 
-## 2. First Boot — Wi-Fi Setup
+## 2. Known Limitations & Expectations
+
+While ODIN is highly advanced, it is important to set the right expectations regarding what the system can and cannot do:
+
+- **External API Dependency:** For fully automatic operation, ODIN relies on third-party servers for weather forecasts (e.g., Open-Meteo) and electricity prices (e.g., ENTSO-E). While multiple sources are supported, these external services can change their data structures, experience downtime, or alter their free tiers outside of our control. *Mitigation:* ODIN features built-in manual API endpoints (see [Section 18](#18-api-data-feeds--pushing-prices--weather)). You can push your own data locally (e.g., via Home Assistant), ensuring ODIN will always work regardless of what happens to the public APIs.
+- **Solar Forecast Inaccuracy:** Solar production is calculated using weather predictions, which cannot be 100% accurate. Passing clouds, unexpected haze, or partial panel shading can cause the actual yield to be lower than the forecast. *Mitigation:* Use the **Min Solar Coverage (%)** parameter (see [Section 9](#min-solar-coverage-)) to require a safety buffer (e.g., 120%–150%) before ODIN assumes heating is genuinely powered by free solar.
+- **Human Factors & Unpredictable Heat Gains:** The solver learns your house's thermal behavior over time, but it cannot predict human actions. Opening windows for an hour, lighting a fireplace, cooking a large meal, or hosting a party will alter the room temperature in ways the model could not anticipate. ODIN will notice the deviation and adjust the plan for the *next* hour.
+- **Hardware Overrides:** ODIN optimizes the schedule, but it cannot override the heat pump's physical safety limits or hard-coded triggers. For instance, if someone takes a very long shower and the tank temperature hits the physical drop point, the heat pump will start immediately to recover the tank, regardless of ODIN's cost plan.
+- **FTC5 / FTC4 (firmware > 12.01):** FTC5 and FTC4 do not provide 'real-time' energy consumption numbers. Asgard will use the daily reported consumption as a fallback. Please be advised that the energy consumption bar per hour will not display a value. It is recommended to install **an** energy meter and **link it** in Asgard. Then you will be able to see the hourly energy consumption.
+- **High Resolution Temperature Sensor:** It is recommended to use a temperature sensor with a **0.1°C** resolution. ODIN will be able to observe temperature changes faster and react accordingly.
+
+---
+
+## 3. License, Usage Conditions & Warranty
+
+ODIN is provided under a strict home-use agreement. By using the ODIN software and hardware, you agree to the following terms and conditions:
+
+- **Personal / Home Use Only:** The system is intended strictly for private, residential use to optimize personal energy consumption.
+- **No Commercial Use:** You may not use ODIN for any commercial purposes. This includes, but is not limited to, managing commercial properties, industrial applications, charging clients for optimization services, or reselling the hardware/software package as part of a commercial installation service.
+- **Disclaimer of Liability:** The creators of ODIN are not responsible for any damages to your property, heating system, or home caused by using this software. Users are required to actively monitor the system to ensure it is behaving correctly and safely. Please be extra vigilant **especially when cooling**, as improper cooling operation can lead to severe condensation and water damage.
+- **Limited Warranty:** A **1-year warranty** is provided against **hardware** manufacturing defects.
+    * **Exclusions:** The warranty is **VOID** if failure is caused by user error, such as:
+    * Physical modification or soldering by the user.
+    * Water damage
+    * **Accidental damage (e.g. dropping the unit, cracking the 3D printed casing).**
+
+---
+
+## 4. First Boot — Wi-Fi Setup
 
 When ODIN boots for the first time (or after a Wi-Fi reset), it cannot connect to your home network yet. It creates its own temporary access point so you can configure it.
 
@@ -55,11 +85,9 @@ Connect to it. No password is required.
 
 Open a browser and go to:
 
-```
-http://192.168.4.1
-```
+[http://192.168.4.1](http://192.168.4.1)
 
-Open the **Setup Wizard** (see [Section 3](#3-setup-wizard)). Complete all four steps to configure pricing, location, solar, and heat pump parameters before ODIN connects to your home network.
+Open the **Setup Wizard** (see [Section 5](#5-setup-wizard)). Complete all four steps to configure pricing, location, solar, and heat pump parameters before ODIN connects to your home network.
 
 ### Step 3 — Find ODIN on your network
 
@@ -73,7 +101,7 @@ ping odin.local
 
 ---
 
-## 3. Setup Wizard
+## 5. Setup Wizard
 
 The setup wizard is a guided 4-step process that runs on first boot (or can be re-opened by navigating to `http://<odin-ip>/setup`). It collects the minimum configuration needed before ODIN can start optimizing.
 
@@ -86,8 +114,8 @@ Configure how ODIN retrieves electricity prices.
 | Field | Description |
 |-------|-------------|
 | **Pricing Mode** | `Dynamic (Spot)` uses hourly day-ahead market prices. `Fixed Rate` uses a flat price you enter manually. |
-| **Price Zone** | Your electricity market region (see the full zone list in [Section 6](#price-zone)). |
-| **Data Source** | `Energy-Charts (Free)` requires no account. `ENTSO-E (Requires Token)` uses the official European exchange data and requires a free API token. `External API (HTTP POST)` disables automatic fetching — prices are pushed to ODIN from an external system (see [Section 16](#16-api-data-feeds--pushing-prices--weather)). |
+| **Price Zone** | Your electricity market region (see the full zone list in [Section 8](#price-zone)). |
+| **Data Source** | `Energy-Charts (Free)` requires no account. `ENTSO-E (Requires Token)` uses the official European exchange data and requires a free API token. `External API (HTTP POST)` disables automatic fetching — prices are pushed to ODIN from an external system (see [Section 18](#18-api-data-feeds--pushing-prices--weather)). |
 | **ENTSO-E API Token** | Only shown when ENTSO-E is selected. Format: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`. Get one free at [transparency.entsoe.eu](https://transparency.entsoe.eu). |
 
 ### Step 2 — Geographical Location
@@ -123,7 +151,7 @@ Click **Finish & Save** on step 4. ODIN saves all settings and redirects to the 
 
 ---
 
-## 4. Navigating the Dashboard
+## 6. Navigating the Dashboard
 
 The dashboard has four tabs at the top:
 
@@ -138,7 +166,7 @@ The firmware version is shown in the top-left corner of the header. A connection
 
 ---
 
-## 5. Firmware Updates (OTA)
+## 7. Firmware Updates (OTA)
 
 ODIN supports over-the-air (OTA) firmware updates directly from the dashboard.
 
@@ -156,7 +184,7 @@ ODIN supports over-the-air (OTA) firmware updates directly from the dashboard.
 
 ---
 
-## 6. Settings — Location & Energy
+## 8. Settings — Location & Energy
 
 Open the **Settings** tab. This section is divided into sub-sections: **Pricing**, **Weather**, **Location**, and **Solar PV**. Click **Apply Location & Energy** to save all changes in this section at once.
 
@@ -269,7 +297,7 @@ If your zone is not listed, choose the closest market zone or use **Fixed Rate**
 |--------|-------------|
 | **Energy-Charts (default)** | Free, no account needed. Covers all supported European zones. Recommended for most users. |
 | **ENTSO-E Transparency** | Official European energy exchange data. Requires a free API token. More reliable in some zones. Falls back to Energy-Charts if the fetch fails. |
-| **External API (HTTP POST)** | Disables all automatic price fetching. Prices must be pushed to ODIN by an external system (e.g. Home Assistant, a script, or a custom integration). See [Section 16](#16-api-data-feeds--pushing-prices--weather) for the endpoint and payload format. |
+| **External API (HTTP POST)** | Disables all automatic price fetching. Prices must be pushed to ODIN by an external system (e.g. Home Assistant, a script, or a custom integration). See [Section 18](#18-api-data-feeds--pushing-prices--weather) for the endpoint and payload format. |
 
 ---
 
@@ -291,7 +319,7 @@ Your personal API token from the ENTSO-E Transparency Platform. Register for fre
 |--------|-------|
 | **Open-Meteo (default)** | Free, no account or key needed. Good accuracy across Europe. Uses server-side tilted-plane irradiance (POA) calculation — more accurate than post-processing for non-south orientations. |
 | **Visual Crossing** | Alternative provider. Requires a free API key from [visualcrossing.com](https://www.visualcrossing.com). Irradiance is transposed from GHI to POA using ODIN's built-in model. Some users find it more accurate for their specific location. |
-| **Manual API (HTTP POST)** | Disables all automatic weather fetching. Temperature and solar irradiance must be pushed to ODIN by an external system (e.g. Home Assistant, a local weather station, or a custom integration). See [Section 16](#16-api-data-feeds--pushing-prices--weather) for the endpoint and payload format. |
+| **Manual API (HTTP POST)** | Disables all automatic weather fetching. Temperature and solar irradiance must be pushed to ODIN by an external system (e.g. Home Assistant, a local weather station, or a custom integration). See [Section 18](#18-api-data-feeds--pushing-prices--weather) for the endpoint and payload format. |
 
 ---
 
@@ -366,7 +394,7 @@ ODIN uses the tilt angle together with orientation and irradiance data to calcul
 
 ---
 
-## 7. Settings — Solver Tuning
+## 9. Settings — Solver Tuning
 
 These parameters control how ODIN's optimisation engine balances cost savings against comfort. Click **Apply Tuning Params** to save changes.
 
@@ -482,7 +510,7 @@ Think of it as a slider between "maximum savings" and "maximum comfort stability
 
 ---
 
-## 8. Settings — 24h Schedule Profile
+## 10. Settings — 24h Schedule Profile
 
 The schedule defines your **comfort temperature band** for each hour of the day. ODIN will never plan to heat above the maximum or let the house cool below the minimum.
 
@@ -528,7 +556,7 @@ The resulting comfort band is `[Base + Min, Base + Max]`. ODIN plans heating to 
 
 ---
 
-## 9. Settings — Energy Constraints
+## 11. Settings — Energy Constraints
 
 The **Energy Constraints** section lets you set a per-hour cap on either the heat pump's electrical consumption or its thermal output. This is separate from the comfort schedule — where the schedule defines what temperature to maintain, constraints define how hard the heat pump is allowed to work to get there.
 
@@ -571,7 +599,7 @@ Click **Compile & Send Limits** to save the constraint schedule.
 
 ---
 
-## 10. Environmental Data Tab
+## 12. Environmental Data Tab
 
 The **Data** tab shows the current inputs ODIN is working with:
 
@@ -596,7 +624,7 @@ Click **Fetch Latest Data** at the top right to immediately refresh both prices 
 
 ---
 
-## 11. Monitor Tab
+## 13. Monitor Tab
 
 The **Monitor** tab shows live system status:
 
@@ -612,7 +640,7 @@ The **Monitor** tab shows live system status:
 
 ---
 
-## 12. Quick-Start Checklist
+## 14. Quick-Start Checklist
 
 Use this checklist after first-time setup to confirm everything is configured correctly:
 
@@ -631,7 +659,7 @@ Use this checklist after first-time setup to confirm everything is configured co
 
 ---
 
-## 13. Asgard — Solver Tab
+## 15. Asgard — Solver Tab
 
 The **Solver** tab in the Asgard dashboard is where you connect Asgard to ODIN, monitor the optimisation results, and fine-tune the physics parameters that the solver uses to model your house.
 
@@ -639,7 +667,7 @@ The **Solver** tab in the Asgard dashboard is where you connect Asgard to ODIN, 
 
 ---
 
-### 13.1 Connecting to ODIN
+### 15.1 Connecting to ODIN
 
 #### Automatic detection
 
@@ -664,15 +692,13 @@ Toggle **Enable Dynamic Cost Solver** to activate ODIN-driven heating or cooling
 
 ---
 
-### 13.2 Running an Optimisation Manually
+### 15.2 Running an Optimisation Manually
 
-The **Run Optimization** button triggers an immediate solve to let you preview how setting changes affect the plan. *Note that this is a preview only and will be reset on next refresh.* 
-
-**From hour** field (next to the button): by default, the solve starts from the current hour. You can override this to test what the solver would plan from a different starting hour (0–23). Leave it blank to use the current hour.
+The **Run Optimization** button triggers an immediate solve to let you preview how setting changes affect the plan. *Note that this is a preview only and will be reset on next refresh.* **From hour** field (next to the button): by default, the solve starts from the current hour. You can override this to test what the solver would plan from a different starting hour (0–23). Leave it blank to use the current hour.
 
 ---
 
-### 13.3 Odin Settings
+### 15.3 Odin Settings
 
 This section houses extra parameters specific to how the ODIN solver behaves:
 
@@ -681,7 +707,7 @@ This section houses extra parameters specific to how the ODIN solver behaves:
 
 ---
 
-### 13.4 Physics Data — Sent to Solver
+### 15.4 Physics Data — Sent to Solver
 
 This section shows the values Asgard sends to ODIN with every solve request. These are derived automatically from your heat pump's real measured data over the past day *(note: these are only automatically populated after a heating or cooling session has actually taken place)*.
 
@@ -740,7 +766,7 @@ The difference between the highest and lowest room temperature measured yesterda
 
 #### Max Output (kW)
 
-The maximum thermal output your heat pump can deliver, in kilowatts. The solver will never plan heat input above this value. See [Section 7 — HP Max Capacity](#hp-max-capacity-kw-thermal) for how to set it.
+The maximum thermal output your heat pump can deliver, in kilowatts. The solver will never plan heat input above this value. See [Section 9 — HP Max Capacity](#hp-max-capacity-kw-thermal) for how to set it.
 
 ---
 
@@ -793,7 +819,7 @@ The maximum rate at which your battery can discharge per hour. ODIN will never a
 
 ---
 
-### 13.5 Heating System Type
+### 15.5 Heating System Type
 
 This selector (in the Asgard Settings tab under Auto Adaptive) tells the solver what kind of heating system you have. It sets the default COP and thermal mass ranges used during the initial learning phase.
 
@@ -805,7 +831,7 @@ This selector (in the Asgard Settings tab under Auto Adaptive) tells the solver 
 
 ---
 
-## 14. Monitoring Performance — Room Temperature Charts
+## 16. Monitoring Performance — Room Temperature Charts
 
 The best way to evaluate how well ODIN is working is to watch the **Room Temperatures (24h)** chart in the Solver tab. This chart shows three lines:
 
@@ -844,7 +870,7 @@ The solver underestimated heat loss or overestimated solar gain. Check that the 
 
 ---
 
-## 15. How the Optimizer Works
+## 17. How the Optimizer Works
 
 This section gives a plain-language overview of how ODIN plans heating. You do not need to read it to use ODIN, but it can help explain why the system behaves the way it does.
 
@@ -874,23 +900,46 @@ Each hourly plan balances three things simultaneously:
 
 **Heat pump health** — frequent compressor starts and sustained very-high or very-low loads are gently discouraged. ODIN prefers steady, efficient operation over rapid cycling.
 
-### DHW scheduling
+### DHW Scheduling
 
-ODIN is aware of domestic hot water (DHW) heating. How this behaves depends on your DHW Drop and DHW Threshold settings. For instance, a tested setup uses a 300L tank with a 10°C drop, a setpoint of 48°C, and an ODIN threshold of 8.5°C. Since every installation and household uses different amounts of hot water, you will need to experiment with these values yourself.
+ODIN is fully aware of your Domestic Hot Water (DHW) needs. Rather than letting the heat pump blindly reheat the tank whenever it drops, ODIN's optimization engine tries to schedule this heavy energy load during the cheapest or sunniest hours.
 
-When the hot water tank needs reheating (based on the threshold), ODIN picks the cheapest available hour for DHW and locks it in before building the space-heating plan. This ensures both needs are scheduled together efficiently, prioritised at the cheapest (often solar) hours.
+How this behaves depends on three variables: your **Target** (Setpoint), your hardware **Drop**, and ODIN's **Threshold**.
 
-*Note:* While ODIN creates a plan, if someone takes a long, hot shower in between, the plan for the next hour will change as ODIN looks for the next cheapest reachable point. However, if so much water is used that the temperature hits the physical drop point, ODIN cannot prevent this—the heat pump will simply start automatically due to the drop.
+#### Example Numbers
+To understand when ODIN triggers a DHW run, let's look at a tested setup with a 300L tank:
+* **Target Setpoint:** 48°C
+* **Hardware Drop:** 10°C (The limit where the heat pump *must* start)
+* **ODIN Threshold:** 8.5°C (ODIN's planning buffer)
 
-If electricity prices go negative, ODIN will also top up the hot water tank opportunistically — heating is genuinely free at that point.
+Using these numbers, we get two critical trigger points:
+1. **The Hardware Minimum:** `Target - Drop` (48 - 10 = **38°C**). If the water hits this temperature, the heat pump ignores all schedules and starts heating immediately to protect your comfort.
+2. **The ODIN Trigger:** `Hardware Minimum + Threshold` (38 + 8.5 = **46.5°C**). This is the temperature at which ODIN starts looking for a smart heating slot.
 
-### Battery integration
+#### How the Algorithm Schedules the Slot
+At the start of every hour, ODIN's optimization engine checks the current tank temperature. 
 
-If you have a home battery, ODIN allocates available battery charge to the most expensive heating hours of the day, within the discharge limit you have set. This reduces grid draw during price peaks and is factored into the cost forecast shown after each solve.
+1. **Triggering the search:** As soon as the tank drops below the ODIN Trigger (e.g., someone washes their hands and it drops to 46.0°C), ODIN knows a DHW run will be needed soon.
+2. **Finding the best slot:** The algorithm scans the upcoming hours in its planning window. It looks for the cheapest available spot—usually an hour with high solar coverage or very low grid prices—*before* it expects the tank to drop all the way to 38°C.
+3. **Locking it in:** Once the optimal hour is found, the engine **locks in the DHW run first**. Because DHW requires the heat pump to run at high temperatures (meaning space heating is paused), ODIN secures the DHW slot and then builds the rest of the space-heating plan around it to ensure they do not clash.
+
+#### Dynamic Adjustments & Hardware Overrides
+Because ODIN recalculates every hour, the plan is highly dynamic. If ODIN schedules a DHW run for 14:00 (the cheapest solar hour), but someone takes a 15-minute shower at 11:00, the algorithm will instantly recalculate at 12:00 to see if it needs to move the heating slot closer.
+
+**The Hardware Override:** ODIN can only optimize what it can foresee. If someone takes a massive, long shower and drains the tank rapidly down to 38°C (The Hardware Minimum), the physical drop point is reached. At this point, the heat pump starts automatically to recover the tank. ODIN cannot prevent this hardware safety mechanism, meaning that specific run will happen regardless of the current electricity price.
+
+#### Opportunistic "Free" Heating
+If electricity spot prices drop below zero (negative pricing), the algorithm overrides the normal threshold logic. It will opportunistically top up the hot water tank to its maximum target—even if the tank is only slightly depleted—because heating at that exact moment is genuinely free (or even pays you).
+
+### Battery integration (Recommendation Only)
+
+If you have a home battery, ODIN calculates how to best allocate your available battery charge to the most expensive heating hours of the day, within the discharge limit you have set. This reduces the estimated grid draw during price peaks and is factored into the cost forecast shown after each solve.
+
+**Note:** ODIN currently only generates a discharge *schedule and recommendation*. It does not actively integrate with or control your battery hardware (yet). To actually discharge your battery according to this plan, you will need to use an external automation platform (like Home Assistant) to read ODIN's planned consumption and control your battery accordingly.
 
 ---
 
-## 16. API Data Feeds — Pushing Prices & Weather
+## 18. API Data Feeds — Pushing Prices & Weather
 
 ODIN supports two HTTP POST endpoints that let an external system — such as Home Assistant, a Node-RED flow, or any script — push electricity prices and weather data directly to the device. This replaces the built-in automatic fetchers entirely and is useful when:
 
@@ -959,7 +1008,7 @@ Pushes 24–48 hours of hourly electricity prices to ODIN.
 ```yaml
 rest_command:
   push_odin_prices:
-    url: "http://192.168.1.42/api/data/prices"
+    url: "[http://192.168.1.42/api/data/prices](http://192.168.1.42/api/data/prices)"
     method: POST
     content_type: "application/json"
     payload: >
@@ -1021,7 +1070,7 @@ Pushes 24–48 hours of hourly outdoor temperature and solar irradiance to ODIN.
 ```yaml
 rest_command:
   push_odin_weather:
-    url: "http://192.168.1.42/api/data/weather"
+    url: "[http://192.168.1.42/api/data/weather](http://192.168.1.42/api/data/weather)"
     method: POST
     content_type: "application/json"
     payload: >
