@@ -378,8 +378,16 @@ header {
     </div>
   </div>
   
-  <div class="header-right">
-    <div class="fw-version" id="disp-ver">v—</div>
+<div class="header-right">
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <div class="fw-version" id="disp-ver">v—</div>
+      <!-- Update indicator icon (hidden by default) -->
+      <svg id="update-icon" style="display: none; cursor: pointer; color: var(--warn);" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" onclick="goToUpdateTab()" title="Update Available! Click to view.">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+    </div>
     <div id="lastUpdate">—</div>
   </div>
 </header>
@@ -1058,7 +1066,20 @@ header {
         <button class="log-btn" onclick="clearLogs()">Clear</button>
         <button class="log-btn" onclick="downloadLogs()">Download</button>
         <button class="log-btn" style="border-color: var(--accent); color: var(--accent);" onclick="triggerUpload()">Manual Firmware Upload</button>
+        <button class="log-btn" id="btn-check-update" style="border-color: var(--accent); color: var(--accent);" onclick="checkForUpdate(this)">Check for Update</button>
      </div>
+
+     <!-- ── Update available banner (hidden until update found) ──────────── -->
+    <div id="ota-update-banner" style="display:none;background:var(--card2,#1e2535);border:1px solid var(--accent);border-radius:8px;padding:12px;margin:10px 0;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <span id="ota-version-info" style="font-size:12px;color:var(--text);font-family:var(--mono);font-weight:600;"></span>
+            <button class="log-btn" id="btn-apply-update" style="border-color:#e07b39;color:#e07b39;font-weight:bold;" onclick="applyUpdate(this)">Download</button>
+        </div>
+        
+        <div id="ota-release-notes" style="margin-top:12px; font-size:11px; color:var(--text2); font-family:var(--mono); line-height:1.5; border-top:1px solid var(--border); padding-top:10px; display:none;"></div>
+        
+        <span id="ota-apply-status" style="display:block; margin-top:8px; font-size:11px; color:var(--text3); font-family:var(--mono);"></span>
+    </div>
      
      <div id="logs-container"></div>
    </div>
@@ -1272,6 +1293,185 @@ function getCurrencySymbol(bzn) {
 }
 
 // Manual Upload
+// ── OTA auto-update ───────────────────────────────────────────────────────────
+const GITHUB_OWNER = 'gekkekoe';
+const GITHUB_REPO  = 'esphome-ecodan-hp';
+
+function extractPrefix(version) {
+  if (!version) return null;
+  const match = version.match(/^(.+)-\d{4}-\d{2}-\d{2}\.\d+$/);
+  return match ? match[1] : null;
+}
+
+function parseVersionString(v) {
+  const match = v.match(/(\d{4}-\d{2}-\d{2})\.(\d+)$/);
+  if (!match) return { date: "", build: 0 };
+  return {
+    date: match[1],
+    build: parseInt(match[2], 10) // Parses .01 and .1 as 1
+  };
+}
+
+function isNewer(current, latest) {
+  const cur = parseVersionString(current);
+  const lat = parseVersionString(latest);
+
+  if (lat.date > cur.date) return true;
+  if (lat.date < cur.date) return false;
+  
+  return lat.build > cur.build;
+}
+
+// Lightweight Markdown to HTML formatter for release notes
+function formatReleaseNotes(body) {
+    if (!body) return "No release notes provided.";
+    return body
+        .replace(/\r\n/g, '\n') // Normalize newlines
+        .replace(/^#+\s+(.*)/gm, '<strong style="color:var(--text);">$1</strong>') // Headers
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text);">$1</strong>') // Bold text
+        .replace(/`(.*?)`/g, '<span style="background:var(--bg);padding:2px 4px;border-radius:4px;color:var(--accent);">$1</span>') // Inline code
+        .replace(/^- (.*)/gm, '&bull; $1') // List items
+        .replace(/\n/g, '<br>'); // Line breaks
+}
+
+async function checkForUpdate(btn = null) {
+  const bannerEl   = document.getElementById('ota-update-banner');
+  const infoEl     = document.getElementById('ota-version-info');
+  const notesEl    = document.getElementById('ota-release-notes');
+  const statusEl   = document.getElementById('ota-apply-status');
+  const updateIcon = document.getElementById('update-icon');
+  const applyBtn   = document.getElementById('btn-apply-update');
+
+  // Only manipulate the UI button if this was a manual user click
+  if (btn) {
+    btn.textContent = 'Checking…';
+    btn.disabled = true;
+    bannerEl.style.display = 'none';
+    notesEl.style.display = 'none';
+    statusEl.textContent = '';
+  }
+
+  try {
+    const current = (latestState && latestState.latest_version) ? latestState.latest_version : null;
+    if (!current) {
+        if (btn) throw new Error('Device version unknown — wait for state poll');
+        return; // Silent exit for background check
+    }
+
+    const prefix = extractPrefix(current);
+    if (!prefix) {
+        if (btn) throw new Error(`Could not parse version prefix from: ${current}`);
+        return;
+    }
+
+    const ghRes = await fetch(
+      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`,
+      { headers: { 'Accept': 'application/vnd.github+json' } }
+    );
+    if (!ghRes.ok) {
+        if (btn) throw new Error(`GitHub API error: ${ghRes.status}`);
+        return;
+    }
+
+    const release = await ghRes.json();
+    const tag     = release.tag_name; 
+    const expectedAsset = `${prefix}-${tag}.ota.bin`;
+
+    if (!isNewer(current, `${prefix}-${tag}`)) {
+      if (btn) {
+        btn.textContent = '✓ Up to date';
+        setTimeout(() => { btn.textContent = 'Check for Update'; btn.disabled = false; }, 3000);
+      }
+      updateIcon.style.display = 'none';
+      return;
+    }
+
+    const asset = release.assets.find(a => a.name === expectedAsset);
+    if (!asset) {
+      const available = release.assets.map(a => a.name).join(', ');
+      if (btn) throw new Error(`Asset '${expectedAsset}' not found. Available: ${available}`);
+      return;
+    }
+
+    // Store data directly on the APPLY button so it's always accessible
+    applyBtn.dataset.downloadUrl   = asset.browser_download_url;
+    applyBtn.dataset.latestVersion = `${prefix}-${tag}`;
+    applyBtn.dataset.assetName     = expectedAsset;
+
+    // Apply texts and release notes to UI
+    infoEl.textContent = `Update available: ${current} → ${prefix}-${tag}`;
+    notesEl.innerHTML = formatReleaseNotes(release.body);
+    notesEl.style.display = 'block';
+    bannerEl.style.display = 'block';
+    
+    // Light up the notification icon in the header
+    updateIcon.style.display = 'block';
+
+  } catch(e) {
+    if (btn) {
+      infoEl.textContent = '✗ ' + e.message;
+      bannerEl.style.display = 'block';
+    }
+  } finally {
+    if (btn) {
+      btn.textContent = 'Check for Update';
+      btn.disabled = false;
+    }
+  }
+}
+
+async function applyUpdate(btn) {
+  const downloadUrl = btn.dataset.downloadUrl;
+  const assetName   = btn.dataset.assetName || 'firmware.bin';
+  const statusEl    = document.getElementById('ota-apply-status');
+
+  // Check if the URL is present
+  if (!downloadUrl) { 
+    showToast('No update URL found. Run check first.', true); 
+    return; 
+  }
+
+  // Update UI to indicate the download has started
+  btn.textContent = 'Downloading...';
+  btn.disabled = true;
+  statusEl.textContent = 'Starting browser download...';
+
+  // Create an invisible link element to trigger the browser download natively
+  const a = document.createElement('a');
+  a.href = downloadUrl;
+  a.download = assetName;
+  
+  // Append, click, and remove the link
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  // Show a toast with instructions for the next manual step
+  showToast('✓ File downloaded! Please use the Manual Firmware Upload section to flash it.', false);
+
+  // Hide the OTA banner after a short delay so the UI is clean again
+  setTimeout(() => {
+    document.getElementById('ota-update-banner').style.display = 'none';
+    document.getElementById('update-icon').style.display = 'none';
+    
+    // Reset button state just in case
+    btn.textContent = 'Download Update';
+    btn.disabled = false;
+    statusEl.textContent = '';
+  }, 5000);
+}
+
+function goToUpdateTab() {
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs.forEach(t => {
+    if (t.textContent.trim() === 'Logs') {
+      switchTab('logs', t);
+      // smooth scroll to the banner
+      document.getElementById('ota-update-banner').scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+}
+
 function triggerUpload() { document.getElementById('ota-file').click(); }
 function performUpload() {
   const input = document.getElementById('ota-file');
@@ -3394,6 +3594,9 @@ async function fetchOdinData() {
     } 
 }
 
+
+let autoUpdateChecked = false;
+
 async function fetchState() {
   try {
     const res = await fetch('/dashboard/state');
@@ -3402,6 +3605,13 @@ async function fetchState() {
     latestState = d;
     render(d);
     updateCharts(d);
+
+    // Run background update check once we have the version
+    if (!autoUpdateChecked && d.latest_version) {
+        autoUpdateChecked = true;
+        checkForUpdate();
+    }
+
   } catch(e) {
     console.warn(e);
     setText('lastUpdate', 'ERR');
@@ -3589,19 +3799,28 @@ function showResetButton() {
   document.getElementById('btn-reset-zoom').style.display = 'block';
 }
 
+let odinZoomed = false;
+let isSyncingOdin = false;
+
 function syncOdinScales(sourceChart) {
+  if (isSyncingOdin) return; 
+  
+  isSyncingOdin = true;
+
   const min = sourceChart.scales.x.min;
   const max = sourceChart.scales.x.max;
+  
   [odinConsChart, odinProdChart, odinCostChart, odinTempChart, odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
     if (c && c !== sourceChart) {
       // Use the plugin's native API instead of overriding chart options
       c.zoomScale('x', {min: min, max: max}, 'none');
     }
   });
+  
   showOdinResetButton();
-}
 
-let odinZoomed = false;
+  isSyncingOdin = false;
+}
 
 function resetOdinZoom() {
     odinZoomed = false;
