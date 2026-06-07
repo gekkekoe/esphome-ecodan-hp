@@ -113,7 +113,7 @@ sections:
               type: entities
               entities:
                 - entity: >-
-                    number.ecodan_heatpump_auto_adaptive_min_cooling_flow_temperature
+                    number.ecodan_heatpump_auto_adaptive_min_cooling_flow_temperature_z1
                   name: Min. Cooling Flow Temperature
                 - entity: >-
                     number.ecodan_heatpump_auto_adaptive_cooling_smart_start_temp
