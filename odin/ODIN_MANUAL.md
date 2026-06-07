@@ -30,6 +30,7 @@
 ## 1. What You Need
 
 - **Asgard hardware** with virtual thermostats wired (required — ODIN cannot function without it)
+  * Buffer tank systems will have to use the virtual thermostats z1 and/or z2
 - **ODIN hardware**
 - A browser to complete initial setup
 - Your location coordinates (latitude / longitude) — the setup wizard has an interactive map
@@ -83,11 +84,13 @@ Connect to it. No password is required.
 
 ### Step 2 — Open the setup wizard
 
+![Odin WiFi Setup](img/odin-wifi.png) 
+
 Open a browser and go to:
 
 [http://192.168.4.1](http://192.168.4.1)
 
-Open the **Setup Wizard** (see [Section 5](#5-setup-wizard)). Complete all four steps to configure pricing, location, solar, and heat pump parameters before ODIN connects to your home network.
+Open the **Setup Wizard** (see [Section 5](#5-setup-wizard)). Complete all five steps to configure pricing, location, solar, weather, and heat pump parameters before ODIN connects to your home network.
 
 ### Step 3 — Find ODIN on your network
 
@@ -103,11 +106,13 @@ ping odin.local
 
 ## 5. Setup Wizard
 
-The setup wizard is a guided 4-step process that runs on first boot (or can be re-opened by navigating to `http://<odin-ip>/setup`). It collects the minimum configuration needed before ODIN can start optimizing.
+The setup wizard is a guided 5-step process that runs on first boot (or can be re-opened by navigating to `http://<odin-ip>/setup`). It collects the minimum configuration needed before ODIN can start optimizing.
 
 The wizard pre-fills any values already stored in ODIN's configuration, so re-running it is safe and non-destructive.
 
 ### Step 1 — Pricing Configuration
+
+![Odin Wizard Setup](img/wizard-price.png) 
 
 Configure how ODIN retrieves electricity prices.
 
@@ -120,6 +125,8 @@ Configure how ODIN retrieves electricity prices.
 
 ### Step 2 — Geographical Location
 
+![Odin Wizard Setup](img/wizard-location.png) 
+
 An interactive map allows you to drag a marker or click to set your location. ODIN uses this to fetch the correct weather forecast and solar irradiance for your area.
 
 The latitude and longitude fields below the map update automatically as you move the marker. Six decimal places of precision are stored.
@@ -127,6 +134,8 @@ The latitude and longitude fields below the map update automatically as you move
 > **Why this matters:** An incorrect location gives wrong solar irradiance data, which causes ODIN to over- or under-estimate how much of the heat pump's load your panels are covering.
 
 ### Step 3 — Solar PV System
+
+![Odin Wizard Setup](img/wizard-solar.png) 
 
 Toggle **I have solar panels** on if you have a PV installation. The fields below become active:
 
@@ -138,7 +147,21 @@ Toggle **I have solar panels** on if you have a PV installation. The fields belo
 
 If you have no solar panels, leave the toggle off. ODIN will still optimize around price. Please be advised that solar production is an **estimation** based on the parameters.
 
-### Step 4 — Heat Pump Specifications
+### Step 4 — Weather Data Source
+
+![Odin Wizard Setup](img/wizard-weather.png) 
+
+ODIN uses outdoor temperature and solar irradiance forecasts for heat-loss modeling and solar yield prediction.
+
+| Field | Description |
+|-------|-------------|
+| **Weather Source** | `Open-Meteo (Free)` requires no key for the free tier. `Visual Crossing` requires a free API key. `Manual API (HTTP POST)` disables automatic fetching — weather data must be pushed to ODIN from an external system. |
+| **Open-Meteo API Key** | Optional — leave empty for the free tier. |
+| **Visual Crossing API Key** | Required when Visual Crossing is selected. Get one free at [visualcrossing.com](https://www.visualcrossing.com). |
+
+### Step 5 — Heat Pump Specifications
+
+![Odin Wizard Setup](img/wizard-system.png) 
 
 Enter the thermal limits of your heat pump so the solver can plan realistic loads:
 
@@ -147,7 +170,7 @@ Enter the thermal limits of your heat pump so the solver can plan realistic load
 | **Max Thermal Capacity (kW)** | The maximum heat output your heat pump can deliver at typical outdoor temperatures. Check the technical datasheet for the value at 7°C. |
 | **Min Modulation (kW)** | The lowest output your heat pump can sustain before the compressor shuts off. Below this level, the HP cycles on/off instead of modulating smoothly. |
 
-Click **Finish & Save** on step 4. ODIN saves all settings and redirects to the main dashboard.
+Click **Finish & Save** on step 5. ODIN saves all settings and redirects to the main dashboard.
 
 ---
 
@@ -645,7 +668,7 @@ The **Monitor** tab shows live system status:
 Use this checklist after first-time setup to confirm everything is configured correctly:
 
 - [ ] ODIN is connected to your home Wi-Fi (dashboard loads via local IP)
-- [ ] Setup Wizard completed — or all four setting areas manually configured
+- [ ] Setup Wizard completed — or all five setting areas manually configured
 - [ ] **Latitude** and **Longitude** are set to your location
 - [ ] **Price Zone** matches your country
 - [ ] **Pricing Mode** is set to Dynamic (if you have a dynamic contract)
