@@ -54,29 +54,31 @@ void EcodanDashboard::setup() {
   this->odin_lfs_last_write_ms_ = millis();
   this->setup_lfs();
 
-  // ── LFS task (ODIN persistence) ────────────────────────────────────────
-  this->lfs_odin_trigger_ = xSemaphoreCreateBinary();
-  xTaskCreatePinnedToCore(
-    EcodanDashboard::lfs_odin_task_,
-    "lfs_odin",
-    8192,
-    this,
-    1,
-    &this->lfs_odin_task_handle_,
-    1
-  );
+  if (this->lfs_mounted_) {
+    // ── LFS task (ODIN persistence) ────────────────────────────────────────
+    this->lfs_odin_trigger_ = xSemaphoreCreateBinary();
+    xTaskCreatePinnedToCore(
+      EcodanDashboard::lfs_odin_task_,
+      "lfs_odin",
+      8192,
+      this,
+      1,
+      &this->lfs_odin_task_handle_,
+      1
+    );
 
-  // ── LFS task (history persistence) ────────────────────────────────────
-  this->lfs_trigger_ = xSemaphoreCreateBinary();
-  xTaskCreatePinnedToCore(
-    EcodanDashboard::lfs_task_,
-    "lfs_hist",
-    8192,
-    this,
-    1,
-    &this->lfs_task_handle_,
-    1
-  );
+    // ── LFS task (history persistence) ────────────────────────────────────
+    this->lfs_trigger_ = xSemaphoreCreateBinary();
+    xTaskCreatePinnedToCore(
+      EcodanDashboard::lfs_task_,
+      "lfs_hist",
+      8192,
+      this,
+      1,
+      &this->lfs_task_handle_,
+      1
+    );
+  }
 
   base_->init();
   base_->add_handler(this);
@@ -85,9 +87,11 @@ void EcodanDashboard::setup() {
 
 void EcodanDashboard::loop() {
   uint32_t now = millis();
-  if (now - last_history_time_ >= 60000 || last_history_time_ == 0) {
-    last_history_time_ = now;
-    record_history_();
+  if (this->lfs_mounted_) {
+    if (now - last_history_time_ >= 60000 || last_history_time_ == 0) {
+      last_history_time_ = now;
+      record_history_();
+    }
   }
 
   if (now - last_snapshot_time_ >= 1000 || last_snapshot_time_ == 0) {
@@ -96,7 +100,7 @@ void EcodanDashboard::loop() {
   }
 
   // ODIN Persistence Trigger (Moved away from NVS)
-  if (this->odin_lfs_dirty_) {
+  if (this->lfs_mounted_ && this->odin_lfs_dirty_) {
     const uint32_t LFS_FLUSH_INTERVAL_MS = LFS_FLUSH_COUNT * 60 * 1000;
     if (this->odin_lfs_last_write_ms_ == 0 || (now - this->odin_lfs_last_write_ms_) >= LFS_FLUSH_INTERVAL_MS) {
       this->odin_lfs_dirty_ = false;

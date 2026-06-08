@@ -554,6 +554,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   TaskHandle_t      lfs_odin_task_handle_{nullptr};
   SemaphoreHandle_t lfs_odin_trigger_{nullptr};
+  bool              lfs_mounted_{false}; 
 
   // ── Snapshot (thread-safe sensor cache) ──────────────────────────────────
 

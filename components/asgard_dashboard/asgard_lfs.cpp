@@ -155,8 +155,9 @@ void EcodanDashboard::setup_lfs() {
     
     if (esp_vfs_littlefs_register(&conf) != ESP_OK) {
         ESP_LOGE(TAG_LFS, "LittleFS mount failed — history disabled");
-        return;
+        return;  // lfs_mounted_ stays false
     }
+    this->lfs_mounted_ = true;
 
     lfs_helper::init_circular_file(LFS_MINUTES_PATH, sizeof(MinuteRecord),
                                    MAX_MINUTES, history_head_, history_count_);
@@ -250,7 +251,7 @@ void EcodanDashboard::lfs_task_(void* arg) {
 // ── Hourly record persistence ─────────────────────────────────────────────────
 
 void EcodanDashboard::record_hourly_data(const HourlyRecord& rec) {
-    if (history_mutex_ == NULL || xSemaphoreTake(history_mutex_, portMAX_DELAY) != pdTRUE)
+    if (!lfs_mounted_ || history_mutex_ == NULL || xSemaphoreTake(history_mutex_, portMAX_DELAY) != pdTRUE)
         return;
 
     // 1. Write the record — write_circular does a forward seek only.
@@ -351,7 +352,7 @@ void EcodanDashboard::lfs_persist_odin_() {
 }
 
 void EcodanDashboard::load_odin_data(int current_day) {
-    if (this->odin_data_ready_) return;
+    if (!lfs_mounted_ || this->odin_data_ready_) return;
 
     auto cache = std::unique_ptr<OdinCacheStruct>(new OdinCacheStruct());
     bool ok = lfs_helper::read_file(LFS_ODIN_PATH, cache.get(), sizeof(OdinCacheStruct));
