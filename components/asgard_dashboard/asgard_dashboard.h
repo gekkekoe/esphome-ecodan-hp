@@ -368,6 +368,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void handle_set_(AsyncWebServerRequest *request);
   void handle_odin_request_(AsyncWebServerRequest *request);
   void dispatch_set_(const std::string &key, const std::string &sval, float fval, bool is_string);
+  void handle_vt_update_(AsyncWebServerRequest *request);
 
   std::vector<DashboardAction> action_queue_;
   SemaphoreHandle_t action_lock_ = NULL;
