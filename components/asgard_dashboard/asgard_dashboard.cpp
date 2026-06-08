@@ -143,6 +143,7 @@ bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
           url == "/dashboard/setup" ||
           url == "/dashboard/state" || url == "/dashboard/set" ||
           url == "/dashboard/history" || url == "/dashboard/odin" ||
+          url == "/dashboard/vt_update" ||
           url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js"); 
 }
 
@@ -156,6 +157,7 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
   else if (url == "/dashboard/set")                     handle_set_(request);
   else if (url == "/dashboard/history")                 handle_history_request_(request);
   else if (url == "/dashboard/odin")                    handle_odin_request_(request);
+  else if (url == "/dashboard/vt_update")               handle_vt_update_(request);
   else if (url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js") {
     handle_js_(request);
   }
@@ -1722,6 +1724,53 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
   }
 
   httpd_resp_send_chunk(req, nullptr, 0);
+}
+
+// Add 'GET' setter for temp sensors without proper POST
+void EcodanDashboard::handle_vt_update_(AsyncWebServerRequest *request) {
+  httpd_req_t *req = *request;
+
+  if (request->method() != HTTP_GET) {
+    httpd_resp_set_status(req, "405 Method Not Allowed");
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_send(req, "Method Not Allowed", HTTPD_RESP_USE_STRLEN);
+    return;
+  }
+
+  bool updated = false;
+
+  // Handle Zone 1
+  if (request->hasParam("z1")) {
+    float temp = std::atof(request->getParam("z1")->value().c_str());
+    if (this->virtual_climate_z1_ != nullptr) {
+      this->virtual_climate_z1_->current_temperature = temp;
+      this->virtual_climate_z1_->publish_state();
+      updated = true;
+      ESP_LOGI(TAG, "Shelly GET webhook updated Z1 climate to %.2f", temp);
+    }
+  }
+
+  // Handle Zone 2
+  if (request->hasParam("z2")) {
+    float temp = std::atof(request->getParam("z2")->value().c_str());
+    if (this->virtual_climate_z2_ != nullptr) {
+      this->virtual_climate_z2_->current_temperature = temp;
+      this->virtual_climate_z2_->publish_state();
+      updated = true;
+      ESP_LOGI(TAG, "Shelly GET webhook updated Z2 climate to %.2f", temp);
+    }
+  }
+
+  if (updated) {
+    httpd_resp_set_status(req, "200 OK");
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    httpd_resp_send(req, "{\"success\":true}", HTTPD_RESP_USE_STRLEN);
+  } else {
+    httpd_resp_set_status(req, "400 Bad Request");
+    httpd_resp_set_type(req, "text/plain");
+    httpd_resp_send(req, "Missing z1/z2 param or climates not configured", HTTPD_RESP_USE_STRLEN);
+  }
 }
 
 }  // namespace asgard_dashboard
