@@ -50,6 +50,7 @@ While ODIN is highly advanced, it is important to set the right expectations reg
 - **Hardware Overrides:** ODIN optimizes the schedule, but it cannot override the heat pump's physical safety limits or hard-coded triggers. For instance, if someone takes a very long shower and the tank temperature hits the physical drop point, the heat pump will start immediately to recover the tank, regardless of ODIN's cost plan.
 - **FTC5 / FTC4 (firmware > 12.01):** FTC5 and FTC4 do not provide 'real-time' energy consumption numbers. Asgard will use the daily reported consumption as a fallback. Please be advised that the energy consumption bar per hour will not display a value. It is recommended to install **an** energy meter and **link it** in Asgard. Then you will be able to see the hourly energy consumption.
 - **High Resolution Temperature Sensor:** It is recommended to use a temperature sensor with a **0.1°C** resolution. ODIN will be able to observe temperature changes faster and react accordingly.
+- **Legionella Prevention:** Odin has no control over Legionella Prevention.
 
 ---
 
