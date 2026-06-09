@@ -146,6 +146,8 @@ Toggle **I have solar panels** on if you have a PV installation. The fields belo
 | **Orientation (Degrees)** | The compass direction your panels face, in degrees (0 = North, 90 = East, 180 = South, 270 = West). Use the preset dropdown or enter exact degrees. |
 | **Tilt / Pitch (Degrees)** | The angle your panels are mounted at. Flat roof = ~10°, pitched roof = ~35–45°. |
 
+You can define multiple arrays by pressing the `add array` button.
+
 If you have no solar panels, leave the toggle off. ODIN will still optimize around price. Please be advised that solar production is an **estimation** based on the parameters.
 
 ### Step 4 — Weather Data Source
