@@ -143,7 +143,6 @@ bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
           url == "/dashboard/setup" ||
           url == "/dashboard/state" || url == "/dashboard/set" ||
           url == "/dashboard/history" || url == "/dashboard/odin" ||
-          url == "/dashboard/vt_update" ||
           url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js"); 
 }
 
@@ -157,7 +156,6 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
   else if (url == "/dashboard/set")                     handle_set_(request);
   else if (url == "/dashboard/history")                 handle_history_request_(request);
   else if (url == "/dashboard/odin")                    handle_odin_request_(request);
-  else if (url == "/dashboard/vt_update")               handle_vt_update_(request);
   else if (url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js") {
     handle_js_(request);
   }
@@ -1724,66 +1722,6 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
   }
 
   httpd_resp_send_chunk(req, nullptr, 0);
-}
-
-// Add 'GET' setter for temp sensors without proper POST
-void EcodanDashboard::handle_vt_update_(AsyncWebServerRequest *request) {
-  httpd_req_t *req = *request;
-
-  if (request->method() != HTTP_GET) {
-    httpd_resp_set_status(req, "405 Method Not Allowed");
-    httpd_resp_set_type(req, "text/plain");
-    httpd_resp_send(req, "Method Not Allowed", HTTPD_RESP_USE_STRLEN);
-    return;
-  }
-
-  bool updated = false;
-  std::string errors = "";
-
-  auto parse_and_set = [&](const char* param_name, climate::Climate* climate_obj) {
-    if (request->hasParam(param_name) && climate_obj != nullptr) {
-      std::string val_str = request->getParam(param_name)->value();
-      
-      if (val_str.empty()) {
-        errors += std::string(param_name) + " is empty; ";
-        return;
-      }
-
-      char* end_ptr;
-      float temp = std::strtof(val_str.c_str(), &end_ptr);
-
-      if (end_ptr == val_str.c_str() || *end_ptr != '\0') {
-         errors += std::string(param_name) + " contains invalid characters; ";
-         return;
-      }
-
-      if (temp < 0.0f || temp > 50.0f) {
-         errors += std::string(param_name) + " is outside realistic sensor bounds (0.0 - 50.0); ";
-         return;
-      }
-
-      climate_obj->current_temperature = temp;
-      climate_obj->publish_state();
-      updated = true;
-      ESP_LOGI(TAG, "GET webhook updated %s climate to %.2f", param_name, temp);
-    }
-  };
-
-
-  parse_and_set("z1", this->virtual_climate_z1_);
-  parse_and_set("z2", this->virtual_climate_z2_);
-
-  if (updated) {
-    httpd_resp_set_status(req, "200 OK");
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-    httpd_resp_send(req, "{\"success\":true}", HTTPD_RESP_USE_STRLEN);
-  } else {
-    httpd_resp_set_status(req, "400 Bad Request");
-    httpd_resp_set_type(req, "text/plain");
-    std::string msg = "No valid updates performed. " + errors;
-    httpd_resp_send(req, msg.c_str(), HTTPD_RESP_USE_STRLEN);
-  }
 }
 
 }  // namespace asgard_dashboard
