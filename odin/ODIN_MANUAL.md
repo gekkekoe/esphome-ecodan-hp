@@ -24,6 +24,7 @@
 16. [Monitoring Performance — Room Temperature Charts](#16-monitoring-performance--room-temperature-charts)
 17. [How the Optimizer Works](#17-how-the-optimizer-works)
 18. [API Data Feeds — Pushing Prices & Weather](#18-api-data-feeds--pushing-prices--weather)
+19. [Factory Reset](#19-factory-reset)
 
 ---
 
@@ -68,6 +69,9 @@ ODIN is provided under a strict home-use agreement. By using the ODIN software a
     * **Accidental damage (e.g. dropping the unit, cracking the 3D printed casing).**
 
 ---
+
+> [!TIP]
+> **Optimal Placement:** To ensure a stable connection, place your Odin unit near a Wi-Fi access point or router. Due to its low power consumption, Odin can be conveniently powered directly from a spare USB port on your router or NAS.
 
 ## 4. First Boot — Wi-Fi Setup
 
@@ -1125,3 +1129,11 @@ Both endpoints are stateless — push whenever your data updates. Recommended pr
 - **Weather:** push once per hour (or every 30 minutes) so ODIN always has the freshest forecast before its hourly solve. Each push overwrites the previous data.
 
 > **Tip:** In Home Assistant, a Time-based automation that calls `rest_command.push_odin_prices` at 14:15 and `rest_command.push_odin_weather` every hour on the :55 mark (five minutes before ODIN's hourly solve) is a reliable and low-overhead integration pattern.
+
+## 19. Factory Reset
+
+If you need to restore ODIN to its original settings, follow these steps:
+
+1. Press and hold the boot button.
+2. Keep the button pressed until the status LED turns solid blue, then release.
+3. The LED will flash red and blue while the device erases all data.
