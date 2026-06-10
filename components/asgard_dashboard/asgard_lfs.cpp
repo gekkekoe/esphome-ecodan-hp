@@ -317,6 +317,10 @@ void EcodanDashboard::lfs_odin_task_(void* arg) {
 }
 
 void EcodanDashboard::lfs_persist_odin_() {
+    if (!this->lfs_mounted_) {
+        return;
+    }
+    
     // make_unique value-initialises all fields to zero, so no explicit memset needed.
     auto cache = std::make_unique<OdinCacheStruct>();
     cache->magic = ODIN_MAGIC;
