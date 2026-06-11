@@ -25,7 +25,7 @@ blueprint:
           # device_class: temperature
 
 variables:
-  source: !input source_entity
+  source: !input source_entitya
   target: !input target_input
 
 trigger:
