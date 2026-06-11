@@ -2128,6 +2128,8 @@ function setMonitorMode(mode) {
     if (mode === 'live') {
         btnLive.classList.add('active'); btnHist.classList.remove('active');
         calCont.style.display = 'none';
+        // Reset zoom state to re-enable auto-scrolling
+        userZoomed = false;
         loadServerHistory(null, null, 'min'); 
     } else {
         btnLive.classList.remove('active'); btnHist.classList.add('active');
@@ -2415,29 +2417,20 @@ function updateOdinCharts() {
 function renderOdinLive() {
     if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart || !odinPriceChart || !odinWeatherChart || !odinProdChart) return;
 
-    let currentZMin = null;
-    let currentZMax = null;
-    if (odinZoomed && odinTempChart && odinTempChart.scales.x) {
-        currentZMin = odinTempChart.scales.x.min;
-        currentZMax = odinTempChart.scales.x.max;
-    }
-
     const labels72 = Array.from({length: 72}, (_, i) => {
         const hour = i % 24;
         return `${String(hour).padStart(2,'0')}:00`;
     });
     
-    // Restore original fixed 72-hour X-axis configuration
     const staticXAxis = getOdinXAxisConfig(true);
 
-    // Re-apply static constraints to all 7 core optimization components
     [odinConsChart, odinProdChart, odinCostChart, odinTempChart, odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
         if (c) {
             c.data.labels = labels72;
-            c.options.scales.x = { ...staticXAxis };
-            if (odinZoomed && currentZMin !== null) {
-                c.options.scales.x.min = currentZMin;
-                c.options.scales.x.max = currentZMax;
+            if (!odinZoomed) {
+                c.options.scales.x = { ...staticXAxis };
+                c.options.scales.x.min = 23.5;
+                c.options.scales.x.max = 47.5;
             }
         }
     });
@@ -2653,17 +2646,10 @@ function renderOdinLive() {
     odinWeatherChart.data.datasets[1].data = solar;
     odinWeatherChart.update('none');
 
-    if (!odinZoomed) {
-        [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
-        odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-            if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
-        });
-    } else if (currentZMin !== null) {
-        [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
-        odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-            if (c) c.zoomScale('x', {min: currentZMin, max: currentZMax}, 'none');
-        });
-    }
+    [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
+    odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
+        if (c) c.update('none');
+    });
 }
 
 function updateCharts(d) {
@@ -2731,14 +2717,19 @@ function updateCharts(d) {
     // Populate all four charts from history arrays
     renderMinuteCharts();
 
-    // Apply 5-hour auto-window when user hasn't manually zoomed.
     if (!userZoomed && history.timestamps.length > 0) {
-      const labels = buildMinuteLabels();
-      const fiveHoursAgo = now - (5 * 60 * 60 * 1000);
+      // Get the true Unix epoch time in milliseconds
+      const realNow = Date.now(); 
+      
+      // Calculate exactly 5 hours ago in UTC
+      const fiveHoursAgo = realNow - (5 * 60 * 60 * 1000);       
       const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
-      if (startIndex !== -1 && startIndex < labels.length) {
-        const minLabel = labels[startIndex];
-        monitorCharts().forEach(c => { c.options.scales.x.min = minLabel; c.options.scales.x.max = null; });
+      
+      if (startIndex !== -1) {
+        monitorCharts().forEach(c => { 
+          c.options.scales.x.min = startIndex; 
+          c.options.scales.x.max = history.timestamps.length - 1; 
+        });
       }
     }
 
@@ -3757,19 +3748,18 @@ function syncScales(chart, min, max) {
 
 function resetAllZoom() {
   userZoomed = false;
+  
   if (monitorMode === 'live' && history.timestamps.length > 0) {
-    // Live mode: restore the 5-hour auto-window (same as initial load state)
+    // Live mode: restore the 5-hour auto-window using indices
     const now = Date.now() - (new Date().getTimezoneOffset() * 60000);
-    const labels = buildMinuteLabels();
     const fiveHoursAgo = now - (5 * 60 * 60 * 1000);
     const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
     
-    if (startIndex !== -1 && startIndex < labels.length) {
-      const minLabel = labels[startIndex];
+    if (startIndex !== -1) {
       monitorCharts().forEach(c => {
         c.resetZoom('none');
-        c.options.scales.x.min = minLabel;
-        delete c.options.scales.x.max;
+        c.options.scales.x.min = startIndex;
+        c.options.scales.x.max = history.timestamps.length - 1;
         c.update('none');
       });
     } else {
@@ -3781,13 +3771,12 @@ function resetAllZoom() {
       });
     }
   } else {
-    // History mode: show all loaded data at full scale
-    const labels = buildMinuteLabels();
+    // History mode: show all loaded data at full scale using indices instead of labels
     monitorCharts().forEach(c => {
       c.resetZoom('none');
-      if (labels && labels.length > 0) {
-        c.options.scales.x.min = labels[0];
-        c.options.scales.x.max = labels[labels.length - 1];
+      if (history.timestamps && history.timestamps.length > 0) {
+        c.options.scales.x.min = 0;
+        c.options.scales.x.max = history.timestamps.length - 1;
       } else {
         delete c.options.scales.x.min;
         delete c.options.scales.x.max;
@@ -3928,15 +3917,15 @@ async function loadServerHistory(fromTs, toTs, type = 'min') {
         renderMinuteCharts();
 
         if (monitorMode === 'live' && history.timestamps.length > 0) {
-          // Apply the 5-hour window immediately so the chart never renders at full scale
-          // first and then rescales when the first fetchState() poll fires.
-          const liveNow = Date.now() - (new Date().getTimezoneOffset() * 60000);
-          const liveLabels = buildMinuteLabels();
-          const fiveHoursAgo = liveNow - (5 * 60 * 60 * 1000);
+          // Apply the same index-based approach for initial load
+          const fiveHoursAgo = now - (5 * 60 * 60 * 1000);
           const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
-          if (startIndex !== -1 && startIndex < liveLabels.length) {
-            const minLabel = liveLabels[startIndex];
-            monitorCharts().forEach(c => { c.options.scales.x.min = minLabel; c.options.scales.x.max = null; });
+          
+          if (startIndex !== -1) {
+            monitorCharts().forEach(c => { 
+              c.options.scales.x.min = startIndex; 
+              c.options.scales.x.max = history.timestamps.length - 1; 
+            });
           }
           monitorCharts().forEach(c => c.update('none'));
         } else if (monitorMode !== 'live' && history.timestamps.length > 0) {
