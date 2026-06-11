@@ -57,7 +57,7 @@ sensor:
         return id(gl_temp_${zone_identifier});
       }
 
-      // Index 2: MRC
+      // Index 2: MRC/RCx
       if (idx == 2) {
         auto& status = id(ecodan_instance).get_status();
         return "${zone_identifier}" == "z1" ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
@@ -73,7 +73,7 @@ select:
     options:
       - "Virtual Thermostat Input ${zone_identifier}" 
       - "DS18x20 ${zone_identifier}"
-      - "MRC"
+      - "MRC or RCx"
     initial_option: "Virtual Thermostat Input ${zone_identifier}" 
     set_action:
       then:
