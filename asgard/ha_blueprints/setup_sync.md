@@ -20,3 +20,40 @@ Use this version if your source is a standalone temperature sensor (e.g., a basi
 2. Click the blue button above for the version you need.
 3. Home Assistant will automatically open the import dialog.
 4. You will see a preview of the blueprint and can click **"Import Blueprint"**.
+
+---
+
+## 2. Manual Setup
+If you prefer to set this up manually instead of using a blueprint, you can use the instructions below. 
+
+### Instructions
+1. Go to **Home Assistant** > **Settings** > **Automations & Scenes**.
+2. Click **Create Automation** > **Create new automation**.
+3. Click the options menu (three dots) in the top right corner and select "Edit in YAML." Paste the YAML configuration provided below, ensuring you replace all three instances of `room_temp_sensor` with your actual sensor's entity ID
+
+```yaml
+alias: "Sync Room Temperature to Ecodan (Manual Sensor Version)"
+description: "Synchronizes a standalone temperature sensor to the Ecodan Virtual Thermostat."
+mode: single
+
+trigger:
+  - platform: state
+    # Replace this with your actual temperature sensor entity ID
+    entity_id: sensor.room_temp_sensor
+
+condition:
+  - condition: template
+    value_template: >
+      {{ states('sensor.room_temp_sensor') | float(0) != states('number.ecodan_heatpump_virtual_thermostat_input_z1') | float(0) }}
+
+action:
+  - service: number.set_value
+    target:
+      # Replace this with your actual ESPHome target number entity ID
+      entity_id: number.ecodan_heatpump_virtual_thermostat_input_z1
+    data:
+      value: "{{ states('sensor.room_temp_sensor') | float(0) }}"
+
+  - delay: "00:01:00"
+
+```
