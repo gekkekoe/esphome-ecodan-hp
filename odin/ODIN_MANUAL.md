@@ -1041,7 +1041,7 @@ Pushes 24–48 hours of hourly electricity prices to ODIN.
 ```yaml
 rest_command:
   push_odin_prices:
-    url: "[http://192.168.1.42/api/data/prices](http://192.168.1.42/api/data/prices)"
+    url: "http://192.168.1.42/api/data/prices"
     method: POST
     content_type: "application/json"
     payload: >
@@ -1103,7 +1103,7 @@ Pushes 24–48 hours of hourly outdoor temperature and solar irradiance to ODIN.
 ```yaml
 rest_command:
   push_odin_weather:
-    url: "[http://192.168.1.42/api/data/weather](http://192.168.1.42/api/data/weather)"
+    url: "http://192.168.1.42/api/data/weather"
     method: POST
     content_type: "application/json"
     payload: >
