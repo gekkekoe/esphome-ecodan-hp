@@ -73,6 +73,9 @@ ODIN is provided under a strict home-use agreement. By using the ODIN software a
 > [!TIP]
 > **Optimal Placement:** To ensure a stable connection, place your Odin unit near a Wi-Fi access point or router. Due to its low power consumption, Odin can be conveniently powered directly from a spare USB port on your router or NAS.
 
+> [!IMPORTANT]
+> **Assign a Static IP Address:** For optimal reliability, please configure a static (fixed) IP address for your Odin unit. You can typically do this in your router's settings by creating a DHCP reservation using Odin's MAC address.
+
 ## 4. First Boot — Wi-Fi Setup
 
 When ODIN boots for the first time (or after a Wi-Fi reset), it cannot connect to your home network yet. It creates its own temporary access point so you can configure it.
