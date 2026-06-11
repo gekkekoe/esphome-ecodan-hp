@@ -5,6 +5,7 @@
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
 #include <esp_http_server.h>
+#include <esp_netif.h>
 #include <cstdio>
 #include <cstring>
 #include <cmath>
@@ -654,6 +655,19 @@ void EcodanDashboard::update_snapshot_() {
     current_snapshot_.version[0] = '\0';
   }
 
+  // Local IP via esp_netif
+  {
+    esp_netif_t *netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    if (!netif) netif = esp_netif_next_unsafe(nullptr);  // fallback: first available
+    esp_netif_ip_info_t ip_info{};
+    if (netif && esp_netif_get_ip_info(netif, &ip_info) == ESP_OK && ip_info.ip.addr != 0) {
+      snprintf(current_snapshot_.local_ip, sizeof(current_snapshot_.local_ip),
+               IPSTR, IP2STR(&ip_info.ip));
+    } else {
+      current_snapshot_.local_ip[0] = '\0';
+    }
+  }
+
   xSemaphoreGive(snapshot_mutex_);
 }
 
@@ -920,7 +934,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_sel("temp_sensor_source_z1", snap.sel_temp_source_z1);
   p_sel("temp_sensor_source_z2", snap.sel_temp_source_z2);
 
-  off += snprintf(buf.data() + off, BUF_SIZE - off, "\"_uptime_ms\":%u}", millis());
+  off += snprintf(buf.data() + off, BUF_SIZE - off, "\"local_ip\":\"%s\",\"_uptime_ms\":%u}", snap.local_ip, millis());
   flush();
   httpd_resp_send_chunk(req, nullptr, 0);
 }

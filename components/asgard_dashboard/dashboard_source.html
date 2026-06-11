@@ -3203,7 +3203,7 @@ function render(d) {
   if (scZ2) scZ2.style.display = isZ2 ? 'block' : 'none';
 
   setText('disp-ver', d.latest_version || '—');
-  setText('lastUpdate', formatUptime(d._uptime_ms));
+  setText('lastUpdate', formatUptime(d._uptime_ms, d.local_ip));
 }
 
 function setText(id, val) {
@@ -3214,16 +3214,19 @@ function setText(id, val) {
 function fmt1(v) { return (v != null && !isNaN(v)) ? parseFloat(v).toFixed(1) : '—'; }
 function fmt2(v) { return (v != null && !isNaN(v)) ? parseFloat(v).toFixed(2) : '—'; }
 
-function formatUptime(ms) {
-  if (ms == null) return 'Uptime: —';
-  let s = Math.floor(ms / 1000);
-  let m = Math.floor(s / 60); s = s % 60;
-  let h = Math.floor(m / 60); m = m % 60;
-  let d = Math.floor(h / 24); h = h % 24;
-  
-  if (d > 0) return `Uptime: ${d}d ${h}h`;
-  if (h > 0) return `Uptime: ${h}h ${m}m`;
-  return `Uptime: ${m}m ${s}s`;
+function formatUptime(ms, ip) {
+  let uptime = '—';
+  if (ms != null) {
+    let s = Math.floor(ms / 1000);
+    let m = Math.floor(s / 60); s = s % 60;
+    let h = Math.floor(m / 60); m = m % 60;
+    let d = Math.floor(h / 24); h = h % 24;
+    if (d > 0) uptime = `${d}d ${h}h`;
+    else if (h > 0) uptime = `${h}h ${m}m`;
+    else uptime = `${m}m ${s}s`;
+  }
+  const ipPart = (ip && ip !== '0.0.0.0' && ip !== '') ? `, ip: ${ip}` : '';
+  return `uptime: ${uptime}${ipPart}`;
 }
 
 function step(key, delta) {

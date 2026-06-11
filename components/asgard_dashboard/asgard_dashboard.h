@@ -133,6 +133,7 @@ struct DashboardSnapshot {
 
   // Text sensors (fixed-size to avoid heap allocation in snapshot)
   char version[32]{0};
+  char local_ip[16]{0};
 
   // Solver
   bool sw_use_solver{false};
