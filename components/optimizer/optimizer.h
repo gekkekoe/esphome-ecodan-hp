@@ -188,7 +188,7 @@ namespace esphome
       bool  is_heating_active(const ecodan::Status &status);
       bool  is_cooling_active(const ecodan::Status &status);
       float clamp_flow_temp(float flow, float min_temp, float max_temp);
-      float enforce_step_down(const ecodan::Status &status, float actual_flow, float calculated_flow);
+      float enforce_step_limit(const ecodan::Status &status, float actual_flow, float calculated_flow);
       bool  set_flow_temp(float flow, OptimizerZone zone);
       float round_nearest(float input)      { return round(input * 10.0f) / 10.0f; }
       float round_nearest_half(float input) { return floor(input * 2.0) / 2.0f; }

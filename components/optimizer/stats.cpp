@@ -18,7 +18,7 @@ namespace esphome
             uint32_t now = millis();
             bool is_running = (status.CompressorFrequency > 0) || status.CompressorOn;
             bool is_heating_active = status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
-            bool is_cooling_active = status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON; // ADD THIS
+            bool is_cooling_active = status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON;
 
             if (this->last_check_ms_ != 0) {    
                 float minutes_passed = (now - this->last_check_ms_) / 60000.0f;

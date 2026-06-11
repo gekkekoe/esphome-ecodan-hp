@@ -264,11 +264,11 @@ namespace esphome
             // Clamp + step-down (order depends on post-DHW window)
             if (this->is_post_dhw_window(status)) {
                 calculated_flow = this->clamp_flow_temp(calculated_flow, zone_min, zone_max);
-                calculated_flow = this->enforce_step_down(status,
+                calculated_flow = this->enforce_step_limit(status,
                     this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2),
                     calculated_flow);
             } else {
-                calculated_flow = this->enforce_step_down(status,
+                calculated_flow = this->enforce_step_limit(status,
                     this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2),
                     calculated_flow);
                 calculated_flow = this->clamp_flow_temp(calculated_flow, zone_min, zone_max);
@@ -319,6 +319,9 @@ namespace esphome
                     min_cool_target = state_.minimum_cooling_flow_temp_z2->state;
             }
 
+            calculated_flow = this->enforce_step_limit(status,
+                    this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2),
+                    calculated_flow);
             calculated_flow = this->clamp_flow_temp(calculated_flow,
                                                     min_cool_target,
                                                     this->state_.cooling_smart_start_temp->state);
