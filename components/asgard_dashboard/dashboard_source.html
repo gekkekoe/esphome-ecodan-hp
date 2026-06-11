@@ -868,7 +868,7 @@ header {
         <div class="ctrl-row">
           <span class="ctrl-label">Enable Dynamic Cost Solver</span>
           <label class="toggle-wrap">
-            <input type="checkbox" id="sw-solver" onchange="sendSwitch('use_dynamic_cost_solver', this.checked)">
+            <input type="checkbox" id="sw-solver" onchange="handleSolverToggle(this)">
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -2162,6 +2162,31 @@ async function onMonitorDateChanged() {
     });
     
     await loadServerHistory(fromTs, toTs, 'min');
+}
+
+function handleSolverToggle(checkbox) {
+  if (checkbox.checked) {
+    const aaToggle = document.getElementById('sw-aa');
+    const aaCard = document.getElementById('card-aa');
+    
+    const isAaEnabled = aaToggle && aaToggle.checked;
+    // AA is considered greyed out if it has the 'disabled-box' class
+    const isAaGreyedOut = aaCard && aaCard.classList.contains('disabled-box');
+
+    if (!isAaEnabled) {
+      checkbox.checked = false; // Revert the UI toggle state
+      showToast('Cannot enable Solver: Auto Adaptive control is turned off.', true);
+      return;
+    }
+
+    if (isAaGreyedOut) {
+      checkbox.checked = false;
+      showToast('Cannot enable Solver: Auto Adaptive is currently inactive. Please set the Operating Mode to a correct mode.', true);
+      return;
+    }
+  }
+
+  sendSwitch('use_dynamic_cost_solver', checkbox.checked);
 }
 
 function setSolverMode(mode) {
