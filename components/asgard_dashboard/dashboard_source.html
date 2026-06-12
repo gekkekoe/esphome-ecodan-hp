@@ -2101,7 +2101,7 @@ const xAxis = {
                       title: function(ctx) {
                           if (!ctx || !ctx.length) return '';
                           const index = ctx[0].dataIndex;
-                          return labels72[index] || '';
+                          return ctx[0].chart.data.labels[index] || '';
                       }
                   }
               }
@@ -2279,6 +2279,9 @@ function setSolverMode(mode) {
             if (c) c.resetZoom('none');
         });
 
+        loadServerHistory(null, null, 'min').then(() => {
+            if (solverMode === 'live') updateOdinCharts();
+        });
         renderOdinLive();
         fetchOdinData();
     } else {
@@ -2298,8 +2301,11 @@ async function onSolverDateChanged() {
     if (!dateVal) return;
 
     const startDate = new Date(dateVal + 'T00:00:00Z');
-    const fromTs = Math.floor(startDate.getTime() / 1000);
-    const toTs = fromTs + (rangeDays * 24 * 60 * 60) + 3600;
+    // Shift the fetch window by 30 mins (+1800s).
+    // This skips the 00:00 record (which belongs to 23:00 yesterday)
+    // and safely grabs up to 00:30 tomorrow (which belongs to 23:00 today).
+    const fromTs = Math.floor(startDate.getTime() / 1000) + 1800;
+    const toTs = fromTs + (rangeDays * 24 * 60 * 60);
     
     [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
      odinPriceChart, odinWeatherChart, odinBattChart].forEach(c => {
@@ -2333,7 +2339,9 @@ function renderOdinHistory() {
     // 1. Generate multi-day descriptive X-axis labels from Unix indices (in English)
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const labels = hourlyHistory.map(r => {
-        const d = new Date(r.timestamp);
+        // Shift by 30 mins backwards to correctly label the hour block it represents
+        // (Hourly records are saved slightly after the hour, e.g. 16:00:40 for the 15:00 block)
+        const d = new Date(r.timestamp - 30 * 60 * 1000);
         return `${days[d.getUTCDay()]} ${String(d.getUTCHours()).padStart(2,'0')}:00`;
     });
     
