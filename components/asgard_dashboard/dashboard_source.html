@@ -561,7 +561,18 @@ header {
         </div>
 
         <div class="ctrl-row"><span class="ctrl-label">Thermostat Mode</span><select class="ctrl-select" id="sel-z1-vmode" onchange="sendVMode('z1', this)"><option value="heat">Heat</option><option value="cool">Cool</option><option value="off">Off</option></select></div>
-        <div class="ctrl-row" style="margin-bottom: 10px; padding-bottom: 12px;"><span class="ctrl-label">Temp Sensor Source</span><select class="ctrl-select" id="sel-z1ts" onchange="sendSelect('temp_sensor_source_z1', this)"><option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC or RCx</option></select></div>        
+        <div class="ctrl-row" style="margin-bottom: 10px; padding-bottom: 12px;">
+          <span class="ctrl-label param-label">Temp Sensor Source<span class="tip-icon">?</span>
+            <span class="tip-box">
+              <span class="tip-unit">Virtual Thermostat Input</span>REST API sensor (Home Assistant, REST API).<br><br>
+              <span class="tip-unit">DS18x20</span>Wired Dallas DS18B20 sensor.<br><br>
+              <span class="tip-unit">MRC or RCx</span>Main display sensor or Wireless thermostat (low resolution, 0.5°C steps).
+            </span>
+          </span>
+          <select class="ctrl-select" id="sel-z1ts" onchange="sendSelect('temp_sensor_source_z1', this)">
+            <option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC or RCx</option>
+          </select>
+        </div>        
         
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="z1-current">—<span>°C</span></div></div>
@@ -610,7 +621,18 @@ header {
         </div>
 
         <div class="ctrl-row"><span class="ctrl-label">Thermostat Mode</span><select class="ctrl-select" id="sel-z2-vmode" onchange="sendVMode('z2', this)"><option value="heat">Heat</option><option value="cool">Cool</option><option value="off">Off</option></select></div>
-        <div class="ctrl-row" style="margin-bottom: 10px; padding-bottom: 12px;"><span class="ctrl-label">Temp Sensor Source</span><select class="ctrl-select" id="sel-z2ts" onchange="sendSelect('temp_sensor_source_z2', this)"><option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC or RCx</option></select></div>
+        <div class="ctrl-row" style="margin-bottom: 10px; padding-bottom: 12px;">
+          <span class="ctrl-label param-label">Temp Sensor Source<span class="tip-icon">?</span>
+            <span class="tip-box">
+              <span class="tip-unit">Virtual Thermostat Input</span>REST API sensor (Home Assistant, REST API).<br><br>
+              <span class="tip-unit">DS18x20</span>Wired Dallas DS18B20 sensor.<br><br>
+              <span class="tip-unit">MRC or RCx</span>Main display sensor or Wireless thermostat (low resolution, 0.5°C steps).
+            </span>
+          </span>
+          <select class="ctrl-select" id="sel-z2ts" onchange="sendSelect('temp_sensor_source_z2', this)">
+            <option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC or RCx</option>
+          </select>
+        </div>
 
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="z2-current">—<span>°C</span></div></div>
@@ -705,26 +727,74 @@ header {
         <div class="ctrl-row"><span class="ctrl-label">Global Smart Start Temp</span><div class="stepper"><button class="step-btn" onclick="step('cool-start-z1', -0.5)">−</button><div class="step-val" id="cool-start-z1-val">—</div><button class="step-btn" onclick="step('cool-start-z1', +0.5)">+</button></div></div>
         <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Settings Z1</div>
 
-        <div class="ctrl-row"><span class="ctrl-label">Room Temp Source Z1</span><select class="ctrl-select" id="sel-z1src" onchange="sendSelect('room_temp_source_z1', this)"><option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option></select></div>
+        <div class="ctrl-row">
+          <span class="ctrl-label param-label">Room Temp Source Z1<span class="tip-icon">?</span>
+            <span class="tip-box">
+              <span class="tip-unit">Room Thermostat</span>MRC or Wireless thermostat.<br><br>
+              <span class="tip-unit">HA / REST API</span>Reads temp pushed via REST API or HA.<br><br>
+              <span class="tip-unit">Asgard Virtual Thermostat</span>Uses the Virtual Thermostat.
+            </span>
+          </span>
+          <select class="ctrl-select" id="sel-z1src" onchange="sendSelect('room_temp_source_z1', this)">
+            <option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option>
+          </select>
+        </div>
         
         <div id="heat-settings-z1">
           <div class="ctrl-row"><span class="ctrl-label">Max Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -0.1)">−</button><div class="step-val" id="aa-max-val">—</div><button class="step-btn" onclick="step('aa-max', +0.1)">+</button></div></div>
           <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -0.1)">−</button><div class="step-val" id="aa-min-val">—</div><button class="step-btn" onclick="step('aa-min', +0.1)">+</button></div></div>
         </div>
         <div id="cool-settings-z1" style="display:none;">
-          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Cool Flow</span><div class="stepper"><button class="step-btn" onclick="step('cool-min-z1', -0.1)">−</button><div class="step-val" id="cool-min-z1-val">—</div><button class="step-btn" onclick="step('cool-min-z1', +0.1)">+</button></div></div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+            <span class="ctrl-label param-label">Min Cool Flow Z1
+              <span class="tip-icon" style="color:var(--danger); border-color:var(--danger);">!</span>
+              <span class="tip-box" style="border-color:var(--danger);">
+                <span class="tip-unit" style="color:var(--danger);">Dew Point Warning</span>
+                Ensure this value is above your home's dew temperature to prevent condensation.
+              </span>
+            </span>
+            <div class="stepper">
+              <button class="step-btn" onclick="step('cool-min-z1', -0.1)">−</button>
+              <div class="step-val" id="cool-min-z1-val">—</div>
+              <button class="step-btn" onclick="step('cool-min-z1', +0.1)">+</button>
+            </div>
+          </div>
         </div>        
         
         <div id="aa-z2-container" style="display:none;">
           <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Settings Z2</div>
-          <div class="ctrl-row" id="row-z2src"><span class="ctrl-label">Room Temp Source Z2</span><select class="ctrl-select" id="sel-z2src" onchange="sendSelect('room_temp_source_z2', this)"><option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option></select></div>
+          <div class="ctrl-row" id="row-z2src">
+            <span class="ctrl-label param-label">Room Temp Source Z2<span class="tip-icon">?</span>
+              <span class="tip-box">
+                <span class="tip-unit">Room Thermostat</span>MRC or Wireless thermostat.<br><br>
+                <span class="tip-unit">HA / REST API</span>Reads temp pushed via REST API or HA.<br><br>
+                <span class="tip-unit">Asgard Virtual Thermostat</span>Uses the Virtual Thermostat.
+              </span>
+            </span>
+            <select class="ctrl-select" id="sel-z2src" onchange="sendSelect('room_temp_source_z2', this)">
+              <option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option>
+            </select>
+          </div>
           
           <div id="heat-settings-z2">
             <div class="ctrl-row"><span class="ctrl-label">Max Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><div class="step-val" id="aa-max-z2-val">—</div><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
             <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><div class="step-val" id="aa-min-z2-val">—</div><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
           </div>
           <div id="cool-settings-z2" style="display:none;">
-            <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Cool Flow</span><div class="stepper"><button class="step-btn" onclick="step('cool-min-z2', -0.1)">−</button><div class="step-val" id="cool-min-z2-val">—</div><button class="step-btn" onclick="step('cool-min-z2', +0.1)">+</button></div></div>
+            <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+              <span class="ctrl-label param-label">Min Cool Flow Z2
+                <span class="tip-icon" style="color:var(--danger); border-color:var(--danger);">!</span>
+                <span class="tip-box" style="border-color:var(--danger);">
+                  <span class="tip-unit" style="color:var(--danger);">Dew Point Warning</span>
+                  Ensure this value is above your home's dew temperature to prevent condensation.
+                </span>
+              </span>
+              <div class="stepper">
+                <button class="step-btn" onclick="step('cool-min-z2', -0.1)">−</button>
+                <div class="step-val" id="cool-min-z2-val">—</div>
+                <button class="step-btn" onclick="step('cool-min-z2', +0.1)">+</button>
+              </div>
+            </div>
           </div>
         </div>
 
