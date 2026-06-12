@@ -298,13 +298,14 @@ interval:
             static int   last_hour = -1;
             static int   last_day  = -1;
 
-            static float last_h_cons = -1.0f;
+            static float last_h_cons = -1.0f; // Heating Tracker
             static float last_h_prod = -1.0f;
-            static float last_c_cons = -1.0f; // NEW: Cooling Tracker
-            static float last_c_prod = -1.0f; // NEW: Cooling Tracker
-            static float last_d_cons = -1.0f;
+            static float last_c_cons = -1.0f; // Cooling Tracker
+            static float last_c_prod = -1.0f;
+            static float last_d_cons = -1.0f; // DHW Tracker
             static float last_d_prod = -1.0f;
             static float last_t_cons = -1.0f;
+            static float last_room   = NAN;   // need to track last room temp for day transition 
 
             int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
             float cur_h_cons = id(optimizer_ptr)->get_heating_consumed_kwh();
@@ -328,6 +329,7 @@ interval:
               last_d_cons = cur_d_cons;
               last_d_prod = cur_d_prod;
               last_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons;
+              last_room   = id(virtual_climate_z1).current_temperature;
               return;
             }
 
@@ -354,7 +356,7 @@ interval:
               // Now subtracting cooling as well so standby remains accurate!
               float d_standby = std::max(0.0f, d_t_cons - d_h_cons - d_c_cons - d_d_cons);
 
-              float room = id(virtual_climate_z1).current_temperature;
+              float room = last_room;
 
               // Combine heating and cooling for the dashboard charts so you don't need a massive C++ rewrite
               float combined_climate_cons = d_h_cons + d_c_cons;
@@ -372,6 +374,7 @@ interval:
               last_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons;
               last_hour   = cur_hr;
               last_day    = cur_day;
+              last_room   = id(virtual_climate_z1).current_temperature;
             }
           }
 
