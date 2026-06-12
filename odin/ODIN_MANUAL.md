@@ -33,6 +33,7 @@
 - **Asgard hardware** with virtual thermostats wired (required — ODIN cannot function without it)
   * Buffer tank systems will have to use the virtual thermostats z1 and/or z2
 - **ODIN hardware**
+- It is required to run Auto Adaptive, as the solver utilizes it to enforce safety constraints and boundary limits.
 - A browser to complete initial setup
 - Your location coordinates (latitude / longitude) — the setup wizard has an interactive map
 - Basic knowledge of your house: heating system type, solar panel capacity (if any), heat pump rated output
