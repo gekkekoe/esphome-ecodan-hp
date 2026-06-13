@@ -272,8 +272,9 @@ interval:
           // Ensure we load NVS data once, and only when the Ecodan time is valid
           static bool nvs_loaded = false;
           int cur_day = id(optimizer_ptr)->get_current_ecodan_day();
+          int cur_hr  = id(optimizer_ptr)->get_current_ecodan_hour();
           if (!nvs_loaded && cur_day != -1) {
-              id(asgard_dashboard_id)->load_odin_data(cur_day);
+              id(asgard_dashboard_id)->load_odin_data(cur_day, cur_hr);
               nvs_loaded = true;
           }
 

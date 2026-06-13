@@ -353,7 +353,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
                        const std::vector<float>& op_mode,
                        const LastRunStats& run_stats);
 
-  void load_odin_data(int current_day);
+  void load_odin_data(int current_day, int current_hour = 0);
 
   // Called each hour by YAML to record actual consumption / room temp.
   // hour is 0-23 (today's hour); stored at index 24+hour in the 72-slot window.

@@ -355,7 +355,7 @@ void EcodanDashboard::lfs_persist_odin_() {
     }
 }
 
-void EcodanDashboard::load_odin_data(int current_day) {
+void EcodanDashboard::load_odin_data(int current_day, int current_hour) {
     if (!lfs_mounted_ || this->odin_data_ready_) return;
 
     auto cache = std::unique_ptr<OdinCacheStruct>(new OdinCacheStruct());
@@ -393,6 +393,10 @@ void EcodanDashboard::load_odin_data(int current_day) {
                 cache->arrays[16][i] = 0.0f; // smn
                 cache->arrays[17][i] = 0.0f; // smx
             }
+            // After the shift, slots 24..(24+current_hour-1) (new "today", elapsed hours)
+            // still hold yesterday's tomorrow-forecast op_mode. Clear only those slots —
+            // slots from current_hour onwards were set by the last solver run and are valid.
+            for (int i = 24; i < 24 + current_hour; i++) cache->arrays[14][i] = 0.0f;
         } else {
             ESP_LOGI(TAG_LFS, "LFS Load: Day jump, clearing stale actuals");
             for (int k : {6, 7, 8, 9, 10, 18}) {
