@@ -1410,6 +1410,12 @@ void EcodanDashboard::align_odin_day_(int current_day) {
 void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons) {
     if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
 
+    if (!this->odin_data_ready_) {
+        xSemaphoreGive(snapshot_mutex_);
+        return;
+    }
+    this->ensure_odin_vectors_();
+
     if (!std::isnan(actual_cons_kwh)) {
         if (std::isnan(dhw_cons)) dhw_cons = 0.0f;
         if (std::isnan(standby_cons)) standby_cons = 0.0f;
@@ -1421,7 +1427,7 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
     // 1. Ensure the 72h window is properly aligned to today BEFORE we update arrays
     align_odin_day_(day);
 
-    int target_idx = 24 + hour; 
+    int target_idx = 24 + hour;
     float hour_cost = NAN, hour_solar = NAN;
     float exp_cons = NAN, exp_prod = NAN, exp_room = NAN, price = NAN;
     float weather = NAN, batt_dis = NAN, op_mode = NAN;
@@ -1439,10 +1445,10 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
             float real_mode = 0.0f; // Default OFF (0) / Standby
             if (!std::isnan(dhw_cons) && dhw_cons > 0.03f) {
                 real_mode = 1.0f; // DHW / Legionella
-            } 
+            }
             else if (!std::isnan(actual_cons_kwh) && actual_cons_kwh > 0.05f) {
                 float inst_mode = (operation_mode_ && operation_mode_->has_state()) ? operation_mode_->state : NAN;
-                
+
                 // Modes: 1=DHW, 2=Heat, 3=Cool, 6=Legionella
                 if (inst_mode == 6.0f || inst_mode == 1.0f) {
                     real_mode = 1.0f; // Legionella / DHW fallback
@@ -1558,30 +1564,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         return;
     }
 
-    auto ensure_72 = [](std::vector<float>& v, float fill_val) {
-        if (v.size() != 72) v.assign(72, fill_val);
-    };
-
-    ensure_72(this->odin_expected_end_temp_, NAN);
-    ensure_72(this->odin_energy_, NAN);
-    ensure_72(this->odin_production_, NAN);
-    ensure_72(this->odin_expected_temp_, NAN);
-    ensure_72(this->odin_cost_, NAN);
-    ensure_72(this->odin_actual_dhw_cons_, NAN);
-    ensure_72(this->odin_actual_dhw_prod_, NAN);
-    ensure_72(this->odin_actual_cons_, NAN);
-    ensure_72(this->odin_actual_prod_, NAN);
-    ensure_72(this->odin_actual_room_, NAN);
-    ensure_72(this->odin_actual_standby_cons_, NAN);
-
-    ensure_72(this->odin_battery_discharge_, 0.0f);
-    ensure_72(this->odin_sched_base_, 0.0f);
-    ensure_72(this->odin_sched_min_, 0.0f);
-    ensure_72(this->odin_sched_max_, 0.0f);
-    ensure_72(this->odin_weather_, 0.0f);
-    ensure_72(this->odin_solar_, 0.0f);
-    ensure_72(this->odin_prices_, 0.0f);
-    ensure_72(this->odin_operation_mode_, 0.0f);
+    this->ensure_odin_vectors_();
 
     if (!this->odin_data_ready_) {
         this->odin_data_ready_ = true;
