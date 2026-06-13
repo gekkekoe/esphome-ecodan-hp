@@ -84,6 +84,12 @@ void EcodanDashboard::setup() {
   base_->init();
   base_->add_handler(this);
   this->load_odin_data(-1);
+  // If LFS is not mounted (e.g. wrong partition table), load_odin_data returns immediately
+  // without sizing the vectors or setting odin_data_ready_.
+  if (!this->odin_data_ready_) {
+    this->ensure_odin_vectors_();
+    this->odin_data_ready_ = true;
+  }
 }
 
 void EcodanDashboard::loop() {
