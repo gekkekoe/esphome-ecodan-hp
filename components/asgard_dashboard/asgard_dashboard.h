@@ -549,6 +549,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
     std::vector<float>* vec;  // pointer to the corresponding member vector
   };
   std::array<OdinArrayEntry, 19> odin_array_map_();
+  void ensure_odin_vectors_();
 
   static void lfs_odin_task_(void* arg);
   void lfs_persist_odin_();
