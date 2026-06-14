@@ -365,6 +365,8 @@ These fields appear when the corresponding weather source is selected. Leave **O
 
 ### Latitude / Longitude
 
+<img src="img/geolocation.png" style="width:400px;">
+
 Your geographic coordinates in decimal degrees. Essential for solar irradiance and weather forecasts.
 
 **How to find them:** Search your address on [maps.google.com](https://maps.google.com), right-click your location, and the coordinates appear at the top of the context menu.
@@ -393,6 +395,8 @@ During hours when your panels produce more electricity than the heat pump needs,
 ---
 
 ### Solar Orientation (Degrees)
+
+<img src="img/solar-orientation.png" style="width:500px;">
 
 The compass direction your panels face, expressed in degrees (0 = North, 90 = East, 180 = South, 270 = West). Use the preset dropdown for standard directions or enter exact degrees for split arrays.
 
@@ -552,6 +556,8 @@ The schedule defines your **comfort temperature band** for each hour of the day.
 
 The schedule is divided into **time blocks**. Each block defines settings that apply from its start hour until the next block begins. The last block wraps around to midnight.
 
+<img src="img/24h-schedule.png" style="width:500px;">
+
 Each block has four fields:
 
 | Field | Description |
@@ -608,22 +614,18 @@ Select one of three modes:
 
 When a mode other than Disabled is selected, a time-block schedule appears — identical in structure to the comfort schedule. Each block sets a start hour and a maximum value (in kW) for that period.
 
+
 **Example — Silent Mode (Max Output):**
 
-| Hour | Max Output (kW) |
-|------|----------------|
-| 0 | 4.0 |
-| 7 | 10.0 |
-| 23 | 4.0 |
+<img src="img/output-constraint.png" style="width:500px;">
+
 
 This limits the heat pump to 4 kW thermal output between 23:00 and 07:00 (quiet at night), while allowing full output during the day.
 
 **Example — Grid Limit (Max Consumption):**
 
-| Hour | Max Consumption (kW) |
-|------|---------------------|
-| 0 | 2.5 |
-| 7 | 3.5 |
+<img src="img/input-constraint.png" style="width:500px;">
+
 
 This prevents the heat pump from drawing more than the specified electrical power, for instance to stay within a smart meter capacity tariff limit.
 
@@ -639,7 +641,11 @@ The **Data** tab shows the current inputs ODIN is working with:
 
 Both charts display **48 hours** of data: today's 24 hours followed by tomorrow's 24 hours (labelled `+1d 0:00` through `+1d 23:00`). This gives you a full view of the data ODIN is working with for today and the complete plan it has already built for tomorrow night.
 
+<img src="img/price.png" style="width:500px;">
+
 **Energy Prices** — hourly day-ahead spot prices in EUR/kWh, shown as a bar chart. The date the prices apply to is shown below the chart title. Tomorrow's prices appear in the `+1d` portion of the chart once they have been fetched (typically available from around 13:00 CET). If prices show `0` for all hours, click **Fetch Latest Data** to manually trigger a refresh.
+
+<img src="img/weather.png" style="width:500px;">
 
 **Weather Forecast** — hourly outside temperature (°C) and solar irradiance (W/m²) for your location across both days. The timestamp of the last weather fetch is shown below the title.
 
@@ -711,6 +717,8 @@ This check runs automatically every 60 seconds. If ODIN is on the same Wi-Fi net
 
 #### Manual IP entry (Recommended, much faster than mDNS)
 
+<img src="img/odin-ip.png" style="width:500px;">
+
 If mDNS does not work on your network (some routers block it), enter ODIN's IP address manually:
 
 1. Find ODIN's IP address in your router's connected devices list
@@ -719,6 +727,8 @@ If mDNS does not work on your network (some routers block it), enter ODIN's IP a
 4. Click **Save IP**
 
 Once a valid IP is stored, the **Open ODIN** button appears — click it to open the ODIN dashboard directly in a new tab.
+
+<img src="img/asgard-odin-settings.png" style="width:500px;">
 
 #### Enable Dynamic Cost Solver
 
@@ -937,6 +947,8 @@ Each hourly plan balances three things simultaneously:
 ### DHW Scheduling
 
 ODIN is fully aware of your Domestic Hot Water (DHW) needs. Rather than letting the heat pump blindly reheat the tank whenever it drops, ODIN's optimization engine tries to schedule this heavy energy load during the cheapest or sunniest hours.
+
+<img src="img/dhw-schedule.png" style="width:500px;">
 
 How this behaves depends on three variables: your **Target** (Setpoint), your hardware **Drop**, and ODIN's **Threshold**.
 
