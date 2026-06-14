@@ -20,7 +20,11 @@ script:
                 return false;
               }
 
-              // 3. Dynamic timer (5 min if online, 1 min if offline)
+              // 3. Skip if no valid IP configured (avoid mDNS .local resolution)
+              std::string target = id(txt_solver_ip).state;
+              if (target == "" || target == "0.0.0.0") return false;
+
+              // 4. Dynamic timer (5 min if online, 1 min if offline)
               static uint32_t last_ping_time = 0;
               uint32_t now = millis();
               if (id(bin_solver_connected).state && last_ping_time != 0 && (now - last_ping_time < 300000)) {
@@ -32,9 +36,7 @@ script:
           then:
             - http_request.get:
                 url: !lambda |-
-                  std::string target = id(txt_solver_ip).state;
-                  if (target == "" || target == "0.0.0.0") target = "odin.local";
-                  return "http://" + target + "/api/version";
+                  return "http://" + id(txt_solver_ip).state + "/api/version";
                 request_headers:
                   Connection: close
                 on_response:
