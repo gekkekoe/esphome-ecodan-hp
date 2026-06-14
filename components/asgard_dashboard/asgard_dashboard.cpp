@@ -1360,15 +1360,23 @@ void EcodanDashboard::send_minute_history_(httpd_req_t *req, uint32_t from_ts, u
 }
 
 void EcodanDashboard::align_odin_day_(int current_day) {
-    // Ignore invalid days or boot state (-1)
-    if (current_day < 1 || current_day > 366 || this->odin_stored_day_ < 1) return;
+    ESP_LOGI(TAG, "[align_odin_day_] current_day = %d, odin_stored_day_ = %d", current_day, this->odin_stored_day_);
+    // Only abort on invalid incoming days
+    if (current_day < 1 || current_day > 366) return;
+
+    // If the cache is empty/new, initialize the day tracker and exit safely.
+    if (this->odin_stored_day_ < 1) {
+        ESP_LOGI(TAG, "[align_odin_day_] Initializing odin_stored_day_ to %d", current_day);
+        this->odin_stored_day_ = current_day;
+        return;
+    }
 
     if (current_day != this->odin_stored_day_) {
         int day_delta = current_day - this->odin_stored_day_;
         
         // Check for normal +1 day progression (or year wrap-around)
         if (day_delta == 1 || day_delta == -364 || day_delta == -365) {
-            ESP_LOGI(TAG, "ODIN day transition (%d -> %d): shifting 72h window", this->odin_stored_day_, current_day);
+            ESP_LOGI(TAG, "[align_odin_day_] ODIN day transition (%d -> %d): shifting 72h window", this->odin_stored_day_, current_day);
             auto shift_arr = [](std::vector<float>& v, float fill_val) {
                 if (v.size() != 72) return;
                 // Shift today and tomorrow -> yesterday and today
@@ -1542,9 +1550,11 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
     memset(hr.reserved, 0, sizeof(hr.reserved));
 
     xSemaphoreGive(snapshot_mutex_);
-    
+
     record_hourly_data(hr);
-    this->odin_lfs_dirty_ = true; 
+    // odin_lfs_dirty_ intentionally NOT set here: actual-data slots are small deltas
+    // that will be captured in the next regular flush triggered by store_odin_data.
+    // Setting it here caused a spurious second LFS write ~5min after every solver run.
 }
 
 void EcodanDashboard::store_odin_data(int current_hour, int current_day,
@@ -1609,7 +1619,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
     this->last_run_stats_ = run_stats;
 
     xSemaphoreGive(this->snapshot_mutex_);
-    ESP_LOGI(TAG, "ODIN arrays stored (hour=%d, day=%d)", current_hour, current_day);
+    ESP_LOGI(TAG, "ODIN arrays stored (hour=%d, day=%d, odin_stored_day=%d)", current_hour, current_day, this->odin_stored_day_);
     this->odin_lfs_dirty_ = true;
 }
 
