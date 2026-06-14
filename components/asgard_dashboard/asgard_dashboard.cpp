@@ -1360,7 +1360,7 @@ void EcodanDashboard::send_minute_history_(httpd_req_t *req, uint32_t from_ts, u
 }
 
 void EcodanDashboard::align_odin_day_(int current_day) {
-    ESP_LOGI(TAG, "[align_odin_day_] current_day = %d, odin_stored_day_ = %d", current_day, this->odin_stored_day_);
+    // ESP_LOGI(TAG, "[align_odin_day_] current_day = %d, odin_stored_day_ = %d", current_day, this->odin_stored_day_);
     // Only abort on invalid incoming days
     if (current_day < 1 || current_day > 366) return;
 
