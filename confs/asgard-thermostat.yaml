@@ -151,9 +151,9 @@ climate:
           then:
             - switch.turn_off: asgard_relay_${zone_identifier}
 
-    # enfore min runtime of 15m, or user supplied
-    min_heating_run_time: 15min
-    min_cooling_run_time: 15min
+    # disabled min runtimes, too many questions
+    min_heating_run_time: 0s
+    min_cooling_run_time: 0s
     min_idle_time: 0s        
     min_heating_off_time: 0s 
     min_cooling_off_time: 0s
