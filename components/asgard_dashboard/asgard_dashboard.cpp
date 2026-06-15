@@ -1359,8 +1359,17 @@ void EcodanDashboard::send_minute_history_(httpd_req_t *req, uint32_t from_ts, u
     httpd_resp_send_chunk(req, nullptr, 0);
 }
 
-void EcodanDashboard::align_odin_day_(int current_day) {
-    // ESP_LOGI(TAG, "[align_odin_day_] current_day = %d, odin_stored_day_ = %d", current_day, this->odin_stored_day_);
+int EcodanDashboard::get_current_ecodan_day() {
+    if (this->ecodan_ == nullptr) return -1;
+    time_t ts = this->ecodan_->get_status().timestamp();
+    if (ts == -1) return -1;
+    struct tm t;
+    localtime_r(&ts, &t);
+    return t.tm_yday;
+}
+
+void EcodanDashboard::align_odin_day_() {
+int current_day = this->get_current_ecodan_day();
     // Only abort on invalid incoming days
     if (current_day < 1 || current_day > 366) return;
 
@@ -1374,8 +1383,15 @@ void EcodanDashboard::align_odin_day_(int current_day) {
     if (current_day != this->odin_stored_day_) {
         int day_delta = current_day - this->odin_stored_day_;
         
+        // Handle year wrap-around cleanly
+        if (day_delta < -300) day_delta += 365;
+        if (day_delta > 300) day_delta -= 365;
+
+        // Ignore delayed YAML updates that try to pull the day backwards
+        if (day_delta < 0) return;
+
         // Check for normal +1 day progression (or year wrap-around)
-        if (day_delta == 1 || day_delta == -364 || day_delta == -365) {
+        if (day_delta > 0 && day_delta < 3) {
             ESP_LOGI(TAG, "[align_odin_day_] ODIN day transition (%d -> %d): shifting 72h window", this->odin_stored_day_, current_day);
             auto shift_arr = [](std::vector<float>& v, float fill_val) {
                 if (v.size() != 72) return;
@@ -1385,26 +1401,28 @@ void EcodanDashboard::align_odin_day_(int current_day) {
                 for (int i = 48; i < 72; i++) v[i] = fill_val;
             };
             
-            shift_arr(this->odin_expected_end_temp_, NAN);
-            shift_arr(this->odin_energy_, NAN);
-            shift_arr(this->odin_production_, NAN);
-            shift_arr(this->odin_expected_temp_, NAN);
-            shift_arr(this->odin_cost_, NAN);
-            shift_arr(this->odin_battery_discharge_, 0.0f);
-            shift_arr(this->odin_sched_base_, 0.0f);
-            shift_arr(this->odin_sched_min_, 0.0f);
-            shift_arr(this->odin_sched_max_, 0.0f);
-            shift_arr(this->odin_weather_, 0.0f);
-            shift_arr(this->odin_solar_, 0.0f);
-            shift_arr(this->odin_prices_, 0.0f);
-            shift_arr(this->odin_operation_mode_, 0.0f);
-            
-            shift_arr(this->odin_actual_dhw_cons_, NAN);
-            shift_arr(this->odin_actual_dhw_prod_, NAN);
-            shift_arr(this->odin_actual_cons_, NAN);
-            shift_arr(this->odin_actual_prod_, NAN);
-            shift_arr(this->odin_actual_room_, NAN);
-            shift_arr(this->odin_actual_standby_cons_, NAN);
+            for (int d = 0; d < day_delta; d++) {
+                shift_arr(this->odin_expected_end_temp_, NAN);
+                shift_arr(this->odin_energy_, NAN);
+                shift_arr(this->odin_production_, NAN);
+                shift_arr(this->odin_expected_temp_, NAN);
+                shift_arr(this->odin_cost_, NAN);
+                shift_arr(this->odin_battery_discharge_, 0.0f);
+                shift_arr(this->odin_sched_base_, 0.0f);
+                shift_arr(this->odin_sched_min_, 0.0f);
+                shift_arr(this->odin_sched_max_, 0.0f);
+                shift_arr(this->odin_weather_, 0.0f);
+                shift_arr(this->odin_solar_, 0.0f);
+                shift_arr(this->odin_prices_, 0.0f);
+                shift_arr(this->odin_operation_mode_, 0.0f);
+                
+                shift_arr(this->odin_actual_dhw_cons_, NAN);
+                shift_arr(this->odin_actual_dhw_prod_, NAN);
+                shift_arr(this->odin_actual_cons_, NAN);
+                shift_arr(this->odin_actual_prod_, NAN);
+                shift_arr(this->odin_actual_room_, NAN);
+                shift_arr(this->odin_actual_standby_cons_, NAN);
+            }
         } else {
             // Massive jump (e.g. device was off for days). Clear stale actuals.
             ESP_LOGI(TAG, "ODIN day jump (%d -> %d): clearing old actuals", this->odin_stored_day_, current_day);
@@ -1439,7 +1457,7 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
     }
     
     // 1. Ensure the 72h window is properly aligned to today BEFORE we update arrays
-    align_odin_day_(day);
+    align_odin_day_();
 
     int target_idx = 24 + hour;
     float hour_cost = NAN, hour_solar = NAN;
@@ -1588,7 +1606,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
     }
 
     // 1. Shift the arrays if the day has changed since the last update
-    align_odin_day_(current_day);
+    align_odin_day_();
     
     // 2. Unified Data Update
     for (int i = 0; i < 48; i++) {

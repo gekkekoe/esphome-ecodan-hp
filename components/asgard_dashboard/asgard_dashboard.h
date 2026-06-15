@@ -565,7 +565,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   uint32_t          last_snapshot_time_{0};
   void update_snapshot_();
 
-  void align_odin_day_(int current_day);
+  int get_current_ecodan_day();
+  void align_odin_day_();
 
   // ── ODIN solver arrays (72-slot window: yesterday / today / tomorrow) ────
 
