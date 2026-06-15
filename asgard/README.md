@@ -20,11 +20,12 @@
 <div align="center">
   <h2>Order via the link/button below:</h2>
 
-**Odin release is nearing. If you are interested in Odin, please wait for the Asgard+Odin bundle.**
+> ⚠️ **Please note that Asgard is currently out of stock, with a new shipment expected in early July.You are welcome to place a backorder, and your item will be dispatched immediately upon restock. The Asgard+Odin bundle is also expected early July.**
 
-| Standard Order (NL/EU) | UK Special Bundle (3 Units) |
-| :--- | :--- |
-| [![Order Asgard](https://img.shields.io/badge/Order-Single%20Unit-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFa6oIblrcIPaNN3Wq4AU00) | [![Order UK Bundle](https://img.shields.io/badge/Order-UK%203--Unit%20Bundle-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/14AeVefBH8sz9JJ0Ke4AU01) |
+| Standard Order (NL/EU) |
+| :--- |
+| [![Order Asgard](https://img.shields.io/badge/Order-Single%20Unit-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFa6oIblrcIPaNN3Wq4AU00)|
+
 
 </div>
 
