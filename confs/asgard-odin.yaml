@@ -291,6 +291,16 @@ interval:
               }
           }
 
+          // DAY ROLLOVER: shift the 72h dashboard window right away, no solve needed
+          static int last_seen_day = -1;
+          if (initial_fetch_done && cur_day != -1) {
+              if (last_seen_day != -1 && cur_day != last_seen_day) {
+                  ESP_LOGI("asgard_dashboard", "Day rollover (%d -> %d): syncing 72h window.", last_seen_day, cur_day);
+                  id(asgard_dashboard_id)->sync_odin_day();
+              }
+              last_seen_day = cur_day;
+          }
+
           if (id(optimizer_ptr)->check_and_clear_odin_fetch_request()) {
             ESP_LOGI("asgard_dashboard", "fetching MPC optimization...");
             id(fetch_odin_optimization)->execute();

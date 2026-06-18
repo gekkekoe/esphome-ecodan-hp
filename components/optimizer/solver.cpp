@@ -114,8 +114,12 @@ namespace esphome
             }
 
             int first_update = is_first_run ? current_hour : current_hour + 1;
-            if (first_update >= 0 && first_update < 24) {
-                for (int i = first_update; i < 24; i++) {
+
+            // odin_production_/odin_operation_mode_ are a 24h "today" window, always
+            // indexed 0-23 regardless of calendar day
+            int prod_first_update = (first_update == 24) ? 0 : first_update;
+            if (prod_first_update >= 0 && prod_first_update < 24) {
+                for (int i = prod_first_update; i < 24; i++) {
                     if (i < (int)prod.size())    this->odin_production_[i]     = prod[i];
                     if (i < (int)op_mode.size()) this->odin_operation_mode_[i] = op_mode[i];
                 }

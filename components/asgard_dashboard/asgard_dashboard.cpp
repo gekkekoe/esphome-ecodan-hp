@@ -1368,8 +1368,7 @@ int EcodanDashboard::get_current_ecodan_day() {
     return t.tm_yday;
 }
 
-void EcodanDashboard::align_odin_day_() {
-int current_day = this->get_current_ecodan_day();
+void EcodanDashboard::align_odin_day_(int current_day) {
     // Only abort on invalid incoming days
     if (current_day < 1 || current_day > 366) return;
 
@@ -1439,6 +1438,19 @@ int current_day = this->get_current_ecodan_day();
     }
 }
 
+void EcodanDashboard::sync_odin_day() {
+    if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
+
+    if (!this->odin_data_ready_) {
+        xSemaphoreGive(snapshot_mutex_);
+        return;
+    }
+
+    align_odin_day_(this->get_current_ecodan_day());
+
+    xSemaphoreGive(snapshot_mutex_);
+}
+
 void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons) {
     if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
 
@@ -1456,10 +1468,28 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
         if (std::isnan(dhw_prod)) dhw_prod = 0.0f;
     }
     
-    // 1. Ensure the 72h window is properly aligned to today BEFORE we update arrays
-    align_odin_day_();
+    // Ensure the 72h window is properly aligned to the day this actual data
+    // belongs to BEFORE we update arrays.
+    align_odin_day_(day);
 
-    int target_idx = 24 + hour;
+    // Resolve which 24h block this hour belongs to. Day-rollover timing means
+    // this call's `day` may already be yesterday relative to odin_stored_day_
+    int day_delta = day - this->odin_stored_day_;
+    if (day_delta < -300) day_delta += 365; // year wrap
+    if (day_delta > 300)  day_delta -= 365;
+
+    int day_offset;
+    if (day_delta == 0)  day_offset = 24;       // today
+    else if (day_delta == -1) day_offset = 0;   // yesterday
+    else if (day_delta == 1)  day_offset = 48;  // tomorrow (shouldn't normally happen, but handle it)
+    else {
+        ESP_LOGW(TAG, "update_actual_data: day %d is too far from odin_stored_day_ %d (delta=%d), dropping actual for hour %d",
+                 day, this->odin_stored_day_, day_delta, hour);
+        xSemaphoreGive(snapshot_mutex_);
+        return;
+    }
+
+    int target_idx = day_offset + hour;
     float hour_cost = NAN, hour_solar = NAN;
     float exp_cons = NAN, exp_prod = NAN, exp_room = NAN, price = NAN;
     float weather = NAN, batt_dis = NAN, op_mode = NAN;
@@ -1606,7 +1636,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
     }
 
     // 1. Shift the arrays if the day has changed since the last update
-    align_odin_day_();
+    align_odin_day_(current_day);
     
     // 2. Unified Data Update
     for (int i = 0; i < 48; i++) {

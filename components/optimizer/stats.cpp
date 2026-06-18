@@ -221,6 +221,8 @@ namespace esphome
                 ESP_LOGI(OPTIMIZER_TAG, "Raw Data Collection: Day transition detected (%d -> %d). Saving stats...", 
                          this->last_processed_day_, current_day);
 
+                this->sync_odin_data_day();
+
                 // FTC4/FTC5 Fallback Logic (Consumption Only)
                 if (this->last_total_heating_consumed_ <= 0.01f && this->daily_runtime_global > 0.0f) {
                     ESP_LOGI(OPTIMIZER_TAG, "Real-time heating consumption empty. Falling back to daily Ecodan sensor.");

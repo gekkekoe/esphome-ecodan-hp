@@ -362,6 +362,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
                           float dhw_cons, float dhw_prod,
                           float actual_room_temp, float standby_cons);
 
+  void sync_odin_day();
+
  protected:
   void handle_root_(AsyncWebServerRequest *request);
   void handle_setup_(AsyncWebServerRequest *request);
@@ -566,7 +568,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void update_snapshot_();
 
   int get_current_ecodan_day();
-  void align_odin_day_();
+  void align_odin_day_(int current_day);
 
   // ── ODIN solver arrays (72-slot window: yesterday / today / tomorrow) ────
 

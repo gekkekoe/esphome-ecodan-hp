@@ -2697,6 +2697,22 @@ function renderOdinLive() {
 
     const pricesKwh     = prices.map(p => p !== null ? parseFloat((p).toFixed(5)) : null);
 
+    // The forecast for "tomorrow" (index 48+) doesn't exist yet until the next solve
+    // runs, so index 48 (tomorrow 00:00) is null right after the midnight shift.
+    // forward fill if data is unknown to handle this case
+    const fillSeam = (arr) => {
+        if (arr[48] !== null) return arr; // already has real data, nothing to do
+        const tomorrowHasAnyData = arr.slice(48, 72).some(v => v !== null);
+        if (!tomorrowHasAnyData && arr[47] !== null) arr[48] = arr[47];
+        return arr;
+    };
+    fillSeam(expTemp);
+    fillSeam(schedBase);
+    fillSeam(schedMin);
+    fillSeam(schedMax);
+    fillSeam(expCons);
+    fillSeam(expProd);
+
     const actualCost = new Array(72).fill(null);
     const expConsGrid = new Array(72).fill(null);
     const expConsSolar = new Array(72).fill(null);
