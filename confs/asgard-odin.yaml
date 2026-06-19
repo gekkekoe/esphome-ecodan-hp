@@ -209,11 +209,11 @@ script:
 
                               for (int i = 0; i < 48; i++) {
                                 exp_end_t[i] = j_eet[i].isNull() ? NAN : j_eet[i].as<float>();
-                                nrg[i]      = j_e[i].isNull() ? 0.0f : j_e[i].as<float>();
-                                prod[i]     = (!has_p || j_p[i].isNull()) ? 0.0f : j_p[i].as<float>();
+                                nrg[i]      = j_e[i].isNull() ? NAN : j_e[i].as<float>();
+                                prod[i]     = (!has_p || j_p[i].isNull()) ? NAN : j_p[i].as<float>();
                                 exp_t[i]    = j_t[i].isNull() ? NAN : j_t[i].as<float>();
-                                cost[i]     = j_c[i].isNull() ? 0.0f : j_c[i].as<float>();
-                                batt[i]     = (!has_b || j_b[i].isNull()) ? 0.0f : j_b[i].as<float>();
+                                cost[i]     = j_c[i].isNull() ? NAN : j_c[i].as<float>();
+                                batt[i]     = (!has_b || j_b[i].isNull()) ? NAN : j_b[i].as<float>();
                                 sb[i]       = (!has_sb || j_sb[i].isNull()) ? NAN : j_sb[i].as<float>();
                                 smn[i]      = (!has_smn || j_smn[i].isNull()) ? NAN : j_smn[i].as<float>();
                                 smx[i]      = (!has_smx || j_smx[i].isNull()) ? NAN : j_smx[i].as<float>();

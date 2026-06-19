@@ -1401,19 +1401,20 @@ void EcodanDashboard::align_odin_day_(int current_day) {
             };
             
             for (int d = 0; d < day_delta; d++) {
+                // All fields use NAN (-> JSON null) to mean "no forecast/data yet",
                 shift_arr(this->odin_expected_end_temp_, NAN);
                 shift_arr(this->odin_energy_, NAN);
                 shift_arr(this->odin_production_, NAN);
                 shift_arr(this->odin_expected_temp_, NAN);
                 shift_arr(this->odin_cost_, NAN);
-                shift_arr(this->odin_battery_discharge_, 0.0f);
-                shift_arr(this->odin_sched_base_, 0.0f);
-                shift_arr(this->odin_sched_min_, 0.0f);
-                shift_arr(this->odin_sched_max_, 0.0f);
-                shift_arr(this->odin_weather_, 0.0f);
-                shift_arr(this->odin_solar_, 0.0f);
-                shift_arr(this->odin_prices_, 0.0f);
-                shift_arr(this->odin_operation_mode_, 0.0f);
+                shift_arr(this->odin_battery_discharge_, NAN);
+                shift_arr(this->odin_sched_base_, NAN);
+                shift_arr(this->odin_sched_min_, NAN);
+                shift_arr(this->odin_sched_max_, NAN);
+                shift_arr(this->odin_weather_, NAN);
+                shift_arr(this->odin_solar_, NAN);
+                shift_arr(this->odin_prices_, NAN);
+                shift_arr(this->odin_operation_mode_, NAN);
                 
                 shift_arr(this->odin_actual_dhw_cons_, NAN);
                 shift_arr(this->odin_actual_dhw_prod_, NAN);
@@ -1468,11 +1469,11 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
         if (std::isnan(dhw_prod)) dhw_prod = 0.0f;
     }
     
-    // Ensure the 72h window is properly aligned to the day this actual data
+    // 1. Ensure the 72h window is properly aligned to the day this actual data
     // belongs to BEFORE we update arrays.
     align_odin_day_(day);
 
-    // Resolve which 24h block this hour belongs to. Day-rollover timing means
+    // 2. Resolve which 24h block this hour belongs to. Day-rollover timing means
     // this call's `day` may already be yesterday relative to odin_stored_day_
     int day_delta = day - this->odin_stored_day_;
     if (day_delta < -300) day_delta += 365; // year wrap
