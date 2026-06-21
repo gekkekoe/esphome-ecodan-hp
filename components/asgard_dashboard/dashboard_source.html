@@ -896,7 +896,7 @@ header {
             </button>
           </div>
         </div>
-        <div class="ctrl-row"><span class="ctrl-label">Lockout Duration (min)</span><select class="ctrl-select" id="sel-lockout-dur" onchange="sendSelect('lockout_duration', this)"><option value="0">0</option><option value="1">15</option><option value="2">30</option><option value="3">45</option><option value="4">60</option></select></div>
+        <div class="ctrl-row"><span class="ctrl-label">Lockout Duration (min)</span><select class="ctrl-select" id="sel-lockout-dur" onchange="sendSelect('lockout_duration', this)"><option value="0">0</option><option value="1">15</option><option value="2">30</option><option value="3">45</option><option value="4">60</option><option value="5">120</option><option value="6">240</option></select></div>
         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Minimum On-Time (min)</span><div class="stepper"><button class="step-btn" onclick="step('min-on-time', -1)">−</button><div class="step-val" id="min-on-time-val">—</div><button class="step-btn" onclick="step('min-on-time', +1)">+</button></div></div>
 
         <button class="send-btn" onclick="sendSC(this)" style="margin-bottom:0; margin-top:24px;">Apply Lockout Settings</button>

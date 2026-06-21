@@ -296,6 +296,8 @@ select:
       - "30"
       - "45"
       - "60"
+      - "120"
+      - "240"
     initial_option: "0"
 
   - platform: template
