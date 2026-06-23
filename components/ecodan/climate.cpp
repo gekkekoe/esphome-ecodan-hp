@@ -198,7 +198,7 @@ namespace ecodan
             // dynamic adjustment in esphome works, but does not seem to progagate to HA
             // auto is_cooling = this->mode == climate::ClimateMode::CLIMATE_MODE_COOL;
             // traits.set_visual_min_temperature(is_cooling ? 5 : 25);
-            // traits.set_visual_max_temperature(is_cooling ? 20 : 60);
+            // traits.set_visual_max_temperature(is_cooling ? 25 : 60);
             traits.set_visual_min_temperature(5);
             traits.set_visual_max_temperature(60);           
             //ESP_LOGE(TAG, "min: %f, max: %f", traits.get_visual_min_temperature(), traits.get_visual_max_temperature());
@@ -221,7 +221,7 @@ namespace ecodan
         else {
             auto is_cooling = this->mode == climate::ClimateMode::CLIMATE_MODE_COOL;
             min_limit = is_cooling ? 5 : 24;
-            max_limit = is_cooling ? 20 : 60;
+            max_limit = is_cooling ? 25 : 60;
         }
     }
 
