@@ -550,7 +550,7 @@ sensor:
     device_class: duration
     state_class: total_increasing
     entity_category: diagnostic
-    update_interval: 5s
+    update_interval: 60s
 
   # helper class to reset daily counter _day_of_year
   - platform: template
