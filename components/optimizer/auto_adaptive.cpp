@@ -322,10 +322,16 @@ namespace esphome
             calculated_flow = this->enforce_step_limit(status,
                     this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2),
                     calculated_flow);
-            calculated_flow = this->clamp_flow_temp(calculated_flow,
-                                                    min_cool_target,
-                                                    this->state_.cooling_smart_start_temp->state);
-            
+
+            float smart_start = this->state_.cooling_smart_start_temp->state;
+            if (min_cool_target > smart_start) {
+                ESP_LOGW(OPTIMIZER_TAG,
+                    "Z%d COOLING: min_cool_target (%.1f) > smart_start (%.1f) — clamping to min_cool_target.",
+                    (zone_i + 1), min_cool_target, smart_start);
+                smart_start = min_cool_target;
+            }
+            calculated_flow = this->clamp_flow_temp(calculated_flow, min_cool_target, smart_start);
+
             return calculated_flow;
         }
 
