@@ -170,6 +170,7 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
     httpd_req_t *req_404 = *request;
     httpd_resp_set_status(req_404, "404 Not Found");
     httpd_resp_set_type(req_404, "text/plain");
+    httpd_resp_set_hdr(req_404, "Connection", "close");
     httpd_resp_send(req_404, "Not found", HTTPD_RESP_USE_STRLEN);
   }
 }
@@ -233,6 +234,7 @@ void EcodanDashboard::handle_js_(AsyncWebServerRequest *request) {
     httpd_req_t *req_404 = *request;
     httpd_resp_set_status(req_404, "404 Not Found");
     httpd_resp_set_type(req_404, "text/plain");
+    httpd_resp_set_hdr(req_404, "Connection", "close");
     httpd_resp_send(req_404, "File not found", HTTPD_RESP_USE_STRLEN);
     return;
   }
@@ -246,6 +248,7 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   if (request->method() != HTTP_POST) {
     httpd_resp_set_status(req, "405 Method Not Allowed");
     httpd_resp_set_type(req, "text/plain");
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, "Method Not Allowed", HTTPD_RESP_USE_STRLEN);
     return;
   }
@@ -254,6 +257,7 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   if (content_len == 0 || content_len > 1024) {
     httpd_resp_set_status(req, "400 Bad Request");
     httpd_resp_set_type(req, "text/plain");
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, "Bad Request", HTTPD_RESP_USE_STRLEN);
     return;
   }
@@ -263,6 +267,7 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   if (body == nullptr) {
     httpd_resp_set_status(req, "500 Internal Server Error");
     httpd_resp_set_type(req, "text/plain");
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, "Out of Memory", HTTPD_RESP_USE_STRLEN);
     return;
   }
@@ -273,6 +278,7 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
     free(body);
     httpd_resp_set_status(req, "400 Bad Request");
     httpd_resp_set_type(req, "text/plain");
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, "Read failed", HTTPD_RESP_USE_STRLEN);
     return;
   }
@@ -294,6 +300,7 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
     free(body);
     httpd_resp_set_status(req, "400 Bad Request");
     httpd_resp_set_type(req, "text/plain");
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, "Missing key", HTTPD_RESP_USE_STRLEN);
     return;
   }
@@ -334,11 +341,13 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
     httpd_resp_set_status(req, "200 OK");
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, "{\"ok\":true}", HTTPD_RESP_USE_STRLEN);
   } else {
     ESP_LOGW(TAG, "Failed to acquire action_lock_ in handle_set_ (Timeout)");
     httpd_resp_set_status(req, "503 Service Unavailable");
     httpd_resp_set_type(req, "text/plain");
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, "System busy, try again", HTTPD_RESP_USE_STRLEN);
   }
 }
@@ -689,6 +698,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
     httpd_req_t *req_err = *request;
     httpd_resp_set_status(req_err, "503 Service Unavailable");
     httpd_resp_set_type(req_err, "text/plain");
+    httpd_resp_set_hdr(req_err, "Connection", "close");
     httpd_resp_send(req_err, "System busy, try again", HTTPD_RESP_USE_STRLEN);
     return;
   }
