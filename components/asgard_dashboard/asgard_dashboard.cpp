@@ -180,7 +180,8 @@ void EcodanDashboard::send_chunked_(AsyncWebServerRequest *request, const char *
   httpd_resp_set_status(req, "200 OK");
   httpd_resp_set_type(req, content_type);
   httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-  
+  httpd_resp_set_hdr(req, "Connection", "close");
+
   if (cache_control != nullptr) {
     httpd_resp_set_hdr(req, "Cache-Control", cache_control);
   }
