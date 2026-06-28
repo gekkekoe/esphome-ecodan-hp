@@ -98,11 +98,18 @@ header {
   .legend-item { display: flex; align-items: center; gap: 5px; font-size: 9px; font-family: var(--mono); color: var(--text2); }
   .legend-dot { width: 16px; height: 2px; flex-shrink: 0; }
   .chart-container { position: relative; width: 100%; height: 200px; }
+  .chart-scroll-hint {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(10,18,35,0.72); border-radius: 8px; opacity: 0; pointer-events: none;
+    transition: opacity 0.15s; z-index: 10; font-family: var(--mono); font-size: 11px;
+    color: var(--text2); letter-spacing: 0.5px; text-align: center; line-height: 1.6;
+  }
+  .chart-scroll-hint.visible { opacity: 1; }
   canvas {
     -webkit-touch-callout: none; 
     -webkit-user-select: none;
     user-select: none;
-    touch-action: pan-y !important;
+    touch-action: pan-y;
   }
 
   .ctrl-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
@@ -1292,6 +1299,37 @@ let lastGraphUpdate = 0;
 let userZoomed = false;
 let tempChart = null, freqChart = null, statusChart = null, outsideTempChart = null;
 
+// ── Scroll-hint overlay ─────────────────────────────────────────────────────
+// Shows a brief "Use Ctrl+scroll or pinch to zoom" message when the user
+// scrolls over a chart without the modifier key, so the page scrolls normally
+// but the user learns how to zoom.
+let _scrollHintTimer = null;
+function _showScrollHint(canvas) {
+  let hint = canvas.parentElement.querySelector('.chart-scroll-hint');
+  if (!hint) {
+    hint = document.createElement('div');
+    hint.className = 'chart-scroll-hint';
+    const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+    const key = isMac ? '⌘ Cmd' : 'Ctrl';
+    const touch = ('ontouchstart' in window);
+    hint.textContent = touch
+      ? 'Pinch to zoom · Drag to pan'
+      : `${key}+scroll to zoom · Drag to pan`;
+    canvas.parentElement.appendChild(hint);
+  }
+  hint.classList.add('visible');
+  clearTimeout(_scrollHintTimer);
+  _scrollHintTimer = setTimeout(() => hint.classList.remove('visible'), 1200);
+}
+function initScrollHints() {
+  document.querySelectorAll('.chart-container canvas').forEach(canvas => {
+    canvas.addEventListener('wheel', e => {
+      if (!e.ctrlKey && !e.metaKey) _showScrollHint(canvas);
+    }, { passive: true });
+  });
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 
 // Toggles the visibility of a card and saves the state to localStorage
 function toggleCard(cardId) {
@@ -1650,7 +1688,6 @@ function initCharts() {
         pan: {
           enabled: true,
           mode: 'x',
-          modifierKey: 'alt', 
           threshold: 10, 
           onPanStart({chart, event}) {
             if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
@@ -1671,7 +1708,7 @@ function initCharts() {
           }
         },
         zoom: {
-          wheel: { enabled: true, speed: 0.20 },
+          wheel: { enabled: true, speed: 0.20, modifierKey: 'ctrl' },
           pinch: { enabled: true },
           mode: 'x',
           onZoomStart({chart}) {
@@ -1967,7 +2004,7 @@ const xAxis = {
           x: { min: -0.5, max: 71.5, minRange: 2 }
       },
       pan: {
-          enabled: true, mode: 'x', modifierKey: 'alt', threshold: 10,
+          enabled: true, mode: 'x', threshold: 10,
           onPanStart({chart, event}) {
               if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) return false;
               chart.options.plugins.tooltip.enabled = false;
@@ -1982,7 +2019,7 @@ const xAxis = {
           }
       },
       zoom: {
-          wheel: { enabled: true, speed: 0.05 }, pinch: { enabled: true }, mode: 'x',
+          wheel: { enabled: true, speed: 0.05, modifierKey: 'ctrl' }, pinch: { enabled: true }, mode: 'x',
           onZoomStart({chart}) {
               chart.options.plugins.tooltip.enabled = false;
               chart.tooltip.setActiveElements([], {x: 0, y: 0}); 
@@ -4222,7 +4259,8 @@ function initSettingsDragAndDrop() {
       z.src = '/js/zoom.js';
       
       z.onload = async () => {
-        initCharts(); 
+        initCharts();
+        initScrollHints();
         initSettingsDragAndDrop();
         initCollapsibleCards();
         const now = Math.floor(Date.now() / 1000);
