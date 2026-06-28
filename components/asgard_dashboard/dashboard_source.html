@@ -1300,33 +1300,7 @@ let userZoomed = false;
 let tempChart = null, freqChart = null, statusChart = null, outsideTempChart = null;
 
 // ── Scroll-hint overlay ─────────────────────────────────────────────────────
-// Shows a brief "Use Ctrl+scroll or pinch to zoom" message when the user
-// scrolls over a chart without the modifier key, so the page scrolls normally
-// but the user learns how to zoom.
-let _scrollHintTimer = null;
-function _showScrollHint(canvas) {
-  let hint = canvas.parentElement.querySelector('.chart-scroll-hint');
-  if (!hint) {
-    hint = document.createElement('div');
-    hint.className = 'chart-scroll-hint';
-    const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
-    const key = isMac ? '⌘ Cmd' : 'Ctrl';
-    const touch = ('ontouchstart' in window);
-    hint.textContent = touch
-      ? 'Pinch to zoom · Drag to pan'
-      : `${key}+scroll to zoom · Drag to pan`;
-    canvas.parentElement.appendChild(hint);
-  }
-  hint.classList.add('visible');
-  clearTimeout(_scrollHintTimer);
-  _scrollHintTimer = setTimeout(() => hint.classList.remove('visible'), 1200);
-}
 function initScrollHints() {
-  document.querySelectorAll('.chart-container canvas').forEach(canvas => {
-    canvas.addEventListener('wheel', e => {
-      if (!e.ctrlKey && !e.metaKey) _showScrollHint(canvas);
-    }, { passive: true });
-  });
 }
 // ────────────────────────────────────────────────────────────────────────────
 
