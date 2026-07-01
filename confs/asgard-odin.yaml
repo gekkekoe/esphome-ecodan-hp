@@ -121,6 +121,11 @@ script:
                   } else {
                       // fallback to operating mode (for DHW/Legionella)
                       _op_mode = static_cast<uint8_t>(id(optimizer_ptr)->get_current_operation_mode());
+                      
+                      // if Legionella is active, force threshold to 0 to disable DHW planning for this hour
+                      if (_op_mode == 6) {
+                        _dhw_thresh = 0.0f;
+                      }
                   }
 
                   int _cur_hour = id(optimizer_ptr)->get_current_ecodan_hour();
