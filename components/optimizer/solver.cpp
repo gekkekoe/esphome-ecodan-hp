@@ -94,17 +94,11 @@ namespace esphome
                 return;
             }
 
-            int _day = this->get_current_ecodan_day();
-            if (_day >= 0) {
-                this->odin_data_day_ = _day;
-            }
-
             this->odin_min_output_ = min_output;
             this->odin_max_output_ = max_output;
 
-            // Change the size check to 48
             // odin_production_ and odin_operation_mode_ are DP_HOURS=24 (engine only plans today).
-            // odin_solar_forecast_ is kept at 48 — the server passes today+tomorrow solar so
+            // odin_solar_forecast_ is kept at 48 — the server passes today+tomorrow solar.
             bool is_first_run = (!this->odin_data_ready_ || this->odin_production_.size() != 24);
             if (is_first_run) {
                 this->odin_solar_forecast_.assign(48, 0.0f);
@@ -115,13 +109,30 @@ namespace esphome
 
             int first_update = is_first_run ? current_hour : current_hour + 1;
 
+            // Midnight-wrap: solve ran at hour 23, first_update==24 means the new data
+            // is for tomorrow (slots 24-47 in the engine's 48h output arrays).
+            // We also advance odin_data_day_ to tomorrow so the day-staleness check in
+            // resolve_solver_result_() does not immediately invalidate the data at 00:00.
+            bool midnight_wrap = (first_update == 24);
+
+            int _day = this->get_current_ecodan_day();
+            if (_day >= 0) {
+                // If wrapping into the next day, register tomorrow's yday so that the
+                // data stays valid when the clock ticks past midnight.
+                this->odin_data_day_ = midnight_wrap ? ((_day + 1) % 365) : _day;
+            }
+
             // odin_production_/odin_operation_mode_ are a 24h "today" window, always
-            // indexed 0-23 regardless of calendar day
-            int prod_first_update = (first_update == 24) ? 0 : first_update;
+            // indexed 0-23 regardless of calendar day.
+            // On midnight-wrap the engine's prod/op_mode slots for tomorrow start at
+            // index 24, so apply a source offset of 24 when reading from those arrays.
+            int prod_first_update = midnight_wrap ? 0 : first_update;
+            int prod_src_offset   = midnight_wrap ? 24 : 0;
             if (prod_first_update >= 0 && prod_first_update < 24) {
                 for (int i = prod_first_update; i < 24; i++) {
-                    if (i < (int)prod.size())    this->odin_production_[i]     = prod[i];
-                    if (i < (int)op_mode.size()) this->odin_operation_mode_[i] = op_mode[i];
+                    int src = i + prod_src_offset;
+                    if (src < (int)prod.size())    this->odin_production_[i]     = prod[src];
+                    if (src < (int)op_mode.size()) this->odin_operation_mode_[i] = op_mode[src];
                 }
             }
 
@@ -132,7 +143,8 @@ namespace esphome
             }
 
             xSemaphoreGive(this->odin_mutex_);
-            ESP_LOGI(OPTIMIZER_TAG, "ODIN production targets loaded (48h). current_hour=%d", current_hour);
+            ESP_LOGI(OPTIMIZER_TAG, "ODIN production targets loaded (48h). current_hour=%d midnight_wrap=%d data_day=%d",
+                     current_hour, (int)midnight_wrap, this->odin_data_day_);
         }
 
         // ─────────────────────────────────────────────────────────────────
