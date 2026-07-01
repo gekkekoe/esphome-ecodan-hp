@@ -1,6 +1,6 @@
 http_request:
   verify_ssl: false
-  timeout: 3s
+  timeout: 10s
 
 script:
   - id: odin_ping_script
