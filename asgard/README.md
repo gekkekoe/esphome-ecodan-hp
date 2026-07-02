@@ -20,7 +20,7 @@
 <div align="center">
   <h2>Order via the link/button below:</h2>
 
-> ⚠️ **Please note that Asgard is currently out of stock, with a new shipment expected in early July.You are welcome to place a backorder, and your item will be dispatched immediately upon restock. The Asgard+Odin bundle is also expected early July.**
+> ⚠️ **Asgard is currently in stock**
 
 | Standard Order (NL/EU) |
 | :--- |
