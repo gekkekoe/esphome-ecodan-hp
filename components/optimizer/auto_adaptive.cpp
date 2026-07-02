@@ -411,7 +411,7 @@ namespace esphome
             if (solver_enabled) {
                 auto [solver_load_ratio, solver_heatpump_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(room_target_temp, room_temp);
                 
-                if (solver_operating_mode == OptimizerOperationMode::DHW_ON) {
+                if (solver_operating_mode == OptimizerOperationMode::DHW_ON || solver_operating_mode == OptimizerOperationMode::LEGIONELLA_PREVENTION) {
                     return; 
                 }
 
