@@ -1136,7 +1136,19 @@ header {
     <div class="chart-container"><canvas id="odinProdChart"></canvas></div>
   </div>
   <div class="chart-card full-width" style="grid-column: 1 / -1;">
-    <div class="chart-header"><div class="section-title" style="margin:0">Cost (24h)</div></div>
+    <div class="chart-header">
+      <div class="section-title" style="margin:0">Cost (24h)</div>
+      <div style="display:flex; align-items:center; gap:20px;">
+        <div style="text-align:right">
+          <div class="stat-label">Total Expected</div>
+          <div class="stat-value" id="tot-exp-cost" style="color:var(--warn)">—</div>
+        </div>
+        <div style="text-align:right">
+          <div class="stat-label">Total Actual</div>
+          <div class="stat-value" id="tot-act-cost" style="color:var(--accent3)">—</div>
+        </div>
+      </div>
+    </div>
     <div class="chart-container"><canvas id="odinCostChart"></canvas></div>
   </div>
   <div id="odin-batt-card" class="chart-card full-width" style="display:none; grid-column: 1 / -1;">
@@ -2480,6 +2492,7 @@ function renderOdinHistory() {
     // Completely hide live solver simulation cards from history mode
     const battCard = document.getElementById('odin-batt-card');
     if (battCard) battCard.style.display = 'none';
+    updateCostTotals();
 }
 
 function getOdinXAxisConfig(isLive) {
@@ -2802,6 +2815,7 @@ function renderOdinLive() {
     odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
         if (c) c.update('none');
     });
+    updateCostTotals();
 }
 
 function updateCharts(d) {
@@ -3946,6 +3960,34 @@ function showResetButton() {
 let odinZoomed = false;
 let isSyncingOdin = false;
 
+function updateCostTotals() {
+  if (!odinCostChart) return;
+
+  const dsExp = odinCostChart.data.datasets[0].data; // Expected Cost
+  const dsAct = odinCostChart.data.datasets[1].data; // Actual Cost
+
+  let minRaw = odinCostChart.scales.x.min ?? 0;
+  let maxRaw = odinCostChart.scales.x.max ?? (dsExp.length - 1);
+
+  let minIdx = Math.max(0, Math.ceil(minRaw));
+  let maxIdx = Math.min(dsExp.length - 1, Math.floor(maxRaw));
+
+  let sumExp = 0;
+  let sumAct = 0;
+
+  for (let i = minIdx; i <= maxIdx; i++) {
+    if (dsExp[i]) sumExp += dsExp[i];
+    if (dsAct[i]) sumAct += dsAct[i];
+  }
+
+  const currSym = typeof getCurrencySymbol === 'function' 
+    ? getCurrencySymbol(odinDataCache?.last_run?.bidding_zone) 
+    : '€';
+
+  document.getElementById('tot-exp-cost').textContent = `${currSym} ${sumExp.toFixed(2)}`;
+  document.getElementById('tot-act-cost').textContent = `${currSym} ${sumAct.toFixed(2)}`;
+}
+
 function syncOdinScales(sourceChart) {
   if (isSyncingOdin) return; 
   
@@ -3964,6 +4006,7 @@ function syncOdinScales(sourceChart) {
   showOdinResetButton();
 
   isSyncingOdin = false;
+  updateCostTotals();
 }
 
 function resetOdinZoom() {
@@ -3973,6 +4016,7 @@ function resetOdinZoom() {
         if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
     });
     document.getElementById('btn-reset-zoom-odin').style.display = 'none';
+    updateCostTotals();
 }
 
 function showOdinResetButton() {
