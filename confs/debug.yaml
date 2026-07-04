@@ -1,6 +1,6 @@
 # Example configuration entry
 debug:
-  update_interval: 5s
+  update_interval: 10s
 
 text_sensor:
   - platform: debug
