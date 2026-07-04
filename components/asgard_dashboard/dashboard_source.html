@@ -1119,32 +1119,57 @@ header {
   </div>
 
   <div class="chart-card full-width" style="grid-column: 1 / -1;">
-    <div class="chart-header">
+    <div class="chart-header" style="flex-wrap: wrap; gap: 10px;">
       <div class="section-title" style="margin:0">Energy Consumption (24h)</div>
-      <div style="display:flex; align-items:center; gap:10px;">
+      <div style="display:flex; align-items:center; gap:20px; flex-wrap: wrap;">
+        <div style="text-align:right">
+          <div class="stat-label">Exp. Grid</div>
+          <div class="stat-value" id="tot-exp-cons" style="color:var(--warn)">—</div>
+        </div>
+        <div style="text-align:right">
+          <div class="stat-label">Exp. Solar</div>
+          <div class="stat-value" id="tot-solar-cons" style="color:#57B9FF">—</div>
+        </div>
+        <div style="text-align:right">
+          <div class="stat-label">Actual</div>
+          <div class="stat-value" id="tot-act-cons" style="color:var(--accent3)">—</div>
+        </div>
       </div>
     </div>
     <div class="chart-container"><canvas id="odinConsChart"></canvas></div>
   </div>
   
   <div class="chart-card full-width" style="grid-column: 1 / -1;">
-    <div class="chart-header">
+    <div class="chart-header" style="flex-wrap: wrap; gap: 10px;">
       <div class="section-title" style="margin:0">Energy Production (24h)</div>
-      <div style="display:flex; align-items:center; gap:10px;">
+      <div style="display:flex; align-items:center; gap:20px; flex-wrap: wrap;">
+        <div style="text-align:right">
+          <div class="stat-label">Exp. Climate</div>
+          <div class="stat-value" id="tot-exp-prod" style="color:var(--warn)">—</div>
+        </div>
+        <div style="text-align:right">
+          <div class="stat-label">Exp. Solar</div>
+          <div class="stat-value" id="tot-solar-prod" style="color:#57B9FF">—</div>
+        </div>
+        <div style="text-align:right">
+          <div class="stat-label">Actual</div>
+          <div class="stat-value" id="tot-act-prod" style="color:var(--accent3)">—</div>
+        </div>
       </div>
     </div>
     <div class="chart-container"><canvas id="odinProdChart"></canvas></div>
   </div>
+
   <div class="chart-card full-width" style="grid-column: 1 / -1;">
-    <div class="chart-header">
+    <div class="chart-header" style="flex-wrap: wrap; gap: 10px;">
       <div class="section-title" style="margin:0">Cost (24h)</div>
-      <div style="display:flex; align-items:center; gap:20px;">
+      <div style="display:flex; align-items:center; gap:20px; flex-wrap: wrap;">
         <div style="text-align:right">
-          <div class="stat-label">Total Expected</div>
+          <div class="stat-label">Expected</div>
           <div class="stat-value" id="tot-exp-cost" style="color:var(--warn)">—</div>
         </div>
         <div style="text-align:right">
-          <div class="stat-label">Total Actual</div>
+          <div class="stat-label">Actual</div>
           <div class="stat-value" id="tot-act-cost" style="color:var(--accent3)">—</div>
         </div>
       </div>
@@ -2492,7 +2517,7 @@ function renderOdinHistory() {
     // Completely hide live solver simulation cards from history mode
     const battCard = document.getElementById('odin-batt-card');
     if (battCard) battCard.style.display = 'none';
-    updateCostTotals();
+    updateOdinTotals();
 }
 
 function getOdinXAxisConfig(isLive) {
@@ -2815,7 +2840,7 @@ function renderOdinLive() {
     odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
         if (c) c.update('none');
     });
-    updateCostTotals();
+    updateOdinTotals();
 }
 
 function updateCharts(d) {
@@ -3960,32 +3985,52 @@ function showResetButton() {
 let odinZoomed = false;
 let isSyncingOdin = false;
 
-function updateCostTotals() {
-  if (!odinCostChart) return;
-
-  const dsExp = odinCostChart.data.datasets[0].data; // Expected Cost
-  const dsAct = odinCostChart.data.datasets[1].data; // Actual Cost
+function updateOdinTotals() {
+  if (!odinCostChart || !odinConsChart || !odinProdChart) return;
 
   let minRaw = odinCostChart.scales.x.min ?? 0;
-  let maxRaw = odinCostChart.scales.x.max ?? (dsExp.length - 1);
+  let maxRaw = odinCostChart.scales.x.max ?? (odinCostChart.data.datasets[0].data.length - 1);
 
   let minIdx = Math.max(0, Math.ceil(minRaw));
-  let maxIdx = Math.min(dsExp.length - 1, Math.floor(maxRaw));
+  let maxIdx = Math.min(odinCostChart.data.datasets[0].data.length - 1, Math.floor(maxRaw));
 
-  let sumExp = 0;
-  let sumAct = 0;
+  let sumCostExp = 0, sumCostAct = 0;
+  let sumConsGrid = 0, sumConsSolar = 0, sumConsAct = 0;
+  let sumProdHP = 0, sumProdSolar = 0, sumProdAct = 0;
 
   for (let i = minIdx; i <= maxIdx; i++) {
-    if (dsExp[i]) sumExp += dsExp[i];
-    if (dsAct[i]) sumAct += dsAct[i];
+    // Cost
+    if (odinCostChart.data.datasets[0].data[i]) sumCostExp += odinCostChart.data.datasets[0].data[i];
+    if (odinCostChart.data.datasets[1].data[i]) sumCostAct += odinCostChart.data.datasets[1].data[i];
+
+    // Consumption (Exp: 0 Grid, 1 Solar | Act: 2 Climate, 3 DHW, 4 Standby)
+    if (odinConsChart.data.datasets[0].data[i]) sumConsGrid += odinConsChart.data.datasets[0].data[i];
+    if (odinConsChart.data.datasets[1].data[i]) sumConsSolar += odinConsChart.data.datasets[1].data[i];
+    if (odinConsChart.data.datasets[2].data[i]) sumConsAct += odinConsChart.data.datasets[2].data[i];
+    if (odinConsChart.data.datasets[3].data[i]) sumConsAct += odinConsChart.data.datasets[3].data[i];
+    if (odinConsChart.data.datasets[4].data[i]) sumConsAct += odinConsChart.data.datasets[4].data[i];
+
+    // Production (Exp: 0 Climate, 1 Solar | Act: 2 Climate, 3 DHW)
+    if (odinProdChart.data.datasets[0].data[i]) sumProdHP += odinProdChart.data.datasets[0].data[i];
+    if (odinProdChart.data.datasets[1].data[i]) sumProdSolar += odinProdChart.data.datasets[1].data[i];
+    if (odinProdChart.data.datasets[2].data[i]) sumProdAct += odinProdChart.data.datasets[2].data[i];
+    if (odinProdChart.data.datasets[3].data[i]) sumProdAct += odinProdChart.data.datasets[3].data[i];
   }
 
   const currSym = typeof getCurrencySymbol === 'function' 
     ? getCurrencySymbol(odinDataCache?.last_run?.bidding_zone) 
     : '€';
 
-  document.getElementById('tot-exp-cost').textContent = `${currSym} ${sumExp.toFixed(2)}`;
-  document.getElementById('tot-act-cost').textContent = `${currSym} ${sumAct.toFixed(2)}`;
+  document.getElementById('tot-exp-cost').textContent = `${currSym} ${sumCostExp.toFixed(2)}`;
+  document.getElementById('tot-act-cost').textContent = `${currSym} ${sumCostAct.toFixed(2)}`;
+
+  document.getElementById('tot-exp-cons').textContent = `${sumConsGrid.toFixed(1)} kWh`;
+  document.getElementById('tot-solar-cons').textContent = `${sumConsSolar.toFixed(1)} kWh`;
+  document.getElementById('tot-act-cons').textContent = `${sumConsAct.toFixed(1)} kWh`;
+
+  document.getElementById('tot-exp-prod').textContent = `${sumProdHP.toFixed(1)} kWh`;
+  document.getElementById('tot-solar-prod').textContent = `${sumProdSolar.toFixed(1)} kWh`;
+  document.getElementById('tot-act-prod').textContent = `${sumProdAct.toFixed(1)} kWh`;
 }
 
 function syncOdinScales(sourceChart) {
@@ -4006,7 +4051,7 @@ function syncOdinScales(sourceChart) {
   showOdinResetButton();
 
   isSyncingOdin = false;
-  updateCostTotals();
+  updateOdinTotals();
 }
 
 function resetOdinZoom() {
@@ -4016,7 +4061,7 @@ function resetOdinZoom() {
         if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
     });
     document.getElementById('btn-reset-zoom-odin').style.display = 'none';
-    updateCostTotals();
+    updateOdinTotals();
 }
 
 function showOdinResetButton() {
