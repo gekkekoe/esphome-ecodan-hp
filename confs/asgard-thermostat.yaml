@@ -102,7 +102,9 @@ switch:
     turn_on_action:
       - if:
           condition:
-            lambda: 'return !id(sw_odin_override_${zone_identifier}).state && (id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF);'
+            # Only block the action if the virtual thermostat is active.
+            # We ignore the ODIN override state to allow manual intervention.
+            lambda: 'return id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF;'
           then:
             - switch.turn_on: asgard_relay_${zone_identifier}
           else:
@@ -111,7 +113,7 @@ switch:
     turn_off_action:
       - if:
           condition:
-             lambda: 'return !id(sw_odin_override_${zone_identifier}).state && (id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF);'
+             lambda: 'return id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF;'
           then:
             - switch.turn_off: asgard_relay_${zone_identifier}
 
