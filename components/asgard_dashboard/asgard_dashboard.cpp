@@ -688,7 +688,15 @@ void EcodanDashboard::update_snapshot_() {
 }
 
 void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
-  DashboardSnapshot snap;
+  // Move ~800-byte structure to the heap to protect the task stack
+  auto snap_ptr = std::unique_ptr<DashboardSnapshot>(new DashboardSnapshot());
+  if (!snap_ptr) {
+    httpd_req_t *req_err = *request;
+    httpd_resp_set_status(req_err, "500 Internal Server Error");
+    httpd_resp_send(req_err, "Out of Memory", HTTPD_RESP_USE_STRLEN);
+    return;
+  }
+  DashboardSnapshot &snap = *snap_ptr;
 
   if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(500)) == pdTRUE) {
     snap = current_snapshot_;
@@ -710,13 +718,10 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
   httpd_resp_set_hdr(req, "Connection", "close");
 
-  // Shared 2KB heap buffer — flushed per logical block to stay well within limits.
-  // Each block is at most ~600 bytes so there is comfortable headroom.
   constexpr size_t BUF_SIZE = 2048;
   std::vector<char> buf(BUF_SIZE);
   int off = 0;
 
-  // Send current buffer contents and reset offset. Returns false on TCP error.
   auto flush = [&]() -> bool {
     if (off <= 0) return true;
     bool ok = (httpd_resp_send_chunk(req, buf.data(), off) == ESP_OK);
@@ -724,31 +729,46 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
     return ok;
   };
 
-  // Append helpers — write into buf[], flush automatically when >75% full.
+  auto space_left = [&]() -> size_t {
+    return (off < (int)BUF_SIZE) ? (BUF_SIZE - (size_t)off) : 0;
+  };
+
+  // Safe snprintf accumulation logic to prevent offset runaway
+  auto safe_add_offset = [&](int written) {
+      if (written > 0) {
+          off += (written < (int)space_left()) ? written : (int)space_left();
+      }
+      if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+  };
+
   auto p_f = [&](const char* k, float v) {
-    if (!std::isnan(v)) off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":%.2f,", k, v);
-    else                off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":null,", k);
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    int w;
+    if (!std::isnan(v)) w = snprintf(buf.data() + off, space_left(), "\"%s\":%.2f,", k, v);
+    else                w = snprintf(buf.data() + off, space_left(), "\"%s\":null,", k);
+    safe_add_offset(w);
   };
   auto p_b = [&](const char* k, bool v) {
-    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":%s,", k, v ? "true" : "false");
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    int w = snprintf(buf.data() + off, space_left(), "\"%s\":%s,", k, v ? "true" : "false");
+    safe_add_offset(w);
   };
   auto p_n = [&](const char* k, float v) {
-    if (!std::isnan(v)) off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":%.4g,", k, v);
-    else                off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":null,", k);
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    int w;
+    if (!std::isnan(v)) w = snprintf(buf.data() + off, space_left(), "\"%s\":%.4g,", k, v);
+    else                w = snprintf(buf.data() + off, space_left(), "\"%s\":null,", k);
+    safe_add_offset(w);
   };
   auto p_lim = [&](const char* k, const DashboardSnapshot::NumData& d) {
-    if (!std::isnan(d.min)) off += snprintf(buf.data() + off, BUF_SIZE - off,
+    int w;
+    if (!std::isnan(d.min)) w = snprintf(buf.data() + off, space_left(),
                                 "\"%s\":{\"min\":%.4g,\"max\":%.4g,\"step\":%.4g},", k, d.min, d.max, d.step);
-    else                    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":null,", k);
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    else                    w = snprintf(buf.data() + off, space_left(), "\"%s\":null,", k);
+    safe_add_offset(w);
   };
   auto p_sel = [&](const char* k, int v) {
-    if (v >= 0) off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":\"%d\",", k, v);
-    else        off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":null,", k);
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    int w;
+    if (v >= 0) w = snprintf(buf.data() + off, space_left(), "\"%s\":\"%d\",", k, v);
+    else        w = snprintf(buf.data() + off, space_left(), "\"%s\":null,", k);
+    safe_add_offset(w);
   };
   auto p_act = [&](const char* k, int a) {
     const char* s = "idle";
@@ -757,25 +777,24 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
     else if (a == climate::CLIMATE_ACTION_COOLING)    s = "cooling";
     else if (a == climate::CLIMATE_ACTION_HEATING)    s = "heating";
     else if (a == climate::CLIMATE_ACTION_DRYING)     s = "drying";
-    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":\"%s\",", k, s);
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    int w = snprintf(buf.data() + off, space_left(), "\"%s\":\"%s\",", k, s);
+    safe_add_offset(w);
   };
   auto p_mod = [&](const char* k, int m) {
     const char* s = "off";
     if      (m == climate::CLIMATE_MODE_HEAT) s = "heat";
     else if (m == climate::CLIMATE_MODE_COOL) s = "cool";
     else if (m == climate::CLIMATE_MODE_AUTO) s = "auto";
-    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":\"%s\",", k, s);
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    int w = snprintf(buf.data() + off, space_left(), "\"%s\":\"%s\",", k, s);
+    safe_add_offset(w);
   };
 
-  // --- Opening brace + ui flags ---
-  off += snprintf(buf.data() + off, BUF_SIZE - off,
+  int w_start = snprintf(buf.data() + off, space_left(),
     "{\"ui_use_room_z1\":%s,\"ui_use_room_z2\":%s,",
     snap.ui_use_room_z1 ? "true" : "false",
     snap.ui_use_room_z2 ? "true" : "false");
+  safe_add_offset(w_start);
 
-  // --- HP sensor floats ---
   p_f("hp_feed_temp",                  snap.hp_feed_temp);
   p_f("hp_return_temp",                snap.hp_return_temp);
   p_f("outside_temp",                  snap.outside_temp);
@@ -791,7 +810,6 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_f("wifi_signal_db",                snap.wifi_signal_db);
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // --- DHW ---
   p_f("dhw_temp",              snap.dhw_temp);
   p_f("dhw_flow_temp_target",  snap.dhw_flow_temp_target);
   p_f("dhw_flow_temp_drop",    snap.dhw_flow_temp_drop);
@@ -799,7 +817,6 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_f("dhw_delivered",         snap.dhw_delivered);
   p_f("dhw_cop",               snap.dhw_cop);
 
-  // --- Heating / cooling ---
   p_f("heating_consumed",  snap.heating_consumed);
   p_f("heating_produced",  snap.heating_produced);
   p_f("heating_cop",       snap.heating_cop);
@@ -810,7 +827,6 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_f("z2_flow_temp_target", snap.z2_flow_temp_target);
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // --- Number settings ---
   p_n("auto_adaptive_setpoint_bias",   snap.num_aa_setpoint_bias.val);
   p_lim("aa_bias_lim",                 snap.num_aa_setpoint_bias);
   p_n("maximum_heating_flow_temp",     snap.num_max_flow_temp.val);
@@ -833,7 +849,6 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_lim("min_compressor_on_time_lim",  snap.num_min_compressor_on_time);
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // --- Climate zones ---
   p_n("z1_current_temp", snap.virt_z1.curr);  p_n("z1_setpoint", snap.virt_z1.tar);
   p_act("z1_action", snap.virt_z1.action);    p_mod("z1_mode", snap.virt_z1.mode);
   p_n("z2_current_temp", snap.virt_z2.curr);  p_n("z2_setpoint", snap.virt_z2.tar);
@@ -846,7 +861,6 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_n("flow_z2_current", snap.flow_z2.curr);  p_n("flow_z2_setpoint", snap.flow_z2.tar);
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // --- Binary / switch status ---
   p_b("status_compressor",           snap.status_compressor);
   p_b("status_booster",              snap.status_booster);
   p_b("status_defrost",              snap.status_defrost);
@@ -863,7 +877,6 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("sw_regular_dhw",              snap.sw_regular_dhw);
   p_b("power_mode", snap.sw_power_mode);
 
-  // --- Cooling settings ---
   p_n("cooling_smart_start_z1",  snap.num_cooling_smart_start_z1.val);
   p_lim("cool_smart_z1_lim",     snap.num_cooling_smart_start_z1);
   p_n("minimum_cooling_flow_z1", snap.num_min_cooling_flow_z1.val);
@@ -873,14 +886,12 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
 
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // --- Solver ---
   p_b("use_dynamic_cost_solver", snap.sw_use_solver);
   p_b("show_solver_tab",         snap.sw_show_solver_tab);
   p_b("solver_connected",        snap.bin_solver_connected);
   p_sel("solver_dhw_mode", snap.solver_dhw_mode);
   p_sel("lockout_duration", snap.sel_lockout_duration);
 
-  // --- Server control ---
   p_b("server_control_enabled",          snap.sw_server_control);
   p_b("server_control_prohibit_dhw",     snap.sw_sc_prohibit_dhw);
   p_b("server_control_prohibit_z1_heating", snap.sw_sc_prohibit_z1_heating);
@@ -888,7 +899,6 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("server_control_prohibit_z2_heating", snap.sw_sc_prohibit_z2_heating);
   p_b("server_control_prohibit_z2_cooling", snap.sw_sc_prohibit_z2_cooling);
 
-  // --- Raw physics EMA numbers ---
   p_n("raw_heat_produced",      snap.num_raw_heat_produced.val);
   p_lim("raw_heat_produced_lim",snap.num_raw_heat_produced);
   p_n("raw_elec_consumed",      snap.num_raw_elec_consumed.val);
@@ -922,26 +932,40 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // --- String fields (solver IP, version) — escape inline into buf ---
-  off += snprintf(buf.data() + off, BUF_SIZE - off, "\"solver_ip_address\":\"");
-  for (char *c = snap.txt_solver_ip; *c != '\0'; ++c) {
-    if      (*c == '"')  { buf[off++] = '\\'; buf[off++] = '"'; }
-    else if (*c == '\\') { buf[off++] = '\\'; buf[off++] = '\\'; }
-    else                 { buf[off++] = *c; }
-  }
-  off += snprintf(buf.data() + off, BUF_SIZE - off, "\",\"latest_version\":\"");
-  for (char *c = snap.version; *c != '\0'; ++c) {
-    if      (*c == '"')  { buf[off++] = '\\'; buf[off++] = '"'; }
-    else if (*c == '\\') { buf[off++] = '\\'; buf[off++] = '\\'; }
-    else                 { buf[off++] = *c; }
-  }
-  off += snprintf(buf.data() + off, BUF_SIZE - off, "\",");
+  // Safe string appending (prevents manual array out-of-bounds writes)
+  auto append_safe_char = [&](char c) {
+      if (off >= (int)BUF_SIZE - 1) flush();
+      buf[off++] = c;
+  };
 
-  // --- operation_mode + selects + closing ---
-  if (!std::isnan(snap.operation_mode))
-    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"operation_mode\":%d,", (int)snap.operation_mode);
-  else
-    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"operation_mode\":null,");
+  int w1 = snprintf(buf.data() + off, space_left(), "\"solver_ip_address\":\"");
+  safe_add_offset(w1);
+  for (int i = 0; i < 31 && snap.txt_solver_ip[i] != '\0'; ++i) {
+    char c = snap.txt_solver_ip[i];
+    if      (c == '"')  { append_safe_char('\\'); append_safe_char('"'); }
+    else if (c == '\\') { append_safe_char('\\'); append_safe_char('\\'); }
+    else                { append_safe_char(c); }
+  }
+  
+  int w2 = snprintf(buf.data() + off, space_left(), "\",\"latest_version\":\"");
+  safe_add_offset(w2);
+  for (int i = 0; i < 31 && snap.version[i] != '\0'; ++i) {
+    char c = snap.version[i];
+    if      (c == '"')  { append_safe_char('\\'); append_safe_char('"'); }
+    else if (c == '\\') { append_safe_char('\\'); append_safe_char('\\'); }
+    else                { append_safe_char(c); }
+  }
+  
+  int w3 = snprintf(buf.data() + off, space_left(), "\",");
+  safe_add_offset(w3);
+
+  if (!std::isnan(snap.operation_mode)) {
+    int w4 = snprintf(buf.data() + off, space_left(), "\"operation_mode\":%d,", (int)snap.operation_mode);
+    safe_add_offset(w4);
+  } else {
+    int w5 = snprintf(buf.data() + off, space_left(), "\"operation_mode\":null,");
+    safe_add_offset(w5);
+  }
 
   p_sel("heating_system_type",   snap.sel_heating_system_type);
   p_sel("room_temp_source_z1",   snap.sel_room_temp_source_z1);
@@ -951,7 +975,9 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_sel("temp_sensor_source_z1", snap.sel_temp_source_z1);
   p_sel("temp_sensor_source_z2", snap.sel_temp_source_z2);
 
-  off += snprintf(buf.data() + off, BUF_SIZE - off, "\"local_ip\":\"%s\",\"_uptime_ms\":%u}", snap.local_ip, millis());
+  int w6 = snprintf(buf.data() + off, space_left(), "\"local_ip\":\"%s\",\"_uptime_ms\":%u}", snap.local_ip, (uint32_t)millis());
+  safe_add_offset(w6);
+  
   flush();
   httpd_resp_send_chunk(req, nullptr, 0);
 }
@@ -1734,23 +1760,41 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
       }
   }
 
-  // Helper: serialise one pre-copied array into json_buf and send as a chunk.
+// Helper: serialise one pre-copied array into json_buf and send as a chunk.
   auto send_arr_chunk = [&](int k, const char* name) __attribute__((noinline)) -> bool {
       if (!arr_valid[k]) return true; // skip silently; array had wrong size
 
       int offset = snprintf(json_buf, JSON_BUFFER_SIZE, "\"%s\":[", name);
+      // Protect against snprintf truncation returning a value larger than the buffer
+      if (offset > JSON_BUFFER_SIZE) offset = JSON_BUFFER_SIZE;
+
       for (size_t i = 0; i < ODIN_HOURS; i++) {
-          int space_left = (JSON_BUFFER_SIZE > offset) ? (JSON_BUFFER_SIZE - offset) : 0;
+          int space_left = JSON_BUFFER_SIZE - offset;
+          if (space_left <= 0) break; // Buffer is full, stop processing to prevent memory corruption
+
+          int written;
           if (std::isnan(all_arrs[k][i])) {
-              offset += snprintf(json_buf + offset, space_left, "null");
+              written = snprintf(json_buf + offset, space_left, "null");
           } else {
-              offset += snprintf(json_buf + offset, space_left, "%.2f", all_arrs[k][i]);
+              written = snprintf(json_buf + offset, space_left, "%.2f", all_arrs[k][i]);
           }
-          space_left = (JSON_BUFFER_SIZE > offset) ? (JSON_BUFFER_SIZE - offset) : 0;
-          if (i < ODIN_HOURS - 1) offset += snprintf(json_buf + offset, space_left, ",");
+          
+          // Safely advance the offset only by what actually fit in the buffer
+          offset += (written < space_left) ? written : space_left;
+          space_left = JSON_BUFFER_SIZE - offset;
+
+          if (i < ODIN_HOURS - 1 && space_left > 0) {
+              written = snprintf(json_buf + offset, space_left, ",");
+              offset += (written < space_left) ? written : space_left;
+          }
       }
-      int space_left = (JSON_BUFFER_SIZE > offset) ? (JSON_BUFFER_SIZE - offset) : 0;
-      offset += snprintf(json_buf + offset, space_left, "],"); // always comma; stats block follows
+      
+      int space_left = JSON_BUFFER_SIZE - offset;
+      if (space_left > 0) {
+          int written = snprintf(json_buf + offset, space_left, "],");
+          offset += (written < space_left) ? written : space_left; // always comma; stats block follows
+      }
+      
       if (offset >= JSON_BUFFER_SIZE) offset = JSON_BUFFER_SIZE - 1;
       return (httpd_resp_send_chunk(req, json_buf, offset) == ESP_OK);
   };
