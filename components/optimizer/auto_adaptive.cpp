@@ -321,7 +321,7 @@ namespace esphome
 
             calculated_flow = this->enforce_step_limit(status,
                     this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2),
-                    calculated_flow);
+                    calculated_flow, true);
 
             // smart_start caps the flow on startup (water still warm) to avoid a slam-start.
             bool cooling_active = this->is_cooling_active(status);
