@@ -261,16 +261,17 @@ namespace esphome
                 ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING: flow=%.2f°C, return=%.2f°C (boost %.1f)", (zone_i + 1), calculated_flow, actual_return_temp, pcp_adj);
             }
 
+            bool cooling_mode = is_cooling_mode(status, (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
             // Clamp + step-down (order depends on post-DHW window)
             if (this->is_post_dhw_window(status)) {
                 calculated_flow = this->clamp_flow_temp(calculated_flow, zone_min, zone_max);
                 calculated_flow = this->enforce_step_limit(status,
                     this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2),
-                    calculated_flow);
+                    calculated_flow, cooling_mode);
             } else {
                 calculated_flow = this->enforce_step_limit(status,
                     this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2),
-                    calculated_flow);
+                    calculated_flow, cooling_mode);
                 calculated_flow = this->clamp_flow_temp(calculated_flow, zone_min, zone_max);
             }
 
@@ -321,7 +322,7 @@ namespace esphome
 
             calculated_flow = this->enforce_step_limit(status,
                     this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2),
-                    calculated_flow);
+                    calculated_flow, true);
 
             // smart_start caps the flow on startup (water still warm) to avoid a slam-start.
             bool cooling_active = this->is_cooling_active(status);

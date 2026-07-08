@@ -83,7 +83,8 @@ namespace esphome
                 }
             }   
             else {
-                adjusted_flow = enforce_step_limit(status, actual_flow_temp, current_flow_setpoint);
+                bool cooling_mode = is_cooling_mode(status, zone);
+                adjusted_flow = enforce_step_limit(status, actual_flow_temp, current_flow_setpoint, cooling_mode);
             }
     
             if (adjusted_flow != current_flow_setpoint)
