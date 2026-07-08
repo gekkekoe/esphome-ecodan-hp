@@ -674,7 +674,7 @@ void EcodanDashboard::update_snapshot_() {
   // Local IP via esp_netif
   {
     esp_netif_t *netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
-    if (!netif) netif = esp_netif_next_unsafe(nullptr);  // fallback: first available
+    // REMOVED: esp_netif_next_unsafe to prevent TLSF heap corruption during reconnects
     esp_netif_ip_info_t ip_info{};
     if (netif && esp_netif_get_ip_info(netif, &ip_info) == ESP_OK && ip_info.ip.addr != 0) {
       snprintf(current_snapshot_.local_ip, sizeof(current_snapshot_.local_ip),
@@ -1534,12 +1534,12 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
     float s_base = NAN, s_min = NAN, s_max = NAN;
 
     if (target_idx >= 0 && target_idx < 72) {
-        this->odin_actual_cons_[target_idx] = actual_cons_kwh;
-        this->odin_actual_prod_[target_idx] = actual_prod_kwh;
-        this->odin_actual_dhw_cons_[target_idx] = dhw_cons;
-        this->odin_actual_dhw_prod_[target_idx] = dhw_prod;
-        this->odin_actual_room_[target_idx] = actual_room_temp;
-        this->odin_actual_standby_cons_[target_idx] = standby_cons;
+        this->odin_actual_cons_.at(target_idx) = actual_cons_kwh;
+        this->odin_actual_prod_.at(target_idx) = actual_prod_kwh;
+        this->odin_actual_dhw_cons_.at(target_idx) = dhw_cons;
+        this->odin_actual_dhw_prod_.at(target_idx) = dhw_prod;
+        this->odin_actual_room_.at(target_idx) = actual_room_temp;
+        this->odin_actual_standby_cons_.at(target_idx) = standby_cons;
 
         if (this->odin_operation_mode_.size() == 72) {
             float real_mode = 0.0f; // Default OFF (0) / Standby
