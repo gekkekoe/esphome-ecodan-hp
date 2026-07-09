@@ -30,6 +30,9 @@ trigger:
     entity_id: !input source_entity
 
 action:
+  - condition: template
+    value_template: "{{ is_number(states(source)) }}"
+  
   - variables:
       current_temp: "{{ states(source) | float(0) }}"
       
