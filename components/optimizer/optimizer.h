@@ -1,189 +1,277 @@
 #pragma once
 
-#include "esphome.h"
-
-// forward declare EcodanHeatpump
-namespace esphome
-{
-  namespace ecodan
-  {
-    class EcodanHeatpump;
-  } // namespace ecodan
-} // namespace esphome
+#include <atomic>
+#include "optimizer_state.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+#include <lwip/netdb.h>
+#include <lwip/sockets.h>
 
 namespace esphome
 {
   namespace optimizer
   {
 
-    static constexpr const char *OPTIMIZER_TAG = "auto_adaptive";
-    static constexpr const char *OPTIMIZER_CYCLE_TAG = "short_cycle";
-
-    enum class OptimizerZone : uint8_t
-    {
-        ZONE_1 = 1,
-        ZONE_2 = 2,
-        SINGLE = 0
-    };
-
-    struct OptimizerState
-    {
-      esphome::ecodan::EcodanHeatpump *ecodan_instance;
-
-      esphome::switch_::Switch *auto_adaptive_control_enabled;
-      esphome::switch_::Switch *predictive_short_cycle_control_enabled;
-      esphome::switch_::Switch *defrost_risk_handling_enabled;
-      esphome::switch_::Switch *smart_boost_enabled;
-
-      esphome::binary_sensor::BinarySensor *status_short_cycle_lockout;
-      esphome::binary_sensor::BinarySensor *status_predictive_boost_active;
-      esphome::binary_sensor::BinarySensor *status_compressor;
-      esphome::binary_sensor::BinarySensor *status_defrost;
-
-      esphome::sensor::Sensor *hp_feed_temp;
-      esphome::sensor::Sensor *z1_feed_temp;
-      esphome::sensor::Sensor *z2_feed_temp;
-      esphome::sensor::Sensor *operation_mode;
-  
-      esphome::sensor::Sensor *daily_heating_produced;
-      esphome::sensor::Sensor *daily_heating_consumed;
-      esphome::number::Number *solver_kwh_meter_feedback;
-
-      esphome::select::Select *heating_system_type;
-      esphome::select::Select *temperature_feedback_source;
-      esphome::select::Select *lockout_duration;
-      esphome::select::Select *solver_kwh_meter_feedback_source;
-
-      esphome::number::Number *auto_adaptive_setpoint_bias;
-      esphome::number::Number *temperature_feedback_z1;
-      esphome::number::Number *temperature_feedback_z2;
-      esphome::number::Number *maximum_heating_flow_temp;
-      esphome::number::Number *minimum_heating_flow_temp;
-      esphome::number::Number *maximum_heating_flow_temp_z2;
-      esphome::number::Number *minimum_heating_flow_temp_z2;
-      esphome::number::Number *minimum_cooling_flow_temp;
-      esphome::number::Number *cooling_smart_start_temp;
-      esphome::number::Number *minimum_compressor_on_time;
-      esphome::number::Number *predictive_short_cycle_high_delta_time_window;
-      esphome::number::Number *predictive_short_cycle_high_delta_threshold;
-
-      // stats vars
-      float &learned_heat_loss_global;
-      float &learned_base_cop_global;
-      float &learned_thermal_output_global;
-      float &learned_elec_power_global;
-
-      float &daily_runtime_global; 
-
-      uint32_t &lockout_expiration_timestamp;
-    };
-
     class Optimizer
     {
     private:
       OptimizerState state_;
 
-      // store last dhw end to trail feed temp
+      // DHW trailing setpoint
       uint32_t dhw_post_run_expiration_ = 0;
       float dhw_old_z1_setpoint_ = NAN;
       float dhw_old_z2_setpoint_ = NAN;
 
-      uint32_t predictive_delta_start_time_ = 0;
+      // Predictive short-cycle prevention
+      float pcp_old_z1_setpoint_ = NAN;
+      float pcp_old_z2_setpoint_ = NAN;
+      float pcp_adjustment_z1_   = 0.0f;
+      float pcp_adjustment_z2_   = 0.0f;
+      uint32_t predictive_delta_start_time_z1_ = 0;
+      uint32_t predictive_delta_start_time_z2_ = 0;
+
+      // Compressor / defrost tracking
+      struct DefrostState {
+        float locked_outside_temp_{NAN};
+        float locked_return_temp_{NAN};
+        float locked_return_temp_z1_{NAN};
+        float locked_return_temp_z2_{NAN};
+
+        float get_return_temp(bool independent_zone_temp, OptimizerZone zone) const {
+            if (independent_zone_temp)
+                return (zone == OptimizerZone::ZONE_2) ? locked_return_temp_z2_ : locked_return_temp_z1_;        
+            return locked_return_temp_;
+        }
+      };
+
+      OptimizerOperationMode to_operation_mode(float val) {
+          if (std::isnan(val)) return OptimizerOperationMode::OFF;
+          
+          int int_val = static_cast<int>(std::round(val));
+          switch (int_val) {
+              case 1:   return OptimizerOperationMode::DHW_ON;
+              case 2:   return OptimizerOperationMode::HEAT_ON;
+              case 3:   return OptimizerOperationMode::COOL_ON;
+              //case 5:   return OptimizerOperationMode::FROST_PROTECT;
+              //case 6:   return OptimizerOperationMode::LEGIONELLA_PREVENTION;
+              case 255: return OptimizerOperationMode::UNAVAILABLE;
+              default:  return OptimizerOperationMode::OFF;
+          }
+      };
+
+      bool is_cooling_mode(const ecodan::Status& status, OptimizerZone zone) {
+        auto ecodan_zone = zone == OptimizerZone::ZONE_1 ? ecodan::Zone::ZONE_1 : ecodan::Zone::ZONE_2;
+        return status.has_cooling() && status.is_auto_adaptive_cooling(ecodan_zone);
+      }
+
       uint32_t compressor_start_time_ = 0;
-      uint32_t last_defrost_time_ = 0;
-      float predictive_short_cycle_total_adjusted_ = 0.0f;
+      uint32_t last_defrost_time_     = 0;
+      DefrostState state_before_defrost_;
 
-      // save last callback state, to only invoke callback on actual change
-      float last_hp_feed_temp_ = NAN;
-      float last_z1_feed_temp_ = NAN;
-      float last_z2_feed_temp_ = NAN;
+      int odin_last_executed_dhw_hour_ = -1;
 
-      // cast to uint8 when actually using
-      float last_operation_mode_ = NAN;
-
-      // cast to bool
-      float last_defrost_status_ = 0;
+      // Callback state (detect change before firing)
+      float last_hp_feed_temp_      = NAN;
+      float last_z1_feed_temp_      = NAN;
+      float last_z2_feed_temp_      = NAN;
+      float last_operation_mode_    = NAN;
+      float last_defrost_status_    = 0;
       float last_compressor_status_ = 0;
 
-      // smart boost vars
-      uint32_t stagnation_start_time_ = 0;
-      float last_error_ = 0.0f;
-      float current_stagnation_boost_ = 1.0f;
+      // Smart boost
+      uint32_t stagnation_start_time_  = 0;
+      float last_error_                = 0.0f;
+      float current_stagnation_boost_  = 1.0f;
 
-      // Learning state variables
-      float daily_temp_sum_ = 0.0f;
-      int daily_temp_count_ = 0;
-      int last_processed_day_ = -1;
-      // helpers to track runtime
-      uint32_t last_check_ms_ = 0;
+      // Stats / learning
+      float    daily_outside_temp_sum_      = 0.0f;
+      int      daily_outside_temp_count_    = 0;
+      float    daily_room_temp_sum_         = 0.0f;
+      int      daily_room_temp_count_       = 0;
+      float    daily_room_temp_min_         = 99.0f;
+      float    daily_room_temp_max_         = -99.0f;
+      float    daily_runtime_global         = 0.0f;
+      float    daily_max_output_power_      {0.0f};
+      uint32_t last_check_ms_               = 0;
+      int      last_processed_day_          = -1;
+      int      last_processed_hour_         {-1};
+      int      last_pre_hour_triggered_      {-1};
+      float    daily_runtime_cool_          = 0.0f;
 
-      // Energy snapshots for delta calculation
-      float last_total_heating_produced_ = 0.0f;
-      float last_total_heating_consumed_ = 0.0f;
+      // Strict energy separation buckets
+      float    last_global_prod_            = -1.0f;
+      float    last_global_cons_            = -1.0f;
+      float    last_total_heating_produced_ = 0.0f;
+      float    last_total_heating_consumed_ = 0.0f;
+      float    last_total_cooling_produced_ = 0.0f;
+      float    last_total_cooling_consumed_ = 0.0f;
+      float    last_total_dhw_produced_     = 0.0f;
+      float    last_total_dhw_consumed_     = 0.0f;
+      float    last_total_all_consumed_     = 0.0f;
 
-      void process_adaptive_zone_(
-          std::size_t i,
-          const ecodan::Status &status,
-          float defrost_memory_ms,
-          float cold_factor,
-          float min_delta_cold_limit,
-          float base_min_delta_t,
-          float max_delta_t,
-          float max_error_range,
-          float actual_outside_temp,
-          float zone_max_flow_temp,
-          float zone_min_flow_temp,
-          float &out_flow_heat,
-          float &out_flow_cool);
+      // 10-minute wind-down window: keeps buckets open after compressor stops
+      // to catch delayed meter ticks. Initialised to UINT32_MAX - 700000 so the
+      // window is guaranteed expired at boot regardless of millis() value.
+      bool     last_was_dhw_                = false;
+      bool     last_was_heating_            = false;
+      bool     last_was_cooling_            = false;
+      uint32_t last_run_time_               = UINT32_MAX - 700000UL;
+
+      // Free cooling window tracking (HP-off period, any time of day)
+      // Measures HL×TM product from unregulated cooldown, free of solar/DHW contamination.
+      bool     fc_active_        = false;
+      float    fc_room_start_    = NAN;
+      float    fc_outside_sum_   = 0.0f;
+      int      fc_outside_count_ = 0;
+      float    fc_hours_         = 0.0f;
+      float    fc_solar_sum_     = 0.0f;
       
-      float round_nearest(float input) { return round(input * 10.0f) / 10.0f; }
-      float round_nearest_half(float input) { return floor(input * 2.0) / 2.0f; }
-      bool is_system_hands_off(const ecodan::Status &status);
-      bool is_dhw_active(const ecodan::Status &status);
-      bool is_post_dhw_window(const ecodan::Status &status);
-      bool is_heating_active(const ecodan::Status &status);
-      float clamp_flow_temp(float calculated_flow, float min_temp, float max_temp);
-      float enforce_step_down(float actual_flow_temp, float calculated_flow);
-      bool set_flow_temp(float flow, OptimizerZone zone);
+      // ODIN solver data
+      std::atomic<bool> odin_fetch_requested_{false};
+      std::vector<float> odin_production_;
+      std::vector<float> odin_solar_forecast_;
+      std::vector<float> odin_operation_mode_;
+      float odin_min_output_{0};
+      float odin_max_output_{0};
 
-      // smart boost
+      int      odin_data_day_   {-1};
+      bool     odin_data_ready_ {false};
+      SemaphoreHandle_t odin_mutex_ = NULL;
+
+      // Solver soft-stop state
+      int  solver_stop_hour_   {-1};
+      bool solver_stop_active_ {false};
+      int  solver_resume_hour_ {-1};
+      bool adaptive_loop_running_ {false};
+
+      // ── adaptive_loop.cpp ──────────────────────────────────────────────
+      HeatingProfile   get_heating_profile_(int type_index);
+      struct SolverResult { float load_ratio; bool heatpump_off; OptimizerOperationMode mode{OptimizerOperationMode::UNAVAILABLE}; int current_hour{-1}; };
+      DefrostState resolve_defrost_state_();
+      SolverResult resolve_solver_result_(float room_target_temp, float current_room_temp);
+      float            calculate_heating_flow_(std::size_t zone_i,
+                                               const ecodan::Status &status,
+                                               const HeatingProfile &prof,
+                                               bool set_point_reached,
+                                               float cold_factor,
+                                               float actual_outside_temp,
+                                               float zone_min, float zone_max,
+                                               float error_factor,
+                                               float smart_boost);
+      float            calculate_cooling_flow_(std::size_t zone_i,
+                                               const ecodan::Status &status,
+                                               float target_delta_t);
+      void             process_adaptive_zone_(std::size_t i,
+                                              const ecodan::Status &status,
+                                              const HeatingProfile &prof,
+                                              float cold_factor,
+                                              float actual_outside_temp,
+                                              float zone_max, float zone_min,
+                                              float &out_flow_heat,
+                                              float &out_flow_cool);
+
+      // ── smart_boost.cpp ───────────────────────────────────────────────
       float calculate_smart_boost(int profile, float error);
 
-      // callback handlers for important events
+      // ── solver.cpp ────────────────────────────────────────────────────
+      void apply_solver_soft_stop(bool should_stop);
+
+      // ── events.cpp ────────────────────────────────────────────────────
       void on_feed_temp_change(float actual_flow_temp, OptimizerZone zone);
       void on_operation_mode_change(uint8_t new_mode, uint8_t previous_mode);
 
-      // stats
+      // ── prevention.cpp ────────────────────────────────────────────────
+      void predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone);
+
+      // ── stats.cpp ─────────────────────────────────────────────────────
       void update_learning_model(int day_of_year);
+
+      // ── utility.cpp ───────────────────────────────────────────────────
+      bool  is_system_hands_off(const ecodan::Status &status);
+      bool  is_dhw_active(const ecodan::Status &status);
+      bool  is_post_dhw_window(const ecodan::Status &status);
+      bool  is_heating_active(const ecodan::Status &status);
+      bool  is_cooling_active(const ecodan::Status &status);
+      float clamp_flow_temp(float flow, float min_temp, float max_temp);
+      float enforce_step_limit(const ecodan::Status &status, float actual_flow, float calculated_flow, bool is_cooling_mode);
+      bool  set_flow_temp(float flow, OptimizerZone zone);
+      float round_nearest(float input)      { return round(input * 10.0f) / 10.0f; }
+      float round_nearest_half(float input) { return floor(input * 2.0) / 2.0f; }
 
     public:
       Optimizer(OptimizerState state);
 
-      bool get_predictive_boost_state();
-      void reset_predictive_boost();
+      // Main loops
       void run_auto_adaptive_loop();
       void predictive_short_cycle_check();
-      void restore_svc_state();
-      void start_lockout();
-      void check_lockout_expiration();
+      void update_heat_model();
+
+      // Compressor / defrost events
       void on_compressor_stop();
       void on_compressor_state_change(bool x, bool x_previous);
       void on_defrost_state_change(bool x, bool x_previous);
+
+      // Lockout
+      void restore_svc_state();
+      void start_lockout();
+      void check_lockout_expiration();
+
+      // Boost sensor
+      bool get_predictive_boost_state();
+      void reset_predictive_boost();
       void update_boost_sensor();
 
-      void update_heat_model();
+      // Temperature helpers (used by YAML / dashboard)
+      float get_room_current_temp(OptimizerZone zone);
+      float get_room_target_temp(OptimizerZone zone);
+      float get_feed_temp(OptimizerZone zone);
+      float get_return_temp(OptimizerZone zone);
+      float get_flow_setpoint(OptimizerZone zone);
+      FlowLimits get_flow_limits(OptimizerZone zone);
+
+      // Solver / ODIN
+      bool aa_enabled() const;
+      bool solver_enabled() const;
+      uint8_t get_current_operation_mode();
+      float get_current_solar_irradiance();
+      
+      float get_heating_produced_kwh() const { return last_total_heating_produced_; }
+      float get_heating_consumed_kwh() const { return last_total_heating_consumed_; }
+      float get_cooling_produced_kwh() const { return last_total_cooling_produced_; }
+      float get_cooling_consumed_kwh() const { return last_total_cooling_consumed_; }
+      float get_dhw_produced_kwh() const { return last_total_dhw_produced_; }
+      float get_dhw_consumed_kwh() const { return last_total_dhw_consumed_; }
+      float get_total_consumed_kwh() const { return this->last_total_all_consumed_; }
+
+      int  get_current_ecodan_hour();
+      int  get_current_ecodan_day();
+      bool has_old_odin_data();
+      void store_odin_data(int current_hour, float min_output, float max_output, const std::vector<float>& prod, const std::vector<float>& solar, const std::vector<float>& op_mode);
+      // Brings odin_data_day_ in sync with the new day without forcing a new solve 
+      // the existing forecast (from the 23:55 solve) is still valid, only the "is this stale" check
+      // needs to know we're now on the new day.
+      void sync_odin_data_day() {
+          int d = this->get_current_ecodan_day();
+          if (d >= 0 && this->odin_mutex_ != NULL && xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
+              this->odin_data_day_ = d;
+              xSemaphoreGive(this->odin_mutex_);
+          }
+      }
+      bool check_and_clear_odin_fetch_request() {
+          return odin_fetch_requested_.exchange(false);
+      }
+      void set_odin_fetch_request() {
+        this->odin_fetch_requested_ = true;
+      }
     };
 
-    // dummy, can remain empty
+    // Dummy ESPHome component — triggers codegen, stays empty
     class OptimizerComponent : public esphome::Component
     {
     public:
       void setup() override {}
-      void loop() override {}
-      void dump_config() override
-      {
-        ESP_LOGCONFIG("optimizer", "Optimizer Custom Component");
-      }
+      void loop()  override {}
+      void dump_config() override { ESP_LOGCONFIG("optimizer", "Optimizer Custom Component"); }
     };
 
   } // namespace optimizer

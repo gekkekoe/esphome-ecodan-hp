@@ -24,20 +24,21 @@ substitutions:
   version: ESP-versio
   led_brightness: LEDin kirkkaus
   led_switch: LED
+  heatpump_switch_regular_dhw: Normaali LKV
   heatpump_switch_force_dhw: Pakota LKV
   heatpump_switch_power_mode: Lämpöpumppu
   heatpump_switch_holiday: Lomatoiminto
   wifi_signal_proc: WiFi-signaali %
   wifi_signal_db: WiFi-signaali dB
-  z1_flow_temp_target: Vyöhyke 1 L/J asetusarvo
+  z1_flow_temp_target: Vyöhyke 1 asetusarvo
   status_prohibit_cool_z1: Vyöhyke 1 jäähdytyksen esto
   status_prohibit_heating_z1: Vyöhyke 1 lämmityksen esto
   heatpump_climate_z1: Vyöhyke 1 menolämpötila
   heatpump_climate_room_z1: Vyöhyke 1 huonelämpötila
   z1_room_temp_target: Vyöhyke 1 huoneen asetusarvo
   z1_room_temp: Vyöhyke 1 huonelämpötila
-  heatpump_number_z2_set_flow_temperature: Vyöhyke 2 L/J asetusarvo
-  z2_flow_temp_target: Vyöhyke 2 L/J asetusarvo
+  heatpump_number_z2_set_flow_temperature: Vyöhyke 2 asetusarvo
+  z2_flow_temp_target: Vyöhyke 2 asetusarvo
   status_prohibit_cool_z2: Vyöhyke 2 jäähdytyksen esto
   status_prohibit_heating_z2: Vyöhyke 2 lämmityksen esto
   heatpump_number_z2_set_room_temperature: Vyöhyke 2 huoneen asetusarvo
@@ -143,7 +144,8 @@ substitutions:
   cooling_smart_start_temp: 'Mukautuva ohjaus: Jäähdytyksen älykäs aloituslämpötila'
   temperature_feedback_source: 'Mukautuva ohjaus: Huonelämpötilan lähde'
   temperature_feedback_option_room: 'Huonetermostaatti'
-  select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant or REST API'
+  select_feedback_option_asgard_vt: 'Asgard Virtuaalinen Termostaatti'
   heating_system_type: 'Mukautuva ohjaus: lämmitysjärjestelmän tyyppi'
   heating_system_type_option_ufh: 'Lattialämmitys'
   heating_system_type_option_ufh_rad: 'Lattialämmitys + patterit'
@@ -165,4 +167,28 @@ substitutions:
 
   solver_kwh_meter_feedback_source: "Energiamittarin lähde"
   solver_kwh_meter_option_internal: "Sisäinen energiamittari"
-  solver_kwh_meter_feedback: "kWh-mittari"
+  solver_kwh_meter_feedback: "kWh-mittarin palaute"
+
+  solver_dhw_mode: Ratkaisimen käyttövesitila
+  solver_dhw_mode_option_regular: Normaali
+  solver_dhw_mode_option_forced: Pakotettu
+
+  asgard_vt_temp_sensor_source: 'Virtuaalisen Termostaatin Lähde'
+
+  sw_use_solver: "Ota käyttöön dynaaminen kustannusratkaisija"
+  bin_solver_connected: "Ratkaisijan online-tila"
+  num_raw_heat_produced: "Raaka tuotettu lämpö (kWh)"
+  num_raw_elec_consumed: "Raaka kulutettu sähkö (kWh)"
+  num_raw_runtime_hours: "Raaka käyntiaika (Tuntia)"
+  num_raw_avg_outside_temp: "Raaka keskim. ulkolämpötila (°C)"
+  num_raw_avg_room_temp: "Raaka keskim. huonelämpötila (°C)"
+  num_raw_delta_room_temp: "Raaka huonelämpötilan delta (°C)"
+  num_battery_soc_kwh: "Akun varaustila (kWh)"
+  num_battery_max_discharge_kw: "Akun maksimipurkaus (kW)"
+  num_raw_hl_tm_product: "Raaka HL×TM-tulo"
+  num_raw_solar_factor: "Passiivisen aurinkolämmön kerroin"
+
+  num_raw_cool_produced: "Tuotettu jäähdytys (Raaka)"
+  num_raw_cool_elec_consumed: "Jäähdytyksen sähkönkulutus (Raaka)"
+  num_raw_cool_runtime_hours: "Jäähdytyksen käyntiaika (Raaka)"
+  num_raw_cool_avg_outside_temp: "Keskim. ulkolämpötila jäähd. (Raaka)"

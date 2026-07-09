@@ -1,9 +1,7 @@
 substitutions:
   zone_identifier_z1: "2"
-  # z2 conditional callback assignment link
-  z2_feed_assignment: "state.z2_feed_temp = id(z2_feed_temp);"
   z2_cpp_prefix: ""
-  z2_yaml_prefix: ""
+  z2_enabled: true
 
 binary_sensor:
   - platform: ecodan
@@ -76,22 +74,6 @@ sensor:
       id: status_mixing_valve
       name: ${status_mixing_valve}
 
-    status_heating_cooling_z2:
-      id: status_heating_cooling_z2
-      name: H/C status z2
-      internal: true
-      on_value:
-        if:
-          condition:
-            - lambda: |-
-                auto mode = static_cast<uint8_t>(id(ecodan_instance).get_status().HeatingCoolingModeZone2);
-                auto index = id(heatpump_select_operating_mode_z2).active_index();
-                return (index.has_value() && index.value() != mode);
-          then:
-            - select.set_index:
-                id: heatpump_select_operating_mode_z2
-                index: !lambda "return static_cast<uint8_t>(id(ecodan_instance).get_status().HeatingCoolingModeZone2);"
-
 select:
   - platform: template
     name: z2 ${heatpump_select_operating_mode}
@@ -109,10 +91,41 @@ select:
     set_action:
       - lambda: |-
           auto index = id(heatpump_select_operating_mode_z2).index_of(x);
-          auto active_index = id(heatpump_select_operating_mode_z2).active_index();
-          if (index.has_value() && index.value() != active_index.value()) {
-            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(index.value()), esphome::ecodan::Zone::ZONE_2);
+          if (index.has_value() && index.value() != id(heatpump_select_operating_mode_z2).active_index().value_or(-1)) {
+            uint8_t new_idx = index.value();
+            id(ecodan_instance).set_hp_mode(static_cast<uint8_t>(new_idx), esphome::ecodan::Zone::ZONE_2);
+
+            climate::Climate *v_climate = nullptr;
+            for (auto *c : App.get_climates()) {
+              if (c->get_name() == "Virtual Thermostat z2") {
+                v_climate = c;
+                break;
+              }
+            }
+
+            // Sync the virtual thermostat (if it exists in this build AND is not OFF)
+            if (v_climate != nullptr && v_climate->mode != climate::CLIMATE_MODE_OFF) {
+              auto call = v_climate->make_call();
+              
+              // Heating modes: Target (0), Flow (1), Curve (2), Floor Dry Up (5)
+              if (new_idx == 0 || new_idx == 1 || new_idx == 2 || new_idx == 5) {
+                if (v_climate->mode != climate::CLIMATE_MODE_HEAT) {
+                  call.set_mode(climate::CLIMATE_MODE_HEAT);
+                  call.perform();
+                }
+              }
+              // Cooling modes: Target (3), Flow (4), Curve (6)
+              else if (new_idx == 3 || new_idx == 4 || new_idx == 6) {
+                if (v_climate->mode != climate::CLIMATE_MODE_COOL) {
+                  call.set_mode(climate::CLIMATE_MODE_COOL);
+                  call.perform();
+                }
+              }
+            }
           }
+ecodan:
+  id: ecodan_instance
+  operating_mode_z2: heatpump_select_operating_mode_z2
 
 text_sensor:
   - platform: template

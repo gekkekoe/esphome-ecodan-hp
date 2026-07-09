@@ -25,7 +25,7 @@ packages:
             confs/base.yaml,            # required
             confs/request-codes.yaml,   # disable if your unit does not support request codes (service menu)
             confs/esp32s3.yaml,         # confs/esp32.yaml, for regular board
-            #confs/esp32s3-led.yaml,    # atom s3 status leds
+            #confs/led.yaml,    # status leds
             confs/zone1.yaml,
             confs/server-control-z1.yaml,
             ## enable if you want to use zone 2

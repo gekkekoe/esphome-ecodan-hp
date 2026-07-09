@@ -1,0 +1,15 @@
+switch:
+  - platform: template
+    name: Ignore Slave SET cmds
+    id: switch_ignore_slave
+    icon: "mdi:block-helper"
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true 
+    
+    turn_on_action:
+      - lambda: |-
+          id(ecodan_instance).set_ignore_slave_cmd(true);
+
+    turn_off_action:
+      - lambda: |-
+          id(ecodan_instance).set_ignore_slave_cmd(false);

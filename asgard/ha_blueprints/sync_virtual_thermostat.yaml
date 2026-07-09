@@ -1,0 +1,53 @@
+blueprint:
+  name: Sync Room Temperature to Ecodan
+  description: >
+    Synchronizes the current temperature from a thermostat (climate entity) or a
+    separate sensor to the Asgard 'Virtual Thermostat' number input.
+
+    It automatically detects whether to read the state (for sensors) or the
+    'current_temperature' attribute (for climate entities) and only updates
+    the Ecodan device if the value has changed to prevent unnecessary traffic.
+  domain: automation
+  input:
+    source_entity:
+      name: Source Temperature (Thermostat or Sensor)
+      description: The entity that measures the actual room temperature (e.g., climate.office or sensor.living_room).
+      selector:
+        entity:
+          domain: [climate, sensor]
+    
+    target_input:
+      name: Target feedback (number) field
+      description: The ESPHome 'number' entity for the Virtual Thermostat input (e.g., number.ecodan_heatpump_virtual_thermostat_input_z1).
+      selector:
+        entity:
+          domain: number
+          # device_class: temperature
+
+variables:
+  source: !input source_entity
+  target: !input target_input
+
+trigger:
+  - platform: state
+    entity_id: !input source_entity
+
+action:
+  - variables:
+      current_temp: >-
+        {% if states[source].domain == 'climate' %}
+          {{ state_attr(source, 'current_temperature') | float(0) }}
+        {% else %}
+          {{ states(source) | float(0) }}
+        {% endif %}
+  - condition: template
+    value_template: "{{ current_temp != states(target) | float(0) }}"
+
+  - service: number.set_value
+    target:
+      entity_id: !input target_input
+    data:
+      value: "{{ current_temp }}"
+  - delay: "00:01:00"
+
+mode: single

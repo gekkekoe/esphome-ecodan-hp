@@ -24,20 +24,21 @@ substitutions:
   version: ESP Version
   led_brightness: LED Brightness
   led_switch: LED
+  heatpump_switch_regular_dhw: Regular DHW
   heatpump_switch_force_dhw: Force DHW
   heatpump_switch_power_mode: Heatpump
   heatpump_switch_holiday: Holiday Mode
   wifi_signal_proc: WiFi Signal %
   wifi_signal_db: WiFi Signal dB
-  z1_flow_temp_target: Zone 1 H/C Setpoint Value
+  z1_flow_temp_target: Zone 1 Setpoint Value
   status_prohibit_cool_z1: Zone 1 Prohibit Cooling Status
   status_prohibit_heating_z1: Zone 1 Prohibit Heating
   heatpump_climate_z1: Zone 1 Flow Temp
   heatpump_climate_room_z1: Zone 1 Room Temp
   z1_room_temp_target: Zone 1 Room Setpoint Value
   z1_room_temp: Zone 1 Room Temp
-  heatpump_number_z2_set_flow_temperature: Zone 2 H/C setpoint
-  z2_flow_temp_target: Zone 2 H/C Setpoint Value
+  heatpump_number_z2_set_flow_temperature: Zone 2 setpoint
+  z2_flow_temp_target: Zone 2 Setpoint Value
   status_prohibit_cool_z2: Zone 2 Prohibit Cooling
   status_prohibit_heating_z2: Zone 2 Prohibit Heating
   heatpump_number_z2_set_room_temperature: Zone 2 Room Setpoint
@@ -145,7 +146,8 @@ substitutions:
   cooling_smart_start_temp: 'Auto-Adaptive: Cooling Smart Start Temp'
   temperature_feedback_source: 'Auto-Adaptive: Room Temperature source'
   temperature_feedback_option_room: 'Room Thermostat'
-  select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant or REST API'
+  select_feedback_option_asgard_vt: 'Asgard Virtual Thermostat'
   heating_system_type: 'Auto-Adaptive: Heating System Type'
   heating_system_type_option_ufh: 'Underfloor Heating'
   heating_system_type_option_ufh_rad: 'Underfloor Heating + Radiators'
@@ -175,3 +177,26 @@ substitutions:
   solver_kwh_meter_feedback_source: Energy Meter Source
   solver_kwh_meter_option_internal: Internal Energy Meter
   solver_kwh_meter_feedback: kWh meter feedback
+  solver_dhw_mode: Solver DHW Mode
+  solver_dhw_mode_option_regular: Regular
+  solver_dhw_mode_option_forced: Forced
+
+  asgard_vt_temp_sensor_source: Virtual Thermostat Source
+
+  # solver settings
+  sw_use_solver:  "Enable Dynamic Cost Solver"
+  bin_solver_connected: "Solver Online Status"
+  num_raw_heat_produced: "Raw Heat Produced (kWh)"
+  num_raw_elec_consumed: "Raw Electricity Consumed (kWh)"
+  num_raw_runtime_hours: "Raw Runtime (Hours)"
+  num_raw_avg_outside_temp: "Raw Avg Outside Temp (°C)"
+  num_raw_avg_room_temp: "Raw Avg Room Temp (°C)"
+  num_raw_delta_room_temp: "Raw Delta Room Temp (°C)"
+  num_battery_soc_kwh: "Battery SoC (kWh)"
+  num_battery_max_discharge_kw: "Battery Max Discharge (kW)"
+  num_raw_hl_tm_product: "Raw HL×TM Product"
+  num_raw_solar_factor: "Passive Solar Gain Factor"
+  num_raw_cool_produced: "Raw Cool Produced"
+  num_raw_cool_elec_consumed: "Raw Cool Eletricity Consumed"
+  num_raw_cool_runtime_hours: "Raw Cool Runtime"
+  num_raw_cool_avg_outside_temp: "Raw Cool Avg Outside Temp"

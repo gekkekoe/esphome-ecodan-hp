@@ -1,0 +1,18 @@
+# Partition table for ESP32-S3 WROOM 16 MB flash
+#
+# Layout (identical to current 8 MB layout up to 0x800000, then +8 MB LittleFS):
+#
+#   0x009000  otadata    8 KB    OTA selection
+#   0x00b000  phy_init   4 KB    RF calibration
+#   0x010000  app0    3840 KB    OTA slot 0  (firmware)
+#   0x3d0000  app1    3840 KB    OTA slot 1  (OTA target)
+#   0x790000  nvs      448 KB    NVS (odin_cache, hist_meta, Wi-Fi, …)
+#   0x800000  littlefs   8 MB    History binary + future file storage
+#
+# Name,     Type, SubType,  Offset,    Size,    Flags
+otadata,    data, ota,      0x9000,    0x2000,
+phy_init,   data, phy,       0xb000,    0x1000,
+app0,       app,  ota_0,    0x10000,   0x3C0000,
+app1,       app,  ota_1,    0x3D0000,  0x3C0000,
+nvs,        data, nvs,      0x790000,  0x70000,
+history,    data, littlefs, 0x800000,  0x800000,

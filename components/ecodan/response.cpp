@@ -34,6 +34,26 @@ namespace ecodan
         return fault_code;
     }
 
+    inline void sync_mode_select(select::Select* select_cmp, Status::HpMode current_mode) {
+        if (select_cmp == nullptr)
+            return;
+
+        // Do not update the select box if the zone is OFF
+        if (current_mode == Status::HpMode::OFF) {
+            ESP_LOGD(TAG, "Zone is OFF, skipping select component update.");
+            return;
+        }
+
+        const auto &options = select_cmp->traits.get_options();
+        size_t index = static_cast<size_t>(current_mode);
+
+        if (index < options.size()) {
+            select_cmp->publish_state(std::string(options[index]));
+        } else {
+            ESP_LOGW(TAG, "Received unknown mode index: %zu", index);
+        }
+    }
+
     void EcodanHeatpump::handle_get_response(Message& res)
     {
         switch (res.payload_type<GetType>())
@@ -43,6 +63,7 @@ namespace ecodan
                 auto res_request_code = static_cast<Status::REQUEST_CODE>(res.get_int16(1));
                 if (activeRequestCode == res_request_code) {
                     activeRequestCode = Status::REQUEST_CODE::NONE;
+                    activeRequestCodeRetries = 0;
                 }
 
                 if (res[3] == 2 || res[3] == 1) {
@@ -196,6 +217,8 @@ namespace ecodan
             publish_state("dhw_secondary_temp", status.DhwSecondaryTemperature);
             status.update_output_power_estimation(specificHeatConstantOverride);
             publish_state("computed_output_power", status.ComputedOutputPower);
+
+            //ESP_LOGE(TAG, "Feed: %.2f°C vs %.2f°C, Return: %.2f°C vs %.2f°C", res.get_float8_v4(3), status.HpFeedTemperature, res.get_float8_v4(6), status.HpReturnTemperature);
             break;
         case GetType::TEMPERATURE_STATE_B:
             status.Z1FeedTemperature = res.get_float16(1);
@@ -285,7 +308,7 @@ namespace ecodan
             publish_state("status_compressor", status.CompressorOn);
             //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
             break;
-        case GetType::PUMP_STATUS:
+        case GetType::PUMP_STATUS_A:
         {
             // byte 1 = pump running on/off
             // byte 4 = pump 2
@@ -336,6 +359,14 @@ namespace ecodan
             publish_state("mixing_valve_step", static_cast<float>(status.MixingValveStep));
             //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
         }
+            break;
+        case GetType::PUMP_STATUS_B:
+        {   
+            // byte 8 - Z1  Mixing valve step
+            status.MixingValveStep = res[8];   
+            publish_state("mixing_valve_step_z1", static_cast<float>(status.MixingValveStepZ1));
+            //ESP_LOGI(TAG, res.debug_dump_packet().c_str());
+        }
             break;              
         case GetType::FLOW_RATE:
             // booster = 2, 
@@ -363,13 +394,18 @@ namespace ecodan
             status.DhwFlowTemperatureSetPoint = res.get_float16(8);
             //status.RadiatorFlowTemperatureSetPoint = res.get_float16(12);
 
+            // update operating mode selections
+            if (this->selects.count("operating_mode_z1"))
+                sync_mode_select(this->selects["operating_mode_z1"], status.HeatingCoolingMode);
+    
+            if (this->selects.count("operating_mode_z2"))
+                sync_mode_select(this->selects["operating_mode_z2"], status.HeatingCoolingModeZone2);
+
             publish_state("status_power", status.Power == Status::PowerMode::ON);
             publish_state("status_dhw_eco", status.HotWaterMode == Status::DhwMode::ECO);
             publish_state("status_operation", static_cast<float>(status.Operation));
             // publish numeric operation mode for callbacks
             publish_state("operation_mode", static_cast<float>(status.Operation));
-            publish_state("status_heating_cooling", static_cast<float>(status.HeatingCoolingMode));
-            publish_state("status_heating_cooling_z2", static_cast<float>(status.HeatingCoolingModeZone2));
 
             publish_state("dhw_flow_temp_target", status.DhwFlowTemperatureSetPoint);
             //publish_state("sh_flow_temp_target", status.RadiatorFlowTemperatureSetPoint);
@@ -441,7 +477,9 @@ namespace ecodan
             status.DipSwitch4 = res[7];
             status.DipSwitch5 = res[9];
             status.DipSwitch6 = res[11];
+            status.DipSwitch7 = res[13];
             initialCount |= 2;
+            publish_state("status_zone2_enabled", status.has_2zones());
             break;
         default:
             ESP_LOGI(TAG, "Unknown response type received on serial port: %u", static_cast<uint8_t>(res.payload_type<GetType>()));

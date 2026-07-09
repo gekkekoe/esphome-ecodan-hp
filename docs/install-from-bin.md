@@ -1,7 +1,15 @@
-# easy install
+## ⚠️ WARNING flashing factory image resets all your settings to default
+> **Recovery mode**:
+>
+> Only use the **factory** variant of the firmware when flashing via the web.esphome.io site.
+> If you use the ota image, your unit will go into bootloop and you need to enter recovery mode to recover from this.
+> Flash the ota image via http://ecodan-heatpump.local or http://ip)
+
+
 ## Get the factory.bin firmware for initial flash
 * Go to https://github.com/gekkekoe/esphome-ecodan-hp/releases/latest and download one of the factory.bin files. 
 ```
+Firmware for Asgard: asgard-yy-xx-version.factory.bin (where xx = language, yy = number of supported zones, single firmware for both proxy and non-proxy)
 Firmware for Atom S3 (Lite): esp32s3-yy-xx-version.factory.bin (where xx = language, yy = number of supported zones)
 Firmware for Atom S3 (Lite) with proxy PCB: esp32s3-proxy2-yy-xx-version.factory.bin (where xx = language, yy = number of supported zones)
 ```

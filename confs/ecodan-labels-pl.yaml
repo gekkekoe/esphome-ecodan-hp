@@ -24,20 +24,21 @@ substitutions:
   version: Wersja ESP
   led_brightness: Jasność LED
   led_switch: LED
+  heatpump_switch_regular_dhw: Normalne CWU
   heatpump_switch_force_dhw: Wymuszenie CWU
   heatpump_switch_power_mode: Tryb grzania
   heatpump_switch_holiday: Tryb wakacyjny (sterowanie)
   wifi_signal_proc: Sygnał WiFi %
   wifi_signal_db: Sygnał WiFi dB
-  z1_flow_temp_target: Ustawiona wartość H/C Strefa 1
+  z1_flow_temp_target: Ustawiona wartość Strefa 1
   status_prohibit_cool_z1: Zakaz chłodzenia Strefa 1
   status_prohibit_heating_z1: Zakaz ogrzewania Strefa 1
   heatpump_climate_z1: Strefa 1 Temp. Zasilania
   heatpump_climate_room_z1: Strefa 1 Temp. Pokojowa
   z1_room_temp_target: Ustawiona temperatura Strefa 1
   z1_room_temp: Temperatura Strefa 1
-  heatpump_number_z2_set_flow_temperature: Ustawiona temperatura H/C Strefa 2
-  z2_flow_temp_target: Ustawiona wartość H/C Strefa 2
+  heatpump_number_z2_set_flow_temperature: Ustawiona temperatura Strefa 2
+  z2_flow_temp_target: Ustawiona wartość Strefa 2
   status_prohibit_cool_z2: Zakaz chłodzenia Strefa 2
   status_prohibit_heating_z2: Zakaz ogrzewania Strefa 2
   heatpump_number_z2_set_room_temperature: Ustawiona temperatura Strefa 2
@@ -142,7 +143,8 @@ substitutions:
   cooling_smart_start_temp: 'Autoadaptacja: Inteligentna Temp. Startu Chłodzenia'
   temperature_feedback_source: 'Autoadaptacja: Źródło Temperatury w Pomieszczeniu'
   temperature_feedback_option_room: 'Termostat Pokojowy'
-  select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant or REST API'
+  select_feedback_option_asgard_vt: 'Wirtualny Termostat Asgard'
   heating_system_type: 'Autoadaptacja: Typ Systemu Grzewczego'
   heating_system_type_option_ufh: 'Ogrzewanie Podłogowe'
   heating_system_type_option_ufh_rad: 'Ogrzewanie Podłogowe + Grzejniki'
@@ -165,3 +167,27 @@ substitutions:
   solver_kwh_meter_feedback_source: "Źródło licznika energii"
   solver_kwh_meter_option_internal: "Wewnętrzny licznik energii"
   solver_kwh_meter_feedback: "Sprzężenie zwrotne licznika"
+
+  solver_dhw_mode: Tryb CWU solvera
+  solver_dhw_mode_option_regular: Normalny
+  solver_dhw_mode_option_forced: Wymuszony
+
+  asgard_vt_temp_sensor_source: 'Źródło Wirtualnego Termostatu'
+
+  sw_use_solver: "Włącz dynamiczny kalkulator kosztów"
+  bin_solver_connected: "Status online kalkulatora"
+  num_raw_heat_produced: "Surowe wyprodukowane ciepło (kWh)"
+  num_raw_elec_consumed: "Surowe zużycie prądu (kWh)"
+  num_raw_runtime_hours: "Surowy czas pracy (Godziny)"
+  num_raw_avg_outside_temp: "Surowa śr. temp. na zewnątrz (°C)"
+  num_raw_avg_room_temp: "Surowa śr. temp. w pomieszczeniu (°C)"
+  num_raw_delta_room_temp: "Surowa delta temp. w pomieszczeniu (°C)"
+  num_battery_soc_kwh: "Stan naładowania baterii (kWh)"
+  num_battery_max_discharge_kw: "Maks. rozładowanie baterii (kW)"
+  num_raw_hl_tm_product: "Surowy iloczyn HL×TM"
+  num_raw_solar_factor: "Współczynnik pasywnych zysków słonecznych"
+
+  num_raw_cool_produced: "Wyprodukowane chłodzenie (Surowe)"
+  num_raw_cool_elec_consumed: "Zużycie prądu chłodzenie (Surowe)"
+  num_raw_cool_runtime_hours: "Czas pracy chłodzenia (Surowe)"
+  num_raw_cool_avg_outside_temp: "Śr. temp. zewn. chłodzenia (Surowe)"

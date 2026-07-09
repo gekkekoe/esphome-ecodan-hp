@@ -24,20 +24,21 @@ substitutions:
   version: ESP Versione
   led_brightness: LED Luminosità
   led_switch: LED
+  heatpump_switch_regular_dhw: ACS normale
   heatpump_switch_force_dhw: Forza ACS
   heatpump_switch_power_mode: Ecodan
   heatpump_switch_holiday: Modalità Vacanza
   wifi_signal_proc: WiFi Segnale %
   wifi_signal_db: WiFi Segnale dB
-  z1_flow_temp_target: Z1 C/F T. Mandata
+  z1_flow_temp_target: Z1 T. Mandata
   status_prohibit_cool_z1: Z1 Raff. Proibito
   status_prohibit_heating_z1: Z1 Risc. Proibito
   heatpump_climate_z1: Zona 1 Temp. Mandata
   heatpump_climate_room_z1: Zona 1 Temp. Ambiente
   z1_room_temp_target: Z1 T. Ambiente Desiderata
   z1_room_temp: Z1 T. Ambiente
-  heatpump_number_z2_set_flow_temperature: Z2 C/F Mandata
-  z2_flow_temp_target: Z2 C/F T. Mandata
+  heatpump_number_z2_set_flow_temperature: Z2 Mandata
+  z2_flow_temp_target: Z2 T. Mandata
   status_prohibit_cool_z2: Z2 Raff. Proibito
   status_prohibit_heating_z2: Z2 Risc. Proibito
   heatpump_number_z2_set_room_temperature: Z2 T. Ambiente
@@ -143,7 +144,8 @@ substitutions:
   cooling_smart_start_temp: 'Autoadattivo: Temp. di Avvio Intelligente Raffrescamento'
   temperature_feedback_source: 'Autoadattivo: Fonte Temperatura Ambiente'
   temperature_feedback_option_room: 'Termostato Ambiente'
-  select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant or REST API'
+  select_feedback_option_asgard_vt: 'Termostato Virtuale Asgard'
   heating_system_type: 'Autoadattivo: Tipo di Impianto'
   heating_system_type_option_ufh: 'Riscaldamento a Pavimento'
   heating_system_type_option_ufh_rad: 'Riscaldamento a Pavimento + Radiatori'
@@ -166,3 +168,27 @@ substitutions:
   solver_kwh_meter_feedback_source: "Fonte contatore"
   solver_kwh_meter_option_internal: "Contatore interno"
   solver_kwh_meter_feedback: "Feedback contatore kWh"
+
+  solver_dhw_mode: Modalità ACS del Solver
+  solver_dhw_mode_option_regular: Normale
+  solver_dhw_mode_option_forced: Forzato
+
+  asgard_vt_temp_sensor_source: 'Sorgente Termostato Virtuale'
+
+  sw_use_solver: "Abilita risolutore di costi dinamici"
+  bin_solver_connected: "Stato online risolutore"
+  num_raw_heat_produced: "Calore grezzo prodotto (kWh)"
+  num_raw_elec_consumed: "Elettricità grezza consumata (kWh)"
+  num_raw_runtime_hours: "Tempo di esecuzione grezzo (Ore)"
+  num_raw_avg_outside_temp: "Temp. esterna media grezza (°C)"
+  num_raw_avg_room_temp: "Temp. ambiente media grezza (°C)"
+  num_raw_delta_room_temp: "Delta temp. ambiente grezza (°C)"
+  num_battery_soc_kwh: "Stato di carica batteria (kWh)"
+  num_battery_max_discharge_kw: "Scarica max batteria (kW)"
+  num_raw_hl_tm_product: "Prodotto HL×TM grezzo"
+  num_raw_solar_factor: "Fattore di guadagno solare passivo"
+
+  num_raw_cool_produced: "Raffreddamento prodotto (Grezzo)"
+  num_raw_cool_elec_consumed: "Consumo elet. raffredd. (Grezzo)"
+  num_raw_cool_runtime_hours: "Tempo funz. raffreddamento (Grezzo)"
+  num_raw_cool_avg_outside_temp: "Temp. est. media raffredd. (Grezzo)"

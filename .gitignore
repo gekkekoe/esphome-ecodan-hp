@@ -5,12 +5,15 @@ venv
 build.yaml
 proxy.yaml
 asgard.yaml
+factory.yaml
+mqtt.yaml
 Firmware.bin
 sdkconfig.esp32dev
 CMakeLists.txt
 firmware.bin
 components/ecodan/__pycache__/*
 components/optimizer/__pycache__/*
+components/asgard_dashboard/__pycache__/*
 secrets.yaml
 .python-version
 *.DS_Store

@@ -5,6 +5,7 @@
 #include <chrono>
 #include <optional>
 #include <atomic>
+#include <queue>
 
 #include "esphome.h"
 #include "esphome/core/component.h"
@@ -13,6 +14,8 @@
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#include "esphome/components/select/select.h"
+#include "esphome/components/thermostat/thermostat_climate.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -58,6 +61,11 @@ namespace ecodan
             }
         }
 
+        void register_select(const std::string &key, select::Select *obj) {
+            if (obj != nullptr) 
+                this->selects[key] = obj;
+        }
+
         void enable_request_code_sensors() {
             hasRequestCodeSensors = true;
         }
@@ -67,6 +75,7 @@ namespace ecodan
         }
 
         // exposed as external component commands
+        void set_ignore_slave_cmd(bool ignoreCmds) { ignoreSlaveCMDs = ignoreCmds; };
         void set_room_temperature(float value, esphome::ecodan::Zone zone);
         void set_flow_target_temperature(float value, esphome::ecodan::Zone zone);
         void set_dhw_target_temperature(float value);
@@ -80,6 +89,7 @@ namespace ecodan
         void set_svc_state_before_lockout(CONTROLLER_FLAG flag) { serverControlFlagBeforeLockout = flag; }
         void reset_svc_state_before_lockout() { serverControlFlagBeforeLockout.reset(); }
         void set_specific_heat_constant(float newConstant) { specificHeatConstantOverride = newConstant; }
+        float get_specific_heat_constant() const { return specificHeatConstantOverride; }
         void set_polling_interval(uint32_t ms) { this->set_update_interval(ms); }
         void set_uart_parent(uart::UARTComponent *uart) { this->uart_ = uart; }
         void set_proxy_uart(uart::UARTComponent *uart) { this->proxy_uart_ = uart; }
@@ -90,6 +100,7 @@ namespace ecodan
         std::map<std::string, sensor::Sensor*> sensors;
         std::map<std::string, text_sensor::TextSensor*> textSensors;
         std::map<std::string, binary_sensor::BinarySensor*> binarySensors;
+        std::map<std::string, select::Select*> selects;
 
         // publish func
         void publish_state(const std::string& sensorKey, float sensorValue);
@@ -106,7 +117,8 @@ namespace ecodan
         uart::UARTComponent *uart_ = nullptr;
         uart::UARTComponent *proxy_uart_ = nullptr;
         uint8_t initialCount = 0;
-        bool slave_detected_ = false;
+        bool slaveDetected = false;
+        bool ignoreSlaveCMDs = false;
 
         Status status;
         float temperatureStep = 0.5f;
@@ -117,6 +129,7 @@ namespace ecodan
         bool hasRequestCodeSensors = false;
         bool requestCodesEnabled = true;
         Status::REQUEST_CODE activeRequestCode = Status::REQUEST_CODE::NONE;
+        uint8_t activeRequestCodeRetries = 0;
 
         std::optional<CONTROLLER_FLAG> serverControlFlagBeforeLockout = {};
         std::queue<QueuedCommand> cmdQueue;
@@ -189,6 +202,41 @@ namespace ecodan
         void get_current_limits(float &min_limit, float &max_limit);
         std::chrono::time_point<std::chrono::steady_clock> last_update;
     };    
+
+    class EcodanVirtualThermostat : public thermostat::ThermostatClimate {
+    public:
+        void control(const climate::ClimateCall &call) override {
+
+            if (call.get_target_temperature().has_value()) {
+                this->target_temperature = *call.get_target_temperature();
+            }
+            if (!std::isnan(this->target_temperature)) {
+                this->target_temperature_low = this->target_temperature;
+                this->target_temperature_high = this->target_temperature;
+            }
+            thermostat::ThermostatClimate::control(call);  
+        };
+
+        climate::ClimateTraits traits() override {
+            auto traits = thermostat::ThermostatClimate::traits();
+            traits.clear_feature_flags(climate::CLIMATE_SUPPORTS_TWO_POINT_TARGET_TEMPERATURE);
+            traits.add_feature_flags(climate::CLIMATE_SUPPORTS_ACTION);
+            traits.add_feature_flags(climate::CLIMATE_SUPPORTS_CURRENT_TEMPERATURE);
+
+            traits.set_supported_modes({
+                climate::CLIMATE_MODE_OFF,
+                climate::CLIMATE_MODE_HEAT,
+                climate::CLIMATE_MODE_COOL
+            });
+
+            traits.set_visual_min_temperature(8);
+            traits.set_visual_max_temperature(28);
+            traits.set_visual_target_temperature_step(0.1);
+            traits.set_visual_current_temperature_step(0.1);
+
+            return traits;
+        }
+    };
 
 } // namespace ecodan
 } // namespace esphome

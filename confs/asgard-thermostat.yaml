@@ -2,6 +2,7 @@ number:
   - platform: template
     id: asgard_vt_input_${zone_identifier}
     name: "Virtual Thermostat Input ${zone_identifier}" 
+    device_class: temperature
     unit_of_measurement: "°C"
     optimistic: true
     restore_value: true
@@ -11,23 +12,87 @@ number:
     step: 0.1
     on_value:
       then:
-        - component.update: asgard_vt_feedback_${zone_identifier}
+        - if:
+            condition:
+              lambda: |-
+                auto idx = id(asgard_vt_temp_sensor_source_${zone_identifier}).active_index().value_or(0);
+                return idx == 0;
+            then:
+              - component.update: asgard_vt_feedback_${zone_identifier}
+
+  - platform: template
+    name: "Asgard Hysteresis ${zone_identifier}"
+    id: thermostat_hysteresis_${zone_identifier}
+    icon: "mdi:arrow-expand-vertical"
+    unit_of_measurement: "°C"
+    min_value: 0.1
+    max_value: 2.0
+    step: 0.1
+    restore_value: true
+    initial_value: 0.5
+    optimistic: true
+    on_value:
+      then:
+        - lambda: |-
+            id(virtual_climate_${zone_identifier}).set_heat_deadband(0);
+            id(virtual_climate_${zone_identifier}).set_heat_overrun(x);
+            id(virtual_climate_${zone_identifier}).set_cool_deadband(0);
+            id(virtual_climate_${zone_identifier}).set_cool_overrun(x);
 
 sensor:
   - platform: template
     id: asgard_vt_feedback_${zone_identifier}
     internal: true 
     unit_of_measurement: "°C"
-    lambda: |-
-      return id(asgard_vt_input_${zone_identifier}).state;
     update_interval: 60s
+    lambda: |-
+      auto idx = id(asgard_vt_temp_sensor_source_${zone_identifier}).active_index().value_or(0);
+      
+      if (idx == 0) {
+        return id(asgard_vt_input_${zone_identifier}).state;
+      }
+      
+      // Index 1: OneWire Sensor
+      if (idx == 1) {
+        return id(gl_temp_${zone_identifier});
+      }
+
+      // Index 2: MRC/RCx
+      if (idx == 2) {
+        auto& status = id(ecodan_instance).get_status();
+        return "${zone_identifier}" == "z1" ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
+      }
+      return NAN;
+
+select:
+  - platform: template
+    id: asgard_vt_temp_sensor_source_${zone_identifier}
+    name: "${asgard_vt_temp_sensor_source} ${zone_identifier}"
+    optimistic: true
+    restore_value: true
+    options:
+      - "Virtual Thermostat Input ${zone_identifier}" 
+      - "DS18x20 ${zone_identifier}"
+      - "MRC or RCx"
+    initial_option: "Virtual Thermostat Input ${zone_identifier}" 
+    set_action:
+      then:
+        - component.update: asgard_vt_feedback_${zone_identifier}
 
 switch:
+  - platform: template
+    id: sw_odin_override_${zone_identifier}
+    name: "ODIN Relay Override ${zone_identifier}"
+    internal: true
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+
   - platform: gpio
     pin: ${gpio}
     id: asgard_relay_${zone_identifier}
     name: "Hardware Relay ${zone_identifier}"
     internal: true 
+    restore_mode: RESTORE_DEFAULT_OFF
 
   - platform: template
     name: "Manual Relay ${zone_identifier}"
@@ -37,7 +102,7 @@ switch:
     turn_on_action:
       - if:
           condition:
-            lambda: 'return id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF;'
+            lambda: 'return !id(sw_odin_override_${zone_identifier}).state && (id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF);'
           then:
             - switch.turn_on: asgard_relay_${zone_identifier}
           else:
@@ -46,23 +111,15 @@ switch:
     turn_off_action:
       - if:
           condition:
-             lambda: 'return id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF;'
+             lambda: 'return !id(sw_odin_override_${zone_identifier}).state && (id(virtual_climate_${zone_identifier}).mode == climate::CLIMATE_MODE_OFF);'
           then:
             - switch.turn_off: asgard_relay_${zone_identifier}
 
-  - platform: template
-    id: demand_switch_${zone_identifier}
-    internal: true
-    lambda: 'return id(asgard_relay_${zone_identifier}).state;'
-    turn_on_action:
-      - switch.turn_on: asgard_relay_${zone_identifier}
-    turn_off_action:
-      - switch.turn_off: asgard_relay_${zone_identifier}
-
 climate:
-  - platform: thermostat
+  - platform: ecodan
     name: "Virtual Thermostat ${zone_identifier}"
     id: virtual_climate_${zone_identifier}
+    variant: virtual
     sensor: asgard_vt_feedback_${zone_identifier}
     
     visual:
@@ -70,21 +127,33 @@ climate:
       max_temperature: 30
       temperature_step: 0.1
     
-    heat_deadband: 0.5
+    heat_deadband: 0
     heat_overrun: 0.5
-    cool_deadband: 0.5
+    cool_deadband: 0
     cool_overrun: 0.5
     
     heat_action:
-      - switch.turn_on: demand_switch_${zone_identifier}
+      - if:
+          condition:
+            lambda: 'return !id(sw_odin_override_${zone_identifier}).state;'
+          then:
+            - switch.turn_on: asgard_relay_${zone_identifier}
     cool_action:
-      - switch.turn_on: demand_switch_${zone_identifier}
+      - if:
+          condition:
+            lambda: 'return !id(sw_odin_override_${zone_identifier}).state;'
+          then:
+            - switch.turn_on: asgard_relay_${zone_identifier}
     idle_action:
-      - switch.turn_off: demand_switch_${zone_identifier}
+      - if:
+          condition:
+            lambda: 'return !id(sw_odin_override_${zone_identifier}).state;'
+          then:
+            - switch.turn_off: asgard_relay_${zone_identifier}
 
-    # enfore min runtime of 15m, or user supplied
-    min_heating_run_time: 15min
-    min_cooling_run_time: 15min
+    # disabled min runtimes, too many questions
+    min_heating_run_time: 0s
+    min_cooling_run_time: 0s
     min_idle_time: 0s        
     min_heating_off_time: 0s 
     min_cooling_off_time: 0s

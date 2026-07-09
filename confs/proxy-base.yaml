@@ -1,0 +1,88 @@
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendlyName}
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32:
+  board: esp32-s3-devkitc-1
+  flash_size: 8MB
+  cpu_frequency: 240MHz
+  framework:
+    type: esp-idf
+    version: recommended
+    # Custom sdkconfig options
+    sdkconfig_options:
+      COMPILER_OPTIMIZATION_SIZE: y
+      # CONFIG_COMPILER_OPTIMIZATION_ASSERTIONS_ENABLE: y
+      # COMPILER_OPTIMIZATION_DEFAULT: y 
+      CONFIG_BT_ENABLED: n
+      CONFIG_FREERTOS_USE_TRACE_FACILITY: y
+      CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS: y
+      CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS: y
+      CONFIG_ESP_MAIN_TASK_STACK_SIZE: "8192"
+      CONFIG_HTTPD_TASK_STACK_SIZE: "8192"
+      CONFIG_LWIP_TCPIP_TASK_STACK_SIZE: "12288"
+
+      # Replace the crashing assert with a graceful return
+      CONFIG_LWIP_NETCONN_FULLDUPLEX: y        # prevents use-after-close race on netconn
+      CONFIG_LWIP_TCP_CLOSE_TIMEOUT_MS: "2000" # don't linger too long on broken connections
+      CONFIG_LWIP_MAX_ACTIVE_TCP: "16" 
+      CONFIG_LWIP_TCP_RECVMBOX_SIZE: "8"
+      CONFIG_LWIP_TCPIP_RECVMBOX_SIZE: "32"
+      CONFIG_LWIP_SO_RCVBUF: y 
+
+uart:
+  - id: uart_ecodan
+    rx_pin:
+      number: GPIO${uart_rx_pin}
+      mode:
+        input: true
+        pullup: true
+    tx_pin:
+      number: GPIO${uart_tx_pin}
+      mode:
+        output: true
+    baud_rate: 2400
+    parity: EVEN
+    stop_bits: 1
+    debug:
+      direction: BOTH
+      dummy_receiver: false
+      after:
+        timeout: 50ms
+      sequence:
+        - lambda: if (id(uart_debug_switch).state) UARTDebug::log_hex(direction, bytes, ' ');
+
+  - id: uart_proxy
+    rx_pin:
+      number: GPIO${uart_proxy_rx_pin}
+      mode:
+        input: true
+        pullup: true
+    tx_pin:
+      number: GPIO${uart_proxy_tx_pin}
+      mode:
+        output: true
+    baud_rate: 9600
+    parity: EVEN
+    stop_bits: 1
+    debug:
+      direction: BOTH
+      dummy_receiver: false
+      after:
+        timeout: 50ms
+      sequence:
+        - lambda: if (id(uart_debug_switch).state) UARTDebug::log_hex(direction, bytes, '_');  
+
+ecodan:
+  uart_id: uart_main
+  proxy_uart_id: uart_proxy
+
+###  ESP restart button
+button:
+  - platform: restart
+    id: restart_button
+    name: ${restart_button}
+

@@ -24,20 +24,21 @@ substitutions:
   version: ESP-versjon
   led_brightness: LED lysstyrke
   led_switch: LED
+  heatpump_switch_regular_dhw: Normalt DHW
   heatpump_switch_force_dhw: Tving DHW
   heatpump_switch_power_mode: Varmepumpe
   heatpump_switch_holiday: Ferie-modus kontroll
   wifi_signal_proc: WiFi-signal %
   wifi_signal_db: WiFi-signal dB
-  z1_flow_temp_target: Sone 1 H/C innstilt verdi
+  z1_flow_temp_target: Sone 1 innstilt verdi
   status_prohibit_cool_z1: Sone 1 kjøling forbudt
   status_prohibit_heating_z1: Sone 1 oppvarming forbudt
   heatpump_climate_z1: Sone 1 Turtemp
   heatpump_climate_room_z1: Sone 1 Romtemp
   z1_room_temp_target: Sone 1 rominnstilling
   z1_room_temp: Sone 1 romtemperatur
-  heatpump_number_z2_set_flow_temperature: Sone 2 H/C innstilling
-  z2_flow_temp_target: Sone 2 H/C innstilt verdi
+  heatpump_number_z2_set_flow_temperature: Sone 2 innstilling
+  z2_flow_temp_target: Sone 2 innstilt verdi
   status_prohibit_cool_z2: Sone 2 kjøling forbudt
   status_prohibit_heating_z2: Sone 2 oppvarming forbudt
   heatpump_number_z2_set_room_temperature: Sone 2 rominnstilling
@@ -142,7 +143,8 @@ substitutions:
   cooling_smart_start_temp: 'Autoadaptiv: Smart Start Temp Kjøling'
   temperature_feedback_source: 'Autoadaptiv: Kilde for Romtemperatur'
   temperature_feedback_option_room: 'Romtermostat'
-  select_feedback_option_api: 'Home Assistant / REST API'
+  select_feedback_option_api: 'Home Assistant or REST API'
+  select_feedback_option_asgard_vt: 'Asgard Virtuell Termostat'
   heating_system_type: 'Autoadaptiv: Type Varmesystem'
   heating_system_type_option_ufh: 'Gulvvarme'
   heating_system_type_option_ufh_rad: 'Gulvvarme + Radiatorer'
@@ -165,3 +167,27 @@ substitutions:
   solver_kwh_meter_feedback_source: "Energimåler kilde"
   solver_kwh_meter_option_internal: "Intern energimåler"
   solver_kwh_meter_feedback: "kWh-måler tilbakemelding"
+
+  solver_dhw_mode: Solver varmtvannsmodus
+  solver_dhw_mode_option_regular: Normal
+  solver_dhw_mode_option_forced: Tvunget
+
+  asgard_vt_temp_sensor_source: 'Kilde Virtuell Termostat'
+
+  sw_use_solver: "Aktiver dynamisk kostnadsberegner"
+  bin_solver_connected: "Beregner online-status"
+  num_raw_heat_produced: "Rå produsert varme (kWh)"
+  num_raw_elec_consumed: "Rå forbrukt strøm (kWh)"
+  num_raw_runtime_hours: "Rå driftstid (Timer)"
+  num_raw_avg_outside_temp: "Rå gj.snitt utetemp. (°C)"
+  num_raw_avg_room_temp: "Rå gj.snitt romtemp. (°C)"
+  num_raw_delta_room_temp: "Rå delta romtemp. (°C)"
+  num_battery_soc_kwh: "Batteri SoC (kWh)"
+  num_battery_max_discharge_kw: "Maks. batteriutlading (kW)"
+  num_raw_hl_tm_product: "Rått HL×TM-produkt"
+  num_raw_solar_factor: "Passiv solvarmefaktor"
+
+  num_raw_cool_produced: "Produsert kjøling (Rådata)"
+  num_raw_cool_elec_consumed: "Strømforbruk kjøling (Rådata)"
+  num_raw_cool_runtime_hours: "Driftstid kjøling (Rådata)"
+  num_raw_cool_avg_outside_temp: "Gj.snitt utetemp. kjøling (Rådata)"

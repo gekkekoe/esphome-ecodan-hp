@@ -1,3 +1,16 @@
+# lambda: in the template sensors are causing reboots, so remove them and seed them on boot.
+esphome:
+  on_boot:
+    priority: 600 
+    then:
+      - lambda: |-
+          id(sensor_heating_consumed_total).publish_state(id(total_heating_consumed));
+          id(sensor_heating_produced_total).publish_state(id(total_heating_produced));
+          id(sensor_cooling_consumed_total).publish_state(id(total_cooling_consumed));
+          id(sensor_cooling_produced_total).publish_state(id(total_cooling_produced));
+          id(sensor_dhw_consumed_total).publish_state(id(total_dhw_consumed));
+          id(sensor_dhw_produced_total).publish_state(id(total_dhw_produced));
+
 globals:
   - id: total_heating_consumed
     type: float
@@ -52,13 +65,17 @@ globals:
 sensor:
   - platform: ecodan
     cool_cop:
+      id: cool_cop
       name: ${cool_cop}
     heating_cop:
+      id: heating_cop
       name: ${heating_cop}    
     dhw_cop:
+      id: ddhw_cop
       name: ${dhw_cop}
 
     cool_consumed:
+      id: cool_consumed
       name: ${cool_consumed}
       filters:
         - filter_out: nan
@@ -69,7 +86,6 @@ sensor:
             if (today == -1) return;
 
             int last_day = id(last_cooling_consumed_update_day);
-
             if (last_day == -1) {
               id(last_cooling_consumed_update_day) = today;
               last_day = today;
@@ -80,7 +96,9 @@ sensor:
               id(last_cooling_consumed_update_day) = today;
               id(sensor_cooling_consumed_total).publish_state(id(total_cooling_consumed));
             }
+
     cool_delivered:
+      id: cool_delivered
       name: ${cool_delivered}
       filters:
         - filter_out: nan
@@ -91,7 +109,6 @@ sensor:
             if (today == -1) return;
 
             int last_day = id(last_cooling_produced_update_day);
-
             if (last_day == -1) {
               id(last_cooling_produced_update_day) = today;
               last_day = today;
@@ -104,6 +121,7 @@ sensor:
             }
 
     heating_consumed:
+      id: heating_consumed
       name: ${heating_consumed}
       filters:
         - filter_out: nan
@@ -114,7 +132,6 @@ sensor:
             if (today == -1) return;
 
             int last_day = id(last_heating_consumed_update_day);
-
             if (last_day == -1) {
               id(last_heating_consumed_update_day) = today;
               last_day = today;
@@ -125,7 +142,9 @@ sensor:
               id(last_heating_consumed_update_day) = today;
               id(sensor_heating_consumed_total).publish_state(id(total_heating_consumed));
             }
+
     heating_delivered:
+      id: heating_delivered
       name: ${heating_delivered}
       filters:
         - filter_out: nan
@@ -136,7 +155,6 @@ sensor:
             if (today == -1) return;
 
             int last_day = id(last_heating_produced_update_day);
-
             if (last_day == -1) {
               id(last_heating_produced_update_day) = today;
               last_day = today;
@@ -149,6 +167,7 @@ sensor:
             }
 
     dhw_consumed:
+      id: dhw_consumed
       name: ${dhw_consumed}
       filters:
         - filter_out: nan
@@ -159,7 +178,6 @@ sensor:
             if (today == -1) return;
 
             int last_day = id(last_dhw_consumed_update_day);
-
             if (last_day == -1) {
               id(last_dhw_consumed_update_day) = today;
               last_day = today;
@@ -170,7 +188,9 @@ sensor:
               id(last_dhw_consumed_update_day) = today;
               id(sensor_dhw_consumed_total).publish_state(id(total_dhw_consumed));
             }
+
     dhw_delivered:
+      id: dhw_delivered
       name: ${dhw_delivered}
       filters:
         - filter_out: nan
@@ -181,7 +201,6 @@ sensor:
             if (today == -1) return;
 
             int last_day = id(last_dhw_produced_update_day);
-
             if (last_day == -1) {
               id(last_dhw_produced_update_day) = today;
               last_day = today;
@@ -200,7 +219,7 @@ sensor:
     device_class: energy
     state_class: total_increasing
     accuracy_decimals: 2
-    lambda: return id(total_heating_consumed);
+    update_interval: never
       
   - platform: template
     name: ${total_increasing_heating_delivered}
@@ -209,7 +228,7 @@ sensor:
     device_class: energy
     state_class: total_increasing
     accuracy_decimals: 2
-    lambda: return id(total_heating_produced);
+    update_interval: never
       
   - platform: template
     name: ${total_increasing_cool_consumed}
@@ -218,7 +237,7 @@ sensor:
     device_class: energy
     state_class: total_increasing
     accuracy_decimals: 2
-    lambda: return id(total_cooling_consumed);
+    update_interval: never
       
   - platform: template
     name: ${total_increasing_cool_delivered}
@@ -227,7 +246,7 @@ sensor:
     device_class: energy
     state_class: total_increasing
     accuracy_decimals: 2
-    lambda: return id(total_cooling_produced);
+    update_interval: never
       
   - platform: template
     name: ${total_increasing_dhw_consumed}
@@ -236,7 +255,7 @@ sensor:
     device_class: energy
     state_class: total_increasing
     accuracy_decimals: 2
-    lambda: return id(total_dhw_consumed);
+    update_interval: never
       
   - platform: template
     name: ${total_increasing_dhw_delivered}
@@ -245,4 +264,4 @@ sensor:
     device_class: energy
     state_class: total_increasing
     accuracy_decimals: 2
-    lambda: return id(total_dhw_produced);
+    update_interval: never

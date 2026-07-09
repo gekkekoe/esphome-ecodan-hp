@@ -295,19 +295,15 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("refrigerant_error_code"): sensor.sensor_schema(
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
-        cv.Optional("status_heating_cooling"): sensor.sensor_schema(
-            entity_category=ENTITY_CATEGORY_NONE,
-            icon="mdi:thermostat",
-        ),
-        cv.Optional("status_heating_cooling_z2"): sensor.sensor_schema(
-            entity_category=ENTITY_CATEGORY_NONE,
-            icon="mdi:thermostat",
-        ),    
         cv.Optional("status_mixing_valve"): sensor.sensor_schema(
             icon="mdi:valve",
             state_class=ENTITY_CATEGORY_NONE,
         ), 
         cv.Optional("mixing_valve_step"): sensor.sensor_schema(
+            icon="mdi:valve",
+            state_class=STATE_CLASS_MEASUREMENT
+        ),
+        cv.Optional("mixing_valve_step_z1"): sensor.sensor_schema(
             icon="mdi:valve",
             state_class=STATE_CLASS_MEASUREMENT
         ),
@@ -379,7 +375,7 @@ CONFIG_SCHEMA = cv.Schema(
             unit_of_measurement=UNIT_REVOLUTIONS_PER_MINUTE,
             icon="mdi:fan",
             accuracy_decimals=0,
-            device_class=DEVICE_CLASS_FREQUENCY,
+            # device_class=DEVICE_CLASS_FREQUENCY,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         cv.Optional("pump_speed"): sensor.sensor_schema(

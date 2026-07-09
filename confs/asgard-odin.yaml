@@ -1,0 +1,401 @@
+http_request:
+  verify_ssl: false
+  timeout: 10s
+
+script:
+  - id: odin_ping_script
+    mode: single
+    then:
+      - if:
+          condition:
+            lambda: |-
+              // 1. Check if the solver is allowed to run
+              if (!id(sw_use_solver).state) {
+                if (id(bin_solver_connected).state) id(bin_solver_connected).publish_state(false);
+                return false;
+              }
+
+              // 2. Pause ping if an optimization data fetch is running
+              if (id(fetch_odin_optimization).is_running() || id(fetch_odin_optimization_attempt).is_running()) {
+                return false;
+              }
+
+              // 3. Skip if no valid IP configured (avoid mDNS .local resolution)
+              std::string target = id(txt_solver_ip).state;
+              if (target == "" || target == "0.0.0.0") return false;
+
+              // 4. Dynamic timer (5 min if online, 1 min if offline)
+              static uint32_t last_ping_time = 0;
+              uint32_t now = millis();
+              if (id(bin_solver_connected).state && last_ping_time != 0 && (now - last_ping_time < 300000)) {
+                return false;
+              }
+              last_ping_time = now;
+              return true;
+
+          then:
+            - http_request.get:
+                url: !lambda |-
+                  return "http://" + id(txt_solver_ip).state + "/api/version";
+                request_headers:
+                  Connection: close
+                on_response:
+                  then:
+                    - lambda: |-
+                        if (!id(bin_solver_connected).state) {
+                          id(bin_solver_connected).publish_state(true);
+                          ESP_LOGI("asgard_dashboard", "ODIN server is now ONLINE.");
+                        }
+                on_error:
+                  then:
+                    - lambda: |-
+                        if (id(bin_solver_connected).state) {
+                          id(bin_solver_connected).publish_state(false);
+                          ESP_LOGW("asgard_dashboard", "ODIN server is OFFLINE.");
+                        }
+
+  - id: fetch_odin_optimization
+    mode: single
+    then:
+      - lambda: 'id(odin_retry_count) = 0;'
+      - script.execute: fetch_odin_optimization_attempt
+
+  - id: process_odin_retry
+    mode: single
+    then:
+      - lambda: |-
+          // Retry logic: if not marked as done (-1), schedule another attempt
+          if (id(odin_retry_count) == -1) return; // success or permanent failure
+          id(odin_retry_count) += 1;
+          if (id(odin_retry_count) <= 3) {
+            ESP_LOGW("asgard_dashboard", "ODIN solve attempt %d failed, retrying in 15s...", id(odin_retry_count));
+          } else {
+            ESP_LOGE("asgard_dashboard", "ODIN solve failed after 3 retries, giving up.");
+            id(odin_retry_count) = -1;
+          }
+      - if:
+          condition:
+            lambda: 'return id(odin_retry_count) > 0 && id(odin_retry_count) <= 3;'
+          then:
+            - delay: 15s
+            - script.execute: fetch_odin_optimization_attempt
+
+  - id: fetch_odin_optimization_attempt
+    mode: single
+    then:
+      - if:
+          condition:
+            - switch.is_on: sw_use_solver
+            - lambda: 'return id(optimizer_ptr)->get_current_ecodan_hour() >= 0 && id(bin_solver_connected).state && id(txt_solver_ip).state != "0.0.0.0" && id(txt_solver_ip).state != "" && !id(odin_ping_script).is_running();'
+          then:
+            - http_request.post:
+                url: !lambda 'return "http://" + id(txt_solver_ip).state + "/api/solve";'
+                request_headers:
+                  Content-Type: application/json
+                  Connection: close
+                capture_response: true
+                max_response_buffer_size: 6144
+                
+                body: !lambda |-
+                  static char payload[1024];
+
+                  float solar_factor = id(num_raw_solar_factor).state;
+                  if (std::isnan(solar_factor) || solar_factor <= 0.001f) {
+                      solar_factor = 0.015f; // default
+                  }
+                  
+                  float _dhw_temp = std::isnan(id(dhw_temp).state) ? 0.0f : id(dhw_temp).state;
+                  float _dhw_target = std::isnan(id(dhw_flow_temp_target).state) ? 0.0f : id(dhw_flow_temp_target).state;
+                  float _dhw_drop = std::isnan(id(dhw_flow_temp_drop).state) ? 0.0f : id(dhw_flow_temp_drop).state;
+                  float _dhw_thresh = std::isnan(id(dhw_start_threshold).state) ? 0.0f : id(dhw_start_threshold).state;
+                  float _min_cool_flow = std::isnan(id(minimum_cooling_flow_temp_z1).state) ? 18.0f : id(minimum_cooling_flow_temp_z1).state;
+
+                  uint8_t _op_mode = 0; 
+                  // use selected operating mode to derive heating/cooling
+                  auto hc_mode = id(ecodan_instance).get_status().HeatingCoolingMode;
+                  if (hc_mode == ecodan::Status::HpMode::HEAT_FLOW_TEMP) {
+                      _op_mode = 2; // Heating
+                  } 
+                  else if (hc_mode == ecodan::Status::HpMode::COOL_FLOW_TEMP) {
+                      _op_mode = 3; // Cooling
+                  } else {
+                      // fallback to operating mode (for DHW/Legionella)
+                      _op_mode = static_cast<uint8_t>(id(optimizer_ptr)->get_current_operation_mode());
+                      
+                      // if Legionella is active, force threshold to 0 to disable DHW planning for this hour
+                      if (_op_mode == 6) {
+                        _dhw_thresh = 0.0f;
+                      }
+                  }
+
+                  int _cur_hour = id(optimizer_ptr)->get_current_ecodan_hour();
+
+                  snprintf(payload, sizeof(payload),
+                      "{\"params\":{"
+                      "\"heat_produced\":%.3f,"
+                      "\"elec_consumed\":%.3f,"
+                      "\"runtime_hours\":%.2f,"
+                      "\"avg_outside_temp\":%.2f,"
+                      "\"cool_produced\":%.2f,"
+                      "\"cool_elec_consumed\":%.2f,"
+                      "\"cool_runtime_hours\":%.2f,"
+                      "\"cool_avg_outside_temp\":%.2f,"
+                      "\"avg_room_temp\":%.2f,"
+                      "\"delta_room_temp\":%.2f,"
+                      "\"hl_tm_product\":%.4f,"
+                      "\"passive_solar_gain_factor\":%.4f,"
+                      "\"current_hour\":%d,"
+                      "\"current_room_temp\":%.2f,"
+                      "\"battery_soc_kwh\":%.2f,"
+                      "\"battery_max_discharge_kw\":%.2f,"
+                      "\"dhw_temp\":%.2f,"
+                      "\"dhw_target\":%.2f,"
+                      "\"dhw_drop\":%.2f,"
+                      "\"dhw_start_threshold\":%.2f,"
+                      "\"min_cool_flow\":%.2f,"
+                      "\"current_operation_mode\":%u"
+                      "}}",
+                      id(num_raw_heat_produced).state,
+                      id(num_raw_elec_consumed).state,
+                      id(num_raw_runtime_hours).state,
+                      id(num_raw_avg_outside_temp).state,
+                      id(num_raw_cool_produced).state,
+                      id(num_raw_cool_elec_consumed).state,
+                      id(num_raw_cool_runtime_hours).state,
+                      id(num_raw_cool_avg_outside_temp).state,
+                      id(num_raw_avg_room_temp).state,
+                      id(num_raw_delta_room_temp).state,
+                      id(num_raw_hl_tm_product).state,
+                      solar_factor,
+                      _cur_hour,
+                      id(virtual_climate_z1).current_temperature,
+                      id(num_battery_soc_kwh).state,
+                      id(num_battery_max_discharge_kw).state,
+                      _dhw_temp,
+                      _dhw_target,
+                      _dhw_drop,
+                      _dhw_thresh,
+                      _min_cool_flow,
+                      _op_mode
+                  );
+                  return std::string(payload);
+
+                on_response:
+                  then:
+                    - lambda: |-
+                        if (response->status_code == 200) {
+                          bool parse_ok = esphome::json::parse_json(body, [](JsonObject root) {
+                            if (root["success"].as<bool>()) {
+                              static std::vector<float> exp_end_t(48), nrg(48), prod(48), exp_t(48), cost(48), batt(48), sb(48), smn(48), smx(48), wth(48), sol(48), prc(48), op_mode(48);
+
+                              JsonArray j_eet = root["expected_end_temp"];
+                              JsonArray j_e  = root["energy_consumption"];
+                              JsonArray j_p  = root["heat_production"];
+                              JsonArray j_t  = root["expected_begin_temp"];
+                              JsonArray j_c  = root["expected_cost"];
+                              JsonArray j_b  = root["battery_discharge"];
+                              JsonArray j_sb = root["sched_base"];
+                              JsonArray j_smn = root["sched_min"];
+                              JsonArray j_smx = root["sched_max"];
+                              JsonArray j_wth = root["weather"];
+                              JsonArray j_sol = root["solar"];
+                              JsonArray j_prc = root["prices"];
+                              JsonArray j_op  = root["operation_mode"];
+
+                              bool has_p   = !j_p.isNull();
+                              bool has_b   = !j_b.isNull();
+                              bool has_sb  = !j_sb.isNull();
+                              bool has_smn = !j_smn.isNull();
+                              bool has_smx = !j_smx.isNull();
+                              bool has_wth = !j_wth.isNull();
+                              bool has_sol = !j_sol.isNull();
+                              bool has_prc = !j_prc.isNull();
+                              bool has_op  = !j_op.isNull();
+
+                              for (int i = 0; i < 48; i++) {
+                                exp_end_t[i] = j_eet[i].isNull() ? NAN : j_eet[i].as<float>();
+                                nrg[i]      = j_e[i].isNull() ? NAN : j_e[i].as<float>();
+                                prod[i]     = (!has_p || j_p[i].isNull()) ? NAN : j_p[i].as<float>();
+                                exp_t[i]    = j_t[i].isNull() ? NAN : j_t[i].as<float>();
+                                cost[i]     = j_c[i].isNull() ? NAN : j_c[i].as<float>();
+                                batt[i]     = (!has_b || j_b[i].isNull()) ? NAN : j_b[i].as<float>();
+                                sb[i]       = (!has_sb || j_sb[i].isNull()) ? NAN : j_sb[i].as<float>();
+                                smn[i]      = (!has_smn || j_smn[i].isNull()) ? NAN : j_smn[i].as<float>();
+                                smx[i]      = (!has_smx || j_smx[i].isNull()) ? NAN : j_smx[i].as<float>();
+                                wth[i]      = (!has_wth || j_wth[i].isNull()) ? NAN : j_wth[i].as<float>();
+                                sol[i]      = (!has_sol || j_sol[i].isNull()) ? NAN : j_sol[i].as<float>();
+                                prc[i]      = (!has_prc || j_prc[i].isNull()) ? NAN : j_prc[i].as<float>();
+                                op_mode[i]  = (!has_op || j_op[i].isNull()) ? NAN : j_op[i].as<float>();
+                              }
+
+                              int cur_hr = root["current_hour"].is<int>() ? root["current_hour"].as<int>() : id(optimizer_ptr)->get_current_ecodan_hour();
+                              int cur_day = id(optimizer_ptr)->get_current_ecodan_day();
+
+                              esphome::asgard_dashboard::EcodanDashboard::LastRunStats stats;
+                              stats.current_hour    = cur_hr;
+                              stats.execution_ms    = root["execution_ms"].as<uint32_t>();
+                              stats.evaluated_nodes = root["evaluated_nodes"].as<uint32_t>();
+                              stats.heat_loss       = root["used_heat_loss"].as<float>();
+                              stats.base_cop        = root["used_base_cop"].as<float>();
+                              stats.thermal_mass    = root["used_thermal_mass"].as<float>();
+                              stats.exp_consumption = root["total_consumption_kwh"].as<float>();
+                              stats.exp_production  = root["total_heat_produced_kwh"].as<float>();
+                              stats.exp_solar       = root["total_solar_used_kwh"].as<float>();
+                              stats.exp_solar_total = root["total_solar_kwh"].is<float>() ? root["total_solar_kwh"].as<float>() : stats.exp_solar;
+                              stats.total_cost      = root["total_cost"].as<float>();
+                              stats.used_solar_kwp  = root["used_solar_kwp"].is<float>() ? root["used_solar_kwp"].as<float>() : 0.0f;
+                              stats.min_output      = root["used_min_output"].is<float>() ? root["used_min_output"].as<float>() : 3.0f;
+                              stats.max_output      = root["used_max_output"].is<float>() ? root["used_max_output"].as<float>() : 8.0f;
+                              stats.bidding_zone    = root["bidding_zone"].is<std::string>() ? root["bidding_zone"].as<std::string>() : "NL";
+
+                              id(optimizer_ptr)->store_odin_data(cur_hr, stats.min_output, stats.max_output, prod, sol, op_mode);
+
+                              id(asgard_dashboard_id)->store_odin_data(
+                                cur_hr, cur_day, exp_end_t, nrg, prod, exp_t, cost, batt, sb, smn, smx, wth, sol, prc, op_mode, stats);
+
+                              // Mark success so retry logic knows we're done
+                              id(odin_retry_count) = -1;
+                            } else {
+                              ESP_LOGE("asgard_dashboard", "Solver failed to find a valid solution path!");
+                              if (root["error"].is<const char*>()) {
+                                  ESP_LOGE("ODIN_API", "Reason: %s", root["error"].as<const char*>());
+                              }
+                              id(odin_retry_count) = -1;
+                            }
+                            return true;
+                          });
+                          if (!parse_ok) {
+                            ESP_LOGW("asgard_dashboard", "JSON parse failed, will retry if attempts remain.");
+                          }
+                        } else {
+                          ESP_LOGW("asgard_dashboard", "ODIN returned HTTP %d, will retry if attempts remain.", response->status_code);
+                        }
+                    - script.execute: process_odin_retry
+
+interval:
+  - interval: 60s
+    then:
+      - lambda: |-
+          // Ensure we load NVS data once, and only when the Ecodan time is valid
+          static bool nvs_loaded = false;
+          int cur_day = id(optimizer_ptr)->get_current_ecodan_day();
+          int cur_hr  = id(optimizer_ptr)->get_current_ecodan_hour();
+          if (!nvs_loaded && cur_day != -1) {
+              id(asgard_dashboard_id)->load_odin_data(cur_day, cur_hr);
+              nvs_loaded = true;
+          }
+
+          // BOOT FETCH: Retry every 60s until the server is actually online
+          static bool initial_fetch_done = false;
+          if (nvs_loaded && !initial_fetch_done) {
+              // Wait until the solver is enabled AND the ping task confirms it is online
+              if (id(sw_use_solver).state && id(bin_solver_connected).state) {
+                  ESP_LOGI("asgard_dashboard", "Initial load: Server is ONLINE. Fetching MPC optimization.");
+                  id(fetch_odin_optimization)->execute();
+                  initial_fetch_done = true;
+              }
+          }
+
+          // DAY ROLLOVER: shift the 72h dashboard window right away, no solve needed
+          static int last_seen_day = -1;
+          if (initial_fetch_done && cur_day != -1) {
+              if (last_seen_day != -1 && cur_day != last_seen_day) {
+                  ESP_LOGI("asgard_dashboard", "Day rollover (%d -> %d): syncing 72h window.", last_seen_day, cur_day);
+                  id(asgard_dashboard_id)->sync_odin_day();
+              }
+              last_seen_day = cur_day;
+          }
+
+          if (id(optimizer_ptr)->check_and_clear_odin_fetch_request()) {
+            ESP_LOGI("asgard_dashboard", "fetching MPC optimization...");
+            id(fetch_odin_optimization)->execute();
+          }
+
+          {
+            // Hourly Accumulator
+            static int   last_hour = -1;
+            static int   last_day  = -1;
+
+            static float last_h_cons = -1.0f; // Heating Tracker
+            static float last_h_prod = -1.0f;
+            static float last_c_cons = -1.0f; // Cooling Tracker
+            static float last_c_prod = -1.0f;
+            static float last_d_cons = -1.0f; // DHW Tracker
+            static float last_d_prod = -1.0f;
+            static float last_t_cons = -1.0f;
+            static float last_room   = NAN;   // need to track last room temp for day transition 
+
+            int cur_hr = id(optimizer_ptr)->get_current_ecodan_hour();
+            float cur_h_cons = id(optimizer_ptr)->get_heating_consumed_kwh();
+            float cur_h_prod = id(optimizer_ptr)->get_heating_produced_kwh();
+            float cur_c_cons = id(optimizer_ptr)->get_cooling_consumed_kwh(); // NEW
+            float cur_c_prod = id(optimizer_ptr)->get_cooling_produced_kwh(); // NEW
+            float cur_d_cons = id(optimizer_ptr)->get_dhw_consumed_kwh();
+            float cur_d_prod = id(optimizer_ptr)->get_dhw_produced_kwh();
+            float cur_t_cons = id(optimizer_ptr)->get_total_consumed_kwh();
+
+            if (std::isnan(cur_h_cons) || std::isnan(cur_h_prod) || std::isnan(cur_d_cons) || std::isnan(cur_d_prod)) return;
+
+            // Initial run or recovery
+            if (last_hour == -1) {
+              last_hour   = cur_hr;
+              last_day    = cur_day;
+              last_h_cons = cur_h_cons;
+              last_h_prod = cur_h_prod;
+              last_c_cons = cur_c_cons;
+              last_c_prod = cur_c_prod;
+              last_d_cons = cur_d_cons;
+              last_d_prod = cur_d_prod;
+              last_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons;
+              last_room   = id(virtual_climate_z1).current_temperature;
+              return;
+            }
+
+            // Hour transition detected
+            if (cur_hr != last_hour && cur_hr != -1) {
+              float d_h_cons = cur_h_cons - last_h_cons;
+              float d_h_prod = cur_h_prod - last_h_prod;
+              float d_c_cons = cur_c_cons - last_c_cons;
+              float d_c_prod = cur_c_prod - last_c_prod;
+              float d_d_cons = cur_d_cons - last_d_cons;
+              float d_d_prod = cur_d_prod - last_d_prod;
+              float d_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons - last_t_cons;
+
+              // Handle midnight resets (if the C++ buckets drop to 0)
+              if (d_h_cons < 0) d_h_cons = cur_h_cons;
+              if (d_h_prod < 0) d_h_prod = cur_h_prod;
+              if (d_c_cons < 0) d_c_cons = cur_c_cons;
+              if (d_c_prod < 0) d_c_prod = cur_c_prod;
+              if (d_d_cons < 0) d_d_cons = cur_d_cons;
+              if (d_d_prod < 0) d_d_prod = cur_d_prod;
+              if (d_t_cons < 0) d_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons;
+
+              // Standby = total consumed minus the bucketed modes, floor at 0
+              // Now subtracting cooling as well so standby remains accurate!
+              float d_standby = std::max(0.0f, d_t_cons - d_h_cons - d_c_cons - d_d_cons);
+
+              float room = last_room;
+
+              // Combine heating and cooling for the dashboard charts so you don't need a massive C++ rewrite
+              float combined_climate_cons = d_h_cons + d_c_cons;
+              float combined_climate_prod = d_h_prod + d_c_prod;
+
+              id(asgard_dashboard_id)->update_actual_data(last_hour, last_day, combined_climate_cons, combined_climate_prod, d_d_cons, d_d_prod, room, d_standby);
+
+              // Save the new baseline for the next hour
+              last_h_cons = cur_h_cons;
+              last_h_prod = cur_h_prod;
+              last_c_cons = cur_c_cons;
+              last_c_prod = cur_c_prod;
+              last_d_cons = cur_d_cons;
+              last_d_prod = cur_d_prod;
+              last_t_cons = std::isnan(cur_t_cons) ? 0.0f : cur_t_cons;
+              last_hour   = cur_hr;
+              last_day    = cur_day;
+              last_room   = id(virtual_climate_z1).current_temperature;
+            }
+          }
+
+  - interval: 60s
+    then:
+      - script.execute: odin_ping_script

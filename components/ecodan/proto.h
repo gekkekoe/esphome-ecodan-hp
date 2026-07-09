@@ -80,8 +80,8 @@ namespace ecodan
         DIP_SWITCHES = 0x11,
         ACTIVE_TIME = 0x13,
         FLOW_RATE = 0x14,
-        PUMP_STATUS = 0x15,
-        UNKNOWN_0x16 = 0x16,
+        PUMP_STATUS_A = 0x15,
+        PUMP_STATUS_B = 0x16,
         UNKNOWN_0x17 = 0x17,
         UNKNOWN_0x18 = 0x18,
         UNKNOWN_0x19 = 0x19,
@@ -400,6 +400,28 @@ namespace ecodan
                 {  0x9B,    0.34313f,    -1.503f     }, // (155)
                 {  0xB4,    0.306f,      4.187f      }, // (180)
                 {  0xB7,    0.28667f,    7.67f       }  // (183)
+            };
+            static const size_t NTC_TABLE_SIZE = sizeof(NTC_TABLE) / sizeof(NTC_TABLE[0]);
+
+            uint8_t byteValue = payload()[index]; 
+            for (size_t i = 0; i < NTC_TABLE_SIZE; ++i) {
+                if (byteValue <= NTC_TABLE[i].max_byte) {
+                    float value = (float)byteValue;
+                    return (value * NTC_TABLE[i].scale) + NTC_TABLE[i].offset;
+                }
+            }
+            const auto& lastSegment = NTC_TABLE[NTC_TABLE_SIZE - 1];
+            float value = (float)byteValue;
+            return (value * lastSegment.scale) + lastSegment.offset;
+        }
+        
+        // NTC Sensor (type B=~3172, R_s=~9.8k)
+        float get_float8_v4(size_t index)
+        {
+            static const InterpolationSegment NTC_TABLE[] = {
+                // max_byte, scale,      offset
+                {  0x6A,    0.5060f,     -20.92f     }, // (Max Byte 106)
+                {  0xFF,    0.3780f,     -7.40f      } 
             };
             static const size_t NTC_TABLE_SIZE = sizeof(NTC_TABLE) / sizeof(NTC_TABLE[0]);
 

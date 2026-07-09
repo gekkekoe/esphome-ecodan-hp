@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asgard Auto Adaptive Setup</title>
+    <style>
+        /* Import official Asgard fonts */
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+        /* Asgard Dashboard color palette and variables */
+        :root {
+            --bg:     #0a0e1a;
+            --bg2:    #0f1525;
+            --bg3:    #151c30;
+            --card:   #131929;
+            --border: #1e2d4a;
+            --accent: #00c8ff;
+            --accent3:#7fff7f;
+            --warn:   #ffb020;
+            --danger: #ff4455;
+            --text:   #ffffff;
+            --text2:  #b4c6e7;
+            --text3:  #8295b8;
+            --radius: 12px;
+            --mono:   'JetBrains Mono', monospace;
+            --sans:   'Space Grotesk', sans-serif;
+        }
+
+        /* Reset and base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: var(--bg); color: var(--text); 
+            font-family: var(--sans); min-height: 100vh; 
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+
+        /* Header Branding */
+        .brand-container { text-align: center; margin-bottom: 30px; }
+        .brand-wordmark { font-family: var(--mono); font-size: 32px; font-weight: 700; color: var(--accent); letter-spacing: 6px; }
+        .brand-sub { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+        /* Wizard Card Container */
+        .wizard-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); width: 100%; max-width: 600px;
+            overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* Progress Bar */
+        .progress-container { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); }
+        .step-indicator {
+            flex: 1; text-align: center; padding: 12px 0;
+            font-family: var(--mono); font-size: 10px; font-weight: 700;
+            color: var(--text3); text-transform: uppercase; letter-spacing: 1px;
+            border-bottom: 2px solid transparent; transition: 0.3s;
+        }
+        .step-indicator.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(0,200,255,0.05); }
+        .step-indicator.completed { color: var(--text2); }
+
+        /* Step Content Area */
+        .step-content { padding: 30px; display: none; animation: fadeIn 0.3s ease; }
+        .step-content.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+
+        .step-title { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 15px; letter-spacing: 1px; border-left: 3px solid var(--accent); padding-left: 10px; }
+        .step-desc { font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.5; }
+        
+        /* UI Elements */
+        .info-box { background: var(--bg3); border: 1px dashed var(--border); border-radius: 8px; padding: 12px; font-size: 11px; color: var(--text3); margin-top: 15px; line-height: 1.4; }
+        .info-box code { color: var(--accent); font-family: var(--mono); }
+        .sub-label { font-size: 9px; font-family: var(--mono); color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin: 15px 0 5px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+
+        /* Control Rows */
+        .ctrl-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 16px; }
+        .ctrl-row:last-of-type { border-bottom: none; }
+        .ctrl-label { font-size: 13px; color: var(--text2); flex: 1; }
+        
+        .ctrl-select, .ctrl-input {
+            background: var(--bg3); border: 1px solid var(--border); border-radius: 7px;
+            color: var(--text); font-family: var(--mono); font-size: 11px;
+            padding: 8px 12px; outline: none; transition: border-color 0.2s; max-width: 240px; flex: 1;
+        }
+        .ctrl-select:focus, .ctrl-input:focus { border-color: var(--accent); }
+        .ctrl-input { max-width: 80px; text-align: center; }
+        
+        /* Toggle Switch */
+        .toggle-wrap { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+        .toggle-wrap input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; inset: 0; background: var(--bg3); border: 1px solid var(--border); border-radius: 24px; cursor: pointer; transition: all 0.2s; }
+        .toggle-slider::before { content:''; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; background: var(--text3); border-radius: 50%; transition: all 0.2s; }
+        .toggle-wrap input:checked + .toggle-slider { background: rgba(127,255,127,0.15); border-color: var(--accent3); }
+        .toggle-wrap input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--accent3); }
+
+        /* Footer / Navigation */
+        .wizard-footer {
+            padding: 20px 30px; background: var(--bg2); border-top: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px; border-radius: 8px; font-family: var(--mono); font-size: 12px;
+            font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-back { background: transparent; border: 1px solid var(--border); color: var(--text3); }
+        .btn-back:hover { border-color: var(--text); color: var(--text); }
+        .btn-next { background: rgba(0,200,255,0.1); border: 1px solid var(--accent); color: var(--accent); }
+        .btn-next:hover { background: rgba(0,200,255,0.2); box-shadow: 0 0 10px rgba(0,200,255,0.15); }
+        .btn-next.finish { background: rgba(127,255,127,0.1); border-color: var(--accent3); color: var(--accent3); }
+        .btn-next.finish:hover { background: rgba(127,255,127,0.2); box-shadow: 0 0 10px rgba(127,255,127,0.15); }
+        
+        .hidden { visibility: hidden; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div>
+    <div class="brand-container">
+        <div class="brand-wordmark">ASGARD</div>
+        <div class="brand-sub">Auto Adaptive Wizard</div>
+    </div>
+
+    <div class="wizard-card">
+        <!-- Progress Indicators -->
+        <div class="progress-container">
+            <div class="step-indicator active" id="ind-0">1. Mode & Limits</div>
+            <div class="step-indicator" id="ind-1">2. Z1 Sensors</div>
+            <div class="step-indicator" id="ind-2">3. Z2 Sensors</div>
+            <div class="step-indicator" id="ind-3">4. Enable</div>
+        </div>
+
+        <!-- STEP 1: General Mode & Flow Limits -->
+        <div class="step-content active" id="step-0">
+            <div class="step-title">Mode & Flow Limits</div>
+            <div class="step-desc">Select the operating mode and set the flow temperature boundaries for your zones.</div>
+            
+            <div class="ctrl-row">
+                <span class="ctrl-label">Operating Mode</span>
+                <select id="w-op-mode-z1" class="ctrl-select" onchange="toggleModeSettings()">
+                    <!-- Index 1 corresponds to Heat Flow, Index 4 to Cool Flow in Asgard options -->
+                    <option value="1">Heat Flow Temperature</option>
+                    <option value="4">Cool Flow Temperature</option>
+                </select>
+            </div>
+
+            <!-- Dynamic Zone 1 Limits -->
+            <div class="sub-label">Zone 1 Limits</div>
+            <div id="z1-heat-settings">
+                <div class="ctrl-row">
+                    <span class="ctrl-label">Max Heating Flow Z1 (°C)</span>
+                    <input type="number" id="w-max-flow-z1" class="ctrl-input" value="45.0" step="0.5">
+                </div>
+                <div class="ctrl-row">
+                    <span class="ctrl-label">Min Heating Flow Z1 (°C)</span>
+                    <input type="number" id="w-min-flow-z1" class="ctrl-input" value="25.0" step="0.5">
+                </div>
+            </div>
+
+            <div id="z1-cool-settings" style="display: none;">
+                <div class="ctrl-row">
+                    <span class="ctrl-label">Global Smart Start Temp (°C)</span>
+                    <input type="number" id="w-cool-start-z1" class="ctrl-input" value="20.0" step="0.5">
+                </div>
+                <div class="ctrl-row">
+                    <span class="ctrl-label">Min Cooling Flow Z1 (°C)</span>
+                    <input type="number" id="w-cool-min-z1" class="ctrl-input" value="18.0" step="0.5">
+                </div>
+            </div>
+
+            <!-- Enable Zone 2 -->
+            <div class="ctrl-row" style="margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px;">
+                <span class="ctrl-label" style="font-weight: 600; color: var(--text);">Enable Zone 2 Settings</span>
+                <label class="toggle-wrap">
+                    <input type="checkbox" id="w-enable-z2" onchange="toggleZ2Fields()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <!-- Dynamic Zone 2 Limits -->
+            <div id="z2-limits-container" style="display: none;">
+                <div class="sub-label">Zone 2 Limits</div>
+                <div id="z2-heat-settings">
+                    <div class="ctrl-row">
+                        <span class="ctrl-label">Max Heating Flow Z2 (°C)</span>
+                        <input type="number" id="w-max-flow-z2" class="ctrl-input" value="45.0" step="0.5">
+                    </div>
+                    <div class="ctrl-row">
+                        <span class="ctrl-label">Min Heating Flow Z2 (°C)</span>
+                        <input type="number" id="w-min-flow-z2" class="ctrl-input" value="25.0" step="0.5">
+                    </div>
+                </div>
+                <div id="z2-cool-settings" style="display: none;">
+                    <div class="info-box" style="margin-top: 5px;">
+                        <b>Note:</b> Cooling parameters (Smart Start & Min Flow) are globally controlled by Zone 1.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Zone 1 Sensor Setup -->
+        <div class="step-content" id="step-1">
+            <div class="step-title">Zone 1 Sensors</div>
+            <div class="step-desc">Configure where the Auto Adaptive algorithm gets its room temperature data for Zone 1.</div>
+            
+            <div class="ctrl-row">
+                <span class="ctrl-label">Room Temp Source Z1</span>
+                <select id="w-room-src-z1" class="ctrl-select">
+                    <option value="0">Room Thermostat</option>
+                    <option value="1">Home Assistant / REST API</option>
+                    <option value="2">Asgard Virtual Thermostat</option>
+                </select>
+            </div>
+            
+            <div class="ctrl-row">
+                <span class="ctrl-label">Temp Sensor Source Z1</span>
+                <select id="w-temp-src-z1" class="ctrl-select" onchange="toggleApiInfo('z1')">
+                    <option value="0">Virtual Thermostat Input</option>
+                    <option value="1">DS18x20 (Dallas)</option>
+                    <option value="2">MRC (Main Display)</option>
+                </select>
+            </div>
+
+            <div class="info-box" id="info-api-z1">
+                For <b>Virtual Thermostat Input</b>, push temperature updates via REST API to: <br><br>
+                <code>POST /number/Virtual_Thermostat_Input_z1/set?value=21.5</code>
+            </div>
+            <div class="info-box hidden" id="info-mrc-z1" style="display: none; border-color: var(--warn); color: var(--warn);">
+                <b>Warning:</b> The MRC (Main Display) sensor has a low resolution of 0.5°C. This might result in less accurate Auto Adaptive performance.
+            </div>
+        </div>
+
+        <!-- STEP 3: Zone 2 Sensor Setup -->
+        <div class="step-content" id="step-2">
+            <div class="step-title">Zone 2 Sensors</div>
+            <div class="step-desc">Configure the temperature source for the second zone.</div>
+            
+            <div id="z2-sensor-fields" style="opacity: 0.3; pointer-events: none; transition: 0.3s;">
+                <div class="ctrl-row">
+                    <span class="ctrl-label">Room Temp Source Z2</span>
+                    <select id="w-room-src-z2" class="ctrl-select">
+                        <option value="0">Room Thermostat</option>
+                        <option value="1">Home Assistant / REST API</option>
+                        <option value="2">Asgard Virtual Thermostat</option>
+                    </select>
+                </div>
+                
+                <div class="ctrl-row">
+                    <span class="ctrl-label">Temp Sensor Source Z2</span>
+                    <select id="w-temp-src-z2" class="ctrl-select" onchange="toggleApiInfo('z2')">
+                        <option value="0">Virtual Thermostat Input</option>
+                        <option value="1">DS18x20 (Dallas)</option>
+                        <option value="2">MRC (Main Display)</option>
+                    </select>
+                </div>
+
+                <div class="info-box" id="info-api-z2">
+                    For <b>Virtual Thermostat Input</b>, push temperature updates via REST API to: <br><br>
+                    <code>POST /number/Virtual_Thermostat_Input_z2/set?value=21.5</code>
+                </div>
+                <div class="info-box hidden" id="info-mrc-z2" style="display: none; border-color: var(--warn); color: var(--warn);">
+                    <b>Warning:</b> The MRC (Main Display) sensor has a low resolution of 0.5°C. This might result in less accurate Auto Adaptive performance.
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4: Enable -->
+        <div class="step-content" id="step-3">
+            <div class="step-title">Activate Control</div>
+            <div class="step-desc">Finalize your configuration and enable the Auto Adaptive algorithm.</div>
+            
+            <div class="ctrl-row" style="background: rgba(127,255,127,0.05); padding: 16px; border: 1px solid var(--accent3); border-radius: 8px;">
+                <span class="ctrl-label" style="color: var(--text); font-weight: 600;">Enable AA Control</span>
+                <label class="toggle-wrap">
+                    <input type="checkbox" id="w-aa-enable">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="info-box">
+                When enabled, Asgard will continuously monitor the delta between the room temperature and the setpoint to automatically adjust the flow temperature of the heat pump.
+            </div>
+        </div>
+
+        <!-- Footer Navigation -->
+        <div class="wizard-footer">
+            <button class="nav-btn btn-back hidden" id="btn-back" onclick="changeStep(-1)">Back</button>
+            <button class="nav-btn btn-next" id="btn-next" onclick="changeStep(1)">Continue</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentStep = 0;
+    const totalSteps = 4;
+
+    // Load actual device state on load
+    async function loadConfig() {
+        try {
+            const res = await fetch('/dashboard/state');
+            if (!res.ok) return;
+            const d = await res.json();
+            
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el && val !== undefined && val !== null) el.value = val;
+            };
+            const setCheck = (id, val) => {
+                const el = document.getElementById(id);
+                if (el && val !== undefined && val !== null) el.checked = val;
+            };
+
+            // Step 1: Mode & Limits
+            if (d.operating_mode_z1 !== undefined && d.operating_mode_z1 !== null) {
+                const el = document.getElementById('w-op-mode-z1');
+                if (parseInt(d.operating_mode_z1) === 4) el.value = "4"; // Cool Flow
+                else el.value = "1"; // Default to Heat Flow
+            }
+            
+            setVal('w-max-flow-z1', d.maximum_heating_flow_temp);
+            setVal('w-min-flow-z1', d.minimum_heating_flow_temp);
+            setVal('w-cool-start-z1', d.cooling_smart_start_z1);
+            setVal('w-cool-min-z1', d.minimum_cooling_flow_z1);
+
+            setCheck('w-enable-z2', d.zone2_enabled);
+
+            setVal('w-max-flow-z2', d.maximum_heating_flow_temp_z2);
+            setVal('w-min-flow-z2', d.minimum_heating_flow_temp_z2);
+
+            // Step 2 & 3: Sensors (Fix applied: removing sel_ prefix)
+            setVal('w-room-src-z1', d.room_temp_source_z1);
+            setVal('w-temp-src-z1', d.temp_sensor_source_z1);
+            
+            setVal('w-room-src-z2', d.room_temp_source_z2);
+            setVal('w-temp-src-z2', d.temp_sensor_source_z2);
+
+            // Step 4: Enable
+            setCheck('w-aa-enable', d.auto_adaptive_control_enabled);
+
+            // Trigger UI updates based on loaded values
+            toggleModeSettings();
+            toggleZ2Fields();
+            toggleApiInfo('z1');
+            toggleApiInfo('z2');
+
+        } catch(e) {
+            console.warn('Could not load existing config. UI will use HTML defaults.', e);
+        }
+    }
+
+    // Toggle parameters based on Heat or Cool selection in Step 1
+    function toggleModeSettings() {
+        const mode = document.getElementById('w-op-mode-z1').value;
+        const isCooling = (mode === "4"); // 4 corresponds to Cool Flow Temperature in Asgard
+
+        // Zone 1
+        document.getElementById('z1-heat-settings').style.display = isCooling ? 'none' : 'block';
+        document.getElementById('z1-cool-settings').style.display = isCooling ? 'block' : 'none';
+
+        // Zone 2
+        document.getElementById('z2-heat-settings').style.display = isCooling ? 'none' : 'block';
+        document.getElementById('z2-cool-settings').style.display = isCooling ? 'block' : 'none';
+    }
+
+    // Toggles the Zone 2 limits and sensors based on the checkbox in Step 1
+    function toggleZ2Fields() {
+        const isEnabled = document.getElementById('w-enable-z2').checked;
+        
+        // Show/hide limits in Step 1
+        const limitsContainer = document.getElementById('z2-limits-container');
+        limitsContainer.style.display = isEnabled ? 'block' : 'none';
+        
+        // Enable/disable sensors in Step 3
+        const sensorFields = document.getElementById('z2-sensor-fields');
+        sensorFields.style.opacity = isEnabled ? '1' : '0.3';
+        sensorFields.style.pointerEvents = isEnabled ? 'auto' : 'none';
+    }
+
+    // Handles the display of the API warning box based on sensor selection
+    function toggleApiInfo(zone) {
+        const val = document.getElementById(`w-temp-src-${zone}`).value;
+        const apiBox = document.getElementById(`info-api-${zone}`);
+        const mrcBox = document.getElementById(`info-mrc-${zone}`);
+        
+        if (apiBox && mrcBox) {
+            apiBox.style.display = (val === "0") ? "block" : "none";
+            mrcBox.style.display = (val === "2") ? "block" : "none";
+        }
+    }
+
+    // Handles wizard navigation between steps
+    function changeStep(direction) {
+        // Hide current step
+        document.getElementById(`step-${currentStep}`).classList.remove('active');
+        document.getElementById(`ind-${currentStep}`).classList.remove('active');
+        
+        if (direction > 0) {
+            document.getElementById(`ind-${currentStep}`).classList.add('completed');
+        } else {
+            document.getElementById(`ind-${currentStep}`).classList.remove('completed');
+        }
+
+        // Increment or decrement step
+        currentStep += direction;
+
+        // Ensure bounds
+        if (currentStep < 0) currentStep = 0;
+        if (currentStep >= totalSteps) {
+            saveAndFinish();
+            return;
+        }
+
+        // Show new step
+        document.getElementById(`step-${currentStep}`).classList.add('active');
+        document.getElementById(`ind-${currentStep}`).classList.add('active');
+        document.getElementById(`ind-${currentStep}`).classList.remove('completed');
+
+        // Update buttons state
+        document.getElementById('btn-back').classList.toggle('hidden', currentStep === 0);
+        
+        const nextBtn = document.getElementById('btn-next');
+        if (currentStep === totalSteps - 1) {
+            nextBtn.textContent = 'Enable & Save';
+            nextBtn.classList.add('finish');
+        } else {
+            nextBtn.textContent = 'Continue';
+            nextBtn.classList.remove('finish');
+        }
+    }
+
+    // Mock API POST function
+    async function apiPost(key, value) {
+        try {
+            await fetch('/dashboard/set', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ key, value }) 
+            });
+            console.log(`Saved: ${key} = ${value}`);
+        } catch (e) {
+            console.error('Failed to save', key, e);
+        }
+    }
+
+    // Collects all data and saves to the backend
+    async function saveAndFinish() {
+        const btn = document.getElementById('btn-next');
+        btn.textContent = 'Saving...';
+        btn.style.pointerEvents = 'none';
+
+        const getVal = id => parseInt(document.getElementById(id).value);
+        const getFloat = id => parseFloat(document.getElementById(id).value);
+        const hasZ2 = document.getElementById('w-enable-z2').checked;
+        const opMode = getVal('w-op-mode-z1');
+        const isCooling = (opMode === 4);
+
+        // Basic settings payload
+        const payload = [
+            { key: 'operating_mode_z1', value: opMode },
+            { key: 'room_temp_source_z1', value: getVal('w-room-src-z1') },
+            { key: 'temp_sensor_source_z1', value: getVal('w-temp-src-z1') }
+        ];
+
+        // Conditional Flow Limits Z1
+        if (isCooling) {
+            payload.push({ key: 'cooling_smart_start_z1', value: getFloat('w-cool-start-z1') });
+            payload.push({ key: 'minimum_cooling_flow_z1', value: getFloat('w-cool-min-z1') });
+        } else {
+            payload.push({ key: 'maximum_heating_flow_temp', value: getFloat('w-max-flow-z1') });
+            payload.push({ key: 'minimum_heating_flow_temp', value: getFloat('w-min-flow-z1') });
+        }
+
+        // Zone 2 specifics
+        if (hasZ2) {
+            payload.push({ key: 'room_temp_source_z2', value: getVal('w-room-src-z2') });
+            payload.push({ key: 'temp_sensor_source_z2', value: getVal('w-temp-src-z2') });
+            
+            // Only push Z2 heating limits if we are not in cooling mode
+            if (!isCooling) {
+                payload.push({ key: 'maximum_heating_flow_temp_z2', value: getFloat('w-max-flow-z2') });
+                payload.push({ key: 'minimum_heating_flow_temp_z2', value: getFloat('w-min-flow-z2') });
+            }
+        }
+
+        // Post the settings sequentially
+        for (const item of payload) {
+            await apiPost(item.key, item.value);
+        }
+
+        // Finally, toggle the enable switch
+        const isEnabled = document.getElementById('w-aa-enable').checked ? 1 : 0;
+        await apiPost('auto_adaptive_control_enabled', isEnabled);
+
+        // Redirect back to the main dashboard
+        window.location.href = '/dashboard';
+    }
+
+    // Call loadConfig instantly
+    loadConfig();
+
+</script>
+
+</body>
+</html>

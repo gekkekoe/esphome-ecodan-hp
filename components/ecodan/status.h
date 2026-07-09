@@ -40,7 +40,7 @@ namespace ecodan
         float Z1ReturnTemperature{NAN};
         float Z2FeedTemperature{NAN};
         float Z2ReturnTemperature{NAN};
-        float MixingTankTemperature;
+        float MixingTankTemperature{NAN};
         float HpRefrigerantLiquidTemperature;
         float HpRefrigerantCondensingTemperature;
         float DhwTemperature{NAN};
@@ -63,6 +63,8 @@ namespace ecodan
         uint8_t MixingValveStatus;
         uint8_t MixingValveStep;
         uint8_t MultiZoneStatus;
+        // FTC7 has z1 mixing valve
+        uint8_t MixingValveStepZ1;
 
         // error codes
         uint8_t RefrigerantErrorCode;
@@ -76,6 +78,7 @@ namespace ecodan
         uint8_t DipSwitch4{0};
         uint8_t DipSwitch5{0};
         uint8_t DipSwitch6{0};
+        uint8_t DipSwitch7{0};
 
         // refrigerant code
         uint8_t RefrigerantCode = 255;
@@ -214,15 +217,7 @@ namespace ecodan
 
         bool has_independent_zone_temps() const {
             //  SW2-7 is only valid active when SW3-6 is off
-            return IS_BIT_SET(DipSwitch2, 6) && !IS_BIT_SET(DipSwitch3, 5);
-        }
-
-        bool has_independent_z2() const {
-            if (IS_BIT_SET(DipSwitch3, 5) && !IS_BIT_SET(DipSwitch2, 6)) // SW3-6 True, SW2-7 False
-                return false; //z1, z2 -> same flow
-            else if (IS_BIT_SET(DipSwitch2, 5) && IS_BIT_SET(DipSwitch2, 6)) // SW2-6 or SW2-7 True
-                return true; // z1, z2 -> independent flows
-            return false;
+            return has_mixing_tank() || (IS_BIT_SET(DipSwitch2, 6) && !IS_BIT_SET(DipSwitch3, 5));
         }
 
         bool has_2zones() const {
@@ -307,14 +302,27 @@ Temp C	specific heat (J/Kg. K)
 90	    4.208
 100	    4.22
 */
-        float estimate_water_constant(float temp) {
+        float estimate_water_constant(float temp) const {
             return 4.21f + -2.04e-03 * temp + 3.09e-05 * temp * temp + -9.63e-08 * temp * temp * temp;
         }
 
         void update_output_power_estimation(float specific_heat_constant_override = NAN) {
             if (!std::isnan(HpFeedTemperature) && !std::isnan(HpReturnTemperature) && FlowRate > 0) {
                 float specific_heat_constant = std::isnan(specific_heat_constant_override) ? estimate_water_constant(HpFeedTemperature) : specific_heat_constant_override;
-                ComputedOutputPower = (FlowRate/60.0) * (HpFeedTemperature - HpReturnTemperature) * specific_heat_constant;
+
+                float delta_t = 0.0f;
+
+                if (this->Operation == ecodan::Status::OperationMode::COOL_ON) {
+                    delta_t = HpReturnTemperature - HpFeedTemperature;
+                } 
+                else {
+                    delta_t = HpFeedTemperature - HpReturnTemperature;
+                }
+
+                if (delta_t < 0.0f)
+                    delta_t = 0.0f;
+
+                ComputedOutputPower = (FlowRate/60.0) * delta_t * specific_heat_constant;
             }
             else {
                 ComputedOutputPower = 0.0f;

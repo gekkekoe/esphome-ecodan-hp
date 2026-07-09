@@ -1,6 +1,7 @@
 substitutions:
   uart_rx_pin: 2
   uart_tx_pin: 1
+  led_gpio_pin: 35
 
 esphome:
   name: ${name}
@@ -57,5 +58,3 @@ sensor:
     entity_category: diagnostic
     unit_of_measurement: "°C"
     device_class: temperature
-
-<<: !include esp32s3-led.yaml

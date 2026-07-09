@@ -1,3 +1,6 @@
+preferences:
+  flash_write_interval: 30min
+
 globals:
 # delta_energy_consumed_increasing
   - id: _delta_energy_consumed_increasing_daily_input_last_value
@@ -25,6 +28,11 @@ globals:
     type: bool
     restore_value: yes
     initial_value: 'false'
+
+  #dhw saved setpoint to restore
+  - id: stored_dhw_target
+    type: float
+    initial_value: '0.0'
 
 ####################
 # heatpump commands
@@ -54,6 +62,32 @@ switch:
       - logger.set_level: VERBOSE
     turn_off_action:
       - logger.set_level: ERROR
+
+  - platform: template
+    name: ${heatpump_switch_regular_dhw}
+    id: heatpump_switch_regular_dhw
+    optimistic: true
+    icon: "mdi:water-boiler-auto"
+    turn_on_action:
+      - script.execute: trigger_dhw_script
+    turn_off_action:
+      - script.stop: trigger_dhw_script
+      - if:
+          condition:
+            lambda: |-
+              return (id(stored_dhw_target) > 0.0) && 
+                     (id(dhw_flow_temp_target).state != id(stored_dhw_target));
+          then:
+            - logger.log:
+                format: "Script aborted. Restoring original target temperature."
+                tag: "ecodan"
+                level: WARN
+            - climate.control:
+                id: heatpump_climate_dhw
+                target_temperature: !lambda 'return id(stored_dhw_target);'
+            - globals.set:
+                id: stored_dhw_target
+                value: '0.0'
 
   - platform: template
     name: ${heatpump_switch_force_dhw}
@@ -167,6 +201,7 @@ text_sensor:
   - platform: template
     id: status_operation
     name: ${status_operation}
+    update_interval: never
     lambda: |-
       auto value = id(ecodan_instance).get_status().Operation;
       switch (value)
@@ -299,6 +334,15 @@ text_sensor:
       return format_bin(static_cast<uint8_t>(id(ecodan_instance).get_status().DipSwitch6));
 
   - platform: template
+    id: status_dip_switch_7
+    entity_category: diagnostic
+    update_interval: 60s
+    icon: mdi:toggle-switch-off-outline
+    name: Dip Switch 7 (8-1)
+    lambda: |-
+      return format_bin(static_cast<uint8_t>(id(ecodan_instance).get_status().DipSwitch7));
+
+  - platform: template
     id: status_multi_zone
     name: ${status_multi_zone}
     lambda: |-
@@ -317,6 +361,9 @@ sensor:
     operation_mode:
       id: operation_mode
       internal: true
+      on_value:
+        then:
+          - component.update: status_operation
     controller_version:
       id: controller_version
       internal: true
@@ -325,6 +372,7 @@ sensor:
       id: heat_source
       internal: true          
     runtime:
+      id: runtime
       name: ${runtime}
     compressor_frequency:
       id: compressor_frequency
@@ -341,9 +389,15 @@ sensor:
     hp_feed_temp:
       id: hp_feed_temp
       name: ${hp_feed_temp}
+      on_value:
+        then:
+          - component.update: hp_delta_t
     hp_return_temp:
       id: hp_return_temp
       name: ${hp_return_temp}
+      on_value:
+        then:
+          - component.update: hp_delta_t
     hp_refrigerant_temp:
       id: hp_refrigerant_temp
       name: ${hp_refrigerant_temp}
@@ -417,9 +471,14 @@ sensor:
           if (controller_day != last_day_of_year) {
             last_day_of_year = controller_day;
             partial_sum = 0.0f;
+            last_value = x;
+            return partial_sum;
           }
 
-          partial_sum += x >= last_value ? (x - last_value) : (65536 + x - last_value);
+          if (x >= last_value) {
+            partial_sum += (x - last_value);
+          }
+          // roll overs are auto handled by total_increasing
           last_value = x;
           return partial_sum;
   
@@ -469,6 +528,18 @@ sensor:
           return cop;
       }
 
+  - platform: template
+    id: hp_delta_t
+    name: "Delta T"
+    lambda: |-
+      if (isnan(id(hp_feed_temp).state) || isnan(id(hp_return_temp).state)) return {};
+      return id(hp_feed_temp).state - id(hp_return_temp).state;
+    accuracy_decimals: 1
+    unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
+    update_interval: never
+
   - platform: uptime
     name: ${uptime}
     disabled_by_default: false
@@ -479,7 +550,7 @@ sensor:
     device_class: duration
     state_class: total_increasing
     entity_category: diagnostic
-    update_interval: 5s
+    update_interval: 60s
 
   # helper class to reset daily counter _day_of_year
   - platform: template
@@ -493,7 +564,7 @@ sensor:
       int controller_day = status.day_of_year();
 
       if (controller_day == -1) {
-        return NAN;
+        return {};
       }
 
       float previous_day_float = id(heatpump_day_of_year).state;
@@ -629,3 +700,70 @@ binary_sensor:
     status_in5_request:
       id: status_in5_request
       name: ${status_in5_request}
+    status_zone2_enabled:
+      id: status_zone2_enabled
+      internal: true
+      name: zone 2 enabled
+
+
+script:
+  - id: trigger_dhw_script
+    mode: single
+    then:
+      - if:
+          condition:
+            lambda: |-
+              return id(ecodan_instance).get_status().Operation == esphome::ecodan::Status::OperationMode::DHW_ON 
+                      || id(ecodan_instance).get_status().Operation == esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION;
+          then:
+            - logger.log:
+                format: "DHW is already running. Skipping script."
+                tag: "asgard"
+                level: INFO
+            - switch.turn_off: heatpump_switch_regular_dhw
+            - script.stop: trigger_dhw_script
+
+      - if:
+          condition:
+            lambda: |-
+              return !std::isnan(id(dhw_temp).state) && 
+                     !std::isnan(id(dhw_flow_temp_target).state) && 
+                     (id(dhw_temp).state < id(dhw_flow_temp_target).state);
+          then:
+            # Save the current target temperature
+            - globals.set:
+                id: stored_dhw_target
+                value: !lambda 'return id(dhw_flow_temp_target).state;'
+            
+            # Increase dhw setpoint to trigger regular dhw (compensating for the drop)
+            - logger.log:
+                format: "Triggering DHW: Setting temporary target."
+                tag: "asgard"
+                level: INFO
+            - climate.control:
+                id: heatpump_climate_dhw
+                target_temperature: !lambda |-
+                  float drop = std::isnan(id(dhw_flow_temp_drop).state) ? 10.0 : id(dhw_flow_temp_drop).state;
+                  return id(dhw_temp).state + 1.0 + drop;
+            
+            - wait_until:
+                condition:
+                  lambda: 'return id(ecodan_instance).get_status().Operation == esphome::ecodan::Status::OperationMode::DHW_ON;'
+                timeout: 5min 
+            
+            # Restore old setpoint
+            - logger.log:
+                format: "DHW started. Restoring the original target temperature."
+                tag: "asgard"
+                level: INFO
+            - climate.control:
+                id: heatpump_climate_dhw
+                target_temperature: !lambda 'return id(stored_dhw_target);'
+
+            - logger.log:
+                format: "DHW activation completed. Turning off switch."
+                tag: "asgard"
+                level: INFO
+            - switch.turn_off: heatpump_switch_regular_dhw
+
+<<: !include stats.yaml
