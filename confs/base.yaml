@@ -1,5 +1,5 @@
 preferences:
-  flash_write_interval: 30min
+  flash_write_interval: 5min
 
 globals:
 # delta_energy_consumed_increasing
