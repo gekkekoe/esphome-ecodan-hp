@@ -175,7 +175,7 @@ namespace esphome
                 if (this->solver_stop_active_ && this->solver_stop_hour_ == current_hour)
                     return;
 
-                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: enable stop for hour %d", current_hour);
+                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: disable demand for hour %d", current_hour);
 
                 if (relay_z1 != nullptr && relay_z1->state) relay_z1->turn_off();
                 if (relay_z2 != nullptr && relay_z2->state) relay_z2->turn_off();
@@ -189,7 +189,7 @@ namespace esphome
                     return;
                 this->solver_resume_hour_ = current_hour;
 
-                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: disable stop for hour %d", current_hour);
+                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-start: enabled demand for hour %d", current_hour);
 
                 if (relay_z1 != nullptr) relay_z1->turn_on();
                 if (relay_z2 != nullptr) relay_z2->turn_on();         
