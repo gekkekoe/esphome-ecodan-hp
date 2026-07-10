@@ -448,41 +448,46 @@ namespace esphome
 
             // ALWAYS UPDATE: Passive Data & Building Physics ---
             update_ema_num(this->state_.num_raw_avg_room_temp, avg_room, ALPHA);
-            update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
             // Always track to avoid COP/EER normalisation issues when there is no heating/cooling
             update_ema_num(this->state_.num_raw_avg_outside_temp,      avg_outside, ALPHA);
             update_ema_num(this->state_.num_raw_cool_avg_outside_temp, avg_outside, ALPHA);
 
             // ONLY UPDATE WHEN HEATING OR COOLING: System Performance ---
             if (heat_produced_kwh >= 2.0f && runtime_hours >= 1.0f) {
+                update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
                 update_ema_num(this->state_.num_raw_heat_produced, heat_produced_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_elec_consumed, elec_consumed_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_runtime_hours, runtime_hours, ALPHA);
 
-                ESP_LOGI(OPTIMIZER_TAG, "Full Heating update (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC",
+                ESP_LOGI(OPTIMIZER_TAG, "Full Heating update (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
                          safe_get(this->state_.num_raw_heat_produced, heat_produced_kwh), 
                          safe_get(this->state_.num_raw_elec_consumed, elec_consumed_kwh), 
                          safe_get(this->state_.num_raw_runtime_hours, runtime_hours), 
                          safe_get(this->state_.num_raw_avg_outside_temp, avg_outside),
-                         safe_get(this->state_.num_raw_avg_room_temp, avg_room));
+                         safe_get(this->state_.num_raw_avg_room_temp, avg_room),
+                         safe_get(this->state_.num_raw_delta_room_temp, delta_room));
 
             } else if (cool_produced_kwh >= 2.0f && cool_runtime_hours >= 1.0f) {
+                update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
                 update_ema_num(this->state_.num_raw_cool_produced, cool_produced_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_cool_elec_consumed, cool_elec_consumed_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_cool_runtime_hours, cool_runtime_hours, ALPHA);
 
-                ESP_LOGI(OPTIMIZER_TAG, "Full Cooling update (15%% EMA): CoolProd=%.1fkWh, CoolElec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC",
+                ESP_LOGI(OPTIMIZER_TAG, "Full Cooling update (15%% EMA): CoolProd=%.1fkWh, CoolElec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, DeltaRoom=%.1fC",
                          safe_get(this->state_.num_raw_cool_produced, cool_produced_kwh), 
                          safe_get(this->state_.num_raw_cool_elec_consumed, cool_elec_consumed_kwh), 
                          safe_get(this->state_.num_raw_cool_runtime_hours, cool_runtime_hours), 
-                         safe_get(this->state_.num_raw_cool_avg_outside_temp, avg_outside));
+                         safe_get(this->state_.num_raw_cool_avg_outside_temp, avg_outside),
+                         safe_get(this->state_.num_raw_delta_room_temp, delta_room));
 
             } else {
                 // Output a log message, but do not abort before passive stats are saved
+                // (delta_room here is today's raw max-min swing, not a stored EMA — neither
+                // the cool nor heat delta_room stat is touched on a day with no active session)
                 ESP_LOGI(OPTIMIZER_TAG, "Passive stats saved (AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC). Heating/Cooling skipped (<2kWh or <1h).",
                          safe_get(this->state_.num_raw_avg_outside_temp, avg_outside), 
                          safe_get(this->state_.num_raw_avg_room_temp, avg_room), 
-                         safe_get(this->state_.num_raw_delta_room_temp, delta_room));
+                         delta_room);
             }
         }
 
