@@ -13,19 +13,18 @@
 * 100% Local control (No Cloud dependency).
 
 # Ordering & Availability
-* **Product:** Asgard PCB: ESP32-S3 Development Sub-assembly + **50cm** Connector cable
-* **Price:** € 65,- (including VAT)
+* **Product:** Asgard PCB: ESP32-S3 Development Sub-assembly + **50cm** Connector cable (Odin enclosure optional)
+* **Price:** From € 65,- (including VAT)
 * **Delivery:** Shipped within 3 business days from The Netherlands (When in stock)
 
 <div align="center">
-  <h2>Order via the link/button below:</h2>
+  <h2>Order via the links/buttons below:</h2>
 
-> ⚠️ **Asgard is currently in stock**
+  ⚠️ **Asgard and Odin are currently in stock**
 
-| Standard Order (NL/EU) |
-| :--- |
-| [![Order Asgard](https://img.shields.io/badge/Order-Single%20Unit-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFa6oIblrcIPaNN3Wq4AU00)|
-
+| Standard Order (NL/EU) | UK Customers Only |
+| :--- | :--- |
+| [![Order Standard](https://img.shields.io/badge/Order-Standard%20Order-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFa6oIblrcIPaNN3Wq4AU00)| [![Order UK Bundle](https://img.shields.io/badge/Order-Asgard%20%2B%20Odin%20Bundle-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/9B6dRacpv6krcVV3Wq4AU05)|
 
 </div>
 
