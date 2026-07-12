@@ -34,6 +34,12 @@ globals:
     type: float
     initial_value: '0.0'
 
+  # helper to track HL cooling
+  - id: cool_last_active_hour
+    type: int
+    restore_value: false
+    initial_value: '-1'
+
 ####################
 # heatpump commands
 
