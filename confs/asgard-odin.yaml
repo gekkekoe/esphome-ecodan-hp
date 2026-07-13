@@ -153,8 +153,7 @@ script:
                       "\"dhw_drop\":%.2f,"
                       "\"dhw_start_threshold\":%.2f,"
                       "\"min_cool_flow\":%.2f,"
-                      "\"current_operation_mode\":%u,"
-                      "\"cool_last_active_hour\":%d"
+                      "\"current_operation_mode\":%u"
                       "}}",
                       id(num_raw_heat_produced).state,
                       id(num_raw_elec_consumed).state,
@@ -177,8 +176,7 @@ script:
                       _dhw_drop,
                       _dhw_thresh,
                       _min_cool_flow,
-                      _op_mode,
-                      id(cool_last_active_hour)
+                      _op_mode
                   );
                   return std::string(payload);
 
@@ -381,12 +379,6 @@ interval:
               // Combine heating and cooling for the dashboard charts so you don't need a massive C++ rewrite
               float combined_climate_cons = d_h_cons + d_c_cons;
               float combined_climate_prod = d_h_prod + d_c_prod;
-
-              if (cur_day != last_day) {
-                id(cool_last_active_hour) = -1; // fresh day, nothing recorded yet
-              } else if (d_c_prod > 0.01f) {
-                id(cool_last_active_hour) = last_hour;
-              }
 
               id(asgard_dashboard_id)->update_actual_data(last_hour, last_day, combined_climate_cons, combined_climate_prod, d_d_cons, d_d_prod, room, d_standby);
 
