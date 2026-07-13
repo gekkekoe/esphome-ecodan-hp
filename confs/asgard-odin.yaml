@@ -140,6 +140,7 @@ script:
                       "\"cool_elec_consumed\":%.2f,"
                       "\"cool_runtime_hours\":%.2f,"
                       "\"cool_avg_outside_temp\":%.2f,"
+                      "\"cool_solar_sum\":%.2f,"
                       "\"avg_room_temp\":%.2f,"
                       "\"delta_room_temp\":%.2f,"
                       "\"hl_tm_product\":%.4f,"
@@ -163,6 +164,7 @@ script:
                       id(num_raw_cool_elec_consumed).state,
                       id(num_raw_cool_runtime_hours).state,
                       id(num_raw_cool_avg_outside_temp).state,
+                      id(num_raw_cool_solar_sum).state,
                       id(num_raw_avg_room_temp).state,
                       id(num_raw_delta_room_temp).state,
                       id(num_raw_hl_tm_product).state,

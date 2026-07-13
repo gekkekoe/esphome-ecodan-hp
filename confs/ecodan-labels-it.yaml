@@ -192,3 +192,4 @@ substitutions:
   num_raw_cool_elec_consumed: "Consumo elet. raffredd. (Grezzo)"
   num_raw_cool_runtime_hours: "Tempo funz. raffreddamento (Grezzo)"
   num_raw_cool_avg_outside_temp: "Temp. est. media raffredd. (Grezzo)"
+  num_raw_cool_solar_sum: "Somma grezza irraggiamento solare (Raffreddamento)"

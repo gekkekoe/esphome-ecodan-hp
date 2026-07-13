@@ -97,6 +97,7 @@ namespace esphome
       int      last_processed_hour_         {-1};
       int      last_pre_hour_triggered_      {-1};
       float    daily_runtime_cool_          = 0.0f;
+      float    daily_cool_solar_sum_        = 0.0f;
 
       // Strict energy separation buckets
       float    last_global_prod_            = -1.0f;

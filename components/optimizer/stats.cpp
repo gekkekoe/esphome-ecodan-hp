@@ -38,6 +38,11 @@ namespace esphome
                 }
                 if (is_running && is_cooling_active) {
                     this->daily_runtime_cool_ += minutes_passed;
+                    // only measure when cooling
+                    float cur_sol = this->get_current_solar_irradiance();
+                    if (cur_sol > 15.0f) {
+                        this->daily_cool_solar_sum_ += cur_sol * (minutes_passed / 60.0f);
+                    }
                 }
 
                 // --- Free cooling window (HP-off period, any time of day) ---
@@ -256,6 +261,7 @@ namespace esphome
                 
                 this->daily_runtime_global = 0.0f;
                 this->daily_runtime_cool_ = 0.0f;
+                this->daily_cool_solar_sum_ = 0.0f;
 
                 // Reset daily accumulators
                 this->last_total_heating_produced_ = 0.0f;
@@ -423,6 +429,7 @@ namespace esphome
             float cool_runtime_hours = this->daily_runtime_cool_ / 60.0f;
             float cool_produced_kwh = this->last_total_cooling_produced_;
             float cool_elec_consumed_kwh = this->last_total_cooling_consumed_;
+            float cool_solar_sum_raw = this->daily_cool_solar_sum_;
 
             ESP_LOGI(OPTIMIZER_TAG, "Daily Raw Stats: Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, MaxOut=%.1fkW, AvgOut=%.1fC, AvgRoom=%.1fC, DeltaRoom=%.1fC",
                      heat_produced_kwh, elec_consumed_kwh, runtime_hours, max_out_kw, avg_outside, avg_room, delta_room);
@@ -472,6 +479,7 @@ namespace esphome
                 update_ema_num(this->state_.num_raw_cool_produced, cool_produced_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_cool_elec_consumed, cool_elec_consumed_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_cool_runtime_hours, cool_runtime_hours, ALPHA);
+                update_ema_num(this->state_.num_raw_cool_solar_sum, cool_solar_sum_raw, ALPHA);
 
                 ESP_LOGI(OPTIMIZER_TAG, "Full Cooling update (15%% EMA): CoolProd=%.1fkWh, CoolElec=%.1fkWh, Run=%.1fh, AvgOut=%.1fC, DeltaRoom=%.1fC",
                          safe_get(this->state_.num_raw_cool_produced, cool_produced_kwh), 

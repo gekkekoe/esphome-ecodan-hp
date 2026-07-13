@@ -192,3 +192,4 @@ substitutions:
   num_raw_cool_elec_consumed: "Stroomverbruik koelen (Raw)"
   num_raw_cool_runtime_hours: "Draaiuren koelen (Raw)"
   num_raw_cool_avg_outside_temp: "Gem. buitentemp. koelen (Raw)"
+  num_raw_cool_solar_sum: "Ruwe zonne-instraling som (Koelen)"

@@ -200,3 +200,4 @@ substitutions:
   num_raw_cool_elec_consumed: "Raw Cool Eletricity Consumed"
   num_raw_cool_runtime_hours: "Raw Cool Runtime"
   num_raw_cool_avg_outside_temp: "Raw Cool Avg Outside Temp"
+  num_raw_cool_solar_sum: "Raw Cool Solar irradiance Sum"

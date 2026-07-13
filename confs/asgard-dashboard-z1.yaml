@@ -113,6 +113,7 @@ asgard_dashboard:
   num_raw_cool_elec_consumed_id:     num_raw_cool_elec_consumed
   num_raw_cool_runtime_hours_id:     num_raw_cool_runtime_hours
   num_raw_cool_avg_outside_temp_id:  num_raw_cool_avg_outside_temp
+  num_raw_cool_solar_sum_id:         num_raw_cool_solar_sum
 
   solver_kwh_meter_feedback_source_id: solver_kwh_meter_feedback_source
   solver_kwh_meter_feedback_id: solver_kwh_meter_feedback
