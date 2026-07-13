@@ -118,17 +118,28 @@ namespace esphome
                                             // formula as odin_server: avg_thermal_power / delta_T_out.
                                             // Fallback to 0.22 kW/K if data is insufficient.
                                             float derived_heat_loss = 0.22f;
-                                            if (this->state_.num_raw_heat_produced != nullptr &&
-                                                this->state_.num_raw_avg_room_temp != nullptr &&
-                                                this->state_.num_raw_avg_outside_temp != nullptr) {
-                                                float ema_heat    = this->state_.num_raw_heat_produced->state;
-                                                float ema_room    = this->state_.num_raw_avg_room_temp->state;
-                                                float ema_outside = this->state_.num_raw_avg_outside_temp->state;
-                                                float delta_t_out = ema_room - ema_outside;
-                                                if (delta_t_out > 2.0f && ema_heat > 0.1f) {
-                                                    float hl = (ema_heat / 24.0f) / delta_t_out;
-                                                    derived_heat_loss = std::max(0.05f, std::min(0.6f, hl));
-                                                }
+                                            
+                                            // Grab Heating EMAs
+                                            float ema_heat     = this->state_.num_raw_heat_produced != nullptr ? this->state_.num_raw_heat_produced->state : 0.0f;
+                                            float ema_room     = this->state_.num_raw_avg_room_temp != nullptr ? this->state_.num_raw_avg_room_temp->state : 20.0f;
+                                            float ema_out_heat = this->state_.num_raw_avg_outside_temp != nullptr ? this->state_.num_raw_avg_outside_temp->state : 7.0f;
+                                            
+                                            // Grab Cooling EMAs
+                                            float ema_cool     = this->state_.num_raw_cool_produced != nullptr ? this->state_.num_raw_cool_produced->state : 0.0f;
+                                            float ema_out_cool = this->state_.num_raw_cool_avg_outside_temp != nullptr ? this->state_.num_raw_cool_avg_outside_temp->state : 25.0f;
+
+                                            float delta_t_heat = ema_room - ema_out_heat;
+                                            float delta_t_cool = ema_out_cool - ema_room;
+
+                                            // Try deriving from Heating
+                                            if (ema_heat > 0.1f && delta_t_heat > 2.0f) {
+                                                float hl = (ema_heat / 24.0f) / delta_t_heat;
+                                                derived_heat_loss = std::max(0.05f, std::min(0.6f, hl));
+                                            } 
+                                            // Fallback to deriving from Cooling
+                                            else if (ema_cool > 0.1f && delta_t_cool > 1.0f) {
+                                                float hl = (ema_cool / 24.0f) / delta_t_cool;
+                                                derived_heat_loss = std::max(0.05f, std::min(0.6f, hl));
                                             }
                                             float thermal_mass_est = tau * derived_heat_loss;
                                             float learned_solar_factor = (free_heating_kelvin * thermal_mass_est) / (avg_sol * t_hours);
