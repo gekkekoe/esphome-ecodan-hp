@@ -1541,28 +1541,8 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
         this->odin_actual_room_.at(target_idx) = actual_room_temp;
         this->odin_actual_standby_cons_.at(target_idx) = standby_cons;
 
-        if (this->odin_operation_mode_.size() == 72) {
-            float real_mode = 0.0f; // Default OFF (0) / Standby
-            if (!std::isnan(dhw_cons) && dhw_cons > 0.03f) {
-                real_mode = 1.0f; // DHW / Legionella
-            }
-            else if (!std::isnan(actual_cons_kwh) && actual_cons_kwh > 0.05f) {
-                float inst_mode = (operation_mode_ && operation_mode_->has_state()) ? operation_mode_->state : NAN;
-
-                // Modes: 1=DHW, 2=Heat, 3=Cool, 6=Legionella
-                if (inst_mode == 6.0f || inst_mode == 1.0f) {
-                    real_mode = 1.0f; // Legionella / DHW fallback
-                } else if (inst_mode == 3.0f) {
-                    real_mode = 3.0f;
-                } else {
-                    // inst_mode may have reverted to heating/standby mid-hour because
-                    // prohibit stopped cooling before the hour boundary.
-                    float planned_mode = this->odin_operation_mode_[target_idx];
-                    real_mode = (planned_mode == 3.0f) ? 3.0f : 2.0f;
-                }
-            }
-            this->odin_operation_mode_[target_idx] = real_mode;
-        }
+        // Removed dynamic overwrite of odin_operation_mode_ to preserve the original forecast.
+        // The real execution data is correctly handled via actual_cons_ / actual_dhw_cons_ / actual_standby_cons_.
 
         // Extract planned data for this specific hour
         if (this->odin_cost_.size() == 72) hour_cost = this->odin_cost_[target_idx];
