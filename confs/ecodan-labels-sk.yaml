@@ -202,4 +202,3 @@ substitutions:
   num_raw_cool_elec_consumed: "Spotreba elektriny chladenie (Surové)"
   num_raw_cool_runtime_hours: "Čas behu chladenia (Surové)"
   num_raw_cool_avg_outside_temp: "Priem. vonk. tepl. chladenia (Surové)"
-  num_raw_cool_solar_sum: "Hrubá suma slnečného žiarenia (Chladenie)"

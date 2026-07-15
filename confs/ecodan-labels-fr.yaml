@@ -192,4 +192,3 @@ substitutions:
   num_raw_cool_elec_consumed: "Élec. consommée refroid. (Brut)"
   num_raw_cool_runtime_hours: "Temps fonct. refroid. (Brut)"
   num_raw_cool_avg_outside_temp: "Temp. ext. moyenne refroid. (Brut)"
-  num_raw_cool_solar_sum: "Somme brute d'irradiance solaire (Refroidissement)"

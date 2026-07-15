@@ -191,4 +191,3 @@ substitutions:
   num_raw_cool_elec_consumed: "Stromverbrauch Kühlen (Rohdaten)"
   num_raw_cool_runtime_hours: "Laufzeit Kühlen (Rohdaten)"
   num_raw_cool_avg_outside_temp: "Mittl. Außentemp. Kühlen (Rohdaten)"
-  num_raw_cool_solar_sum: "Rohe Solarstrahlungssumme (Kühlung)"

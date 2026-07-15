@@ -192,4 +192,3 @@ substitutions:
   num_raw_cool_elec_consumed: "Consumo eléct. refrigeración (Bruto)"
   num_raw_cool_runtime_hours: "Tiempo func. refrigeración (Bruto)"
   num_raw_cool_avg_outside_temp: "Temp. ext. media refrig. (Bruto)"
-  num_raw_cool_solar_sum: "Suma bruta de irradiancia solar (Refrigeración)"

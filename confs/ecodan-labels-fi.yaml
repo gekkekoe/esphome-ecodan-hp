@@ -192,4 +192,3 @@ substitutions:
   num_raw_cool_elec_consumed: "Jäähdytyksen sähkönkulutus (Raaka)"
   num_raw_cool_runtime_hours: "Jäähdytyksen käyntiaika (Raaka)"
   num_raw_cool_avg_outside_temp: "Keskim. ulkolämpötila jäähd. (Raaka)"
-  num_raw_cool_solar_sum: "Raaka auringon säteilyn summa (Jäähdytys)"

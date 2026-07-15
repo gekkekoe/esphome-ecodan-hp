@@ -1047,11 +1047,6 @@ header {
             <span class="ctrl-label param-label">Cooling Avg Ambient<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature (last session) during cooling.</span></span>
             <div class="stepper"><button class="step-btn" onclick="step('raw-cool-out', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-out-val" onchange="manualInput('raw-cool-out', this.value)" /><button class="step-btn" onclick="step('raw-cool-out', +0.1)">+</button></div>
           </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Cooling Solar Sum<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">W/m²·h/day</span>Accumulated solar irradiance while cooling. Used for heat loss calculation.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-solar', -10)">−</button><input type="number" class="step-input" id="raw-cool-solar-val" onchange="manualInput('raw-cool-solar', this.value)" /><button class="step-btn" onclick="step('raw-cool-solar', +10)">+</button></div>
-          </div>
         </div>
 
         <div class="sub-label" style="margin-top:20px;">Universal Building Physics</div>
@@ -1313,7 +1308,6 @@ const LIMITS = {
   'raw-cool-elec': { min: 0.0, max: 100.0, step: 0.1 },
   'raw-cool-run':  { min: 0.0, max: 24.0, step: 0.1 },
   'raw-cool-out':  { min: -25.0, max: 50.0, step: 0.1 },
-  'raw-cool-solar': { min: 0.0, max: 15000.0, step: 1.0 },
   'min-on-time': { min: 1, max: 20, step: 1 },
 };
 
@@ -1334,7 +1328,7 @@ const STEP_EL = {
   'batt-max-dis': 'batt-max-dis-val',
   'cool-start-z1': 'cool-start-z1-val', 'cool-min-z1': 'cool-min-z1-val', 'cool-min-z2': 'cool-min-z2-val',
   'dhw-thresh': 'dhw-thresh-val',
-  'raw-cool-prod': 'raw-cool-prod-val', 'raw-cool-elec': 'raw-cool-elec-val', 'raw-cool-run': 'raw-cool-run-val', 'raw-cool-out': 'raw-cool-out-val', 'raw-cool-solar': 'raw-cool-solar-val',
+  'raw-cool-prod': 'raw-cool-prod-val', 'raw-cool-elec': 'raw-cool-elec-val', 'raw-cool-run': 'raw-cool-run-val', 'raw-cool-out': 'raw-cool-out-val',
   'min-on-time': 'min-on-time-val',
 };
 
@@ -3142,7 +3136,6 @@ function render(d) {
   if (d.raw_cool_elec_consumed_lim) { LIMITS['raw-cool-elec'].min = d.raw_cool_elec_consumed_lim.min; LIMITS['raw-cool-elec'].max = d.raw_cool_elec_consumed_lim.max; LIMITS['raw-cool-elec'].step = d.raw_cool_elec_consumed_lim.step; }
   if (d.raw_cool_runtime_hours_lim) { LIMITS['raw-cool-run'].min = d.raw_cool_runtime_hours_lim.min; LIMITS['raw-cool-run'].max = d.raw_cool_runtime_hours_lim.max; LIMITS['raw-cool-run'].step = d.raw_cool_runtime_hours_lim.step; }
   if (d.raw_cool_avg_outside_temp_lim) { LIMITS['raw-cool-out'].min = d.raw_cool_avg_outside_temp_lim.min; LIMITS['raw-cool-out'].max = d.raw_cool_avg_outside_temp_lim.max; LIMITS['raw-cool-out'].step = d.raw_cool_avg_outside_temp_lim.step; }
-  if (d.raw_cool_solar_sum_lim) { LIMITS['raw-cool-solar'].min = d.raw_cool_solar_sum_lim.min; LIMITS['raw-cool-solar'].max = d.raw_cool_solar_sum_lim.max; LIMITS['raw-cool-solar'].step = d.raw_cool_solar_sum_lim.step; }
 
   if (d.cool_smart_z1_lim) { LIMITS['cool-start-z1'].min = d.cool_smart_z1_lim.min; LIMITS['cool-start-z1'].max = d.cool_smart_z1_lim.max; LIMITS['cool-start-z1'].step = d.cool_smart_z1_lim.step || 0.5; }
   if (d.min_cool_flow_z1_lim) { LIMITS['cool-min-z1'].min = d.min_cool_flow_z1_lim.min; LIMITS['cool-min-z1'].max = d.min_cool_flow_z1_lim.max; LIMITS['cool-min-z1'].step = d.min_cool_flow_z1_lim.step || 0.1; }
@@ -3273,8 +3266,6 @@ function render(d) {
 
   seedPending('min-on-time', d.min_compressor_on_time);
 
-  seedPending('raw-cool-solar',  d.raw_cool_solar_sum);
-  
   setToggle('sw-power-mode', d.power_mode);
 
   toggleCoolingUI();
@@ -3613,7 +3604,7 @@ async function sendPhysics(btn) {
   btn.classList.add('sending');
   let c = 0;
   try {
-    const physicsKeys = ['raw-heat','raw-elec','raw-run','raw-out','raw-room','raw-delta','raw-hl-tm','raw-solar-factor','batt-soc','batt-max-dis', 'raw-cool-prod', 'raw-cool-elec', 'raw-cool-run', 'raw-cool-out', 'raw-cool-solar'];
+    const physicsKeys = ['raw-heat','raw-elec','raw-run','raw-out','raw-room','raw-delta','raw-hl-tm','raw-solar-factor','batt-soc','batt-max-dis', 'raw-cool-prod', 'raw-cool-elec', 'raw-cool-run', 'raw-cool-out'];
     
     const physicsMap = { 
       'raw-heat': 'raw_heat_produced', 'raw-elec': 'raw_elec_consumed', 'raw-run': 'raw_runtime_hours',
@@ -3621,8 +3612,7 @@ async function sendPhysics(btn) {
       'raw-hl-tm': 'raw_hl_tm_product', 'raw-solar-factor': 'raw_solar_factor',
       'batt-soc': 'battery_soc_kwh', 'batt-max-dis': 'battery_max_discharge_kw',
       'raw-cool-prod': 'raw_cool_produced', 'raw-cool-elec': 'raw_cool_elec_consumed', 
-      'raw-cool-run': 'raw_cool_runtime_hours', 'raw-cool-out': 'raw_cool_avg_outside_temp',
-      'raw-cool-solar': 'raw_cool_solar_sum'
+      'raw-cool-run': 'raw_cool_runtime_hours', 'raw-cool-out': 'raw_cool_avg_outside_temp'
     };
     for (const k of physicsKeys) {
       if (hasChanged(k)) {
@@ -3679,7 +3669,6 @@ async function runOdinSolver() {
             cool_elec_consumed: pending['raw-cool-elec'] || latestState.raw_cool_elec_consumed || 0,
             cool_runtime_hours: pending['raw-cool-run'] || latestState.raw_cool_runtime_hours || 0,
             cool_avg_outside_temp: pending['raw-cool-out'] || latestState.raw_cool_avg_outside_temp || 20,
-            cool_solar_sum: pending['raw-cool-solar'] || latestState.raw_cool_solar_sum || 0,
             avg_room_temp: pending['raw-room'] || latestState.raw_avg_room_temp || 20,
             delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
             hl_tm_product: pending['raw-hl-tm'] ?? latestState.raw_hl_tm_product ?? 0.0,
