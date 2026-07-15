@@ -29,10 +29,12 @@ globals:
     restore_value: yes
     initial_value: 'false'
 
-  #dhw saved setpoint to restore
-  - id: stored_dhw_target
-    type: float
-    initial_value: '0.0'
+  # DHW trigger: remembers whether WE turned Server Control on, so we only
+  # restore it to off if it wasn't already on for some other reason.
+  - id: dhw_trigger_scm_was_off
+    type: bool
+    restore_value: no
+    initial_value: 'false'
 
 ####################
 # heatpump commands
@@ -72,22 +74,6 @@ switch:
       - script.execute: trigger_dhw_script
     turn_off_action:
       - script.stop: trigger_dhw_script
-      - if:
-          condition:
-            lambda: |-
-              return (id(stored_dhw_target) > 0.0) && 
-                     (id(dhw_flow_temp_target).state != id(stored_dhw_target));
-          then:
-            - logger.log:
-                format: "Script aborted. Restoring original target temperature."
-                tag: "ecodan"
-                level: WARN
-            - climate.control:
-                id: heatpump_climate_dhw
-                target_temperature: !lambda 'return id(stored_dhw_target);'
-            - globals.set:
-                id: stored_dhw_target
-                value: '0.0'
 
   - platform: template
     name: ${heatpump_switch_force_dhw}
@@ -723,47 +709,74 @@ script:
             - switch.turn_off: heatpump_switch_regular_dhw
             - script.stop: trigger_dhw_script
 
+      # Server Control must be on before any flag can be toggled at all.
+      # Remember whether it was off, so we only restore it.
+      - lambda: |-
+          id(dhw_trigger_scm_was_off) = !id(ecodan_instance).get_status().ServerControl;
+      - if:
+          condition:
+            lambda: 'return id(dhw_trigger_scm_was_off);'
+          then:
+            - logger.log:
+                format: "DHW trigger: Server Control was off — enabling it."
+                tag: "asgard"
+                level: INFO
+            - switch.turn_on: heatpump_switch_server_control_mode
+            - wait_until:
+                condition:
+                  lambda: 'return id(ecodan_instance).get_status().ServerControl;'
+                timeout: 90s
+
+      # Respect an already-active user prohibit
       - if:
           condition:
             lambda: |-
-              return !std::isnan(id(dhw_temp).state) && 
-                     !std::isnan(id(dhw_flow_temp_target).state) && 
-                     (id(dhw_temp).state < id(dhw_flow_temp_target).state);
+              auto flags = id(ecodan_instance).get_status().get_svc_flags();
+              return static_cast<uint8_t>(flags & esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW) != 0;
           then:
-            # Save the current target temperature
-            - globals.set:
-                id: stored_dhw_target
-                value: !lambda 'return id(dhw_flow_temp_target).state;'
-            
-            # Increase dhw setpoint to trigger regular dhw (compensating for the drop)
             - logger.log:
-                format: "Triggering DHW: Setting temporary target."
+                format: "DHW trigger: Prohibit DHW is already on (user doesn't want DHW). Doing nothing."
                 tag: "asgard"
                 level: INFO
-            - climate.control:
-                id: heatpump_climate_dhw
-                target_temperature: !lambda |-
-                  float drop = std::isnan(id(dhw_flow_temp_drop).state) ? 10.0 : id(dhw_flow_temp_drop).state;
-                  return id(dhw_temp).state + 1.0 + drop;
-            
+          else:
+            - logger.log:
+                format: "DHW trigger: toggling Prohibit DHW on, then off, to force an immediate start."
+                tag: "asgard"
+                level: INFO
+            - switch.turn_on: heatpump_switch_server_control_prohibit_dhw
+            - wait_until:
+                condition:
+                  lambda: |-
+                    auto flags = id(ecodan_instance).get_status().get_svc_flags();
+                    return static_cast<uint8_t>(flags & esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW) != 0;
+                timeout: 90s
+            - switch.turn_off: heatpump_switch_server_control_prohibit_dhw
+            - wait_until:
+                condition:
+                  lambda: |-
+                    auto flags = id(ecodan_instance).get_status().get_svc_flags();
+                    return static_cast<uint8_t>(flags & esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW) == 0;
+                timeout: 90s
             - wait_until:
                 condition:
                   lambda: 'return id(ecodan_instance).get_status().Operation == esphome::ecodan::Status::OperationMode::DHW_ON;'
-                timeout: 5min 
-            
-            # Restore old setpoint
+                timeout: 5min
             - logger.log:
-                format: "DHW started. Restoring the original target temperature."
+                format: "DHW started."
                 tag: "asgard"
                 level: INFO
-            - climate.control:
-                id: heatpump_climate_dhw
-                target_temperature: !lambda 'return id(stored_dhw_target);'
 
+      # Restore Server Control to off, but only if we were the one who enabled it
+      - if:
+          condition:
+            lambda: 'return id(dhw_trigger_scm_was_off);'
+          then:
             - logger.log:
-                format: "DHW activation completed. Turning off switch."
+                format: "DHW trigger: restoring Server Control to off."
                 tag: "asgard"
                 level: INFO
-            - switch.turn_off: heatpump_switch_regular_dhw
+            - switch.turn_off: heatpump_switch_server_control_mode
+
+      - switch.turn_off: heatpump_switch_regular_dhw
 
 <<: !include stats.yaml

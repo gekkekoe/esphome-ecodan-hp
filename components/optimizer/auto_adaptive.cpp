@@ -116,7 +116,8 @@ namespace esphome
                                           mode != OptimizerOperationMode::HEAT_ON);
 
                     // Fall-forward logic: if currently off or doing DHW/Legionella, 
-                    if (odin_last_executed_dhw_hour_ == current_hour && (result.heatpump_off || mode == OptimizerOperationMode::DHW_ON || mode == OptimizerOperationMode::LEGIONELLA_PREVENTION)) {
+                    if (odin_last_executed_dhw_hour_ != -1
+                        && (result.heatpump_off || mode == OptimizerOperationMode::DHW_ON || mode == OptimizerOperationMode::LEGIONELLA_PREVENTION)) {
 
                         if (!std::isnan(next_prod) && next_mode != OptimizerOperationMode::UNAVAILABLE) {
                             bool next_off = (next_prod < 0.1f &&
