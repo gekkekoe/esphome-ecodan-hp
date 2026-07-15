@@ -176,14 +176,3 @@ number:
     initial_value: 0.0
     icon: "mdi:thermometer-water"
     entity_category: "config"
-
-  - platform: template
-    id: num_raw_cool_solar_sum
-    name: ${num_raw_cool_solar_sum}
-    internal: ${is_internal_asgard_only}
-    optimistic: true
-    restore_value: true
-    initial_value: 0.0
-    min_value: 0.0
-    max_value: 15000.0 # W/m2 * hours per day max
-    step: 1.0
