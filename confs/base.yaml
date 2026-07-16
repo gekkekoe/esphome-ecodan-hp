@@ -72,8 +72,6 @@ switch:
     icon: "mdi:water-boiler-auto"
     turn_on_action:
       - script.execute: trigger_dhw_script
-    turn_off_action:
-      - script.stop: trigger_dhw_script
 
   - platform: template
     name: ${heatpump_switch_force_dhw}
