@@ -156,6 +156,8 @@ Toggle **I have solar panels** on if you have a PV installation. The fields belo
 
 You can define multiple arrays by pressing the `add array` button.
 
+> **Tip:** Extra per-array options — **Hardware Efficiency (PR)** and **Morning / Evening Shade** for panels shaded by trees or buildings — are available on the **Settings → Solar PV** page after setup. See [Section 8](#8-settings--location--energy).
+
 If you have no solar panels, leave the toggle off. ODIN will still optimize around price. Please be advised that solar production is an **estimation** based on the parameters.
 
 ### Step 4 — Weather Data Source
@@ -432,6 +434,25 @@ ODIN uses the tilt angle together with orientation and irradiance data to calcul
 
 ---
 
+### Morning Shade & Evening Shade
+
+Trees, chimneys, dormers, and neighbouring roofs often block the **low** sun early and late in the day, while the **high** midday sun clears them. Without this hint ODIN assumes a clear horizon and over-predicts your solar production every morning and evening — which can make it pre-heat expecting free solar that never arrives.
+
+Each array has two shade factors:
+
+| Field | Meaning |
+|-------|---------|
+| **Morning Shade** | How much of the *morning* output survives the shade. `1.00` = clear sky, `0.50` = half the morning yield lost, `0.00` = fully blocked. |
+| **Evening Shade** | The same, for the *evening* (low sun in the west). |
+
+ODIN applies the shade at full strength around sunrise/sunset and fades it to zero at midday — mirroring how a shadow is longest when the sun is low and gone when the sun is overhead. The effect only reduces **panel electricity production**; it does not change the passive warmth the sun brings through your windows.
+
+**How to set them:** Leave both at `1.00` if nothing shades the panels. Otherwise estimate the worst-case loss at the shaded edge of the day — a thin branch might be `0.85`, a solid obstruction `0.4`, a wall that keeps the array dark until mid-morning `0.1`. Each array is set independently, so an east array shaded at breakfast and a west array shaded at dinner are handled correctly. Fine-tune by comparing the forecast against your inverter's actual output on a clear day.
+
+> **Note:** If the panels have a *clear* horizon but the forecast still overshoots real production, the cause is usually **Capacity (kWp)** or **Hardware Efficiency (PR)**, not shade — leave the shade factors at `1.00` in that case.
+
+---
+
 ## 9. Settings — Solver Tuning
 
 These parameters control how ODIN's optimisation engine balances cost savings against comfort. Click **Apply Tuning Params** to save changes.
@@ -467,6 +488,26 @@ The lowest thermal output your heat pump can sustain before the compressor shuts
 | Small modulating (5–7 kW) | 1.5–2.5 kW |
 | Medium (9–12 kW) | 2.0–3.5 kW |
 | Large (14–16 kW) | 3.0–5.0 kW |
+
+---
+
+### Learned Heat Loss (kW/K)
+
+How fast your house leaks heat — the electrical/thermal power lost per degree of difference between inside and outside. `0.15 kW/K` means the house loses 0.15 kW for every 1°C it is warmer than outside.
+
+**You do not normally set this.** ODIN re-learns it automatically on every optimisation from your real heating data (yesterday's heat produced and the indoor/outdoor temperatures), so it stays accurate as your insulation, glazing, or draughts change — nothing to save, nothing to lose on a reboot.
+
+**The one time this field is used:** a brand-new install (or after a factory reset) **before the first heating day of the winter**. Until the heat pump has actually heated in anger, ODIN has no data to learn from, so it falls back to this value as a starting estimate. The moment a single real heating day exists, this field is ignored entirely.
+
+**How to set it (only for that cold-start case):**
+
+| House | Starting value |
+|-------|---------------|
+| Well-insulated / new-build | 0.10 |
+| Average, reasonably insulated | 0.15 (leave as default) |
+| Older, poorly insulated | 0.30–0.40+ |
+
+Valid range: `0.05–0.60 kW/K`. If left blank, ODIN uses a generic `0.15 kW/K` until it has learned your house.
 
 ---
 
