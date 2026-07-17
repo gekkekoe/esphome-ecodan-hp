@@ -3658,6 +3658,29 @@ async function runOdinSolver() {
     if (isNaN(minCoolFlow)) {
         minCoolFlow = 18.0; 
     }
+    
+    // Extract trailing 24 hours. The 72h window stores yesterday at 0-23, and today at 24-47.
+    // The trailing 24 hours ends precisely at (today_offset + solveHour - 1).
+    // Mathematically, this maps perfectly to indices [solveHour] through [solveHour + 23].
+    const hist_room_temp = [];
+    const hist_out_temp = [];
+    const hist_solar = [];
+    const hist_prod = [];
+    const hist_op_mode = [];
+
+    for (let i = 0; i < 24; i++) {
+        const idx = solveHour + i;
+        if (odinDataCache && idx >= 0 && idx < 72) {
+            hist_room_temp.push(odinDataCache.actual_room_temp?.[idx] ?? null);
+            hist_out_temp.push(odinDataCache.weather?.[idx] ?? null); // Forecast acts as out_temp
+            hist_solar.push(odinDataCache.solar?.[idx] ?? null);
+            hist_prod.push(odinDataCache.actual_prod?.[idx] ?? null);
+            hist_op_mode.push(odinDataCache.operation_mode?.[idx] ?? null);
+        } else {
+            hist_room_temp.push(null); hist_out_temp.push(null); hist_solar.push(null);
+            hist_prod.push(null); hist_op_mode.push(null);
+        }
+    }
 
     const payload = {
         params: {
@@ -3665,14 +3688,14 @@ async function runOdinSolver() {
             elec_consumed: pending['raw-elec'] || latestState.raw_elec_consumed || 0,
             runtime_hours: pending['raw-run'] || latestState.raw_runtime_hours || 0,
             avg_outside_temp: pending['raw-out'] || latestState.raw_avg_outside_temp || 7,
+            avg_room_temp: pending['raw-room'] || latestState.raw_avg_room_temp || 20,
+            delta_room_temp: pending['raw-delta'] ?? latestState.raw_delta_room_temp ?? 0,
             cool_produced: pending['raw-cool-prod'] || latestState.raw_cool_produced || 0,
             cool_elec_consumed: pending['raw-cool-elec'] || latestState.raw_cool_elec_consumed || 0,
             cool_runtime_hours: pending['raw-cool-run'] || latestState.raw_cool_runtime_hours || 0,
             cool_avg_outside_temp: pending['raw-cool-out'] || latestState.raw_cool_avg_outside_temp || 20,
-            avg_room_temp: pending['raw-room'] || latestState.raw_avg_room_temp || 20,
-            delta_room_temp: pending['raw-delta'] || latestState.raw_delta_room_temp || 0,
             hl_tm_product: pending['raw-hl-tm'] ?? latestState.raw_hl_tm_product ?? 0.0,
-            passive_solar_gain_factor: pending['raw-solar-factor'] || latestState.raw_solar_factor || 0.015,
+            passive_solar_gain_factor: 0.015,
             current_room_temp: latestState.z1_current_temp || 20.0,
             current_hour: solveHour,
             battery_soc_kwh: pending['batt-soc'] ?? latestState.battery_soc_kwh ?? 0.0,
@@ -3683,7 +3706,12 @@ async function runOdinSolver() {
             dhw_start_threshold: pending['dhw-thresh'] ?? latestState.dhw_start_threshold ?? 0.0,
             // 0=OFF,1=DHW_ON,2=HEAT_ON,3=COOL_ON,5=FROST_PROTECT,6=LEGIONELLA,255=UNAVAILABLE
             current_operation_mode: selectedMode,
-            min_cool_flow: minCoolFlow
+            min_cool_flow: minCoolFlow,
+            hist_room_temp: hist_room_temp,
+            hist_out_temp: hist_out_temp,
+            hist_solar: hist_solar,
+            hist_prod: hist_prod,
+            hist_op_mode: hist_op_mode
         }
     };
 

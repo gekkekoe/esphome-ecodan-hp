@@ -363,6 +363,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
                           float actual_room_temp, float standby_cons);
 
   void sync_odin_day();
+  float get_odin_value(const char* name, int idx);
 
  protected:
   void handle_root_(AsyncWebServerRequest *request);

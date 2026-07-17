@@ -491,13 +491,25 @@ The lowest thermal output your heat pump can sustain before the compressor shuts
 
 ---
 
-### Learned Heat Loss (kW/K)
+### Heat Loss Learning Method
 
-How fast your house leaks heat — the electrical/thermal power lost per degree of difference between inside and outside. `0.15 kW/K` means the house loses 0.15 kW for every 1°C it is warmer than outside.
+ODIN measures how fast your house leaks heat automatically — the electrical/thermal power lost per degree of difference between inside and outside. `0.15 kW/K` means the house loses 0.15 kW for every 1°C it is warmer than outside. There are two ways ODIN can learn this number, and you can switch between them at any time.
 
-**You do not normally set this.** ODIN re-learns it automatically on every optimisation from your real heating data (yesterday's heat produced and the indoor/outdoor temperatures), so it stays accurate as your insulation, glazing, or draughts change — nothing to save, nothing to lose on a reboot.
+**Day Method (default)** — ODIN re-learns this every solve from your real heating data: yesterday's total heat produced, divided by the temperature difference over that same day. This is recomputed fresh each time, so there is nothing to save and nothing to lose on a reboot. It works with any temperature sensor and needs no special setup.
 
-**The one time this field is used:** a brand-new install (or after a factory reset) **before the first heating day of the winter**. Until the heat pump has actually heated in anger, ODIN has no data to learn from, so it falls back to this value as a starting estimate. The moment a single real heating day exists, this field is ignored entirely.
+**Hourly Grey-Box (optional toggle)** — instead of one full-day average, this fits your heat loss *and* your passive solar gain together from 24 hours of hourly room/outdoor-temperature/solar/production data. In principle this is a more detailed model of your house. In practice, it only outperforms the Day Method if your room-temperature sensor reports at roughly **0.1°C resolution**. Coarser sensors (~0.5°C, common on many stock heat pump room sensors) introduce enough rounding noise into the hour-to-hour numbers that the fit becomes unreliable — the Day Method, which only needs one number per day, is far less sensitive to this.
+
+**Comparing the two:** both methods are always calculated and shown side by side in the debug output (`hl_day_method` / `hl_greybox_method`, plus `greybox_status`), regardless of which one the toggle has selected. This lets you check whether Grey-Box is producing something sensible for your house before switching to it — you don't need to flip the toggle back and forth to compare.
+
+**Where to find it:** Settings → Solver Tuning → **Hourly Grey-Box HL** (toggle). Off by default.
+
+---
+
+### Learned Heat Loss (kW/K) — manual starting value
+
+This field is the manual fallback used only in one specific situation:
+
+**The one time this field is used:** a brand-new install (or after a factory reset) **before the first heating day of the winter**. Until the heat pump has actually heated in anger, neither method above has any data to learn from, so ODIN falls back to this value as a starting estimate. The moment a single real heating day exists, this field is ignored entirely — permanently, even through the following summer — because the Day Method's data source is frozen at the last day it actually saw heating, not reset each season.
 
 **How to set it (only for that cold-start case):**
 
@@ -508,6 +520,13 @@ How fast your house leaks heat — the electrical/thermal power lost per degree 
 | Older, poorly insulated | 0.30–0.40+ |
 
 Valid range: `0.05–0.60 kW/K`. If left blank, ODIN uses a generic `0.15 kW/K` until it has learned your house.
+
+**The full fallback order, every solve:**
+
+1. **Grey-Box result** — only if the toggle above is on *and* that hour's fit was accepted (enough valid samples, well-conditioned, physically sensible result).
+2. **Day Method result** — used whenever Grey-Box is off, or on but not accepted this solve (this is the normal, expected state for most solves even with Grey-Box enabled — it's not an error, just means that particular day's data wasn't clean enough to trust over the Day Method).
+3. **This manual field** — only if no heating has ever happened yet.
+4. **Generic `0.15 kW/K`** — only if none of the above have anything to go on (fresh install, nothing set).
 
 ---
 
@@ -820,13 +839,13 @@ Total electricity your heat pump consumed yesterday in heating mode (DHW exclude
 
 #### Runtime (Hours)
 
-How many hours the heat pump ran in heating mode yesterday. Together with daily temperature data, this helps derive the thermal mass of your house. Typical values: 8–18 hours in winter, 2–8 hours in spring.
+How many hours the heat pump ran in heating mode yesterday. Together with daily temperature data, this helps derive the thermal mass of your house. Typical values: 8–18 hours in winter, 2–8 hours in spring. Like Avg Outside Temp below, this holds at its last heating day's value once heating season ends, rather than resetting to zero.
 
 ---
 
 #### Avg Outside Temp (°C)
 
-Average outdoor temperature yesterday. Used to calculate heat loss and COP correction. Fetched automatically from your heat pump's outdoor sensor.
+Average outdoor temperature on the last day the heat pump actually ran in heating mode. Used to calculate heat loss and COP correction. Fetched automatically from your heat pump's outdoor sensor. Outside the heating season this value simply holds at its last heating day — it does not track today's temperature — which is what lets the Day Method (see [Settings — Solver Tuning](#9-settings--solver-tuning)) keep using a valid winter reading all summer.
 
 ---
 
@@ -942,7 +961,7 @@ The charts show 48 hours of data — yesterday (left half) and today (right half
 The house is better insulated than the model thinks — Tau may be slightly underestimated. This is safe (you stay warm) and will self-correct as learning converges. No action needed.
 
 **Actual consistently lower than Expected:**
-The house loses heat faster than modelled — heat loss may be underestimated, or there is an unmeasured draught. Consider increasing the `kWh Penalty` to make the solver plan more conservatively.
+The house loses heat faster than modelled — heat loss may be underestimated, or there is an unmeasured draught. Consider increasing the `kWh Penalty` to make the solver plan more conservatively. If you have **Hourly Grey-Box HL** enabled, this is also the symptom of an unreliable fit (common on room sensors coarser than ~0.1°C) — check `greybox_status` in the debug output, and try switching back to the Day Method.
 
 **Expected is flat during sunny hours (no solar warmup):**
 The `Passive Solar Factor` may be too low. Increase it slightly and monitor over a few days.
@@ -969,7 +988,7 @@ Rather than reacting hour by hour, ODIN thinks several steps ahead. This is what
 
 ODIN automatically learns how your house behaves from real daily measurements:
 
-- **How fast it loses heat** — derived from outdoor temperature and how long the heat pump needed to run to maintain temperature.
+- **How fast it loses heat** — derived from outdoor temperature and how long the heat pump needed to run to maintain temperature (a settings toggle lets you switch to a more detailed hourly model instead, if your room sensor is precise enough — see [Settings — Solver Tuning](#9-settings--solver-tuning)).
 - **How much heat the structure stores** — derived from how slowly the house cools down when the heat pump is off. A heavy concrete or tiled floor stores much more heat than a lightweight timber frame.
 - **How much free solar heat enters through windows** — derived from periods when the sun is shining and the heat pump is off.
 

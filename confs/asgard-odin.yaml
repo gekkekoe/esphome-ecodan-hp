@@ -97,13 +97,14 @@ script:
                 max_response_buffer_size: 6144
                 
                 body: !lambda |-
-                  static char payload[1024];
+                  JsonDocument doc; // ArduinoJson v7 syntax
+                  JsonObject params = doc["params"].to<JsonObject>();
 
                   float solar_factor = id(num_raw_solar_factor).state;
                   if (std::isnan(solar_factor) || solar_factor <= 0.001f) {
                       solar_factor = 0.015f; // default
                   }
-                  
+
                   float _dhw_temp = std::isnan(id(dhw_temp).state) ? 0.0f : id(dhw_temp).state;
                   float _dhw_target = std::isnan(id(dhw_flow_temp_target).state) ? 0.0f : id(dhw_flow_temp_target).state;
                   float _dhw_drop = std::isnan(id(dhw_flow_temp_drop).state) ? 0.0f : id(dhw_flow_temp_drop).state;
@@ -111,74 +112,79 @@ script:
                   float _min_cool_flow = std::isnan(id(minimum_cooling_flow_temp_z1).state) ? 18.0f : id(minimum_cooling_flow_temp_z1).state;
 
                   uint8_t _op_mode = 0; 
-                  // use selected operating mode to derive heating/cooling
                   auto hc_mode = id(ecodan_instance).get_status().HeatingCoolingMode;
                   if (hc_mode == ecodan::Status::HpMode::HEAT_FLOW_TEMP) {
-                      _op_mode = 2; // Heating
-                  } 
-                  else if (hc_mode == ecodan::Status::HpMode::COOL_FLOW_TEMP) {
-                      _op_mode = 3; // Cooling
+                      _op_mode = 2;
+                  } else if (hc_mode == ecodan::Status::HpMode::COOL_FLOW_TEMP) {
+                      _op_mode = 3;
                   } else {
-                      // fallback to operating mode (for DHW/Legionella)
                       _op_mode = static_cast<uint8_t>(id(optimizer_ptr)->get_current_operation_mode());
-                      
-                      // if Legionella is active, force threshold to 0 to disable DHW planning for this hour
-                      if (_op_mode == 6) {
-                        _dhw_thresh = 0.0f;
-                      }
+                      if (_op_mode == 6) _dhw_thresh = 0.0f;
                   }
 
                   int _cur_hour = id(optimizer_ptr)->get_current_ecodan_hour();
 
-                  snprintf(payload, sizeof(payload),
-                      "{\"params\":{"
-                      "\"heat_produced\":%.3f,"
-                      "\"elec_consumed\":%.3f,"
-                      "\"runtime_hours\":%.2f,"
-                      "\"avg_outside_temp\":%.2f,"
-                      "\"cool_produced\":%.2f,"
-                      "\"cool_elec_consumed\":%.2f,"
-                      "\"cool_runtime_hours\":%.2f,"
-                      "\"cool_avg_outside_temp\":%.2f,"
-                      "\"avg_room_temp\":%.2f,"
-                      "\"delta_room_temp\":%.2f,"
-                      "\"hl_tm_product\":%.4f,"
-                      "\"passive_solar_gain_factor\":%.4f,"
-                      "\"current_hour\":%d,"
-                      "\"current_room_temp\":%.2f,"
-                      "\"battery_soc_kwh\":%.2f,"
-                      "\"battery_max_discharge_kw\":%.2f,"
-                      "\"dhw_temp\":%.2f,"
-                      "\"dhw_target\":%.2f,"
-                      "\"dhw_drop\":%.2f,"
-                      "\"dhw_start_threshold\":%.2f,"
-                      "\"min_cool_flow\":%.2f,"
-                      "\"current_operation_mode\":%u"
-                      "}}",
-                      id(num_raw_heat_produced).state,
-                      id(num_raw_elec_consumed).state,
-                      id(num_raw_runtime_hours).state,
-                      id(num_raw_avg_outside_temp).state,
-                      id(num_raw_cool_produced).state,
-                      id(num_raw_cool_elec_consumed).state,
-                      id(num_raw_cool_runtime_hours).state,
-                      id(num_raw_cool_avg_outside_temp).state,
-                      id(num_raw_avg_room_temp).state,
-                      id(num_raw_delta_room_temp).state,
-                      id(num_raw_hl_tm_product).state,
-                      solar_factor,
-                      _cur_hour,
-                      id(virtual_climate_z1).current_temperature,
-                      id(num_battery_soc_kwh).state,
-                      id(num_battery_max_discharge_kw).state,
-                      _dhw_temp,
-                      _dhw_target,
-                      _dhw_drop,
-                      _dhw_thresh,
-                      _min_cool_flow,
-                      _op_mode
-                  );
-                  return std::string(payload);
+                  // Set the scalars we actually still need
+                  params["current_hour"] = _cur_hour;
+                  params["current_room_temp"] = id(virtual_climate_z1).current_temperature;
+                  params["hl_tm_product"] = id(num_raw_hl_tm_product).state;
+                  // Fallback value only. odin_server.cpp always computes the day-method
+                  // HL, and — if use_greybox_hl is enabled and the fit is accepted
+                  params["passive_solar_gain_factor"] = solar_factor;
+                  params["battery_soc_kwh"] = id(num_battery_soc_kwh).state;
+                  params["battery_max_discharge_kw"] = id(num_battery_max_discharge_kw).state;
+                  params["dhw_temp"] = _dhw_temp;
+                  params["dhw_target"] = _dhw_target;
+                  params["dhw_drop"] = _dhw_drop;
+                  params["dhw_start_threshold"] = _dhw_thresh;
+                  params["min_cool_flow"] = _min_cool_flow;
+                  params["current_operation_mode"] = _op_mode;
+                  
+                  // Retained for Dynamic COP derivation inside Odin
+                  params["heat_produced"] = id(num_raw_heat_produced).state;
+                  params["elec_consumed"] = id(num_raw_elec_consumed).state;
+                  params["runtime_hours"] = id(num_raw_runtime_hours).state;
+                  params["avg_outside_temp"] = id(num_raw_avg_outside_temp).state;
+                  params["avg_room_temp"] = id(num_raw_avg_room_temp).state;
+                  params["delta_room_temp"] = id(num_raw_delta_room_temp).state;
+                  params["cool_produced"] = id(num_raw_cool_produced).state;
+                  params["cool_elec_consumed"] = id(num_raw_cool_elec_consumed).state;
+                  params["cool_runtime_hours"] = id(num_raw_cool_runtime_hours).state;
+                  params["cool_avg_outside_temp"] = id(num_raw_cool_avg_outside_temp).state;
+
+                  // Extract trailing 24 hours via ArduinoJson v7 syntax
+                  JsonArray arr_room = params["hist_room_temp"].to<JsonArray>();
+                  JsonArray arr_out = params["hist_out_temp"].to<JsonArray>();
+                  JsonArray arr_solar = params["hist_solar"].to<JsonArray>();
+                  JsonArray arr_prod = params["hist_prod"].to<JsonArray>();
+                  JsonArray arr_op = params["hist_op_mode"].to<JsonArray>();
+
+                  for (int i = 0; i < 24; i++) {
+                      int idx = _cur_hour + i;
+                      if (idx >= 0 && idx < 72) {
+                          float r = id(asgard_dashboard_id)->get_odin_value("actual_room_temp", idx);
+                          if (std::isnan(r)) arr_room.add(nullptr); else arr_room.add(r);
+                          
+                          float o = id(asgard_dashboard_id)->get_odin_value("weather", idx); 
+                          if (std::isnan(o)) arr_out.add(nullptr); else arr_out.add(o);
+                          
+                          float s = id(asgard_dashboard_id)->get_odin_value("solar", idx);
+                          if (std::isnan(s)) arr_solar.add(nullptr); else arr_solar.add(s);
+                          
+                          float p = id(asgard_dashboard_id)->get_odin_value("actual_prod", idx);
+                          if (std::isnan(p)) arr_prod.add(nullptr); else arr_prod.add(p);
+                          
+                          float op = id(asgard_dashboard_id)->get_odin_value("operation_mode", idx);
+                          if (std::isnan(op)) arr_op.add(nullptr); else arr_op.add(op);
+                      } else {
+                          arr_room.add(nullptr); arr_out.add(nullptr); arr_solar.add(nullptr); 
+                          arr_prod.add(nullptr); arr_op.add(nullptr);
+                      }
+                  }
+
+                  std::string output;
+                  serializeJson(doc, output);
+                  return output;
 
                 on_response:
                   then:

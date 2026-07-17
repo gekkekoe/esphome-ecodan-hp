@@ -143,6 +143,26 @@ void EcodanDashboard::loop() {
   }
 }
 
+float EcodanDashboard::get_odin_value(const char* name, int idx) {
+    float val = NAN;
+    if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
+        auto map = this->odin_array_map_();
+        for (const auto& entry : map) {
+            if (strcmp(entry.name, name) == 0) {
+                // Ensure the vector exists and the index is within bounds
+                if (entry.vec != nullptr && idx >= 0 && idx < entry.vec->size()) {
+                    val = (*entry.vec)[idx];
+                }
+                break;
+            }
+        }
+        xSemaphoreGive(snapshot_mutex_);
+    } else {
+        ESP_LOGW(TAG, "get_odin_value: Failed to acquire snapshot_mutex_");
+    }
+    return val;
+}
+
 bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
   char url_buf[AsyncWebServerRequest::URL_BUF_SIZE];
   auto url = request->url_to(url_buf);
