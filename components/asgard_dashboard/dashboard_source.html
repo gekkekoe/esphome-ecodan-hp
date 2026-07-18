@@ -543,19 +543,19 @@ header {
     
     <div class="ctrl-card" id="card-z1">
       <div class="section-title">Zone 1</div>
-      <div class="ctrl-row"><span class="ctrl-label">Operating Mode</span><select class="ctrl-select" id="sel-z1mode" onchange="sendSelect('operating_mode_z1', this)"><option>Heat Target Temperature</option><option>Heat Flow Temperature</option><option>Heat Compensation Curve</option><option>Cool Target Temperature</option><option>Cool Flow Temperature</option><option>Floor Dry Up</option><option>Cool Compensation Curve</option></select></div>
+      <div class="ctrl-row"><span class="ctrl-label param-label">Operating Mode<span class="tip-icon">?</span><span class="tip-box">The Ecodan controller's own operating mode for this zone. Auto-Adaptive (below) only works in a Flow Temperature mode.</span></span><select class="ctrl-select" id="sel-z1mode" onchange="sendSelect('operating_mode_z1', this)"><option>Heat Target Temperature</option><option>Heat Flow Temperature</option><option>Heat Compensation Curve</option><option>Cool Target Temperature</option><option>Cool Flow Temperature</option><option>Floor Dry Up</option><option>Cool Compensation Curve</option></select></div>
       
       <div id="flow-z1-area" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Flow Climate Z1</div>
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="flow-z1-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z1-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="flow-z1-sp-val">—</div><button class="step-btn" onclick="step('flow-z1-sp', +0.1)">+</button></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z1-sp', -0.1)">−</button><input type="number" class="step-input" style="font-size:18px; min-width:52px" id="flow-z1-sp-val" onchange="manualInput('flow-z1-sp', this.value)"><button class="step-btn" onclick="step('flow-z1-sp', +0.1)">+</button></div></div>
         </div>
         <button class="send-btn" id="btn-flow-z1" onclick="sendFlow('z1', this)" style="margin-bottom:0;">Apply Flow Z1</button>
       </div>
       
       <div class="ctrl-row" style="margin-top: 15px; border-bottom: none; padding-bottom: 0;">
-        <span class="ctrl-label">Use Room Thermostat Z1</span>
+        <span class="ctrl-label param-label">Use Room Thermostat Z1<span class="tip-icon">?</span><span class="tip-box">Turn on when using MRC or Wireless thermostat without the virtual thermostat.</span></span>
         <label class="toggle-wrap">
           <input type="checkbox" id="ui-room-z1" onchange="sendUI('z1', this.checked)">
           <span class="toggle-slider"></span>
@@ -567,7 +567,7 @@ header {
           <span id="dot-z1" class="status-dot"></span>Virtual Thermostat Z1
         </div>
 
-        <div class="ctrl-row"><span class="ctrl-label">Thermostat Mode</span><select class="ctrl-select" id="sel-z1-vmode" onchange="sendVMode('z1', this)"><option value="heat">Heat</option><option value="cool">Cool</option><option value="off">Off</option></select></div>
+        <div class="ctrl-row"><span class="ctrl-label param-label">Thermostat Mode<span class="tip-icon">?</span><span class="tip-box">Heat/Cool/Off for the Virtual Thermostat below. Must match what the heat pump is actually doing — set to Off if you want to control the relay manually.</span></span><select class="ctrl-select" id="sel-z1-vmode" onchange="sendVMode('z1', this)"><option value="heat">Heat</option><option value="cool">Cool</option><option value="off">Off</option></select></div>
         <div class="ctrl-row" style="margin-bottom: 10px; padding-bottom: 12px;">
           <span class="ctrl-label param-label">Temp Sensor Source<span class="tip-icon">?</span>
             <span class="tip-box">
@@ -583,9 +583,9 @@ header {
         
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="z1-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z1-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z1-sp-val">—</div><button class="step-btn" onclick="step('z1-sp', +0.1)">+</button></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z1-sp', -0.1)">−</button><input type="number" class="step-input" style="font-size:18px; min-width:52px" id="z1-sp-val" onchange="manualInput('z1-sp', this.value)"><button class="step-btn" onclick="step('z1-sp', +0.1)">+</button></div></div>
         </div>
-        <div class="ctrl-row"><span class="ctrl-label">Hysteresis &nbsp;<span id="z1-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span><input type="range" class="ctrl-range" id="z1-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z1')"></div>
+        <div class="ctrl-row"><span class="ctrl-label param-label">Hysteresis<span class="tip-icon">?</span><span class="tip-box">Deadband around the setpoint before the Virtual Thermostat switches the heat pump on or off. Wider = fewer on/off cycles but more temperature swing; narrower = tighter control but more cycling.</span></span> &nbsp;<span id="z1-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span><input type="range" class="ctrl-range" id="z1-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z1')"></div>
         <button class="send-btn" id="btn-z1" onclick="sendZone('z1', this)" style="margin-bottom:0">Apply Virtual Thermostat Z1</button>
       </div>
 
@@ -595,7 +595,7 @@ header {
         </div>
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="room-z1-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('room-z1-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="room-z1-sp-val">—</div><button class="step-btn" onclick="step('room-z1-sp', +0.5)">+</button></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('room-z1-sp', -0.5)">−</button><input type="number" class="step-input" style="font-size:18px; min-width:52px" id="room-z1-sp-val" onchange="manualInput('room-z1-sp', this.value)"><button class="step-btn" onclick="step('room-z1-sp', +0.5)">+</button></div></div>
         </div>
         <button class="send-btn" id="btn-room-z1" onclick="sendRoom('z1', this)" style="margin-bottom:0;">Apply Room Thermostat Z1</button>
       </div>
@@ -603,19 +603,19 @@ header {
 
     <div class="ctrl-card" id="card-z2" style="display:none;">
       <div class="section-title">Zone 2</div>
-      <div class="ctrl-row"><span class="ctrl-label">Operating Mode</span><select class="ctrl-select" id="sel-z2mode" onchange="sendSelect('operating_mode_z2', this)"><option>Heat Target Temperature</option><option>Heat Flow Temperature</option><option>Heat Compensation Curve</option><option>Cool Target Temperature</option><option>Cool Flow Temperature</option><option>Floor Dry Up</option><option>Cool Compensation Curve</option></select></div>
+      <div class="ctrl-row"><span class="ctrl-label param-label">Operating Mode<span class="tip-icon">?</span><span class="tip-box">The Ecodan controller's own operating mode for this zone. Auto-Adaptive (below) only works in a Flow Temperature mode.</span></span><select class="ctrl-select" id="sel-z2mode" onchange="sendSelect('operating_mode_z2', this)"><option>Heat Target Temperature</option><option>Heat Flow Temperature</option><option>Heat Compensation Curve</option><option>Cool Target Temperature</option><option>Cool Flow Temperature</option><option>Floor Dry Up</option><option>Cool Compensation Curve</option></select></div>
 
       <div id="flow-z2-area" style="display:none; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Flow Climate Z2</div>
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="flow-z2-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z2-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="flow-z2-sp-val">—</div><button class="step-btn" onclick="step('flow-z2-sp', +0.1)">+</button></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('flow-z2-sp', -0.1)">−</button><input type="number" class="step-input" style="font-size:18px; min-width:52px" id="flow-z2-sp-val" onchange="manualInput('flow-z2-sp', this.value)"><button class="step-btn" onclick="step('flow-z2-sp', +0.1)">+</button></div></div>
         </div>
         <button class="send-btn" id="btn-flow-z2" onclick="sendFlow('z2', this)" style="margin-bottom:0;">Apply Flow Z2</button>
       </div>
 
       <div class="ctrl-row" style="margin-top: 15px; border-bottom: none; padding-bottom: 0;">
-        <span class="ctrl-label">Use Room Thermostat Z2</span>
+        <span class="ctrl-label param-label">Use Room Thermostat Z2<span class="tip-icon">?</span><span class="tip-box">Turn on when using MRC or Wireless thermostat without the virtual thermostat.</span></span>
         <label class="toggle-wrap">
           <input type="checkbox" id="ui-room-z2" onchange="sendUI('z2', this.checked)">
           <span class="toggle-slider"></span>
@@ -627,7 +627,7 @@ header {
           <span id="dot-z2" class="status-dot"></span>Virtual Thermostat Z2
         </div>
 
-        <div class="ctrl-row"><span class="ctrl-label">Thermostat Mode</span><select class="ctrl-select" id="sel-z2-vmode" onchange="sendVMode('z2', this)"><option value="heat">Heat</option><option value="cool">Cool</option><option value="off">Off</option></select></div>
+        <div class="ctrl-row"><span class="ctrl-label param-label">Thermostat Mode<span class="tip-icon">?</span><span class="tip-box">Heat/Cool/Off for the Virtual Thermostat below. Must match what the heat pump is actually doing — set to Off if you want to control the relay manually.</span></span><select class="ctrl-select" id="sel-z2-vmode" onchange="sendVMode('z2', this)"><option value="heat">Heat</option><option value="cool">Cool</option><option value="off">Off</option></select></div>
         <div class="ctrl-row" style="margin-bottom: 10px; padding-bottom: 12px;">
           <span class="ctrl-label param-label">Temp Sensor Source<span class="tip-icon">?</span>
             <span class="tip-box">
@@ -643,9 +643,9 @@ header {
 
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="z2-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z2-sp', -0.1)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="z2-sp-val">—</div><button class="step-btn" onclick="step('z2-sp', +0.1)">+</button></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('z2-sp', -0.1)">−</button><input type="number" class="step-input" style="font-size:18px; min-width:52px" id="z2-sp-val" onchange="manualInput('z2-sp', this.value)"><button class="step-btn" onclick="step('z2-sp', +0.1)">+</button></div></div>
         </div>
-        <div class="ctrl-row"><span class="ctrl-label">Hysteresis &nbsp;<span id="z2-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span></span><input type="range" class="ctrl-range" id="z2-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z2')"></div>
+        <div class="ctrl-row"><span class="ctrl-label param-label">Hysteresis<span class="tip-icon">?</span><span class="tip-box">Deadband around the setpoint before the Virtual Thermostat switches the heat pump on or off. Wider = fewer on/off cycles but more temperature swing; narrower = tighter control but more cycling.</span></span> &nbsp;<span id="z2-hyst-val" style="color:var(--accent);font-family:var(--mono)">—</span><input type="range" class="ctrl-range" id="z2-hyst" min="0.1" max="3.0" step="0.1" style="max-width:140px" oninput="hystInput('z2')"></div>
         <button class="send-btn" id="btn-z2" onclick="sendZone('z2', this)" style="margin-bottom:0">Apply Virtual Thermostat Z2</button>
       </div>
 
@@ -655,7 +655,7 @@ header {
         </div>
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Current</div><div class="big-temp" style="font-size:32px" id="room-z2-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('room-z2-sp', -0.5)">−</button><div class="step-val" style="font-size:18px; min-width:52px" id="room-z2-sp-val">—</div><button class="step-btn" onclick="step('room-z2-sp', +0.5)">+</button></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('room-z2-sp', -0.5)">−</button><input type="number" class="step-input" style="font-size:18px; min-width:52px" id="room-z2-sp-val" onchange="manualInput('room-z2-sp', this.value)"><button class="step-btn" onclick="step('room-z2-sp', +0.5)">+</button></div></div>
         </div>
         <button class="send-btn" id="btn-room-z2" onclick="sendRoom('z2', this)" style="margin-bottom:0;">Apply Room Thermostat Z2</button>
       </div>
@@ -667,7 +667,7 @@ header {
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
         
         <div class="ctrl-row" style="border-bottom: 1px solid var(--border); padding: 0 0 12px 0;">
-          <span class="ctrl-label">Force DHW Now</span>
+          <span class="ctrl-label param-label">Force DHW Now<span class="tip-icon">?</span><span class="tip-box">Triggers non-ECO mode DHW.</span></span>
           <label class="toggle-wrap">
             <input type="checkbox" id="sw-fdhw" onchange="sendSwitch('force_dhw', this.checked)">
             <span class="toggle-slider"></span>
@@ -676,7 +676,7 @@ header {
         
         <div class="ctrl-row" style="border-bottom: none; padding: 12px 0 0 0;">
           <span class="ctrl-label param-label">Trigger Regular DHW<span class="tip-icon">?</span>
-          <span class="tip-box">Temporarily bumps the DHW target by max drop + 1°C to trigger a normal DHW heating cycle.</span></span>
+          <span class="tip-box">Triggers ECO mode DHW.</span></span>
           <label class="toggle-wrap">
             <input type="checkbox" id="sw-regular-dhw" onchange="sendSwitch('sw_regular_dhw', this.checked)">
             <span class="toggle-slider"></span>
@@ -697,7 +697,7 @@ header {
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Tank Temp</div><div class="big-temp" id="dhw-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Target</div><div class="stepper"><button class="step-btn" onclick="step('dhw-sp', -0.5)">−</button><div class="step-val" id="dhw-sp-val">—</div><button class="step-btn" onclick="step('dhw-sp', +0.5)">+</button></div></div>
+          <div style="flex:1;"><div class="stat-label">Target</div><div class="stepper"><button class="step-btn" onclick="step('dhw-sp', -0.5)">−</button><input type="number" class="step-input" id="dhw-sp-val" onchange="manualInput('dhw-sp', this.value)"><button class="step-btn" onclick="step('dhw-sp', +0.5)">+</button></div></div>
         </div>
         <button class="send-btn" onclick="sendDHW(this)" style="margin-bottom:0;">Apply DHW</button>
       </div>
@@ -708,9 +708,9 @@ header {
       
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">General Settings</div>
-        <div class="ctrl-row"><span class="ctrl-label">Enable AA Control</span><label class="toggle-wrap"><input type="checkbox" id="sw-aa" onchange="sendSwitch('auto_adaptive_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
-        <div class="ctrl-row"><span class="ctrl-label">Defrost Mitigation</span><label class="toggle-wrap"><input type="checkbox" id="sw-dm" onchange="sendSwitch('defrost_risk_handling_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
-        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Smart Boost</span><label class="toggle-wrap"><input type="checkbox" id="sw-sb" onchange="sendSwitch('smart_boost_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
+        <div class="ctrl-row"><span class="ctrl-label param-label">Enable AA Control<span class="tip-icon">?</span><span class="tip-box">Master switch for Asgard's Auto-Adaptive flow-temperature algorithm.</span></span><label class="toggle-wrap"><input type="checkbox" id="sw-aa" onchange="sendSwitch('auto_adaptive_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
+        <div class="ctrl-row"><span class="ctrl-label param-label">Defrost Mitigation<span class="tip-icon">?</span><span class="tip-box">Adjusts Auto-Adaptive behaviour in conditions where ice formation on the outdoor unit is likely, to reduce defrost frequency and its associated temperature dips.</span></span><label class="toggle-wrap"><input type="checkbox" id="sw-dm" onchange="sendSwitch('defrost_risk_handling_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Smart Boost<span class="tip-icon">?</span><span class="tip-box">Temporarily raises the flow-temperature target when the room is stagnating below setpoint, to recover faster than gradual adaptive control alone would.</span></span><label class="toggle-wrap"><input type="checkbox" id="sw-sb" onchange="sendSwitch('smart_boost_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
       </div>
 
 
@@ -719,7 +719,7 @@ header {
 
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">General Zone Settings</div>
         <div class="ctrl-row">
-          <span class="ctrl-label">Heating System Type</span>
+          <span class="ctrl-label param-label">Heating System Type<span class="tip-icon">?</span><span class="tip-box">Your emitter type — underfloor heating, radiators, or a mix. Used to set safe min/max flow-temperature deltas and defrost-recovery timing for the Auto-Adaptive algorithm. The "*" are the lineair curve versions.</span></span>
           <select class="ctrl-select" id="sel-hst" onchange="sendSelect('heating_system_type', this)">
             <option value="0">UFH</option>
             <option value="1">UFH *</option>
@@ -730,8 +730,8 @@ header {
           </select>
         </div>
 
-        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Setpoint Bias</span><div class="stepper"><button class="step-btn" onclick="step('aa-bias', -0.1)">−</button><div class="step-val" id="aa-bias-val">—</div><button class="step-btn" onclick="step('aa-bias', +0.1)">+</button></div></div>
-        <div class="ctrl-row"><span class="ctrl-label">Global Smart Start Temp</span><div class="stepper"><button class="step-btn" onclick="step('cool-start-z1', -0.5)">−</button><div class="step-val" id="cool-start-z1-val">—</div><button class="step-btn" onclick="step('cool-start-z1', +0.5)">+</button></div></div>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Setpoint Bias<span class="tip-icon">?</span><span class="tip-box">A flat offset added to whatever flow temperature Auto-Adaptive calculates. Positive if the room consistently runs cold, negative if it consistently overshoots.</span></span><div class="stepper"><button class="step-btn" onclick="step('aa-bias', -0.1)">−</button><input type="number" class="step-input" id="aa-bias-val" onchange="manualInput('aa-bias', this.value)"><button class="step-btn" onclick="step('aa-bias', +0.1)">+</button></div></div>
+        <div class="ctrl-row"><span class="ctrl-label param-label">Global Smart Start Temp<span class="tip-icon">?</span><span class="tip-box">Ceiling on the flow temperature for the first command when a cooling cycle starts, so the system doesn't demand a fully-cold flow while the emitter water is still warm from sitting idle. Only applies before the compressor is actively cooling — once it's running, this cap is lifted and the algorithm targets the true calculated flow. Shared across both zones.</span></span><div class="stepper"><button class="step-btn" onclick="step('cool-start-z1', -0.5)">−</button><input type="number" class="step-input" id="cool-start-z1-val" onchange="manualInput('cool-start-z1', this.value)"><button class="step-btn" onclick="step('cool-start-z1', +0.5)">+</button></div></div>
         <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Settings Z1</div>
 
         <div class="ctrl-row">
@@ -748,8 +748,8 @@ header {
         </div>
         
         <div id="heat-settings-z1">
-          <div class="ctrl-row"><span class="ctrl-label">Max Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -0.1)">−</button><div class="step-val" id="aa-max-val">—</div><button class="step-btn" onclick="step('aa-max', +0.1)">+</button></div></div>
-          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z1</span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -0.1)">−</button><div class="step-val" id="aa-min-val">—</div><button class="step-btn" onclick="step('aa-min', +0.1)">+</button></div></div>
+          <div class="ctrl-row"><span class="ctrl-label param-label">Max Flow Z1<span class="tip-icon">?</span><span class="tip-box">Upper flow-temperature bound Auto-Adaptive is allowed to command for this zone.</span></span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -0.1)">−</button><input type="number" class="step-input" id="aa-max-val" onchange="manualInput('aa-max', this.value)"><button class="step-btn" onclick="step('aa-max', +0.1)">+</button></div></div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Min Flow Z1<span class="tip-icon">?</span><span class="tip-box">Lower flow-temperature bound Auto-Adaptive is allowed to command for this zone.</span></span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -0.1)">−</button><input type="number" class="step-input" id="aa-min-val" onchange="manualInput('aa-min', this.value)"><button class="step-btn" onclick="step('aa-min', +0.1)">+</button></div></div>
         </div>
         <div id="cool-settings-z1" style="display:none;">
           <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
@@ -762,7 +762,7 @@ header {
             </span>
             <div class="stepper">
               <button class="step-btn" onclick="step('cool-min-z1', -0.1)">−</button>
-              <div class="step-val" id="cool-min-z1-val">—</div>
+              <input type="number" class="step-input" id="cool-min-z1-val" onchange="manualInput('cool-min-z1', this.value)">
               <button class="step-btn" onclick="step('cool-min-z1', +0.1)">+</button>
             </div>
           </div>
@@ -784,8 +784,8 @@ header {
           </div>
           
           <div id="heat-settings-z2">
-            <div class="ctrl-row"><span class="ctrl-label">Max Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><div class="step-val" id="aa-max-z2-val">—</div><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
-            <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Min Flow Z2</span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><div class="step-val" id="aa-min-z2-val">—</div><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
+            <div class="ctrl-row"><span class="ctrl-label param-label">Max Flow Z2<span class="tip-icon">?</span><span class="tip-box">Upper flow-temperature bound Auto-Adaptive is allowed to command for this zone.</span></span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><input type="number" class="step-input" id="aa-max-z2-val" onchange="manualInput('aa-max-z2', this.value)"><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
+            <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Min Flow Z2<span class="tip-icon">?</span><span class="tip-box">Lower flow-temperature bound Auto-Adaptive is allowed to command for this zone.</span></span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><input type="number" class="step-input" id="aa-min-z2-val" onchange="manualInput('aa-min-z2', this.value)"><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
           </div>
           <div id="cool-settings-z2" style="display:none;">
             <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
@@ -798,7 +798,7 @@ header {
               </span>
               <div class="stepper">
                 <button class="step-btn" onclick="step('cool-min-z2', -0.1)">−</button>
-                <div class="step-val" id="cool-min-z2-val">—</div>
+                <input type="number" class="step-input" id="cool-min-z2-val" onchange="manualInput('cool-min-z2', this.value)">
                 <button class="step-btn" onclick="step('cool-min-z2', +0.1)">+</button>
               </div>
             </div>
@@ -807,9 +807,9 @@ header {
 
         <div id="heat-short-cycle">
           <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Short Cycle Protection</div>
-          <div class="ctrl-row"><span class="ctrl-label">Predictive Control</span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
-          <div class="ctrl-row"><span class="ctrl-label">Time Window (min)</span><div class="stepper"><button class="step-btn" onclick="step('psc-win', -0.5)">−</button><div class="step-val" id="psc-win-val">—</div><button class="step-btn" onclick="step('psc-win', +0.5)">+</button></div></div>
-          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Delta Threshold (°C)</span><div class="stepper"><button class="step-btn" onclick="step('psc-delta', -0.5)">−</button><div class="step-val" id="psc-delta-val">—</div><button class="step-btn" onclick="step('psc-delta', +0.5)">+</button></div></div>
+          <div class="ctrl-row"><span class="ctrl-label param-label">Predictive Control<span class="tip-icon">?</span><span class="tip-box">Watches for a sustained gap between requested and actual flow temperature — a sign the compressor is about to short-cycle — and nudges the flow-temp target up to avoid it.</span></span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
+          <div class="ctrl-row"><span class="ctrl-label param-label">Time Window (min)<span class="tip-icon">?</span><span class="tip-box">How long the flow-temperature delta must stay above the threshold below before Predictive Control intervenes.</span></span><div class="stepper"><button class="step-btn" onclick="step('psc-win', -0.5)">−</button><div class="step-val" id="psc-win-val">—</div><button class="step-btn" onclick="step('psc-win', +0.5)">+</button></div></div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Delta Threshold (°C)<span class="tip-icon">?</span><span class="tip-box">How far actual flow temperature must lag behind the requested target.</span></span><div class="stepper"><button class="step-btn" onclick="step('psc-delta', -0.5)">−</button><input type="number" class="step-input" id="psc-delta-val" onchange="manualInput('psc-delta', this.value)"><button class="step-btn" onclick="step('psc-delta', +0.5)">+</button></div></div>
         </div>
 
         <button class="send-btn" onclick="sendAA(this)" style="margin-bottom:0; margin-top:24px;">Apply Settings</button>
@@ -821,7 +821,7 @@ header {
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
       <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Power Mode</div>
         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
-          <span class="ctrl-label">Enable</span>
+          <span class="ctrl-label param-label">Enable<span class="tip-icon">?</span><span class="tip-box">Power On / Stand-by</span></span>
           <label class="toggle-wrap">
             <input type="checkbox" id="sw-power-mode" onchange="sendSwitch('power_mode', this.checked)">
             <span class="toggle-slider"></span>
@@ -832,7 +832,7 @@ header {
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Odin Solver</div>
         <div class="ctrl-row">
-          <span class="ctrl-label">Show Solver Tab</span>
+          <span class="ctrl-label param-label">Show Solver Tab<span class="tip-icon">?</span><span class="tip-box">Shows or hides the Solver navigation tab in this dashboard. Enable when Odin is used.</span></span>
           <label class="toggle-wrap">
             <input type="checkbox" id="sw-show-solver" onchange="sendSwitch('show_solver_tab_enabled', this.checked)">
             <span class="toggle-slider"></span>
@@ -843,7 +843,7 @@ header {
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Ecodan Server Control</div>
         <div class="ctrl-row">
-          <span class="ctrl-label">Enable Server Control</span>
+          <span class="ctrl-label param-label">Enable Server Control<span class="tip-icon">?</span><span class="tip-box">Server Control allows you to override the operations.</span></span>
           <label class="toggle-wrap">
             <input type="checkbox" id="sw-sc-enable" onchange="onServerControlToggle(this.checked)">
             <span class="toggle-slider"></span>
@@ -854,21 +854,21 @@ header {
       <div id="sc-prohibit-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Prohibit Controls</div>
         <div class="ctrl-row">
-          <span class="ctrl-label">DHW</span>
+          <span class="ctrl-label param-label">DHW<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from running any DHW cycle, regardless of tank temperature, schedule, or manual triggers, until turned back off.</span></span>
           <label class="toggle-wrap">
             <input type="checkbox" id="sw-sc-prohibit-dhw" onchange="sendSwitch('server_control_prohibit_dhw', this.checked)">
             <span class="toggle-slider"></span>
           </label>
         </div>
         <div class="ctrl-row">
-          <span class="ctrl-label">Z1 Heating</span>
+          <span class="ctrl-label param-label">Z1 Heating<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from heating Zone 1, regardless of schedule or Auto-Adaptive, until turned back off.</span></span>
           <label class="toggle-wrap">
             <input type="checkbox" id="sw-sc-prohibit-z1-heat" onchange="sendSwitch('server_control_prohibit_z1_heating', this.checked)">
             <span class="toggle-slider"></span>
           </label>
         </div>
         <div class="ctrl-row" id="sc-prohibit-z1-cool-row">
-          <span class="ctrl-label">Z1 Cooling</span>
+          <span class="ctrl-label param-label">Z1 Cooling<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from cooling Zone 1, regardless of schedule or Auto-Adaptive, until turned back off.</span></span>
           <label class="toggle-wrap">
             <input type="checkbox" id="sw-sc-prohibit-z1-cool" onchange="sendSwitch('server_control_prohibit_z1_cooling', this.checked)">
             <span class="toggle-slider"></span>
@@ -876,14 +876,14 @@ header {
         </div>
         <div id="sc-z2-prohibits" style="display:none;">
           <div class="ctrl-row">
-            <span class="ctrl-label">Z2 Heating</span>
+            <span class="ctrl-label param-label">Z2 Heating<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from heating Zone 2, regardless of schedule or Auto-Adaptive, until turned back off.</span></span>
             <label class="toggle-wrap">
               <input type="checkbox" id="sw-sc-prohibit-z2-heat" onchange="sendSwitch('server_control_prohibit_z2_heating', this.checked)">
               <span class="toggle-slider"></span>
             </label>
           </div>
           <div class="ctrl-row">
-            <span class="ctrl-label">Z2 Cooling</span>
+            <span class="ctrl-label param-label">Z2 Cooling<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from cooling Zone 2, regardless of schedule or Auto-Adaptive, until turned back off.</span></span>
             <label class="toggle-wrap">
               <input type="checkbox" id="sw-sc-prohibit-z2-cool" onchange="sendSwitch('server_control_prohibit_z2_cooling', this.checked)">
               <span class="toggle-slider"></span>
@@ -903,8 +903,8 @@ header {
             </button>
           </div>
         </div>
-        <div class="ctrl-row"><span class="ctrl-label">Lockout Duration (min)</span><select class="ctrl-select" id="sel-lockout-dur" onchange="sendSelect('lockout_duration', this)"><option value="0">0</option><option value="1">15</option><option value="2">30</option><option value="3">45</option><option value="4">60</option><option value="5">120</option><option value="6">240</option></select></div>
-        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label">Minimum On-Time (min)</span><div class="stepper"><button class="step-btn" onclick="step('min-on-time', -1)">−</button><div class="step-val" id="min-on-time-val">—</div><button class="step-btn" onclick="step('min-on-time', +1)">+</button></div></div>
+        <div class="ctrl-row"><span class="ctrl-label param-label">Lockout Duration (min)<span class="tip-icon">?</span><span class="tip-box">How long Short Cycle Lockout holds elevated flow temps after triggering, before returning control to normal Auto-Adaptive behaviour. 0 = feature disabled.</span></span><select class="ctrl-select" id="sel-lockout-dur" onchange="sendSelect('lockout_duration', this)"><option value="0">0</option><option value="1">15</option><option value="2">30</option><option value="3">45</option><option value="4">60</option><option value="5">120</option><option value="6">240</option></select></div>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Minimum On-Time (min)<span class="tip-icon">?</span><span class="tip-box">How long the compressor must have already been running before Predictive Control or Short Cycle Lockout will act.</span></span><div class="stepper"><button class="step-btn" onclick="step('min-on-time', -1)">−</button><div class="step-val" id="min-on-time-val">—</div><button class="step-btn" onclick="step('min-on-time', +1)">+</button></div></div>
 
         <button class="send-btn" onclick="sendSC(this)" style="margin-bottom:0; margin-top:24px;">Apply Lockout Settings</button>
       </div>
@@ -943,7 +943,7 @@ header {
       <div class="collapsible-content">
       
         <div class="ctrl-row">
-          <span class="ctrl-label">Enable Dynamic Cost Solver</span>
+          <span class="ctrl-label param-label">Enable Dynamic Cost Solver<span class="tip-icon">?</span><span class="tip-box">Lets ODIN's hourly plan (electricity price + weather + solar optimised) drive the heat pump instead of Asgard's standalone Auto-Adaptive control.</span></span>
           <label class="toggle-wrap">
             <input type="checkbox" id="sw-solver" onchange="handleSolverToggle(this)">
             <span class="toggle-slider"></span>
@@ -956,7 +956,7 @@ header {
         </div>
 
         <div class="ctrl-row">
-          <span class="ctrl-label">Odin IP Address</span>
+          <span class="ctrl-label param-label">Odin IP Address<span class="tip-icon">?</span><span class="tip-box">Manual override for the ODIN device's address.</span></span>
           <div style="display: flex; align-items: center; gap: 6px;">
             <input type="text" id="ui-solver-ip" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 110px; text-align: right; outline: none;" placeholder="0.0.0.0">
             <button class="step-btn" style="width: 26px; border-color: var(--text3); color: var(--text3);" onclick="sendInputString('solver_ip_address', 'ui-solver-ip')" title="Save IP">✓</button>
@@ -975,7 +975,7 @@ header {
         
         <div class="ctrl-row" style="border-bottom: none;">
           <span class="ctrl-label param-label">ODIN DHW Trigger<span class="tip-icon">?</span><span class="tip-box">
-            <span class="tip-unit">Mode</span>Method used when ODIN schedules DHW. Regular bumps the setpoint by max drop + 1°C, Forced is faster but at the cost of higher consumption</span></span>
+            <span class="tip-unit">Mode</span>Method used when ODIN schedules DHW. Regular uses ECO mode, Forced is faster but at the cost of higher consumption</span></span>
           <select class="ctrl-select" id="sel-odin-dhw-mode" onchange="sendSelect('solver_dhw_mode', this)">
             <option>Regular</option>
             <option>Forced</option>
