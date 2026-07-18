@@ -52,7 +52,7 @@ namespace esphome
                 if (status.CompressorOn && current_timestamp > 0) {
                     const uint32_t after_dhw_monitoring_duration_s = 5 * 60UL;
                     this->dhw_post_run_expiration_ = (uint32_t)(current_timestamp + after_dhw_monitoring_duration_s);
-                    ESP_LOGD(OPTIMIZER_TAG, "Setting monitor expiration to: %d", this->dhw_post_run_expiration_);
+                    ESP_LOGD(OPTIMIZER_TAG, "Setting monitor expiration to: %lu", this->dhw_post_run_expiration_);
                 }
             }
             else if (post_dhw_window) {

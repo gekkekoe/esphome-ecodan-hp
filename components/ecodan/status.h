@@ -197,7 +197,7 @@ namespace ecodan
             return ControllerDateTime.tm_yday;
         }
 
-        const time_t timestamp() const {
+        time_t timestamp() const {
             if (ControllerDateTime.tm_year < 100)
                 return -1;
             struct tm dt = ControllerDateTime; 
@@ -231,7 +231,7 @@ namespace ecodan
 
         CONTROLLER_FLAG get_svc_flags() const
         {
-            CONTROLLER_FLAG flag;
+            CONTROLLER_FLAG flag{};
             if (ProhibitDhw)
                 flag |= CONTROLLER_FLAG::PROHIBIT_DHW;
             if (ProhibitHeatingZ1)

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "esphome.h"
-#include "esphome/components/thermostat/thermostat_climate.h"
+#include "esphome/components/climate/climate.h"
 
 // forward declare EcodanHeatpump
 namespace esphome
@@ -122,8 +122,11 @@ namespace esphome
         esphome::select::Select *solver_kwh_meter_feedback_source;
         esphome::select::Select *solver_dhw_mode{nullptr};
 
-        esphome::thermostat::ThermostatClimate *asgard_vt_z1;
-        esphome::thermostat::ThermostatClimate *asgard_vt_z2;
+        // Only base climate::Climate state (current_temperature/target_temperature)
+        // is read via these pointers (see optimizer/utility.cpp), so they don't
+        // need to be typed as thermostat::ThermostatClimate specifically.
+        esphome::climate::Climate *asgard_vt_z1;
+        esphome::climate::Climate *asgard_vt_z2;
 
         uint32_t &lockout_expiration_timestamp;
     };

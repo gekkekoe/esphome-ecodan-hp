@@ -12,9 +12,9 @@
 #include <memory>
 #include <esp_littlefs.h>
 #include <sys/stat.h>
+#include <string>
 #include "esphome/components/ecodan/ecodan.h"
 
-// #include "esp_system.h"
 // #include "esp_heap_caps.h"
 
 namespace esphome {
@@ -23,7 +23,7 @@ namespace asgard_dashboard {
 static const char *const TAG = "asgard_dashboard";
 
 //#define TEST_TS
-const time_t EcodanDashboard::timestamp() const {
+time_t EcodanDashboard::timestamp() const {
 #ifndef TEST_TS
   if (this->ecodan_ != nullptr) {
     auto status = this->ecodan_->get_status();
@@ -262,6 +262,21 @@ void EcodanDashboard::handle_js_(AsyncWebServerRequest *request) {
   send_chunked_(request, "application/javascript", file_data, file_len, "public, max-age=31536000");
 }
 
+void EcodanDashboard::handleBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index,
+                                  size_t total) {
+  if (index == 0) {
+    this->post_body_.clear();
+    this->post_body_oversized_ = total > 1024;
+    if (!this->post_body_oversized_) {
+      this->post_body_.reserve(total);
+    }
+  }
+  if (this->post_body_oversized_) {
+    return;  // still drained by the framework; just don't accumulate it
+  }
+  this->post_body_.append(reinterpret_cast<const char *>(data), len);
+}
+
 void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   httpd_req_t *req = *request;
 
@@ -273,8 +288,13 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
     return;
   }
 
-  size_t content_len = req->content_len;
-  if (content_len == 0 || content_len > 1024) {
+  // The request body was already fully consumed by the framework's
+  // handle_raw_body_() before handleRequest()/handle_set_() ever runs (see
+  // handleBody() above for why) -- there is nothing left to read from `req`
+  // here, so we use the buffer handleBody() filled instead of httpd_req_recv().
+  if (this->post_body_oversized_) {
+    this->post_body_.clear();
+    this->post_body_oversized_ = false;
     httpd_resp_set_status(req, "400 Bad Request");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_set_hdr(req, "Connection", "close");
@@ -282,33 +302,22 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
     return;
   }
 
-  // Memory-safe allocation on the heap instead of the stack
-  char *body = (char *)malloc(content_len + 1);
-  if (body == nullptr) {
-    httpd_resp_set_status(req, "500 Internal Server Error");
-    httpd_resp_set_type(req, "text/plain");
-    httpd_resp_set_hdr(req, "Connection", "close");
-    httpd_resp_send(req, "Out of Memory", HTTPD_RESP_USE_STRLEN);
-    return;
-  }
-  memset(body, 0, content_len + 1);
-
-  int received = httpd_req_recv(req, body, content_len);
-  if (received <= 0) {
-    free(body);
+  if (this->post_body_.empty()) {
     httpd_resp_set_status(req, "400 Bad Request");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_set_hdr(req, "Connection", "close");
-    httpd_resp_send(req, "Read failed", HTTPD_RESP_USE_STRLEN);
+    httpd_resp_send(req, "Empty body", HTTPD_RESP_USE_STRLEN);
     return;
   }
-  body[received] = '\0';
 
-  ESP_LOGI(TAG, "Dashboard POST body: %s", body);
+  const std::string body = std::move(this->post_body_);
+  this->post_body_.clear();
+
+  ESP_LOGI(TAG, "Dashboard POST body: %s", body.c_str());
 
   // Restore the original JSON parsing logic for keys and values
   char key[64] = {0};
-  const char *kp = strstr(body, "\"key\":");
+  const char *kp = strstr(body.c_str(), "\"key\":");
   if (kp) {
     kp += 6;
     while (*kp == ' ' || *kp == '"') kp++;
@@ -317,7 +326,6 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   }
 
   if (strlen(key) == 0) {
-    free(body);
     httpd_resp_set_status(req, "400 Bad Request");
     httpd_resp_set_type(req, "text/plain");
     httpd_resp_set_hdr(req, "Connection", "close");
@@ -329,7 +337,7 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   float fval = 0.0f;
   bool is_string = false;
 
-  const char *vp = strstr(body, "\"value\":");
+  const char *vp = strstr(body.c_str(), "\"value\":");
   if (vp) {
     vp += 8;
     while (*vp == ' ') vp++;
@@ -342,9 +350,6 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
       fval = static_cast<float>(atof(vp));
     }
   }
-
-  // Always free heap memory immediately after extracting values
-  free(body);
 
   ESP_LOGI(TAG, "Dashboard set: key=%s value=%s/%.2f", key,
            is_string ? strval : "-", is_string ? 0.0f : fval);
@@ -995,7 +1000,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_sel("temp_sensor_source_z1", snap.sel_temp_source_z1);
   p_sel("temp_sensor_source_z2", snap.sel_temp_source_z2);
 
-  int w6 = snprintf(buf.data() + off, space_left(), "\"local_ip\":\"%s\",\"_uptime_ms\":%u}", snap.local_ip, (uint32_t)millis());
+  int w6 = snprintf(buf.data() + off, space_left(), "\"local_ip\":\"%s\",\"_uptime_ms\":%lu}", snap.local_ip, (unsigned long)millis());
   safe_add_offset(w6);
   
   flush();
@@ -1241,7 +1246,7 @@ void EcodanDashboard::send_hourly_history_(httpd_req_t *req, uint32_t from_ts, u
                 first = false;
 
                 int len = snprintf(out_buf.get() + out_len, OUT_BUF_SIZE - out_len,
-                    "[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
+                    "[%lu,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
                     hbatch[j].timestamp, hbatch[j].avg_outside,
                     hbatch[j].total_cons, hbatch[j].total_prod,
                     hbatch[j].odin_heat_loss, hbatch[j].odin_cop,
@@ -1363,7 +1368,7 @@ void EcodanDashboard::send_minute_history_(httpd_req_t *req, uint32_t from_ts, u
         first = false;
 
         int len = snprintf(out_buf.get() + out_len, OUT_BUF_SIZE - out_len,
-            "[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u,%d,%d,%d,%d,%d]",
+            "[%lu,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u,%d,%d,%d,%d,%d]",
             rec.timestamp, rec.hp_feed, rec.hp_return,
             rec.z1_sp, rec.z2_sp, rec.z1_curr, rec.z2_curr,
             rec.z1_flow, rec.z2_flow, rec.freq, rec.flags,
@@ -1813,7 +1818,7 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
       int offset = snprintf(json_buf, JSON_BUFFER_SIZE,
           "\"current_hour\":%d,"
           "\"today_start_index\":24,"
-          "\"last_run\":{\"execution_ms\":%u,\"evaluated_nodes\":%u,\"bidding_zone\":\"%s\",\"heat_loss\":%.3f,\"base_cop\":%.2f,"
+          "\"last_run\":{\"execution_ms\":%lu,\"evaluated_nodes\":%lu,\"bidding_zone\":\"%s\",\"heat_loss\":%.3f,\"base_cop\":%.2f,"
           "\"thermal_mass\":%.1f,\"exp_consumption\":%.2f,\"exp_production\":%.2f,"
           "\"exp_solar\":%.2f,\"exp_solar_total\":%.2f,\"used_solar_kwp\":%.2f,"
           "\"used_solar_correction\":%.3f,\"used_battery_soc_kwh\":%.2f,\"total_cost\":%.4f}}",

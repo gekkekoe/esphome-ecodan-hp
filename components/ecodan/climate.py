@@ -12,13 +12,12 @@ from . import ECODAN, CONF_ECODAN_ID, ECODAN_CLIMATE
 AUTO_LOAD = ["ecodan", "thermostat"]
 ecodan_ns = cg.esphome_ns.namespace("ecodan")
 EcodanClimate = ecodan_ns.class_("EcodanClimate", climate.Climate, cg.Component)
-EcodanVirtualThermostat = ecodan_ns.class_('EcodanVirtualThermostat', thermostat_cli.ThermostatClimate)
 CONF_VARIANT = "variant"
 
 base_schema = thermostat_cli.CONFIG_SCHEMA.validators[0]
 # extend with id
 extended_schema = base_schema.extend({
-    cv.GenerateID(): cv.declare_id(EcodanVirtualThermostat),
+    cv.GenerateID(): cv.declare_id(thermostat_cli.ThermostatClimate),
 })
 extra_validators = thermostat_cli.CONFIG_SCHEMA.validators[1:]
 VIRTUAL_SCHEMA = cv.All(extended_schema, *extra_validators)
@@ -84,8 +83,11 @@ CONFIG_SCHEMA = cv.typed_schema({
 
 async def to_code(config):
     if config[CONF_VARIANT] == "virtual":
-        # use parent code gen
-        await thermostat_cli.to_code(config)        
+        # use stock thermostat codegen as-is
+        await thermostat_cli.to_code(config)
+
+        var = await cg.get_variable(config[CONF_ID])
+        cg.add(var.set_supports_two_points(False))
     else:
         #hp = await cg.get_variable(config[CONF_ECODAN_ID])
         for key, conf in config.items():

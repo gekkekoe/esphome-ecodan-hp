@@ -401,7 +401,7 @@ void EcodanDashboard::load_odin_data(int current_day, int current_hour) {
     if (current_day != -1 && current_day != (int)cache->stored_day) {
         int day_delta = current_day - (int)cache->stored_day;
         if (day_delta == 1 || day_delta == -364 || day_delta == -365) {
-            ESP_LOGI(TAG_LFS, "LFS Load: Day transition (%d -> %d), shifting 72h window", cache->stored_day, current_day);
+            ESP_LOGI(TAG_LFS, "LFS Load: Day transition (%d -> %d), shifting 72h window", (int)cache->stored_day, current_day);
             for (int k = 0; k < 32; k++) {
                 for (int i = 0; i < 48; i++) cache->arrays[k][i] = cache->arrays[k][i + 24];
                 for (int i = 48; i < 72; i++) cache->arrays[k][i] = NAN; 

@@ -205,7 +205,7 @@ text_sensor:
     name: ${pump_feedback_status}
     lambda: |-
       auto value = id(ecodan_instance).get_status().PumpFeedback;
-      if (value >= 0 && value < 70) { // 0-69
+      if (value < 70) { // 0-69 (PumpFeedback is unsigned, so >= 0 always holds)
         return std::string("Active");;
       } else if (value > 73 && value < 77) { // 74-76
         return std::string("Warning");

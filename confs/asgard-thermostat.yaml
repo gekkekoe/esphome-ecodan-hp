@@ -60,7 +60,7 @@ sensor:
       // Index 2: MRC/RCx
       if (idx == 2) {
         auto& status = id(ecodan_instance).get_status();
-        return "${zone_identifier}" == "z1" ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
+        return strcmp("${zone_identifier}", "z1") == 0 ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
       }
       return NAN;
 

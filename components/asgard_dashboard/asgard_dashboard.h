@@ -319,6 +319,11 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   bool canHandle(AsyncWebServerRequest *request) const override;
   void handleRequest(AsyncWebServerRequest *request) override;
   bool isRequestHandlerTrivial() const override { return false; }
+  // esphome's web_server_idf framework fully drains the body of any POST
+  // whose Content-Type isn't application/x-www-form-urlencoded or
+  // multipart/form-data (e.g. our application/json) via this callback
+  // *before* calling handleRequest()
+  void handleBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) override;
 
   // Solver run stats — populated from YAML after each solve
   struct LastRunStats {
@@ -375,6 +380,11 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   std::vector<DashboardAction> action_queue_;
   SemaphoreHandle_t action_lock_ = NULL;
+
+  // Accumulates the raw POST body across handleBody() calls (see comment on
+  // handleBody() above); consumed and cleared by handle_set_().
+  std::string post_body_;
+  bool post_body_oversized_{false};
 
   // Component
   ecodan::EcodanHeatpump *ecodan_{nullptr};
@@ -611,7 +621,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   static int16_t pack_temp_(float val);
   static bool bin_state_(binary_sensor::BinarySensor *b);
 
-  const time_t timestamp() const;
+  time_t timestamp() const;
 };
 
 } // namespace asgard_dashboard

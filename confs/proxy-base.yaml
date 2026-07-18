@@ -2,8 +2,7 @@
 esphome:
   name: ${name}
   friendly_name: ${friendlyName}
-  platformio_options:
-    board_build.flash_mode: dio
+  merge_warnings: false
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -14,6 +13,7 @@ esp32:
     version: recommended
     # Custom sdkconfig options
     sdkconfig_options:
+      CONFIG_ESPTOOLPY_FLASHMODE_DIO: y
       COMPILER_OPTIMIZATION_SIZE: y
       # CONFIG_COMPILER_OPTIMIZATION_ASSERTIONS_ENABLE: y
       # COMPILER_OPTIMIZATION_DEFAULT: y 

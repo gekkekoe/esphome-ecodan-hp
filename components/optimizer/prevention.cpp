@@ -184,7 +184,7 @@ namespace esphome
             if (duration_s > 0)
             {
                 this->state_.lockout_expiration_timestamp = (uint32_t)(current_timestamp + duration_s);
-                ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Lockout active. Expiration timestamp set to: %u", this->state_.lockout_expiration_timestamp);
+                ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Lockout active. Expiration timestamp set to: %lu", this->state_.lockout_expiration_timestamp);
             }
         }
 
@@ -208,14 +208,14 @@ namespace esphome
 
             if (current_time >= expiration)
             {
-                ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Lockout period has expired (Ecodan Time: %u, Expiration: %u). Restoring operations.", current_time, expiration);
+                ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Lockout period has expired (Ecodan Time: %lu, Expiration: %lu). Restoring operations.", current_time, expiration);
                 this->restore_svc_state();
             }
             else
             {
                 if (this->state_.status_short_cycle_lockout != nullptr && !this->state_.status_short_cycle_lockout->state)
                 {
-                    ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Booted during active lockout. Re-enabling lockout sensor. (Ecodan Time: %u, Expiration: %u)", current_time, expiration);
+                    ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Booted during active lockout. Re-enabling lockout sensor. (Ecodan Time: %lu, Expiration: %lu)", current_time, expiration);
                     this->state_.status_short_cycle_lockout->publish_state(true);
                 }
             }
