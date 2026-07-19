@@ -17,6 +17,8 @@
 * **Price:** From € 65,- (including VAT)
 * **Delivery:** Shipped within 3 business days from The Netherlands (When in stock)
 
+> **New to ODIN?** Read the [ODIN whitepaper](https://gekkekoe.github.io/heatpump-optimizer/) first — what it does and a payback calculator — before ordering the bundle below.
+
 <div align="center">
   <h2>Order via the links/buttons below:</h2>
 
