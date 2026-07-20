@@ -1689,17 +1689,21 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
         if (i < (int)sched_base.size() && !std::isnan(sched_base[i]))  this->odin_sched_base_[target_idx] = sched_base[i];
         if (i < (int)sched_min.size()  && !std::isnan(sched_min[i]))   this->odin_sched_min_[target_idx]  = sched_min[i];
         if (i < (int)sched_max.size()  && !std::isnan(sched_max[i]))   this->odin_sched_max_[target_idx]  = sched_max[i];
-        if (i < (int)weather.size()    && !std::isnan(weather[i]))     this->odin_weather_[target_idx]    = weather[i];
-        if (i < (int)solar.size()      && !std::isnan(solar[i]))       this->odin_solar_[target_idx]      = solar[i];
-        if (i < (int)prices.size()     && !std::isnan(prices[i]))      this->odin_prices_[target_idx]     = prices[i];
+        
 
-        // Calculated data (only overwrite future hours or empty slots to protect "past" history)
+        // Calculated data (only overwrite future hours or empty slots to protect "past" history).
+        // This covers everything shown on the solver charts: consumption, production, cost,
+        // electricity prices and the weather forecast — once an hour has passed, the plan for
+        // that hour is frozen and a new solver run may no longer touch it.
         bool is_empty_slot = std::isnan(this->odin_production_[target_idx]);
 
         if (i > current_hour || (i == current_hour && is_empty_slot)) {
             if (i < (int)energy.size()     && !std::isnan(energy[i]))      this->odin_energy_[target_idx]            = energy[i];
             if (i < (int)production.size() && !std::isnan(production[i]))  this->odin_production_[target_idx]        = production[i];
             if (i < (int)cost.size()       && !std::isnan(cost[i]))        this->odin_cost_[target_idx]              = cost[i];
+            if (i < (int)weather.size()    && !std::isnan(weather[i]))     this->odin_weather_[target_idx]           = weather[i];
+            if (i < (int)prices.size()     && !std::isnan(prices[i]))      this->odin_prices_[target_idx]            = prices[i];
+            if (i < (int)solar.size()      && !std::isnan(solar[i]))       this->odin_solar_[target_idx]             = solar[i];
             if (i < (int)battery_discharge.size() && !std::isnan(battery_discharge[i])) this->odin_battery_discharge_[target_idx] = battery_discharge[i];
             if (i < (int)op_mode.size()    && !std::isnan(op_mode[i]))     this->odin_operation_mode_[target_idx]    = op_mode[i];
             if (i < (int)exp_temp.size()   && !std::isnan(exp_temp[i]))    this->odin_expected_temp_[target_idx]     = exp_temp[i];
