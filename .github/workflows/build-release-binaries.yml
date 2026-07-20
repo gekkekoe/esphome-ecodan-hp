@@ -83,9 +83,9 @@ jobs:
           pip install wheel esphome
           esphome compile build.yaml
 
-          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.ota.bin $PREFIX.ota.bin
-          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.factory.bin $PREFIX.factory.bin
-          cp .esphome/build/ecodan-heatpump/.pioenvs/ecodan-heatpump/firmware.elf $PREFIX.elf
+          cp .esphome/build/ecodan-heatpump/build/firmware.ota.bin $PREFIX.ota.bin
+          cp .esphome/build/ecodan-heatpump/build/firmware.factory.bin $PREFIX.factory.bin
+          cp .esphome/build/ecodan-heatpump/build/firmware.elf $PREFIX.elf
           gh release upload --clobber ${{github.event.release.tag_name}} $PREFIX.ota.bin
           gh release upload --clobber ${{github.event.release.tag_name}} $PREFIX.factory.bin
       
