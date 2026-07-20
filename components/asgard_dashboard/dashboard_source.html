@@ -1111,6 +1111,9 @@ header {
           <div class="legend-item">
             <span style="color:#ffb020; font-weight:bold;">12:00</span>DHW
           </div>
+          <div class="legend-item" title="Colored strip hovering just above the highest visible line: the mode that actually ran that hour. Planned mode is shown by the x-axis label colors.">
+            <div class="legend-dot" style="height:5px; border-radius:1px; background:#8295b8;"></div>Actual mode (strip)
+          </div>
         </div>
         <button class="log-btn" id="btn-reset-zoom-odin" style="display:none; padding: 2px 8px; font-size: 9px;" onclick="resetOdinZoom()">Reset Zoom</button>
       </div>
@@ -2125,6 +2128,7 @@ const xAxis = {
 
   odinTempChart = new Chart(document.getElementById('odinTempChart').getContext('2d'), {
       type: 'line',
+      plugins: [odinModeBandsPlugin],
       data: {
           labels: labels72,
           datasets: [
@@ -2156,14 +2160,14 @@ const xAxis = {
           ]
       },
       options: {
-          responsive: true, 
-          maintainAspectRatio: false, 
+          responsive: true,
+          maintainAspectRatio: false,
           // Use nearest on the X axis so it doesn't mix up the 15m and 1h data indexes
           interaction: { mode: 'nearest', axis: 'x', intersect: false },
           plugins: {
               // Hide the default Chart.js legend boxes
-              legend: { 
-                  display: false 
+              legend: {
+                  display: false
               },
               zoom: odinZoomConfig,
               tooltip: {
@@ -2171,18 +2175,23 @@ const xAxis = {
                       title: function(ctx) {
                           if (!ctx || !ctx.length) return '';
                           const index = ctx[0].dataIndex;
-                          return ctx[0].chart.data.labels[index] || '';
+                          const label = ctx[0].chart.data.labels[index] || '';
+                          const isLive = (typeof solverMode !== 'undefined' && solverMode === 'live');
+                          const actual = isLive ? getOdinActualModeAt(index)
+                              : (typeof hourlyHistory !== 'undefined' ? getOdinActualModeForRecord(hourlyHistory[index]) : null);
+                          const aName = (actual !== null && actual !== 0) ? ODIN_MODE_NAMES[actual] : null;
+                          return aName ? [label, 'Actual: ' + aName] : label;
                       }
                   }
               }
           },
-          scales: { 
-              x: xAxis, 
-              y: { 
-                  ticks: { color: '#8295b8', font: monoFont }, 
+          scales: {
+              x: xAxis,
+              y: {
+                  ticks: { color: '#8295b8', font: monoFont },
                   grid: { color: '#1e2d4a' },
-                  title: { display: true, text: '°C', color: '#8295b8' } 
-              } 
+                  title: { display: true, text: '°C', color: '#8295b8' }
+              }
           }
       }
   });
@@ -2520,29 +2529,197 @@ function renderOdinHistory() {
     updateOdinTotals();
 }
 
+// ── Operating-mode helpers (shared by axis ticks + temp-chart mode bands) ──
+// Extracts the solver's planned operation mode for a slot, from the live
+// 72h cache or the elastic history array. Returns 0 (idle) when nothing
+// is planned, null when unknown.
+function getOdinOpModeAt(idx, isLive) {
+    if (isLive && odinDataCache && odinDataCache.operation_mode) {
+        // left overs of previous hours, register as idle
+        const expCons = odinDataCache.energy_consumption?.[idx] || 0;
+        const expProd = odinDataCache.heat_production?.[idx] || 0;
+        if (expCons === 0 && expProd === 0) return 0; // Return Idle
+
+        return odinDataCache.operation_mode[idx];
+    } else if (!isLive && typeof hourlyHistory !== 'undefined' && hourlyHistory[idx]) {
+        // Check history array for planned activity
+        const r = hourlyHistory[idx];
+        const expCons = r.exp_cons || 0;
+        const expProd = r.exp_prod || 0;
+        if (expCons === 0 && expProd === 0) return 0; // Return Idle
+
+        return r.op_mode;
+    }
+    return null;
+}
+
+const ODIN_MODE_NAMES = { 0: 'Idle', 1: 'DHW', 2: 'Heating', 3: 'Cooling', 5: 'Frost Protect', 6: 'Legionella' };
+
+function getOdinModeRGB(mode) {
+    if (mode === 1 || mode === 6) return '255,176,32';  // DHW / Legionella (Yellow)
+    if (mode === 2 || mode === 5) return '255,107,53';  // Heating / Frost (Orange)
+    if (mode === 3) return '0,200,255';                 // Cooling (Blue)
+    return null;                                        // Idle / unknown → no band
+}
+
+// ── Actual (executed) operating mode per hour ─────────────────────────────
+// Aggregated client-side from the minute records: flags bits 6-9 carry the
+// Ecodan operating mode, bit 0/1 compressor/booster. No firmware change
+// needed — coverage is limited to the minute-record retention window.
+// Map key = hour index in "local epoch" ms (timestamp / 3600000).
+let actualModeByHourKey = new Map();
+let lastActualModeFetch = 0;
+
+async function fetchActualModesRange(fromTs, toTs) {
+    try {
+        const res = await fetch('/dashboard/history?type=min&from=' + fromTs + '&to=' + toTs);
+        if (!res.ok) return false;
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) return false;
+
+        // Same uptime-fallback alignment as loadServerHistory
+        const serverLastTs = data[data.length - 1][0] * 1000;
+        let tOff = 0;
+        if (serverLastTs < 1577836800000) {
+            tOff = (Date.now() - (new Date().getTimezoneOffset() * 60000)) - serverLastTs;
+        }
+
+        // Count running minute-samples per mode, per hour block
+        const counts = new Map();
+        data.forEach(row => {
+            const flags = row[10];
+            const mode = (flags >> 6) & 0x0F;
+            if (mode <= 0 || mode > 7) return;
+            const freq = (row[9] === -32768) ? 0 : row[9] / 10.0;
+            const running = (flags & 0x01) || (flags & 0x02) || freq > 0; // compressor / booster
+            if (!running) return;
+            const key = Math.floor(((row[0] * 1000) + tOff) / 3600000);
+            let c = counts.get(key);
+            if (!c) { c = {}; counts.set(key, c); }
+            c[mode] = (c[mode] || 0) + 1;
+        });
+
+        // Dominant mode per hour wins the band
+        counts.forEach((c, key) => {
+            let best = 0, bestCnt = 0;
+            for (const m in c) { if (c[m] > bestCnt) { bestCnt = c[m]; best = parseInt(m); } }
+            if (best > 0) actualModeByHourKey.set(key, best);
+        });
+        return true;
+    } catch (e) { return false; /* non-critical: bands simply stay empty */ }
+}
+
+// Live view refresh: last 30h covers the visible yesterday/today slots
+async function refreshOdinActualModes(force = false) {
+    if (!force && Date.now() - lastActualModeFetch < 5 * 60 * 1000) return;
+    lastActualModeFetch = Date.now();
+    const now = Math.floor(Date.now() / 1000);
+    const ok = await fetchActualModesRange(now - 30 * 3600, now + 60);
+    if (ok && odinTempChart && solverMode === 'live') odinTempChart.update('none');
+}
+
+// Actual mode for a live-window slot. Future hours have no actual by definition.
+function getOdinActualModeAt(idx) {
+    const nowIdx = 24 + new Date().getHours();
+    if (idx > nowIdx) return null;
+    if (idx === nowIdx) {
+        // Current hour: use the live operating mode from the last state poll
+        const m = (typeof latestState !== 'undefined' && latestState) ? latestState.operation_mode : null;
+        return (m === undefined || m === null) ? null : m;
+    }
+    const nowLocal = Date.now() - (new Date().getTimezoneOffset() * 60000);
+    const todayMid = Math.floor(nowLocal / 86400000) * 86400000;
+    const key = Math.floor((todayMid + (idx - 24) * 3600000) / 3600000);
+    const v = actualModeByHourKey.get(key);
+    return v === undefined ? null : v;
+}
+
+// Actual mode for an elastic-history record (block start = timestamp - 30 min)
+function getOdinActualModeForRecord(r) {
+    if (!r) return null;
+    // Prefer a server-provided field if it ever exists (future firmware)
+    if (r.actual_op_mode !== null && r.actual_op_mode !== undefined) return r.actual_op_mode;
+    const v = actualModeByHourKey.get(Math.floor((r.timestamp - 1800000) / 3600000));
+    return v === undefined ? null : v;
+}
+
+// Inline Chart.js plugin, registered on odinTempChart only:
+// - thin strip hovering just above the highest visible line = ACTUAL mode that ran
+// - dashed white line through the plot                       = now (live view only)
+// Planned mode is already shown via the x-axis tick colors, so it's not repeated here.
+const odinModeBandsPlugin = {
+    id: 'odinModeBands',
+
+    beforeDatasetsDraw(chart) {
+        const { ctx, chartArea, scales } = chart;
+        if (!chartArea || !scales.x || !scales.y) return;
+
+        const isLive = (typeof solverMode !== 'undefined' && solverMode === 'live');
+        const count = isLive ? 72
+            : (typeof hourlyHistory !== 'undefined' && hourlyHistory ? hourlyHistory.length : 0);
+
+        // "Now" marker, drawn behind the data.
+        if (isLive) {
+            const nowIdx = 24 + new Date().getHours();
+            const nx = scales.x.getPixelForValue(nowIdx - 0.5 + new Date().getMinutes() / 60);
+            if (nx >= chartArea.left && nx <= chartArea.right) {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+                ctx.setLineDash([4, 4]);
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(nx, chartArea.top);
+                ctx.lineTo(nx, chartArea.bottom);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        if (!count) return;
+
+        // Find the highest currently-plotted value across all temp datasets
+        // (schedule band, scheduled, expected, actual), so the strip can float
+        // just above whatever line is on top, instead of a fixed pixel offset.
+        let maxVal = -Infinity;
+        chart.data.datasets.forEach(ds => {
+            (ds.data || []).forEach(v => { if (typeof v === 'number' && v > maxVal) maxVal = v; });
+        });
+        if (!isFinite(maxVal)) return;
+
+        const STRIP_H = 5;
+        const GAP_C = 0.1; // °C gap between the highest line and the strip
+        let stripBottom = scales.y.getPixelForValue(maxVal + GAP_C);
+        // Clamp inside the plot area so it can never creep above chartArea.top
+        // or drop down over the lines it's meant to sit above.
+        stripBottom = Math.max(chartArea.top + STRIP_H, Math.min(chartArea.bottom, stripBottom));
+        const stripY = stripBottom - STRIP_H;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+        ctx.clip();
+
+        for (let i = 0; i < count; i++) {
+            const left = scales.x.getPixelForValue(i - 0.5);
+            const right = scales.x.getPixelForValue(i + 0.5);
+            if (right < chartArea.left || left > chartArea.right) continue;
+
+            const actual = isLive ? getOdinActualModeAt(i) : getOdinActualModeForRecord(hourlyHistory[i]);
+            const rgbA = getOdinModeRGB(actual);
+            if (rgbA) {
+                ctx.fillStyle = `rgba(${rgbA},0.9)`;
+                ctx.fillRect(left, stripY, right - left, STRIP_H);
+            }
+        }
+        ctx.restore();
+    }
+};
+
 function getOdinXAxisConfig(isLive) {
     // Helper function to extract the operation mode depending on the active data source
     const getOpMode = (ctx) => {
         if (!ctx.tick || ctx.tick.value === undefined) return null;
-        const idx = ctx.tick.value;
-
-        if (isLive && odinDataCache && odinDataCache.operation_mode) {
-            // left overs of previous hours, register as idle
-            const expCons = odinDataCache.energy_consumption?.[idx] || 0;
-            const expProd = odinDataCache.heat_production?.[idx] || 0;
-            if (expCons === 0 && expProd === 0) return 0; // Return Idle
-
-            return odinDataCache.operation_mode[idx];
-        } else if (!isLive && typeof hourlyHistory !== 'undefined' && hourlyHistory[idx]) {
-            // Check history array for planned activity
-            const r = hourlyHistory[idx];
-            const expCons = r.exp_cons || 0;
-            const expProd = r.exp_prod || 0;
-            if (expCons === 0 && expProd === 0) return 0; // Return Idle
-
-            return r.op_mode;
-        }
-        return null;
+        return getOdinOpModeAt(ctx.tick.value, isLive);
     };
 
     return {
@@ -3805,7 +3982,9 @@ async function fetchOdinData() {
         }
     } catch(e) {
       console.warn("Failed to load local ODIN cache", e);
-    } 
+    }
+    // Keep the actual-mode bands of the temp chart up to date (throttled internally)
+    refreshOdinActualModes();
 }
 
 
@@ -4237,12 +4416,24 @@ async function loadServerHistory(fromTs, toTs, type = 'min') {
                 sched_base: getF(row[19], 100.0),
                 sched_min: getF(row[20], 100.0),
                 sched_max: getF(row[21], 100.0),
-                exp_solar_kwh: getF(row[22], 100.0)
+                exp_solar_kwh: getF(row[22], 100.0),
+                // Dominant actually-executed mode (only present with newer firmware;
+                // otherwise resolved client-side from minute records)
+                actual_op_mode: row.length > 23 ? getF(row[23], 1.0) : null
             };
         });
-        
+
         if (solverMode !== 'live') {
             updateOdinCharts();
+        }
+
+        // Resolve the actually-executed mode per hour from the minute records
+        // for the same range (as far as minute retention reaches), then repaint
+        // the temperature chart's mode bands.
+        if (fromTs && toTs) {
+            fetchActualModesRange(fromTs, toTs).then(ok => {
+                if (ok && solverMode !== 'live' && odinTempChart) odinTempChart.update('none');
+            });
         }
     }
   } catch(e) { console.error("History fetch failed", e); }
