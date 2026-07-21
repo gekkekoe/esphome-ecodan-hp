@@ -2188,6 +2188,10 @@ const xAxis = {
           scales: {
               x: xAxis,
               y: {
+                  // Headroom above the highest line so the actual-mode strip
+                  // (drawn by odinModeBandsPlugin) always has clear space and
+                  // never touches the schedule-max band.
+                  grace: '12%',
                   ticks: { color: '#8295b8', font: monoFont },
                   grid: { color: '#1e2d4a' },
                   title: { display: true, text: '°C', color: '#8295b8' }
@@ -2644,55 +2648,24 @@ function getOdinActualModeForRecord(r) {
 }
 
 // Inline Chart.js plugin, registered on odinTempChart only:
-// - thin strip hovering just above the highest visible line = ACTUAL mode that ran
-// - dashed white line through the plot                       = now (live view only)
-// Planned mode is already shown via the x-axis tick colors, so it's not repeated here.
+// A thin strip runs along the very top of the plot (in the y-axis headroom
+// created by scales.y.grace), colored per hour by the ACTUAL mode that ran.
+// Planned mode is shown via the x-axis tick colors, not repeated here.
 const odinModeBandsPlugin = {
     id: 'odinModeBands',
 
-    beforeDatasetsDraw(chart) {
+    afterDatasetsDraw(chart) {
         const { ctx, chartArea, scales } = chart;
         if (!chartArea || !scales.x || !scales.y) return;
 
         const isLive = (typeof solverMode !== 'undefined' && solverMode === 'live');
         const count = isLive ? 72
             : (typeof hourlyHistory !== 'undefined' && hourlyHistory ? hourlyHistory.length : 0);
-
-        // "Now" marker, drawn behind the data.
-        if (isLive) {
-            const nowIdx = 24 + new Date().getHours();
-            const nx = scales.x.getPixelForValue(nowIdx - 0.5 + new Date().getMinutes() / 60);
-            if (nx >= chartArea.left && nx <= chartArea.right) {
-                ctx.save();
-                ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-                ctx.setLineDash([4, 4]);
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(nx, chartArea.top);
-                ctx.lineTo(nx, chartArea.bottom);
-                ctx.stroke();
-                ctx.restore();
-            }
-        }
-
         if (!count) return;
 
-        // Find the highest currently-plotted value across all temp datasets
-        // (schedule band, scheduled, expected, actual), so the strip can float
-        // just above whatever line is on top, instead of a fixed pixel offset.
-        let maxVal = -Infinity;
-        chart.data.datasets.forEach(ds => {
-            (ds.data || []).forEach(v => { if (typeof v === 'number' && v > maxVal) maxVal = v; });
-        });
-        if (!isFinite(maxVal)) return;
-
         const STRIP_H = 5;
-        const GAP_C = 0.1; // °C gap between the highest line and the strip
-        let stripBottom = scales.y.getPixelForValue(maxVal + GAP_C);
-        // Clamp inside the plot area so it can never creep above chartArea.top
-        // or drop down over the lines it's meant to sit above.
-        stripBottom = Math.max(chartArea.top + STRIP_H, Math.min(chartArea.bottom, stripBottom));
-        const stripY = stripBottom - STRIP_H;
+        const TOP_MARGIN = 2; // px below the plot's top edge
+        const stripY = chartArea.top + TOP_MARGIN;
 
         ctx.save();
         ctx.beginPath();
@@ -2706,10 +2679,10 @@ const odinModeBandsPlugin = {
 
             const actual = isLive ? getOdinActualModeAt(i) : getOdinActualModeForRecord(hourlyHistory[i]);
             const rgbA = getOdinModeRGB(actual);
-            if (rgbA) {
-                ctx.fillStyle = `rgba(${rgbA},0.9)`;
-                ctx.fillRect(left, stripY, right - left, STRIP_H);
-            }
+            if (!rgbA) continue;
+
+            ctx.fillStyle = `rgba(${rgbA},0.9)`;
+            ctx.fillRect(left, stripY, right - left, STRIP_H);
         }
         ctx.restore();
     }
