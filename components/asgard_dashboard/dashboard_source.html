@@ -1199,12 +1199,29 @@ header {
 </div>
 
 <div id="view-logs" class="view-section">
+   <div class="chart-card full-width" style="margin-bottom: 20px;">
+     <div class="chart-header">
+       <div class="section-title" style="margin:0">Settings Backup</div>
+       <div id="settings-backup-status" style="font-size:10px; font-family:var(--mono); color:var(--text3)"></div>
+     </div>
+
+     <div style="color: var(--text3); font-size: 11px; margin: -4px 0 12px 0; line-height: 1.5;">
+       Save every Settings and Solver tab value (numbers, switches, sliders, selects) to a JSON file, or restore them from a previously saved file.
+     </div>
+
+     <div class="log-controls">
+        <button class="log-btn" style="border-color: var(--accent); color: var(--accent);" onclick="downloadSettingsBackup()">Save Settings</button>
+        <button class="log-btn" id="btn-restore-settings" style="border-color: var(--accent); color: var(--accent);" onclick="triggerRestoreSettings()">Restore Settings</button>
+     </div>
+     <input type="file" id="settings-restore-file" style="display:none" accept=".json,application/json" onchange="restoreSettingsFromFile()">
+   </div>
+
    <div class="chart-card full-width">
      <div class="chart-header">
        <div class="section-title" style="margin:0">System Logs</div>
        <div id="log-status" style="font-size:10px; font-family:var(--mono); color:var(--text3)">Connecting...</div>
      </div>
-     
+
      <div class="log-controls">
         <button class="log-btn" id="pauseBtn" onclick="togglePause()">Pause</button>
         <button class="log-btn" onclick="clearLogs()">Clear</button>
@@ -1253,21 +1270,123 @@ const history = {
   outside: [], liquid_pipe: [], condensing: []
 };
 
-const pending = { 
-  'aa-bias': null, 'aa-max': null, 'aa-min': null, 
-  'aa-max-z2': null, 'aa-min-z2': null,
-  'psc-win': null, 'psc-delta': null, 
-  'dhw-sp': null, 
-  'z1-sp': null, 'z1-hyst': null, 'room-z1-sp': null,
-  'z2-sp': null, 'z2-hyst': null, 'room-z2-sp': null,
-  'flow-z1-sp': null, 'flow-z2-sp': null,
-  'raw-heat': null, 'raw-elec': null, 'raw-run': null,
-  'raw-out': null, 'raw-room': null, 'raw-delta': null, 'raw-solar-factor': null,
-  'batt-soc': null, 'batt-max-dis': null,
-  'cool-start-z1': null, 'cool-min-z1': null, 'cool-min-z2': null, 'dhw-thresh': null,
-  'raw-cool-prod': null, 'raw-cool-elec': null, 'raw-cool-run': null, 'raw-cool-out': null, 'raw-cool-room': null,
-  'min-on-time': null,
-};
+// ── Central control registry ────────────────────────────────────────────────
+// Single source of truth for every editable Settings & Solver tab control.
+// To add, remove, or rename a control, edit ONLY this list — `pending`,
+// `LIMITS`, `STEP_EL`, and the Settings Backup save/restore feature (Logs tab)
+// are all generated from it automatically.
+//
+// type:
+//   'number' - stepper input tracked in `pending`; value mirrors into the
+//              element named by `el` (an <input> or <div class="step-val">)
+//              via STEP_EL. Needs pkey/key/el/min/max/step.
+//   'hyst'   - hysteresis range slider; tracked in `pending` but its min/max
+//              come live from the device (see render()), not from LIMITS.
+//              Needs pkey/key.
+//   'switch' - checkbox, sent as 1/0. Needs key/el.
+//   'select' - <select>, sent as the option index (int). Needs key/el.
+//   'vmode'  - <select> with a heat/cool/off string value. Needs key/el.
+//   'text'   - free text input, sent as a string. Needs key/el.
+//
+// `key` is the /dashboard/set key and must match dispatch_set_() in
+// asgard_dashboard.cpp exactly.
+const CONTROLS = [
+  // ── Auto Adaptive ──
+  { type:'number', pkey:'aa-bias',     key:'auto_adaptive_setpoint_bias',  el:'aa-bias-val',     min:-5,    max:5,    step:0.1 },
+  { type:'number', pkey:'aa-max',      key:'maximum_heating_flow_temp',    el:'aa-max-val',      min:30,    max:65,   step:0.1 },
+  { type:'number', pkey:'aa-min',      key:'minimum_heating_flow_temp',    el:'aa-min-val',      min:20,    max:55,   step:0.1 },
+  { type:'number', pkey:'aa-max-z2',   key:'maximum_heating_flow_temp_z2', el:'aa-max-z2-val',   min:30,    max:65,   step:0.1 },
+  { type:'number', pkey:'aa-min-z2',   key:'minimum_heating_flow_temp_z2', el:'aa-min-z2-val',   min:20,    max:55,   step:0.1 },
+  { type:'number', pkey:'cool-start-z1', key:'cooling_smart_start_z1',     el:'cool-start-z1-val', min:16,  max:25,   step:0.5 },
+  { type:'number', pkey:'cool-min-z1', key:'minimum_cooling_flow_z1',      el:'cool-min-z1-val', min:5,     max:25,   step:0.1 },
+  { type:'number', pkey:'cool-min-z2', key:'minimum_cooling_flow_z2',      el:'cool-min-z2-val', min:5,     max:25,   step:0.1 },
+  { type:'number', pkey:'psc-win',     key:'predictive_short_cycle_high_delta_time_window', el:'psc-win-val',   min:1.0, max:5.0, step:0.5 },
+  { type:'number', pkey:'psc-delta',   key:'predictive_short_cycle_high_delta_threshold',   el:'psc-delta-val', min:1.0, max:3.0, step:0.5 },
+  { type:'switch', key:'auto_adaptive_control_enabled', el:'sw-aa' },
+  { type:'switch', key:'defrost_risk_handling_enabled', el:'sw-dm' },
+  { type:'switch', key:'smart_boost_enabled', el:'sw-sb' },
+  { type:'switch', key:'predictive_short_cycle_control_enabled', el:'sw-psc' },
+  { type:'select', key:'heating_system_type', el:'sel-hst' },
+  { type:'select', key:'room_temp_source_z1', el:'sel-z1src' },
+  { type:'select', key:'room_temp_source_z2', el:'sel-z2src' },
+
+  // ── Zones ──
+  { type:'select', key:'operating_mode_z1', el:'sel-z1mode' },
+  { type:'select', key:'operating_mode_z2', el:'sel-z2mode' },
+  { type:'select', key:'temp_sensor_source_z1', el:'sel-z1ts' },
+  { type:'select', key:'temp_sensor_source_z2', el:'sel-z2ts' },
+  { type:'switch', key:'ui_use_room_z1', el:'ui-room-z1' },
+  { type:'switch', key:'ui_use_room_z2', el:'ui-room-z2' },
+  { type:'vmode',  key:'virtual_climate_z1_mode', el:'sel-z1-vmode' },
+  { type:'vmode',  key:'virtual_climate_z2_mode', el:'sel-z2-vmode' },
+  { type:'number', pkey:'z1-sp', key:'virtual_climate_z1_setpoint', el:'z1-sp-val', min:10, max:30, step:0.1 },
+  { type:'number', pkey:'z2-sp', key:'virtual_climate_z2_setpoint', el:'z2-sp-val', min:10, max:30, step:0.1 },
+  { type:'hyst',   pkey:'z1-hyst', key:'thermostat_hysteresis_z1' },
+  { type:'hyst',   pkey:'z2-hyst', key:'thermostat_hysteresis_z2' },
+  { type:'number', pkey:'room-z1-sp', key:'heatpump_climate_z1_setpoint', el:'room-z1-sp-val', min:10, max:30, step:0.5 },
+  { type:'number', pkey:'room-z2-sp', key:'heatpump_climate_z2_setpoint', el:'room-z2-sp-val', min:10, max:30, step:0.5 },
+  { type:'number', pkey:'flow-z1-sp', key:'flow_climate_z1_setpoint', el:'flow-z1-sp-val', min:10, max:60, step:0.1 },
+  { type:'number', pkey:'flow-z2-sp', key:'flow_climate_z2_setpoint', el:'flow-z2-sp-val', min:10, max:60, step:0.1 },
+
+  // ── DHW ──
+  { type:'switch', key:'force_dhw', el:'sw-fdhw' },
+  { type:'switch', key:'sw_regular_dhw', el:'sw-regular-dhw' },
+  { type:'number', pkey:'dhw-sp', key:'dhw_setpoint', el:'dhw-sp-val', min:40, max:60, step:0.5 },
+  { type:'number', pkey:'dhw-thresh', key:'dhw_start_threshold', el:'dhw-thresh-val', min:0, max:20, step:0.5 },
+  { type:'select', key:'solver_dhw_mode', el:'sel-odin-dhw-mode' },
+
+  // ── Solver / Odin ──
+  { type:'switch', key:'use_dynamic_cost_solver', el:'sw-solver' },
+  { type:'switch', key:'show_solver_tab_enabled', el:'sw-show-solver' },
+  { type:'text',   key:'solver_ip_address', el:'ui-solver-ip' },
+
+  // ── Physics Data (heating profile) ──
+  { type:'number', pkey:'raw-heat', key:'raw_heat_produced',    el:'raw-heat-val', min:0,   max:200, step:0.1 },
+  { type:'number', pkey:'raw-elec', key:'raw_elec_consumed',    el:'raw-elec-val', min:0,   max:100, step:0.1 },
+  { type:'number', pkey:'raw-run',  key:'raw_runtime_hours',    el:'raw-run-val',  min:0,   max:24,  step:0.1 },
+  { type:'number', pkey:'raw-out',  key:'raw_avg_outside_temp', el:'raw-out-val',  min:-25, max:40,  step:0.1 },
+  { type:'number', pkey:'raw-room', key:'raw_avg_room_temp',    el:'raw-room-val', min:10,  max:35,  step:0.1 },
+
+  // ── Physics Data (cooling profile) ──
+  { type:'number', pkey:'raw-cool-prod', key:'raw_cool_produced',         el:'raw-cool-prod-val', min:0,   max:200, step:0.1 },
+  { type:'number', pkey:'raw-cool-elec', key:'raw_cool_elec_consumed',    el:'raw-cool-elec-val', min:0,   max:100, step:0.1 },
+  { type:'number', pkey:'raw-cool-run',  key:'raw_cool_runtime_hours',    el:'raw-cool-run-val',  min:0,   max:24,  step:0.1 },
+  { type:'number', pkey:'raw-cool-out',  key:'raw_cool_avg_outside_temp', el:'raw-cool-out-val',  min:-25, max:50,  step:0.1 },
+  { type:'number', pkey:'raw-cool-room', key:'raw_cool_avg_room_temp',    el:'raw-cool-room-val', min:10,  max:35,  step:0.1 },
+
+  // ── Universal Building Physics ──
+  { type:'number', pkey:'raw-delta',        key:'raw_delta_room_temp', el:'raw-delta-val',        min:0,     max:10,   step:0.1 },
+  { type:'number', pkey:'raw-hl-tm',        key:'raw_hl_tm_product',   el:'raw-hl-tm-val',        min:0,     max:300,  step:0.5 },
+  { type:'number', pkey:'raw-solar-factor', key:'raw_solar_factor',    el:'raw-solar-factor-val', min:0.001, max:0.05, step:0.0025 },
+  { type:'number', pkey:'batt-soc',         key:'battery_soc_kwh',            el:'batt-soc-val',     min:0,   max:30, step:0.1 },
+  { type:'number', pkey:'batt-max-dis',     key:'battery_max_discharge_kw',   el:'batt-max-dis-val', min:0.5, max:15, step:0.1 },
+
+  // ── Advanced Control ──
+  { type:'switch', key:'power_mode', el:'sw-power-mode' },
+  { type:'switch', key:'server_control_enabled', el:'sw-sc-enable' },
+  { type:'switch', key:'server_control_prohibit_dhw', el:'sw-sc-prohibit-dhw' },
+  { type:'switch', key:'server_control_prohibit_z1_heating', el:'sw-sc-prohibit-z1-heat' },
+  { type:'switch', key:'server_control_prohibit_z1_cooling', el:'sw-sc-prohibit-z1-cool' },
+  { type:'switch', key:'server_control_prohibit_z2_heating', el:'sw-sc-prohibit-z2-heat' },
+  { type:'switch', key:'server_control_prohibit_z2_cooling', el:'sw-sc-prohibit-z2-cool' },
+  { type:'select', key:'lockout_duration', el:'sel-lockout-dur' },
+  { type:'number', pkey:'min-on-time', key:'minimum_compressor_on_time', el:'min-on-time-val', min:1, max:20, step:1 },
+];
+
+// `pending`, `LIMITS`, and `STEP_EL` are derived from CONTROLS so they can
+// never drift out of sync with each other.
+const pending = {};
+const LIMITS = {};
+const STEP_EL = {};
+CONTROLS.forEach(c => {
+  if (c.type === 'number') {
+    pending[c.pkey] = null;
+    LIMITS[c.pkey] = { min: c.min, max: c.max, step: c.step };
+    STEP_EL[c.pkey] = c.el;
+  } else if (c.type === 'hyst') {
+    pending[c.pkey] = null;
+  }
+});
 
 const lastEdit = {};
 const serverState = {};
@@ -1282,64 +1401,6 @@ let odinTempChart = null;
 let odinBattChart = null;
 let odinPriceChart = null;
 let odinWeatherChart = null;
-
-const LIMITS = { 
-  'aa-bias': { min: -5, max: 5, step: 0.1 }, 
-  'aa-max': { min: 30, max: 65, step: 0.1 }, 
-  'aa-min': { min: 20, max: 55, step: 0.1 }, 
-  'aa-max-z2': { min: 30, max: 65, step: 0.1 },
-  'aa-min-z2': { min: 20, max: 55, step: 0.1 }, 
-  'psc-win': { min: 1.0, max: 5.0, step: 0.5 },
-  'psc-delta': { min: 1.0, max: 3.0, step: 0.5 },
-  'dhw-sp': { min: 40, max: 60, step: 0.5 }, 
-  'z1-sp': { min: 10, max: 30, step: 0.1 }, 
-  'z2-sp': { min: 10, max: 30, step: 0.1 },
-  'room-z1-sp': { min: 10, max: 30, step: 0.5 }, 
-  'room-z2-sp': { min: 10, max: 30, step: 0.5 },
-  'flow-z1-sp': { min: 10, max: 60, step: 0.1 },
-  'flow-z2-sp': { min: 10, max: 60, step: 0.1 },
-  'raw-heat': { min: 0.0, max: 200.0, step: 0.1 },
-  'raw-elec': { min: 0.0, max: 100.0, step: 0.1 },
-  'raw-run': { min: 0.0, max: 24.0, step: 0.1 },
-  'raw-out': { min: -25.0, max: 40.0, step: 0.1 },
-  'raw-room': { min: 10.0, max: 35.0, step: 0.1 },
-  'raw-delta': { min: 0.0, max: 10.0, step: 0.1 },
-  'raw-hl-tm': { min: 0.0, max: 300.0, step: 0.5 },
-  'raw-solar-factor': { min: 0.001, max: 0.05, step: 0.0025 },
-  'batt-soc': { min: 0.0, max: 30.0, step: 0.1 },
-  'batt-max-dis': { min: 0.5, max: 15.0, step: 0.1 },
-  'cool-start-z1': { min: 16.0, max: 25.0, step: 0.5 },
-  'cool-min-z1':   { min: 5.0, max: 25.0, step: 0.1 },
-  'cool-min-z2':   { min: 5.0, max: 25.0, step: 0.1 },
-  'dhw-thresh':    { min: 0.0, max: 20.0, step: 0.5 },
-  'raw-cool-prod': { min: 0.0, max: 200.0, step: 0.1 },
-  'raw-cool-elec': { min: 0.0, max: 100.0, step: 0.1 },
-  'raw-cool-run':  { min: 0.0, max: 24.0, step: 0.1 },
-  'raw-cool-out':  { min: -25.0, max: 50.0, step: 0.1 },
-  'raw-cool-room': { min: 10.0, max: 35.0, step: 0.1 },
-  'min-on-time': { min: 1, max: 20, step: 1 },
-};
-
-const STEP_EL = { 
-  'aa-bias': 'aa-bias-val', 
-  'aa-max': 'aa-max-val', 'aa-min': 'aa-min-val', 
-  'aa-max-z2': 'aa-max-z2-val', 'aa-min-z2': 'aa-min-z2-val',
-  'psc-win': 'psc-win-val',
-  'psc-delta': 'psc-delta-val',
-  'dhw-sp': 'dhw-sp-val', 
-  'z1-sp': 'z1-sp-val', 'room-z1-sp': 'room-z1-sp-val',
-  'z2-sp': 'z2-sp-val', 'room-z2-sp': 'room-z2-sp-val',
-  'flow-z1-sp': 'flow-z1-sp-val', 'flow-z2-sp': 'flow-z2-sp-val',
-  'raw-heat': 'raw-heat-val', 'raw-elec': 'raw-elec-val', 'raw-run': 'raw-run-val',
-  'raw-out': 'raw-out-val', 'raw-room': 'raw-room-val', 'raw-delta': 'raw-delta-val',
-  'raw-hl-tm': 'raw-hl-tm-val','raw-solar-factor': 'raw-solar-factor-val',
-  'batt-soc': 'batt-soc-val',
-  'batt-max-dis': 'batt-max-dis-val',
-  'cool-start-z1': 'cool-start-z1-val', 'cool-min-z1': 'cool-min-z1-val', 'cool-min-z2': 'cool-min-z2-val',
-  'dhw-thresh': 'dhw-thresh-val',
-  'raw-cool-prod': 'raw-cool-prod-val', 'raw-cool-elec': 'raw-cool-elec-val', 'raw-cool-run': 'raw-cool-run-val', 'raw-cool-out': 'raw-cool-out-val', 'raw-cool-room': 'raw-cool-room-val',
-  'min-on-time': 'min-on-time-val',
-};
 
 let lastGraphUpdate = 0;
 let userZoomed = false;
@@ -4111,6 +4172,134 @@ function downloadLogs() {
   a.download = `logs_${new Date().toISOString().slice(0,19)}.txt`;
   a.click();
   window.URL.revokeObjectURL(url);
+}
+
+// ── Settings Backup (Save / Restore) ──────────────────────────────────────
+// Reads current values straight from the CONTROLS registry above — nothing
+// to maintain here. Restore just replays apiPost({key, value}) for each
+// entry in the uploaded file, the same call each control's own onchange
+// handler already makes.
+
+function collectSettingsSnapshot() {
+  const out = {};
+  CONTROLS.forEach(c => {
+    if (c.type === 'switch') {
+      const el = document.getElementById(c.el);
+      if (el) out[c.key] = el.checked ? 1 : 0;
+    } else if (c.type === 'select') {
+      const el = document.getElementById(c.el);
+      if (el && el.selectedIndex >= 0) out[c.key] = el.selectedIndex;
+    } else if (c.type === 'vmode') {
+      const el = document.getElementById(c.el);
+      if (el && el.value) out[c.key] = el.value;
+    } else if (c.type === 'text') {
+      const el = document.getElementById(c.el);
+      if (el) out[c.key] = el.value;
+    } else if (c.type === 'number' || c.type === 'hyst') {
+      const v = pending[c.pkey];
+      if (v !== null && v !== undefined && !Number.isNaN(v)) out[c.key] = v;
+    }
+  });
+  return out;
+}
+
+function setSettingsBackupStatus(text, color) {
+  const el = document.getElementById('settings-backup-status');
+  if (el) { el.textContent = text; el.style.color = color || 'var(--text3)'; }
+}
+
+function downloadSettingsBackup() {
+  const settings = collectSettingsSnapshot();
+  const keyCount = Object.keys(settings).length;
+  if (keyCount === 0) {
+    showToast('✗ No settings available yet, try again shortly', true);
+    return;
+  }
+
+  const payload = {
+    _type: 'asgard_dashboard_settings',
+    _version: 1,
+    _saved_at: new Date().toISOString(),
+    _firmware_version: (latestState && latestState.latest_version) || null,
+    settings
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `asgard_settings_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.json`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+
+  showToast(`✓ Saved ${keyCount} settings to file`);
+  setSettingsBackupStatus(`Last save: ${keyCount} settings, ${new Date().toLocaleTimeString()}`);
+}
+
+function triggerRestoreSettings() {
+  document.getElementById('settings-restore-file').click();
+}
+
+async function restoreSettingsFromFile() {
+  const input = document.getElementById('settings-restore-file');
+  if (!input.files || input.files.length === 0) return;
+  const file = input.files[0];
+  input.value = ''; // allow re-selecting the same file later
+
+  let parsed;
+  try {
+    const text = await file.text();
+    parsed = JSON.parse(text);
+  } catch (e) {
+    showToast('✗ Invalid settings file', true);
+    return;
+  }
+
+  const settings = (parsed && typeof parsed.settings === 'object') ? parsed.settings : parsed;
+  if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+    showToast('✗ No settings found in file', true);
+    return;
+  }
+
+  const keys = Object.keys(settings);
+  if (keys.length === 0) {
+    showToast('✗ File contains no settings', true);
+    return;
+  }
+
+  const ok = confirm(`Restore ${keys.length} settings from this file?\n\nThis will overwrite your current Settings and Solver configuration on the device.`);
+  if (!ok) return;
+
+  const btn = document.getElementById('btn-restore-settings');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+  setSettingsBackupStatus(`Restoring 0 / ${keys.length}...`, 'var(--warn)');
+
+  let done = 0, failed = 0;
+  for (const key of keys) {
+    try {
+      await apiPost({ key, value: settings[key] });
+      done++;
+    } catch (e) {
+      failed++;
+      console.warn('Restore failed for key', key, e);
+    }
+    setSettingsBackupStatus(`Restoring ${done + failed} / ${keys.length}...`, 'var(--warn)');
+    // Small delay so the device's single action queue isn't flooded.
+    await new Promise(r => setTimeout(r, 60));
+  }
+
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+
+  if (failed === 0) {
+    showToast(`✓ Restored ${done} settings`);
+    setSettingsBackupStatus(`Last restore: ${done} settings, ${new Date().toLocaleTimeString()}`);
+  } else {
+    showToast(`⚠ Restored ${done}, ${failed} failed`, true);
+    setSettingsBackupStatus(`Last restore: ${done} ok, ${failed} failed`, 'var(--danger)');
+  }
+
+  // Pull fresh state from the device so the UI reflects the restored values.
+  setTimeout(fetchState, 500);
 }
 
 function updateStatus(text, color) {

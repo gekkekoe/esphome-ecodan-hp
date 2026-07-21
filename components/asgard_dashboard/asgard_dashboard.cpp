@@ -385,7 +385,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   }
 
   auto doSwitch = [&](switch_::Switch *sw) {
-    if (!sw) { ESP_LOGW(TAG, "Switch not configured"); return; }
+    if (!sw) { ESP_LOGW(TAG, "Switch not configured: key=%s", key.c_str()); return; }
     fval > 0.5f ? sw->turn_on() : sw->turn_off();
   };
   if (key == "auto_adaptive_control_enabled") { doSwitch(sw_auto_adaptive_); return; }
@@ -407,7 +407,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "server_control_prohibit_z2_cooling") { doSwitch(sw_sc_prohibit_z2_cooling_);  return; }
 
   auto doSelect = [&](select::Select *sel) {
-    if (!sel) { ESP_LOGW(TAG, "Select not configured"); return; }
+    if (!sel) { ESP_LOGW(TAG, "Select not configured: key=%s", key.c_str()); return; }
     auto call = sel->make_call();
     if (is_string) {
       call.set_option(sval);
@@ -428,7 +428,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "lockout_duration")      { doSelect(lockout_duration_); return; }
 
   auto doNumber = [&](number::Number *n) {
-    if (!n) { ESP_LOGW(TAG, "Number not configured"); return; }
+    if (!n) { ESP_LOGW(TAG, "Number not configured: key=%s", key.c_str()); return; }
     auto call = n->make_call();
     call.set_value(fval);
     call.perform();
@@ -475,7 +475,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   }
 
   auto doClimate = [&](climate::Climate *c, const char *name) {
-    if (!c) { ESP_LOGW(TAG, "%s climate not configured", name); return; }
+    if (!c) { ESP_LOGW(TAG, "%s climate not configured: key=%s", name, key.c_str()); return; }
     auto call = c->make_call();
     call.set_target_temperature(fval);
     call.perform();
@@ -492,15 +492,15 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   
   if (key == "virtual_climate_z1_mode" || key == "virtual_climate_z2_mode") {
     climate::Climate *c = (key == "virtual_climate_z1_mode") ? virtual_climate_z1_ : virtual_climate_z2_;
-    if (c && is_string) {
-      auto call = c->make_call();
-      if (sval == "heat") call.set_mode(climate::CLIMATE_MODE_HEAT);
-      else if (sval == "cool") call.set_mode(climate::CLIMATE_MODE_COOL);
-      else if (sval == "auto") call.set_mode(climate::CLIMATE_MODE_AUTO);
-      else call.set_mode(climate::CLIMATE_MODE_OFF);
-      call.perform();
-      ESP_LOGI(TAG, "%s set to %s", key.c_str(), sval.c_str());
-    }
+    if (!c) { ESP_LOGW(TAG, "Climate not configured: key=%s", key.c_str()); return; }
+    if (!is_string) { ESP_LOGW(TAG, "Expected string value for key=%s", key.c_str()); return; }
+    auto call = c->make_call();
+    if (sval == "heat") call.set_mode(climate::CLIMATE_MODE_HEAT);
+    else if (sval == "cool") call.set_mode(climate::CLIMATE_MODE_COOL);
+    else if (sval == "auto") call.set_mode(climate::CLIMATE_MODE_AUTO);
+    else call.set_mode(climate::CLIMATE_MODE_OFF);
+    call.perform();
+    ESP_LOGI(TAG, "%s set to %s", key.c_str(), sval.c_str());
     return;
   }
 
@@ -517,6 +517,8 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
 
   if (is_string) {
      ESP_LOGW(TAG, "Unknown string key: %s", key.c_str());
+  } else {
+     ESP_LOGW(TAG, "Unknown key: %s (value=%.4f)", key.c_str(), fval);
   }
 }
 
