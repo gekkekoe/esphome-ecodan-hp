@@ -458,9 +458,6 @@ namespace esphome
                 return comp != nullptr ? comp->state : fallback;
             };
 
-            // ALWAYS UPDATE: Passive Data & Building Physics ---
-            update_ema_num(this->state_.num_raw_avg_room_temp, avg_room, ALPHA);
-            
 
             // Outside temp averaged ONLY over hours cooling was actually active
             // — NOT the whole-day average, which includes the cool night and can
@@ -474,6 +471,7 @@ namespace esphome
             // ONLY UPDATE WHEN HEATING OR COOLING: System Performance ---
             if (heat_produced_kwh >= 2.0f && runtime_hours >= 1.0f) {
                 update_ema_num(this->state_.num_raw_avg_outside_temp, avg_outside, ALPHA);
+                update_ema_num(this->state_.num_raw_avg_room_temp, avg_room, ALPHA);
                 update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
                 update_ema_num(this->state_.num_raw_heat_produced, heat_produced_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_elec_consumed, elec_consumed_kwh, ALPHA);
