@@ -471,6 +471,9 @@ namespace esphome
             // ONLY UPDATE WHEN HEATING OR COOLING: System Performance ---
             if (heat_produced_kwh >= 2.0f && runtime_hours >= 1.0f) {
                 update_ema_num(this->state_.num_raw_avg_outside_temp, avg_outside, ALPHA);
+                // Room temp in lockstep with the outside temp above — the two form
+                // the delta_t_out pair for the day-method HL and must reflect the
+                // same (heating-day) population. See note above.
                 update_ema_num(this->state_.num_raw_avg_room_temp, avg_room, ALPHA);
                 update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
                 update_ema_num(this->state_.num_raw_heat_produced, heat_produced_kwh, ALPHA);
@@ -487,6 +490,12 @@ namespace esphome
 
             } else if (cool_produced_kwh >= 2.0f && cool_runtime_hours >= 1.0f) {
                 update_ema_num(this->state_.num_raw_delta_room_temp, delta_room, ALPHA);
+                // Cooling-day room average — the cooling counterpart of
+                // num_raw_avg_room_temp, mirroring the existing outside-temp split
+                // (num_raw_avg_outside_temp vs num_raw_cool_avg_outside_temp).
+                // Pairs with cool_avg_outside for delta_t_out_cool in odin_server.
+                // Kept separate so the heating HL pair stays frozen on winter data.
+                update_ema_num(this->state_.num_raw_cool_avg_room_temp, avg_room, ALPHA);
                 update_ema_num(this->state_.num_raw_cool_produced, cool_produced_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_cool_elec_consumed, cool_elec_consumed_kwh, ALPHA);
                 update_ema_num(this->state_.num_raw_cool_runtime_hours, cool_runtime_hours, ALPHA);

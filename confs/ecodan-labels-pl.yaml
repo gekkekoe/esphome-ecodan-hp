@@ -191,3 +191,4 @@ substitutions:
   num_raw_cool_elec_consumed: "Zużycie prądu chłodzenie (Surowe)"
   num_raw_cool_runtime_hours: "Czas pracy chłodzenia (Surowe)"
   num_raw_cool_avg_outside_temp: "Śr. temp. zewn. chłodzenia (Surowe)"
+  num_raw_cool_avg_room_temp: "Surowa średnia temp. pokojowa chłodzenia"

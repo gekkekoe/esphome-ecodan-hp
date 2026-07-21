@@ -192,3 +192,4 @@ substitutions:
   num_raw_cool_elec_consumed: "Elförbrukning kyla (Rådata)"
   num_raw_cool_runtime_hours: "Drifttid kyla (Rådata)"
   num_raw_cool_avg_outside_temp: "Genomsnittlig utetemp. kyla (Rådata)"
+  num_raw_cool_avg_room_temp: "Rå kylning genomsnittlig rumstemp."

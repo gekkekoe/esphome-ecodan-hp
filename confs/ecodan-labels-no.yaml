@@ -191,3 +191,4 @@ substitutions:
   num_raw_cool_elec_consumed: "Strømforbruk kjøling (Rådata)"
   num_raw_cool_runtime_hours: "Driftstid kjøling (Rådata)"
   num_raw_cool_avg_outside_temp: "Gj.snitt utetemp. kjøling (Rådata)"
+  num_raw_cool_avg_room_temp: "Rå kjøling gj.snitt romtemp."

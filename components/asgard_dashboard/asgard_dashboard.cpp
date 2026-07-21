@@ -461,6 +461,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "raw_cool_elec_consumed") { doNumber(num_raw_cool_elec_consumed_); return; }
   if (key == "raw_cool_runtime_hours") { doNumber(num_raw_cool_runtime_hours_); return; }
   if (key == "raw_cool_avg_outside_temp") { doNumber(num_raw_cool_avg_outside_temp_); return; }
+  if (key == "raw_cool_avg_room_temp") { doNumber(num_raw_cool_avg_room_temp_); return; }
 
   if (key == "predictive_short_cycle_high_delta_time_window")    { doNumber(pred_sc_time_);    return; }
   if (key == "predictive_short_cycle_high_delta_threshold")    { doNumber(pred_sc_delta_);    return; }
@@ -650,6 +651,7 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_raw_cool_elec_consumed_, current_snapshot_.num_raw_cool_elec_consumed);
   get_n(num_raw_cool_runtime_hours_, current_snapshot_.num_raw_cool_runtime_hours);
   get_n(num_raw_cool_avg_outside_temp_, current_snapshot_.num_raw_cool_avg_outside_temp);
+  get_n(num_raw_cool_avg_room_temp_, current_snapshot_.num_raw_cool_avg_room_temp);
 
   get_n(num_battery_soc_kwh_, current_snapshot_.num_battery_soc_kwh);
   get_n(num_battery_max_discharge_kw_, current_snapshot_.num_battery_max_discharge_kw);
@@ -954,6 +956,8 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_lim("raw_cool_runtime_hours_lim",snap.num_raw_cool_runtime_hours);
   p_n("raw_cool_avg_outside_temp",   snap.num_raw_cool_avg_outside_temp.val);
   p_lim("raw_cool_avg_outside_temp_lim", snap.num_raw_cool_avg_outside_temp);
+  p_n("raw_cool_avg_room_temp",      snap.num_raw_cool_avg_room_temp.val);
+  p_lim("raw_cool_avg_room_temp_lim", snap.num_raw_cool_avg_room_temp);
   
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 

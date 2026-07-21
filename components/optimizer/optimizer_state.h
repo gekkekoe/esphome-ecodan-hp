@@ -114,6 +114,9 @@ namespace esphome
         esphome::number::Number *num_raw_cool_elec_consumed{nullptr};
         esphome::number::Number *num_raw_cool_runtime_hours{nullptr};
         esphome::number::Number *num_raw_cool_avg_outside_temp{nullptr};
+        // Cooling-day room average — counterpart of num_raw_avg_room_temp (which is
+        // frozen in lockstep with the heating pair). Pairs with cool_avg_outside_temp.
+        esphome::number::Number *num_raw_cool_avg_room_temp{nullptr};
 
         esphome::select::Select *heating_system_type;
         esphome::select::Select *temperature_feedback_source_z1;
