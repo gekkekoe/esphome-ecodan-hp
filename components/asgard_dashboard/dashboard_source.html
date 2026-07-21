@@ -1025,6 +1025,11 @@ header {
             <span class="ctrl-label param-label">Avg Ambient Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average ambient temperature (last session). Used to calculate heat loss and COP correction.</span></span>
             <div class="stepper"><button class="step-btn" onclick="step('raw-out', -0.1)">−</button><input type="number" class="step-input" id="raw-out-val" onchange="manualInput('raw-out', this.value)" /><button class="step-btn" onclick="step('raw-out', +0.1)">+</button></div>
           </div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Heating Avg Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average room temperature on heating days. Pairs with Avg Ambient Temp above to determine heat loss coefficient. Heating-only — see Cooling Avg Room in the Cooling Profile tab for the cooling-season counterpart.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-room', -0.1)">−</button><input type="number" class="step-input" id="raw-room-val" onchange="manualInput('raw-room', this.value)" /><button class="step-btn" onclick="step('raw-room', +0.1)">+</button></div>
+          </div>
         </div>
 
         <div id="phys-group-cool" style="display: none;">
@@ -1049,17 +1054,12 @@ header {
           </div>
 
           <div class="ctrl-row">
-            <span class="ctrl-label param-label">Cooling Avg Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average room temperature on cooling days. Pairs with Cooling Avg Ambient; kept separate from the heating-season Avg Room Temp to prevent seasonal drift.</span></span>
+            <span class="ctrl-label param-label">Cooling Avg Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average room temperature on cooling days. Pairs with Cooling Avg Ambient above. Cooling-only — see Heating Avg Room in the Heating Profile tab for the heating-season counterpart. Kept separate to prevent seasonal drift.</span></span>
             <div class="stepper"><button class="step-btn" onclick="step('raw-cool-room', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-room-val" onchange="manualInput('raw-cool-room', this.value)" /><button class="step-btn" onclick="step('raw-cool-room', +0.1)">+</button></div>
           </div>
         </div>
 
         <div class="sub-label" style="margin-top:20px;">Universal Building Physics</div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Avg Room Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average room temperature yesterday. Together with outside temp, determines heat loss coefficient.</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('raw-room', -0.1)">−</button><input type="number" class="step-input" id="raw-room-val" onchange="manualInput('raw-room', this.value)" /><button class="step-btn" onclick="step('raw-room', +0.1)">+</button></div>
-        </div>
 
         <div class="ctrl-row">
           <span class="ctrl-label param-label">Delta Room Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C (daily swing)</span>Difference between max and min room temp yesterday. Small delta = high thermal mass (house holds heat well).</span></span>
