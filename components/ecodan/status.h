@@ -175,7 +175,7 @@ namespace ecodan
         float EnergyConsumedIncreasing{0};
 
         // Service codes
-        uint16_t RcCompressorStarts;
+        uint32_t RcCompressorStarts;
         float RcDischargeTemp;
         float RcOuLiquidPipeTemp;
         float RcOuTwoPhasePipeTemp;
