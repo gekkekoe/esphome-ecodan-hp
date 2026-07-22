@@ -30,6 +30,10 @@ namespace esphome
       uint32_t predictive_delta_start_time_z1_ = 0;
       uint32_t predictive_delta_start_time_z2_ = 0;
 
+      int   active_lockout_strategy_      = 0;
+      float flow_lockout_old_z1_setpoint_ = NAN;
+      float flow_lockout_old_z2_setpoint_ = NAN;
+
       // Compressor / defrost tracking
       struct DefrostState {
         float locked_outside_temp_{NAN};
@@ -214,7 +218,7 @@ namespace esphome
       void on_defrost_state_change(bool x, bool x_previous);
 
       // Lockout
-      void restore_svc_state();
+      void restore_pre_lockout_state();
       void start_lockout();
       void check_lockout_expiration();
 

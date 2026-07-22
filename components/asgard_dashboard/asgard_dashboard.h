@@ -130,6 +130,7 @@ struct DashboardSnapshot {
   int sel_temp_source_z1{-1};
   int sel_temp_source_z2{-1};
   int sel_lockout_duration{-1};
+  int sel_lockout_strategy{-1};
 
   // Text sensors (fixed-size to avoid heap allocation in snapshot)
   char version[32]{0};
@@ -256,6 +257,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_sel_temp_source_z1(select::Select *s)              { sel_temp_source_z1_ = s; }
   void set_sel_temp_source_z2(select::Select *s)              { sel_temp_source_z2_ = s; }
   void set_lockout_duration(select::Select *s)                { lockout_duration_ = s; }
+  void set_lockout_strategy(select::Select *s)                { lockout_strategy_ = s; }
 
   // Numbers
   void set_num_aa_setpoint_bias(number::Number *n)            { num_aa_setpoint_bias_ = n; }
@@ -461,6 +463,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   select::Select *sel_temp_source_z2_{nullptr};
   select::Select *solver_dhw_mode_{nullptr};
   select::Select *lockout_duration_{nullptr};
+  select::Select *lockout_strategy_{nullptr};
 
   // Numbers
   number::Number *num_aa_setpoint_bias_{nullptr};

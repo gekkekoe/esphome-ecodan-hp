@@ -426,6 +426,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "temp_sensor_source_z2") { doSelect(sel_temp_source_z2_); return; } 
   if (key == "solver_dhw_mode")       { doSelect(solver_dhw_mode_); return; }
   if (key == "lockout_duration")      { doSelect(lockout_duration_); return; }
+  if (key == "lockout_strategy")      { doSelect(lockout_strategy_); return; }
 
   auto doNumber = [&](number::Number *n) {
     if (!n) { ESP_LOGW(TAG, "Number not configured: key=%s", key.c_str()); return; }
@@ -610,6 +611,7 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.dhw_cop = get_f(dhw_cop_);
   current_snapshot_.solver_dhw_mode = get_sel(solver_dhw_mode_);
   current_snapshot_.sel_lockout_duration = get_sel(lockout_duration_);
+  current_snapshot_.sel_lockout_strategy = get_sel(lockout_strategy_);
   current_snapshot_.sw_power_mode = get_sw(sw_power_mode_);
 
   current_snapshot_.heating_consumed = get_f(heating_consumed_);
@@ -920,6 +922,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("solver_connected",        snap.bin_solver_connected);
   p_sel("solver_dhw_mode", snap.solver_dhw_mode);
   p_sel("lockout_duration", snap.sel_lockout_duration);
+  p_sel("lockout_strategy", snap.sel_lockout_strategy);
 
   p_b("server_control_enabled",          snap.sw_server_control);
   p_b("server_control_prohibit_dhw",     snap.sw_sc_prohibit_dhw);

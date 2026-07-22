@@ -896,6 +896,7 @@ header {
             </button>
           </div>
         </div>
+        <div class="ctrl-row"><span class="ctrl-label param-label">Lockout Strategy<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">Server Control</span>Enables Server Control and prohibits the active zone(s)/mode, then restores the prior controller flags afterwards.<br><br><span class="tip-unit">Flow Control</span>Pushes the flow setpoint 5°C past the current actual feed temp (colder in cooling, warmer in heating) so the unit self-satisfies and the compressor stops — the water pump keeps circulating. The original flow setpoint is restored afterwards.</span></span><select class="ctrl-select" id="sel-lockout-strategy" onchange="sendSelect('lockout_strategy', this)"><option value="0">Server Control</option><option value="1">Flow Control</option></select></div>
         <div class="ctrl-row"><span class="ctrl-label param-label">Lockout Duration (min)<span class="tip-icon">?</span><span class="tip-box">How long Short Cycle Lockout holds elevated flow temps after triggering, before returning control to normal Auto-Adaptive behaviour. 0 = feature disabled.</span></span><select class="ctrl-select" id="sel-lockout-dur" onchange="sendSelect('lockout_duration', this)"><option value="0">0</option><option value="1">15</option><option value="2">30</option><option value="3">45</option><option value="4">60</option><option value="5">120</option><option value="6">240</option></select></div>
         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Minimum On-Time (min)<span class="tip-icon">?</span><span class="tip-box">How long the compressor must have already been running before Predictive Control or Short Cycle Lockout will act.</span></span><div class="stepper"><button class="step-btn" onclick="step('min-on-time', -1)">−</button><div class="step-val" id="min-on-time-val">—</div><button class="step-btn" onclick="step('min-on-time', +1)">+</button></div></div>
 
@@ -1371,6 +1372,7 @@ const CONTROLS = [
   { type:'switch', key:'server_control_prohibit_z1_cooling', el:'sw-sc-prohibit-z1-cool' },
   { type:'switch', key:'server_control_prohibit_z2_heating', el:'sw-sc-prohibit-z2-heat' },
   { type:'switch', key:'server_control_prohibit_z2_cooling', el:'sw-sc-prohibit-z2-cool' },
+  { type:'select', key:'lockout_strategy', el:'sel-lockout-strategy' },
   { type:'select', key:'lockout_duration', el:'sel-lockout-dur' },
   { type:'number', pkey:'min-on-time', key:'minimum_compressor_on_time', el:'min-on-time-val', min:1, max:20, step:1 },
 ];
@@ -3469,6 +3471,7 @@ function render(d) {
   setSelect('sel-z1ts',   d.temp_sensor_source_z1);
   setSelect('sel-z2ts',   d.temp_sensor_source_z2);
   setSelect('sel-odin-dhw-mode', d.solver_dhw_mode);
+  setSelect('sel-lockout-strategy', d.lockout_strategy);
   setSelect('sel-lockout-dur', d.lockout_duration);
 
   updateDot('dot-z1', d.z1_action);

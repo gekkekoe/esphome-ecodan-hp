@@ -137,26 +137,43 @@ namespace esphome
             }
         }
 
-        void Optimizer::restore_svc_state()
+        void Optimizer::restore_pre_lockout_state()
         {
-            auto flag_before_lockout = this->state_.ecodan_instance->get_svc_state_before_lockout();
-
-            if (flag_before_lockout.has_value())
+            if (this->active_lockout_strategy_ == 1)
             {
-                auto flag = *flag_before_lockout;
-
-                auto &status = this->state_.ecodan_instance->get_status();
-                auto current_flag = status.get_svc_flags();
-                auto dhw_mask = esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW;
-                flag = (flag & ~dhw_mask) | (current_flag & dhw_mask);
-
-                flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
-                this->state_.ecodan_instance->set_controller_mode(flag, true);
+                if (!isnan(this->flow_lockout_old_z1_setpoint_)) {
+                    ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Restoring Z1 flow setpoint after Flow Control Lockout: %.1f°C", this->flow_lockout_old_z1_setpoint_);
+                    this->state_.ecodan_instance->set_flow_target_temperature(this->flow_lockout_old_z1_setpoint_, esphome::ecodan::Zone::ZONE_1);
+                    this->flow_lockout_old_z1_setpoint_ = NAN;
+                }
+                if (!isnan(this->flow_lockout_old_z2_setpoint_)) {
+                    ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Restoring Z2 flow setpoint after Flow Control Lockout: %.1f°C", this->flow_lockout_old_z2_setpoint_);
+                    this->state_.ecodan_instance->set_flow_target_temperature(this->flow_lockout_old_z2_setpoint_, esphome::ecodan::Zone::ZONE_2);
+                    this->flow_lockout_old_z2_setpoint_ = NAN;
+                }
             }
             else
             {
-                this->state_.ecodan_instance->set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
+                auto flag_before_lockout = this->state_.ecodan_instance->get_svc_state_before_lockout();
+
+                if (flag_before_lockout.has_value())
+                {
+                    auto flag = *flag_before_lockout;
+
+                    auto &status = this->state_.ecodan_instance->get_status();
+                    auto current_flag = status.get_svc_flags();
+                    auto dhw_mask = esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW;
+                    flag = (flag & ~dhw_mask) | (current_flag & dhw_mask);
+
+                    flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
+                    this->state_.ecodan_instance->set_controller_mode(flag, true);
+                }
+                else
+                {
+                    this->state_.ecodan_instance->set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
+                }
             }
+
             this->state_.lockout_expiration_timestamp = 0;
             if (this->state_.status_short_cycle_lockout != nullptr) {
                 this->state_.status_short_cycle_lockout->publish_state(false);
@@ -166,7 +183,6 @@ namespace esphome
         void Optimizer::start_lockout()
         {
             auto &status = this->state_.ecodan_instance->get_status();
-            auto flag = status.get_svc_flags();
             time_t current_timestamp = status.timestamp();
 
             if (current_timestamp == -1)
@@ -175,23 +191,79 @@ namespace esphome
                 return;
             }
 
-            if (status.ServerControl)
-                this->state_.ecodan_instance->set_svc_state_before_lockout(flag);
+            int strategy = 0; // 0 = Server Control, 1 = Flow Control
+            if (this->state_.lockout_strategy != nullptr && this->state_.lockout_strategy->active_index().has_value())
+                strategy = this->state_.lockout_strategy->active_index().value();
+            this->active_lockout_strategy_ = strategy;
+
+            if (strategy == 1)
+            {
+                const float FLOW_LOCKOUT_OFFSET = 5.0f;
+
+                if (status.is_heating(esphome::ecodan::Zone::ZONE_1) || status.is_cooling(esphome::ecodan::Zone::ZONE_1))
+                {
+                    bool cooling = status.is_cooling(esphome::ecodan::Zone::ZONE_1);
+                    float actual_flow = this->get_feed_temp(OptimizerZone::ZONE_1);
+
+                    if (isnan(actual_flow))
+                    {
+                        ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout: Z1 actual feed temp unavailable. Skipping Z1.");
+                    }
+                    else
+                    {
+                        this->flow_lockout_old_z1_setpoint_ = this->get_flow_setpoint(OptimizerZone::ZONE_1);
+                        float target = cooling ? (actual_flow + FLOW_LOCKOUT_OFFSET) : (actual_flow - FLOW_LOCKOUT_OFFSET);
+                        auto limits = cooling ? this->get_cool_flow_limits(OptimizerZone::ZONE_1) : this->get_flow_limits(OptimizerZone::ZONE_1);
+                        //target = this->clamp_flow_temp(target, limits.min, limits.max);
+                        ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout Z1 (%s): actual %.1f°C -> forcing setpoint %.1f°C (was %.1f°C)",
+                            cooling ? "cooling" : "heating", actual_flow, target, this->flow_lockout_old_z1_setpoint_);
+                        this->state_.ecodan_instance->set_flow_target_temperature(target, esphome::ecodan::Zone::ZONE_1);
+                    }
+                }
+
+                if (status.has_2zones() && (status.is_heating(esphome::ecodan::Zone::ZONE_2) || status.is_cooling(esphome::ecodan::Zone::ZONE_2)))
+                {
+                    bool cooling = status.is_cooling(esphome::ecodan::Zone::ZONE_2);
+                    float actual_flow = this->get_feed_temp(OptimizerZone::ZONE_2);
+
+                    if (isnan(actual_flow))
+                    {
+                        ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout: Z2 actual feed temp unavailable. Skipping Z2.");
+                    }
+                    else
+                    {
+                        this->flow_lockout_old_z2_setpoint_ = this->get_flow_setpoint(OptimizerZone::ZONE_2);
+                        float target = cooling ? (actual_flow + FLOW_LOCKOUT_OFFSET) : (actual_flow - FLOW_LOCKOUT_OFFSET);
+                        auto limits = cooling ? this->get_cool_flow_limits(OptimizerZone::ZONE_2) : this->get_flow_limits(OptimizerZone::ZONE_2);
+                        //target = this->clamp_flow_temp(target, limits.min, limits.max);
+                        ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout Z2 (%s): actual %.1f°C -> forcing setpoint %.1f°C (was %.1f°C)",
+                            cooling ? "cooling" : "heating", actual_flow, target, this->flow_lockout_old_z2_setpoint_);
+                        this->state_.ecodan_instance->set_flow_target_temperature(target, esphome::ecodan::Zone::ZONE_2);
+                    }
+                }
+            }
             else
-                this->state_.ecodan_instance->reset_svc_state_before_lockout();
+            {
+                auto flag = status.get_svc_flags();
 
-            if (status.is_heating(esphome::ecodan::Zone::ZONE_1))
-                flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_HEATING;
-            else if (status.is_cooling(esphome::ecodan::Zone::ZONE_1))
-                flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_COOLING;
+                if (status.ServerControl)
+                    this->state_.ecodan_instance->set_svc_state_before_lockout(flag);
+                else
+                    this->state_.ecodan_instance->reset_svc_state_before_lockout();
 
-            if (status.is_heating(esphome::ecodan::Zone::ZONE_2))
-                flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_HEATING;
-            else if (status.is_cooling(esphome::ecodan::Zone::ZONE_2))
-                flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_COOLING;
+                if (status.is_heating(esphome::ecodan::Zone::ZONE_1))
+                    flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_HEATING;
+                else if (status.is_cooling(esphome::ecodan::Zone::ZONE_1))
+                    flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_COOLING;
 
-            flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
-            this->state_.ecodan_instance->set_controller_mode(flag, true);
+                if (status.is_heating(esphome::ecodan::Zone::ZONE_2))
+                    flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_HEATING;
+                else if (status.is_cooling(esphome::ecodan::Zone::ZONE_2))
+                    flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_COOLING;
+
+                flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
+                this->state_.ecodan_instance->set_controller_mode(flag, true);
+            }
 
             auto val = esphome::parse_number<int>(this->state_.lockout_duration->current_option());
             uint32_t duration_s = (val.has_value() ? *val : 0) * 60UL;
@@ -223,7 +295,7 @@ namespace esphome
             if (current_time >= expiration)
             {
                 ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Lockout period has expired (Ecodan Time: %lu, Expiration: %lu). Restoring operations.", current_time, expiration);
-                this->restore_svc_state();
+                this->restore_pre_lockout_state();
             }
             else
             {

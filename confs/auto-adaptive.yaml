@@ -52,6 +52,7 @@ esphome:
             ${z2_cpp_prefix} state.temperature_feedback_source_z2 = id(temperature_feedback_source_z2);
 
             state.lockout_duration = id(lockout_duration);
+            state.lockout_strategy = id(lockout_strategy);
             state.status_compressor = id(status_compressor);
             state.status_defrost = id(status_defrost);
 
@@ -302,6 +303,16 @@ select:
     initial_option: "0"
 
   - platform: template
+    id: lockout_strategy
+    name: ${lockout_strategy}
+    optimistic: true
+    restore_value: true
+    options:
+      - "${lockout_strategy_option_server_control}"
+      - "${lockout_strategy_option_flow_control}"
+    initial_option: "${lockout_strategy_option_server_control}"
+
+  - platform: template
     id: solver_kwh_meter_feedback_source
     name: ${solver_kwh_meter_feedback_source}
     optimistic: true
@@ -391,7 +402,7 @@ button:
       - logger.log:
           level: INFO
           format: "Lockout script cancelled by button"
-      - lambda: id(optimizer_ptr)->restore_svc_state();
+      - lambda: id(optimizer_ptr)->restore_pre_lockout_state();
   # - platform: template
   #   name: 'Auto-Adaptive: Run'
   #   id: run_auto_adaptive_cycle

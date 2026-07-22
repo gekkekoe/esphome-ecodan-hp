@@ -122,6 +122,7 @@ namespace esphome
         esphome::select::Select *temperature_feedback_source_z1;
         esphome::select::Select *temperature_feedback_source_z2;
         esphome::select::Select *lockout_duration;
+        esphome::select::Select *lockout_strategy{nullptr};
         esphome::select::Select *solver_kwh_meter_feedback_source;
         esphome::select::Select *solver_dhw_mode{nullptr};
 

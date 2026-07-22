@@ -141,6 +141,7 @@ CONFIG_SCHEMA = cv.Schema(
         # Short Cycle Prevention
         cv.Optional("minimum_compressor_on_time_id"): cv.use_id(number.Number),
         cv.Optional("lockout_duration_id"): cv.use_id(select.Select),
+        cv.Optional("lockout_strategy_id"): cv.use_id(select.Select),
         cv.Optional("status_short_cycle_lockout_id"): cv.use_id(binary_sensor.BinarySensor),
         cv.Optional("short_cycle_mitigation_button_id"): cv.use_id(button.Button),
 
@@ -277,6 +278,7 @@ async def to_code(config):
         # Short Cycle Prevention mappings
         ("minimum_compressor_on_time_id",     "set_minimum_compressor_on_time"),
         ("lockout_duration_id",               "set_lockout_duration"),
+        ("lockout_strategy_id",               "set_lockout_strategy"),
         ("status_short_cycle_lockout_id",     "set_status_short_cycle_lockout"),
         ("short_cycle_mitigation_button_id",  "set_short_cycle_mitigation_button"),
     ]
