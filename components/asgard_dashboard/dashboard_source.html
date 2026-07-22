@@ -805,13 +805,6 @@ header {
           </div>
         </div>
 
-        <div id="heat-short-cycle">
-          <div class="sub-label" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border); padding-bottom: 5px;">Short Cycle Protection</div>
-          <div class="ctrl-row"><span class="ctrl-label param-label">Predictive Control<span class="tip-icon">?</span><span class="tip-box">Watches for a sustained gap between requested and actual flow temperature — a sign the compressor is about to short-cycle — and nudges the flow-temp target up to avoid it.</span></span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
-          <div class="ctrl-row"><span class="ctrl-label param-label">Time Window (min)<span class="tip-icon">?</span><span class="tip-box">How long the flow-temperature delta must stay above the threshold below before Predictive Control intervenes.</span></span><div class="stepper"><button class="step-btn" onclick="step('psc-win', -0.5)">−</button><div class="step-val" id="psc-win-val">—</div><button class="step-btn" onclick="step('psc-win', +0.5)">+</button></div></div>
-          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Delta Threshold (°C)<span class="tip-icon">?</span><span class="tip-box">How far actual flow temperature must lag behind the requested target.</span></span><div class="stepper"><button class="step-btn" onclick="step('psc-delta', -0.5)">−</button><input type="number" class="step-input" id="psc-delta-val" onchange="manualInput('psc-delta', this.value)"><button class="step-btn" onclick="step('psc-delta', +0.5)">+</button></div></div>
-        </div>
-
         <button class="send-btn" onclick="sendAA(this)" style="margin-bottom:0; margin-top:24px;">Apply Settings</button>
       </div>
     </div>  
@@ -907,6 +900,15 @@ header {
         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Minimum On-Time (min)<span class="tip-icon">?</span><span class="tip-box">How long the compressor must have already been running before Predictive Control or Short Cycle Lockout will act.</span></span><div class="stepper"><button class="step-btn" onclick="step('min-on-time', -1)">−</button><div class="step-val" id="min-on-time-val">—</div><button class="step-btn" onclick="step('min-on-time', +1)">+</button></div></div>
 
         <button class="send-btn" onclick="sendSC(this)" style="margin-bottom:0; margin-top:24px;">Apply Lockout Settings</button>
+      </div>
+
+      <div id="heat-short-cycle" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Short Cycle Protection</div>
+        <div class="ctrl-row"><span class="ctrl-label param-label">Predictive Control<span class="tip-icon">?</span><span class="tip-box">Watches for a sustained gap between requested and actual flow temperature — a sign the compressor is about to short-cycle — and nudges the flow-temp target further from the current reading (up in heating, down in cooling) to avoid it.</span></span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
+        <div class="ctrl-row"><span class="ctrl-label param-label">Time Window (min)<span class="tip-icon">?</span><span class="tip-box">How long the flow-temperature delta must stay above the threshold below before Predictive Control intervenes.</span></span><div class="stepper"><button class="step-btn" onclick="step('psc-win', -0.5)">−</button><div class="step-val" id="psc-win-val">—</div><button class="step-btn" onclick="step('psc-win', +0.5)">+</button></div></div>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Delta Threshold (°C)<span class="tip-icon">?</span><span class="tip-box">How far actual flow temperature must lag behind the requested target.</span></span><div class="stepper"><button class="step-btn" onclick="step('psc-delta', -0.5)">−</button><input type="number" class="step-input" id="psc-delta-val" onchange="manualInput('psc-delta', this.value)"><button class="step-btn" onclick="step('psc-delta', +0.5)">+</button></div></div>
+
+        <button class="send-btn" onclick="sendPSC(this)" style="margin-bottom:0; margin-top:24px;">Apply Predictive Control Settings</button>
       </div>
     </div>
   </div>
@@ -3271,9 +3273,6 @@ function toggleCoolingUI() {
   const cGlobal = document.getElementById('cool-settings-z1');
   if (cGlobal) cGlobal.style.display = isCoolingMode ? 'block' : 'none';
 
-  const short_cycle = document.getElementById('heat-short-cycle');
-  if (short_cycle) short_cycle.style.display = isCoolingMode ? 'none' : 'block';
-
   // --- Auto Adaptive Validation ---
   // Check if Zone 2 is active in the UI
   const z2Card = document.getElementById('card-z2');
@@ -3706,8 +3705,6 @@ async function sendAA(btn) {
     if (hasChanged('cool-min-z1'))   { await apiPost({ key: 'minimum_cooling_flow_z1', value: pending['cool-min-z1'] }); c++; }
     if (hasChanged('cool-min-z2'))   { await apiPost({ key: 'minimum_cooling_flow_z2', value: pending['cool-min-z2'] }); c++; }
 
-    if (hasChanged('psc-win'))   { await apiPost({ key: 'predictive_short_cycle_high_delta_time_window', value: pending['psc-win'] }); c++; }
-    if (hasChanged('psc-delta')) { await apiPost({ key: 'predictive_short_cycle_high_delta_threshold', value: pending['psc-delta'] }); c++; }
     showToast(c > 0 ? '✓ Auto Adaptive updated' : 'No changes');
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');
@@ -3786,8 +3783,21 @@ async function sendSC(btn) {
       c++; 
     }
     showToast(c > 0 ? '✓ Lockout Settings updated' : 'No changes');
-  } catch(e) { 
-    showToast('✗ ' + e.message, true); 
+  } catch(e) {
+    showToast('✗ ' + e.message, true);
+  }
+  btn.classList.remove('sending');
+}
+
+async function sendPSC(btn) {
+  btn.classList.add('sending');
+  let c = 0;
+  try {
+    if (hasChanged('psc-win'))   { await apiPost({ key: 'predictive_short_cycle_high_delta_time_window', value: pending['psc-win'] }); c++; }
+    if (hasChanged('psc-delta')) { await apiPost({ key: 'predictive_short_cycle_high_delta_threshold', value: pending['psc-delta'] }); c++; }
+    showToast(c > 0 ? '✓ Predictive Control updated' : 'No changes');
+  } catch(e) {
+    showToast('✗ ' + e.message, true);
   }
   btn.classList.remove('sending');
 }

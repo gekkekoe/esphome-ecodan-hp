@@ -168,6 +168,25 @@ namespace esphome
             return {min_flow, max_flow};
         }
 
+        FlowLimits Optimizer::get_cool_flow_limits(OptimizerZone zone) {
+            float min_flow = 18.0f;
+            if (zone == OptimizerZone::ZONE_2) {
+                if (this->state_.minimum_cooling_flow_temp_z2 != nullptr)
+                    min_flow = this->state_.minimum_cooling_flow_temp_z2->state;
+            } else {
+                if (this->state_.minimum_cooling_flow_temp_z1 != nullptr)
+                    min_flow = this->state_.minimum_cooling_flow_temp_z1->state;
+            }
+
+            float max_flow = 30.0f;
+            if (min_flow > max_flow)
+            {
+                max_flow = min_flow;
+            }
+
+            return {min_flow, max_flow};
+        }
+
         float Optimizer::enforce_step_limit(const ecodan::Status &status, float actual_flow_temp, float calculated_flow, bool is_cooling_mode) 
         {
             const float MAX_FEED_STEP_CHANGE = 1.0f;

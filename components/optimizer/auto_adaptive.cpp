@@ -308,8 +308,17 @@ namespace esphome
                     calculated_flow = actual_flow_temp;
                 }
 
-                ESP_LOGD(OPTIMIZER_TAG, "Z%d COOLING: calc=%.1f°C (return %.1f - delta %.1f)",
-                         (zone_i + 1), calculated_flow, actual_return_temp, target_delta_t);
+                auto &pcp_adj = (zone_i == 1) ? this->pcp_adjustment_z2_ : this->pcp_adjustment_z1_;
+                if (pcp_adj < 0.0f) {
+                    if (!std::isnan(actual_flow_temp) && (calculated_flow - actual_flow_temp) >= 1.0f) {
+                        calculated_flow += pcp_adj;
+                    } else {
+                        pcp_adj = 0.0f;
+                    }
+                }
+
+                ESP_LOGD(OPTIMIZER_TAG, "Z%d COOLING: calc=%.1f°C (return %.1f - delta %.1f) (boost %.1f)",
+                         (zone_i + 1), calculated_flow, actual_return_temp, target_delta_t, pcp_adj);
             }
 
             float min_cool_target = 18.0f;

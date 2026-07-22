@@ -183,7 +183,7 @@ namespace esphome
       void on_operation_mode_change(uint8_t new_mode, uint8_t previous_mode);
 
       // ── prevention.cpp ────────────────────────────────────────────────
-      void predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone);
+      void predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone, bool is_cooling);
 
       // ── stats.cpp ─────────────────────────────────────────────────────
       void update_learning_model(int day_of_year);
@@ -230,6 +230,7 @@ namespace esphome
       float get_return_temp(OptimizerZone zone);
       float get_flow_setpoint(OptimizerZone zone);
       FlowLimits get_flow_limits(OptimizerZone zone);
+      FlowLimits get_cool_flow_limits(OptimizerZone zone);
 
       // Solver / ODIN
       bool aa_enabled() const;
