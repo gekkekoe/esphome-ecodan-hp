@@ -71,19 +71,25 @@ namespace esphome
             }
 
             auto multizone_status = status.MultiZoneStatus;
-            bool is_heating_z1 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) 
+
+            bool multizone_z1_active = status.has_2zones() && (multizone_status == 1 || multizone_status == 2);
+            bool multizone_z2_active = status.has_2zones() && (multizone_status == 1 || multizone_status == 3);
+
+            bool is_heating_z1 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1)
                 || status.is_heating(esphome::ecodan::Zone::ZONE_1)
-                || (status.has_2zones() && (multizone_status == 1 || multizone_status == 2));
+                || (multizone_z1_active && this->is_heating_active(status));
 
             bool is_heating_z2 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2)
                 || status.is_heating(esphome::ecodan::Zone::ZONE_2)
-                || (status.has_2zones() && (multizone_status == 1 || multizone_status == 3));
+                || (multizone_z2_active && this->is_heating_active(status));
 
             bool is_cooling_z1 = status.has_cooling()
-                && (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) || status.is_cooling(esphome::ecodan::Zone::ZONE_1));
+                && (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) || status.is_cooling(esphome::ecodan::Zone::ZONE_1)
+                    || (multizone_z1_active && this->is_cooling_active(status)));
 
             bool is_cooling_z2 = status.has_cooling()
-                && (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2) || status.is_cooling(esphome::ecodan::Zone::ZONE_2));
+                && (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2) || status.is_cooling(esphome::ecodan::Zone::ZONE_2)
+                    || (multizone_z2_active && this->is_cooling_active(status)));
 
             if (is_heating_z1)
                 this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_1, false);
