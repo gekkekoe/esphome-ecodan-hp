@@ -2,7 +2,12 @@ import gzip
 import os
 import re
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def generate_header(source_file, output_file, array_name):
+    source_file = os.path.join(SCRIPT_DIR, source_file)
+    output_file = os.path.join(SCRIPT_DIR, output_file)
+
     if not os.path.exists(source_file):
         print(f"Error: {source_file} not found!")
         return
@@ -26,6 +31,8 @@ def generate_header(source_file, output_file, array_name):
     for i in range(0, len(hex_array), 16):
         rows.append("  " + ", ".join(hex_array[i:i+16]))
 
+    rows_joined = ",\n".join(rows)
+
     header_content = f"""#pragma once
 #include <stdint.h>
 #include <stddef.h>
@@ -34,7 +41,7 @@ namespace esphome {{
 namespace asgard_dashboard {{
 
 static const uint8_t {array_name}[] = {{
-{",\n".join(rows)}
+{rows_joined}
 }};
 static const size_t {array_name}_LEN = {len(compressed)};
 

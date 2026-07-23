@@ -885,6 +885,11 @@ header {
         </div>
       </div>
    
+      <div id="heat-short-cycle" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Short Cycle Protection</div>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Predictive Control<span class="tip-icon">?</span><span class="tip-box">Keeps the flow-temp target within ~1°C of the actual feed temperature on every reading (below it in heating, above it in cooling) so a drifting feed can't cross the compressor's cut-off and halt it — preventing short cycles.</span></span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
+      </div>
+
       <div id="sc-prevention-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Short Cycle Lockout</div>
         <div class="ctrl-row">
@@ -901,11 +906,6 @@ header {
         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Minimum On-Time (min)<span class="tip-icon">?</span><span class="tip-box">How long the compressor must have already been running before Predictive Control or Short Cycle Lockout will act.</span></span><div class="stepper"><button class="step-btn" onclick="step('min-on-time', -1)">−</button><div class="step-val" id="min-on-time-val">—</div><button class="step-btn" onclick="step('min-on-time', +1)">+</button></div></div>
 
         <button class="send-btn" onclick="sendSC(this)" style="margin-bottom:0; margin-top:24px;">Apply Lockout Settings</button>
-      </div>
-
-      <div id="heat-short-cycle" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Short Cycle Protection</div>
-        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Predictive Control<span class="tip-icon">?</span><span class="tip-box">Keeps the flow-temp target within ~1°C of the actual feed temperature on every reading (below it in heating, above it in cooling) so a drifting feed can't cross the compressor's cut-off and halt it — preventing short cycles.</span></span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
       </div>
     </div>
   </div>
