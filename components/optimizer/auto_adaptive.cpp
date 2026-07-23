@@ -616,8 +616,9 @@ namespace esphome
             float cold_factor = cf_raw * cf_raw * 1.5f;
 
             ESP_LOGD(OPTIMIZER_TAG,
-                "[*] Auto-adaptive cycle: independent_zone_temps=%d has_cooling=%d cold_factor=%.2f min_delta=%.2f max_delta=%.2f",
-                status.has_independent_zone_temps(), status.has_cooling(), cold_factor, prof.base_min_delta_t, prof.max_delta_t);
+                "[*] Auto-adaptive cycle: independent_zone_temps=%d has_cooling=%d cold_factor=%.2f min_delta=%.2f max_delta=%.2f multizone_status=%d operation=%d",
+                status.has_independent_zone_temps(), status.has_cooling(), cold_factor, prof.base_min_delta_t, prof.max_delta_t,
+                status.MultiZoneStatus, static_cast<uint8_t>(status.Operation));
 
             auto max_zones = status.has_2zones() ? 2 : 1;
 
