@@ -49,9 +49,9 @@ Newer FTC7+ systems can also report `TH6_2_PHASE_PIPE_TEMP`, `TH32_SUCTION_PIPE_
 
 Download/save the [logviewer.html](https://raw.githubusercontent.com/gekkekoe/esphome-ecodan-hp/refs/heads/main/docs/logviewer.html) to your computer locally. Open `logviewer.html` with a browser and connect to the ESP ip. It should stream logging and you will be able to save it to a file.
 
-Asgard users can nagivate the http://esp_ip/dashboard and click on the logs tab.
+Asgard users can navigate to `http://esp_ip/dashboard` and click on the Logs tab.
 
-## 6. Why is the force DHW switch is not working?
+## 6. Why is the force DHW switch not working?
 
 DHW is prohibited by one of the following:
 * Hour schedules in MRC/Melcloud

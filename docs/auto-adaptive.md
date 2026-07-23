@@ -36,16 +36,23 @@ The simulator allows you to change all inputs (Return Temp, Room Temp, etc.) and
 
 ### How to Choose Your Profile
 
-The `Heating System Type` selector gives you six options, letting you choose both your physical system type and its "aggressiveness".
+The **`Heating System Type`** selector gives you six options: three physical
+system types, each in a **default** and a **`*`** variant.
 
-* **UFH (Gentle / Smoothstep):** For standard underfloor heating. Uses the gentle S-curve to maximize stability and prevent overshoot, while still being responsive during heat-up. **This is the recommended default.**
-* **UFH \* (Responsive / Linear):** For UFH systems that feel too slow to respond. Uses the more aggressive `linear` curve.
+- **Default (no `*`) — Smoothstep (Gentle):** an S-curve response that is gentle
+  around small errors (preventing overshoot) and firmer in the mid-range. Best
+  for higher-inertia systems.
+- **`*` variant — Linear (Responsive):** a proportional response that reacts
+  faster. Best for lower-inertia systems or when the default feels too slow.
 
-* **Hybrid (Gentle / Smoothstep):** For mixed systems. Treats the system gently, like UFH, to prevent the fast radiators from causing overshoot.
-* **Hybrid \* (Responsive / Linear):** For mixed systems where you want to prioritize the *fast comfort* of the radiators. This is a more aggressive, responsive setting.
-
-* **Radiators (Gentle / Smoothstep):** For radiator-only systems with high thermal mass (e.g., old cast-iron radiators) where a gentle S-curve approach is still desired.
-* **Radiators \* (Responsive / Linear):** For standard, low-inertia radiators. This profile is the most responsive to changes in temperature.
+| Option (as shown in the UI) | Use for |
+| :--- | :--- |
+| **Underfloor Heating** | Standard underfloor heating. Gentle S-curve for maximum stability. **Recommended default.** |
+| **Underfloor Heating \*** | UFH that feels too slow to respond — the more responsive linear curve. |
+| **Underfloor Heating + Radiators** | Mixed systems, treated gently (like UFH) to stop the fast radiators overshooting. |
+| **Underfloor Heating + Radiators \*** | Mixed systems where you want to prioritise the fast comfort of the radiators. |
+| **Radiators** | Radiator-only systems with high thermal mass (e.g. old cast-iron) where a gentle curve is still wanted. |
+| **Radiators \*** | Standard low-inertia radiators. The most responsive profile. |
 
 ---
 
@@ -71,7 +78,12 @@ This transforms your controller from a reactive system into a predictive one, en
 
 This feature predicts imminent short cycles that can occur when the home's heat demand is lower than the heat pump's minimum power output.
 
-When it detects a high-risk situation (actual flow temperature rising too far (>= 1.5c) above the requested flow), it proactively applies a **+0.5°C boost**. The high-risk condition is controlled by `High Delta Duration` (the minimum high-risk duration before the systems is applying the boost) and `High Delta Threshold` (the temp difference the system should monitor).
+When it detects a high-risk situation — the actual flow temperature rising too
+far above the requested flow — it proactively applies a **+0.5°C boost** (−0.5°C
+in cooling). Two settings control it: **`High Delta Threshold`** (how far the
+actual flow may exceed the request before it counts as high-risk; default
+**1.0°C**, minimum 0.5°C) and **`High Delta Duration`** (how long that high-risk
+condition must persist before the boost is applied).
 
 * **In Auto-Adaptive Mode:** This boost is stored in the `predictive_short_cycle_total_adjusted` variable. The main `auto_adaptive_loop` sees this boost and adds it to its own calculation. The loop is also responsible for resetting the boost to 0 when the risk is gone.
 * **In Standalone Mode:** The boost is applied directly to the flow setpoint and added to the `predictive_short_cycle_total_adjusted` variable. It remains active for the entire compressor cycle and is reset by the `on_compressor_stop` script.
@@ -112,7 +124,7 @@ All parameters are adjustable in real-time from the Home Assistant interface.
 | Parameter | Description | Guidance & Default |
 | :--- | :--- | :--- |
 | **`Auto-Adaptive: Control`** | **Enables or disables the entire Auto-Adaptive feature.** When disabled, the system will revert to using the standard fixed flow temperature setpoints. | **Default**: `On` |
-| **`Auto-Adaptive: Heating System Type`** | Tunes the algorithm's behavior and responsiveness. Options marked with `*` are **Linear (Responsive)**. Others are **Quadratic (Gentle)**. | **Default**: `UFH (Gentle / Quadratic)`<br>• **UFH / UFH***: For underfloor heating.<br>• **Hybrid / Hybrid***: For mixed systems.<br>• **Radiators / Radiators***: For radiator-only systems. |
+| **`Auto-Adaptive: Heating System Type`** | Tunes the algorithm's behaviour and responsiveness. Options marked with `*` use the **Linear (Responsive)** curve; the others use the **Smoothstep (Gentle)** curve. | **Default**: `Underfloor Heating`<br>• **Underfloor Heating / \***<br>• **Underfloor Heating + Radiators / \***<br>• **Radiators / \*** |
 | **`Auto-Adaptive: Max. Heating Flow Temperature`**| Sets a hard safety limit for the flow temperature during heating to protect floors. | **Default**: `38.0°C` |
 | **`Auto-Adaptive: Min. Heating Flow Temperature`**| Sets a hard stability limit for the flow temperature. Set this to the lowest stable temperature your heat pump can run at. | **Default**: `25.0°C` |
 | **`Auto-Adaptive: Min. Cooling Flow Temperature`**| Sets a hard safety limit for the flow temperature during cooling to prevent condensation. | **Default**: `18.0°C` |
@@ -148,7 +160,7 @@ Example REST API call to set the feedback temperature to 21.5°C:
 curl -X POST "http://<esp_ip>/number/temperature_feedback_z1/set?value=21.5" -d ""
 curl -X POST "http://<esp_ip>/number/temperature_feedback_z2/set?value=22.0" -d "" # only for 2 zones
 ```
-Example Home Assistent automation:
+Example Home Assistant automation:
 ```yaml
 - id: SyncTemperatureToAdaptiveController
   alias: Sync Room Temp to Auto-Adaptive Controller

@@ -10,7 +10,7 @@ The recommended hardware for running this integration is the [Asgard PCB](https:
 | Board | Link | Notes |
 |:---|:----:|:---|
 | Asgard | https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/README.md | Plug & Play / supports proxy |
-| M5Stack Atom Lite (ESP32 variants) | https://docs.m5stack.com/en/core/ATOM%20Lite | Grove ports used |(confs/m5stack-atom-lite-proxy.md) |
+| M5Stack Atom Lite (ESP32 variants) | https://docs.m5stack.com/en/core/ATOM%20Lite | Grove ports used |
 | M5Stack Atom Lite S3 (ESP32-S3 variants) | https://docs.m5stack.com/en/core/AtomS3%20Lite | Grove ports used |
 
 
