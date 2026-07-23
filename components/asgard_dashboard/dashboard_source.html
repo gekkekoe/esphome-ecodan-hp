@@ -905,11 +905,7 @@ header {
 
       <div id="heat-short-cycle" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Short Cycle Protection</div>
-        <div class="ctrl-row"><span class="ctrl-label param-label">Predictive Control<span class="tip-icon">?</span><span class="tip-box">Watches for a sustained gap between requested and actual flow temperature — a sign the compressor is about to short-cycle — and nudges the flow-temp target further from the current reading (up in heating, down in cooling) to avoid it.</span></span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
-        <div class="ctrl-row"><span class="ctrl-label param-label">Time Window (min)<span class="tip-icon">?</span><span class="tip-box">How long the flow-temperature delta must stay above the threshold below before Predictive Control intervenes.</span></span><div class="stepper"><button class="step-btn" onclick="step('psc-win', -0.5)">−</button><div class="step-val" id="psc-win-val">—</div><button class="step-btn" onclick="step('psc-win', +0.5)">+</button></div></div>
-        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Delta Threshold (°C)<span class="tip-icon">?</span><span class="tip-box">How far actual flow temperature must lag behind the requested target.</span></span><div class="stepper"><button class="step-btn" onclick="step('psc-delta', -0.5)">−</button><input type="number" class="step-input" id="psc-delta-val" onchange="manualInput('psc-delta', this.value)"><button class="step-btn" onclick="step('psc-delta', +0.5)">+</button></div></div>
-
-        <button class="send-btn" onclick="sendPSC(this)" style="margin-bottom:0; margin-top:24px;">Apply Predictive Control Settings</button>
+        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Predictive Control<span class="tip-icon">?</span><span class="tip-box">Keeps the flow-temp target within ~1°C of the actual feed temperature on every reading (below it in heating, above it in cooling) so a drifting feed can't cross the compressor's cut-off and halt it — preventing short cycles.</span></span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
       </div>
     </div>
   </div>
@@ -1303,8 +1299,6 @@ const CONTROLS = [
   { type:'number', pkey:'cool-start-z1', key:'cooling_smart_start_z1',     el:'cool-start-z1-val', min:16,  max:25,   step:0.5 },
   { type:'number', pkey:'cool-min-z1', key:'minimum_cooling_flow_z1',      el:'cool-min-z1-val', min:5,     max:25,   step:0.1 },
   { type:'number', pkey:'cool-min-z2', key:'minimum_cooling_flow_z2',      el:'cool-min-z2-val', min:5,     max:25,   step:0.1 },
-  { type:'number', pkey:'psc-win',     key:'predictive_short_cycle_high_delta_time_window', el:'psc-win-val',   min:1.0, max:5.0, step:0.5 },
-  { type:'number', pkey:'psc-delta',   key:'predictive_short_cycle_high_delta_threshold',   el:'psc-delta-val', min:1.0, max:3.0, step:0.5 },
   { type:'switch', key:'auto_adaptive_control_enabled', el:'sw-aa' },
   { type:'switch', key:'defrost_risk_handling_enabled', el:'sw-dm' },
   { type:'switch', key:'smart_boost_enabled', el:'sw-sb' },
@@ -3347,9 +3341,6 @@ function render(d) {
   if (d.min_flow_lim) { LIMITS['aa-min'].min = d.min_flow_lim.min; LIMITS['aa-min'].max = d.min_flow_lim.max; LIMITS['aa-min'].step = 0.1; }
   if (d.max_flow_z2_lim) { LIMITS['aa-max-z2'].min = d.max_flow_z2_lim.min; LIMITS['aa-max-z2'].max = d.max_flow_z2_lim.max; LIMITS['aa-max-z2'].step = 0.1; }
   if (d.min_flow_z2_lim) { LIMITS['aa-min-z2'].min = d.min_flow_z2_lim.min; LIMITS['aa-min-z2'].max = d.min_flow_z2_lim.max; LIMITS['aa-min-z2'].step = 0.1; }
-  if (d.pred_sc_time_lim) { LIMITS['psc-win'].min = d.pred_sc_time_lim.min; LIMITS['psc-win'].max = d.pred_sc_time_lim.max; LIMITS['psc-win'].step = d.pred_sc_time_lim.step; }
-  if (d.pred_sc_delta_lim) { LIMITS['psc-delta'].min = d.pred_sc_delta_lim.min; LIMITS['psc-delta'].max = d.pred_sc_delta_lim.max; LIMITS['psc-delta'].step = d.pred_sc_delta_lim.step; }
-
   if (d.raw_cool_produced_lim) { LIMITS['raw-cool-prod'].min = d.raw_cool_produced_lim.min; LIMITS['raw-cool-prod'].max = d.raw_cool_produced_lim.max; LIMITS['raw-cool-prod'].step = d.raw_cool_produced_lim.step; }
   if (d.raw_cool_elec_consumed_lim) { LIMITS['raw-cool-elec'].min = d.raw_cool_elec_consumed_lim.min; LIMITS['raw-cool-elec'].max = d.raw_cool_elec_consumed_lim.max; LIMITS['raw-cool-elec'].step = d.raw_cool_elec_consumed_lim.step; }
   if (d.raw_cool_runtime_hours_lim) { LIMITS['raw-cool-run'].min = d.raw_cool_runtime_hours_lim.min; LIMITS['raw-cool-run'].max = d.raw_cool_runtime_hours_lim.max; LIMITS['raw-cool-run'].step = d.raw_cool_runtime_hours_lim.step; }
@@ -3448,9 +3439,6 @@ function render(d) {
   seedPending('aa-min',  d.minimum_heating_flow_temp);
   seedPending('aa-max-z2', d.maximum_heating_flow_temp_z2);
   seedPending('aa-min-z2', d.minimum_heating_flow_temp_z2);
-
-  seedPending('psc-win', d.pred_sc_time);
-  seedPending('psc-delta', d.pred_sc_delta);
 
   setToggle('sw-aa', d.auto_adaptive_control_enabled);
   setToggle('sw-dm', d.defrost_risk_handling_enabled);
@@ -3786,19 +3774,6 @@ async function sendSC(btn) {
       c++; 
     }
     showToast(c > 0 ? '✓ Lockout Settings updated' : 'No changes');
-  } catch(e) {
-    showToast('✗ ' + e.message, true);
-  }
-  btn.classList.remove('sending');
-}
-
-async function sendPSC(btn) {
-  btn.classList.add('sending');
-  let c = 0;
-  try {
-    if (hasChanged('psc-win'))   { await apiPost({ key: 'predictive_short_cycle_high_delta_time_window', value: pending['psc-win'] }); c++; }
-    if (hasChanged('psc-delta')) { await apiPost({ key: 'predictive_short_cycle_high_delta_threshold', value: pending['psc-delta'] }); c++; }
-    showToast(c > 0 ? '✓ Predictive Control updated' : 'No changes');
   } catch(e) {
     showToast('✗ ' + e.message, true);
   }

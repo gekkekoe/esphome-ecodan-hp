@@ -22,14 +22,13 @@ namespace esphome
       float dhw_old_z1_setpoint_ = NAN;
       float dhw_old_z2_setpoint_ = NAN;
 
-      // Predictive short-cycle prevention
-      float pcp_old_z1_setpoint_ = NAN;
-      float pcp_old_z2_setpoint_ = NAN;
-      float pcp_adjustment_z1_   = 0.0f;
-      float pcp_adjustment_z2_   = 0.0f;
-      uint32_t predictive_delta_start_time_z1_ = 0;
-      uint32_t predictive_delta_start_time_z2_ = 0;
+      // Predictive short-cycle protection: true while the step-limit is actively holding
+      // the zone's flow setpoint against the feed to keep the compressor from cutting off.
+      // Drives the "Predictive Boost Active" sensor.
+      bool  predictive_boost_active_z1_ = false;
+      bool  predictive_boost_active_z2_ = false;
 
+      // Short-cycle lockout strategy state
       int   active_lockout_strategy_      = 0;
       float flow_lockout_old_z1_setpoint_ = NAN;
       float flow_lockout_old_z2_setpoint_ = NAN;
@@ -224,9 +223,8 @@ namespace esphome
       void start_lockout();
       void check_lockout_expiration();
 
-      // Boost sensor
+      // Predictive boost sensor
       bool get_predictive_boost_state();
-      void reset_predictive_boost();
       void update_boost_sensor();
 
       // Temperature helpers (used by YAML / dashboard)

@@ -132,8 +132,6 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("flow_climate_z2_id"):                 cv.use_id(climate.Climate),
 
         cv.Optional("predictive_short_cycle_control_enabled_id"):      cv.use_id(switch.Switch),
-        cv.Optional("predictive_short_cycle_high_delta_time_window_id"): cv.use_id(number.Number),
-        cv.Optional("predictive_short_cycle_high_delta_threshold_id"):   cv.use_id(number.Number),
 
         cv.Optional("ui_use_room_z1_id"): cv.use_id(globals.GlobalsComponent),
         cv.Optional("ui_use_room_z2_id"): cv.use_id(globals.GlobalsComponent),
@@ -236,8 +234,6 @@ async def to_code(config):
         ("flow_climate_z1_id",                "set_flow_climate_z1"),
         ("flow_climate_z2_id",                "set_flow_climate_z2"),
         ("predictive_short_cycle_control_enabled_id",    "set_pred_sc_switch"),
-        ("predictive_short_cycle_high_delta_time_window_id", "set_pred_sc_time"),
-        ("predictive_short_cycle_high_delta_threshold_id",   "set_pred_sc_delta"),
         ("ui_use_room_z1_id", "set_ui_use_room_z1"),
         ("ui_use_room_z2_id", "set_ui_use_room_z2"),
         ("sw_use_solver_id",                  "set_sw_use_solver"),

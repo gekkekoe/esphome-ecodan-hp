@@ -68,8 +68,6 @@ esphome:
 
             state.cooling_smart_start_temp = id(cooling_smart_start_temp);
             state.minimum_compressor_on_time = id(minimum_compressor_on_time);
-            state.predictive_short_cycle_high_delta_time_window = id(predictive_short_cycle_high_delta_time_window);
-            state.predictive_short_cycle_high_delta_threshold = id(predictive_short_cycle_high_delta_threshold);
 
             state.solver_kwh_meter_feedback_source = id(solver_kwh_meter_feedback_source);
             state.solver_kwh_meter_feedback = id(solver_kwh_meter_feedback); 
@@ -97,7 +95,7 @@ esphome:
 
             // instantiate optimizer
             id(optimizer_ptr) = new esphome::optimizer::Optimizer(state);
-            
+
         - lambda: id(optimizer_ptr)->update_boost_sensor();
         - lambda: id(optimizer_ptr)->check_lockout_expiration();
 
@@ -220,26 +218,6 @@ number:
     max_value: 20
     step: 1
   - platform: template
-    id: predictive_short_cycle_high_delta_time_window
-    name: ${predictive_short_cycle_high_delta_time_window}
-    unit_of_measurement: "min"
-    optimistic: true
-    restore_value: true
-    initial_value: 4.0
-    min_value: 1.0
-    max_value: 5.0
-    step: 0.5
-  - platform: template
-    id: predictive_short_cycle_high_delta_threshold
-    name: ${predictive_short_cycle_high_delta_threshold}
-    unit_of_measurement: "°C"
-    optimistic: true
-    restore_value: true
-    initial_value: 1.0
-    min_value: 1.0
-    max_value: 3.0
-    step: 0.5
-  - platform: template
     id: solver_kwh_meter_feedback
     name: ${solver_kwh_meter_feedback}
     unit_of_measurement: "kWh"
@@ -334,10 +312,6 @@ switch:
     id: predictive_short_cycle_control_enabled
     restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
-    turn_on_action:
-      - lambda: if (id(optimizer_ptr) != nullptr) id(optimizer_ptr)->reset_predictive_boost();
-    turn_off_action:
-      - lambda: if (id(optimizer_ptr) != nullptr) id(optimizer_ptr)->reset_predictive_boost();
 
   - platform: template
     name: ${defrost_risk_handling_enabled}
@@ -369,8 +343,6 @@ binary_sensor:
   - platform: template
     id: status_predictive_boost_active
     name: ${status_predictive_boost_active}
-    lambda: |-
-      return (id(optimizer_ptr) == nullptr) ? false : id(optimizer_ptr)->get_predictive_boost_state();
   - platform: ecodan
     status_short_cycle_lockout:
       id: status_short_cycle_lockout
@@ -428,7 +400,6 @@ interval:
     then:
       - lambda: id(optimizer_ptr)->check_lockout_expiration();
       - lambda: id(optimizer_ptr)->predictive_short_cycle_check();
-      - lambda: id(optimizer_ptr)->update_boost_sensor();
       - lambda: id(optimizer_ptr)->update_heat_model();
   - interval: ${update_interval_minutes}
     then:

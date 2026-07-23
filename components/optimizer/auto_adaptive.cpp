@@ -230,8 +230,7 @@ namespace esphome
                     calculated_flow = actual_return_temp + target_delta;
                 }
 
-                // Predictive boost adjustment (fetch feed temp once; reused by buffer guard below)
-                auto &pcp_adj = (zone_i == 1) ? this->pcp_adjustment_z2_ : this->pcp_adjustment_z1_;
+                // Fetch feed temp once (reused by the buffer guard below).
                 float actual_flow_temp = this->get_feed_temp(
                     (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
 
@@ -252,14 +251,7 @@ namespace esphome
 
                 calculated_flow = this->round_nearest(calculated_flow);
 
-                if (pcp_adj > 0.0f) {
-                    if ((actual_flow_temp - calculated_flow) >= 1.0f) {
-                        calculated_flow += pcp_adj;
-                    } else {
-                        pcp_adj = 0.0f;
-                    }
-                }
-                ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING: flow=%.2f°C, return=%.2f°C (boost %.1f)", (zone_i + 1), calculated_flow, actual_return_temp, pcp_adj);
+                ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING: flow=%.2f°C, return=%.2f°C", (zone_i + 1), calculated_flow, actual_return_temp);
             }
 
             bool cooling_mode = is_cooling_mode(status, (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
@@ -308,17 +300,8 @@ namespace esphome
                     calculated_flow = actual_flow_temp;
                 }
 
-                auto &pcp_adj = (zone_i == 1) ? this->pcp_adjustment_z2_ : this->pcp_adjustment_z1_;
-                if (pcp_adj < 0.0f) {
-                    if (!std::isnan(actual_flow_temp) && (calculated_flow - actual_flow_temp) >= 1.0f) {
-                        calculated_flow += pcp_adj;
-                    } else {
-                        pcp_adj = 0.0f;
-                    }
-                }
-
-                ESP_LOGD(OPTIMIZER_TAG, "Z%d COOLING: calc=%.1f°C (return %.1f - delta %.1f) (boost %.1f)",
-                         (zone_i + 1), calculated_flow, actual_return_temp, target_delta_t, pcp_adj);
+                ESP_LOGD(OPTIMIZER_TAG, "Z%d COOLING: calc=%.1f°C (return %.1f - delta %.1f)",
+                         (zone_i + 1), calculated_flow, actual_return_temp, target_delta_t);
             }
 
             float min_cool_target = 18.0f;

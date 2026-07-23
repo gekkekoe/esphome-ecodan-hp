@@ -137,8 +137,6 @@ substitutions:
   lockout_strategy_option_flow_control: 'Control de flujo'
   short_cycle_mitigation_button: 'Ciclo corto: Cancelar bloqueo'
   predictive_short_cycle_control_enabled: 'Ciclo corto: Prevención Predictiva'
-  predictive_short_cycle_high_delta_time_window: 'Ciclo corto: Duración de Delta Alto'
-  predictive_short_cycle_high_delta_threshold: 'Ciclo corto: Umbral Alto de Delta'
   status_predictive_boost_active: 'Ciclo corto: Impulso Predictivo Activo'
   auto_adaptive_control_enabled: 'Autoadaptativo: Control'
   maximum_heating_flow_temp: 'Autoadaptativo: Temp. Máx. de Flujo Calefacción'

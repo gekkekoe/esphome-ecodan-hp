@@ -161,28 +161,6 @@ namespace esphome
         void Optimizer::on_compressor_stop()
         {
             auto &status = this->state_.ecodan_instance->get_status();
-            bool stand_alone_predictive_active = !this->state_.auto_adaptive_control_enabled->state && this->state_.predictive_short_cycle_control_enabled->state;
-
-            ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Compressor stop event: stand-alone-cycle prevention: %d, saved z1 flow setpoint: %.1f, saved z2 flow setpoint: %.1f"
-                , stand_alone_predictive_active, this->pcp_old_z1_setpoint_, this->pcp_old_z2_setpoint_);
-
-            // don't restore feed temp when defrost is active
-            if (!status.DefrostActive && stand_alone_predictive_active && (!isnan(this->pcp_old_z1_setpoint_) || !isnan(this->pcp_old_z2_setpoint_)))
-            {
-                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Restoring flow setpoint after predictive boost.");
-
-                if (!isnan(this->pcp_old_z1_setpoint_)) {
-                    this->set_flow_temp(this->pcp_old_z1_setpoint_, OptimizerZone::ZONE_1);
-                    this->pcp_old_z1_setpoint_ = NAN;
-                    this->pcp_adjustment_z1_ = 0.0f;
-                }
-
-                if (status.has_2zones() && !isnan(this->pcp_old_z2_setpoint_)) {
-                    this->set_flow_temp(this->pcp_old_z2_setpoint_, OptimizerZone::ZONE_2);
-                    this->pcp_old_z2_setpoint_ = NAN;
-                    this->pcp_adjustment_z2_ = 0.0f;
-                }
-            }
 
             if (this->state_.lockout_duration->active_index().value_or(0) == 0)
             {

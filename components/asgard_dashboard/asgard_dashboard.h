@@ -101,8 +101,6 @@ struct DashboardSnapshot {
   NumData num_min_flow_temp_z2;
   NumData num_hysteresis_z1;
   NumData num_hysteresis_z2;
-  NumData pred_sc_time;
-  NumData pred_sc_delta;
   NumData num_min_compressor_on_time;
 
   // Cooling settings
@@ -267,8 +265,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_min_flow_temp_z2(number::Number *n)            { num_min_flow_temp_z2_ = n; }
   void set_num_hysteresis_z1(number::Number *n)               { num_hysteresis_z1_ = n; }
   void set_num_hysteresis_z2(number::Number *n)               { num_hysteresis_z2_ = n; }
-  void set_pred_sc_time(number::Number *n)                    { pred_sc_time_ = n; }
-  void set_pred_sc_delta(number::Number *n)                   { pred_sc_delta_ = n; }
   void set_num_dhw_start_threshold(number::Number *n)         { num_dhw_start_threshold_ = n; }
   void set_minimum_compressor_on_time(number::Number *n)      { minimum_compressor_on_time_ = n; }
 
@@ -473,8 +469,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_min_flow_temp_z2_{nullptr};
   number::Number *num_hysteresis_z1_{nullptr};
   number::Number *num_hysteresis_z2_{nullptr};
-  number::Number *pred_sc_time_{nullptr};
-  number::Number *pred_sc_delta_{nullptr};
   number::Number *num_cooling_smart_start_z1_{nullptr};
   number::Number *num_min_cooling_flow_z1_{nullptr};
   number::Number *num_min_cooling_flow_z2_{nullptr};

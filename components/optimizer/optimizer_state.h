@@ -69,7 +69,7 @@ namespace esphome
         esphome::switch_::Switch *sw_regular_dhw{nullptr};
 
         esphome::binary_sensor::BinarySensor *status_short_cycle_lockout;
-        esphome::binary_sensor::BinarySensor *status_predictive_boost_active;
+        esphome::binary_sensor::BinarySensor *status_predictive_boost_active{nullptr};
         esphome::binary_sensor::BinarySensor *status_compressor;
         esphome::binary_sensor::BinarySensor *status_defrost;
 
@@ -97,8 +97,6 @@ namespace esphome
         esphome::number::Number *minimum_cooling_flow_temp_z2;
         esphome::number::Number *cooling_smart_start_temp;
         esphome::number::Number *minimum_compressor_on_time;
-        esphome::number::Number *predictive_short_cycle_high_delta_time_window;
-        esphome::number::Number *predictive_short_cycle_high_delta_threshold;
         esphome::number::Number *num_raw_heat_produced;
         esphome::number::Number *num_raw_elec_consumed;
         esphome::number::Number *num_raw_runtime_hours;

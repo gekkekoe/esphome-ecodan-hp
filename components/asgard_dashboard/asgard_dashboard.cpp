@@ -464,8 +464,6 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "raw_cool_avg_outside_temp") { doNumber(num_raw_cool_avg_outside_temp_); return; }
   if (key == "raw_cool_avg_room_temp") { doNumber(num_raw_cool_avg_room_temp_); return; }
 
-  if (key == "predictive_short_cycle_high_delta_time_window")    { doNumber(pred_sc_time_);    return; }
-  if (key == "predictive_short_cycle_high_delta_threshold")    { doNumber(pred_sc_delta_);    return; }
 
   if (key == "dhw_setpoint" && dhw_climate_ != nullptr) {
     auto call = dhw_climate_->make_call();
@@ -632,8 +630,6 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_min_flow_temp_z2_, current_snapshot_.num_min_flow_temp_z2);
   get_n(num_hysteresis_z1_, current_snapshot_.num_hysteresis_z1);
   get_n(num_hysteresis_z2_, current_snapshot_.num_hysteresis_z2);
-  get_n(pred_sc_time_, current_snapshot_.pred_sc_time);
-  get_n(pred_sc_delta_, current_snapshot_.pred_sc_delta);
   get_n(minimum_compressor_on_time_, current_snapshot_.num_min_compressor_on_time);
 
   // cooling settings
@@ -872,10 +868,6 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_lim("hysteresis_z1_lim",           snap.num_hysteresis_z1);
   p_n("thermostat_hysteresis_z2",      snap.num_hysteresis_z2.val);
   p_lim("hysteresis_z2_lim",           snap.num_hysteresis_z2);
-  p_n("pred_sc_time",                  snap.pred_sc_time.val);
-  p_lim("pred_sc_time_lim",            snap.pred_sc_time);
-  p_n("pred_sc_delta",                 snap.pred_sc_delta.val);
-  p_lim("pred_sc_delta_lim",           snap.pred_sc_delta);
   p_n("min_compressor_on_time",        snap.num_min_compressor_on_time.val);
   p_lim("min_compressor_on_time_lim",  snap.num_min_compressor_on_time);
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }

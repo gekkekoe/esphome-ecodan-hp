@@ -8,96 +8,38 @@ namespace esphome
     {
         using namespace esphome::ecodan;
 
-        bool Optimizer::get_predictive_boost_state()
-        {
-            return (!isnan(this->pcp_adjustment_z1_) && this->pcp_adjustment_z1_ != 0.0f)
-                || (!isnan(this->pcp_adjustment_z2_) && this->pcp_adjustment_z2_ != 0.0f);
-        }
-
-        void Optimizer::reset_predictive_boost()
-        {
-            this->pcp_adjustment_z1_ = 0.0f;
-            this->pcp_adjustment_z2_ = 0.0f;
-            this->update_boost_sensor();
-        }
-
         void Optimizer::predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone, bool is_cooling) {
 
-            auto &mapped_delta_start_time_ = (zone == OptimizerZone::ZONE_2) ? this->predictive_delta_start_time_z2_ : this->predictive_delta_start_time_z1_;
-            auto &mapped_pcp_old_flow_setpoint_ = (zone == OptimizerZone::ZONE_2) ? this->pcp_old_z2_setpoint_ : this->pcp_old_z1_setpoint_;
-            auto &mapped_pcp_adjustment_ = (zone == OptimizerZone::ZONE_2) ? this->pcp_adjustment_z2_ : this->pcp_adjustment_z1_;
+            bool &boost_active = (zone == OptimizerZone::ZONE_2) ? this->predictive_boost_active_z2_ : this->predictive_boost_active_z1_;
 
-            auto start_time = mapped_delta_start_time_;
             if (this->is_system_hands_off(status) || !status.CompressorOn)
             {
-                if (start_time > 0)
-                    mapped_delta_start_time_ = 0;
+                boost_active = false;
                 return;
             }
 
             float requested_flow = this->get_flow_setpoint(zone);
             float actual_flow = this->get_feed_temp(zone);
-            //ESP_LOGD(OPTIMIZER_CYCLE_TAG, "PCP: Zone: %d: actual flow (%.1f°C), requested flow (%.1f°C)", static_cast<uint8_t>(zone), actual_flow, requested_flow);
 
             if (isnan(requested_flow) || isnan(actual_flow))
             {
                 ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Requested or Actual feed temperature unavailable. Exiting.");
-                if (start_time > 0)
-                    mapped_delta_start_time_ = 0;
+                boost_active = false;
                 return;
             }
 
-            float predictive_short_cycle_high_delta_threshold = this->state_.predictive_short_cycle_high_delta_threshold->state;
-            if (isnan(predictive_short_cycle_high_delta_threshold) || predictive_short_cycle_high_delta_threshold < 0.5f)
+            float step_limited = this->enforce_step_limit(status, actual_flow, requested_flow, is_cooling);
+            auto limits = is_cooling ? this->get_cool_flow_limits(zone) : this->get_flow_limits(zone);
+            step_limited = this->clamp_flow_temp(step_limited, limits.min, limits.max);
+
+            // Boost is "active" exactly when this cycle adjusted the setpoint; if we didn't touch it, we're not boosting.
+            boost_active = (step_limited != requested_flow);
+            if (boost_active)
             {
-                predictive_short_cycle_high_delta_threshold = 1.0f;
+                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): step-limit flow %.1f°C -> %.1f°C (actual feed %.1f°C)",
+                    static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", requested_flow, step_limited, actual_flow);
+                this->set_flow_temp(step_limited, zone);
             }
-
-            float time_window_setting = this->state_.predictive_short_cycle_high_delta_time_window->state;
-            if (isnan(time_window_setting) || time_window_setting < 1.0f || time_window_setting > 5.0f)
-            {
-                ESP_LOGE(OPTIMIZER_CYCLE_TAG, "Corrupt value for time_window: %.2f. Reverting to 4.0", time_window_setting);
-                time_window_setting = 4.0f;
-            }
-            uint32_t trigger_duration_ms = time_window_setting * 60000UL;
-
-            float delta = is_cooling ? (requested_flow - actual_flow) : (actual_flow - requested_flow);
-            const float adjustment_factor = is_cooling ? -0.5f : 0.5f;
-
-            if (delta >= predictive_short_cycle_high_delta_threshold)
-            {
-                if (mapped_delta_start_time_ == 0)
-                {
-                    mapped_delta_start_time_ = millis();
-                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Zone: %d (%s): High Delta T detected (%.1f°C). Starting timer.", static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", delta);
-                }
-                else if (((millis() - mapped_delta_start_time_) >= trigger_duration_ms))
-                {
-                    ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Short-cycle predicted (%s)! Adjusting Feed temps to force a longer cycle. Current saved Z%d setpoint: %.1f°", is_cooling ? "cooling" : "heating", static_cast<uint8_t>(zone), mapped_pcp_old_flow_setpoint_);
-                    mapped_delta_start_time_ = 0;
-
-                    if (isnan(mapped_pcp_old_flow_setpoint_)) {
-                        mapped_pcp_old_flow_setpoint_ = this->get_flow_setpoint(zone);
-                        ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Updating Z%d Saved setpont to:  %.1f", static_cast<uint8_t>(zone), mapped_pcp_old_flow_setpoint_);
-                    }
-                    mapped_pcp_adjustment_ += adjustment_factor;
-
-                    auto limits = is_cooling ? this->get_cool_flow_limits(zone) : this->get_flow_limits(zone);
-                    float adjusted_flow = this->get_flow_setpoint(zone) + adjustment_factor;
-                    adjusted_flow = this->clamp_flow_temp(adjusted_flow, limits.min, limits.max);
-                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Adjust Z%d %s Flow to -> %.1f°C", static_cast<uint8_t>(zone), is_cooling ? "Cool" : "Heat", adjusted_flow);
-                    this->set_flow_temp(adjusted_flow, zone);
-                }
-            }
-            else
-            {
-                if (start_time != 0)
-                {
-                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Zone: %d: High Delta T has disappeared. Resetting timer.", static_cast<uint8_t>(zone));
-                    mapped_delta_start_time_ = 0;
-                }
-            }
-
         }
 
         void Optimizer::predictive_short_cycle_check()
@@ -113,11 +55,20 @@ namespace esphome
                     if (status.has_2zones())
                         this->apply_flow_lockout_setpoint_(status, OptimizerZone::ZONE_2, this->get_feed_temp(OptimizerZone::ZONE_2), false);
                 }
+                // Compressor is parked during a lockout, not boosted.
+                this->predictive_boost_active_z1_ = false;
+                this->predictive_boost_active_z2_ = false;
+                this->update_boost_sensor();
                 return;
             }
 
             if (!this->state_.predictive_short_cycle_control_enabled->state)
+            {
+                this->predictive_boost_active_z1_ = false;
+                this->predictive_boost_active_z2_ = false;
+                this->update_boost_sensor();
                 return;
+            }
 
             auto multizone_status = status.MultiZoneStatus;
             bool is_heating_z1 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) 
@@ -138,6 +89,8 @@ namespace esphome
                 this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_1, false);
             else if (is_cooling_z1)
                 this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_1, true);
+            else
+                this->predictive_boost_active_z1_ = false; // zone idle → not boosting
 
             if (status.has_2zones())
             {
@@ -145,7 +98,26 @@ namespace esphome
                     this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_2, false);
                 else if (is_cooling_z2)
                     this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_2, true);
+                else
+                    this->predictive_boost_active_z2_ = false;
             }
+            else
+            {
+                this->predictive_boost_active_z2_ = false;
+            }
+
+            this->update_boost_sensor();
+        }
+
+        bool Optimizer::get_predictive_boost_state()
+        {
+            return this->predictive_boost_active_z1_ || this->predictive_boost_active_z2_;
+        }
+
+        void Optimizer::update_boost_sensor()
+        {
+            if (this->state_.status_predictive_boost_active != nullptr)
+                this->state_.status_predictive_boost_active->publish_state(this->get_predictive_boost_state());
         }
 
         void Optimizer::restore_pre_lockout_state()
@@ -323,11 +295,6 @@ namespace esphome
                     this->state_.status_short_cycle_lockout->publish_state(true);
                 }
             }
-        }
-
-        void Optimizer::update_boost_sensor()
-        {
-            this->state_.status_predictive_boost_active->publish_state(this->get_predictive_boost_state());
         }
 
     } // namespace optimizer
