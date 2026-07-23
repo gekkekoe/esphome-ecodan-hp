@@ -29,17 +29,16 @@ namespace esphome
             }
 
             float step_limited = this->enforce_step_limit(status, actual_flow, requested_flow, is_cooling);
-            auto limits = is_cooling ? this->get_cool_flow_limits(zone) : this->get_flow_limits(zone);
-            step_limited = this->clamp_flow_temp(step_limited, limits.min, limits.max);
-
             // Boost is "active" exactly when this cycle adjusted the setpoint; if we didn't touch it, we're not boosting.
             boost_active = (step_limited != requested_flow);
             if (boost_active)
             {
                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): step-limit flow %.1f°C -> %.1f°C (actual feed %.1f°C)",
                     static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", requested_flow, step_limited, actual_flow);
-                this->set_flow_temp(step_limited, zone);
             }
+            auto limits = is_cooling ? this->get_cool_flow_limits(zone) : this->get_flow_limits(zone);
+            step_limited = this->clamp_flow_temp(step_limited, limits.min, limits.max);
+            this->set_flow_temp(step_limited, zone);
         }
 
         void Optimizer::predictive_short_cycle_check()
