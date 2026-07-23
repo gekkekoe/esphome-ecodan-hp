@@ -24,9 +24,7 @@ namespace esphome
             if (this->state_.hp_feed_temp != nullptr) {
                 this->state_.hp_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
                     update_if_changed(this->last_hp_feed_temp_, x, [this](float new_v, float) {
-                        auto &status = this->state_.ecodan_instance->get_status();
-                        if (this->is_dhw_active(status) || this->is_post_dhw_window(status))
-                            this->on_feed_temp_change(new_v, OptimizerZone::SINGLE);
+                        this->on_feed_temp_change(new_v, OptimizerZone::SINGLE);
                     });
                 });
             }
@@ -34,9 +32,7 @@ namespace esphome
             if (this->state_.z1_feed_temp != nullptr) {
                 this->state_.z1_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
                     update_if_changed(this->last_z1_feed_temp_, x, [this](float new_v, float) {
-                        auto &status = this->state_.ecodan_instance->get_status();
-                        if (this->is_dhw_active(status) || this->is_post_dhw_window(status))
-                            this->on_feed_temp_change(new_v, OptimizerZone::ZONE_1);
+                        this->on_feed_temp_change(new_v, OptimizerZone::ZONE_1);
                     });
                 });
             }
@@ -44,9 +40,7 @@ namespace esphome
             if (this->state_.z2_feed_temp != nullptr) {
                 this->state_.z2_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
                     update_if_changed(this->last_z2_feed_temp_, x, [this](float new_v, float) {
-                        auto &status = this->state_.ecodan_instance->get_status();
-                        if (this->is_dhw_active(status) || this->is_post_dhw_window(status))
-                            this->on_feed_temp_change(new_v, OptimizerZone::ZONE_2);
+                        this->on_feed_temp_change(new_v, OptimizerZone::ZONE_2);
                     });
                 });
             }

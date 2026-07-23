@@ -184,10 +184,12 @@ namespace esphome
 
       // ── events.cpp ────────────────────────────────────────────────────
       void on_feed_temp_change(float actual_flow_temp, OptimizerZone zone);
+      void handle_dhw_feed_temp_(float actual_flow_temp, OptimizerZone zone);
       void on_operation_mode_change(uint8_t new_mode, uint8_t previous_mode);
 
       // ── prevention.cpp ────────────────────────────────────────────────
       void predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone, bool is_cooling);
+      void apply_flow_lockout_setpoint_(const ecodan::Status &status, OptimizerZone zone, float actual_flow_temp, bool initial);
 
       // ── stats.cpp ─────────────────────────────────────────────────────
       void update_learning_model(int day_of_year);

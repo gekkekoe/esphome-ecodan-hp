@@ -7,15 +7,27 @@ namespace esphome
     namespace optimizer
     {
         using namespace esphome::ecodan;
+
+        void Optimizer::on_feed_temp_change(float actual_flow_temp, OptimizerZone zone) {
+            if (std::isnan(actual_flow_temp))
+                return;
+
+            this->predictive_short_cycle_check();
+            this->handle_dhw_feed_temp_(actual_flow_temp, zone);
+        }
+
         // callbacks to monitor step down, need to keep within 1.0C else compressor will halt
-        void Optimizer::on_feed_temp_change(float actual_flow_temp, OptimizerZone zone) {            
-            if (std::isnan(actual_flow_temp) 
-                || (this->state_.status_short_cycle_lockout != nullptr && this->state_.status_short_cycle_lockout->state)
+        void Optimizer::handle_dhw_feed_temp_(float actual_flow_temp, OptimizerZone zone) {
+            auto &status = this->state_.ecodan_instance->get_status();
+            bool post_dhw_window = this->is_post_dhw_window(status);
+            if (!this->is_dhw_active(status) && !post_dhw_window)
+                return;
+
+            if ((this->state_.status_short_cycle_lockout != nullptr && this->state_.status_short_cycle_lockout->state)
                 || (this->state_.auto_adaptive_control_enabled != nullptr && !this->state_.auto_adaptive_control_enabled->state)) {
                 return;
             }
 
-            auto &status = this->state_.ecodan_instance->get_status();
 
             if (status.has_independent_zone_temps()) 
             {
@@ -34,7 +46,6 @@ namespace esphome
             float adjusted_flow = actual_flow_temp;
 
             time_t current_timestamp = status.timestamp();
-            bool post_dhw_window = this->is_post_dhw_window(status);
 
             if (this->is_dhw_active(status)) {
                 // Only follow flow temp during DHW if we transitioned from heating.

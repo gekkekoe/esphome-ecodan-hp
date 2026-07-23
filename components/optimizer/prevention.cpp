@@ -103,10 +103,20 @@ namespace esphome
 
         void Optimizer::predictive_short_cycle_check()
         {
+            auto &status = this->state_.ecodan_instance->get_status();
+            if (this->state_.status_short_cycle_lockout != nullptr && this->state_.status_short_cycle_lockout->state)
+            {
+                if (this->active_lockout_strategy_ == 1)
+                {
+                    this->apply_flow_lockout_setpoint_(status, OptimizerZone::ZONE_1, this->get_feed_temp(OptimizerZone::ZONE_1), false);
+                    if (status.has_2zones())
+                        this->apply_flow_lockout_setpoint_(status, OptimizerZone::ZONE_2, this->get_feed_temp(OptimizerZone::ZONE_2), false);
+                }
+                return;
+            }
+
             if (!this->state_.predictive_short_cycle_control_enabled->state)
                 return;
-            
-            auto &status = this->state_.ecodan_instance->get_status();
 
             auto multizone_status = status.MultiZoneStatus;
             bool is_heating_z1 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) 
@@ -180,6 +190,53 @@ namespace esphome
             }
         }
 
+        //   initial = true  : lockout is starting — snapshot the current setpoint (so we
+        //                      can restore it later) and force the offset unconditionally.
+        //   initial = false : chasing during the lockout — the feed temp can drift back
+        //                      toward the forced setpoint 
+        void Optimizer::apply_flow_lockout_setpoint_(const ecodan::Status &status, OptimizerZone zone, float actual_flow_temp, bool initial)
+        {
+            auto ecodan_zone = (zone == OptimizerZone::ZONE_2) ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1;
+            auto &mapped_old_setpoint_ = (zone == OptimizerZone::ZONE_2) ? this->flow_lockout_old_z2_setpoint_ : this->flow_lockout_old_z1_setpoint_;
+
+            bool cooling = status.is_cooling(ecodan_zone);
+            bool heating = status.is_heating(ecodan_zone);
+            if (!cooling && !heating)
+                return;
+
+            if (isnan(actual_flow_temp))
+            {
+                if (initial)
+                    ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout: Z%d actual feed temp unavailable. Skipping.", static_cast<uint8_t>(zone));
+                return;
+            }
+
+            // Chasing but this zone was never forced (idle at lockout start) — nothing to do.
+            if (!initial && isnan(mapped_old_setpoint_))
+                return;
+
+            const float FLOW_LOCKOUT_OFFSET = 5.0f;
+            float target = cooling ? (actual_flow_temp + FLOW_LOCKOUT_OFFSET) : (actual_flow_temp - FLOW_LOCKOUT_OFFSET);
+
+            if (initial)
+            {
+                mapped_old_setpoint_ = this->get_flow_setpoint(zone);
+                ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout Z%d (%s): actual %.1f°C -> forcing setpoint %.1f°C (was %.1f°C)",
+                    static_cast<uint8_t>(zone), cooling ? "cooling" : "heating", actual_flow_temp, target, mapped_old_setpoint_);
+                this->state_.ecodan_instance->set_flow_target_temperature(target, ecodan_zone);
+                return;
+            }
+
+            float current_setpoint = this->get_flow_setpoint(zone);
+            bool needs_chase = cooling ? (target > current_setpoint) : (target < current_setpoint);
+            if (!needs_chase)
+                return;
+
+            ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout Z%d (%s): actual feed drifted to %.1f°C, re-chasing setpoint %.1f°C -> %.1f°C",
+                static_cast<uint8_t>(zone), cooling ? "cooling" : "heating", actual_flow_temp, current_setpoint, target);
+            this->state_.ecodan_instance->set_flow_target_temperature(target, ecodan_zone);
+        }
+
         void Optimizer::start_lockout()
         {
             auto &status = this->state_.ecodan_instance->get_status();
@@ -198,49 +255,9 @@ namespace esphome
 
             if (strategy == 1)
             {
-                const float FLOW_LOCKOUT_OFFSET = 5.0f;
-
-                if (status.is_heating(esphome::ecodan::Zone::ZONE_1) || status.is_cooling(esphome::ecodan::Zone::ZONE_1))
-                {
-                    bool cooling = status.is_cooling(esphome::ecodan::Zone::ZONE_1);
-                    float actual_flow = this->get_feed_temp(OptimizerZone::ZONE_1);
-
-                    if (isnan(actual_flow))
-                    {
-                        ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout: Z1 actual feed temp unavailable. Skipping Z1.");
-                    }
-                    else
-                    {
-                        this->flow_lockout_old_z1_setpoint_ = this->get_flow_setpoint(OptimizerZone::ZONE_1);
-                        float target = cooling ? (actual_flow + FLOW_LOCKOUT_OFFSET) : (actual_flow - FLOW_LOCKOUT_OFFSET);
-                        auto limits = cooling ? this->get_cool_flow_limits(OptimizerZone::ZONE_1) : this->get_flow_limits(OptimizerZone::ZONE_1);
-                        //target = this->clamp_flow_temp(target, limits.min, limits.max);
-                        ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout Z1 (%s): actual %.1f°C -> forcing setpoint %.1f°C (was %.1f°C)",
-                            cooling ? "cooling" : "heating", actual_flow, target, this->flow_lockout_old_z1_setpoint_);
-                        this->state_.ecodan_instance->set_flow_target_temperature(target, esphome::ecodan::Zone::ZONE_1);
-                    }
-                }
-
-                if (status.has_2zones() && (status.is_heating(esphome::ecodan::Zone::ZONE_2) || status.is_cooling(esphome::ecodan::Zone::ZONE_2)))
-                {
-                    bool cooling = status.is_cooling(esphome::ecodan::Zone::ZONE_2);
-                    float actual_flow = this->get_feed_temp(OptimizerZone::ZONE_2);
-
-                    if (isnan(actual_flow))
-                    {
-                        ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout: Z2 actual feed temp unavailable. Skipping Z2.");
-                    }
-                    else
-                    {
-                        this->flow_lockout_old_z2_setpoint_ = this->get_flow_setpoint(OptimizerZone::ZONE_2);
-                        float target = cooling ? (actual_flow + FLOW_LOCKOUT_OFFSET) : (actual_flow - FLOW_LOCKOUT_OFFSET);
-                        auto limits = cooling ? this->get_cool_flow_limits(OptimizerZone::ZONE_2) : this->get_flow_limits(OptimizerZone::ZONE_2);
-                        //target = this->clamp_flow_temp(target, limits.min, limits.max);
-                        ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout Z2 (%s): actual %.1f°C -> forcing setpoint %.1f°C (was %.1f°C)",
-                            cooling ? "cooling" : "heating", actual_flow, target, this->flow_lockout_old_z2_setpoint_);
-                        this->state_.ecodan_instance->set_flow_target_temperature(target, esphome::ecodan::Zone::ZONE_2);
-                    }
-                }
+                this->apply_flow_lockout_setpoint_(status, OptimizerZone::ZONE_1, this->get_feed_temp(OptimizerZone::ZONE_1), true);
+                if (status.has_2zones())
+                    this->apply_flow_lockout_setpoint_(status, OptimizerZone::ZONE_2, this->get_feed_temp(OptimizerZone::ZONE_2), true);
             }
             else
             {
