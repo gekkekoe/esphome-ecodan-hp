@@ -26,7 +26,6 @@ namespace esphome
             auto &mapped_delta_start_time_ = (zone == OptimizerZone::ZONE_2) ? this->predictive_delta_start_time_z2_ : this->predictive_delta_start_time_z1_;
             auto &mapped_pcp_old_flow_setpoint_ = (zone == OptimizerZone::ZONE_2) ? this->pcp_old_z2_setpoint_ : this->pcp_old_z1_setpoint_;
             auto &mapped_pcp_adjustment_ = (zone == OptimizerZone::ZONE_2) ? this->pcp_adjustment_z2_ : this->pcp_adjustment_z1_;
-            auto ecodan_zone = (zone == OptimizerZone::ZONE_2) ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1;
 
             auto start_time = mapped_delta_start_time_;
             if (this->is_system_hands_off(status) || !status.CompressorOn)
@@ -87,7 +86,7 @@ namespace esphome
                     float adjusted_flow = this->get_flow_setpoint(zone) + adjustment_factor;
                     adjusted_flow = this->clamp_flow_temp(adjusted_flow, limits.min, limits.max);
                     ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Adjust Z%d %s Flow to -> %.1f°C", static_cast<uint8_t>(zone), is_cooling ? "Cool" : "Heat", adjusted_flow);
-                    this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow, ecodan_zone);
+                    this->set_flow_temp(adjusted_flow, zone);
                 }
             }
             else
@@ -104,6 +103,8 @@ namespace esphome
         void Optimizer::predictive_short_cycle_check()
         {
             auto &status = this->state_.ecodan_instance->get_status();
+
+            // lockout active, monitor feed temp vs flow setpoint
             if (this->state_.status_short_cycle_lockout != nullptr && this->state_.status_short_cycle_lockout->state)
             {
                 if (this->active_lockout_strategy_ == 1)
@@ -153,12 +154,12 @@ namespace esphome
             {
                 if (!isnan(this->flow_lockout_old_z1_setpoint_)) {
                     ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Restoring Z1 flow setpoint after Flow Control Lockout: %.1f°C", this->flow_lockout_old_z1_setpoint_);
-                    this->state_.ecodan_instance->set_flow_target_temperature(this->flow_lockout_old_z1_setpoint_, esphome::ecodan::Zone::ZONE_1);
+                    this->set_flow_temp(this->flow_lockout_old_z1_setpoint_, OptimizerZone::ZONE_1);
                     this->flow_lockout_old_z1_setpoint_ = NAN;
                 }
                 if (!isnan(this->flow_lockout_old_z2_setpoint_)) {
                     ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Restoring Z2 flow setpoint after Flow Control Lockout: %.1f°C", this->flow_lockout_old_z2_setpoint_);
-                    this->state_.ecodan_instance->set_flow_target_temperature(this->flow_lockout_old_z2_setpoint_, esphome::ecodan::Zone::ZONE_2);
+                    this->set_flow_temp(this->flow_lockout_old_z2_setpoint_, OptimizerZone::ZONE_2);
                     this->flow_lockout_old_z2_setpoint_ = NAN;
                 }
             }
@@ -223,7 +224,7 @@ namespace esphome
                 mapped_old_setpoint_ = this->get_flow_setpoint(zone);
                 ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout Z%d (%s): actual %.1f°C -> forcing setpoint %.1f°C (was %.1f°C)",
                     static_cast<uint8_t>(zone), cooling ? "cooling" : "heating", actual_flow_temp, target, mapped_old_setpoint_);
-                this->state_.ecodan_instance->set_flow_target_temperature(target, ecodan_zone);
+                this->set_flow_temp(target, zone);
                 return;
             }
 
@@ -234,7 +235,7 @@ namespace esphome
 
             ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout Z%d (%s): actual feed drifted to %.1f°C, re-chasing setpoint %.1f°C -> %.1f°C",
                 static_cast<uint8_t>(zone), cooling ? "cooling" : "heating", actual_flow_temp, current_setpoint, target);
-            this->state_.ecodan_instance->set_flow_target_temperature(target, ecodan_zone);
+            this->set_flow_temp(target, zone);
         }
 
         void Optimizer::start_lockout()
