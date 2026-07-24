@@ -3890,6 +3890,14 @@ async function runOdinSolver() {
         }
     }
 
+    let solarFactor = pending['raw-solar-factor'] ?? latestState.raw_solar_factor;
+    if (solarFactor === undefined || solarFactor === null || isNaN(solarFactor) || solarFactor <= 0.001) {
+        solarFactor = 0.015;
+    }
+
+    const isLegionellaActive = latestState.operation_mode === 6;
+    const dhwThresh = isLegionellaActive ? 0.0 : (pending['dhw-thresh'] ?? latestState.dhw_start_threshold ?? 0.0);
+
     const payload = {
         params: {
             heat_produced: pending['raw-heat'] || latestState.raw_heat_produced || 0,
@@ -3904,7 +3912,7 @@ async function runOdinSolver() {
             cool_avg_outside_temp: pending['raw-cool-out'] || latestState.raw_cool_avg_outside_temp || 20,
             cool_avg_room_temp: pending['raw-cool-room'] || latestState.raw_cool_avg_room_temp || latestState.raw_avg_room_temp || 20,
             hl_tm_product: pending['raw-hl-tm'] ?? latestState.raw_hl_tm_product ?? 0.0,
-            passive_solar_gain_factor: 0.015,
+            passive_solar_gain_factor: solarFactor,
             current_room_temp: latestState.z1_current_temp || 20.0,
             current_hour: solveHour,
             battery_soc_kwh: pending['batt-soc'] ?? latestState.battery_soc_kwh ?? 0.0,
@@ -3912,7 +3920,7 @@ async function runOdinSolver() {
             dhw_temp: latestState.dhw_temp || 0,
             dhw_target: latestState.dhw_flow_temp_target || 0,
             dhw_drop: latestState.dhw_flow_temp_drop || 0,
-            dhw_start_threshold: pending['dhw-thresh'] ?? latestState.dhw_start_threshold ?? 0.0,
+            dhw_start_threshold: dhwThresh,
             // 0=OFF,1=DHW_ON,2=HEAT_ON,3=COOL_ON,5=FROST_PROTECT,6=LEGIONELLA,255=UNAVAILABLE
             current_operation_mode: selectedMode,
             min_cool_flow: minCoolFlow,
