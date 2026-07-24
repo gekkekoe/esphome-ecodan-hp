@@ -10,35 +10,76 @@ namespace esphome
 
         void Optimizer::predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone, bool is_cooling) {
 
-            bool &boost_active = (zone == OptimizerZone::ZONE_2) ? this->predictive_boost_active_z2_ : this->predictive_boost_active_z1_;
+            // base_setpoint != NAN is the single source of truth for "a boost is active".
+            float &base_setpoint = (zone == OptimizerZone::ZONE_2) ? this->predictive_boost_base_z2_setpoint_ : this->predictive_boost_base_z1_setpoint_;
 
             if (this->is_system_hands_off(status) || !status.CompressorOn)
             {
-                boost_active = false;
+                // Dropping out of protection: if we had raised the setpoint, put the
+                // original back so a boosted value isn't left stranded on the heat pump.
+                if (!isnan(base_setpoint))
+                {
+                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d: protection ended, restoring flow setpoint %.1f°C",
+                        static_cast<uint8_t>(zone), base_setpoint);
+                    this->set_flow_temp(base_setpoint, zone);
+                    base_setpoint = NAN;
+                }
                 return;
             }
 
-            float requested_flow = this->get_flow_setpoint(zone);
+            float live_setpoint = this->get_flow_setpoint(zone);
             float actual_flow = this->get_feed_temp(zone);
 
-            if (isnan(requested_flow) || isnan(actual_flow))
+            if (isnan(live_setpoint) || isnan(actual_flow))
             {
+                // Leave any active boost in place — the boosted setpoint is still applied.
                 ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Requested or Actual feed temperature unavailable. Exiting.");
-                boost_active = false;
                 return;
             }
 
+            float requested_flow = isnan(base_setpoint) ? live_setpoint : base_setpoint;
+
             float step_limited = this->enforce_step_limit(status, actual_flow, requested_flow, is_cooling);
-            // Boost is "active" exactly when this cycle adjusted the setpoint; if we didn't touch it, we're not boosting.
-            boost_active = (step_limited != requested_flow);
-            if (boost_active)
+            // Boost is happening exactly when this cycle adjusted the setpoint.
+            bool boosting = (step_limited != requested_flow);
+
+            if (boosting)
             {
+                // Remember the original target once, on the first boost of a run.
+                if (isnan(base_setpoint))
+                    base_setpoint = requested_flow;
                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): step-limit flow %.1f°C -> %.1f°C (actual feed %.1f°C)",
                     static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", requested_flow, step_limited, actual_flow);
             }
+            else if (!isnan(base_setpoint))
+            {
+                // No longer boosting — restore the original setpoint we were protecting.
+                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): boost cleared, restoring flow setpoint %.1f°C",
+                    static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", requested_flow);
+            }
+
             auto limits = is_cooling ? this->get_cool_flow_limits(zone) : this->get_flow_limits(zone);
             step_limited = this->clamp_flow_temp(step_limited, limits.min, limits.max);
             this->set_flow_temp(step_limited, zone);
+
+            // step_limited == requested (== base) here when not boosting, so the write above
+            // already restored the original; drop the base so the next run starts fresh.
+            if (!boosting)
+                base_setpoint = NAN;
+        }
+
+        void Optimizer::clear_predictive_boost_(OptimizerZone zone, bool restore)
+        {
+            float &base_setpoint = (zone == OptimizerZone::ZONE_2) ? this->predictive_boost_base_z2_setpoint_ : this->predictive_boost_base_z1_setpoint_;
+
+            // If asked, and we had raised the setpoint, put the original back before letting go.
+            if (restore && !isnan(base_setpoint))
+            {
+                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d: predictive released, restoring flow setpoint %.1f°C",
+                    static_cast<uint8_t>(zone), base_setpoint);
+                this->set_flow_temp(base_setpoint, zone);
+            }
+            base_setpoint = NAN;
         }
 
         void Optimizer::predictive_short_cycle_check()
@@ -54,17 +95,18 @@ namespace esphome
                     if (status.has_2zones())
                         this->apply_flow_lockout_setpoint_(status, OptimizerZone::ZONE_2, this->get_feed_temp(OptimizerZone::ZONE_2), false);
                 }
-                // Compressor is parked during a lockout, not boosted.
-                this->predictive_boost_active_z1_ = false;
-                this->predictive_boost_active_z2_ = false;
+                // Lockout owns the setpoint now — drop our boost claim without restoring.
+                this->clear_predictive_boost_(OptimizerZone::ZONE_1, false);
+                this->clear_predictive_boost_(OptimizerZone::ZONE_2, false);
                 this->update_boost_sensor();
                 return;
             }
 
             if (!this->state_.predictive_short_cycle_control_enabled->state)
             {
-                this->predictive_boost_active_z1_ = false;
-                this->predictive_boost_active_z2_ = false;
+                // Feature turned off — undo any boost we still have applied.
+                this->clear_predictive_boost_(OptimizerZone::ZONE_1, true);
+                this->clear_predictive_boost_(OptimizerZone::ZONE_2, true);
                 this->update_boost_sensor();
                 return;
             }
@@ -95,7 +137,7 @@ namespace esphome
             else if (is_cooling_z1)
                 this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_1, true);
             else
-                this->predictive_boost_active_z1_ = false; // zone idle → not boosting
+                this->clear_predictive_boost_(OptimizerZone::ZONE_1, true); // zone idle → restore + release
 
             if (status.has_2zones())
             {
@@ -104,11 +146,11 @@ namespace esphome
                 else if (is_cooling_z2)
                     this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_2, true);
                 else
-                    this->predictive_boost_active_z2_ = false;
+                    this->clear_predictive_boost_(OptimizerZone::ZONE_2, true);
             }
             else
             {
-                this->predictive_boost_active_z2_ = false;
+                this->clear_predictive_boost_(OptimizerZone::ZONE_2, true);
             }
 
             this->update_boost_sensor();
@@ -116,7 +158,8 @@ namespace esphome
 
         bool Optimizer::get_predictive_boost_state()
         {
-            return this->predictive_boost_active_z1_ || this->predictive_boost_active_z2_;
+            // A boost is active whenever a pre-boost base setpoint is being held for a zone.
+            return !isnan(this->predictive_boost_base_z1_setpoint_) || !isnan(this->predictive_boost_base_z2_setpoint_);
         }
 
         void Optimizer::update_boost_sensor()

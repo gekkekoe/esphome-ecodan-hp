@@ -22,11 +22,8 @@ namespace esphome
       float dhw_old_z1_setpoint_ = NAN;
       float dhw_old_z2_setpoint_ = NAN;
 
-      // Predictive short-cycle protection: true while the step-limit is actively holding
-      // the zone's flow setpoint against the feed to keep the compressor from cutting off.
-      // Drives the "Predictive Boost Active" sensor.
-      bool  predictive_boost_active_z1_ = false;
-      bool  predictive_boost_active_z2_ = false;
+      float predictive_boost_base_z1_setpoint_ = NAN;
+      float predictive_boost_base_z2_setpoint_ = NAN;
 
       // Short-cycle lockout strategy state
       int   active_lockout_strategy_      = 0;
@@ -188,6 +185,7 @@ namespace esphome
 
       // ── prevention.cpp ────────────────────────────────────────────────
       void predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone, bool is_cooling);
+      void clear_predictive_boost_(OptimizerZone zone, bool restore);
       void apply_flow_lockout_setpoint_(const ecodan::Status &status, OptimizerZone zone, float actual_flow_temp, bool initial);
 
       // ── stats.cpp ─────────────────────────────────────────────────────
