@@ -3861,10 +3861,13 @@ async function runOdinSolver() {
     }
 
     
-    let flowTextZ1 = document.getElementById('cool-min-z1-val').innerText;
-    let minCoolFlow = parseFloat(flowTextZ1);
+    let minCoolFlow = pending['cool-min-z1'] ?? latestState.minimum_cooling_flow_z1;
+    if (minCoolFlow === undefined || minCoolFlow === null || isNaN(minCoolFlow)) {
+        const el = document.getElementById('cool-min-z1-val');
+        minCoolFlow = el ? parseFloat(el.value) : NaN;
+    }
     if (isNaN(minCoolFlow)) {
-        minCoolFlow = 18.0; 
+        minCoolFlow = 18.0;
     }
     
     // Extract trailing 24 hours. The 72h window stores yesterday at 0-23, and today at 24-47.
