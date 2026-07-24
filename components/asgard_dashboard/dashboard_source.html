@@ -2653,37 +2653,32 @@ async function fetchActualModesRange(fromTs, toTs) {
             tOff = (Date.now() - (new Date().getTimezoneOffset() * 60000)) - serverLastTs;
         }
 
-        // Count running minute-samples per mode, per hour block
         const counts = new Map();
         data.forEach(row => {
             const flags = row[10];
             const mode = (flags >> 6) & 0x0F;
-            if (mode <= 0 || mode > 7) return;
-            const freq = (row[9] === -32768) ? 0 : row[9] / 10.0;
-            const running = (flags & 0x01) || (flags & 0x02) || freq > 0; // compressor / booster
-            if (!running) return;
+            if (mode > 7) return;              // guard invalid; idle (mode 0) IS counted
             const key = Math.floor(((row[0] * 1000) + tOff) / 3600000);
             let c = counts.get(key);
             if (!c) { c = {}; counts.set(key, c); }
             c[mode] = (c[mode] || 0) + 1;
         });
 
-        // Dominant mode per hour wins the band
         counts.forEach((c, key) => {
-            let best = 0, bestCnt = 0;
+            let best = -1, bestCnt = -1;
             for (const m in c) { if (c[m] > bestCnt) { bestCnt = c[m]; best = parseInt(m); } }
             if (best > 0) actualModeByHourKey.set(key, best);
+            else actualModeByHourKey.delete(key); // idle-dominant → clear any stale strip
         });
         return true;
     } catch (e) { return false; /* non-critical: bands simply stay empty */ }
 }
 
-// Live view refresh: last 30h covers the visible yesterday/today slots
 async function refreshOdinActualModes(force = false) {
     if (!force && Date.now() - lastActualModeFetch < 5 * 60 * 1000) return;
     lastActualModeFetch = Date.now();
-    const now = Math.floor(Date.now() / 1000);
-    const ok = await fetchActualModesRange(now - 30 * 3600, now + 60);
+    const nowLocal = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 1000);
+    const ok = await fetchActualModesRange(nowLocal - 30 * 3600, nowLocal + 3600);
     if (ok && odinTempChart && solverMode === 'live') odinTempChart.update('none');
 }
 
