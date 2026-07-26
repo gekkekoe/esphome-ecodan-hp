@@ -136,10 +136,6 @@
                     name: Minimum On-Time
                   - entity: switch.ecodan_heatpump_short_cycle_predictive_prevention
                     name: Predictive Short Cycle Prevention
-                  - entity: number.ecodan_heatpump_short_cycle_high_delta_duration
-                    name: High Delta T Detection Duration
-                  - entity: number.ecodan_heatpump_short_cycle_high_delta_threshold
-                    name: High Delta T Threshold
                 show_header_toggle: false
                 state_color: true
                 title: Short Cycle
