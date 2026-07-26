@@ -116,6 +116,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("num_cooling_smart_start_z1_id"):      cv.use_id(number.Number),
         cv.Optional("num_min_cooling_flow_z1_id"):         cv.use_id(number.Number),
         cv.Optional("num_min_cooling_flow_z2_id"):         cv.use_id(number.Number),
+        cv.Optional("num_temperature_feedback_z1_id"):     cv.use_id(number.Number),
+        cv.Optional("num_temperature_feedback_z2_id"):     cv.use_id(number.Number),
 
         cv.Optional("num_raw_cool_produced_id"):           cv.use_id(number.Number),
         cv.Optional("num_raw_cool_elec_consumed_id"):      cv.use_id(number.Number),
@@ -260,6 +262,8 @@ async def to_code(config):
         ("num_cooling_smart_start_z1_id",     "set_num_cooling_smart_start_z1"),
         ("num_min_cooling_flow_z1_id",        "set_num_min_cooling_flow_z1"),
         ("num_min_cooling_flow_z2_id",        "set_num_min_cooling_flow_z2"),
+        ("num_temperature_feedback_z1_id",    "set_num_temperature_feedback_z1"),
+        ("num_temperature_feedback_z2_id",    "set_num_temperature_feedback_z2"),
         ("sw_power_mode_id",                  "set_sw_power_mode"),
         ("sw_show_solver_tab_id",             "set_sw_show_solver_tab"), 
 

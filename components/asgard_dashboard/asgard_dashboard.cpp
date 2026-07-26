@@ -442,6 +442,8 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "cooling_smart_start_z1")       { doNumber(num_cooling_smart_start_z1_); return; }
   if (key == "minimum_cooling_flow_z1")      { doNumber(num_min_cooling_flow_z1_); return; }
   if (key == "minimum_cooling_flow_z2")      { doNumber(num_min_cooling_flow_z2_); return; }
+  if (key == "temperature_feedback_z1")      { doNumber(num_temperature_feedback_z1_); return; }
+  if (key == "temperature_feedback_z2")      { doNumber(num_temperature_feedback_z2_); return; }
   if (key == "minimum_compressor_on_time")   { doNumber(minimum_compressor_on_time_); return; }
 
   if (key == "thermostat_hysteresis_z1")    { doNumber(num_hysteresis_z1_);    return; }
@@ -636,6 +638,8 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_cooling_smart_start_z1_, current_snapshot_.num_cooling_smart_start_z1);
   get_n(num_min_cooling_flow_z1_, current_snapshot_.num_min_cooling_flow_z1);
   get_n(num_min_cooling_flow_z2_, current_snapshot_.num_min_cooling_flow_z2);
+  get_n(num_temperature_feedback_z1_, current_snapshot_.num_temperature_feedback_z1);
+  get_n(num_temperature_feedback_z2_, current_snapshot_.num_temperature_feedback_z2);
 
   // solver data
   get_n(num_raw_heat_produced_, current_snapshot_.num_raw_heat_produced);
@@ -906,6 +910,10 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_lim("min_cool_flow_z1_lim",  snap.num_min_cooling_flow_z1);
   p_n("minimum_cooling_flow_z2", snap.num_min_cooling_flow_z2.val);
   p_lim("min_cool_flow_z2_lim",  snap.num_min_cooling_flow_z2);
+  p_n("temperature_feedback_z1", snap.num_temperature_feedback_z1.val);
+  p_lim("temp_feedback_z1_lim",  snap.num_temperature_feedback_z1);
+  p_n("temperature_feedback_z2", snap.num_temperature_feedback_z2.val);
+  p_lim("temp_feedback_z2_lim",  snap.num_temperature_feedback_z2);
 
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 

@@ -738,7 +738,7 @@ header {
           <span class="ctrl-label param-label">Room Temp Source Z1<span class="tip-icon">?</span>
             <span class="tip-box">
               <span class="tip-unit">Room Thermostat</span>MRC or Wireless thermostat.<br><br>
-              <span class="tip-unit">HA / REST API</span>Reads temp pushed via REST API or HA.<br><br>
+              <span class="tip-unit">HA / REST API</span>Reads temp pushed via REST API or HA. ('number.temperature_feedback_z1')<br><br>
               <span class="tip-unit">Asgard Virtual Thermostat</span>Uses the Virtual Thermostat.
             </span>
           </span>
@@ -746,7 +746,16 @@ header {
             <option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option>
           </select>
         </div>
-        
+
+        <div class="ctrl-row" id="row-z1src-temp">
+          <span class="ctrl-label param-label">Room Temp Value<span class="tip-icon">?</span><span class="tip-box">Live temperature of the selected Room Temp Source above — the value Auto-Adaptive actually uses for this zone.</span></span>
+          <span class="ctrl-value" id="z1src-temp" style="font-weight:600; font-family:var(--mono);">—</span>
+        </div>
+        <div class="ctrl-row" id="row-z1-fb" style="display:none;">
+          <span class="ctrl-label param-label">HA / REST API Temp<span class="tip-icon">?</span><span class="tip-box">Room temperature pushed in via Home Assistant or the REST API. Used as the Room Temp Source when 'Home Assistant / REST API' is selected.</span></span>
+          <div class="stepper"><button class="step-btn" onclick="step('temp-fb-z1', -0.1)">−</button><input type="number" class="step-input" id="temp-fb-z1-val" onchange="manualInput('temp-fb-z1', this.value)"><button class="step-btn" onclick="step('temp-fb-z1', +0.1)">+</button></div>
+        </div>
+
         <div id="heat-settings-z1">
           <div class="ctrl-row"><span class="ctrl-label param-label">Max Flow Z1<span class="tip-icon">?</span><span class="tip-box">Upper flow-temperature bound Auto-Adaptive is allowed to command for this zone.</span></span><div class="stepper"><button class="step-btn" onclick="step('aa-max', -0.1)">−</button><input type="number" class="step-input" id="aa-max-val" onchange="manualInput('aa-max', this.value)"><button class="step-btn" onclick="step('aa-max', +0.1)">+</button></div></div>
           <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Min Flow Z1<span class="tip-icon">?</span><span class="tip-box">Lower flow-temperature bound Auto-Adaptive is allowed to command for this zone.</span></span><div class="stepper"><button class="step-btn" onclick="step('aa-min', -0.1)">−</button><input type="number" class="step-input" id="aa-min-val" onchange="manualInput('aa-min', this.value)"><button class="step-btn" onclick="step('aa-min', +0.1)">+</button></div></div>
@@ -774,7 +783,7 @@ header {
             <span class="ctrl-label param-label">Room Temp Source Z2<span class="tip-icon">?</span>
               <span class="tip-box">
                 <span class="tip-unit">Room Thermostat</span>MRC or Wireless thermostat.<br><br>
-                <span class="tip-unit">HA / REST API</span>Reads temp pushed via REST API or HA.<br><br>
+                <span class="tip-unit">HA / REST API</span>Reads temp pushed via REST API or HA. ('number.temperature_feedback_z2')<br><br>
                 <span class="tip-unit">Asgard Virtual Thermostat</span>Uses the Virtual Thermostat.
               </span>
             </span>
@@ -782,7 +791,16 @@ header {
               <option>Room Thermostat</option><option>Home Assistant / REST API</option><option>Asgard Virtual Thermostat</option>
             </select>
           </div>
-          
+
+          <div class="ctrl-row" id="row-z2src-temp">
+            <span class="ctrl-label param-label">Room Temp Value<span class="tip-icon">?</span><span class="tip-box">Live temperature of the selected Room Temp Source above — the value Auto-Adaptive actually uses for this zone.</span></span>
+            <span class="ctrl-value" id="z2src-temp" style="font-weight:600; font-family:var(--mono);">—</span>
+          </div>
+          <div class="ctrl-row" id="row-z2-fb" style="display:none;">
+            <span class="ctrl-label param-label">HA / REST API Temp<span class="tip-icon">?</span><span class="tip-box">Room temperature pushed in via Home Assistant or the REST API. Used as the Room Temp Source when 'Home Assistant / REST API' is selected.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('temp-fb-z2', -0.1)">−</button><input type="number" class="step-input" id="temp-fb-z2-val" onchange="manualInput('temp-fb-z2', this.value)"><button class="step-btn" onclick="step('temp-fb-z2', +0.1)">+</button></div>
+          </div>
+
           <div id="heat-settings-z2">
             <div class="ctrl-row"><span class="ctrl-label param-label">Max Flow Z2<span class="tip-icon">?</span><span class="tip-box">Upper flow-temperature bound Auto-Adaptive is allowed to command for this zone.</span></span><div class="stepper"><button class="step-btn" onclick="step('aa-max-z2', -0.1)">−</button><input type="number" class="step-input" id="aa-max-z2-val" onchange="manualInput('aa-max-z2', this.value)"><button class="step-btn" onclick="step('aa-max-z2', +0.1)">+</button></div></div>
             <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Min Flow Z2<span class="tip-icon">?</span><span class="tip-box">Lower flow-temperature bound Auto-Adaptive is allowed to command for this zone.</span></span><div class="stepper"><button class="step-btn" onclick="step('aa-min-z2', -0.1)">−</button><input type="number" class="step-input" id="aa-min-z2-val" onchange="manualInput('aa-min-z2', this.value)"><button class="step-btn" onclick="step('aa-min-z2', +0.1)">+</button></div></div>
@@ -1299,6 +1317,8 @@ const CONTROLS = [
   { type:'number', pkey:'cool-start-z1', key:'cooling_smart_start_z1',     el:'cool-start-z1-val', min:16,  max:25,   step:0.5 },
   { type:'number', pkey:'cool-min-z1', key:'minimum_cooling_flow_z1',      el:'cool-min-z1-val', min:5,     max:25,   step:0.1 },
   { type:'number', pkey:'cool-min-z2', key:'minimum_cooling_flow_z2',      el:'cool-min-z2-val', min:5,     max:25,   step:0.1 },
+  { type:'number', pkey:'temp-fb-z1',  key:'temperature_feedback_z1',      el:'temp-fb-z1-val',  min:-50,   max:100,  step:0.1 },
+  { type:'number', pkey:'temp-fb-z2',  key:'temperature_feedback_z2',      el:'temp-fb-z2-val',  min:-50,   max:100,  step:0.1 },
   { type:'switch', key:'auto_adaptive_control_enabled', el:'sw-aa' },
   { type:'switch', key:'defrost_risk_handling_enabled', el:'sw-dm' },
   { type:'switch', key:'smart_boost_enabled', el:'sw-sb' },
@@ -3360,12 +3380,14 @@ function render(d) {
     const cbZ1 = document.getElementById('ui-room-z1');
     if (cbZ1 && document.activeElement !== cbZ1) cbZ1.checked = d.ui_use_room_z1;
     toggleThermostatUI('z1', d.ui_use_room_z1);
+    applyRoomSourceConstraints('z1', d.ui_use_room_z1);
   }
-  
+
   if (d.ui_use_room_z2 !== undefined) {
     const cbZ2 = document.getElementById('ui-room-z2');
     if (cbZ2 && document.activeElement !== cbZ2) cbZ2.checked = d.ui_use_room_z2;
     toggleThermostatUI('z2', d.ui_use_room_z2);
+    applyRoomSourceConstraints('z2', d.ui_use_room_z2);
   }
 
   const z2Card = document.getElementById('card-z2');
@@ -3380,11 +3402,16 @@ function render(d) {
 
   const z2SrcVal = d.room_temp_source_z2;
   const z2SrcRow = document.getElementById('row-z2src');
+  const z2SrcTempRow = document.getElementById('row-z2src-temp');
   if (z2SrcVal === 'null' || z2SrcVal === null) {
     if (z2SrcRow) z2SrcRow.style.display = 'none';
+    if (z2SrcTempRow) z2SrcTempRow.style.display = 'none';
+    const z2fb = document.getElementById('row-z2-fb'); if (z2fb) z2fb.style.display = 'none';
   } else {
     if (z2SrcRow) z2SrcRow.style.display = 'flex';
+    if (z2SrcTempRow) z2SrcTempRow.style.display = 'flex';
     setSelect('sel-z2src', z2SrcVal);
+    updateRoomSourceTemp('z2', d);
   }
 
   if (d.hp_feed_temp != null && d.hp_return_temp != null) {
@@ -3408,6 +3435,8 @@ function render(d) {
   if (d.cool_smart_z1_lim) { LIMITS['cool-start-z1'].min = d.cool_smart_z1_lim.min; LIMITS['cool-start-z1'].max = d.cool_smart_z1_lim.max; LIMITS['cool-start-z1'].step = d.cool_smart_z1_lim.step || 0.5; }
   if (d.min_cool_flow_z1_lim) { LIMITS['cool-min-z1'].min = d.min_cool_flow_z1_lim.min; LIMITS['cool-min-z1'].max = d.min_cool_flow_z1_lim.max; LIMITS['cool-min-z1'].step = d.min_cool_flow_z1_lim.step || 0.1; }
   if (d.min_cool_flow_z2_lim) { LIMITS['cool-min-z2'].min = d.min_cool_flow_z2_lim.min; LIMITS['cool-min-z2'].max = d.min_cool_flow_z2_lim.max; LIMITS['cool-min-z2'].step = d.min_cool_flow_z2_lim.step || 0.1; }
+  if (d.temp_feedback_z1_lim) { LIMITS['temp-fb-z1'].min = d.temp_feedback_z1_lim.min; LIMITS['temp-fb-z1'].max = d.temp_feedback_z1_lim.max; LIMITS['temp-fb-z1'].step = d.temp_feedback_z1_lim.step || 0.1; }
+  if (d.temp_feedback_z2_lim) { LIMITS['temp-fb-z2'].min = d.temp_feedback_z2_lim.min; LIMITS['temp-fb-z2'].max = d.temp_feedback_z2_lim.max; LIMITS['temp-fb-z2'].step = d.temp_feedback_z2_lim.step || 0.1; }
 
 
   if (d.min_compressor_on_time_lim) { 
@@ -3497,6 +3526,8 @@ function render(d) {
   seedPending('aa-min',  d.minimum_heating_flow_temp);
   seedPending('aa-max-z2', d.maximum_heating_flow_temp_z2);
   seedPending('aa-min-z2', d.minimum_heating_flow_temp_z2);
+  seedPending('temp-fb-z1', d.temperature_feedback_z1);
+  seedPending('temp-fb-z2', d.temperature_feedback_z2);
 
   setToggle('sw-aa', d.auto_adaptive_control_enabled);
   setToggle('sw-dm', d.defrost_risk_handling_enabled);
@@ -3512,6 +3543,7 @@ function render(d) {
 
   setSelect('sel-hst',    d.heating_system_type);
   setSelect('sel-z1src',  d.room_temp_source_z1);
+  updateRoomSourceTemp('z1', d);
   setSelect('sel-z1mode', d.operating_mode_z1);
   setSelect('sel-z2mode', d.operating_mode_z2);
   setSelect('sel-z1ts',   d.temp_sensor_source_z1);
@@ -3753,6 +3785,8 @@ async function sendAA(btn) {
     if (hasChanged('cool-start-z1')) { await apiPost({ key: 'cooling_smart_start_z1', value: pending['cool-start-z1'] }); c++; }
     if (hasChanged('cool-min-z1'))   { await apiPost({ key: 'minimum_cooling_flow_z1', value: pending['cool-min-z1'] }); c++; }
     if (hasChanged('cool-min-z2'))   { await apiPost({ key: 'minimum_cooling_flow_z2', value: pending['cool-min-z2'] }); c++; }
+    if (hasChanged('temp-fb-z1'))    { await apiPost({ key: 'temperature_feedback_z1', value: pending['temp-fb-z1'] }); c++; }
+    if (hasChanged('temp-fb-z2'))    { await apiPost({ key: 'temperature_feedback_z2', value: pending['temp-fb-z2'] }); c++; }
 
     showToast(c > 0 ? '✓ Auto Adaptive updated' : 'No changes');
   } catch(e) { showToast('✗ ' + e.message, true); }
@@ -3841,17 +3875,61 @@ async function sendSC(btn) {
 function toggleThermostatUI(zone, useRoom) {
   const vZ = document.getElementById('virtual-' + zone + '-section');
   const rZ = document.getElementById('room-' + zone + '-section');
-  
+
   if (rZ) rZ.style.display = useRoom ? 'block' : 'none';
   if (vZ) vZ.style.display = useRoom ? 'none' : 'block';
 }
 
+// Room Temp Source options: 0 = Room Thermostat, 1 = HA/REST API, 2 = Asgard Virtual Thermostat.
+// When "Use Room Thermostat" is on, the virtual thermostat can't be the source (and vice versa),
+// so we disable the invalid option. Passive call only toggles availability, no auto-send.
+function applyRoomSourceConstraints(zone, useRoom) {
+  const sel = document.getElementById('sel-' + zone + 'src');
+  if (!sel || sel.options.length < 3) return;
+  const roomOpt = sel.options[0]; // Room Thermostat
+  const vtOpt   = sel.options[2]; // Asgard Virtual Thermostat
+  if (useRoom) { vtOpt.disabled = true;  roomOpt.disabled = false; }
+  else         { roomOpt.disabled = true; vtOpt.disabled = false; }
+}
+
+// Show the live temperature of whichever Room Temp Source is selected, and reveal the
+// HA/REST input only when that source is chosen.
+function updateRoomSourceTemp(zone, d) {
+  // room_temp_source_* is published as a string index (e.g. "2"), so parse it.
+  const raw = (zone === 'z1') ? d.room_temp_source_z1 : d.room_temp_source_z2;
+  const srcIdx = parseInt(raw, 10);
+  let val = null;
+  if (srcIdx === 0)      val = (zone === 'z1') ? d.room_z1_current : d.room_z2_current;             // Room Thermostat
+  else if (srcIdx === 1) val = (zone === 'z1') ? d.temperature_feedback_z1 : d.temperature_feedback_z2; // HA / REST API
+  else if (srcIdx === 2) val = (zone === 'z1') ? d.z1_current_temp : d.z2_current_temp;             // Asgard Virtual Thermostat
+  setText(zone + 'src-temp', fmt1(val));
+
+  const fbRow = document.getElementById('row-' + zone + '-fb');
+  if (fbRow) fbRow.style.display = (srcIdx === 1) ? 'flex' : 'none';
+}
+
 async function sendUI(zone, val) {
   toggleThermostatUI(zone, val);
-  try { 
-    await apiPost({ key: 'ui_use_room_' + zone, value: val ? 1 : 0 }); 
-  } catch(e) { 
-    showToast('✗ ' + e.message, true); 
+  applyRoomSourceConstraints(zone, val);
+
+  // Auto-pick a valid Room Temp Source: Room Thermostat when using it,
+  // otherwise fall back to the Asgard Virtual Thermostat (only when the current
+  // pick just became invalid), and persist the change.
+  const sel = document.getElementById('sel-' + zone + 'src');
+  if (sel) {
+    if (val && sel.selectedIndex !== 0) {
+      sel.selectedIndex = 0;
+      try { await apiPost({ key: 'room_temp_source_' + zone, value: 0 }); } catch(e) { showToast('✗ ' + e.message, true); }
+    } else if (!val && sel.selectedIndex === 0) {
+      sel.selectedIndex = 2;
+      try { await apiPost({ key: 'room_temp_source_' + zone, value: 2 }); } catch(e) { showToast('✗ ' + e.message, true); }
+    }
+  }
+
+  try {
+    await apiPost({ key: 'ui_use_room_' + zone, value: val ? 1 : 0 });
+  } catch(e) {
+    showToast('✗ ' + e.message, true);
   }
 }
 

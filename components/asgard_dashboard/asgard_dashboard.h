@@ -106,7 +106,11 @@ struct DashboardSnapshot {
   // Cooling settings
   NumData num_cooling_smart_start_z1;
   NumData num_min_cooling_flow_z1;
-  NumData num_min_cooling_flow_z2; 
+  NumData num_min_cooling_flow_z2;
+
+  // HA / REST API room temperature feedback (per zone)
+  NumData num_temperature_feedback_z1;
+  NumData num_temperature_feedback_z2;
 
 
   // Climate data
@@ -272,6 +276,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_cooling_smart_start_z1(number::Number *n)      { num_cooling_smart_start_z1_ = n; }
   void set_num_min_cooling_flow_z1(number::Number *n)         { num_min_cooling_flow_z1_ = n; }
   void set_num_min_cooling_flow_z2(number::Number *n)         { num_min_cooling_flow_z2_ = n; }
+  void set_num_temperature_feedback_z1(number::Number *n)     { num_temperature_feedback_z1_ = n; }
+  void set_num_temperature_feedback_z2(number::Number *n)     { num_temperature_feedback_z2_ = n; }
 
   // Climate
   void set_dhw_climate(climate::Climate *c)                   { dhw_climate_ = c; }
@@ -472,6 +478,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_cooling_smart_start_z1_{nullptr};
   number::Number *num_min_cooling_flow_z1_{nullptr};
   number::Number *num_min_cooling_flow_z2_{nullptr};
+  number::Number *num_temperature_feedback_z1_{nullptr};
+  number::Number *num_temperature_feedback_z2_{nullptr};
   number::Number *minimum_compressor_on_time_{nullptr};
 
   // Climate
