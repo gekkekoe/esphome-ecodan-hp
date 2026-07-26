@@ -2242,10 +2242,10 @@ const xAxis = {
                           const index = ctx[0].dataIndex;
                           const label = ctx[0].chart.data.labels[index] || '';
                           const isLive = (typeof solverMode !== 'undefined' && solverMode === 'live');
-                          const actual = isLive ? getOdinActualModeAt(index)
-                              : (typeof hourlyHistory !== 'undefined' ? getOdinActualModeForRecord(hourlyHistory[index]) : null);
-                          const aName = (actual !== null && actual !== 0) ? ODIN_MODE_NAMES[actual] : null;
-                          return aName ? [label, 'Actual: ' + aName] : label;
+                          const minutes = isLive ? getOdinHourMinutesAt(index)
+                              : (typeof hourlyHistory !== 'undefined' ? getOdinHourMinutesForRecord(hourlyHistory[index]) : null);
+                          const summary = summarizeOdinHourModes(minutes);
+                          return summary ? [label, 'Actual: ' + summary] : label;
                       }
                   }
               }
@@ -2633,9 +2633,10 @@ function getOdinModeRGB(mode) {
 
 // ── Actual (executed) operating mode per hour ─────────────────────────────
 // Aggregated client-side from the minute records: flags bits 6-9 carry the
-// Ecodan operating mode, bit 0/1 compressor/booster. No firmware change
-// needed — coverage is limited to the minute-record retention window.
-// Map key = hour index in "local epoch" ms (timestamp / 3600000).
+// Ecodan operating mode. No firmware change needed — coverage is limited to the
+// minute-record retention window. Each map value is an Int8Array(60): the mode
+// per minute of that hour (-1 = no sample, 0 = idle, 1..7 = a real mode).
+// Key = local-baked hour index (floor(localEpochSec / 3600)).
 let actualModeByHourKey = new Map();
 let lastActualModeFetch = 0;
 
@@ -2653,27 +2654,48 @@ async function fetchActualModesRange(fromTs, toTs) {
             tOff = (Date.now() - (new Date().getTimezoneOffset() * 60000)) - serverLastTs;
         }
 
-        const counts = new Map();
+        // Build a per-MINUTE mode timeline for each hour block (Ecodan operation
+        // mode = flags bits 6-9), filling forward across sampling gaps. Keeping
+        // the full minute breakdown (not just the dominant mode) lets the strip
+        // be coloured proportionally: 10 min cooling then idle draws as 10/60
+        // blue + blank, and a DHW→cooling transition shows both parts in order.
+        const perHour = new Map(); // hourKey -> [{min, mode}, ...]
         data.forEach(row => {
             const flags = row[10];
             const mode = (flags >> 6) & 0x0F;
-            if (mode > 7) return;              // guard invalid; idle (mode 0) IS counted
-            const key = Math.floor(((row[0] * 1000) + tOff) / 3600000);
-            let c = counts.get(key);
-            if (!c) { c = {}; counts.set(key, c); }
-            c[mode] = (c[mode] || 0) + 1;
+            if (mode > 7) return; // guard invalid; idle (mode 0) is kept
+            const tsSec = Math.floor((row[0] * 1000 + tOff) / 1000);
+            const key = Math.floor(tsSec / 3600);            // local-baked hour index
+            const minOfHour = Math.floor((tsSec % 3600) / 60); // 0..59
+            let arr = perHour.get(key);
+            if (!arr) { arr = []; perHour.set(key, arr); }
+            arr.push({ min: minOfHour, mode });
         });
 
-        counts.forEach((c, key) => {
-            let best = -1, bestCnt = -1;
-            for (const m in c) { if (c[m] > bestCnt) { bestCnt = c[m]; best = parseInt(m); } }
-            if (best > 0) actualModeByHourKey.set(key, best);
-            else actualModeByHourKey.delete(key); // idle-dominant → clear any stale strip
+        perHour.forEach((samples, key) => {
+            samples.sort((a, b) => a.min - b.min);
+            const minutes = new Int8Array(60).fill(-1); // -1 = no sample
+            for (let i = 0; i < samples.length; i++) {
+                const start = samples[i].min;
+                const end = (i + 1 < samples.length) ? samples[i + 1].min : 60;
+                for (let m = start; m < end && m < 60; m++) minutes[m] = samples[i].mode;
+            }
+            // Keep the hour only if it actually ran a real (non-idle) mode.
+            let hasMode = false;
+            for (let m = 0; m < 60; m++) if (minutes[m] > 0) { hasMode = true; break; }
+            if (hasMode) actualModeByHourKey.set(key, minutes);
+            else actualModeByHourKey.delete(key); // idle-only hour → clear stale strip
         });
         return true;
     } catch (e) { return false; /* non-critical: bands simply stay empty */ }
 }
 
+// Live view refresh: last 30h covers the visible yesterday/today slots.
+// The ESP stores timestamps in local-baked epoch (real UTC + tz offset), so the
+// fetch window MUST be built in that same epoch. Using bare Date.now()/1000
+// (real UTC) makes the upper bound tz-offset hours too low, so the most recent
+// hours (e.g. the current and previous hour in CEST) fall outside the range and
+// never get fetched — the strip then looks like it "lost" the last hours.
 async function refreshOdinActualModes(force = false) {
     if (!force && Date.now() - lastActualModeFetch < 5 * 60 * 1000) return;
     lastActualModeFetch = Date.now();
@@ -2682,35 +2704,62 @@ async function refreshOdinActualModes(force = false) {
     if (ok && odinTempChart && solverMode === 'live') odinTempChart.update('none');
 }
 
-// Actual mode for a live-window slot. Future hours have no actual by definition.
-function getOdinActualModeAt(idx) {
+// Per-minute mode timeline (Int8Array(60)) for a live-window slot, or null when
+// the hour is in the future or ran no real mode. Device timestamps are
+// local-baked (the dashboard reads them with getUTCHours), so hour keys are
+// local-wall-clock hour indices; build the lookup key on that same basis.
+function getOdinHourMinutesAt(idx) {
     const nowIdx = 24 + new Date().getHours();
-    if (idx > nowIdx) return null;
-    if (idx === nowIdx) {
-        // Current hour: use the live operating mode from the last state poll
-        const m = (typeof latestState !== 'undefined' && latestState) ? latestState.operation_mode : null;
-        return (m === undefined || m === null) ? null : m;
-    }
+    if (idx > nowIdx) return null; // future hour
     const nowLocal = Date.now() - (new Date().getTimezoneOffset() * 60000);
     const todayMid = Math.floor(nowLocal / 86400000) * 86400000;
     const key = Math.floor((todayMid + (idx - 24) * 3600000) / 3600000);
-    const v = actualModeByHourKey.get(key);
-    return v === undefined ? null : v;
+    const base = actualModeByHourKey.get(key) || null;
+
+    if (idx !== nowIdx) return base;
+
+    // Current hour: overlay the live operating mode from the last covered minute
+    // up to "now", so the strip fills toward the present between fetches.
+    const curMin = new Date().getMinutes();
+    const live = (typeof latestState !== 'undefined' && latestState && latestState.operation_mode != null)
+        ? latestState.operation_mode : null;
+    const out = base ? Int8Array.from(base) : new Int8Array(60).fill(-1);
+    if (live != null) {
+        let last = -1;
+        for (let m = 0; m < 60; m++) if (out[m] !== -1) last = m;
+        const from = (last === -1) ? curMin : last + 1; // no history yet → just the live tick
+        for (let m = from; m <= curMin && m < 60; m++) out[m] = live;
+    }
+    let any = false;
+    for (let m = 0; m < 60; m++) if (out[m] > 0) { any = true; break; }
+    return any ? out : null;
 }
 
-// Actual mode for an elastic-history record (block start = timestamp - 30 min)
-function getOdinActualModeForRecord(r) {
+// Per-minute timeline for an elastic-history record (block start = ts - 30 min).
+function getOdinHourMinutesForRecord(r) {
     if (!r) return null;
-    // Prefer a server-provided field if it ever exists (future firmware)
-    if (r.actual_op_mode !== null && r.actual_op_mode !== undefined) return r.actual_op_mode;
-    const v = actualModeByHourKey.get(Math.floor((r.timestamp - 1800000) / 3600000));
-    return v === undefined ? null : v;
+    return actualModeByHourKey.get(Math.floor((r.timestamp - 1800000) / 3600000)) || null;
+}
+
+// Chronological "DHW → Cooling" style summary of the modes in an hour timeline.
+function summarizeOdinHourModes(minutes) {
+    if (!minutes) return null;
+    const seq = [];
+    for (let m = 0; m < 60; m++) {
+        const mode = minutes[m];
+        if (mode > 0 && seq[seq.length - 1] !== mode) seq.push(mode);
+    }
+    const names = seq.map(m => ODIN_MODE_NAMES[m]).filter(Boolean);
+    return names.length ? names.join(' → ') : null;
 }
 
 // Inline Chart.js plugin, registered on odinTempChart only:
 // A thin strip runs along the very top of the plot (in the y-axis headroom
-// created by scales.y.grace), colored per hour by the ACTUAL mode that ran.
-// Planned mode is shown via the x-axis tick colors, not repeated here.
+// created by scales.y.grace), coloured by the ACTUAL mode that ran — PER MINUTE
+// within each hour. So 10 min of cooling in an hour paints the first 10/60 of
+// that hour's width blue and leaves the rest blank; a DHW block followed by
+// cooling shows both segments in chronological order. Planned mode is shown via
+// the x-axis tick colours, not repeated here.
 const odinModeBandsPlugin = {
     id: 'odinModeBands',
 
@@ -2737,12 +2786,26 @@ const odinModeBandsPlugin = {
             const right = scales.x.getPixelForValue(i + 0.5);
             if (right < chartArea.left || left > chartArea.right) continue;
 
-            const actual = isLive ? getOdinActualModeAt(i) : getOdinActualModeForRecord(hourlyHistory[i]);
-            const rgbA = getOdinModeRGB(actual);
-            if (!rgbA) continue;
+            const minutes = isLive ? getOdinHourMinutesAt(i)
+                                   : getOdinHourMinutesForRecord(hourlyHistory[i]);
+            if (!minutes) continue;
 
-            ctx.fillStyle = `rgba(${rgbA},0.9)`;
-            ctx.fillRect(left, stripY, right - left, STRIP_H);
+            const w = right - left;
+            // Merge contiguous same-mode minutes into runs and paint the coloured ones.
+            let m0 = 0;
+            while (m0 < 60) {
+                const mode = minutes[m0];
+                let m1 = m0 + 1;
+                while (m1 < 60 && minutes[m1] === mode) m1++;
+                const rgb = getOdinModeRGB(mode); // null for -1/idle/uncoloured modes
+                if (rgb) {
+                    const x0 = left + (m0 / 60) * w;
+                    const x1 = left + (m1 / 60) * w;
+                    ctx.fillStyle = `rgba(${rgb},0.9)`;
+                    ctx.fillRect(x0, stripY, Math.max(1, x1 - x0), STRIP_H);
+                }
+                m0 = m1;
+            }
         }
         ctx.restore();
     }
