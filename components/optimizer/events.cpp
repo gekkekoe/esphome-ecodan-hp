@@ -106,17 +106,22 @@ namespace esphome
 
         bool Optimizer::set_flow_temp(float flow, OptimizerZone zone) {
             auto &status = this->state_.ecodan_instance->get_status();
-            
+
+            // Treat setpoints within half the 0.1°C control resolution as unchanged, so
+            // float-noise between the stored setpoint and a recomputed value doesn't
+            // trigger a redundant write (and log line) every cycle.
+            auto differs = [](float current, float target) { return std::fabs(current - target) >= 0.05f; };
+
             if (status.has_independent_zone_temps())
             {
                 if (zone == OptimizerZone::ZONE_1) {
-                    if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && status.Zone1FlowTemperatureSetPoint != flow)
+                    if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && differs(status.Zone1FlowTemperatureSetPoint, flow))
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z1 Heat Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_1);
                         return true;
                     }
-                    else if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) && status.Zone1FlowTemperatureSetPoint != flow)
+                    else if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) && differs(status.Zone1FlowTemperatureSetPoint, flow))
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z1 Cool Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_1);
@@ -124,13 +129,13 @@ namespace esphome
                     }
 
                 } else if (zone == OptimizerZone::ZONE_2) {
-                    if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) && status.Zone2FlowTemperatureSetPoint != flow)
+                    if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) && differs(status.Zone2FlowTemperatureSetPoint, flow))
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z2 Heat Flow -> %.1f°C (%.1f°C)", flow, status.Zone2FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_2);
                         return true;
                     }
-                    else if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2) && status.Zone2FlowTemperatureSetPoint != flow)
+                    else if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2) && differs(status.Zone2FlowTemperatureSetPoint, flow))
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z2 Cool Flow -> %.1f°C (%.1f°C)", flow, status.Zone2FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_2);
@@ -140,7 +145,7 @@ namespace esphome
             }
             else
             {
-                if (status.Zone1FlowTemperatureSetPoint != flow) {
+                if (differs(status.Zone1FlowTemperatureSetPoint, flow)) {
                     if (status.HeatingCoolingMode == esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP)
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Dependent Heat Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);

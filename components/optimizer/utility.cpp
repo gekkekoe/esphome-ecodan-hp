@@ -50,16 +50,21 @@ namespace esphome
 
         float Optimizer::clamp_flow_temp(float calculated_flow, float min_temp, float max_temp)
         {
+            // Only treat it as a real clamp (worth logging) when the overshoot exceeds
+            // float-noise at the 0.1°C control resolution; otherwise clamp silently.
+            const float CLAMP_LOG_EPS = 0.05f;
             if (calculated_flow > max_temp)
             {
-                ESP_LOGW(OPTIMIZER_TAG, "Flow limited to %.1f°C (Zone Max Limit), calculated_flow: %.1f",
-                        max_temp, calculated_flow);
+                if (calculated_flow > max_temp + CLAMP_LOG_EPS)
+                    ESP_LOGW(OPTIMIZER_TAG, "Flow limited to %.1f°C (Zone Max Limit), calculated_flow: %.1f",
+                            max_temp, calculated_flow);
                 return max_temp;
             }
             if (calculated_flow < min_temp)
             {
-                ESP_LOGW(OPTIMIZER_TAG, "Flow limited to %.1f°C (Zone Min Limit), calculated_flow: %.1f",
-                        min_temp, calculated_flow);
+                if (calculated_flow < min_temp - CLAMP_LOG_EPS)
+                    ESP_LOGW(OPTIMIZER_TAG, "Flow limited to %.1f°C (Zone Min Limit), calculated_flow: %.1f",
+                            min_temp, calculated_flow);
                 return min_temp;
             }
             return calculated_flow;
