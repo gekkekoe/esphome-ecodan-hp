@@ -947,6 +947,25 @@ The best way to evaluate how well ODIN is working is to watch the **Room Tempera
 
 The charts show 48 hours of data — yesterday (left half) and today (right half) — so you can compare planned versus actual over a full day.
 
+### Why the solver did (or didn't) run — hover an hour
+
+Hover any hour on the chart and the tooltip adds a line explaining *why* the solver planned it that way. This is read straight from the solver's own cost calculation for that hour, not guessed afterwards from the finished plan — so it can never disagree with what you see on the chart. It works for every hour, including ones with no heating at all, and it also appears when browsing past days in the **Calendar** view.
+
+| Reason | Meaning |
+|--------|---------|
+| **Coasting** | The heat pump was off because doing nothing was cheaper than running — the house could coast on stored heat. |
+| **Comfort (limit)** | The house was at or past the edge of your comfort band, so the hard comfort penalty forced the pump to run regardless of price. |
+| **Comfort (drift)** | Inside the comfort band but drifting toward an edge — the solver ran a bit to stay ahead of a future hard-limit hit. |
+| **Thermal buffer** | Pre-heating or pre-cooling that paid for itself — storing cheap or solar heat now to avoid running during a more expensive hour later. |
+| **Modulation / Wear** | The load level was chosen for part-load efficiency (running at a more efficient modulation point) rather than because of price or comfort. |
+| **Energy price** | No other factor dominated — this was simply the cheapest hour to buy the kWh needed. |
+| **Hot water** | Hour reserved for a domestic hot water (DHW) heating cycle. |
+| **Stop price** | Blocked: the price was at or above your **Stop Price** setting, so grid use was forbidden this hour. |
+| **Solar-only** | Blocked: **Solar-Only Cooling** is enabled and there wasn't enough sun to run. |
+| **Power limit** | Blocked: your configured **Energy Constraint** (Max Consumption / Max Output) left no room to run this hour. |
+
+The last three ("blocked") reasons are worth noticing specifically — they mean the solver *wanted* to run but a setting stopped it, which is different from voluntarily coasting. If the house is drifting cold and the tooltip keeps showing one of these, that setting is the first place to check.
+
 ### What good performance looks like
 
 - **Actual closely follows Expected** — the physics model is accurate. The house behaves as predicted.

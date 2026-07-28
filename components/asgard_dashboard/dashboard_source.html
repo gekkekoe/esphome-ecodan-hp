@@ -1163,7 +1163,7 @@ header {
     </div>
     <div class="chart-container"><canvas id="odinConsChart"></canvas></div>
   </div>
-  
+
   <div class="chart-card full-width" style="grid-column: 1 / -1;">
     <div class="chart-header" style="flex-wrap: wrap; gap: 10px;">
       <div class="section-title" style="margin:0">Energy Production (24h)</div>
@@ -1412,6 +1412,46 @@ const serverState = {};
 let hourlyHistory = [];
 let latestState = {};
 let odinDataCache = null;
+// --- Solver decision reasons ---------------------------------------------
+const REASON_INFO = [
+    { label: '—' },
+    { label: 'Coasting' },
+    { label: 'Comfort (limit)' },
+    { label: 'Comfort (drift)' },
+    { label: 'Thermal buffer' },
+    { label: 'Modulation / Wear' },
+    { label: 'Energy price' },
+    { label: 'Hot water' },
+    { label: 'Stop price' },
+    { label: 'Solar-only' },
+    { label: 'Power limit' }
+];
+
+const reasonAt = (idx) => {
+    // First check live cache (Odin forecast)
+    let arr = odinDataCache?.decision_reason;
+    if (arr && idx >= 0 && idx < arr.length && arr[idx] !== null && arr[idx] !== undefined) {
+        const code = Math.round(arr[idx]);
+        return REASON_INFO[code] ?? null;
+    }
+    // Fallback to history mode using hourlyHistory.decision_reason
+    if (hourlyHistory && idx >= 0 && idx < hourlyHistory.length) {
+        const r = hourlyHistory[idx];
+        if (r?.decision_reason !== null && r?.decision_reason !== undefined) {
+            const code = Math.round(r.decision_reason);
+            return REASON_INFO[code] ?? null;
+        }
+    }
+    return null;
+};
+
+const reasonTooltipFooter = (items) => {
+    if (!items || !items.length) return '';
+    const r = reasonAt(items[0].dataIndex);
+    if (!r || !r.label || r.label === '—') return '';
+    return r.label;
+};
+
 let odinConsChart = null;
 let odinProdChart = null;
 let odinCostChart = null;
@@ -2139,13 +2179,14 @@ const xAxis = {
       return 2;
   };
 
+
   odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2d'), {
       type: 'bar',
       data: {
           labels: labels72,
           datasets: [
               { label: 'Expected (Grid)',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
-              { label: 'Expected (Solar)', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 0' },          
+              { label: 'Expected (Solar)', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 0' },
               { label: 'Actual Climate',   data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
               { label: 'Actual DHW',       data: [], backgroundColor: 'rgba(255,107,53,0.35)',  borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' },
               { label: 'Actual Standby',   data: [], backgroundColor: 'rgba(74,90,122,0.35)',   borderColor: '#4a5a7a', borderWidth: 1, stack: 'Stack 1' }
@@ -2241,7 +2282,14 @@ const xAxis = {
               { label: 'Actual',
                 data: [], borderColor: '#ffff00', borderWidth: 2,
                 backgroundColor: 'transparent', fill: false,
-                tension: 0.3, pointRadius: 2, spanGaps: false }
+                tension: 0.3, pointRadius: 2, spanGaps: false },
+              // Invisible line spanning every hour so the tooltip always has something to
+              // latch onto — including hours where none of the visible series has a point
+              // yet — which is what lets the decision-reason footer fire on every hour.
+              // Excluded from the tooltip body and has no legend entry (legend is off here).
+              { label: '_reasonHover', data: labels72.map(() => 0), borderWidth: 0,
+                pointRadius: 0, pointHitRadius: 12, fill: false, tension: 0, spanGaps: true,
+                order: 99, yAxisID: 'reasonAxis' }
           ]
       },
       options: {
@@ -2256,6 +2304,7 @@ const xAxis = {
               },
               zoom: odinZoomConfig,
               tooltip: {
+                  filter: (item) => item.dataset.label !== '_reasonHover',
                   callbacks: {
                       title: function(ctx) {
                           if (!ctx || !ctx.length) return '';
@@ -2266,7 +2315,8 @@ const xAxis = {
                               : (typeof hourlyHistory !== 'undefined' ? getOdinHourMinutesForRecord(hourlyHistory[index]) : null);
                           const summary = summarizeOdinHourModes(minutes);
                           return summary ? [label, 'Actual: ' + summary] : label;
-                      }
+                      },
+                      footer: reasonTooltipFooter
                   }
               }
           },
@@ -2280,7 +2330,10 @@ const xAxis = {
                   ticks: { color: '#8295b8', font: monoFont },
                   grid: { color: '#1e2d4a' },
                   title: { display: true, text: '°C', color: '#8295b8' }
-              }
+              },
+              // Hidden axis for the invisible _reasonHover dataset so its flat 0-line
+              // never influences the visible °C axis's autoscale range.
+              reasonAxis: { display: false, min: 0, max: 1 }
           }
       }
   });
@@ -3220,7 +3273,7 @@ function updateCharts(d) {
     // Live mode: re-render with animation after zoom is set
     monitorCharts().forEach(c => c.update());
   }
-  
+
   updateOdinCharts();
 }
 
@@ -4674,7 +4727,8 @@ async function loadServerHistory(fromTs, toTs, type = 'min') {
 
         if (monitorMode === 'live' && history.timestamps.length > 0) {
           // Apply the same index-based approach for initial load
-          const fiveHoursAgo = now - (5 * 60 * 60 * 1000);
+          const realNow = Date.now();
+          const fiveHoursAgo = realNow - (5 * 60 * 60 * 1000);
           const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
           
           if (startIndex !== -1) {
@@ -4724,9 +4778,10 @@ async function loadServerHistory(fromTs, toTs, type = 'min') {
                 sched_min: getF(row[20], 100.0),
                 sched_max: getF(row[21], 100.0),
                 exp_solar_kwh: getF(row[22], 100.0),
+                decision_reason: row.length > 23 ? getF(row[23], 1.0) : null,
                 // Dominant actually-executed mode (only present with newer firmware;
                 // otherwise resolved client-side from minute records)
-                actual_op_mode: row.length > 23 ? getF(row[23], 1.0) : null
+                actual_op_mode: row.length > 24 ? getF(row[24], 1.0) : null
             };
         });
 

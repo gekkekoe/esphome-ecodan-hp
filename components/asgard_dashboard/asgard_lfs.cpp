@@ -283,7 +283,7 @@ void EcodanDashboard::record_hourly_data(const HourlyRecord& rec) {
 
 // LFS persist/load and the HTTP API response all derive from this table.
 // Slot order (0-18) defines the on-disk layout — do NOT reorder existing entries.
-std::array<EcodanDashboard::OdinArrayEntry, 19>
+std::array<EcodanDashboard::OdinArrayEntry, EcodanDashboard::ODIN_ARRAY_COUNT>
 EcodanDashboard::odin_array_map_() {
     return {{
         {0,  "expected_end_temp",   &odin_expected_end_temp_    },
@@ -305,6 +305,7 @@ EcodanDashboard::odin_array_map_() {
         {16, "sched_min",           &odin_sched_min_            },
         {17, "sched_max",           &odin_sched_max_            },
         {18, "actual_standby_cons", &odin_actual_standby_cons_  },
+        {19, "decision_reason",    &odin_decision_reason_      },
     }};
 }
 
@@ -362,7 +363,7 @@ void EcodanDashboard::lfs_persist_odin_() {
         for (const auto& entry : odin_array_map_())
             safe_save(entry.slot, *entry.vec);
 
-        for (int k = 19; k < 32; k++) {
+        for (int k = ODIN_ARRAY_COUNT; k < 32; k++) {
             for (int i = 0; i < 72; i++) cache->arrays[k][i] = NAN;
         }
 

@@ -362,6 +362,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
                        const std::vector<float>& solar,
                        const std::vector<float>& prices,
                        const std::vector<float>& op_mode,
+                       const std::vector<float>& decision_reason,
                        const LastRunStats& run_stats);
 
   void load_odin_data(int current_day, int current_hour = 0);
@@ -565,11 +566,13 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   // Used by lfs_persist_odin_, load_odin_data, and handle_odin_request_.
   struct OdinArrayEntry {
-    int                  slot; // LFS cache-slot index (0-18)
+    int                  slot; // LFS cache-slot index
     const char* name; // JSON key used in the API response
     std::vector<float>* vec;  // pointer to the corresponding member vector
   };
-  std::array<OdinArrayEntry, 19> odin_array_map_();
+
+  static constexpr int ODIN_ARRAY_COUNT = 20;
+  std::array<OdinArrayEntry, ODIN_ARRAY_COUNT> odin_array_map_();
   void ensure_odin_vectors_();
 
   static void lfs_odin_task_(void* arg);
@@ -610,6 +613,10 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   std::vector<float> odin_solar_;               // effective solar irradiance W/m²
   std::vector<float> odin_prices_;              // electricity prices EUR/MWh
   std::vector<float> odin_operation_mode_;
+
+  // 0=NONE 1=IDLE 2=COMFORT_HARD 3=COMFORT_SOFT 4=THERMAL_BUFFER 5=MODULATION
+  // 6=ENERGY_COST 7=DHW 8=BLOCKED_STOP_PRICE 9=BLOCKED_SOLAR_ONLY 10=BLOCKED_LIMIT.
+  std::vector<float> odin_decision_reason_;
 
   bool              odin_data_ready_{false};
   int               odin_stored_day_{-1};

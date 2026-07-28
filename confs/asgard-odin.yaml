@@ -193,7 +193,7 @@ script:
                         if (response->status_code == 200) {
                           bool parse_ok = esphome::json::parse_json(body, [](JsonObject root) {
                             if (root["success"].as<bool>()) {
-                              static std::vector<float> exp_end_t(48), nrg(48), prod(48), exp_t(48), cost(48), batt(48), sb(48), smn(48), smx(48), wth(48), sol(48), prc(48), op_mode(48);
+                              static std::vector<float> exp_end_t(48), nrg(48), prod(48), exp_t(48), cost(48), batt(48), sb(48), smn(48), smx(48), wth(48), sol(48), prc(48), op_mode(48), reason(48);
 
                               JsonArray j_eet = root["expected_end_temp"];
                               JsonArray j_e  = root["energy_consumption"];
@@ -208,6 +208,7 @@ script:
                               JsonArray j_sol = root["solar"];
                               JsonArray j_prc = root["prices"];
                               JsonArray j_op  = root["operation_mode"];
+                              JsonArray j_rsn = root["decision_reason"];
 
                               bool has_p   = !j_p.isNull();
                               bool has_b   = !j_b.isNull();
@@ -218,6 +219,8 @@ script:
                               bool has_sol = !j_sol.isNull();
                               bool has_prc = !j_prc.isNull();
                               bool has_op  = !j_op.isNull();
+                              // Older Odin builds do not send this; absent simply means "no explanation".
+                              bool has_rsn = !j_rsn.isNull();
 
                               for (int i = 0; i < 48; i++) {
                                 exp_end_t[i] = j_eet[i].isNull() ? NAN : j_eet[i].as<float>();
@@ -233,6 +236,7 @@ script:
                                 sol[i]      = (!has_sol || j_sol[i].isNull()) ? NAN : j_sol[i].as<float>();
                                 prc[i]      = (!has_prc || j_prc[i].isNull()) ? NAN : j_prc[i].as<float>();
                                 op_mode[i]  = (!has_op || j_op[i].isNull()) ? NAN : j_op[i].as<float>();
+                                reason[i]   = (!has_rsn || j_rsn[i].isNull()) ? NAN : j_rsn[i].as<float>();
                               }
 
                               int cur_hr = root["current_hour"].is<int>() ? root["current_hour"].as<int>() : id(optimizer_ptr)->get_current_ecodan_hour();
@@ -258,7 +262,7 @@ script:
                               id(optimizer_ptr)->store_odin_data(cur_hr, stats.min_output, stats.max_output, prod, sol, op_mode);
 
                               id(asgard_dashboard_id)->store_odin_data(
-                                cur_hr, cur_day, exp_end_t, nrg, prod, exp_t, cost, batt, sb, smn, smx, wth, sol, prc, op_mode, stats);
+                                cur_hr, cur_day, exp_end_t, nrg, prod, exp_t, cost, batt, sb, smn, smx, wth, sol, prc, op_mode, reason, stats);
 
                               // Mark success so retry logic knows we're done
                               id(odin_retry_count) = -1;

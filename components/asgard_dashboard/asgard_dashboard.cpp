@@ -1255,7 +1255,7 @@ void EcodanDashboard::send_hourly_history_(httpd_req_t *req, uint32_t from_ts, u
                 first = false;
 
                 int len = snprintf(out_buf.get() + out_len, OUT_BUF_SIZE - out_len,
-                    "[%lu,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
+                    "[%lu,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
                     hbatch[j].timestamp, hbatch[j].avg_outside,
                     hbatch[j].total_cons, hbatch[j].total_prod,
                     hbatch[j].odin_heat_loss, hbatch[j].odin_cop,
@@ -1267,7 +1267,7 @@ void EcodanDashboard::send_hourly_history_(httpd_req_t *req, uint32_t from_ts, u
                     hbatch[j].weather, hbatch[j].batt_discharge,
                     hbatch[j].op_mode, hbatch[j].sched_base,
                     hbatch[j].sched_min, hbatch[j].sched_max,
-                    hbatch[j].exp_solar_kwh);
+                    hbatch[j].exp_solar_kwh, hbatch[j].decision_reason);
                 out_len += len;
             }
             done += got;
@@ -1486,6 +1486,7 @@ void EcodanDashboard::align_odin_day_(int current_day) {
                 shift_arr(this->odin_solar_, NAN);
                 shift_arr(this->odin_prices_, NAN);
                 shift_arr(this->odin_operation_mode_, NAN);
+                shift_arr(this->odin_decision_reason_, NAN);
                 
                 shift_arr(this->odin_actual_dhw_cons_, NAN);
                 shift_arr(this->odin_actual_dhw_prod_, NAN);
@@ -1566,6 +1567,7 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
     float exp_cons = NAN, exp_prod = NAN, exp_room = NAN, price = NAN;
     float weather = NAN, batt_dis = NAN, op_mode = NAN;
     float s_base = NAN, s_min = NAN, s_max = NAN;
+    float dec_reason = NAN;
 
     if (target_idx >= 0 && target_idx < 72) {
         this->odin_actual_cons_.at(target_idx) = actual_cons_kwh;
@@ -1591,6 +1593,7 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
         if (this->odin_sched_base_.size() == 72) s_base = this->odin_sched_base_[target_idx];
         if (this->odin_sched_min_.size() == 72) s_min = this->odin_sched_min_[target_idx];
         if (this->odin_sched_max_.size() == 72) s_max = this->odin_sched_max_[target_idx];
+        if (this->odin_decision_reason_.size() == 72) dec_reason = this->odin_decision_reason_[target_idx];
     }
 
     // --- Create and Append Hourly Record (The Odin Historical Data) ---
@@ -1636,6 +1639,9 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
     hr.sched_base = pack(s_base, 100.0f);
     hr.sched_min = pack(s_min, 100.0f);
     hr.sched_max = pack(s_max, 100.0f);
+    // Integer code (0=Idle, 1-10=reasons), not a scaled physical quantity — scale 1.0
+    // matches how send_h_segment_/the JS parser (getF(row[23], 1.0)) read it back.
+    hr.decision_reason = pack(dec_reason, 1.0f);
 
     {
         float exp_solar_kwh = NAN;
@@ -1671,6 +1677,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
                                       const std::vector<float>& solar,
                                       const std::vector<float>& prices,
                                       const std::vector<float>& op_mode,
+                                      const std::vector<float>& decision_reason,
                                       const LastRunStats& run_stats) {
     if (current_hour < 0) return;
 
@@ -1715,6 +1722,9 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             if (i < (int)solar.size()      && !std::isnan(solar[i]))       this->odin_solar_[target_idx]             = solar[i];
             if (i < (int)battery_discharge.size() && !std::isnan(battery_discharge[i])) this->odin_battery_discharge_[target_idx] = battery_discharge[i];
             if (i < (int)op_mode.size()    && !std::isnan(op_mode[i]))     this->odin_operation_mode_[target_idx]    = op_mode[i];
+            // Kept in lockstep with the hour it explains: frozen once the hour has
+            // passed, exactly like the plan values above.
+            if (i < (int)decision_reason.size() && !std::isnan(decision_reason[i])) this->odin_decision_reason_[target_idx] = decision_reason[i];
             if (i < (int)exp_temp.size()   && !std::isnan(exp_temp[i]))    this->odin_expected_temp_[target_idx]     = exp_temp[i];
             if (i < (int)expected_end_temp.size() && !std::isnan(expected_end_temp[i])) this->odin_expected_end_temp_[target_idx] = expected_end_temp[i];
         }
@@ -1756,8 +1766,8 @@ void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
   std::vector<char> buffer_vec(JSON_BUFFER_SIZE);
   char* json_buf = buffer_vec.data();
 
-  // Heap-allocate the snapshot array (19 × 72 floats = ~5.5 KB — too large for the task stack).
-  constexpr int ODIN_ARRAY_COUNT = 19;
+  // Heap-allocate the snapshot array (ODIN_ARRAY_COUNT × 72 floats — too large for the
+  // task stack). The count comes from the header so it can never drift from the map.
   struct OdinSnapshotData { float arrs[ODIN_ARRAY_COUNT][ODIN_HOURS]; };
   auto all_arrs_ptr = std::unique_ptr<OdinSnapshotData>(new OdinSnapshotData());
   auto& all_arrs = all_arrs_ptr->arrs;
