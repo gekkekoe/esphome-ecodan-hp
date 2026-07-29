@@ -282,6 +282,18 @@ header {
   .phys-tabs button { flex: 1; background: transparent; border: none; color: var(--text3); padding: 8px 0; border-radius: 6px; cursor: pointer; font-family: var(--sans); font-size: 13px; transition: 0.2s; }
   .phys-tabs button.active-heat { background: var(--heat); color: #fff; font-weight: 600; }
   .phys-tabs button.active-cool { background: var(--cool); color: #fff; font-weight: 600; }
+  .condensation-warning {
+    display: none;
+    background: rgba(255, 176, 32, 0.08);
+    border: 1px solid rgba(255, 176, 32, 0.35);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 10px;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--warn);
+    line-height: 1.5;
+  }
 </style>
 </head>
 <body>
@@ -555,6 +567,7 @@ header {
     <div class="ctrl-card" id="card-z1">
       <div class="section-title">Zone 1</div>
       <div class="ctrl-row"><span class="ctrl-label param-label">Operating Mode<span class="tip-icon">?</span><span class="tip-box">The Ecodan controller's own operating mode for this zone. Auto-Adaptive (below) only works in a Flow Temperature mode.</span></span><select class="ctrl-select" id="sel-z1mode" onchange="sendSelect('operating_mode_z1', this)"><option>Heat Target Temperature</option><option>Heat Flow Temperature</option><option>Heat Compensation Curve</option><option>Cool Target Temperature</option><option>Cool Flow Temperature</option><option>Floor Dry Up</option><option>Cool Compensation Curve</option></select></div>
+      <div class="condensation-warning" id="condensation-warning-z1">⚠ Cool Target Temperature can drive the flow temperature very low, creating a high risk of condensation on the emitters.</div>
       
       <div id="flow-z1-area" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Flow Climate Z1</div>
@@ -615,6 +628,7 @@ header {
     <div class="ctrl-card" id="card-z2" style="display:none;">
       <div class="section-title">Zone 2</div>
       <div class="ctrl-row"><span class="ctrl-label param-label">Operating Mode<span class="tip-icon">?</span><span class="tip-box">The Ecodan controller's own operating mode for this zone. Auto-Adaptive (below) only works in a Flow Temperature mode.</span></span><select class="ctrl-select" id="sel-z2mode" onchange="sendSelect('operating_mode_z2', this)"><option>Heat Target Temperature</option><option>Heat Flow Temperature</option><option>Heat Compensation Curve</option><option>Cool Target Temperature</option><option>Cool Flow Temperature</option><option>Floor Dry Up</option><option>Cool Compensation Curve</option></select></div>
+      <div class="condensation-warning" id="condensation-warning-z2">⚠ Cool Target Temperature can drive the flow temperature very low, creating a high risk of condensation on the emitters.</div>
 
       <div id="flow-z2-area" style="display:none; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 10px;">Flow Climate Z2</div>
@@ -3472,6 +3486,13 @@ function toggleCoolingUI() {
   const isCoolingMode = z1IsCooling || z2IsCooling;
   const cGlobal = document.getElementById('cool-settings-z1');
   if (cGlobal) cGlobal.style.display = isCoolingMode ? 'block' : 'none';
+
+  // --- Condensation Warning (only for Cool Target Temperature, index 3) ---
+  const w1 = document.getElementById('condensation-warning-z1');
+  if (w1) w1.style.display = (opModeZ1 === 3) ? 'block' : 'none';
+
+  const w2 = document.getElementById('condensation-warning-z2');
+  if (w2) w2.style.display = (opModeZ2 === 3) ? 'block' : 'none';
 
   // --- Auto Adaptive Validation ---
   // Check if Zone 2 is active in the UI
