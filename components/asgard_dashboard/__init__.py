@@ -76,6 +76,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("sw_use_solver_id"):                   cv.use_id(switch.Switch),
         cv.Optional("sw_show_solver_tab_id"):              cv.use_id(switch.Switch),
         cv.Optional("sw_power_mode_id"):                   cv.use_id(switch.Switch),
+        cv.Optional("sw_service_codes_enabled_id"):        cv.use_id(switch.Switch),
+        cv.Optional("sw_holiday_mode_id"):                 cv.use_id(switch.Switch),
 
         # Server control
         cv.Optional("sw_server_control_id"):               cv.use_id(switch.Switch),
@@ -265,6 +267,8 @@ async def to_code(config):
         ("num_temperature_feedback_z1_id",    "set_num_temperature_feedback_z1"),
         ("num_temperature_feedback_z2_id",    "set_num_temperature_feedback_z2"),
         ("sw_power_mode_id",                  "set_sw_power_mode"),
+        ("sw_service_codes_enabled_id",     "set_sw_service_codes_enabled"),
+        ("sw_holiday_mode_id",              "set_sw_holiday_mode"),
         ("sw_show_solver_tab_id",             "set_sw_show_solver_tab"), 
 
         # Server control

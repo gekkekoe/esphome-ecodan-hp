@@ -151,6 +151,10 @@ struct DashboardSnapshot {
   bool sw_sc_prohibit_z2_heating{false};
   bool sw_sc_prohibit_z2_cooling{false};
 
+  // Service codes & Holiday
+  bool sw_service_codes_enabled{false};
+  bool sw_holiday_mode{false};
+
   NumData num_raw_heat_produced;
   NumData num_raw_elec_consumed;
   NumData num_raw_runtime_hours;
@@ -241,6 +245,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_sw_regular_dhw(switch_::Switch *s)                 { sw_regular_dhw_ = s; }
   void set_pred_sc_switch(switch_::Switch *s)                 { pred_sc_switch_ = s; }
   void set_sw_power_mode(switch_::Switch *s)                  { sw_power_mode_ = s; }
+  void set_sw_service_codes_enabled(switch_::Switch *s)        { sw_service_codes_enabled_ = s; }
+  void set_sw_holiday_mode(switch_::Switch *s)                 { sw_holiday_mode_ = s; }
 
   // Server control
   void set_sw_server_control(switch_::Switch *s)              { sw_server_control_ = s; }
@@ -455,6 +461,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   switch_::Switch *sw_regular_dhw_{nullptr};
   switch_::Switch *pred_sc_switch_{nullptr};
   switch_::Switch *sw_power_mode_{nullptr};
+  switch_::Switch *sw_service_codes_enabled_{nullptr};
+  switch_::Switch *sw_holiday_mode_{nullptr};
 
   // Selects
   select::Select *sel_heating_system_type_{nullptr};

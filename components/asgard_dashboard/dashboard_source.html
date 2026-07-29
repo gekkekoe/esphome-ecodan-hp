@@ -264,6 +264,17 @@ header {
   }
   .ctrl-card.collapsed .collapse-icon { transform: rotate(-90deg); }
   .ctrl-card.collapsed .collapsible-content { display: none; }
+  .sub-label-toggle { cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; transition: color 0.2s; }
+  .sub-label-toggle:hover { color: var(--text); }
+  .sub-card.collapsed .collapse-icon { transform: rotate(-90deg); }
+  .sub-card.collapsed .sub-card-body { display: none; }
+
+  #view-system .section-title { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  #view-system .section-title:hover { color: var(--text); }
+  #view-system .ctrl-card.collapsed .collapse-icon { transform: rotate(-90deg); }
+  #view-system .ctrl-card.collapsed .ctrl-card-body { display: none; }
+  #view-system > .ctrl-card { margin-bottom: 14px; }
+  #view-system > .ctrl-card:last-child { margin-bottom: 0; }
 
   /* ── Physics Card Tabs & Steppers ── */
   .physics-card .step-input { width: 72px; font-size: 12px; }
@@ -404,7 +415,7 @@ header {
     <button class="tab-btn active" onclick="switchTab('monitor', this)">Monitor</button>
     <button class="tab-btn" onclick="switchTab('settings', this)">Settings</button>
     <button class="tab-btn" id="tab-btn-solver" style="display:none;" onclick="switchTab('solver', this)">Solver</button>
-    <button class="tab-btn" onclick="switchTab('logs', this)">Logs</button>
+    <button class="tab-btn" onclick="switchTab('system', this)">System</button>
   </nav>
 </div>
 
@@ -660,49 +671,6 @@ header {
         <button class="send-btn" id="btn-room-z2" onclick="sendRoom('z2', this)" style="margin-bottom:0;">Apply Room Thermostat Z2</button>
       </div>
     </div>
-
-    <div class="ctrl-card" id="card-dhw">
-      <div class="section-title">DHW</div>
-      
-      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
-        
-        <div class="ctrl-row" style="border-bottom: 1px solid var(--border); padding: 0 0 12px 0;">
-          <span class="ctrl-label param-label">Force DHW Now<span class="tip-icon">?</span><span class="tip-box">Triggers non-ECO mode DHW.</span></span>
-          <label class="toggle-wrap">
-            <input type="checkbox" id="sw-fdhw" onchange="sendSwitch('force_dhw', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        
-        <div class="ctrl-row" style="border-bottom: none; padding: 12px 0 0 0;">
-          <span class="ctrl-label param-label">Trigger Regular DHW<span class="tip-icon">?</span>
-          <span class="tip-box">Triggers ECO mode DHW.</span></span>
-          <label class="toggle-wrap">
-            <input type="checkbox" id="sw-regular-dhw" onchange="sendSwitch('sw_regular_dhw', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        
-      </div>
-
-      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="stat-row" style="margin-top: 0;">
-          <div class="stat-item"><span class="stat-label">Setpoint</span><span class="stat-value" id="dhw-setpoint">—</span></div>
-          <div class="stat-item"><span class="stat-label">Drop</span><span class="stat-value" id="dhw-drop">—</span></div>
-          <div class="stat-item"><span class="stat-label">Consumed</span><span class="stat-value" id="dhw-cons">—</span></div>
-          <div class="stat-item"><span class="stat-label">Produced</span><span class="stat-value" id="dhw-prod">—</span></div>
-        </div>
-      </div>
-
-      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
-          <div><div class="stat-label">Tank Temp</div><div class="big-temp" id="dhw-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Target</div><div class="stepper"><button class="step-btn" onclick="step('dhw-sp', -0.5)">−</button><input type="number" class="step-input" id="dhw-sp-val" onchange="manualInput('dhw-sp', this.value)"><button class="step-btn" onclick="step('dhw-sp', +0.5)">+</button></div></div>
-        </div>
-        <button class="send-btn" onclick="sendDHW(this)" style="margin-bottom:0;">Apply DHW</button>
-      </div>
-    </div>
-
     <div class="ctrl-card" id="card-aa">
       <div class="section-title">Auto Adaptive</div>
       
@@ -827,106 +795,202 @@ header {
       </div>
     </div>  
 
-    <div class="ctrl-card" id="card-server-control">
-      <div class="section-title">ADVANCED CONTROL</div>
+    <div class="ctrl-card" id="card-dhw">
+      <div class="section-title">DHW</div>
+      
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
-      <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Power Mode</div>
-        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
-          <span class="ctrl-label param-label">Enable<span class="tip-icon">?</span><span class="tip-box">Power On / Stand-by</span></span>
+        
+        <div class="ctrl-row" style="border-bottom: 1px solid var(--border); padding: 0 0 12px 0;">
+          <span class="ctrl-label param-label">Force DHW Now<span class="tip-icon">?</span><span class="tip-box">Triggers non-ECO mode DHW.</span></span>
           <label class="toggle-wrap">
-            <input type="checkbox" id="sw-power-mode" onchange="sendSwitch('power_mode', this.checked)">
+            <input type="checkbox" id="sw-fdhw" onchange="sendSwitch('force_dhw', this.checked)">
             <span class="toggle-slider"></span>
           </label>
+        </div>
+        
+        <div class="ctrl-row" style="border-bottom: none; padding: 12px 0 0 0;">
+          <span class="ctrl-label param-label">Trigger Regular DHW<span class="tip-icon">?</span>
+          <span class="tip-box">Triggers ECO mode DHW.</span></span>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="sw-regular-dhw" onchange="sendSwitch('sw_regular_dhw', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        
+      </div>
+
+      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="stat-row" style="margin-top: 0;">
+          <div class="stat-item"><span class="stat-label">Setpoint</span><span class="stat-value" id="dhw-setpoint">—</span></div>
+          <div class="stat-item"><span class="stat-label">Drop</span><span class="stat-value" id="dhw-drop">—</span></div>
+          <div class="stat-item"><span class="stat-label">Consumed</span><span class="stat-value" id="dhw-cons">—</span></div>
+          <div class="stat-item"><span class="stat-label">Produced</span><span class="stat-value" id="dhw-prod">—</span></div>
         </div>
       </div>
 
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Odin Solver</div>
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Show Solver Tab<span class="tip-icon">?</span><span class="tip-box">Shows or hides the Solver navigation tab in this dashboard. Enable when Odin is used.</span></span>
-          <label class="toggle-wrap">
-            <input type="checkbox" id="sw-show-solver" onchange="sendSwitch('show_solver_tab_enabled', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
+        <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
+          <div><div class="stat-label">Tank Temp</div><div class="big-temp" id="dhw-current">—<span>°C</span></div></div>
+          <div style="flex:1;"><div class="stat-label">Target</div><div class="stepper"><button class="step-btn" onclick="step('dhw-sp', -0.5)">−</button><input type="number" class="step-input" id="dhw-sp-val" onchange="manualInput('dhw-sp', this.value)"><button class="step-btn" onclick="step('dhw-sp', +0.5)">+</button></div></div>
         </div>
-      </div>
-
-      <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
-        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Ecodan Server Control</div>
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Enable Server Control<span class="tip-icon">?</span><span class="tip-box">Server Control allows you to override the operations.</span></span>
-          <label class="toggle-wrap">
-            <input type="checkbox" id="sw-sc-enable" onchange="onServerControlToggle(this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-
-      <div id="sc-prohibit-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Prohibit Controls</div>
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">DHW<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from running any DHW cycle, regardless of tank temperature, schedule, or manual triggers, until turned back off.</span></span>
-          <label class="toggle-wrap">
-            <input type="checkbox" id="sw-sc-prohibit-dhw" onchange="sendSwitch('server_control_prohibit_dhw', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Z1 Heating<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from heating Zone 1, regardless of schedule or Auto-Adaptive, until turned back off.</span></span>
-          <label class="toggle-wrap">
-            <input type="checkbox" id="sw-sc-prohibit-z1-heat" onchange="sendSwitch('server_control_prohibit_z1_heating', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div class="ctrl-row" id="sc-prohibit-z1-cool-row">
-          <span class="ctrl-label param-label">Z1 Cooling<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from cooling Zone 1, regardless of schedule or Auto-Adaptive, until turned back off.</span></span>
-          <label class="toggle-wrap">
-            <input type="checkbox" id="sw-sc-prohibit-z1-cool" onchange="sendSwitch('server_control_prohibit_z1_cooling', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div id="sc-z2-prohibits" style="display:none;">
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Z2 Heating<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from heating Zone 2, regardless of schedule or Auto-Adaptive, until turned back off.</span></span>
-            <label class="toggle-wrap">
-              <input type="checkbox" id="sw-sc-prohibit-z2-heat" onchange="sendSwitch('server_control_prohibit_z2_heating', this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Z2 Cooling<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from cooling Zone 2, regardless of schedule or Auto-Adaptive, until turned back off.</span></span>
-            <label class="toggle-wrap">
-              <input type="checkbox" id="sw-sc-prohibit-z2-cool" onchange="sendSwitch('server_control_prohibit_z2_cooling', this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-   
-      <div id="heat-short-cycle" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Short Cycle Protection</div>
-        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Predictive Control<span class="tip-icon">?</span><span class="tip-box">Keeps the flow-temp target within ~1°C of the actual feed temperature on every reading (below it in heating, above it in cooling) so a drifting feed can't cross the compressor's cut-off and halt it — preventing short cycles.</span></span><label class="toggle-wrap"><input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)"><span class="toggle-slider"></span></label></div>
-      </div>
-
-      <div id="sc-prevention-section" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Short Cycle Lockout</div>
-        <div class="ctrl-row">
-          <span class="ctrl-label">Lockout Status</span>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="ctrl-value" id="badge-lockout-status" style="font-weight:600;">—</span>
-            <button id="btn-cancel-lockout" class="step-btn" style="display: none; width: 24px; height: 24px;" onclick="apiPost({key: 'short_cycle_mitigation_button', value: 1})" title="Cancel Lockout">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-          </div>
-        </div>
-        <div class="ctrl-row"><span class="ctrl-label param-label">Lockout Strategy<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">Server Control</span>Enables Server Control and prohibits the active zone(s)/mode, then restores the prior controller flags afterwards.<br><br><span class="tip-unit">Flow Control</span>Pushes the flow setpoint 5°C past the current actual feed temp (colder in cooling, warmer in heating) so the unit self-satisfies and the compressor stops — the water pump keeps circulating. The original flow setpoint is restored afterwards.</span></span><select class="ctrl-select" id="sel-lockout-strategy" onchange="sendSelect('lockout_strategy', this)"><option value="0">Server Control</option><option value="1">Flow Control</option></select></div>
-        <div class="ctrl-row"><span class="ctrl-label param-label">Lockout Duration (min)<span class="tip-icon">?</span><span class="tip-box">How long Short Cycle Lockout holds elevated flow temps after triggering, before returning control to normal Auto-Adaptive behaviour. 0 = feature disabled.</span></span><select class="ctrl-select" id="sel-lockout-dur" onchange="sendSelect('lockout_duration', this)"><option value="0">0</option><option value="1">15</option><option value="2">30</option><option value="3">45</option><option value="4">60</option><option value="5">120</option><option value="6">240</option></select></div>
-        <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;"><span class="ctrl-label param-label">Minimum On-Time (min)<span class="tip-icon">?</span><span class="tip-box">How long the compressor must have already been running before Predictive Control or Short Cycle Lockout will act.</span></span><div class="stepper"><button class="step-btn" onclick="step('min-on-time', -1)">−</button><div class="step-val" id="min-on-time-val">—</div><button class="step-btn" onclick="step('min-on-time', +1)">+</button></div></div>
-
-        <button class="send-btn" onclick="sendSC(this)" style="margin-bottom:0; margin-top:24px;">Apply Lockout Settings</button>
+        <button class="send-btn" onclick="sendDHW(this)" style="margin-bottom:0;">Apply DHW</button>
       </div>
     </div>
-  </div>
+
+
+    <div class="ctrl-card" id="card-advanced-control">
+      <div class="section-title">ADVANCED CONTROL</div>
+
+      <div class="sub-card" id="sub-power" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
+        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-power')">Power & Modes <span class="collapse-icon">▼</span></div>
+        <div class="sub-card-body">
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Power<span class="tip-icon">?</span><span class="tip-box">Power On / Stand-by</span></span>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="sw-power-mode" onchange="sendSwitch('power_mode', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Service Codes<span class="tip-icon">?</span><span class="tip-box">Enable service codes mode to see additional diagnostic sensors (compressor starts, pipe temperatures, super/subcool, fan speed). <b>Turn OFF before manually reading codes from your MRC display.</b> Turn back ON when done. Always return to the MRC main screen before toggling — service codes will not work otherwise.</span></span>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="sw-service-codes" onchange="sendSwitch('service_codes_enabled', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+            <span class="ctrl-label param-label">Holiday Mode<span class="tip-icon">?</span><span class="tip-box">Enables Holiday Mode on the heat pump, overriding normal scheduling.</span></span>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="sw-holiday-mode" onchange="sendSwitch('holiday_mode', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-card" id="sub-odin" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-odin')">Odin Solver <span class="collapse-icon">▼</span></div>
+        <div class="sub-card-body">
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+            <span class="ctrl-label param-label">Show Solver Tab<span class="tip-icon">?</span><span class="tip-box">Shows or hides the Solver navigation tab in this dashboard. Enable when Odin is used.</span></span>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="sw-show-solver" onchange="sendSwitch('show_solver_tab_enabled', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-card" id="sub-server" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-server')">Server Control <span class="collapse-icon">▼</span></div>
+        <div class="sub-card-body">
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Enable Server Control<span class="tip-icon">?</span><span class="tip-box">Server Control allows you to override the operations.</span></span>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="sw-sc-enable" onchange="onServerControlToggle(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div id="sc-prohibit-section" style="border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 8px;">
+            <div class="sub-label" style="margin-top: 0; border: none; padding-bottom: 5px;">Prohibit Controls</div>
+            <div class="ctrl-row">
+              <span class="ctrl-label param-label">DHW<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from running any DHW cycle, regardless of tank temperature, schedule, or manual triggers, until turned back off.</span></span>
+              <label class="toggle-wrap">
+                <input type="checkbox" id="sw-sc-prohibit-dhw" onchange="sendSwitch('server_control_prohibit_dhw', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="ctrl-row">
+              <span class="ctrl-label param-label">Z1 Heating<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from heating Zone 1, regardless of schedule or Auto-Adaptive, until turned back off.</span></span>
+              <label class="toggle-wrap">
+                <input type="checkbox" id="sw-sc-prohibit-z1-heat" onchange="sendSwitch('server_control_prohibit_z1_heating', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="ctrl-row" id="sc-prohibit-z1-cool-row">
+              <span class="ctrl-label param-label">Z1 Cooling<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from cooling Zone 1, regardless of schedule or Auto-Adaptive, until turned back off.</span></span>
+              <label class="toggle-wrap">
+                <input type="checkbox" id="sw-sc-prohibit-z1-cool" onchange="sendSwitch('server_control_prohibit_z1_cooling', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div id="sc-z2-prohibits" style="display:none;">
+              <div class="ctrl-row">
+                <span class="ctrl-label param-label">Z2 Heating<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from heating Zone 2, regardless of schedule or Auto-Adaptive, until turned back off.</span></span>
+                <label class="toggle-wrap">
+                  <input type="checkbox" id="sw-sc-prohibit-z2-heat" onchange="sendSwitch('server_control_prohibit_z2_heating', this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+                <span class="ctrl-label param-label">Z2 Cooling<span class="tip-icon">?</span><span class="tip-box">Blocks the heat pump from cooling Zone 2, regardless of schedule or Auto-Adaptive, until turned back off.</span></span>
+                <label class="toggle-wrap">
+                  <input type="checkbox" id="sw-sc-prohibit-z2-cool" onchange="sendSwitch('server_control_prohibit_z2_cooling', this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-card" id="sub-predictive" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-predictive')">Predictive Control <span class="collapse-icon">▼</span></div>
+        <div class="sub-card-body">
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+            <span class="ctrl-label param-label">Enable<span class="tip-icon">?</span><span class="tip-box">Keeps the flow-temp target within ~1°C of the actual feed temperature on every reading (below it in heating, above it in cooling) so a drifting feed can't cross the compressor's cut-off and halt it — preventing short cycles.</span></span>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="sw-psc" onchange="sendSwitch('predictive_short_cycle_control_enabled', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-card" id="sub-short-cycle" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-short-cycle')">Short Cycle Lockout <span class="collapse-icon">▼</span></div>
+        <div class="sub-card-body">
+          <div class="ctrl-row">
+            <span class="ctrl-label">Lockout Status</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="ctrl-value" id="badge-lockout-status" style="font-weight:600;">—</span>
+              <button id="btn-cancel-lockout" class="step-btn" style="display: none; width: 24px; height: 24px;" onclick="apiPost({key: 'short_cycle_mitigation_button', value: 1})" title="Cancel Lockout">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Lockout Strategy<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">Server Control</span>Enables Server Control and prohibits the active zone(s)/mode, then restores the prior controller flags afterwards.<br><br><span class="tip-unit">Flow Control</span>Pushes the flow setpoint 5°C past the current actual feed temp (colder in cooling, warmer in heating) so the unit self-satisfies and the compressor stops — the water pump keeps circulating. The original flow setpoint is restored afterwards.</span></span>
+            <select class="ctrl-select" id="sel-lockout-strategy" onchange="sendSelect('lockout_strategy', this)">
+              <option value="0">Server Control</option>
+              <option value="1">Flow Control</option>
+            </select>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Lockout Duration (min)<span class="tip-icon">?</span><span class="tip-box">How long Short Cycle Lockout holds elevated flow temps after triggering, before returning control to normal Auto-Adaptive behaviour. 0 = feature disabled.</span></span>
+            <select class="ctrl-select" id="sel-lockout-dur" onchange="sendSelect('lockout_duration', this)">
+              <option value="0">0</option>
+              <option value="1">15</option>
+              <option value="2">30</option>
+              <option value="3">45</option>
+              <option value="4">60</option>
+              <option value="5">120</option>
+              <option value="6">240</option>
+            </select>
+          </div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+            <span class="ctrl-label param-label">Minimum On-Time (min)<span class="tip-icon">?</span><span class="tip-box">How long the compressor must have already been running before Predictive Control or Short Cycle Lockout will act.</span></span>
+            <div class="stepper">
+              <button class="step-btn" onclick="step('min-on-time', -1)">−</button>
+              <div class="step-val" id="min-on-time-val">—</div>
+              <button class="step-btn" onclick="step('min-on-time', +1)">+</button>
+            </div>
+          </div>
+          <button class="send-btn" onclick="sendSC(this)" style="margin-bottom:0; margin-top:16px;">Apply Lockout Settings</button>
+        </div>
+      </div>
+    </div>
+</div>
 </div>
 
 <div id="view-solver" class="view-section">
@@ -1215,54 +1279,54 @@ header {
   </div>
 </div>
 
-<div id="view-logs" class="view-section">
-   <div class="chart-card full-width" style="margin-bottom: 20px;">
-     <div class="chart-header">
-       <div class="section-title" style="margin:0">Settings Backup</div>
-       <div id="settings-backup-status" style="font-size:10px; font-family:var(--mono); color:var(--text3)"></div>
+<div id="view-system" class="view-section">
+   <div class="ctrl-card collapsed" id="sys-settings-backup">
+     <div class="section-title" onclick="toggleCard('sys-settings-backup')">Settings Backup <span class="collapse-icon">▼</span></div>
+     <div class="ctrl-card-body">
+       <div id="settings-backup-status" style="font-size:10px; font-family:var(--mono); color:var(--text3); margin-bottom:8px;"></div>
+       <div style="color: var(--text3); font-size: 11px; margin-bottom: 12px; line-height: 1.5;">
+         Save every Settings and Solver tab value (numbers, switches, sliders, selects) to a JSON file, or restore them from a previously saved file.
+       </div>
+       <div class="log-controls">
+          <button class="log-btn" style="border-color: var(--accent); color: var(--accent);" onclick="downloadSettingsBackup()">Save Settings</button>
+          <button class="log-btn" id="btn-restore-settings" style="border-color: var(--accent); color: var(--accent);" onclick="triggerRestoreSettings()">Restore Settings</button>
+       </div>
+       <input type="file" id="settings-restore-file" style="display:none" accept=".json,application/json" onchange="restoreSettingsFromFile()">
      </div>
-
-     <div style="color: var(--text3); font-size: 11px; margin: -4px 0 12px 0; line-height: 1.5;">
-       Save every Settings and Solver tab value (numbers, switches, sliders, selects) to a JSON file, or restore them from a previously saved file.
-     </div>
-
-     <div class="log-controls">
-        <button class="log-btn" style="border-color: var(--accent); color: var(--accent);" onclick="downloadSettingsBackup()">Save Settings</button>
-        <button class="log-btn" id="btn-restore-settings" style="border-color: var(--accent); color: var(--accent);" onclick="triggerRestoreSettings()">Restore Settings</button>
-     </div>
-     <input type="file" id="settings-restore-file" style="display:none" accept=".json,application/json" onchange="restoreSettingsFromFile()">
    </div>
 
-   <div class="chart-card full-width">
-     <div class="chart-header">
-       <div class="section-title" style="margin:0">System Logs</div>
-       <div id="log-status" style="font-size:10px; font-family:var(--mono); color:var(--text3)">Connecting...</div>
+   <div class="ctrl-card" id="sys-firmware">
+     <div class="section-title" onclick="toggleCard('sys-firmware')">Firmware <span class="collapse-icon">▼</span></div>
+     <div class="ctrl-card-body">
+       <div class="log-controls">
+          <button class="log-btn" style="border-color: var(--accent); color: var(--accent);" onclick="triggerUpload()">Manual Firmware Upload</button>
+          <button class="log-btn" id="btn-check-update" style="border-color: var(--accent); color: var(--accent);" onclick="checkForUpdate(this)">Check for Update</button>
+       </div>
+       <div id="ota-update-banner" style="display:none;background:var(--card2,#1e2535);border:1px solid var(--accent);border-radius:8px;padding:12px;margin:10px 0;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <span id="ota-version-info" style="font-size:12px;color:var(--text);font-family:var(--mono);font-weight:600;"></span>
+              <button class="log-btn" id="btn-apply-update" style="border-color:#e07b39;color:#e07b39;font-weight:bold;" onclick="applyUpdate(this)">Download</button>
+          </div>
+          <div id="ota-release-notes" style="margin-top:12px; font-size:11px; color:var(--text2); font-family:var(--mono); line-height:1.5; border-top:1px solid var(--border); padding-top:10px; display:none;"></div>
+          <span id="ota-apply-status" style="display:block; margin-top:8px; font-size:11px; color:var(--text3); font-family:var(--mono);"></span>
+       </div>
      </div>
-
-     <div class="log-controls">
-        <button class="log-btn" id="pauseBtn" onclick="togglePause()">Pause</button>
-        <button class="log-btn" onclick="clearLogs()">Clear</button>
-        <button class="log-btn" onclick="downloadLogs()">Download</button>
-        <button class="log-btn" style="border-color: var(--accent); color: var(--accent);" onclick="triggerUpload()">Manual Firmware Upload</button>
-        <button class="log-btn" id="btn-check-update" style="border-color: var(--accent); color: var(--accent);" onclick="checkForUpdate(this)">Check for Update</button>
-     </div>
-
-     <!-- ── Update available banner (hidden until update found) ──────────── -->
-    <div id="ota-update-banner" style="display:none;background:var(--card2,#1e2535);border:1px solid var(--accent);border-radius:8px;padding:12px;margin:10px 0;">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <span id="ota-version-info" style="font-size:12px;color:var(--text);font-family:var(--mono);font-weight:600;"></span>
-            <button class="log-btn" id="btn-apply-update" style="border-color:#e07b39;color:#e07b39;font-weight:bold;" onclick="applyUpdate(this)">Download</button>
-        </div>
-        
-        <div id="ota-release-notes" style="margin-top:12px; font-size:11px; color:var(--text2); font-family:var(--mono); line-height:1.5; border-top:1px solid var(--border); padding-top:10px; display:none;"></div>
-        
-        <span id="ota-apply-status" style="display:block; margin-top:8px; font-size:11px; color:var(--text3); font-family:var(--mono);"></span>
-    </div>
-     
-     <div id="logs-container"></div>
    </div>
 
    <input type="file" id="ota-file" style="display:none" accept=".bin" onchange="performUpload()">
+
+   <div class="ctrl-card" id="sys-logs">
+     <div class="section-title" onclick="toggleCard('sys-logs')">System Logs <span class="collapse-icon">▼</span></div>
+     <div class="ctrl-card-body">
+       <div id="log-status" style="font-size:10px; font-family:var(--mono); color:var(--text3); margin-bottom:8px;">Connecting...</div>
+       <div class="log-controls">
+          <button class="log-btn" id="pauseBtn" onclick="togglePause()">Pause</button>
+          <button class="log-btn" onclick="clearLogs()">Clear</button>
+          <button class="log-btn" onclick="downloadLogs()">Download</button>
+       </div>
+       <div id="logs-container" style="margin-top:10px;"></div>
+     </div>
+   </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1290,7 +1354,7 @@ const history = {
 // ── Central control registry ────────────────────────────────────────────────
 // Single source of truth for every editable Settings & Solver tab control.
 // To add, remove, or rename a control, edit ONLY this list — `pending`,
-// `LIMITS`, `STEP_EL`, and the Settings Backup save/restore feature (Logs tab)
+// `LIMITS`, `STEP_EL`, and the Settings Backup save/restore feature (System tab)
 // are all generated from it automatically.
 //
 // type:
@@ -1380,6 +1444,8 @@ const CONTROLS = [
 
   // ── Advanced Control ──
   { type:'switch', key:'power_mode', el:'sw-power-mode' },
+  { type:'switch', key:'service_codes_enabled', el:'sw-service-codes' },
+  { type:'switch', key:'holiday_mode', el:'sw-holiday-mode' },
   { type:'switch', key:'server_control_enabled', el:'sw-sc-enable' },
   { type:'switch', key:'server_control_prohibit_dhw', el:'sw-sc-prohibit-dhw' },
   { type:'switch', key:'server_control_prohibit_z1_heating', el:'sw-sc-prohibit-z1-heat' },
@@ -1480,19 +1546,26 @@ function toggleCard(cardId) {
   localStorage.setItem('collapseState_' + cardId, isCollapsed ? 'true' : 'false');
 }
 
-// Restores the collapsed state on page load
-function initCollapsibleCards() {
-  const cards = ['card-odin-settings', 'card-physics-data'];
-  cards.forEach(id => {
-    const isCollapsed = localStorage.getItem('collapseState_' + id) === 'true';
-    if (isCollapsed) {
-      const card = document.getElementById(id);
-      if (card) card.classList.add('collapsed');
-    }
-  });
+// Toggles the visibility of a sub-card within Advanced Control
+function toggleSubCard(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('collapsed');
+  localStorage.setItem('collapseState_' + id, el.classList.contains('collapsed') ? 'true' : 'false');
 }
 
-// Shared reference to all four monitor-tab charts (lazy — safe to call before init).
+// Restores the collapsed state on page load
+function initCollapsibleCards() {
+  const cards = ['card-odin-settings', 'card-physics-data', 'sys-settings-backup', 'sys-firmware', 'sys-logs'];
+  const subCards = ['sub-power', 'sub-odin', 'sub-server', 'sub-predictive', 'sub-short-cycle'];
+  const defaultCollapsed = ['sys-settings-backup'];
+  [...cards, ...subCards].forEach(id => {
+    const stored = localStorage.getItem('collapseState_' + id);
+    const isCollapsed = stored !== null ? stored === 'true' : defaultCollapsed.includes(id);
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('collapsed', isCollapsed);
+  });
+}
 function monitorCharts() {
   return [tempChart, freqChart, outsideTempChart, statusChart].filter(Boolean);
 }
@@ -1733,8 +1806,8 @@ async function applyUpdate(btn) {
 function goToUpdateTab() {
   const tabs = document.querySelectorAll('.tab-btn');
   tabs.forEach(t => {
-    if (t.textContent.trim() === 'Logs') {
-      switchTab('logs', t);
+    if (t.textContent.trim() === 'System') {
+      switchTab('system', t);
       // smooth scroll to the banner
       document.getElementById('ota-update-banner').scrollIntoView({ behavior: 'smooth' });
     }
@@ -3618,6 +3691,8 @@ function render(d) {
   seedPending('min-on-time', d.min_compressor_on_time);
 
   setToggle('sw-power-mode', d.power_mode);
+  setToggle('sw-service-codes', d.service_codes_enabled);
+  setToggle('sw-holiday-mode', d.holiday_mode);
 
   toggleCoolingUI();
 

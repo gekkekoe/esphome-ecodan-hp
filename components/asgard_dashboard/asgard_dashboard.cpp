@@ -394,6 +394,8 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "force_dhw")                     { doSwitch(sw_force_dhw_);     return; } 
   if (key == "sw_regular_dhw")                { doSwitch(sw_regular_dhw_);   return; }
   if (key == "power_mode")                    { doSwitch(sw_power_mode_);    return; }
+  if (key == "service_codes_enabled")           { doSwitch(sw_service_codes_enabled_); return; }
+  if (key == "holiday_mode")                    { doSwitch(sw_holiday_mode_);        return; }
   if (key == "predictive_short_cycle_control_enabled") { doSwitch(pred_sc_switch_);   return; }
   if (key == "use_dynamic_cost_solver")       { doSwitch(sw_use_solver_);    return; }
   if (key == "show_solver_tab_enabled")       { doSwitch(sw_show_solver_tab_); this->odin_lfs_dirty_ = true; return; }
@@ -613,6 +615,8 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.sel_lockout_duration = get_sel(lockout_duration_);
   current_snapshot_.sel_lockout_strategy = get_sel(lockout_strategy_);
   current_snapshot_.sw_power_mode = get_sw(sw_power_mode_);
+  current_snapshot_.sw_service_codes_enabled = get_sw(sw_service_codes_enabled_);
+  current_snapshot_.sw_holiday_mode = get_sw(sw_holiday_mode_);
 
   current_snapshot_.heating_consumed = get_f(heating_consumed_);
   current_snapshot_.heating_produced = get_f(heating_produced_);
@@ -903,6 +907,8 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("force_dhw",                   snap.sw_force_dhw);
   p_b("sw_regular_dhw",              snap.sw_regular_dhw);
   p_b("power_mode", snap.sw_power_mode);
+  p_b("service_codes_enabled", snap.sw_service_codes_enabled);
+  p_b("holiday_mode",          snap.sw_holiday_mode);
 
   p_n("cooling_smart_start_z1",  snap.num_cooling_smart_start_z1.val);
   p_lim("cool_smart_z1_lim",     snap.num_cooling_smart_start_z1);
