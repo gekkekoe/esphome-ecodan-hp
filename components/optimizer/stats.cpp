@@ -1,6 +1,7 @@
 #include "optimizer.h"
 #include "esphome/components/ecodan/ecodan.h"
 #include "esphome/core/log.h"
+#include <inttypes.h>
 #include <cmath>
 
 using std::isnan;
@@ -9,6 +10,38 @@ namespace esphome
 {
     namespace optimizer
     {
+        void Optimizer::restore_energy_buckets_()
+        {
+            EnergyBucketState saved;
+            if (!this->energy_buckets_pref_.load(&saved)) return;
+
+            auto &status = this->state_.ecodan_instance->get_status();
+            if (status.day_of_year() != saved.day) return;
+
+            ESP_LOGI(OPTIMIZER_TAG, "Restoring energy buckets from reboot (day %" PRIu32 ").", saved.day);
+            this->last_total_heating_produced_ = saved.last_total_heating_produced;
+            this->last_total_heating_consumed_ = saved.last_total_heating_consumed;
+            this->last_total_cooling_produced_ = saved.last_total_cooling_produced;
+            this->last_total_cooling_consumed_ = saved.last_total_cooling_consumed;
+            this->last_total_dhw_produced_ = saved.last_total_dhw_produced;
+            this->last_total_dhw_consumed_ = saved.last_total_dhw_consumed;
+            this->last_total_all_consumed_ = saved.last_total_all_consumed;
+        }
+
+        void Optimizer::save_energy_buckets_(int day)
+        {
+            EnergyBucketState buckets;
+            buckets.day = static_cast<uint32_t>(day);
+            buckets.last_total_heating_produced = this->last_total_heating_produced_;
+            buckets.last_total_heating_consumed = this->last_total_heating_consumed_;
+            buckets.last_total_cooling_produced = this->last_total_cooling_produced_;
+            buckets.last_total_cooling_consumed = this->last_total_cooling_consumed_;
+            buckets.last_total_dhw_produced = this->last_total_dhw_produced_;
+            buckets.last_total_dhw_consumed = this->last_total_dhw_consumed_;
+            buckets.last_total_all_consumed = this->last_total_all_consumed_;
+            this->energy_buckets_pref_.save(&buckets);
+        }
+
         // Raw Data Collection Model
         void Optimizer::update_heat_model()
         {
@@ -274,6 +307,9 @@ namespace esphome
                 this->daily_runtime_cool_ = 0.0f;
                 this->daily_cool_outside_temp_sum_ = 0.0f;
                 this->daily_cool_outside_temp_count_ = 0;
+
+                // Persist energy buckets so a reboot mid-day can restore them
+                this->save_energy_buckets_(this->last_processed_day_);
 
                 // Reset daily accumulators
                 this->last_total_heating_produced_ = 0.0f;

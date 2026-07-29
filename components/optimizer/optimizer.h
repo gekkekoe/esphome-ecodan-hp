@@ -111,6 +111,21 @@ namespace esphome
       float    last_total_dhw_consumed_     = 0.0f;
       float    last_total_all_consumed_     = 0.0f;
 
+      // Persistent energy bucket storage across reboots
+      struct EnergyBucketState {
+          uint32_t day = 0;
+          float last_total_heating_produced = 0.0f;
+          float last_total_heating_consumed = 0.0f;
+          float last_total_cooling_produced = 0.0f;
+          float last_total_cooling_consumed = 0.0f;
+          float last_total_dhw_produced = 0.0f;
+          float last_total_dhw_consumed = 0.0f;
+          float last_total_all_consumed = 0.0f;
+      };
+      void restore_energy_buckets_();
+      void save_energy_buckets_(int day);
+      esphome::ESPPreferenceObject energy_buckets_pref_;
+
       // 10-minute wind-down window: keeps buckets open after compressor stops
       // to catch delayed meter ticks. Initialised to UINT32_MAX - 700000 so the
       // window is guaranteed expired at boot regardless of millis() value.

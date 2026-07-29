@@ -1,4 +1,5 @@
 #include "optimizer.h"
+#include "esphome/core/preferences.h"
 
 using std::isnan;
 
@@ -11,6 +12,7 @@ namespace esphome
         Optimizer::Optimizer(OptimizerState state) : state_(state) {
 
             this->odin_mutex_ = xSemaphoreCreateMutex();
+            this->energy_buckets_pref_ = global_preferences->make_preference<EnergyBucketState>(0xEC0D0001);
 
             auto update_if_changed = [this](float &storage, float new_val, auto callback) {
                 if (std::isnan(new_val)) return;
@@ -68,6 +70,7 @@ namespace esphome
                     });
                 });
             }
+            this->restore_energy_buckets_();
         }
 
     } // namespace optimizer
