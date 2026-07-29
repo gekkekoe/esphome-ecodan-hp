@@ -4169,7 +4169,8 @@ async function runOdinSolver() {
             inject72('energy_consumption', data.energy_consumption);
             inject72('heat_production', data.heat_production);
             inject72('expected_cost', data.expected_cost);
-            inject72('battery_discharge', data.battery_discharge); 
+            inject72('battery_discharge', data.battery_discharge);
+            inject72('decision_reason', data.decision_reason);
 
             odinDataCache.last_run = {
                 execution_ms:    data.execution_ms                 || 0,
