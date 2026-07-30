@@ -956,7 +956,7 @@ Hover any hour on the chart and the tooltip adds a line explaining *why* the sol
 | **Coasting** | The heat pump was off because doing nothing was cheaper than running — the house could coast on stored heat. |
 | **Comfort (limit)** | The house was at or past the edge of your comfort band, so the hard comfort penalty forced the pump to run regardless of price. |
 | **Comfort (drift)** | Inside the comfort band, but the room is on the uncomfortable side of your target temperature — too warm when cooling, too cold when heating. The solver ran to hold or recover that position and stay ahead of a future hard-limit hit. This is the most common reason on a normal day; holding the room against drift is simply most of what a heat pump does. |
-| **Buffering (cheap energy)** | The pump ran even though comfort did not ask for it. The room is on the *far* side of your target — cooled below it when cooling, heated above it when heating — because a low grid price (or an efficient part-load point) now beats paying for the same energy in a more expensive hour later. |
+| **Buffering (cheap energy)** | The pump ran even though comfort did not ask for it. The room is on the *far* side of your target — cooled when above target, heated when below target — because a low grid price (or an efficient part-load point) now beats paying for the same energy in a more expensive hour later. |
 | **Buffering (solar)** | Same as above, but specifically because your PV array is covering the draw right now — the same energy would otherwise be free/wasted or come from the grid later. |
 | **Modulation / Wear** | The load level was chosen for part-load efficiency (running at a more efficient modulation point) rather than because of price or comfort. |
 | **Energy price** | No other factor dominated — this was simply the cheapest hour to buy the kWh needed. |
@@ -972,7 +972,7 @@ The last three ("blocked") reasons are worth noticing specifically — they mean
 - On the uncomfortable side of the target → **Comfort (drift)**. The pump had to run; a low price or free solar may well have made it cheap, but it was not the reason.
 - On the far side of the target → **Buffering**. Comfort was already satisfied and the solver deliberately overshot to bank energy, either because PV covered it (**Buffering (solar)**) or because the grid price/efficiency was simply good right now (**Buffering (cheap energy)**).
 
-So a hot afternoon spent sitting just under your cooling ceiling reads as *Comfort (drift)*, even with the PV array at full output — because without cooling the room would have breached the ceiling. Deliberately pre-cooling below your target on that same sunny afternoon reads as *Buffering (solar)*; doing the same overnight on a cheap grid tariff, with no sun involved, reads as *Buffering (cheap energy)*. Earlier firmware reported one undifferentiated "Thermal buffer" label for all of this, which both conflated the ceiling case with the pump running and left "why was it cheap" unanswered.
+So a hot afternoon spent sitting just under your cooling ceiling reads as *Comfort (drift)*, even with the PV array at full output — because without cooling the room would have breached the ceiling. Deliberately pre-cooling below your target on that same sunny afternoon reads as *Buffering (solar)*; doing the same overnight on a cheap grid tariff, with no sun involved, reads as *Buffering (cheap energy)*.
 
 ### What good performance looks like
 
