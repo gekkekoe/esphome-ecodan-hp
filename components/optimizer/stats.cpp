@@ -278,7 +278,6 @@ namespace esphome
             // Initialize on boot to prevent jump
             if (this->last_processed_day_ == -1) {
                 this->last_processed_day_ = current_day;
-                this->last_processed_hour_ = current_hour;
                 return;
             }
 

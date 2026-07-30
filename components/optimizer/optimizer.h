@@ -94,7 +94,6 @@ namespace esphome
       float    daily_max_output_power_      {0.0f};
       uint32_t last_check_ms_               = 0;
       int      last_processed_day_          = -1;
-      int      last_processed_hour_         {-1};
       int      last_pre_hour_triggered_      {-1};
       float    daily_runtime_cool_          = 0.0f;
       float    daily_cool_outside_temp_sum_   = 0.0f;

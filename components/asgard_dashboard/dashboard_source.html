@@ -3793,29 +3793,6 @@ function render(d) {
   seedPending('raw-cool-out',  d.raw_cool_avg_outside_temp);
   seedPending('raw-cool-room', d.raw_cool_avg_room_temp);
 
-  const isRunning = d.status_compressor;
-  const isFlowing = (d.flow_rate && d.flow_rate > 2) || d.status_water_pump;
-  
-  const op = d.operation_mode;
-  const isHeating = (op === 2 || op === 5);
-  const isCooling = (op === 3);
-  const isDHW     = (op === 1 || op === 6);
-
-  const elFlow = document.getElementById('icon-flow');
-  if(elFlow) elFlow.classList.toggle('anim-pulse', isFlowing);
-
-  const elFreq = document.getElementById('icon-freq');
-  if(elFreq) elFreq.classList.toggle('anim-spin', isRunning);
-
-  const elPerfHeat = document.getElementById('icon-perf-heat');
-  if(elPerfHeat) elPerfHeat.classList.toggle('anim-pulse', isRunning && isHeating);
-
-  const elPerfCool = document.getElementById('icon-perf-cool');
-  if(elPerfCool) elPerfCool.classList.toggle('anim-spin', isRunning && isCooling);
-
-  const elPerfDhw = document.getElementById('icon-perf-dhw');
-  if(elPerfDhw) elPerfDhw.classList.toggle('anim-pulse', isRunning && isDHW);
-
   // --- SERVER CONTROL ---
   if (d.server_control_enabled !== undefined) {
     const enableCb = document.getElementById('sw-sc-enable');
