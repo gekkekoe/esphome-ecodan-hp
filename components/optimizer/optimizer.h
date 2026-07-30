@@ -125,6 +125,7 @@ namespace esphome
       void restore_energy_buckets_();
       void save_energy_buckets_(int day);
       esphome::ESPPreferenceObject energy_buckets_pref_;
+      bool restore_attempted_ = false;
 
       // 10-minute wind-down window: keeps buckets open after compressor stops
       // to catch delayed meter ticks. Initialised to UINT32_MAX - 700000 so the

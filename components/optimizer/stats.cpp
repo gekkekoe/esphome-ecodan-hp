@@ -13,11 +13,20 @@ namespace esphome
         void Optimizer::restore_energy_buckets_()
         {
             EnergyBucketState saved;
-            if (!this->energy_buckets_pref_.load(&saved)) return;
+            if (!this->energy_buckets_pref_.load(&saved)) {
+                this->restore_attempted_ = false;  // no data yet, keep retrying
+                return;
+            }
 
             auto &status = this->state_.ecodan_instance->get_status();
-            if (status.day_of_year() != saved.day) return;
+            int current_day = status.day_of_year();
+            if (current_day < 0) {
+                this->restore_attempted_ = false;  // Ecodan status not ready, retry later
+                return;
+            }
+            if (current_day != saved.day) return;
 
+            this->restore_attempted_ = true;
             ESP_LOGI(OPTIMIZER_TAG, "Restoring energy buckets from reboot (day %" PRIu32 ").", saved.day);
             this->last_total_heating_produced_ = saved.last_total_heating_produced;
             this->last_total_heating_consumed_ = saved.last_total_heating_consumed;
@@ -47,6 +56,14 @@ namespace esphome
         {
             if (this->state_.ecodan_instance == nullptr) return;
             auto &status = this->state_.ecodan_instance->get_status();
+
+            // Deferred restore: if constructor ran before Ecodan status was ready,
+            // retry now that we have a valid day.
+            if (!this->restore_attempted_) {
+                if (status.day_of_year() >= 0) {
+                    this->restore_energy_buckets_();
+                }
+            }
             
             uint32_t now = millis();
             bool is_running = (status.CompressorFrequency > 0) || status.CompressorOn;
@@ -308,9 +325,6 @@ namespace esphome
                 this->daily_cool_outside_temp_sum_ = 0.0f;
                 this->daily_cool_outside_temp_count_ = 0;
 
-                // Persist energy buckets so a reboot mid-day can restore them
-                this->save_energy_buckets_(this->last_processed_day_);
-
                 // Reset daily accumulators
                 this->last_total_heating_produced_ = 0.0f;
                 this->last_total_heating_consumed_ = 0.0f;
@@ -319,7 +333,7 @@ namespace esphome
 
                 this->last_total_dhw_produced_ = 0.0f;
                 this->last_total_dhw_consumed_ = 0.0f;
-                
+
                 // Reset global trackers to prevent false deltas across midnight
                 this->last_global_prod_ = -1.0f;
                 this->last_global_cons_ = -1.0f;
@@ -328,7 +342,14 @@ namespace esphome
                 this->last_was_dhw_     = false;
                 this->last_was_heating_ = false;
                 this->last_run_time_    = UINT32_MAX - 700000UL;
+
+                // Persist the freshly-reset (zeroed) buckets under the NEW day.
+                this->save_energy_buckets_(this->last_processed_day_);
             }
+
+            // Checkpoint on every tick (this function runs every 30s
+            //preferences: flash_write_interval: 5min
+            this->save_energy_buckets_(current_day);
 
             // HOURLY MPC TRIGGER
             if (this->solver_enabled()) {
