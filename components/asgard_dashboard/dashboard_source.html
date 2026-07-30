@@ -1498,13 +1498,21 @@ const REASON_INFO = [
     { label: 'Coasting' },
     { label: 'Comfort (limit)' },
     { label: 'Comfort (drift)' },
-    { label: 'Thermal buffer' },
+    // This label means the pump ran when comfort did NOT require it (room on the far
+    // side of sched_base). Hours spent holding the room near a band edge are
+    // Comfort (drift), even on free solar. Split into two sub-reasons (indices 4 and
+    // 11, index-aligned with the C++ enum) so the tooltip says WHY it was worth
+    // buffering: PV covering the draw, or just a cheap grid price/efficient COP.
+    { label: 'Buffering (cheap energy)' },
     { label: 'Modulation / Wear' },
     { label: 'Energy price' },
     { label: 'Hot water' },
     { label: 'Stop price' },
     { label: 'Solar-only' },
-    { label: 'Power limit' }
+    { label: 'Power limit' },
+    { label: 'Buffering (solar)' }   // index 11 — REASON_THERMAL_BUFFER_SOLAR, appended
+                                      // after Power limit for wire-compatibility, not
+                                      // grouped next to index 4 above.
 ];
 
 const reasonAt = (idx) => {
@@ -1523,13 +1531,6 @@ const reasonAt = (idx) => {
         }
     }
     return null;
-};
-
-const reasonTooltipFooter = (items) => {
-    if (!items || !items.length) return '';
-    const r = reasonAt(items[0].dataIndex);
-    if (!r || !r.label || r.label === '—') return '';
-    return r.label;
 };
 
 let odinConsChart = null;
@@ -2401,9 +2402,13 @@ const xAxis = {
                           const minutes = isLive ? getOdinHourMinutesAt(index)
                               : (typeof hourlyHistory !== 'undefined' ? getOdinHourMinutesForRecord(hourlyHistory[index]) : null);
                           const summary = summarizeOdinHourModes(minutes);
-                          return summary ? [label, 'Actual: ' + summary] : label;
+                          const lines = summary ? [label, 'Actual: ' + summary] : [label];
+                          const r = reasonAt(index);
+                          if (r && r.label && r.label !== '—') {
+                              lines.push('Reason: ' + r.label);
+                          }
+                          return lines;
                       },
-                      footer: reasonTooltipFooter
                   }
               }
           },
