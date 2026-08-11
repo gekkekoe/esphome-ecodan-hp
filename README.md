@@ -61,8 +61,7 @@ If you want to contribute a translation: copy the file `ecodan-labels-en.yaml` t
 
 # Result
 Here's how it's connected inside the heatpump:
-
-![image](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/img/asgard-installed.png?raw=true)
+![image](img/asgard-installed.jpg?raw=true)
 
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/gekkekoe)
