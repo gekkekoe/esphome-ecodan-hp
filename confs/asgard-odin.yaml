@@ -128,8 +128,7 @@ script:
                   params["current_hour"] = _cur_hour;
                   params["current_room_temp"] = id(virtual_climate_z1).current_temperature;
                   params["hl_tm_product"] = id(num_raw_hl_tm_product).state;
-                  // Fallback value only. odin_server.cpp always computes the day-method
-                  // HL, and — if use_greybox_hl is enabled and the fit is accepted
+                  // Fallback value only. odin_server.cpp always computes the day-method HL.
                   params["passive_solar_gain_factor"] = solar_factor;
                   params["battery_soc_kwh"] = id(num_battery_soc_kwh).state;
                   params["battery_max_discharge_kw"] = id(num_battery_max_discharge_kw).state;
@@ -152,36 +151,6 @@ script:
                   params["cool_runtime_hours"] = id(num_raw_cool_runtime_hours).state;
                   params["cool_avg_outside_temp"] = id(num_raw_cool_avg_outside_temp).state;
                   params["cool_avg_room_temp"] = id(num_raw_cool_avg_room_temp).state;
-
-                  // Extract trailing 24 hours via ArduinoJson v7 syntax
-                  JsonArray arr_room = params["hist_room_temp"].to<JsonArray>();
-                  JsonArray arr_out = params["hist_out_temp"].to<JsonArray>();
-                  JsonArray arr_solar = params["hist_solar"].to<JsonArray>();
-                  JsonArray arr_prod = params["hist_prod"].to<JsonArray>();
-                  JsonArray arr_op = params["hist_op_mode"].to<JsonArray>();
-
-                  for (int i = 0; i < 24; i++) {
-                      int idx = _cur_hour + i;
-                      if (idx >= 0 && idx < 72) {
-                          float r = id(asgard_dashboard_id)->get_odin_value("actual_room_temp", idx);
-                          if (std::isnan(r)) arr_room.add(nullptr); else arr_room.add(r);
-                          
-                          float o = id(asgard_dashboard_id)->get_odin_value("weather", idx); 
-                          if (std::isnan(o)) arr_out.add(nullptr); else arr_out.add(o);
-                          
-                          float s = id(asgard_dashboard_id)->get_odin_value("solar", idx);
-                          if (std::isnan(s)) arr_solar.add(nullptr); else arr_solar.add(s);
-                          
-                          float p = id(asgard_dashboard_id)->get_odin_value("actual_prod", idx);
-                          if (std::isnan(p)) arr_prod.add(nullptr); else arr_prod.add(p);
-                          
-                          float op = id(asgard_dashboard_id)->get_odin_value("operation_mode", idx);
-                          if (std::isnan(op)) arr_op.add(nullptr); else arr_op.add(op);
-                      } else {
-                          arr_room.add(nullptr); arr_out.add(nullptr); arr_solar.add(nullptr); 
-                          arr_prod.add(nullptr); arr_op.add(nullptr);
-                      }
-                  }
 
                   std::string output;
                   serializeJson(doc, output);

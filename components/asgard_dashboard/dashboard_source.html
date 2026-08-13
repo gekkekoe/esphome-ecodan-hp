@@ -4137,29 +4137,6 @@ async function runOdinSolver() {
         minCoolFlow = 18.0;
     }
     
-    // Extract trailing 24 hours. The 72h window stores yesterday at 0-23, and today at 24-47.
-    // The trailing 24 hours ends precisely at (today_offset + solveHour - 1).
-    // Mathematically, this maps perfectly to indices [solveHour] through [solveHour + 23].
-    const hist_room_temp = [];
-    const hist_out_temp = [];
-    const hist_solar = [];
-    const hist_prod = [];
-    const hist_op_mode = [];
-
-    for (let i = 0; i < 24; i++) {
-        const idx = solveHour + i;
-        if (odinDataCache && idx >= 0 && idx < 72) {
-            hist_room_temp.push(odinDataCache.actual_room_temp?.[idx] ?? null);
-            hist_out_temp.push(odinDataCache.weather?.[idx] ?? null); // Forecast acts as out_temp
-            hist_solar.push(odinDataCache.solar?.[idx] ?? null);
-            hist_prod.push(odinDataCache.actual_prod?.[idx] ?? null);
-            hist_op_mode.push(odinDataCache.operation_mode?.[idx] ?? null);
-        } else {
-            hist_room_temp.push(null); hist_out_temp.push(null); hist_solar.push(null);
-            hist_prod.push(null); hist_op_mode.push(null);
-        }
-    }
-
     let solarFactor = pending['raw-solar-factor'] ?? latestState.raw_solar_factor;
     if (solarFactor === undefined || solarFactor === null || isNaN(solarFactor) || solarFactor <= 0.001) {
         solarFactor = 0.015;
@@ -4193,12 +4170,7 @@ async function runOdinSolver() {
             dhw_start_threshold: dhwThresh,
             // 0=OFF,1=DHW_ON,2=HEAT_ON,3=COOL_ON,5=FROST_PROTECT,6=LEGIONELLA,255=UNAVAILABLE
             current_operation_mode: selectedMode,
-            min_cool_flow: minCoolFlow,
-            hist_room_temp: hist_room_temp,
-            hist_out_temp: hist_out_temp,
-            hist_solar: hist_solar,
-            hist_prod: hist_prod,
-            hist_op_mode: hist_op_mode
+            min_cool_flow: minCoolFlow
         }
     };
 
