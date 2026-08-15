@@ -109,6 +109,7 @@ substitutions:
   status_water_pump: Statut pompe à eau
   status_water_pump_2: Statut pompe à eau no2
   status_water_pump_3: Statut pompe à eau no3
+  status_water_pump_4: Statut pompe à eau no4
   status_mixing_valve: Mixing Valve Statut
   mixing_valve_step: Mixing Valve étape
   status_multi_zone: Multizone Statut

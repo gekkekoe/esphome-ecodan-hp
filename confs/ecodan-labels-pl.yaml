@@ -109,6 +109,7 @@ substitutions:
   status_water_pump: Status pompy obiegowej
   status_water_pump_2: Status pompy obiegowej 2
   status_water_pump_3: Status pompy obiegowej 3
+  status_water_pump_4: Status pompy obiegowej 4
   status_mixing_valve: Status zaworu mieszającego
   mixing_valve_step: Krok zaworu mieszającego
   status_multi_zone: Status wielu stref

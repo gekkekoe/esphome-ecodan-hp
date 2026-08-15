@@ -362,6 +362,8 @@ namespace ecodan
             break;
         case GetType::PUMP_STATUS_B:
         {   
+            status.WaterPump4Active = res[1] != 0;
+            publish_state("status_water_pump_4", status.WaterPump4Active);
             // byte 8 - Z1  Mixing valve step
             status.MixingValveStep = res[8];   
             publish_state("mixing_valve_step_z1", static_cast<float>(status.MixingValveStepZ1));

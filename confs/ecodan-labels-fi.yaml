@@ -109,6 +109,7 @@ substitutions:
   status_water_pump: Vesipumpun tila
   status_water_pump_2: Vesipumppu 2 tila
   status_water_pump_3: Vesipumppu 3 tila
+  status_water_pump_4: Vesipumppu 4 tila
   status_mixing_valve: Sekoitusventtiilin tila
   mixing_valve_step: Sekoitusventtiilin asento
   status_multi_zone: Monivyöhyketila

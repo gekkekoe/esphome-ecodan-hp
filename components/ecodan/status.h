@@ -58,6 +58,7 @@ namespace ecodan
         
         bool WaterPump2Active;
         bool WaterPump3Active;
+        bool WaterPump4Active;
         bool ThreeWayValveActive;
         bool ThreeWayValve2Active;
         uint8_t MixingValveStatus;

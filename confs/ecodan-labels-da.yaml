@@ -109,6 +109,7 @@ substitutions:
   status_water_pump: Vandpumpe status
   status_water_pump_2: Vandpumpe 2 status
   status_water_pump_3: Vandpumpe 3 status
+  status_water_pump_4: Vandpumpe 4 status
   status_mixing_valve: Blandingsventil status
   mixing_valve_step: Blandingsventil trin
   status_multi_zone: Multi-zone status

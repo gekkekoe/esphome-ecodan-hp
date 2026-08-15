@@ -109,6 +109,7 @@ substitutions:
   status_water_pump: Čerpadlo - stav
   status_water_pump_2: Čerpadlo 2 - stav
   status_water_pump_3: Čerpadlo 3 - stav
+  status_water_pump_4: Čerpadlo 4 - stav
   status_mixing_valve: Zmiešavací ventil
   mixing_valve_step: Poloha zmiešavacieho ventilu
   status_multi_zone: Viaczónový režim

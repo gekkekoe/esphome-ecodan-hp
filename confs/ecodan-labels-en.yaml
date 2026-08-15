@@ -109,6 +109,7 @@ substitutions:
   status_water_pump: Water Pump Status
   status_water_pump_2: Water Pump 2 Status
   status_water_pump_3: Water Pump 3 Status
+  status_water_pump_4: Water Pump 4 Status
   status_mixing_valve: Mixing Valve Status
   mixing_valve_step: Mixing Valve Step
   status_multi_zone: Multi Zone Status

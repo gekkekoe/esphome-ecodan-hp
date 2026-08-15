@@ -109,6 +109,7 @@ substitutions:
   status_water_pump: Estado de la Bomba de Agua
   status_water_pump_2: Estado de la Bomba de Agua 2
   status_water_pump_3: Estado de la Bomba de Agua 3
+  status_water_pump_4: Estado de la Bomba de Agua 4
   status_mixing_valve: Estado de la Válvula de Mezcla
   mixing_valve_step: Paso de la Válvula de Mezcla
   status_multi_zone: Estado Multi-Zona
