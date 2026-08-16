@@ -80,6 +80,10 @@ struct DashboardSnapshot {
   float dhw_cop{NAN};
   int solver_dhw_mode{-1};
 
+  // Legionella DHW setpoint automation
+  bool sw_legionella_enable{false};
+  float legionella_saved_dhw_setpoint{NAN};
+
   float heating_consumed{NAN};
   float heating_produced{NAN};
   float heating_cop{NAN};
@@ -174,6 +178,7 @@ struct DashboardSnapshot {
   NumData num_battery_max_discharge_kw;
 
   NumData num_dhw_start_threshold;
+  NumData num_legionella_dhw_setpoint;
 
   char txt_solver_ip[32]{0};
 };
@@ -247,6 +252,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_sw_power_mode(switch_::Switch *s)                  { sw_power_mode_ = s; }
   void set_sw_service_codes_enabled(switch_::Switch *s)        { sw_service_codes_enabled_ = s; }
   void set_sw_holiday_mode(switch_::Switch *s)                 { sw_holiday_mode_ = s; }
+  void set_sw_legionella_dhw_automation(switch_::Switch *s)    { sw_legionella_dhw_automation_ = s; }
 
   // Server control
   void set_sw_server_control(switch_::Switch *s)              { sw_server_control_ = s; }
@@ -276,6 +282,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_hysteresis_z1(number::Number *n)               { num_hysteresis_z1_ = n; }
   void set_num_hysteresis_z2(number::Number *n)               { num_hysteresis_z2_ = n; }
   void set_num_dhw_start_threshold(number::Number *n)         { num_dhw_start_threshold_ = n; }
+  void set_num_legionella_dhw_setpoint(number::Number *n)      { num_legionella_dhw_setpoint_ = n; }
   void set_minimum_compressor_on_time(number::Number *n)      { minimum_compressor_on_time_ = n; }
 
   // Cooling settings (numbers)
@@ -297,6 +304,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   // Globals
   void set_ui_use_room_z1(esphome::globals::RestoringGlobalsComponent<bool> *g) { ui_use_room_z1_ = g; }
   void set_ui_use_room_z2(esphome::globals::RestoringGlobalsComponent<bool> *g) { ui_use_room_z2_ = g; }
+  void set_legionella_saved_dhw_setpoint(esphome::globals::RestoringGlobalsComponent<float> *g) { legionella_saved_dhw_setpoint_ = g; }
 
   // Buttons
   void set_short_cycle_mitigation_button(button::Button *b)   { short_cycle_mitigation_button_ = b; }
@@ -463,6 +471,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   switch_::Switch *sw_power_mode_{nullptr};
   switch_::Switch *sw_service_codes_enabled_{nullptr};
   switch_::Switch *sw_holiday_mode_{nullptr};
+  switch_::Switch *sw_legionella_dhw_automation_{nullptr};
 
   // Selects
   select::Select *sel_heating_system_type_{nullptr};
@@ -502,6 +511,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   esphome::globals::RestoringGlobalsComponent<bool> *ui_use_room_z1_{nullptr};
   esphome::globals::RestoringGlobalsComponent<bool> *ui_use_room_z2_{nullptr};
+  esphome::globals::RestoringGlobalsComponent<float> *legionella_saved_dhw_setpoint_{nullptr};
 
   // Solver
   switch_::Switch *sw_use_solver_{nullptr};
@@ -535,6 +545,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_battery_soc_kwh_{nullptr};
   number::Number *num_battery_max_discharge_kw_{nullptr};
   number::Number *num_dhw_start_threshold_{nullptr};
+  number::Number *num_legionella_dhw_setpoint_{nullptr};
 
   // Buttons
   button::Button *short_cycle_mitigation_button_{nullptr};

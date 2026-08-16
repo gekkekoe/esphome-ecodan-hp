@@ -37,6 +37,11 @@ asgard_dashboard:
   dhw_delivered_id:                  dhw_delivered
   dhw_cop_id:                        ddhw_cop
 
+  # Legionella DHW setpoint automation
+  sw_legionella_dhw_automation_id:   legionella_dhw_automation_enabled
+  num_legionella_dhw_setpoint_id:    legionella_dhw_setpoint
+  legionella_saved_dhw_setpoint_id:  legionella_saved_dhw_setpoint
+
   # Heating Performance
   heating_consumed_id:               heating_consumed
   heating_produced_id:               heating_delivered
