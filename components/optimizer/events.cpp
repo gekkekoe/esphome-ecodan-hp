@@ -206,6 +206,13 @@ namespace esphome
             bool entering_dhw = (new_mode == dhw_mode || new_mode == legionella_mode)
                              && (previous_mode != dhw_mode && previous_mode != legionella_mode);
 
+            // Legionella DHW setpoint automation: save/raise the DHW setpoint when a
+            // Legionella Prevention run starts, restore the saved value when it ends.
+            bool entering_legionella = (new_mode == legionella_mode) && (previous_mode != legionella_mode);
+            bool leaving_legionella  = (previous_mode == legionella_mode) && (new_mode != legionella_mode);
+            if (entering_legionella || leaving_legionella)
+                this->handle_legionella_transition_(entering_legionella);
+
             // Only save heating setpoints when coming from heating — this is the signal
             // on_feed_temp_change uses to know whether DHW flow-temp following is needed.
             if (entering_dhw) {
@@ -225,6 +232,55 @@ namespace esphome
             if (new_mode == heating_mode && previous_mode != heating_mode && this->state_.auto_adaptive_control_enabled->state) {
                 ESP_LOGD(OPTIMIZER_TAG, "Operation Mode Changed to heating: %d -> %d", previous_mode, new_mode);
                 this->run_auto_adaptive_loop();
+            }
+        }
+
+        void Optimizer::handle_legionella_transition_(bool entering)
+        {
+            if (this->state_.legionella_dhw_automation_enabled == nullptr
+                || !this->state_.legionella_dhw_automation_enabled->state)
+                return;
+            if (this->state_.dhw_climate == nullptr)
+                return;
+
+            float current = this->state_.dhw_climate->target_temperature;
+            if (std::isnan(current))
+                return;
+
+            auto *saved_global = this->state_.legionella_saved_dhw_setpoint;
+
+            if (entering) {
+                float legionella_sp = (this->state_.legionella_dhw_setpoint != nullptr
+                                       && this->state_.legionella_dhw_setpoint->has_state())
+                                          ? this->state_.legionella_dhw_setpoint->state
+                                          : 56.0f;
+
+                if (current < legionella_sp - 0.05f) {
+                    if (saved_global != nullptr)
+                        saved_global->value() = current;
+
+                    auto call = this->state_.dhw_climate->make_call();
+                    call.set_target_temperature(legionella_sp);
+                    call.perform();
+
+                    ESP_LOGI(OPTIMIZER_TAG, "Legionella start: DHW setpoint %.1f -> %.1f (stored %.1f)",
+                             current, legionella_sp,
+                             saved_global != nullptr ? saved_global->value() : NAN);
+                }
+            } else {
+                float saved_sp = (saved_global != nullptr) ? saved_global->value() : -1.0f;
+
+                if (saved_sp > 0.0f && current > saved_sp + 0.05f) {
+                    auto call = this->state_.dhw_climate->make_call();
+                    call.set_target_temperature(saved_sp);
+                    call.perform();
+
+                    ESP_LOGI(OPTIMIZER_TAG, "Legionella end: restoring DHW setpoint to %.1f", saved_sp);
+                }
+
+                // clear the stored value for the next run
+                if (saved_global != nullptr)
+                    saved_global->value() = -1.0f;
             }
         }
 

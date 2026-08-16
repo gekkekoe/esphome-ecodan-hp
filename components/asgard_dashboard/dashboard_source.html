@@ -845,9 +845,31 @@ header {
       <div style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div style="display:flex; align-items:flex-end; gap:14px; margin-bottom:10px;">
           <div><div class="stat-label">Tank Temp</div><div class="big-temp" id="dhw-current">—<span>°C</span></div></div>
-          <div style="flex:1;"><div class="stat-label">Target</div><div class="stepper"><button class="step-btn" onclick="step('dhw-sp', -0.5)">−</button><input type="number" class="step-input" id="dhw-sp-val" onchange="manualInput('dhw-sp', this.value)"><button class="step-btn" onclick="step('dhw-sp', +0.5)">+</button></div></div>
+          <div style="flex:1;"><div class="stat-label">Setpoint</div><div class="stepper"><button class="step-btn" onclick="step('dhw-sp', -0.5)">−</button><input type="number" class="step-input" id="dhw-sp-val" onchange="manualInput('dhw-sp', this.value)"><button class="step-btn" onclick="step('dhw-sp', +0.5)">+</button></div></div>
         </div>
         <button class="send-btn" onclick="sendDHW(this)" style="margin-bottom:0;">Apply DHW</button>
+      </div>
+
+      <div class="sub-card" id="sub-legionella" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-legionella')">Legionella Prevention <span class="collapse-icon">▼</span></div>
+        <div class="sub-card-body">
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Enable<span class="tip-icon">?</span><span class="tip-box">When a Legionella Prevention run starts, the DHW setpoint is raised to the Legionella setpoint below (the current value is stored). When the run finishes, the stored setpoint is restored.</span></span>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="sw-legionella" onchange="sendSwitch('legionella_enabled', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="ctrl-row" id="row-legionella-sp">
+            <span class="ctrl-label param-label">Legionella Setpoint<span class="tip-icon">?</span><span class="tip-box" id="tip-legionella-sp">DHW setpoint applied while a Legionella Prevention run is active. The compressor heats the water up to this setpoint efficiently. Only the part above it is done by the booster element, so setting it as high as your heat pump tolerates to minimize booster element usage.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('legionella-sp', -0.5)">−</button><input type="number" class="step-input" id="legionella-sp-val" onchange="manualInput('legionella-sp', this.value)"><button class="step-btn" onclick="step('legionella-sp', +0.5)">+</button></div>
+          </div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+            <span class="ctrl-label param-label">Stored Setpoint<span class="tip-icon">?</span><span class="tip-box">DHW setpoint stored at the start of a Legionella run. It is restored when the run finishes.</span></span>
+            <span class="ctrl-value" id="legionella-saved" style="font-weight:600; font-family:var(--mono);">—</span>
+          </div>
+          <button class="send-btn" onclick="sendLegionella(this)" style="margin-top:10px; margin-bottom:0;">Apply Legionella</button>
+        </div>
       </div>
     </div>
 
@@ -1428,6 +1450,8 @@ const CONTROLS = [
   { type:'switch', key:'sw_regular_dhw', el:'sw-regular-dhw' },
   { type:'number', pkey:'dhw-sp', key:'dhw_setpoint', el:'dhw-sp-val', min:40, max:60, step:0.5 },
   { type:'number', pkey:'dhw-thresh', key:'dhw_start_threshold', el:'dhw-thresh-val', min:0, max:20, step:0.5 },
+  { type:'switch', key:'legionella_enabled', el:'sw-legionella' },
+  { type:'number', pkey:'legionella-sp', key:'legionella_dhw_setpoint', el:'legionella-sp-val', min:50, max:60, step:0.5 },
   { type:'select', key:'solver_dhw_mode', el:'sel-odin-dhw-mode' },
 
   // ── Solver / Odin ──
@@ -3597,6 +3621,12 @@ function render(d) {
     LIMITS['min-on-time'].step = d.min_compressor_on_time_lim.step; 
   }
 
+  if (d.legionella_dhw_setpoint_lim) {
+    LIMITS['legionella-sp'].min = d.legionella_dhw_setpoint_lim.min;
+    LIMITS['legionella-sp'].max = d.legionella_dhw_setpoint_lim.max;
+    LIMITS['legionella-sp'].step = d.legionella_dhw_setpoint_lim.step || 0.5;
+  }
+
   if (d.hysteresis_z1_lim) {
     const el = document.getElementById('z1-hyst');
     if(el) { el.min = d.hysteresis_z1_lim.min; el.max = d.hysteresis_z1_lim.max; el.step = d.hysteresis_z1_lim.step; }
@@ -3638,6 +3668,20 @@ function render(d) {
   seedPending('dhw-sp', d.dhw_flow_temp_target);
   setToggle('sw-fdhw', d.force_dhw); 
   setToggle('sw-regular-dhw', d.sw_regular_dhw);
+  setToggle('sw-legionella', d.legionella_enabled);
+  seedPending('legionella-sp', d.legionella_dhw_setpoint);
+  setText('legionella-saved', d.legionella_saved_dhw_setpoint != null ? fmt1(d.legionella_saved_dhw_setpoint) + '°C' : '—');
+  if (d.legionella_enabled !== undefined) {
+    const legionellaRow = document.getElementById('row-legionella-sp');
+    if (legionellaRow) legionellaRow.classList.toggle('disabled-box', !d.legionella_enabled);
+  }
+  const tipLsp = document.getElementById('tip-legionella-sp');
+  if (tipLsp) {
+    const dhwSp = fmt1(d.dhw_flow_temp_target);
+    const legSp = fmt1(pending['legionella-sp']);
+    const maxSp = fmt1(LIMITS['legionella-sp'].max);
+    tipLsp.textContent = `DHW setpoint applied while a Legionella Prevention run is active. Example: with a setpoint of ${dhwSp} °C, it is raised to ${legSp} °C for the run, so the compressor heats the water up to ${legSp} °C efficiently. Only the part above this value (e.g. ${legSp} → ${maxSp} °C) is done by the booster element, so setting it as high as your heat pump tolerates to minimize booster element usage.`;
+  }
 
   setText('perf-h-in',  fmt2(d.heating_consumed));
   setText('perf-h-out', fmt2(d.heating_produced));
@@ -3930,6 +3974,16 @@ async function sendDHW(btn) {
   try {
     await apiPost({ key: 'dhw_setpoint', value: pending['dhw-sp'] });
     showToast('✓ DHW updated');
+  } catch(e) { showToast('✗ ' + e.message, true); }
+  btn.classList.remove('sending');
+}
+
+async function sendLegionella(btn) {
+  if (!hasChanged('legionella-sp')) { showToast('No change'); return; }
+  btn.classList.add('sending');
+  try {
+    await apiPost({ key: 'legionella_dhw_setpoint', value: pending['legionella-sp'] });
+    showToast('✓ Legionella setpoint updated');
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');
 }

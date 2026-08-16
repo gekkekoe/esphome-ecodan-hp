@@ -2,6 +2,7 @@
 
 #include "esphome.h"
 #include "esphome/components/climate/climate.h"
+#include "esphome/components/globals/globals_component.h"
 
 // forward declare EcodanHeatpump
 namespace esphome
@@ -129,6 +130,12 @@ namespace esphome
         // need to be typed as thermostat::ThermostatClimate specifically.
         esphome::climate::Climate *asgard_vt_z1;
         esphome::climate::Climate *asgard_vt_z2;
+
+        // Legionella DHW setpoint automation
+        esphome::switch_::Switch *legionella_dhw_automation_enabled{nullptr};
+        esphome::number::Number *legionella_dhw_setpoint{nullptr};
+        esphome::climate::Climate *dhw_climate{nullptr};
+        esphome::globals::RestoringGlobalsComponent<float> *legionella_saved_dhw_setpoint{nullptr};
 
         uint32_t &lockout_expiration_timestamp;
     };

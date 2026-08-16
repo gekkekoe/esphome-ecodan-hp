@@ -396,6 +396,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "power_mode")                    { doSwitch(sw_power_mode_);    return; }
   if (key == "service_codes_enabled")           { doSwitch(sw_service_codes_enabled_); return; }
   if (key == "holiday_mode")                    { doSwitch(sw_holiday_mode_);        return; }
+  if (key == "legionella_enabled")                { doSwitch(sw_legionella_dhw_automation_); return; }
   if (key == "predictive_short_cycle_control_enabled") { doSwitch(pred_sc_switch_);   return; }
   if (key == "use_dynamic_cost_solver")       { doSwitch(sw_use_solver_);    return; }
   if (key == "show_solver_tab_enabled")       { doSwitch(sw_show_solver_tab_); this->odin_lfs_dirty_ = true; return; }
@@ -461,6 +462,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "battery_soc_kwh") { doNumber(num_battery_soc_kwh_); return; }
   if (key == "battery_max_discharge_kw") { doNumber(num_battery_max_discharge_kw_); return; }
   if (key == "dhw_start_threshold") { doNumber(num_dhw_start_threshold_); return; }
+  if (key == "legionella_dhw_setpoint") { doNumber(num_legionella_dhw_setpoint_); return; }
 
   if (key == "raw_cool_produced") { doNumber(num_raw_cool_produced_); return; }
   if (key == "raw_cool_elec_consumed") { doNumber(num_raw_cool_elec_consumed_); return; }
@@ -617,6 +619,7 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.sw_power_mode = get_sw(sw_power_mode_);
   current_snapshot_.sw_service_codes_enabled = get_sw(sw_service_codes_enabled_);
   current_snapshot_.sw_holiday_mode = get_sw(sw_holiday_mode_);
+  current_snapshot_.sw_legionella_enable = get_sw(sw_legionella_dhw_automation_);
 
   current_snapshot_.heating_consumed = get_f(heating_consumed_);
   current_snapshot_.heating_produced = get_f(heating_produced_);
@@ -665,6 +668,14 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_battery_max_discharge_kw_, current_snapshot_.num_battery_max_discharge_kw);
 
   get_n(num_dhw_start_threshold_, current_snapshot_.num_dhw_start_threshold);
+  get_n(num_legionella_dhw_setpoint_, current_snapshot_.num_legionella_dhw_setpoint);
+
+  // -1.0 is the "no stored setpoint" sentinel — surface it as null
+  if (legionella_saved_dhw_setpoint_ != nullptr && legionella_saved_dhw_setpoint_->value() >= 0.0f) {
+    current_snapshot_.legionella_saved_dhw_setpoint = legionella_saved_dhw_setpoint_->value();
+  } else {
+    current_snapshot_.legionella_saved_dhw_setpoint = NAN;
+  }
 
   if (txt_solver_ip_ && txt_solver_ip_->has_state()) {
     strncpy(current_snapshot_.txt_solver_ip, txt_solver_ip_->state.c_str(), sizeof(current_snapshot_.txt_solver_ip) - 1);
@@ -909,6 +920,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("power_mode", snap.sw_power_mode);
   p_b("service_codes_enabled", snap.sw_service_codes_enabled);
   p_b("holiday_mode",          snap.sw_holiday_mode);
+  p_b("legionella_enabled", snap.sw_legionella_enable);
 
   p_n("cooling_smart_start_z1",  snap.num_cooling_smart_start_z1.val);
   p_lim("cool_smart_z1_lim",     snap.num_cooling_smart_start_z1);
@@ -958,6 +970,9 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_lim("battery_max_discharge_kw_lim", snap.num_battery_max_discharge_kw);
   p_n("dhw_start_threshold",    snap.num_dhw_start_threshold.val);
   p_lim("dhw_start_threshold_lim", snap.num_dhw_start_threshold);
+  p_n("legionella_dhw_setpoint",  snap.num_legionella_dhw_setpoint.val);
+  p_lim("legionella_dhw_setpoint_lim", snap.num_legionella_dhw_setpoint);
+  p_f("legionella_saved_dhw_setpoint", snap.legionella_saved_dhw_setpoint);
 
   p_n("raw_cool_produced",      snap.num_raw_cool_produced.val);
   p_lim("raw_cool_produced_lim",snap.num_raw_cool_produced);
