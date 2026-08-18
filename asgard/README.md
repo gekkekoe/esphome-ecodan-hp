@@ -22,9 +22,11 @@
 <div align="center">
   <h2>Order via the links/buttons below:</h2>
 
-  ⚠️ **Asgard and Odin are currently in stock**
+  ⚠️ **Asgard and Odin are currently in stock** <br>
+  ⚠️ **Due to regulation (PPWR), shipping to EU countries other than NL has been suspended**
 
-| Standard Order (NL/EU) | UK Customers Only |
+
+| Standard Order (NL) | UK Customers Only |
 | :--- | :--- |
 | [![Order Standard](https://img.shields.io/badge/Order-Standard%20Order-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFa6oIblrcIPaNN3Wq4AU00)| [![Order UK Bundle](https://img.shields.io/badge/Order-Asgard%20%2B%20Odin%20Bundle-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/9B6dRacpv6krcVV3Wq4AU05)|
 
