@@ -1668,8 +1668,7 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
         float exp_solar_kwh = NAN;
         if (!std::isnan(hour_solar) && last_run_stats_.used_solar_kwp > 0.0f) {
             exp_solar_kwh = (hour_solar / 1000.0f)
-                            * last_run_stats_.used_solar_kwp
-                            * last_run_stats_.used_solar_correction;
+                            * last_run_stats_.used_solar_kwp;
         }
         hr.exp_solar_kwh = pack(exp_solar_kwh, 100.0f);
     }

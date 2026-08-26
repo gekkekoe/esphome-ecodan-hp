@@ -3230,11 +3230,10 @@ function renderOdinLive() {
     const expProdSolar = new Array(72).fill(null);
     
     const solarKwp = odinDataCache?.last_run?.used_solar_kwp || 0;
-    const solarCorrection = odinDataCache?.last_run?.used_solar_correction || 1.0;
 
     for (let h = 0; h < 72; h++) {
-        const sol_wm2 = solar[h] || 0; 
-        const expected_solar_kwh = (sol_wm2 / 1000) * solarKwp * solarCorrection;
+        const sol_wm2 = solar[h] || 0;
+        const expected_solar_kwh = (sol_wm2 / 1000) * solarKwp;
         expProdSolar[h] = parseFloat(expected_solar_kwh.toFixed(2));
 
         let total_actual_cons = null;
