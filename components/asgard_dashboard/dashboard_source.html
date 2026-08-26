@@ -1080,13 +1080,16 @@ header {
           </div>
         </div>
 
-        <div class="ctrl-row">
+        <div class="ctrl-row" style="align-items: center;">
           <span class="ctrl-label param-label">DHW Threshold<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>If DHW temp drops below (Target - Drop) + Threshold, Odin schedules DHW during a cheap/sunny hour. 0 = disabled.</span></span>
-          <div class="stepper">
-            <button class="step-btn" onclick="step('dhw-thresh', -0.5)">−</button>
-            <input type="number" class="step-input" id="dhw-thresh-val" onchange="manualInput('dhw-thresh', this.value)" />
-            <button class="step-btn" onclick="step('dhw-thresh', +0.5)">+</button>
-            <button class="step-btn" style="margin-left: 6px; border-color: var(--accent); color: var(--accent);" onclick="sendOdinThresh(this)" title="Apply Threshold">✓</button>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+            <div class="stepper">
+              <button class="step-btn" onclick="step('dhw-thresh', -0.5)">−</button>
+              <input type="number" class="step-input" id="dhw-thresh-val" onchange="manualInput('dhw-thresh', this.value)" />
+              <button class="step-btn" onclick="step('dhw-thresh', +0.5)">+</button>
+              <button class="step-btn" style="margin-left: 6px; border-color: var(--accent); color: var(--accent);" onclick="sendOdinThresh(this)" title="Apply Threshold">✓</button>
+            </div>
+            <span id="dhw-probe-temp" style="font-family: var(--mono); font-size: 10px; color: var(--text3); min-height: 12px;"></span>
           </div>
         </div>
         
@@ -3456,6 +3459,18 @@ function manualInput(key, val) {
     pending[key] = v;
     lastEdit[key] = Date.now();
     refreshStepVal(key);
+    if (key === 'dhw-thresh') updateDhwProbeTemp();
+}
+
+function updateDhwProbeTemp() {
+    const el = document.getElementById('dhw-probe-temp');
+    if (!el) return;
+    const th = (pending['dhw-thresh'] != null) ? pending['dhw-thresh']
+             : (latestState.dhw_start_threshold != null ? latestState.dhw_start_threshold : 0);
+    if (th <= 0) { el.textContent = 'off'; return; }
+    const sp = latestState.dhw_flow_temp_target;
+    const drop = latestState.dhw_flow_temp_drop != null ? latestState.dhw_flow_temp_drop : 0;
+    el.textContent = (sp != null) ? `starts looking at ${fmt1(sp - drop + th)}°C` : 'starts looking at —';
 }
 
 function hasChanged(key) {
@@ -3756,6 +3771,7 @@ function render(d) {
   seedPending('cool-min-z1', d.minimum_cooling_flow_z1);
   seedPending('cool-min-z2', d.minimum_cooling_flow_z2);
   seedPending('dhw-thresh', d.dhw_start_threshold);
+  updateDhwProbeTemp();
 
   seedPending('min-on-time', d.min_compressor_on_time);
 
@@ -3897,6 +3913,7 @@ function step(key, delta) {
   const decimals = stepSize < 0.01 ? 4 : stepSize < 0.1 ? 3 : stepSize < 1 ? 2 : 1;
   pending[key] = +newVal.toFixed(decimals);
   refreshStepVal(key);
+  if (key === 'dhw-thresh') updateDhwProbeTemp();
 }
 
 function hystInput(zone) {
