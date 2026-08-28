@@ -351,9 +351,9 @@ namespace esphome
             auto heating_type_index = this->state_.heating_system_type->active_index().value_or(0);
 
             bool is_heating_mode   = status.is_auto_adaptive_heating(zone);
-            bool is_heating_active = status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
+            bool is_heating_active = is_compressor_active(status) && status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
             bool is_cooling_mode   = status.has_cooling() && status.is_auto_adaptive_cooling(zone);
-            bool is_cooling_active = status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON;
+            bool is_cooling_active = is_compressor_active(status) && status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON;
 
             // Multi-zone heating active refinement
             if (is_heating_active && status.has_2zones()) {

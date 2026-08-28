@@ -48,6 +48,10 @@ namespace esphome
             return status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON;
         }
 
+        bool Optimizer::is_compressor_active(const ecodan::Status &status) {
+            return status.CompressorOn || status.CompressorFrequency > 0;
+        }
+
         float Optimizer::clamp_flow_temp(float calculated_flow, float min_temp, float max_temp)
         {
             // Only treat it as a real clamp (worth logging) when the overshoot exceeds
