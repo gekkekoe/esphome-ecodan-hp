@@ -211,6 +211,10 @@ namespace ecodan
             status.DhwTemperature = res.get_float16(7);
             status.DhwSecondaryTemperature = res.get_float16(10); 
 
+            // First 0x17 status frame = status is populated (consumed by the
+            // ODIN forwarder's publish gate).
+            status.Initialized = true;
+
             publish_state("hp_feed_temp", status.HpFeedTemperature);
             publish_state("hp_return_temp", status.HpReturnTemperature);
             publish_state("dhw_temp", status.DhwTemperature);

@@ -71,7 +71,9 @@ struct HourlyRecord {
 
     int16_t  exp_solar_kwh; // expected solar yield this hour kWh × 100
     int16_t  decision_reason; // decision reason code from Odin solver (0=Idle, 1-10=reasons)
-    int16_t  reserved[7];   // 14 bytes reserved for future expansion
+    int16_t  exp_room_temp_z2;    // zone-2 expected room temp ×100 (records written before the v2 layout read as 0 → null)
+    int16_t  actual_room_temp_z2; // zone-2 actual room temp ×100 (records written before the v2 layout read as 0 → null)
+    int16_t  reserved[5];   // 10 bytes reserved for future expansion
 };
 static_assert(sizeof(HourlyRecord) == 64, "HourlyRecord must be 64 bytes");
 
@@ -90,7 +92,7 @@ struct CircularFileHeader {
 static_assert(sizeof(CircularFileHeader) == 64, "CircularFileHeader must be 64 bytes");
 
 // ── ODIN 72-hour forecast cache (~9.2 KB) ─────────────────────────────────────
-// 32 slots × 72 floats; slots 0-19 are active, 20-31 are reserved (stored as NaN).
+// 32 slots × 72 floats; slots 0-21 are active, 22-31 are reserved (stored as NaN).
 #pragma pack(push, 1)
 struct OdinCacheStruct {
     uint32_t magic;

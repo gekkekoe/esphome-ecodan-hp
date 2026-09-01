@@ -84,6 +84,8 @@ namespace esphome
                                         float min_output, 
                                         float max_output, 
                                         const std::vector<float>& prod,
+                                        const std::vector<float>& prod_z1,
+                                        const std::vector<float>& prod_z2,
                                         const std::vector<float>& solar,
                                         const std::vector<float>& op_mode) {
             if (current_hour == -1) return;
@@ -105,6 +107,15 @@ namespace esphome
                 this->odin_operation_mode_.assign(24, NAN);
                 this->odin_production_.assign(24, NAN);
                 this->odin_data_ready_ = true;
+            }
+
+            const bool two_zone = (!prod_z1.empty() && !prod_z2.empty());
+            if (two_zone) {
+                if (this->odin_production_z1_.size() != 24) this->odin_production_z1_.assign(24, NAN);
+                if (this->odin_production_z2_.size() != 24) this->odin_production_z2_.assign(24, NAN);
+            } else {
+                this->odin_production_z1_.clear();
+                this->odin_production_z2_.clear();
             }
 
             int first_update = is_first_run ? current_hour : current_hour + 1;
@@ -136,6 +147,18 @@ namespace esphome
                 }
             }
 
+            if (two_zone) {
+                int zone_first = (prod_first_update < current_hour) ? prod_first_update : current_hour;
+                for (int i = zone_first; i < 24; i++) {
+                    // Same midnight-wrap source offset as the combined vector: the
+                    // zone arrays are the same 48h rolling window, so on wrap the
+                    // new day's plan sits at 24-47.
+                    int src = i + prod_src_offset;
+                    if (src < (int)prod_z1.size()) this->odin_production_z1_[i] = prod_z1[src];
+                    if (src < (int)prod_z2.size()) this->odin_production_z2_[i] = prod_z2[src];
+                }
+            }
+
             if (first_update >= 0 && first_update < 48) {
                 for (int i = first_update; i < 48; i++) {
                     if (i < (int)solar.size())   this->odin_solar_forecast_[i] = solar[i];
@@ -143,8 +166,9 @@ namespace esphome
             }
 
             xSemaphoreGive(this->odin_mutex_);
-            ESP_LOGI(OPTIMIZER_TAG, "ODIN production targets loaded (48h). current_hour=%d midnight_wrap=%d data_day=%d",
-                     current_hour, (int)midnight_wrap, this->odin_data_day_);
+            ESP_LOGI(OPTIMIZER_TAG, "ODIN production targets loaded (48h). current_hour=%d midnight_wrap=%d data_day=%d two_zone=%d",
+                     current_hour, (int)midnight_wrap, this->odin_data_day_,
+                     (int)prod_z1.size() > 0 && (int)prod_z2.size() > 0);
         }
 
         // ─────────────────────────────────────────────────────────────────

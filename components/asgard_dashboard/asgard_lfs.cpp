@@ -306,6 +306,8 @@ EcodanDashboard::odin_array_map_() {
         {17, "sched_max",           &odin_sched_max_            },
         {18, "actual_standby_cons", &odin_actual_standby_cons_  },
         {19, "decision_reason",    &odin_decision_reason_      },
+        {20, "actual_room_temp_z2", &odin_actual_room_z2_      },
+        {21, "expected_begin_temp_z2", &odin_expected_temp_z2_ },
     }};
 }
 
@@ -423,7 +425,7 @@ void EcodanDashboard::load_odin_data(int current_day, int current_hour) {
             for (int i = 24; i < 24 + current_hour; i++) cache->arrays[14][i] = 0.0f;
         } else {
             ESP_LOGI(TAG_LFS, "LFS Load: Day jump, clearing stale actuals");
-            for (int k : {6, 7, 8, 9, 10, 18}) {
+            for (int k : {6, 7, 8, 9, 10, 18, 20}) {
                 for (int i = 0; i < 72; i++) cache->arrays[k][i] = NAN;
             }
         }

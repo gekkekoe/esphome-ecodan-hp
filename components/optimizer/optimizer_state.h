@@ -117,6 +117,17 @@ namespace esphome
         // frozen in lockstep with the heating pair). Pairs with cool_avg_outside_temp.
         esphome::number::Number *num_raw_cool_avg_room_temp{nullptr};
 
+        // zone-2 stats
+        esphome::number::Number *num_raw_heat_produced_z2{nullptr};
+        esphome::number::Number *num_raw_elec_consumed_z2{nullptr};
+        esphome::number::Number *num_raw_runtime_hours_z2{nullptr};
+        esphome::number::Number *num_raw_avg_room_temp_z2{nullptr};
+        esphome::number::Number *num_raw_delta_room_temp_z2{nullptr};
+        esphome::number::Number *num_raw_cool_produced_z2{nullptr};
+        esphome::number::Number *num_raw_cool_elec_consumed_z2{nullptr};
+        esphome::number::Number *num_raw_cool_runtime_hours_z2{nullptr};
+        esphome::number::Number *num_raw_cool_avg_room_temp_z2{nullptr};
+
         esphome::select::Select *heating_system_type;
         esphome::select::Select *temperature_feedback_source_z1;
         esphome::select::Select *temperature_feedback_source_z2;

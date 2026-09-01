@@ -104,6 +104,17 @@ esphome:
             state.num_raw_hl_tm_product = id(num_raw_hl_tm_product);
             state.num_raw_solar_factor = id(num_raw_solar_factor);
 
+            // Zone-2 learning set
+            state.num_raw_heat_produced_z2 = id(num_raw_heat_produced_z2);
+            state.num_raw_elec_consumed_z2 = id(num_raw_elec_consumed_z2);
+            state.num_raw_runtime_hours_z2 = id(num_raw_runtime_hours_z2);
+            state.num_raw_avg_room_temp_z2 = id(num_raw_avg_room_temp_z2);
+            state.num_raw_delta_room_temp_z2 = id(num_raw_delta_room_temp_z2);
+            state.num_raw_cool_produced_z2 = id(num_raw_cool_produced_z2);
+            state.num_raw_cool_elec_consumed_z2 = id(num_raw_cool_elec_consumed_z2);
+            state.num_raw_cool_runtime_hours_z2 = id(num_raw_cool_runtime_hours_z2);
+            state.num_raw_cool_avg_room_temp_z2 = id(num_raw_cool_avg_room_temp_z2);
+
             // instantiate optimizer
             id(optimizer_ptr) = new esphome::optimizer::Optimizer(state);
 

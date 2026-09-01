@@ -1126,6 +1126,7 @@ header {
         </div>
 
         <div id="phys-group-heat">
+          <div class="sub-label">Zone 1</div>
           <div class="ctrl-row">
             <span class="ctrl-label param-label">Heat Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total heat energy produced (last session) in heating mode. DHW excluded. Used to calculate COP.</span></span>
             <div class="stepper"><button class="step-btn" onclick="step('raw-heat', -0.1)">−</button><input type="number" class="step-input" id="raw-heat-val" onchange="manualInput('raw-heat', this.value)" /><button class="step-btn" onclick="step('raw-heat', +0.1)">+</button></div>
@@ -1150,9 +1151,38 @@ header {
             <span class="ctrl-label param-label">Heating Avg Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average room temperature on heating days. Pairs with Avg Ambient Temp above to determine heat loss coefficient. Heating-only — see Cooling Avg Room in the Cooling Profile tab for the cooling-season counterpart.</span></span>
             <div class="stepper"><button class="step-btn" onclick="step('raw-room', -0.1)">−</button><input type="number" class="step-input" id="raw-room-val" onchange="manualInput('raw-room', this.value)" /><button class="step-btn" onclick="step('raw-room', +0.1)">+</button></div>
           </div>
+          <div id="phys-z2-heat" style="display:none;">
+          <div class="sub-label" style="margin-top:14px;">Zone 2</div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Heat Produced Z2<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Zone 2: total heat energy produced (last session). Used to calculate COP Z2.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-heat-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-heat-z2-val" onchange="manualInput('raw-heat-z2', this.value)" /><button class="step-btn" onclick="step('raw-heat-z2', +0.1)">+</button></div>
+          </div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Electricity Consumed Z2<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Zone 2: electricity used by the heat pump (last session). COP Z2 = Heat Z2 / Elec Z2.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-elec-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-elec-z2-val" onchange="manualInput('raw-elec-z2', this.value)" /><button class="step-btn" onclick="step('raw-elec-z2', +0.1)">+</button></div>
+          </div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Runtime Z2<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Zone 2: hours the heat pump ran (last session). Used to derive thermal mass Z2.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-run-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-run-z2-val" onchange="manualInput('raw-run-z2', this.value)" /><button class="step-btn" onclick="step('raw-run-z2', +0.1)">+</button></div>
+          </div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Zone 2 Avg Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Zone 2: average room temperature on heating days. Pairs with the shared Avg Ambient Temp above for heat loss Z2.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-room-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-room-z2-val" onchange="manualInput('raw-room-z2', this.value)" /><button class="step-btn" onclick="step('raw-room-z2', +0.1)">+</button></div>
+          </div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Zone 2 Delta Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C (daily swing)</span>Zone 2: max minus min room temp yesterday. Small delta = high thermal mass.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-delta-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-delta-z2-val" onchange="manualInput('raw-delta-z2', this.value)" /><button class="step-btn" onclick="step('raw-delta-z2', +0.1)">+</button></div>
+          </div>
+          </div>
         </div>
 
         <div id="phys-group-cool" style="display: none;">
+          <div class="sub-label">Zone 1</div>
           <div class="ctrl-row">
             <span class="ctrl-label param-label">Cooling Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total cooling energy produced (last session). Used to calculate EER.</span></span>
             <div class="stepper"><button class="step-btn" onclick="step('raw-cool-prod', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-prod-val" onchange="manualInput('raw-cool-prod', this.value)" /><button class="step-btn" onclick="step('raw-cool-prod', +0.1)">+</button></div>
@@ -1176,6 +1206,29 @@ header {
           <div class="ctrl-row">
             <span class="ctrl-label param-label">Cooling Avg Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average room temperature on cooling days. Pairs with Cooling Avg Ambient above. Cooling-only — see Heating Avg Room in the Heating Profile tab for the heating-season counterpart. Kept separate to prevent seasonal drift.</span></span>
             <div class="stepper"><button class="step-btn" onclick="step('raw-cool-room', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-room-val" onchange="manualInput('raw-cool-room', this.value)" /><button class="step-btn" onclick="step('raw-cool-room', +0.1)">+</button></div>
+          </div>
+          <div id="phys-z2-cool" style="display:none;">
+          <div class="sub-label" style="margin-top:14px;">Zone 2</div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Cooling Produced Z2<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Zone 2: total cooling energy produced (last session). Used to calculate EER Z2.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-prod-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-prod-z2-val" onchange="manualInput('raw-cool-prod-z2', this.value)" /><button class="step-btn" onclick="step('raw-cool-prod-z2', +0.1)">+</button></div>
+          </div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Cooling Electricity Z2<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Zone 2: electricity used in cooling mode (last session). EER Z2 = Cool Z2 / Elec Z2.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-elec-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-elec-z2-val" onchange="manualInput('raw-cool-elec-z2', this.value)" /><button class="step-btn" onclick="step('raw-cool-elec-z2', +0.1)">+</button></div>
+          </div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Cooling Runtime Z2<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Zone 2: hours the heat pump ran in cooling mode (last session).</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-run-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-run-z2-val" onchange="manualInput('raw-cool-run-z2', this.value)" /><button class="step-btn" onclick="step('raw-cool-run-z2', +0.1)">+</button></div>
+          </div>
+
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Zone 2 Cool Avg Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Zone 2: average room temperature on cooling days. Pairs with the shared Cooling Avg Ambient above.</span></span>
+            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-room-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-room-z2-val" onchange="manualInput('raw-cool-room-z2', this.value)" /><button class="step-btn" onclick="step('raw-cool-room-z2', +0.1)">+</button></div>
+          </div>
           </div>
         </div>
 
@@ -1220,12 +1273,20 @@ header {
             <div class="legend-dot" style="background: repeating-linear-gradient(90deg, #63b3ed 0 6px, transparent 6px 9px);"></div>Scheduled
           </div>
           <div class="legend-item">
-            <div class="legend-dot" style="background: repeating-linear-gradient(90deg, #ffb020 0 5px, transparent 5px 10px);"></div>Expected
+            <div class="legend-dot" style="background: repeating-linear-gradient(90deg, #ffb020 0 5px, transparent 5px 10px);"></div>Expected Z1
+          </div>
+          <div class="legend-item" id="leg-odin-z2-exp" style="display:none;">
+            <div class="legend-dot" style="background: repeating-linear-gradient(90deg, #c084fc 0 5px, transparent 5px 10px);"></div>Expected Z2
           </div>
           <div class="legend-item">
             <div class="legend-dot" style="background: #ffff00; display: flex; align-items: center; justify-content: center;">
               <div style="width: 6px; height: 6px; background: #ffff00; border-radius: 50%;"></div>
-            </div>Actual
+            </div>Actual Z1
+          </div>
+          <div class="legend-item" id="leg-odin-z2-act" style="display:none;">
+            <div class="legend-dot" style="background: #ff69b4; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 6px; height: 6px; background: #ff69b4; border-radius: 50%;"></div>
+            </div>Actual Z2
           </div>
           <div class="legend-item">
             <span style="color:#ff6b35; font-weight:bold;">12:00</span>Heating
@@ -1475,6 +1536,17 @@ const CONTROLS = [
   { type:'number', pkey:'raw-cool-run',  key:'raw_cool_runtime_hours',    el:'raw-cool-run-val',  min:0,   max:24,  step:0.1 },
   { type:'number', pkey:'raw-cool-out',  key:'raw_cool_avg_outside_temp', el:'raw-cool-out-val',  min:-25, max:50,  step:0.1 },
   { type:'number', pkey:'raw-cool-room', key:'raw_cool_avg_room_temp',    el:'raw-cool-room-val', min:10,  max:35,  step:0.1 },
+
+  // ── Physics Data (zone 2 — two-zone builds only) ──
+  { type:'number', pkey:'raw-heat-z2',  key:'raw_heat_produced_z2',    el:'raw-heat-z2-val',  min:0,   max:200, step:0.1 },
+  { type:'number', pkey:'raw-elec-z2',  key:'raw_elec_consumed_z2',    el:'raw-elec-z2-val',  min:0,   max:100, step:0.1 },
+  { type:'number', pkey:'raw-run-z2',   key:'raw_runtime_hours_z2',    el:'raw-run-z2-val',   min:0,   max:24,  step:0.1 },
+  { type:'number', pkey:'raw-room-z2',  key:'raw_avg_room_temp_z2',    el:'raw-room-z2-val',  min:10,  max:35,  step:0.1 },
+  { type:'number', pkey:'raw-delta-z2', key:'raw_delta_room_temp_z2',  el:'raw-delta-z2-val', min:0,   max:10,  step:0.1 },
+  { type:'number', pkey:'raw-cool-prod-z2',  key:'raw_cool_produced_z2',      el:'raw-cool-prod-z2-val',  min:0,   max:200, step:0.1 },
+  { type:'number', pkey:'raw-cool-elec-z2',  key:'raw_cool_elec_consumed_z2', el:'raw-cool-elec-z2-val',  min:0,   max:100, step:0.1 },
+  { type:'number', pkey:'raw-cool-run-z2',   key:'raw_cool_runtime_hours_z2', el:'raw-cool-run-z2-val',   min:0,   max:24,  step:0.1 },
+  { type:'number', pkey:'raw-cool-room-z2',  key:'raw_cool_avg_room_temp_z2', el:'raw-cool-room-z2-val',  min:10,  max:35,  step:0.1 },
 
   // ── Universal Building Physics ──
   { type:'number', pkey:'raw-delta',        key:'raw_delta_room_temp', el:'raw-delta-val',        min:0,     max:10,   step:0.1 },
@@ -2398,6 +2470,18 @@ const xAxis = {
                 data: [], borderColor: '#ffff00', borderWidth: 2,
                 backgroundColor: 'transparent', fill: false,
                 tension: 0.3, pointRadius: 2, spanGaps: false },
+              // [5] Solver expected room temp — zone 2 (same colour as the
+              // monitor's Z2 Target line; shown only when the pump has two zones)
+              { label: 'Expected Z2',
+                data: [], borderColor: '#c084fc', borderDash: [5,5], borderWidth: 2,
+                backgroundColor: 'transparent', fill: false,
+                tension: 0.3, pointRadius: 0, spanGaps: true, hidden: true },
+              // [6] Actual measured room temp — zone 2 (same colour as the
+              // monitor's Z2 Current line)
+              { label: 'Actual Z2',
+                data: [], borderColor: '#ff69b4', borderWidth: 2,
+                backgroundColor: 'transparent', fill: false,
+                tension: 0.3, pointRadius: 2, spanGaps: false, hidden: true },
               // Invisible line spanning every hour so the tooltip always has something to
               // latch onto — including hours where none of the visible series has a point
               // yet — which is what lets the decision-reason footer fire on every hour.
@@ -2563,9 +2647,6 @@ async function onMonitorDateChanged() {
     monitorCharts().forEach(c => {
         if (c) { 
             c.resetZoom('none');
-            // Use delete instead of null to ensure Chart.js properly resets on mobile
-            delete c.options.scales.x.min; 
-            delete c.options.scales.x.max; 
             c.data.labels = []; c.data.datasets.forEach(d => d.data = []); 
             c.update('none'); 
         }
@@ -2768,6 +2849,19 @@ function renderOdinHistory() {
     odinTempChart.data.datasets[2].data = hourlyHistory.map(r => r.sched_base);
     odinTempChart.data.datasets[3].data = hourlyHistory.map(r => r.exp_room_temp);
     odinTempChart.data.datasets[4].data = hourlyHistory.map(r => r.actual_room_temp);
+    // Zone-2 room temps. Older hourly records predate the z2 columns and parse to
+    // null, so hide the lines only when no z2 sample exists in the loaded range.
+    const z2ExpArr = hourlyHistory.map(r => r.exp_room_temp_z2 ?? null);
+    const z2ActArr = hourlyHistory.map(r => r.actual_room_temp_z2 ?? null);
+    const hasZ2 = z2ExpArr.some(v => v !== null) || z2ActArr.some(v => v !== null);
+    odinTempChart.data.datasets[5].data = z2ExpArr;
+    odinTempChart.data.datasets[5].hidden = !hasZ2;
+    odinTempChart.data.datasets[6].data = z2ActArr;
+    odinTempChart.data.datasets[6].hidden = !hasZ2;
+    ['leg-odin-z2-exp', 'leg-odin-z2-act'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = hasZ2 ? 'flex' : 'none';
+    });
     odinTempChart.update('none');
     
     // --- 6. Grid Tariffs Mapping ---
@@ -3098,6 +3192,9 @@ function renderOdinLive() {
     });
 
     const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(72).fill(null))] : new Array(72).fill(null);
+    // Zone 2: identical handling to zone 1 (server 72-slot array, then
+    // today's hours backfilled from the live per-hour first sample).
+    const actualTempZ2ByHour = odinDataCache ? [...(odinDataCache.actual_room_temp_z2 || new Array(72).fill(null))] : new Array(72).fill(null);
 
     const currentLocalHour = new Date().getHours();
 
@@ -3110,6 +3207,7 @@ function renderOdinLive() {
         const hProdDhw   = new Array(24).fill(0);
         const hHasData   = new Array(24).fill(false);
         const firstTempByHour = new Array(24).fill(null);
+        const firstZ2TempByHour = new Array(24).fill(null);
 
         let prevCons = null;
         let prevProd = null;
@@ -3126,6 +3224,7 @@ function renderOdinLive() {
             const mode = history.mode[i];
 
             if (history.z1curr[i] != null && firstTempByHour[h] === null) firstTempByHour[h] = history.z1curr[i];
+            if (history.z2curr[i] != null && firstZ2TempByHour[h] === null) firstZ2TempByHour[h] = history.z2curr[i];
 
             if (history.cons[i] !== null) {
                 if (prevCons !== null) {
@@ -3187,6 +3286,11 @@ function renderOdinLive() {
                     actualTempByHour[idx] = firstTempByHour[h];
                 }
             }
+            if (firstZ2TempByHour[h] !== null) {
+                if (h === currentLocalHour || actualTempZ2ByHour[idx] === null) {
+                    actualTempZ2ByHour[idx] = firstZ2TempByHour[h];
+                }
+            }
         }
       }
 
@@ -3195,6 +3299,7 @@ function renderOdinLive() {
         actualConsHeatByHour[s] = null; actualConsDhwByHour[s] = null; actualConsStandbyByHour[s] = null;
         actualProdHeatByHour[s] = null; actualProdDhwByHour[s] = null;
         actualTempByHour[s] = null;
+        actualTempZ2ByHour[s] = null;
     }
 
     const expCons       = odinDataCache?.energy_consumption  ?? new Array(72).fill(null);
@@ -3288,6 +3393,18 @@ function renderOdinLive() {
     odinTempChart.data.datasets[2].data = schedBase;
     odinTempChart.data.datasets[3].data = expTemp;
     odinTempChart.data.datasets[4].data = actualTempByHour;
+    // Zone 2 lines — same isZ2 rule as the rest of the UI (sensor absent => off)
+    const z2TempOn = (latestState.zone2_enabled !== undefined) ? latestState.zone2_enabled : true;
+    odinTempChart.data.datasets[5].hidden = !z2TempOn;
+    odinTempChart.data.datasets[6].hidden = !z2TempOn;
+    const expTempZ2     = odinDataCache?.expected_begin_temp_z2 ?? new Array(72).fill(null);
+    fillSeam(expTempZ2);
+    odinTempChart.data.datasets[5].data = expTempZ2;
+    odinTempChart.data.datasets[6].data = actualTempZ2ByHour;
+    ['leg-odin-z2-exp', 'leg-odin-z2-act'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = z2TempOn ? 'flex' : 'none';
+    });
     odinTempChart.update('none');
 
     const hasBatt = (odinDataCache?.last_run?.used_battery_soc_kwh || 0) > 0;
@@ -3381,10 +3498,7 @@ function updateCharts(d) {
       const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
       
       if (startIndex !== -1) {
-        monitorCharts().forEach(c => { 
-          c.options.scales.x.min = startIndex; 
-          c.options.scales.x.max = history.timestamps.length - 1; 
-        });
+        forceMonitorXRange(startIndex, history.timestamps.length - 1, false);
       }
     }
 
@@ -3392,7 +3506,10 @@ function updateCharts(d) {
     monitorCharts().forEach(c => c.update());
   }
 
-  updateOdinCharts();
+  // Only re-render the odin charts on the poll tick in live mode. In history
+  // (calendar) mode they are static, and re-rendering would call
+  // renderOdinHistory() which resets the user's zoom to the full range.
+  if (solverMode === 'live') updateOdinCharts();
 }
 
 function setToggle(id, val) {
@@ -3564,6 +3681,8 @@ function toggleCoolingUI() {
 }
 
 function render(d) {
+  // DEBUG DEBUG
+  // d.zone2_enabled = true;
   const isZ2 = (d.zone2_enabled !== undefined) ? d.zone2_enabled : true;
 
   if (d.ui_use_room_z1 !== undefined) {
@@ -3584,6 +3703,10 @@ function render(d) {
   if (z2Card) { z2Card.style.display = isZ2 ? 'block' : 'none'; }
   const z2AA = document.getElementById('aa-z2-container');
   if(z2AA) { z2AA.style.display = isZ2 ? 'block' : 'none'; }
+  const z2HeatPhys = document.getElementById('phys-z2-heat');
+  if (z2HeatPhys) { z2HeatPhys.style.display = isZ2 ? 'block' : 'none'; }
+  const z2CoolPhys = document.getElementById('phys-z2-cool');
+  if (z2CoolPhys) { z2CoolPhys.style.display = isZ2 ? 'block' : 'none'; }
 
   const flowZ2Area = document.getElementById('flow-z2-area');
   if (flowZ2Area) {
@@ -3621,6 +3744,15 @@ function render(d) {
   if (d.raw_cool_runtime_hours_lim) { LIMITS['raw-cool-run'].min = d.raw_cool_runtime_hours_lim.min; LIMITS['raw-cool-run'].max = d.raw_cool_runtime_hours_lim.max; LIMITS['raw-cool-run'].step = d.raw_cool_runtime_hours_lim.step; }
   if (d.raw_cool_avg_outside_temp_lim) { LIMITS['raw-cool-out'].min = d.raw_cool_avg_outside_temp_lim.min; LIMITS['raw-cool-out'].max = d.raw_cool_avg_outside_temp_lim.max; LIMITS['raw-cool-out'].step = d.raw_cool_avg_outside_temp_lim.step; }
   if (d.raw_cool_avg_room_temp_lim) { LIMITS['raw-cool-room'].min = d.raw_cool_avg_room_temp_lim.min; LIMITS['raw-cool-room'].max = d.raw_cool_avg_room_temp_lim.max; LIMITS['raw-cool-room'].step = d.raw_cool_avg_room_temp_lim.step; }
+  if (d.raw_heat_produced_z2_lim) { LIMITS['raw-heat-z2'].min = d.raw_heat_produced_z2_lim.min; LIMITS['raw-heat-z2'].max = d.raw_heat_produced_z2_lim.max; LIMITS['raw-heat-z2'].step = d.raw_heat_produced_z2_lim.step; }
+  if (d.raw_elec_consumed_z2_lim) { LIMITS['raw-elec-z2'].min = d.raw_elec_consumed_z2_lim.min; LIMITS['raw-elec-z2'].max = d.raw_elec_consumed_z2_lim.max; LIMITS['raw-elec-z2'].step = d.raw_elec_consumed_z2_lim.step; }
+  if (d.raw_runtime_hours_z2_lim) { LIMITS['raw-run-z2'].min = d.raw_runtime_hours_z2_lim.min; LIMITS['raw-run-z2'].max = d.raw_runtime_hours_z2_lim.max; LIMITS['raw-run-z2'].step = d.raw_runtime_hours_z2_lim.step; }
+  if (d.raw_avg_room_temp_z2_lim) { LIMITS['raw-room-z2'].min = d.raw_avg_room_temp_z2_lim.min; LIMITS['raw-room-z2'].max = d.raw_avg_room_temp_z2_lim.max; LIMITS['raw-room-z2'].step = d.raw_avg_room_temp_z2_lim.step; }
+  if (d.raw_delta_room_temp_z2_lim) { LIMITS['raw-delta-z2'].min = d.raw_delta_room_temp_z2_lim.min; LIMITS['raw-delta-z2'].max = d.raw_delta_room_temp_z2_lim.max; LIMITS['raw-delta-z2'].step = d.raw_delta_room_temp_z2_lim.step; }
+  if (d.raw_cool_produced_z2_lim) { LIMITS['raw-cool-prod-z2'].min = d.raw_cool_produced_z2_lim.min; LIMITS['raw-cool-prod-z2'].max = d.raw_cool_produced_z2_lim.max; LIMITS['raw-cool-prod-z2'].step = d.raw_cool_produced_z2_lim.step; }
+  if (d.raw_cool_elec_consumed_z2_lim) { LIMITS['raw-cool-elec-z2'].min = d.raw_cool_elec_consumed_z2_lim.min; LIMITS['raw-cool-elec-z2'].max = d.raw_cool_elec_consumed_z2_lim.max; LIMITS['raw-cool-elec-z2'].step = d.raw_cool_elec_consumed_z2_lim.step; }
+  if (d.raw_cool_runtime_hours_z2_lim) { LIMITS['raw-cool-run-z2'].min = d.raw_cool_runtime_hours_z2_lim.min; LIMITS['raw-cool-run-z2'].max = d.raw_cool_runtime_hours_z2_lim.max; LIMITS['raw-cool-run-z2'].step = d.raw_cool_runtime_hours_z2_lim.step; }
+  if (d.raw_cool_avg_room_temp_z2_lim) { LIMITS['raw-cool-room-z2'].min = d.raw_cool_avg_room_temp_z2_lim.min; LIMITS['raw-cool-room-z2'].max = d.raw_cool_avg_room_temp_z2_lim.max; LIMITS['raw-cool-room-z2'].step = d.raw_cool_avg_room_temp_z2_lim.step; }
 
   if (d.cool_smart_z1_lim) { LIMITS['cool-start-z1'].min = d.cool_smart_z1_lim.min; LIMITS['cool-start-z1'].max = d.cool_smart_z1_lim.max; LIMITS['cool-start-z1'].step = d.cool_smart_z1_lim.step || 0.5; }
   if (d.min_cool_flow_z1_lim) { LIMITS['cool-min-z1'].min = d.min_cool_flow_z1_lim.min; LIMITS['cool-min-z1'].max = d.min_cool_flow_z1_lim.max; LIMITS['cool-min-z1'].step = d.min_cool_flow_z1_lim.step || 0.1; }
@@ -3856,6 +3988,15 @@ function render(d) {
   seedPending('raw-cool-run',  d.raw_cool_runtime_hours);
   seedPending('raw-cool-out',  d.raw_cool_avg_outside_temp);
   seedPending('raw-cool-room', d.raw_cool_avg_room_temp);
+  seedPending('raw-heat-z2',  d.raw_heat_produced_z2);
+  seedPending('raw-elec-z2',  d.raw_elec_consumed_z2);
+  seedPending('raw-run-z2',   d.raw_runtime_hours_z2);
+  seedPending('raw-room-z2',  d.raw_avg_room_temp_z2);
+  seedPending('raw-delta-z2', d.raw_delta_room_temp_z2);
+  seedPending('raw-cool-prod-z2',  d.raw_cool_produced_z2);
+  seedPending('raw-cool-elec-z2',  d.raw_cool_elec_consumed_z2);
+  seedPending('raw-cool-run-z2',   d.raw_cool_runtime_hours_z2);
+  seedPending('raw-cool-room-z2',  d.raw_cool_avg_room_temp_z2);
 
   // --- SERVER CONTROL ---
   if (d.server_control_enabled !== undefined) {
@@ -4148,7 +4289,7 @@ async function sendPhysics(btn) {
   btn.classList.add('sending');
   let c = 0;
   try {
-    const physicsKeys = ['raw-heat','raw-elec','raw-run','raw-out','raw-room','raw-delta','raw-hl-tm','raw-solar-factor','batt-soc','batt-max-dis', 'raw-cool-prod', 'raw-cool-elec', 'raw-cool-run', 'raw-cool-out', 'raw-cool-room'];
+    const physicsKeys = ['raw-heat','raw-elec','raw-run','raw-out','raw-room','raw-delta','raw-hl-tm','raw-solar-factor','batt-soc','batt-max-dis', 'raw-cool-prod', 'raw-cool-elec', 'raw-cool-run', 'raw-cool-out', 'raw-cool-room', 'raw-heat-z2','raw-elec-z2','raw-run-z2','raw-room-z2','raw-delta-z2','raw-cool-prod-z2','raw-cool-elec-z2','raw-cool-run-z2','raw-cool-room-z2'];
 
     const physicsMap = {
       'raw-heat': 'raw_heat_produced', 'raw-elec': 'raw_elec_consumed', 'raw-run': 'raw_runtime_hours',
@@ -4157,7 +4298,12 @@ async function sendPhysics(btn) {
       'batt-soc': 'battery_soc_kwh', 'batt-max-dis': 'battery_max_discharge_kw',
       'raw-cool-prod': 'raw_cool_produced', 'raw-cool-elec': 'raw_cool_elec_consumed',
       'raw-cool-run': 'raw_cool_runtime_hours', 'raw-cool-out': 'raw_cool_avg_outside_temp',
-      'raw-cool-room': 'raw_cool_avg_room_temp'
+      'raw-cool-room': 'raw_cool_avg_room_temp',
+      'raw-heat-z2': 'raw_heat_produced_z2', 'raw-elec-z2': 'raw_elec_consumed_z2',
+      'raw-run-z2': 'raw_runtime_hours_z2', 'raw-room-z2': 'raw_avg_room_temp_z2',
+      'raw-delta-z2': 'raw_delta_room_temp_z2',
+      'raw-cool-prod-z2': 'raw_cool_produced_z2', 'raw-cool-elec-z2': 'raw_cool_elec_consumed_z2',
+      'raw-cool-run-z2': 'raw_cool_runtime_hours_z2', 'raw-cool-room-z2': 'raw_cool_avg_room_temp_z2'
     };
     for (const k of physicsKeys) {
       if (hasChanged(k)) {
@@ -4231,6 +4377,23 @@ async function runOdinSolver() {
             hl_tm_product: pending['raw-hl-tm'] ?? latestState.raw_hl_tm_product ?? 0.0,
             passive_solar_gain_factor: solarFactor,
             current_room_temp: latestState.z1_current_temp || 20.0,
+            // ── Zone 2 — always sent, in full. The client never guesses: the
+            // solver decides whether to run the two-zone pass (its
+            // z2_separate_solve switch + the topology flag below). Single-zone
+            // builds send zeros/echoes — the solver ignores them when the flag
+            // is 0, and treats them as "no z2 data yet" when it is 1.
+            independent_zones: (latestState.zone2_enabled === false) ? 0 : 1,
+            current_room_temp_z2: latestState.z2_current_temp || 20.0,
+            heat_produced_z2: pending['raw-heat-z2'] || latestState.raw_heat_produced_z2 || 0,
+            elec_consumed_z2: pending['raw-elec-z2'] || latestState.raw_elec_consumed_z2 || 0,
+            runtime_hours_z2: pending['raw-run-z2'] || latestState.raw_runtime_hours_z2 || 0,
+            avg_room_temp_z2: pending['raw-room-z2'] || latestState.raw_avg_room_temp_z2 || latestState.raw_avg_room_temp || 20,
+            delta_room_temp_z2: pending['raw-delta-z2'] ?? latestState.raw_delta_room_temp_z2 ?? 0.0,
+            hl_tm_product_z2: pending['raw-hl-tm'] ?? latestState.raw_hl_tm_product ?? 0.0,
+            cool_produced_z2: pending['raw-cool-prod-z2'] || latestState.raw_cool_produced_z2 || 0,
+            cool_elec_consumed_z2: pending['raw-cool-elec-z2'] || latestState.raw_cool_elec_consumed_z2 || 0,
+            cool_runtime_hours_z2: pending['raw-cool-run-z2'] || latestState.raw_cool_runtime_hours_z2 || 0,
+            cool_avg_room_temp_z2: pending['raw-cool-room-z2'] || latestState.raw_cool_avg_room_temp_z2 || latestState.raw_cool_avg_room_temp || 20,
             current_hour: solveHour,
             battery_soc_kwh: pending['batt-soc'] ?? latestState.battery_soc_kwh ?? 0.0,
             battery_max_discharge_kw: pending['batt-max-dis'] ?? latestState.battery_max_discharge_kw ?? 3.0,
@@ -4279,6 +4442,7 @@ async function runOdinSolver() {
 
             inject72('expected_end_temp', data.expected_end_temp);
             inject72('expected_begin_temp', data.expected_begin_temp, true); // true = lock current hour
+            inject72('expected_begin_temp_z2', data.expected_begin_temp_z2, true);
             inject72('operation_mode', data.operation_mode, true);
             inject72('prices', data.prices);
             inject72('sched_base', data.sched_base);
@@ -4616,13 +4780,41 @@ function updateStatus(text, color) {
   statusDiv.style.color = color || 'var(--text3)';
 }
 
+/**
+ * Authoritatively set the x-range on ALL monitor charts (single source of truth).
+ * Writes min/max at every level Chart.js / chartjs-plugin-zoom may read —
+ * root config, chart options, and the live scale options — so no stale
+ * per-chart state can override the range. `reset` additionally clears the
+ * zoom plugin's saved (stale) original range.
+ */
+function forceMonitorXRange(min, max, reset = true) {
+  const charts = monitorCharts().filter(Boolean);
+  if (reset) charts.forEach(c => c.resetZoom('none'));
+  charts.forEach(c => {
+    const root = c.config.options.scales;
+    if (root && root.x) { root.x.min = min; root.x.max = max; }
+    c.options.scales.x.min = min;
+    c.options.scales.x.max = max;
+    if (c.scales.x && c.scales.x.options) {
+      c.scales.x.options.min = min;
+      c.scales.x.options.max = max;
+    }
+  });
+  charts.forEach(c => c.update('none'));
+}
+
 function syncScales(chart, min, max) {
   monitorCharts().forEach(c => {
-    if (c !== chart) {
-      c.options.scales.x.min = min;
-      c.options.scales.x.max = max;
-      c.update('none');
+    if (c === chart) return;
+    const root = c.config.options.scales;
+    if (root && root.x) { root.x.min = min; root.x.max = max; }
+    c.options.scales.x.min = min;
+    c.options.scales.x.max = max;
+    if (c.scales.x && c.scales.x.options) {
+      c.scales.x.options.min = min;
+      c.scales.x.options.max = max;
     }
+    c.update('none');
   });
 }
 
@@ -4636,12 +4828,7 @@ function resetAllZoom() {
     const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
     
     if (startIndex !== -1) {
-      monitorCharts().forEach(c => {
-        c.resetZoom('none');
-        c.options.scales.x.min = startIndex;
-        c.options.scales.x.max = history.timestamps.length - 1;
-        c.update('none');
-      });
+      forceMonitorXRange(startIndex, history.timestamps.length - 1);
     } else {
       monitorCharts().forEach(c => { 
         c.resetZoom('none'); 
@@ -4651,18 +4838,10 @@ function resetAllZoom() {
       });
     }
   } else {
-    // History mode: show all loaded data at full scale using indices instead of labels
-    monitorCharts().forEach(c => {
-      c.resetZoom('none');
-      if (history.timestamps && history.timestamps.length > 0) {
-        c.options.scales.x.min = 0;
-        c.options.scales.x.max = history.timestamps.length - 1;
-      } else {
-        delete c.options.scales.x.min;
-        delete c.options.scales.x.max;
-      }
-      c.update('none');
-    });
+    // History mode: full scale — write min/max onto the existing axis
+    // object (same proven mechanism as the live auto-window).
+    const lastIdx = history.timestamps.length - 1;
+    forceMonitorXRange(0, lastIdx);
   }
   document.getElementById('btn-reset-zoom').style.display = 'none';
 }
@@ -4745,10 +4924,20 @@ function syncOdinScales(sourceChart) {
 
 function resetOdinZoom() {
     odinZoomed = false;
-    [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
-     odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-        if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
-    });
+    const charts = [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
+     odinBattChart, odinPriceChart, odinWeatherChart];
+    if (typeof solverMode !== 'undefined' && solverMode === 'history') {
+        // History (calendar) mode: reset to the full history range, not the
+        // hardcoded live window (23.5-47.5 is outside the history data range).
+        charts.forEach(c => {
+            if (c) c.resetZoom('none');
+        });
+    } else {
+        // Live mode: reset to the live window.
+        charts.forEach(c => {
+            if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
+        });
+    }
     document.getElementById('btn-reset-zoom-odin').style.display = 'none';
     updateOdinTotals();
 }
@@ -4853,23 +5042,18 @@ async function loadServerHistory(fromTs, toTs, type = 'min') {
           const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
           
           if (startIndex !== -1) {
-            monitorCharts().forEach(c => { 
-              c.options.scales.x.min = startIndex; 
-              c.options.scales.x.max = history.timestamps.length - 1; 
-            });
+            forceMonitorXRange(startIndex, history.timestamps.length - 1, false);
           }
-          monitorCharts().forEach(c => c.update('none'));
         } else if (monitorMode !== 'live' && history.timestamps.length > 0) {
-          // History mode: maximize scale to show all loaded data
+          // History mode: always show the ENTIRE selected range (100% zoomed
+          // out). Write min/max onto the EXISTING axis object — the same
+          // proven mechanism as the live auto-window above. Replacing the
+          // object does not stick: on update() chart.js rebuilds the scales
+          // from its root config, where the zoom plugin baked the stale
+          // live window.
           userZoomed = false;
-          const labels = buildMinuteLabels();
-          monitorCharts().forEach(c => {
-              c.resetZoom('none');
-              // Explicitly bind to the array bounds to fix mobile viewport rendering
-              c.options.scales.x.min = labels[0];
-              c.options.scales.x.max = labels[labels.length - 1];
-          });
-          monitorCharts().forEach(c => c.update('none'));
+          const lastIdx = history.timestamps.length - 1;
+          forceMonitorXRange(0, lastIdx);
         }        
       } else if (type === 'hour') {
         console.log(`Loaded ${data.length} hourly records.`);
@@ -4900,9 +5084,10 @@ async function loadServerHistory(fromTs, toTs, type = 'min') {
                 sched_max: getF(row[21], 100.0),
                 exp_solar_kwh: getF(row[22], 100.0),
                 decision_reason: row.length > 23 ? getF(row[23], 1.0) : null,
-                // Dominant actually-executed mode (only present with newer firmware;
-                // otherwise resolved client-side from minute records)
-                actual_op_mode: row.length > 24 ? getF(row[24], 1.0) : null
+                // Zone-2 room temps (appended by the v2 hourly layout). Records
+                // written before that layout have zeroed bytes → treat 0 as missing.
+                exp_room_temp_z2: row.length > 25 ? (row[25] === 0 ? null : getF(row[25], 100.0)) : null,
+                actual_room_temp_z2: row.length > 26 ? (row[26] === 0 ? null : getF(row[26], 100.0)) : null
             };
         });
 

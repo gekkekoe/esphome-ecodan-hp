@@ -35,6 +35,10 @@ namespace esphome
             this->last_total_dhw_produced_ = saved.last_total_dhw_produced;
             this->last_total_dhw_consumed_ = saved.last_total_dhw_consumed;
             this->last_total_all_consumed_ = saved.last_total_all_consumed;
+            this->last_total_z2_heating_produced_ = saved.last_total_z2_heating_produced;
+            this->last_total_z2_heating_consumed_ = saved.last_total_z2_heating_consumed;
+            this->last_total_z2_cooling_produced_ = saved.last_total_z2_cooling_produced;
+            this->last_total_z2_cooling_consumed_ = saved.last_total_z2_cooling_consumed;
         }
 
         void Optimizer::save_energy_buckets_(int day)
@@ -48,6 +52,10 @@ namespace esphome
             buckets.last_total_dhw_produced = this->last_total_dhw_produced_;
             buckets.last_total_dhw_consumed = this->last_total_dhw_consumed_;
             buckets.last_total_all_consumed = this->last_total_all_consumed_;
+            buckets.last_total_z2_heating_produced = this->last_total_z2_heating_produced_;
+            buckets.last_total_z2_heating_consumed = this->last_total_z2_heating_consumed_;
+            buckets.last_total_z2_cooling_produced = this->last_total_z2_cooling_produced_;
+            buckets.last_total_z2_cooling_consumed = this->last_total_z2_cooling_consumed_;
             this->energy_buckets_pref_.save(&buckets);
         }
 
@@ -82,12 +90,18 @@ namespace esphome
                     return;
                 }
 
-                // Track runtimes separately
+                // Track runtimes separately.
+                // MultiZoneStatus: 0=idle, 1=both zones, 2=Z1 only, 3=Z2 only.
+                // When only one zone runs, the ENTIRE compressor output goes to
+                // that zone — a clean per-zone learning sample without a meter.
+                uint8_t mzone = status.MultiZoneStatus;
                 if (is_running && is_heating_active) {
                     this->daily_runtime_global += minutes_passed;
+                    if (mzone == 3) this->daily_runtime_heat_z2_ += minutes_passed;
                 }
                 if (is_running && is_cooling_active) {
                     this->daily_runtime_cool_ += minutes_passed;
+                    if (mzone == 3) this->daily_runtime_cool_z2_ += minutes_passed;
 
                     // Outside temp averaged ONLY over hours cooling was actually
                     // active — NOT the whole-day average (which includes the
@@ -252,6 +266,17 @@ namespace esphome
                 }
             }
 
+            // Track zone-2's own room temperature for the second learning set
+            if (status.has_2zones()) {
+                float z2t = this->get_room_current_temp(OptimizerZone::ZONE_2);
+                if (!isnan(z2t)) {
+                    this->daily_room_temp_sum_z2_ += z2t;
+                    this->daily_room_temp_count_z2_++;
+                    if (z2t < this->daily_room_temp_min_z2_) this->daily_room_temp_min_z2_ = z2t;
+                    if (z2t > this->daily_room_temp_max_z2_) this->daily_room_temp_max_z2_ = z2t;
+                }
+            }
+
             if (!isnan(current_room_temp)) {
                 this->daily_room_temp_sum_ += current_room_temp;
                 this->daily_room_temp_count_++;
@@ -315,12 +340,18 @@ namespace esphome
                 
                 this->daily_room_temp_sum_ = 0.0f;
                 this->daily_room_temp_count_ = 0;
+                this->daily_room_temp_sum_z2_ = 0.0f;
+                this->daily_room_temp_count_z2_ = 0;
+                this->daily_room_temp_min_z2_ = 99.0f;
+                this->daily_room_temp_max_z2_ = -99.0f;
                 this->daily_room_temp_min_ = 99.0f;
                 this->daily_room_temp_max_ = -99.0f;
                 this->daily_max_output_power_ = 0.0f;
                 
                 this->daily_runtime_global = 0.0f;
                 this->daily_runtime_cool_ = 0.0f;
+                this->daily_runtime_heat_z2_ = 0.0f;
+                this->daily_runtime_cool_z2_ = 0.0f;
                 this->daily_cool_outside_temp_sum_ = 0.0f;
                 this->daily_cool_outside_temp_count_ = 0;
 
@@ -329,6 +360,10 @@ namespace esphome
                 this->last_total_heating_consumed_ = 0.0f;
                 this->last_total_cooling_produced_ = 0.0f;
                 this->last_total_cooling_consumed_ = 0.0f;
+                this->last_total_z2_heating_produced_ = 0.0f;
+                this->last_total_z2_heating_consumed_ = 0.0f;
+                this->last_total_z2_cooling_produced_ = 0.0f;
+                this->last_total_z2_cooling_consumed_ = 0.0f;
 
                 this->last_total_dhw_produced_ = 0.0f;
                 this->last_total_dhw_consumed_ = 0.0f;
@@ -451,12 +486,21 @@ namespace esphome
             // 3. Bucket the deltas accurately.
             // Ignore physically impossible hardware spikes (>50 kWh in a minute).
             if (delta_prod < 50.0f && delta_cons < 50.0f) {
+                bool z2_only = (status.MultiZoneStatus == 3);
                 if (heat_active_window) {
                     this->last_total_heating_produced_ += delta_prod;
                     this->last_total_heating_consumed_ += delta_cons;
+                    if (z2_only) {
+                        this->last_total_z2_heating_produced_ += delta_prod;
+                        this->last_total_z2_heating_consumed_ += delta_cons;
+                    }
                 } else if (cool_active_window) {
                     this->last_total_cooling_produced_ += delta_prod;
                     this->last_total_cooling_consumed_ += delta_cons;
+                    if (z2_only) {
+                        this->last_total_z2_cooling_produced_ += delta_prod;
+                        this->last_total_z2_cooling_consumed_ += delta_cons;
+                    }
                 } else if (dhw_active_window) {
                     this->last_total_dhw_produced_ += delta_prod;
                     this->last_total_dhw_consumed_ += delta_cons;
@@ -578,6 +622,40 @@ namespace esphome
                          safe_get(this->state_.num_raw_avg_outside_temp, avg_outside), 
                          safe_get(this->state_.num_raw_avg_room_temp, avg_room), 
                          delta_room);
+            }
+
+            // --- Zone-2 learning set
+            {
+                float z2_heat_runtime = this->daily_runtime_heat_z2_ / 60.0f;
+                float z2_cool_runtime = this->daily_runtime_cool_z2_ / 60.0f;
+                float z2_heat_prod    = this->last_total_z2_heating_produced_;
+                float z2_heat_elec    = this->last_total_z2_heating_consumed_;
+                float z2_cool_prod    = this->last_total_z2_cooling_produced_;
+                float z2_cool_elec    = this->last_total_z2_cooling_consumed_;
+                float z2_avg_room = (this->daily_room_temp_count_z2_ > 0)
+                    ? (this->daily_room_temp_sum_z2_ / this->daily_room_temp_count_z2_)
+                    : 20.0f;
+                float z2_delta_room = (this->daily_room_temp_count_z2_ > 0
+                    && this->daily_room_temp_max_z2_ >= this->daily_room_temp_min_z2_)
+                    ? (this->daily_room_temp_max_z2_ - this->daily_room_temp_min_z2_)
+                    : 0.0f;
+
+                if (z2_heat_prod >= 2.0f && z2_heat_runtime >= 1.0f) {
+                    update_ema_num(this->state_.num_raw_heat_produced_z2, z2_heat_prod, ALPHA);
+                    update_ema_num(this->state_.num_raw_elec_consumed_z2, z2_heat_elec, ALPHA);
+                    update_ema_num(this->state_.num_raw_runtime_hours_z2, z2_heat_runtime, ALPHA);
+                    update_ema_num(this->state_.num_raw_avg_room_temp_z2, z2_avg_room, ALPHA);
+                    update_ema_num(this->state_.num_raw_delta_room_temp_z2, z2_delta_room, ALPHA);
+                    ESP_LOGI(OPTIMIZER_TAG, "Z2 heating update (15%% EMA): Heat=%.1fkWh, Elec=%.1fkWh, Run=%.1fh, AvgRoomZ2=%.1fC",
+                             z2_heat_prod, z2_heat_elec, z2_heat_runtime, z2_avg_room);
+                } else if (z2_cool_prod >= 2.0f && z2_cool_runtime >= 1.0f) {
+                    update_ema_num(this->state_.num_raw_cool_produced_z2, z2_cool_prod, ALPHA);
+                    update_ema_num(this->state_.num_raw_cool_elec_consumed_z2, z2_cool_elec, ALPHA);
+                    update_ema_num(this->state_.num_raw_cool_runtime_hours_z2, z2_cool_runtime, ALPHA);
+                    update_ema_num(this->state_.num_raw_cool_avg_room_temp_z2, z2_avg_room, ALPHA);
+                    ESP_LOGI(OPTIMIZER_TAG, "Z2 cooling update (15%% EMA): CoolProd=%.1fkWh, CoolElec=%.1fkWh, Run=%.1fh, AvgRoomZ2=%.1fC",
+                             z2_cool_prod, z2_cool_elec, z2_cool_runtime, z2_avg_room);
+                }
             }
         }
 

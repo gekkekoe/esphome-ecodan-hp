@@ -67,7 +67,7 @@ namespace esphome
         // ─────────────────────────────────────────────────────────────────
         // ODIN solver bias — mutex-safe, returns {bias, heatpump_off}
         // ─────────────────────────────────────────────────────────────────
-        Optimizer::SolverResult Optimizer::resolve_solver_result_(float room_target_temp, float current_room_temp) {
+        Optimizer::SolverResult Optimizer::resolve_solver_result_(std::size_t zone, float room_target_temp, float current_room_temp) {
             SolverResult result{-1.0f, false, OptimizerOperationMode::UNAVAILABLE, -1 };
 
             if (this->state_.sw_use_solver == nullptr || !this->state_.sw_use_solver->state)
@@ -90,12 +90,21 @@ namespace esphome
                 
                 if (current_hour >= 0 && current_hour < 24) {
                     auto mode = to_operation_mode(this->odin_operation_mode_[current_hour]);
-                    float odin_prod   = this->odin_production_[current_hour];
+                    // Per-zone production plan from the two-zone solve. Falls
+                    // back to the combined (whole-pump) plan when the solver
+                    // answered single-zone (the zone vectors stay empty then).
+                    const std::vector<float> &prod_vec =
+                        (zone == 1 && this->odin_production_z2_.size() == this->odin_production_.size())
+                            ? this->odin_production_z2_
+                            : (zone == 0 && this->odin_production_z1_.size() == this->odin_production_.size())
+                                ? this->odin_production_z1_
+                                : this->odin_production_;
+                    float odin_prod   = prod_vec[current_hour];
 
                     // look ahead during lock
                     int next_hour = (current_hour + 1) % 24;
                     auto next_mode = to_operation_mode(this->odin_operation_mode_[next_hour]);
-                    float next_prod  = this->odin_production_[next_hour];
+                    float next_prod  = prod_vec[next_hour];
 
                     xSemaphoreGive(this->odin_mutex_);
 
@@ -403,7 +412,7 @@ namespace esphome
             bool solver_enabled = this->solver_enabled();
 
             if (solver_enabled) {
-                auto [solver_load_ratio, solver_heatpump_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(room_target_temp, room_temp);
+                auto [solver_load_ratio, solver_heatpump_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(i, room_target_temp, room_temp);
                 
                 if (solver_operating_mode == OptimizerOperationMode::DHW_ON || solver_operating_mode == OptimizerOperationMode::LEGIONELLA_PREVENTION) {
                     return; 
@@ -535,7 +544,7 @@ namespace esphome
             auto &status = this->state_.ecodan_instance->get_status();
 
             if (solver_enabled) {
-                auto [solver_load_ratio, solver_heatpump_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(0.0f, 0.0f);
+                auto [solver_load_ratio, solver_heatpump_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(0, 0.0f, 0.0f);
                 
                 if (solver_operating_mode == OptimizerOperationMode::DHW_ON) {
                     int dhw_mode = 0; // 0 = Regular, 1 = Forced

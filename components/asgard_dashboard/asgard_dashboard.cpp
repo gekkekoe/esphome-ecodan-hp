@@ -457,6 +457,11 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "raw_avg_outside_temp") { doNumber(num_raw_avg_outside_temp_); return; }
   if (key == "raw_avg_room_temp") { doNumber(num_raw_avg_room_temp_); return; }
   if (key == "raw_delta_room_temp") { doNumber(num_raw_delta_room_temp_); return; }
+  if (key == "raw_heat_produced_z2") { doNumber(num_raw_heat_produced_z2_); return; }
+  if (key == "raw_elec_consumed_z2") { doNumber(num_raw_elec_consumed_z2_); return; }
+  if (key == "raw_runtime_hours_z2") { doNumber(num_raw_runtime_hours_z2_); return; }
+  if (key == "raw_avg_room_temp_z2") { doNumber(num_raw_avg_room_temp_z2_); return; }
+  if (key == "raw_delta_room_temp_z2") { doNumber(num_raw_delta_room_temp_z2_); return; }
   if (key == "raw_hl_tm_product") { doNumber(num_raw_hl_tm_product_); return; }
   if (key == "raw_solar_factor") { doNumber(num_raw_solar_factor_); return; }
   if (key == "battery_soc_kwh") { doNumber(num_battery_soc_kwh_); return; }
@@ -469,6 +474,10 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "raw_cool_runtime_hours") { doNumber(num_raw_cool_runtime_hours_); return; }
   if (key == "raw_cool_avg_outside_temp") { doNumber(num_raw_cool_avg_outside_temp_); return; }
   if (key == "raw_cool_avg_room_temp") { doNumber(num_raw_cool_avg_room_temp_); return; }
+  if (key == "raw_cool_produced_z2") { doNumber(num_raw_cool_produced_z2_); return; }
+  if (key == "raw_cool_elec_consumed_z2") { doNumber(num_raw_cool_elec_consumed_z2_); return; }
+  if (key == "raw_cool_runtime_hours_z2") { doNumber(num_raw_cool_runtime_hours_z2_); return; }
+  if (key == "raw_cool_avg_room_temp_z2") { doNumber(num_raw_cool_avg_room_temp_z2_); return; }
 
 
   if (key == "dhw_setpoint" && dhw_climate_ != nullptr) {
@@ -657,12 +666,22 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_raw_delta_room_temp_, current_snapshot_.num_raw_delta_room_temp);
   get_n(num_raw_hl_tm_product_, current_snapshot_.num_raw_hl_tm_product);
   get_n(num_raw_solar_factor_, current_snapshot_.num_raw_solar_factor);
+  // Zone-2 daily stats — absent in single-zone builds (nullptr pointers no-op)
+  get_n(num_raw_heat_produced_z2_, current_snapshot_.num_raw_heat_produced_z2);
+  get_n(num_raw_elec_consumed_z2_, current_snapshot_.num_raw_elec_consumed_z2);
+  get_n(num_raw_runtime_hours_z2_, current_snapshot_.num_raw_runtime_hours_z2);
+  get_n(num_raw_avg_room_temp_z2_, current_snapshot_.num_raw_avg_room_temp_z2);
+  get_n(num_raw_delta_room_temp_z2_, current_snapshot_.num_raw_delta_room_temp_z2);
 
   get_n(num_raw_cool_produced_, current_snapshot_.num_raw_cool_produced);
   get_n(num_raw_cool_elec_consumed_, current_snapshot_.num_raw_cool_elec_consumed);
   get_n(num_raw_cool_runtime_hours_, current_snapshot_.num_raw_cool_runtime_hours);
   get_n(num_raw_cool_avg_outside_temp_, current_snapshot_.num_raw_cool_avg_outside_temp);
   get_n(num_raw_cool_avg_room_temp_, current_snapshot_.num_raw_cool_avg_room_temp);
+  get_n(num_raw_cool_produced_z2_, current_snapshot_.num_raw_cool_produced_z2);
+  get_n(num_raw_cool_elec_consumed_z2_, current_snapshot_.num_raw_cool_elec_consumed_z2);
+  get_n(num_raw_cool_runtime_hours_z2_, current_snapshot_.num_raw_cool_runtime_hours_z2);
+  get_n(num_raw_cool_avg_room_temp_z2_, current_snapshot_.num_raw_cool_avg_room_temp_z2);
 
   get_n(num_battery_soc_kwh_, current_snapshot_.num_battery_soc_kwh);
   get_n(num_battery_max_discharge_kw_, current_snapshot_.num_battery_max_discharge_kw);
@@ -961,6 +980,16 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_lim("raw_avg_room_temp_lim",snap.num_raw_avg_room_temp);
   p_n("raw_delta_room_temp",    snap.num_raw_delta_room_temp.val);
   p_lim("raw_delta_room_temp_lim", snap.num_raw_delta_room_temp);
+  p_n("raw_heat_produced_z2",   snap.num_raw_heat_produced_z2.val);
+  p_lim("raw_heat_produced_z2_lim", snap.num_raw_heat_produced_z2);
+  p_n("raw_elec_consumed_z2",   snap.num_raw_elec_consumed_z2.val);
+  p_lim("raw_elec_consumed_z2_lim", snap.num_raw_elec_consumed_z2);
+  p_n("raw_runtime_hours_z2",   snap.num_raw_runtime_hours_z2.val);
+  p_lim("raw_runtime_hours_z2_lim", snap.num_raw_runtime_hours_z2);
+  p_n("raw_avg_room_temp_z2",   snap.num_raw_avg_room_temp_z2.val);
+  p_lim("raw_avg_room_temp_z2_lim", snap.num_raw_avg_room_temp_z2);
+  p_n("raw_delta_room_temp_z2", snap.num_raw_delta_room_temp_z2.val);
+  p_lim("raw_delta_room_temp_z2_lim", snap.num_raw_delta_room_temp_z2);
   p_n("raw_hl_tm_product",      snap.num_raw_hl_tm_product.val);
   p_n("raw_solar_factor",       snap.num_raw_solar_factor.val);
   p_lim("raw_solar_factor_lim", snap.num_raw_solar_factor);
@@ -984,6 +1013,14 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_lim("raw_cool_avg_outside_temp_lim", snap.num_raw_cool_avg_outside_temp);
   p_n("raw_cool_avg_room_temp",      snap.num_raw_cool_avg_room_temp.val);
   p_lim("raw_cool_avg_room_temp_lim", snap.num_raw_cool_avg_room_temp);
+  p_n("raw_cool_produced_z2",   snap.num_raw_cool_produced_z2.val);
+  p_lim("raw_cool_produced_z2_lim", snap.num_raw_cool_produced_z2);
+  p_n("raw_cool_elec_consumed_z2", snap.num_raw_cool_elec_consumed_z2.val);
+  p_lim("raw_cool_elec_consumed_z2_lim", snap.num_raw_cool_elec_consumed_z2);
+  p_n("raw_cool_runtime_hours_z2", snap.num_raw_cool_runtime_hours_z2.val);
+  p_lim("raw_cool_runtime_hours_z2_lim", snap.num_raw_cool_runtime_hours_z2);
+  p_n("raw_cool_avg_room_temp_z2", snap.num_raw_cool_avg_room_temp_z2.val);
+  p_lim("raw_cool_avg_room_temp_z2_lim", snap.num_raw_cool_avg_room_temp_z2);
   
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
@@ -1276,7 +1313,7 @@ void EcodanDashboard::send_hourly_history_(httpd_req_t *req, uint32_t from_ts, u
                 first = false;
 
                 int len = snprintf(out_buf.get() + out_len, OUT_BUF_SIZE - out_len,
-                    "[%lu,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
+                    "[%lu,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
                     hbatch[j].timestamp, hbatch[j].avg_outside,
                     hbatch[j].total_cons, hbatch[j].total_prod,
                     hbatch[j].odin_heat_loss, hbatch[j].odin_cop,
@@ -1288,7 +1325,8 @@ void EcodanDashboard::send_hourly_history_(httpd_req_t *req, uint32_t from_ts, u
                     hbatch[j].weather, hbatch[j].batt_discharge,
                     hbatch[j].op_mode, hbatch[j].sched_base,
                     hbatch[j].sched_min, hbatch[j].sched_max,
-                    hbatch[j].exp_solar_kwh, hbatch[j].decision_reason);
+                    hbatch[j].exp_solar_kwh, hbatch[j].decision_reason,
+                    hbatch[j].exp_room_temp_z2, hbatch[j].actual_room_temp_z2);
                 out_len += len;
             }
             done += got;
@@ -1498,6 +1536,7 @@ void EcodanDashboard::align_odin_day_(int current_day) {
                 shift_arr(this->odin_energy_, NAN);
                 shift_arr(this->odin_production_, NAN);
                 shift_arr(this->odin_expected_temp_, NAN);
+                shift_arr(this->odin_expected_temp_z2_, NAN);
                 shift_arr(this->odin_cost_, NAN);
                 shift_arr(this->odin_battery_discharge_, NAN);
                 shift_arr(this->odin_sched_base_, NAN);
@@ -1514,6 +1553,7 @@ void EcodanDashboard::align_odin_day_(int current_day) {
                 shift_arr(this->odin_actual_cons_, NAN);
                 shift_arr(this->odin_actual_prod_, NAN);
                 shift_arr(this->odin_actual_room_, NAN);
+                shift_arr(this->odin_actual_room_z2_, NAN);
                 shift_arr(this->odin_actual_standby_cons_, NAN);
             }
         } else {
@@ -1524,6 +1564,7 @@ void EcodanDashboard::align_odin_day_(int current_day) {
             this->odin_actual_cons_.assign(72, NAN);
             this->odin_actual_prod_.assign(72, NAN);
             this->odin_actual_room_.assign(72, NAN);
+            this->odin_actual_room_z2_.assign(72, NAN);
             this->odin_actual_standby_cons_.assign(72, NAN);
         }
         
@@ -1545,7 +1586,7 @@ void EcodanDashboard::sync_odin_day() {
     xSemaphoreGive(snapshot_mutex_);
 }
 
-void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons) {
+void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons, float actual_room_temp_z2) {
     if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
 
     if (!this->odin_data_ready_) {
@@ -1586,6 +1627,7 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
     int target_idx = day_offset + hour;
     float hour_cost = NAN, hour_solar = NAN;
     float exp_cons = NAN, exp_prod = NAN, exp_room = NAN, price = NAN;
+    float exp_room_z2 = NAN;
     float weather = NAN, batt_dis = NAN, op_mode = NAN;
     float s_base = NAN, s_min = NAN, s_max = NAN;
     float dec_reason = NAN;
@@ -1596,6 +1638,7 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
         this->odin_actual_dhw_cons_.at(target_idx) = dhw_cons;
         this->odin_actual_dhw_prod_.at(target_idx) = dhw_prod;
         this->odin_actual_room_.at(target_idx) = actual_room_temp;
+        this->odin_actual_room_z2_.at(target_idx) = actual_room_temp_z2;
         this->odin_actual_standby_cons_.at(target_idx) = standby_cons;
 
         // Removed dynamic overwrite of odin_operation_mode_ to preserve the original forecast.
@@ -1607,6 +1650,7 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
         if (this->odin_energy_.size() == 72) exp_cons = this->odin_energy_[target_idx];
         if (this->odin_production_.size() == 72) exp_prod = this->odin_production_[target_idx];
         if (this->odin_expected_temp_.size() == 72) exp_room = this->odin_expected_temp_[target_idx];
+        if (this->odin_expected_temp_z2_.size() == 72) exp_room_z2 = this->odin_expected_temp_z2_[target_idx];
         if (this->odin_prices_.size() == 72) price = this->odin_prices_[target_idx];
         if (this->odin_weather_.size() == 72) weather = this->odin_weather_[target_idx];
         if (this->odin_battery_discharge_.size() == 72) batt_dis = this->odin_battery_discharge_[target_idx];
@@ -1650,6 +1694,8 @@ void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kw
     hr.exp_prod = pack(exp_prod, 100.0f);
     hr.exp_room_temp = pack(exp_room, 100.0f);
     hr.actual_room_temp = pack(actual_room_temp, 100.0f);
+    hr.exp_room_temp_z2 = pack(exp_room_z2, 100.0f);
+    hr.actual_room_temp_z2 = pack(actual_room_temp_z2, 100.0f);
     hr.actual_dhw_cons = pack(dhw_cons, 100.0f);
     hr.actual_dhw_prod = pack(dhw_prod, 100.0f);
     hr.actual_standby_cons = pack(standby_cons, 100.0f);
@@ -1698,7 +1744,8 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
                                       const std::vector<float>& prices,
                                       const std::vector<float>& op_mode,
                                       const std::vector<float>& decision_reason,
-                                      const LastRunStats& run_stats) {
+                                      const LastRunStats& run_stats,
+                                      const std::vector<float>& exp_temp_z2) {
     if (current_hour < 0) return;
 
     if (this->snapshot_mutex_ == NULL ||
@@ -1746,6 +1793,7 @@ void EcodanDashboard::store_odin_data(int current_hour, int current_day,
             // passed, exactly like the plan values above.
             if (i < (int)decision_reason.size() && !std::isnan(decision_reason[i])) this->odin_decision_reason_[target_idx] = decision_reason[i];
             if (i < (int)exp_temp.size()   && !std::isnan(exp_temp[i]))    this->odin_expected_temp_[target_idx]     = exp_temp[i];
+            if (i < (int)exp_temp_z2.size() && !std::isnan(exp_temp_z2[i])) this->odin_expected_temp_z2_[target_idx] = exp_temp_z2[i];
             if (i < (int)expected_end_temp.size() && !std::isnan(expected_end_temp[i])) this->odin_expected_end_temp_[target_idx] = expected_end_temp[i];
         }
     }

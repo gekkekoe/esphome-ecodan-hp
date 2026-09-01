@@ -167,12 +167,22 @@ struct DashboardSnapshot {
   NumData num_raw_delta_room_temp;
   NumData num_raw_hl_tm_product;
   NumData num_raw_solar_factor;
+  // Zone-2 daily stats (two-zone builds only; nullptr elsewhere)
+  NumData num_raw_heat_produced_z2;
+  NumData num_raw_elec_consumed_z2;
+  NumData num_raw_runtime_hours_z2;
+  NumData num_raw_avg_room_temp_z2;
+  NumData num_raw_delta_room_temp_z2;
 
   NumData num_raw_cool_produced;
   NumData num_raw_cool_elec_consumed;
   NumData num_raw_cool_runtime_hours;
   NumData num_raw_cool_avg_outside_temp;
   NumData num_raw_cool_avg_room_temp;
+  NumData num_raw_cool_produced_z2;
+  NumData num_raw_cool_elec_consumed_z2;
+  NumData num_raw_cool_runtime_hours_z2;
+  NumData num_raw_cool_avg_room_temp_z2;
 
   NumData num_battery_soc_kwh;
   NumData num_battery_max_discharge_kw;
@@ -325,12 +335,21 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_raw_delta_room_temp(number::Number *n)         { num_raw_delta_room_temp_ = n; }
   void set_num_raw_hl_tm_product(number::Number *n)           { num_raw_hl_tm_product_ = n; }
   void set_num_raw_solar_factor(number::Number *n)            { num_raw_solar_factor_ = n; }
+  void set_num_raw_heat_produced_z2(number::Number *n)    { num_raw_heat_produced_z2_ = n; }
+  void set_num_raw_elec_consumed_z2(number::Number *n)    { num_raw_elec_consumed_z2_ = n; }
+  void set_num_raw_runtime_hours_z2(number::Number *n)    { num_raw_runtime_hours_z2_ = n; }
+  void set_num_raw_avg_room_temp_z2(number::Number *n)    { num_raw_avg_room_temp_z2_ = n; }
+  void set_num_raw_delta_room_temp_z2(number::Number *n)  { num_raw_delta_room_temp_z2_ = n; }
 
   void set_num_raw_cool_produced(number::Number *v)           { num_raw_cool_produced_ = v; }
   void set_num_raw_cool_elec_consumed(number::Number *v)      { num_raw_cool_elec_consumed_ = v; }
   void set_num_raw_cool_runtime_hours(number::Number *v)      { num_raw_cool_runtime_hours_ = v; }
   void set_num_raw_cool_avg_outside_temp(number::Number *v)   { num_raw_cool_avg_outside_temp_ = v; }
   void set_num_raw_cool_avg_room_temp(number::Number *v)      { num_raw_cool_avg_room_temp_ = v; }
+  void set_num_raw_cool_produced_z2(number::Number *n)    { num_raw_cool_produced_z2_ = n; }
+  void set_num_raw_cool_elec_consumed_z2(number::Number *n) { num_raw_cool_elec_consumed_z2_ = n; }
+  void set_num_raw_cool_runtime_hours_z2(number::Number *n) { num_raw_cool_runtime_hours_z2_ = n; }
+  void set_num_raw_cool_avg_room_temp_z2(number::Number *n) { num_raw_cool_avg_room_temp_z2_ = n; }
 
   void set_num_battery_soc_kwh(number::Number *n)             { num_battery_soc_kwh_ = n; }
   void set_num_battery_max_discharge_kw(number::Number *n)    { num_battery_max_discharge_kw_ = n; }
@@ -377,7 +396,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
                        const std::vector<float>& prices,
                        const std::vector<float>& op_mode,
                        const std::vector<float>& decision_reason,
-                       const LastRunStats& run_stats);
+                       const LastRunStats& run_stats,
+                       const std::vector<float>& exp_temp_z2 = {});
 
   void load_odin_data(int current_day, int current_hour = 0);
 
@@ -386,7 +406,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void update_actual_data(int hour, int day,
                           float actual_cons_kwh, float actual_prod_kwh,
                           float dhw_cons, float dhw_prod,
-                          float actual_room_temp, float standby_cons);
+                          float actual_room_temp, float standby_cons,
+                          float actual_room_temp_z2 = NAN);
 
   void sync_odin_day();
   float get_odin_value(const char* name, int idx);
@@ -537,11 +558,20 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_raw_delta_room_temp_{nullptr};
   number::Number *num_raw_hl_tm_product_{nullptr};
   number::Number *num_raw_solar_factor_{nullptr};
+  number::Number *num_raw_heat_produced_z2_{nullptr};
+  number::Number *num_raw_elec_consumed_z2_{nullptr};
+  number::Number *num_raw_runtime_hours_z2_{nullptr};
+  number::Number *num_raw_avg_room_temp_z2_{nullptr};
+  number::Number *num_raw_delta_room_temp_z2_{nullptr};
   number::Number *num_raw_cool_produced_{nullptr};
   number::Number *num_raw_cool_elec_consumed_{nullptr};
   number::Number *num_raw_cool_runtime_hours_{nullptr};
   number::Number *num_raw_cool_avg_outside_temp_{nullptr};
   number::Number *num_raw_cool_avg_room_temp_{nullptr};
+  number::Number *num_raw_cool_produced_z2_{nullptr};
+  number::Number *num_raw_cool_elec_consumed_z2_{nullptr};
+  number::Number *num_raw_cool_runtime_hours_z2_{nullptr};
+  number::Number *num_raw_cool_avg_room_temp_z2_{nullptr};
   number::Number *num_battery_soc_kwh_{nullptr};
   number::Number *num_battery_max_discharge_kw_{nullptr};
   number::Number *num_dhw_start_threshold_{nullptr};
@@ -590,7 +620,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
     std::vector<float>* vec;  // pointer to the corresponding member vector
   };
 
-  static constexpr int ODIN_ARRAY_COUNT = 20;
+  static constexpr int ODIN_ARRAY_COUNT = 22;
   std::array<OdinArrayEntry, ODIN_ARRAY_COUNT> odin_array_map_();
   void ensure_odin_vectors_();
 
@@ -617,6 +647,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   std::vector<float> odin_energy_;
   std::vector<float> odin_production_;          // heat kWh produced per hour
   std::vector<float> odin_expected_temp_;
+  std::vector<float> odin_expected_temp_z2_;    // zone-2 expected room temp per hour (two-zone builds only)
   std::vector<float> odin_cost_;
   std::vector<float> odin_battery_discharge_;
   std::vector<float> odin_actual_dhw_cons_;     // actual kWh consumed during DHW
@@ -624,6 +655,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   std::vector<float> odin_actual_cons_;         // actual kWh consumed per hour (LFS persisted)
   std::vector<float> odin_actual_prod_;         // actual kWh produced per hour (LFS persisted)
   std::vector<float> odin_actual_room_;         // room temp at start of each hour (LFS persisted)
+  std::vector<float> odin_actual_room_z2_;      // zone-2 room temp per hour (two-zone builds only)
   std::vector<float> odin_actual_standby_cons_; // standby/idle kWh per hour (LFS persisted)
   std::vector<float> odin_sched_base_;          // schedule base setpoint per hour
   std::vector<float> odin_sched_min_;           // absolute min (base + min_offset)

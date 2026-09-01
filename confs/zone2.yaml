@@ -2,6 +2,7 @@ substitutions:
   zone_identifier_z1: "2"
   z2_cpp_prefix: ""
   z2_enabled: true
+  z2_room_temp_arg: ", last_room_z2"
 
 binary_sensor:
   - platform: ecodan
