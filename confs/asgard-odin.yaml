@@ -158,7 +158,7 @@ script:
 
                   float z2_room_temp = id(virtual_climate_z1).current_temperature;
                   ${z2_cpp_prefix} if (!std::isnan(id(virtual_climate_z2).current_temperature)) z2_room_temp = id(virtual_climate_z2).current_temperature;
-                  params["independent_zones"] = id(ecodan_instance).get_status().has_2zones() ? 1 : 0;
+                  params["independent_zones"] = id(ecodan_instance).get_status().has_independent_zone_temps() ? 1 : 0;
                   params["current_room_temp_z2"] = z2_room_temp;
                   params["sched_base_z2"] = ""; // no zone-2 schedule editor yet: empty = zone-1 setpoints
                   params["heat_produced_z2"] = id(num_raw_heat_produced_z2).state;
@@ -199,7 +199,7 @@ script:
                               JsonArray j_op  = root["operation_mode"];
                               JsonArray j_rsn = root["decision_reason"];
                               // Per-zone plans (two-zone solve). Absent on single-zone
-                              static std::vector<float> prod_z1(48), prod_z2(48);
+                              static std::vector<float> prod_z1, prod_z2;
                               prod_z1.clear();
                               prod_z2.clear();
                               JsonArray j_z1 = root["zone_production_z1"];
@@ -207,8 +207,8 @@ script:
                               if (!j_z1.isNull() && !j_z2.isNull()) {
                                 for (uint8_t i = 0; i < 48; i++) {
                                   if (i >= j_z1.size()) break;
-                                  prod_z1[i] = j_z1[i].isNull() ? NAN : j_z1[i].as<float>();
-                                  prod_z2[i] = j_z2[i].isNull() ? NAN : j_z2[i].as<float>();
+                                  prod_z1.push_back(j_z1[i].isNull() ? NAN : j_z1[i].as<float>());
+                                  prod_z2.push_back(j_z2[i].isNull() ? NAN : j_z2[i].as<float>());
                                 }
                               }
 
