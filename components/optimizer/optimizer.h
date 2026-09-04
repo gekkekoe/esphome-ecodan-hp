@@ -210,7 +210,7 @@ namespace esphome
       float calculate_smart_boost(int profile, float error);
 
       // ── solver.cpp ────────────────────────────────────────────────────
-      void apply_solver_soft_stop(bool should_stop);
+      void apply_solver_soft_stop(bool should_stop, OptimizerZone zone);
 
       // ── events.cpp ────────────────────────────────────────────────────
       void on_feed_temp_change(float actual_flow_temp, OptimizerZone zone);

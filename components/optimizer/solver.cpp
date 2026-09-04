@@ -174,7 +174,7 @@ namespace esphome
         // ─────────────────────────────────────────────────────────────────
         // Solver soft-stop: cut/restore relay when ODIN says 0 kWh
         // ─────────────────────────────────────────────────────────────────
-        void Optimizer::apply_solver_soft_stop(bool should_stop) {
+        void Optimizer::apply_solver_soft_stop(bool should_stop, OptimizerZone zone) {
             if (this->state_.ecodan_instance == nullptr) return;
             auto &status = this->state_.ecodan_instance->get_status();
 
@@ -191,18 +191,19 @@ namespace esphome
 
             int current_hour = this->get_current_ecodan_hour();
             if (current_hour < 0) return;  // Ecodan time not yet valid
-            auto *relay_z1    = this->state_.relay_switch_z1;
-            auto *relay_z2    = this->state_.relay_switch_z2;
+            auto *relay = (zone == OptimizerZone::ZONE_2) ? this->state_.relay_switch_z2 : this->state_.relay_switch_z1;
+            if (relay == nullptr) return;
+
+            const char *zl = (zone == OptimizerZone::ZONE_2) ? "Z2" : "Z1";
 
             if (should_stop) {
                 // One write per hour guard
                 if (this->solver_stop_active_ && this->solver_stop_hour_ == current_hour)
                     return;
 
-                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop: disable demand for hour %d", current_hour);
+                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop %s: disable demand for hour %d", zl, current_hour);
 
-                if (relay_z1 != nullptr && relay_z1->state) relay_z1->turn_off();
-                if (relay_z2 != nullptr && relay_z2->state) relay_z2->turn_off();
+                if (relay->state) relay->turn_off();
 
                 this->solver_stop_active_ = true;
                 this->solver_stop_hour_   = current_hour;
@@ -213,10 +214,9 @@ namespace esphome
                     return;
                 this->solver_resume_hour_ = current_hour;
 
-                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-start: enabled demand for hour %d", current_hour);
+                ESP_LOGI(OPTIMIZER_TAG, "Solver soft-start %s: enabled demand for hour %d", zl, current_hour);
 
-                if (relay_z1 != nullptr) relay_z1->turn_on();
-                if (relay_z2 != nullptr) relay_z2->turn_on();         
+                relay->turn_on();
                 this->solver_stop_active_ = false;
                 this->solver_stop_hour_   = -1;
             }

@@ -146,12 +146,14 @@ namespace esphome
                         }
                     }
 
+                    OptimizerZone oz = (zone == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2;
+
                     if (result.heatpump_off) {
-                        apply_solver_soft_stop(true);
+                        apply_solver_soft_stop(true, oz);
                         return result;
                     }
                     
-                    apply_solver_soft_stop(false);
+                    apply_solver_soft_stop(false, oz);
                     
                     float max_out = 7.0f;
                     if (this->odin_max_output_ != 0) {

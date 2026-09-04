@@ -158,7 +158,10 @@ script:
 
                   float z2_room_temp = id(virtual_climate_z1).current_temperature;
                   ${z2_cpp_prefix} if (!std::isnan(id(virtual_climate_z2).current_temperature)) z2_room_temp = id(virtual_climate_z2).current_temperature;
-                  params["independent_zones"] = id(ecodan_instance).get_status().has_independent_zone_temps() ? 1 : 0;
+                  // for 2 zones, always enable 2-zone solve. has_independent_zone_temps is too restrictive, will be removed
+                  // params["independent_zones"] = id(ecodan_instance).get_status().has_independent_zone_temps() ? 1 : 0;
+                  ${z2_cpp_prefix} params["independent_zones"] = 1;
+                  
                   params["current_room_temp_z2"] = z2_room_temp;
                   params["sched_base_z2"] = ""; // no zone-2 schedule editor yet: empty = zone-1 setpoints
                   params["heat_produced_z2"] = id(num_raw_heat_produced_z2).state;
