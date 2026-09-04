@@ -148,7 +148,7 @@ namespace esphome
 
                     OptimizerZone oz = (zone == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2;
 
-                    if (result.heatpump_off) {
+                    if (result.heatpump_off || odin_prod < 0.1f) {
                         apply_solver_soft_stop(true, oz);
                         return result;
                     }
