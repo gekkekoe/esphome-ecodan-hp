@@ -195,30 +195,31 @@ namespace esphome
             if (relay == nullptr) return;
 
             const char *zl = (zone == OptimizerZone::ZONE_2) ? "Z2" : "Z1";
+            const int zi = (zone == OptimizerZone::ZONE_2) ? 1 : 0;
 
             if (should_stop) {
                 // One write per hour guard
-                if (this->solver_stop_active_ && this->solver_stop_hour_ == current_hour)
+                if (this->solver_stop_active_[zi] && this->solver_stop_hour_[zi] == current_hour)
                     return;
 
                 ESP_LOGI(OPTIMIZER_TAG, "Solver soft-stop %s: disable demand for hour %d", zl, current_hour);
 
                 if (relay->state) relay->turn_off();
 
-                this->solver_stop_active_ = true;
-                this->solver_stop_hour_   = current_hour;
+                this->solver_stop_active_[zi] = true;
+                this->solver_stop_hour_[zi]   = current_hour;
 
             } else {
                 // One write per hour guard to avoid chattering
-                if (this->solver_resume_hour_ == current_hour)
+                if (this->solver_resume_hour_[zi] == current_hour)
                     return;
-                this->solver_resume_hour_ = current_hour;
+                this->solver_resume_hour_[zi] = current_hour;
 
                 ESP_LOGI(OPTIMIZER_TAG, "Solver soft-start %s: enabled demand for hour %d", zl, current_hour);
 
                 relay->turn_on();
-                this->solver_stop_active_ = false;
-                this->solver_stop_hour_   = -1;
+                this->solver_stop_active_[zi] = false;
+                this->solver_stop_hour_[zi]   = -1;
             }
         }
     } // namespace optimizer

@@ -526,7 +526,7 @@ namespace esphome
                 bool z1_locked = override_z1 != nullptr && override_z1->state;
                 bool z2_locked = override_z2 != nullptr && override_z2->state;
                 
-                if (z1_locked || z2_locked || this->solver_stop_active_) {
+                if (z1_locked || z2_locked || this->solver_stop_active_[0] || this->solver_stop_active_[1]) {
                     ESP_LOGI(OPTIMIZER_TAG, "Solver/AA disabled, but override switches are active. Forcing release.");
                     if (override_z1 != nullptr && override_z1->state) override_z1->turn_off();
                     if (override_z2 != nullptr && override_z2->state) override_z2->turn_off();

@@ -174,10 +174,10 @@ namespace esphome
       bool     odin_data_ready_ {false};
       SemaphoreHandle_t odin_mutex_ = NULL;
 
-      // Solver soft-stop state
-      int  solver_stop_hour_   {-1};
-      bool solver_stop_active_ {false};
-      int  solver_resume_hour_ {-1};
+      // Solver soft-stop state (per-zone: [0]=Z1, [1]=Z2)
+      int  solver_stop_hour_   [2] {-1, -1};
+      bool solver_stop_active_ [2] {false, false};
+      int  solver_resume_hour_ [2] {-1, -1};
       bool adaptive_loop_running_ {false};
 
       // ── adaptive_loop.cpp ──────────────────────────────────────────────
