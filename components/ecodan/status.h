@@ -230,6 +230,19 @@ namespace ecodan
             return false;
         }
 
+        bool is_split_type() const {
+            // SW1-7 off -> split
+            return !IS_BIT_SET(DipSwitch1, 6);
+        }
+
+        float get_tank_temperature() const { 
+            if (is_split_type() || DhwSecondaryTemperature == 25.0f)
+                return DhwTemperature;
+            
+            // for package units, the secondary temp is the top tank temp
+            return DhwSecondaryTemperature;
+        }
+
         CONTROLLER_FLAG get_svc_flags() const
         {
             CONTROLLER_FLAG flag{};

@@ -52,7 +52,7 @@ climate:
       target_temp_func: |-
         id(ecodan_instance).set_dhw_target_temperature(x);
       current_temp_func: |-
-        return id(ecodan_instance).get_status().DhwTemperature;
+        return id(ecodan_instance).get_status().get_tank_temperature();
 
 switch:
   - platform: template

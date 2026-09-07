@@ -105,11 +105,12 @@ script:
                       solar_factor = 0.015f; // default
                   }
 
-                  float _dhw_temp = std::isnan(id(dhw_temp).state) ? 0.0f : id(dhw_temp).state;
+                  float _dhw_bottom = id(ecodan_instance).get_status().is_split_type() ? NAN : (std::isnan(id(dhw_temp).state) ? 0.0f : id(dhw_temp).state);
+                  float _dhw_top = id(ecodan_instance).get_status().get_tank_temperature();
+                  
                   float _dhw_target = std::isnan(id(dhw_flow_temp_target).state) ? 0.0f : id(dhw_flow_temp_target).state;
                   float _dhw_drop = std::isnan(id(dhw_flow_temp_drop).state) ? 0.0f : id(dhw_flow_temp_drop).state;
                   float _dhw_thresh = std::isnan(id(dhw_start_threshold).state) ? 0.0f : id(dhw_start_threshold).state;
-                  float _dhw_bottom = std::isnan(id(dhw_secondary_temp).state) ? 0.0f : id(dhw_secondary_temp).state;
                   float _min_cool_flow = std::isnan(id(minimum_cooling_flow_temp_z1).state) ? 18.0f : id(minimum_cooling_flow_temp_z1).state;
 
                   uint8_t _op_mode = 0; 
@@ -133,7 +134,7 @@ script:
                   params["passive_solar_gain_factor"] = solar_factor;
                   params["battery_soc_kwh"] = id(num_battery_soc_kwh).state;
                   params["battery_max_discharge_kw"] = id(num_battery_max_discharge_kw).state;
-                  params["dhw_temp"] = _dhw_temp;
+                  params["dhw_temp"] = _dhw_top;
                   params["dhw_target"] = _dhw_target;
                   params["dhw_drop"] = _dhw_drop;
                   params["dhw_start_threshold"] = _dhw_thresh;
