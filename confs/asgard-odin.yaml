@@ -105,7 +105,7 @@ script:
                       solar_factor = 0.015f; // default
                   }
 
-                  float _dhw_bottom = id(ecodan_instance).get_status().is_split_type() ? NAN : (std::isnan(id(dhw_temp).state) ? 0.0f : id(dhw_temp).state);
+                  float _dhw_bottom = id(ecodan_instance).get_status().get_lower_tank_temperature();
                   float _dhw_top = id(ecodan_instance).get_status().get_tank_temperature();
                   
                   float _dhw_target = std::isnan(id(dhw_flow_temp_target).state) ? 0.0f : id(dhw_flow_temp_target).state;

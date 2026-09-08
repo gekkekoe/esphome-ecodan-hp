@@ -230,17 +230,24 @@ namespace ecodan
             return false;
         }
 
-        bool is_split_type() const {
-            // SW1-7 off -> split
-            return !IS_BIT_SET(DipSwitch1, 6);
+        bool is_ftc5_or_lower() const {
+            return Controller < 3;
         }
 
         float get_tank_temperature() const { 
-            if (is_split_type() || DhwSecondaryTemperature == 25.0f)
+            if ((is_ftc5_or_lower() || DhwSecondaryTemperature == 0.0f) || DhwSecondaryTemperature == 25.0f)
                 return DhwTemperature;
             
             // for package units, the secondary temp is the top tank temp
+            // DhwSecondaryTemperature == 25.0f for ftc6+ without secondary sensor
             return DhwSecondaryTemperature;
+        }
+
+        float get_lower_tank_temperature() const {
+            if ((is_ftc5_or_lower() || DhwSecondaryTemperature == 0.0f) || DhwSecondaryTemperature == 25.0f)
+                return NAN;
+            
+            return DhwTemperature;
         }
 
         CONTROLLER_FLAG get_svc_flags() const
