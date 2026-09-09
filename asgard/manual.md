@@ -67,6 +67,7 @@ Please check that your package contains:
    - **3 / P:** One Wire Power
    - **X:** One Wire data
    - **G:** One Wire GND
+
    <small>If your case is marked **3**, the Power pin is 3.3 V. If it is marked **P**, the Power pin is 5 V.</small>
 6. **Relay Port Header:** *(optional)* Connect to IN1/IN6 for virtual thermostat control.
    - **R1:** Relay 1 — connect to IN1 on the FTC board
