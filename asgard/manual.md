@@ -27,13 +27,13 @@ This interface is specifically designed for Mitsubishi Electric **Ecodan/Zubadan
 > * **FTC5:** Missing real-time energy consumption estimation
 > * **FTC6 / FTC7:** Full support
 
-### Co-existence (Slave Port)
-The Asgard PCB features a **pass-through (slave) port**, allowing you to retain the functionality of official or third-party modules.
+### Co-existence (Proxy Port)
+The Asgard PCB features a **pass-through (proxy) port**, allowing you to retain the functionality of official or third-party modules.
 
-* **Supported via slave port:**
+* **Supported via proxy port:**
     * Modern **MelCloud** Wi-Fi adapters (e.g., MAC-567IF-E)
     * **Procon** Modbus interfaces
-* **Not supported via slave port:**
+* **Not supported via proxy port:**
     * The **PAC-WF010-E** will **not work** when proxied through the Asgard PCB. These must be disconnected to use this interface.
 
 ---
@@ -52,21 +52,22 @@ Please check that your package contains:
 | :---: | :---: | :---: | :---: |
 | ![Top](./img/case-top.png) | ![Front](./img/case-front.png) | ![Side](./img/case-side.png) | ![PCB](./img/case-pcb.png) |
 | *USB-C on the side* | *HP: CN105 to heat pump* | *R1: first 2 inputs for relay 1* | |
-| *Reset button on top* | *SL: CN105 to MelCloud/Procon* | *R2: last 2 inputs for relay 2* | |
-| | | *One Wire: 3=3V3, X=data, G=GND* | |
+| *Reset button on top* | *SL/PX: CN105 to MelCloud/Procon* | *R2: last 2 inputs for relay 2* | |
+| | | *One Wire: 3/P=Power, X=data, G=GND* | |
 
 <small>* Left to right orientation</small>
 
 1. **CN105 Connector:** Connection point for the cable to the heat pump or MelCloud adapter.
    - **HP** port connects to the CN105 port of the heat pump
-   - **SL** port *(optional)* connects to MelCloud/Procon modules
+   - **SL/PX** port *(optional)* connects to MelCloud/Procon modules
 2. **ESP32 Module:** Main controller.
 3. **Status LED:** Indicates power and Wi-Fi status.
 4. **Boot/Reset Buttons:** Used for manual flashing (recovery mode).
 5. **Temp Sensor Header:** *(optional)* For a wired Dallas temperature sensor.
-   - **3:** One Wire 3V3
+   - **3 / P:** One Wire Power
    - **X:** One Wire data
    - **G:** One Wire GND
+   <small>If your case is marked **3**, the Power pin is 3.3 V. If it is marked **P**, the Power pin is 5 V.</small>
 6. **Relay Port Header:** *(optional)* Connect to IN1/IN6 for virtual thermostat control.
    - **R1:** Relay 1 — connect to IN1 on the FTC board
    - **R2:** Relay 2 — connect to IN6 on the FTC board (Zone 2 only)
@@ -102,7 +103,7 @@ Look at the main control board for a connector labelled **CN105**.
 * Usually located near the corner where the official Wi-Fi module connects.
 
 > [!TIP]
-> **MelCloud Conflict:** If you have an official MelCloud module connected to CN105, unplug it from CN105 and plug it into the **slave (SL) port** on the Asgard PCB instead.
+> **MelCloud Conflict:** If you have an official MelCloud module connected to CN105, unplug it from CN105 and plug it into the **proxy (SL/PX) port** on the Asgard PCB instead.
 
 ### Step 3: Connect the PCB
 1. Plug the provided cable into the **CN105** port on the heat pump. The plug is keyed — do not force it.

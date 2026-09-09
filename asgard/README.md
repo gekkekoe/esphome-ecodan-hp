@@ -9,7 +9,7 @@
 ### Why use the Asgard Sub-assembly?
 * Enables Virtual Thermostat control (IN1/IN6) as a modern alternative to CNRF.
 * High-resolution temperature sensor integration (DS18B20 support).
-* Pass-through (Slave) port functionality for Melcloud or Procon modules.
+* Pass-through (Proxy) port functionality for Melcloud or Procon modules.
 * 100% Local control (No Cloud dependency).
 
 # Ordering & Availability

@@ -122,6 +122,22 @@ Found under **Advanced Control → Short Cycle Lockout**: (Recommended when cool
 
 ---
 
+## Legionella Prevention *(optional)*
+
+Found under **DHW → Legionella Prevention**. When enabled, Asgard automatically raises the DHW setpoint while a Legionella Prevention run is active and restores it afterwards — no manual setpoint changes needed.
+
+| Control | Description |
+|---------|-------------|
+| **Enable** | When the heat pump starts a Legionella Prevention run , the DHW setpoint is raised to the **Legionella Setpoint** and the previous value is stored. When the run finishes, the stored setpoint is restored. |
+| **Legionella Setpoint** | *(50–60°C, 0.5 steps)* DHW setpoint applied while a Legionella run is active. The compressor heats the water up to this setpoint efficiently — only the part above it is done by the booster element. Set it as high as your heat pump tolerates to minimize booster element usage. |
+| **Stored Setpoint** | *(read-only)* The DHW setpoint stored at the start of a Legionella run; restored when the run finishes. Shows — when nothing is stored. |
+| **Apply Legionella** | Saves the **Legionella Setpoint** value. |
+
+> [!NOTE]
+> If you already run a Home Assistant automation that raises the DHW setpoint during Legionella runs (e.g. [automations/legionella.yaml](../automations/legionella.yaml)), remove it — Asgard handles this internally now.
+
+---
+
 ## Configure Virtual Thermostat Room Temperature via REST API
 
 Asgard exposes a REST API for reading and writing the virtual thermostat input temperature. Any sensor that can make HTTP calls can feed room temperature this way — Home Assistant, Node-RED, a Python script, etc. If you have already used the blueprint to link the temperature sensor, you can skip this section.
