@@ -23,7 +23,7 @@
   <h2>Order via the links/buttons below:</h2>
 
   ⚠️ **Asgard and Odin are currently in stock** <br>
-  ⚠️ **Due to regulation (PPWR), shipping to EU countries other than NL has been suspended**
+  ⚠️ **Due to regulation (PPWR), shipping to EU countries other than NL has been [suspended](https://github.com/gekkekoe/esphome-ecodan-hp/discussions/399)**
 
 
 | Standard Order (NL) |
