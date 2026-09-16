@@ -36,7 +36,7 @@
 
 ## 1. What You Need
 
-- **Asgard hardware** in its 3D printed casing + 50 cm connector cable (JST-PA to CN105)
+- **Asgard hardware** in its 3D printed casing + CN105 connector cable
 - **A Mitsubishi Electric Ecodan/Zubadan Air-to-Water heat pump** (Hydrobox or Cylinder unit)
 - **Optional:** 2 spare wires to connect the **R1** relay to **IN1** on the FTC board (Zone 1 virtual thermostat), and **R2** to **IN6** (Zone 2 only)
 - **Optional:** a wired **DS18B20** Dallas temperature sensor for the One Wire header
@@ -44,7 +44,7 @@
 - **A 2.4 GHz Wi-Fi network** and a phone or laptop with a browser to complete initial setup
 - Basic knowledge of your installation: single or two zones, heating system type (underfloor heating / radiators), DHW tank size
 
-> **Note:** Asgard is a standalone, local device — it requires no cloud subscription or external account. All control, logging, and the dashboard run on the device itself. Home Assistant integration is optional (see [Section 19](#19-home-assistant-optional)).
+> **Note:** Asgard is a local device — it requires no cloud subscription or external account. All control, logging, and the dashboard run on the device itself. Home Assistant integration is optional (see [Section 19](#19-home-assistant-optional)).
 
 ---
 
@@ -62,9 +62,11 @@ While Asgard is highly capable, it is important to set the right expectations re
   | **FTC5** | Supported — **no real-time energy consumption** reporting. Asgard falls back to the daily reported consumption, so the per-hour energy bars in the dashboard will not display a value. If you need hourly energy data, install an energy meter and link it in Home Assistant. |
   | **FTC6 / FTC7** | Full support |
 
+> **Note:** Some SUZ units do not support service codes and will not show certain sensors (compressor starts, liquid pipe, ...).
+
 - **Proxy (pass-through) port:** the **SL/PX** port lets you keep an official or third-party module connected alongside Asgard.
   - **Supported via proxy:** modern MelCloud Wi-Fi adapters (e.g. **MAC-567IF-E**) and **Procon** Modbus interfaces.
-  - **Not supported via proxy:** the **PAC-WF010-E** Wi-Fi module will **not** work when proxied through the Asgard PCB. It must be disconnected to use this interface.
+  - **Not supported via proxy:** the **PAC-WF010-E** Wi-Fi module will **not** work when proxied through the Asgard PCB. It must be disconnected.
 
 - **Room temperature sensor resolution:** Auto Adaptive works best with a room sensor that reports at **0.1 °C resolution** (e.g. a wired DS18B20, or a Home Assistant sensor. REST API can also be used to push sensor data). The sensor in the main Mitsubishi display (MRC) or a wireless thermostat (RCx) only reports in **0.5 °C steps** — use it only if no other sensor is available.
 - **Virtual thermostats:** the R1/R2 relay inputs (IN1/IN6) are what allow Asgard to directly start/stop the heat pump. If you do not wire them, Auto Adaptive can still run by reading the room temperature from another source (MRC, REST API), but Asgard can then only act through the heat pump's own climate modes.
@@ -86,6 +88,7 @@ Asgard is provided under a strict home-use agreement. By using the Asgard softwa
     - Improper wiring (e.g. short circuits, high voltage on data pins)
     - Physical modification or soldering by the user
     - Water damage or incorrect placement inside the heat pump
+    - Damage caused by lightning strike
     - **Accidental damage (e.g. dropping the unit, cracking the 3D printed casing)**
 
 ---
@@ -103,7 +106,7 @@ Asgard is provided under a strict home-use agreement. By using the Asgard softwa
 
 1. **CN105 Connector** — connection point for the cable to the heat pump or a MelCloud adapter:
    - **HP** port connects to the CN105 port of the heat pump
-   - **SL/PX** port *(optional)* connects to a MelCloud/Procon module (proxy)
+   - **SL/PX** proxy port connects to a MelCloud/Procon module *(optional)*
 2. **ESP32-S3 Module** — main controller.
 3. **Status LED** — indicates power and Wi-Fi status.
 4. **Boot/Reset Buttons** — used for manual flashing (recovery mode).
@@ -117,7 +120,7 @@ Asgard is provided under a strict home-use agreement. By using the Asgard softwa
    - **R1:** Relay 1 — connect to **IN1** on the FTC board (Zone 1)
    - **R2:** Relay 2 — connect to **IN6** on the FTC board (Zone 2 only)
 
-**Package contents:** 1× Asgard PCB in 3D printed casing, 1× connection cable (JST-PA to CN105, 50 cm).
+**Package contents:** 1× Asgard PCB in 3D printed casing, 1× CN105 connection cable.
 
 ---
 
@@ -144,7 +147,7 @@ Asgard is provided under a strict home-use agreement. By using the Asgard softwa
 1. Turn off the heat pump via the main controller (MRC) screen.
 2. **Turn off the power at the breaker panel.**
 3. Remove the front panel of the indoor unit (usually held by 2 screws at the bottom; lift up and out).
-4. Check that the package contains the PCB (in casing) and the 50 / 200 cm connection cable.
+4. Check that the package contains the PCB (in casing) and a connection cable.
 
 ### Step 2 — Locate the CN105 Port
 
@@ -572,6 +575,8 @@ Protects the compressor from very short run cycles:
 ---
 
 ## 15. Solver Tab (ODIN Module)
+
+> **Note:** This section will be moved to Odin in the future.
 
 The **Solver** tab is where you connect Asgard to an **ODIN** (Dynamic Cost Optimizer) device, monitor the optimisation results, and fine-tune the physics parameters the solver uses to model your house. **This section only applies if you own and use an ODIN module** — without one, the tab stays hidden and you can ignore it entirely.
 
