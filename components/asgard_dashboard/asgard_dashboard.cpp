@@ -167,10 +167,11 @@ bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
   char url_buf[AsyncWebServerRequest::URL_BUF_SIZE];
   auto url = request->url_to(url_buf);
   return (url == "/dashboard" || url == "/dashboard/" ||
+          url == "/setup" ||
           url == "/dashboard/setup" ||
           url == "/dashboard/state" || url == "/dashboard/set" ||
           url == "/dashboard/history" || url == "/dashboard/odin" ||
-          url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js"); 
+          url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js");
 }
 
 void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
@@ -178,7 +179,7 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
   auto url = request->url_to(url_buf);
   
   if      (url == "/dashboard" || url == "/dashboard/") handle_root_(request);
-  else if (url == "/dashboard/setup")                   handle_setup_(request);
+  else if (url == "/setup" || url == "/dashboard/setup")   handle_setup_(request);
   else if (url == "/dashboard/state")                   handle_state_(request);
   else if (url == "/dashboard/set")                     handle_set_(request);
   else if (url == "/dashboard/history")                 handle_history_request_(request);

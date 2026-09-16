@@ -38,9 +38,8 @@ then set up Auto Adaptive Control.
 The [Asgard PCB](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/README.md)
 is the recommended plug-and-play board. Its guides live alongside the hardware:
 
-- [Hardware manual](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/manual.md) — physical install, wiring, first boot.
+- [Getting Started Guide](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/manual.md) — physical install, wiring, first boot, and the complete standalone dashboard (no Home Assistant needed).
 - [Home Assistant setup](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/ha-config.md) — Auto Adaptive from Home Assistant.
-- [Standalone setup](https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/sa-config.md) — the local dashboard, no Home Assistant needed.
 
 
 ---

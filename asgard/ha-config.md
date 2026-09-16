@@ -2,8 +2,8 @@
 
 This guide sets up **Auto Adaptive Control** from Home Assistant. It assumes the
 Asgard PCB is installed and already added to Home Assistant as an ESPHome device
-(see the [Hardware Manual](manual.md) and, if needed, the
-[Standalone guide](sa-config.md) for what each setting means).
+(see the [Asgard Getting Started Guide](manual.md) for the hardware installation
+and for what each setting means).
 
 Everything below is configured through the entities Home Assistant exposes for
 your Asgard device — no dashboard access required.
@@ -37,7 +37,7 @@ your Asgard device — no dashboard access required.
 
 > For cooling, choose **Cool Flow Temperature** instead. For the full meaning of
 > every Auto Adaptive number (min/max flow, setpoint bias, smart boost, …) see
-> the [Standalone Setup guide](sa-config.md#step-3--configure-auto-adaptive-settings).
+> the [Settings — Auto Adaptive section](manual.md#12-settings--auto-adaptive) of the Getting Started Guide.
 
 ---
 
@@ -60,14 +60,14 @@ in sync with the Asgard virtual thermostat.
 | ![Create](ha_blueprints/img/bp-create.png) | ![Create detail](ha_blueprints/img/bp-create-detail.png) |
 
 Prefer to push the temperature yourself (Node-RED, a script, etc.)? Asgard also
-exposes a REST API — see
-[Configure via REST API](sa-config.md#configure-virtual-thermostat-room-temperature-via-rest-api).
+exposes a REST API — see the [REST API section](manual.md#18-rest-api--dashboard-endpoints)
+of the Getting Started Guide.
 
 ---
 
 ## Next steps
 
 - **Short-cycle protection and lockout:** see
-  [Standalone Setup → Step 4](sa-config.md#step-4--optional-apply-short-cycle-lockout).
+  [Settings — Advanced Control](manual.md#14-settings--advanced-control) in the Getting Started Guide.
 - **ODIN solver integration:** enable the Solver tab as described in
-  [Standalone Setup → Enabling the Solver Tab](sa-config.md#enabling-the-solver-tab-odin-integration).
+  [Solver Tab (ODIN)](manual.md#15-solver-tab-odin) of the Getting Started Guide.
