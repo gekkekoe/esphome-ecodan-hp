@@ -2,6 +2,9 @@
 
 > **Asgard** — Local integration module for Mitsubishi Ecodan/Zubadan Air-to-Water heat pumps. This guide walks you through the hardware installation, first boot, the Auto Adaptive setup wizard, firmware updates, and a complete description of every tab and setting in the standalone dashboard.
 
+> [!NOTE]
+> **This guide is a living document.** Asgard is in ongoing development, so this manual may occasionally lag behind the latest firmware. Outdated sections are corrected as features are refined — if you spot something that no longer matches your device, it will be updated in due time. Have a question or found an error? Raise it in the [GitHub Discussions](https://github.com/gekkekoe/esphome-ecodan-hp/discussions).
+
 ---
 
 ## Table of Contents
