@@ -16,7 +16,7 @@
 5. [Safety Warnings](#5-safety-warnings)
 6. [Installation](#6-installation)
 7. [First Boot — Wi-Fi Setup](#7-first-boot--wi-fi-setup)
-8. [Setup Wizard (Optional)](#8-setup-wizard-optional)
+8. [Setup Wizard](#8-setup-wizard)
 9. [Navigating the Dashboard](#9-navigating-the-dashboard)
 10. [Monitor Tab](#10-monitor-tab)
 11. [Settings — Zones 1 & 2](#11-settings--zones-1--2)
@@ -227,9 +227,9 @@ http://ecodan-heatpump.local/dashboard
 
 ---
 
-## 8. Setup Wizard (Optional)
+## 8. Setup Wizard
 
-The **Setup Wizard** is a guided process that starts with how you control the heat pump and, if you want, walks you through everything Auto Adaptive needs. It runs standalone — no Home Assistant required. The wizard is **optional** — everything it configures can also be set manually in the Settings tab (see [Section 11](#11-settings--zones-1--2) and [Section 12](#12-settings--auto-adaptive)).
+The **Setup Wizard** is the guided way to configure Asgard. It starts with the basics — how you control your heat pump (Asgard Virtual Thermostat or MRC / wireless thermostat) — and, if you choose, walks you through everything Auto Adaptive needs (Steps 3–6). It runs standalone — no Home Assistant required.
 
 Navigate to:
 
@@ -241,6 +241,8 @@ The wizard pre-fills any values already stored on the device, so re-running it i
 
 ### Step 1 — Thermostat
 
+![Step 1](img/sa-w1.png)
+
 Choose which thermostat controls your room temperature:
 
 | Option | Description |
@@ -248,15 +250,17 @@ Choose which thermostat controls your room temperature:
 | **Asgard Virtual Thermostat** | Asgard drives the heat pump directly through the R1/R2 relays (IN1/IN6). Selecting this shows the required wiring and dip-switch steps (see [Section 6](#6-installation)) and a link to this manual. |
 | **MRC / Wireless Thermostat** | The Mitsubishi main display (MRC) or a wireless thermostat (RCx) keeps control, like in a standard installation. |
 
-Depending on your choice, the wizard sets the dashboard's **Use Room Thermostat** switch accordingly (**on** for MRC / wireless, **off** for virtual) and aligns the Auto Adaptive **Room Temp Source** with it — the same auto-adjustment the Settings tab performs.
+Depending on your choice, the wizard sets the dashboard's **Use Room Thermostat** switch accordingly (**on** for MRC / wireless, **off** for virtual) and pre-sets the Auto Adaptive sensor sources in the steps that follow — with MRC / wireless the virtual-thermostat options are greyed out and the sources are fixed to **Room Thermostat** + **MRC / Wireless**; with the virtual thermostat the sources default to **Asgard Virtual Thermostat** + **Virtual Thermostat Input** but every option stays selectable (see [Step 4](#step-4--zone-1-sensors)).
 
 ### Step 2 — Auto Adaptive
+
+![Step 2](img/sa-w2.png)
 
 Answer **yes** to continue with the guided Auto Adaptive configuration (Steps 3–6 below), or **no** to save the thermostat choice and finish. You can enable Auto Adaptive later in the Settings tab at any time.
 
 ### Step 3 — Mode & Flow Limits
 
-![Step 3](img/sa-w1.png)
+![Step 3](img/sa-w3.png)
 
 Choose your operating mode and set the safe boundaries for your flow temperatures. The available fields change dynamically based on the selected mode:
 
@@ -270,9 +274,11 @@ Choose your operating mode and set the safe boundaries for your flow temperature
 
 ### Step 4 — Zone 1 Sensors
 
-![Step 4](img/sa-w2.png)
+![Step 4](img/sa-w4.png)
 
 Configure where the Auto Adaptive algorithm gets its room temperature data for Zone 1.
+
+The available options reflect the thermostat you chose in [Step 1](#step-1--thermostat): with **MRC / wireless thermostat** the virtual-thermostat options are greyed out and the sources are pre-set to **Room Thermostat** + **MRC / Wireless**; with **Asgard virtual thermostat**, **Asgard Virtual Thermostat** + **Virtual Thermostat Input** are pre-selected and all other options stay selectable.
 
 **Room Temp Source:**
 
@@ -280,23 +286,23 @@ Configure where the Auto Adaptive algorithm gets its room temperature data for Z
 |--------|-------------|
 | **Room Thermostat** | You are using the Mitsubishi MRC or a wireless thermostat (or the CNRF project). |
 | **Home Assistant / REST API** | Reads the room temperature from a value pushed via the REST API or a Home Assistant automation/blueprint. Use this when you did not wire R1/R2. |
-| **Asgard Virtual Thermostat** | Uses the Virtual Thermostat relay (R1/R2) as both the control signal and the room temperature source. Requires R1/R2 to be wired. |
+| **Asgard Virtual Thermostat** | Uses the Virtual Thermostat relay (R1/R2) as both the control signal and the room temperature source. Requires R1/R2 to be wired. *(Greyed out when MRC / wireless thermostat is selected in Step 1.)* |
 
 If you chose **Asgard Virtual Thermostat**, also set the **Temp Sensor Source** — where the actual temperature data comes from:
 
 | Option | Description |
 |--------|-------------|
-| **Virtual Thermostat Input** | A sensor feeding the temperature via the REST API (e.g. a Home Assistant automation/blueprint). |
+| **Virtual Thermostat Input** | A sensor feeding the temperature via the REST API (e.g. a Home Assistant automation/blueprint). *(Greyed out when MRC / wireless thermostat is selected in Step 1.)* |
 | **DS18x20 (Dallas)** | A wired DS18B20 sensor physically connected to the One Wire header on the Asgard PCB. |
-| **MRC (Main Display)** | The sensor inside the main Mitsubishi display. *Warning: low resolution (0.5 °C steps) — use only if no other sensor is available.* |
+| **MRC / Wireless** | The room sensor of the Mitsubishi main display — or the wireless RCx thermostat, when routed through the MRC's *Room sensor settings → Room RC zone select*. *Warning: low resolution (0.5 °C steps) — use only if no other sensor is available.* |
 
 ### Step 5 — Zone 2 Sensors
 
-Identical layout to Step 4 for the second zone (Room Temp Source + Temp Sensor Source). If you left **Enable Zone 2 Settings** off in Step 3, this step is skipped.
+Identical layout to Step 4 for the second zone (Room Temp Source + Temp Sensor Source). If you left **Enable Zone 2 Settings** off in Step 3, the fields in this step are disabled.
 
 ### Step 6 — Enable
 
-![Step 6](img/sa-w3.png)
+![Step 6](img/sa-w6.png)
 
 | Control | Description |
 |---------|-------------|
