@@ -1,6 +1,6 @@
 # Asgard Getting Started Guide
 
-> **Asgard** — Local integration module for Mitsubishi Ecodan/Zubadan Air-to-Water heat pumps. This guide walks you through the hardware installation, first boot, the Auto Adaptive setup wizard, firmware updates, and a complete description of every tab and setting in the standalone dashboard.
+> **Asgard** — Local integration module for Mitsubishi Ecodan/Zubadan Air-to-Water heat pumps. This guide walks you through the hardware installation, first boot, the setup wizard, firmware updates, and a complete description of every tab and setting in the standalone dashboard.
 
 > [!NOTE]
 > **This guide is a living document.** Asgard is in ongoing development, so this manual may occasionally lag behind the latest firmware. Outdated sections are corrected as features are refined — if you spot something that no longer matches your device, it will be updated in due time. Have a question or found an error? Raise it in the [GitHub Discussions](https://github.com/gekkekoe/esphome-ecodan-hp/discussions).
@@ -16,7 +16,7 @@
 5. [Safety Warnings](#5-safety-warnings)
 6. [Installation](#6-installation)
 7. [First Boot — Wi-Fi Setup](#7-first-boot--wi-fi-setup)
-8. [Auto Adaptive Setup Wizard (Optional)](#8-auto-adaptive-setup-wizard-optional)
+8. [Setup Wizard (Optional)](#8-setup-wizard-optional)
 9. [Navigating the Dashboard](#9-navigating-the-dashboard)
 10. [Monitor Tab](#10-monitor-tab)
 11. [Settings — Zones 1 & 2](#11-settings--zones-1--2)
@@ -227,9 +227,9 @@ http://ecodan-heatpump.local/dashboard
 
 ---
 
-## 8. Auto Adaptive Setup Wizard (Optional)
+## 8. Setup Wizard (Optional)
 
-The **Auto Adaptive Wizard** is a guided 4-step process that configures everything Auto Adaptive needs. It runs standalone — no Home Assistant required. The wizard is **optional** — everything it configures can also be set manually in the Settings tab (see [Section 12](#12-settings--auto-adaptive)).
+The **Setup Wizard** is a guided process that starts with how you control the heat pump and, if you want, walks you through everything Auto Adaptive needs. It runs standalone — no Home Assistant required. The wizard is **optional** — everything it configures can also be set manually in the Settings tab (see [Section 11](#11-settings--zones-1--2) and [Section 12](#12-settings--auto-adaptive)).
 
 Navigate to:
 
@@ -239,9 +239,24 @@ http://ecodan-heatpump.local/dashboard/setup
 
 The wizard pre-fills any values already stored on the device, so re-running it is safe and non-destructive. You can also apply the same settings manually later in the Settings tab (see [Section 12](#12-settings--auto-adaptive)).
 
-### Step 1 — Mode & Flow Limits
+### Step 1 — Thermostat
 
-![Step 1](img/sa-w1.png)
+Choose which thermostat controls your room temperature:
+
+| Option | Description |
+|--------|-------------|
+| **Asgard Virtual Thermostat** | Asgard drives the heat pump directly through the R1/R2 relays (IN1/IN6). Selecting this shows the required wiring and dip-switch steps (see [Section 6](#6-installation)) and a link to this manual. |
+| **MRC / Wireless Thermostat** | The Mitsubishi main display (MRC) or a wireless thermostat (RCx) keeps control, like in a standard installation. |
+
+Depending on your choice, the wizard sets the dashboard's **Use Room Thermostat** switch accordingly (**on** for MRC / wireless, **off** for virtual) and aligns the Auto Adaptive **Room Temp Source** with it — the same auto-adjustment the Settings tab performs.
+
+### Step 2 — Auto Adaptive
+
+Answer **yes** to continue with the guided Auto Adaptive configuration (Steps 3–6 below), or **no** to save the thermostat choice and finish. You can enable Auto Adaptive later in the Settings tab at any time.
+
+### Step 3 — Mode & Flow Limits
+
+![Step 3](img/sa-w1.png)
 
 Choose your operating mode and set the safe boundaries for your flow temperatures. The available fields change dynamically based on the selected mode:
 
@@ -253,9 +268,9 @@ Choose your operating mode and set the safe boundaries for your flow temperature
 | **Min Cooling Flow** *(cooling)* | The absolute minimum cooling flow temperature. Set it to a safe limit (e.g. 18 °C for floor cooling) to **avoid condensation** — it must stay above your home's dew point. |
 | **Enable Zone 2 Settings** | Toggle this on if your system has a secondary heating/cooling circuit. |
 
-### Step 2 — Zone 1 Sensors
+### Step 4 — Zone 1 Sensors
 
-![Step 2](img/sa-w2.png)
+![Step 4](img/sa-w2.png)
 
 Configure where the Auto Adaptive algorithm gets its room temperature data for Zone 1.
 
@@ -275,13 +290,13 @@ If you chose **Asgard Virtual Thermostat**, also set the **Temp Sensor Source** 
 | **DS18x20 (Dallas)** | A wired DS18B20 sensor physically connected to the One Wire header on the Asgard PCB. |
 | **MRC (Main Display)** | The sensor inside the main Mitsubishi display. *Warning: low resolution (0.5 °C steps) — use only if no other sensor is available.* |
 
-### Step 3 — Zone 2 Sensors
+### Step 5 — Zone 2 Sensors
 
-Identical layout to Step 2 for the second zone (Room Temp Source + Temp Sensor Source). If you left **Enable Zone 2 Settings** off in Step 1, this step is skipped.
+Identical layout to Step 4 for the second zone (Room Temp Source + Temp Sensor Source). If you left **Enable Zone 2 Settings** off in Step 3, this step is skipped.
 
-### Step 4 — Enable
+### Step 6 — Enable
 
-![Step 4](img/sa-w3.png)
+![Step 6](img/sa-w3.png)
 
 | Control | Description |
 |---------|-------------|
@@ -774,7 +789,7 @@ Use this checklist after first-time setup to confirm everything is configured co
 - [ ] Asgard is connected to your home Wi-Fi (dashboard loads via `ecodan-heatpump.local/dashboard`)
 - [ ] A static IP is reserved for Asgard (recommended)
 - [ ] (Optional) **Operating Mode** is set to `Heat Flow Temperature` (or `Cool Flow Temperature`) when using Auto Adaptive
-- [ ] (Optional) Auto adaptive Wizard completed — or the Settings tab configured manually
+- [ ] (Optional) Setup Wizard completed — or the Settings tab configured manually
 - [ ] **Room Temp Source** matches your actual sensor wiring (VT / DS18B20 / MRC / REST API)
 - [ ] **Max / Min Flow** bounds are set for your system
 - [ ] **DHW setpoint** matches your tank configuration
