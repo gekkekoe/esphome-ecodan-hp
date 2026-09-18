@@ -103,13 +103,20 @@
         /* Control Rows */
         .ctrl-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 16px; }
         .ctrl-row:last-of-type { border-bottom: none; }
-        .ctrl-label { font-size: 15px; color: var(--text2); flex: 1; }
+        .ctrl-label { font-size: 16px; color: var(--text2); flex: 1; }
+        
+        /* Tooltips (same pattern as the main dashboard) */
+        .param-label { position: relative; display: inline-flex; align-items: center; gap: 4px; cursor: default; }
+        .param-label .tip-icon { width: 13px; height: 13px; border-radius: 50%; border: 1px solid var(--text3); color: var(--text3); font-size: 9px; font-family: var(--mono); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0.6; transition: opacity 0.15s; }
+        .param-label:hover .tip-icon { opacity: 1; border-color: var(--accent); color: var(--accent); }
+        .param-label .tip-box { visibility: hidden; opacity: 0; position: absolute; left: 0; top: calc(100% + 6px); z-index: 999; background: #1a2540; border: 1px solid var(--accent); border-radius: 7px; padding: 8px 10px; width: 230px; font-size: 10px; font-family: var(--mono); color: var(--text); line-height: 1.5; pointer-events: none; transition: opacity 0.15s; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+        .param-label:hover .tip-box { visibility: visible; opacity: 1; }
         
         /* 16px in inputs prevents iOS Safari from auto-zooming on focus */
         .ctrl-select, .ctrl-input {
             background: var(--bg3); border: 1px solid var(--border); border-radius: 7px;
             color: var(--text); font-family: var(--mono); font-size: 16px;
-            padding: 10px 12px; outline: none; transition: border-color 0.2s; max-width: 240px; flex: 1;
+            padding: 10px 12px; outline: none; transition: border-color 0.2s; max-width: 300px; flex: 1;
         }
         .ctrl-select:focus, .ctrl-input:focus { border-color: var(--accent); }
         .ctrl-input { max-width: 96px; text-align: center; }
@@ -298,7 +305,7 @@
             <div class="step-desc">Configure where the Auto Adaptive algorithm gets its room temperature data for Zone 1.</div>
             
             <div class="ctrl-row">
-                <span class="ctrl-label">Room Temp Source Z1</span>
+                <span class="ctrl-label param-label">Room Temp Source Z1<span class="tip-icon">?</span><span class="tip-box">The room temperature source used by Auto Adaptive (compared against the setpoint).</span></span>
                 <select id="w-room-src-z1" class="ctrl-select">
                     <option value="0">Room Thermostat</option>
                     <option value="1">Home Assistant / REST API</option>
@@ -307,7 +314,7 @@
             </div>
             
             <div class="ctrl-row">
-                <span class="ctrl-label">Temp Sensor Source Z1</span>
+                <span class="ctrl-label param-label">Temp Sensor Source Z1<span class="tip-icon">?</span><span class="tip-box">The temperature sensor source for the Asgard Virtual Thermostat.</span></span>
                 <select id="w-temp-src-z1" class="ctrl-select" onchange="toggleApiInfo('z1')">
                     <option value="0">Virtual Thermostat Input</option>
                     <option value="1">DS18x20 (Dallas)</option>
@@ -330,7 +337,7 @@
             
             <div id="z2-sensor-fields" style="opacity: 0.3; pointer-events: none; transition: 0.3s;">
                 <div class="ctrl-row">
-                    <span class="ctrl-label">Room Temp Source Z2</span>
+                    <span class="ctrl-label param-label">Room Temp Source Z2<span class="tip-icon">?</span><span class="tip-box">The room temperature source used by Auto Adaptive (compared against the setpoint).</span></span>
                     <select id="w-room-src-z2" class="ctrl-select">
                         <option value="0">Room Thermostat</option>
                         <option value="1">Home Assistant / REST API</option>
@@ -339,7 +346,7 @@
                 </div>
                 
                 <div class="ctrl-row">
-                    <span class="ctrl-label">Temp Sensor Source Z2</span>
+                    <span class="ctrl-label param-label">Temp Sensor Source Z2<span class="tip-icon">?</span><span class="tip-box">The temperature sensor source for the Asgard Virtual Thermostat.</span></span>
                     <select id="w-temp-src-z2" class="ctrl-select" onchange="toggleApiInfo('z2')">
                         <option value="0">Virtual Thermostat Input</option>
                         <option value="1">DS18x20 (Dallas)</option>
@@ -538,11 +545,24 @@
         }
     }
 
+    // The Zone 2 Sensors step (index 4) only exists in the wizard when
+    // "Enable Zone 2 Settings" is on — the remaining steps are renumbered.
+    function z2Enabled() {
+        return document.getElementById('w-enable-z2').checked;
+    }
+    function effectiveSteps() {
+        return z2Enabled() ? totalSteps : totalSteps - 1;
+    }
+    function stepPos(i) {
+        // 1-based position of step index i within the effective steps
+        return (i < 4 || z2Enabled()) ? i + 1 : i;
+    }
+
     // Keep the fill bar, step name and counter in sync with the current step
     function updateProgress() {
         document.getElementById('step-name').textContent = stepNames[currentStep];
-        document.getElementById('step-count').textContent = `Step ${currentStep + 1} / ${totalSteps}`;
-        document.getElementById('progress-fill').style.width = `${((currentStep + 1) / totalSteps) * 100}%`;
+        document.getElementById('step-count').textContent = `Step ${stepPos(currentStep)} / ${effectiveSteps()}`;
+        document.getElementById('progress-fill').style.width = `${(stepPos(currentStep) / effectiveSteps()) * 100}%`;
     }
 
     // Toggle parameters based on Heat or Cool selection in Step 2
@@ -571,6 +591,10 @@
         const sensorFields = document.getElementById('z2-sensor-fields');
         sensorFields.style.opacity = isEnabled ? '1' : '0.3';
         sensorFields.style.pointerEvents = isEnabled ? 'auto' : 'none';
+
+        // Drop the Zone 2 Sensors step (dot + step count) from the wizard
+        document.getElementById('ind-4').style.display = isEnabled ? '' : 'none';
+        updateProgress();
     }
 
     // Handles the display of the API warning box based on sensor selection
@@ -606,6 +630,9 @@
 
         // Increment or decrement step
         currentStep += direction;
+
+        // Skip the Zone 2 Sensors step (index 4) when Zone 2 is not enabled
+        if (currentStep === 4 && !z2Enabled()) currentStep += direction;
 
         // Ensure bounds
         if (currentStep < 0) currentStep = 0;
@@ -714,6 +741,8 @@
 
     // Call loadConfig instantly
     loadConfig();
+    // Sync the Zone 2 dot / step count before the async state load resolves
+    toggleZ2Fields();
 
 </script>
 
