@@ -298,7 +298,7 @@ If you chose **Asgard Virtual Thermostat**, also set the **Temp Sensor Source** 
 
 ### Step 5 — Zone 2 Sensors
 
-Identical layout to Step 4 for the second zone (Room Temp Source + Temp Sensor Source). If you left **Enable Zone 2 Settings** off in Step 3, the fields in this step are disabled.
+Identical layout to Step 4 for the second zone (Room Temp Source + Temp Sensor Source). If you left **Enable Zone 2 Settings** off in Step 3, this step is skipped and the wizard counts the remaining steps down accordingly.
 
 ### Step 6 — Enable
 
