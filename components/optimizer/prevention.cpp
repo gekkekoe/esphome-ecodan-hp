@@ -111,40 +111,18 @@ namespace esphome
                 return;
             }
 
-            auto multizone_status = status.MultiZoneStatus;
-            bool multizone_z1_active = status.has_2zones() && (multizone_status == 1 || multizone_status == 2);
-            bool multizone_z2_active = status.has_2zones() && (multizone_status == 1 || multizone_status == 3);
-
-            bool is_heating_z1 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) || status.is_heating(esphome::ecodan::Zone::ZONE_1);
-            bool is_cooling_z1 = status.has_cooling()
-                && (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) || status.is_cooling(esphome::ecodan::Zone::ZONE_1));
-
-            if (multizone_z1_active) {
-                is_heating_z1 = this->is_heating_active(status);
-                is_cooling_z1 = this->is_cooling_active(status);
-            }
-
-            if (is_heating_z1)
+            if (status.is_heating_active(esphome::ecodan::Zone::ZONE_1))
                 this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_1, false);
-            else if (is_cooling_z1)
+            else if (status.is_cooling_active(esphome::ecodan::Zone::ZONE_1))
                 this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_1, true);
             else
                 this->clear_predictive_boost_(OptimizerZone::ZONE_1, true); // zone idle → restore + release
 
             if (status.has_2zones())
             {
-                bool is_heating_z2 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) || status.is_heating(esphome::ecodan::Zone::ZONE_2);
-                bool is_cooling_z2 = status.has_cooling()
-                    && (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2) || status.is_cooling(esphome::ecodan::Zone::ZONE_2));
-
-                if (multizone_z2_active) {
-                    is_heating_z2 = this->is_heating_active(status);
-                    is_cooling_z2 = this->is_cooling_active(status);
-                }
-
-                if (is_heating_z2)
+                if (status.is_heating_active(esphome::ecodan::Zone::ZONE_2))
                     this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_2, false);
-                else if (is_cooling_z2)
+                else if (status.is_cooling_active(esphome::ecodan::Zone::ZONE_2))
                     this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_2, true);
                 else
                     this->clear_predictive_boost_(OptimizerZone::ZONE_2, true);

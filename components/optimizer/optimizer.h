@@ -230,8 +230,6 @@ namespace esphome
       bool  is_system_hands_off(const ecodan::Status &status);
       bool  is_dhw_active(const ecodan::Status &status);
       bool  is_post_dhw_window(const ecodan::Status &status);
-      bool  is_heating_active(const ecodan::Status &status);
-      bool  is_cooling_active(const ecodan::Status &status);
       bool  is_compressor_active(const ecodan::Status &status);
       float clamp_flow_temp(float flow, float min_temp, float max_temp);
       float enforce_step_limit(const ecodan::Status &status, float actual_flow, float calculated_flow, bool is_cooling_mode);

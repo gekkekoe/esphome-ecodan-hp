@@ -309,6 +309,50 @@ namespace ecodan
             return false;
         }
 
+        bool is_heating_active() const {
+            return Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
+        }
+
+        bool is_heating_active(Zone zone) const {
+
+            bool is_heating_mode = is_auto_adaptive_heating(zone) || is_heating(zone);
+            auto is_heating = is_heating_active();
+
+            if (!is_heating || !is_heating_mode)
+                return false;
+
+            if (has_2zones()) {
+                auto mz_status_active = zone == Zone::ZONE_1 ? 
+                    (MultiZoneStatus == 1 || MultiZoneStatus == 2) : (MultiZoneStatus == 1 || MultiZoneStatus == 3);
+
+                return mz_status_active;
+            }
+
+            return true;
+        }
+
+        bool is_cooling_active() const {
+            return Operation == esphome::ecodan::Status::OperationMode::COOL_ON;
+        }
+
+        bool is_cooling_active(Zone zone) const {
+
+            bool is_cooling_mode = is_auto_adaptive_cooling(zone) || is_cooling(zone);
+            auto is_cooling = is_cooling_active();
+
+            if (!is_cooling || !is_cooling_mode)
+                return false;
+
+            if (has_2zones()) {
+                auto mz_status_active = zone == Zone::ZONE_1 ? 
+                    (MultiZoneStatus == 1 || MultiZoneStatus == 2) : (MultiZoneStatus == 1 || MultiZoneStatus == 3);
+
+                return mz_status_active;
+            }
+
+            return true;
+        }
+
 /* polynomial fit for
 Temp C	specific heat (J/Kg. K)
 0.01	4.212

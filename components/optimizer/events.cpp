@@ -67,7 +67,7 @@ namespace esphome
                 }
             }
             else if (post_dhw_window) {
-                if (!this->is_heating_active(status) && !this->is_cooling_active(status)) {
+                if (!status.is_heating_active() && !status.is_cooling_active()) {
                     // no demand, restore saved setpoint
                     float restore_val = NAN;
                     if (zone == OptimizerZone::ZONE_2) {

@@ -39,14 +39,6 @@ namespace esphome
             }
             return false;
         }
-        
-        bool Optimizer::is_heating_active(const ecodan::Status &status) {
-            return status.Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
-        }
-
-        bool Optimizer::is_cooling_active(const ecodan::Status &status) {
-            return status.Operation == esphome::ecodan::Status::OperationMode::COOL_ON;
-        }
 
         bool Optimizer::is_compressor_active(const ecodan::Status &status) {
             return status.CompressorOn || status.CompressorFrequency > 0;

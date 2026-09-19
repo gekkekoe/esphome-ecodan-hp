@@ -329,7 +329,7 @@ namespace esphome
                     calculated_flow, true);
 
             // smart_start caps the flow on startup (water still warm) to avoid a slam-start.
-            bool cooling_active = this->is_cooling_active(status);
+            bool cooling_active = status.is_cooling_active();
             if (!cooling_active) {
                 float smart_start = this->state_.cooling_smart_start_temp->state;
                 if (min_cool_target > smart_start) {
