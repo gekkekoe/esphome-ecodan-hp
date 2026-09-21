@@ -2875,6 +2875,7 @@ function renderOdinHistory() {
     odinPriceChart.data.labels = labels;
     odinPriceChart.options.scales.x = dynamicXAxis;
     odinPriceChart.options.scales.y.title.text = currSym + '/kWh';
+    odinPriceChart.data.datasets[0].label = 'Price (' + currSym + '/kWh)';
     odinPriceChart.data.datasets[0].data = hourlyHistory.map(r => r.price);
     odinPriceChart.update('none');
 
@@ -3392,6 +3393,7 @@ function renderOdinLive() {
     odinCostChart.update('none');
 
     odinPriceChart.options.scales.y.title.text = currSym + '/kWh';
+    odinPriceChart.data.datasets[0].label = 'Price (' + currSym + '/kWh)';
     odinPriceChart.data.datasets[0].data = pricesKwh;
     odinPriceChart.update('none');
 
