@@ -175,7 +175,7 @@ Look at the main control board for a connector labelled **CN105**.
 > [!TIP]
 > **Migrating from wireless thermostats (CNRF):** ensure **SW1-8** is in the **OFF** position when using virtual thermostats.
 >
-> **Using the wireless thermostat as the temperature source for the virtual thermostat:** leave **SW1-8** in the **ON** position, and on the MRC set *Initial settings → Room sensor settings → Room RC zone select* so the **Master Room Sensor z1/z2** is **MRC** instead of RRCx.
+> **Using the wireless thermostat as the temperature source for the virtual thermostat:** leave **SW1-8** in the **ON** position, and on the MRC set *Initial settings → Room sensor settings → Sensor setting → Sensor setting → select* Room RCx.
 
 ![Schematic](./img/HP-schematic.jpg)
 
