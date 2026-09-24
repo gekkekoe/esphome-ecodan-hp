@@ -281,8 +281,12 @@ badges:
     show_name: true
     show_state: true
     show_icon: true
-    entity: sensor.ecodan_heatpump_dhw_current_temp
-    name: 'DHW '
+    entity: climate.ecodan_heatpump_dhw_climate
+    show_entity_picture: false
+    state_content:
+      - current_temperature
+      - hvac_action
+    name: DHW
   - type: entity
     show_name: true
     show_state: true
