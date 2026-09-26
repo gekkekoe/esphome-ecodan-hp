@@ -41,7 +41,8 @@ namespace esphome
         }
 
         bool Optimizer::is_compressor_active(const ecodan::Status &status) {
-            return status.CompressorOn || status.CompressorFrequency > 0;
+            // both flags needs to be true to be active
+            return status.CompressorOn && status.CompressorFrequency > 0;
         }
 
         float Optimizer::clamp_flow_temp(float calculated_flow, float min_temp, float max_temp)
