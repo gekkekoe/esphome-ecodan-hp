@@ -1,0 +1,46 @@
+# ODIN MQTT config (System tab of the asgard dashboard).
+#
+# The ODIN forwarder (odin-forwarder.yaml) uses these MQTT broker
+# settings instead of the build-time ${odin_broker}.
+
+text:
+  - platform: template
+    id: txt_mqtt_broker_ip
+    name: "ODIN MQTT Broker IP"
+    mode: text
+    optimistic: true
+    restore_value: true
+    initial_value: ""
+    max_length: 31
+  - platform: template
+    id: txt_mqtt_broker_port
+    name: "ODIN MQTT Broker Port"
+    mode: text
+    optimistic: true
+    restore_value: true
+    initial_value: "1883"
+    max_length: 5
+  - platform: template
+    id: txt_mqtt_user
+    name: "ODIN MQTT User"
+    mode: text
+    optimistic: true
+    restore_value: true
+    initial_value: ""
+    max_length: 31
+  - platform: template
+    id: txt_mqtt_password
+    name: "ODIN MQTT Password"
+    mode: text
+    optimistic: true
+    restore_value: true
+    initial_value: ""
+    max_length: 31
+  - platform: template
+    id: txt_mqtt_topic_prefix
+    name: "ODIN MQTT Topic Prefix"
+    mode: text
+    optimistic: true
+    restore_value: true
+    initial_value: "hp"
+    max_length: 31

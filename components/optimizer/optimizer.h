@@ -68,7 +68,6 @@ namespace esphome
       uint32_t last_defrost_time_     = 0;
       DefrostState state_before_defrost_;
 
-      int odin_last_executed_dhw_hour_ = -1;
 
       // Callback state (detect change before firing)
       float last_hp_feed_temp_      = NAN;
@@ -83,108 +82,12 @@ namespace esphome
       float last_error_                = 0.0f;
       float current_stagnation_boost_  = 1.0f;
 
-      // Stats / learning
-      float    daily_outside_temp_sum_      = 0.0f;
-      int      daily_outside_temp_count_    = 0;
-      float    daily_room_temp_sum_         = 0.0f;
-      int      daily_room_temp_count_       = 0;
-      float    daily_room_temp_min_         = 99.0f;
-      float    daily_room_temp_max_         = -99.0f;
-      float    daily_runtime_global         = 0.0f;
-      float    daily_max_output_power_      {0.0f};
-      uint32_t last_check_ms_               = 0;
-      int      last_processed_day_          = -1;
-      int      last_pre_hour_triggered_      {-1};
-      float    daily_runtime_cool_          = 0.0f;
-      float    daily_cool_outside_temp_sum_   = 0.0f;
-      int      daily_cool_outside_temp_count_ = 0;
 
-      // Strict energy separation buckets
-      float    last_global_prod_            = -1.0f;
-      float    last_global_cons_            = -1.0f;
-      float    last_total_heating_produced_ = 0.0f;
-      float    last_total_heating_consumed_ = 0.0f;
-      float    last_total_cooling_produced_ = 0.0f;
-      float    last_total_cooling_consumed_ = 0.0f;
-      float    last_total_dhw_produced_     = 0.0f;
-      float    last_total_dhw_consumed_     = 0.0f;
-      float    last_total_all_consumed_     = 0.0f;
-
-      // Zone-2 buckets
-      float    daily_runtime_heat_z2_     = 0.0f;
-      float    daily_runtime_cool_z2_     = 0.0f;
-      float    daily_room_temp_sum_z2_    = 0.0f;
-      int      daily_room_temp_count_z2_  = 0;
-      float    daily_room_temp_min_z2_    = 99.0f;
-      float    daily_room_temp_max_z2_    = -99.0f;
-      float    last_total_z2_heating_produced_  = 0.0f;
-      float    last_total_z2_heating_consumed_  = 0.0f;
-      float    last_total_z2_cooling_produced_  = 0.0f;
-      float    last_total_z2_cooling_consumed_  = 0.0f;
-
-      // Persistent energy bucket storage across reboots
-      struct EnergyBucketState {
-          uint32_t day = 0;
-          float last_total_heating_produced = 0.0f;
-          float last_total_heating_consumed = 0.0f;
-          float last_total_cooling_produced = 0.0f;
-          float last_total_cooling_consumed = 0.0f;
-          float last_total_dhw_produced = 0.0f;
-          float last_total_dhw_consumed = 0.0f;
-          float last_total_all_consumed = 0.0f;
-          float last_total_z2_heating_produced = 0.0f;
-          float last_total_z2_heating_consumed = 0.0f;
-          float last_total_z2_cooling_produced = 0.0f;
-          float last_total_z2_cooling_consumed = 0.0f;
-      };
-      void restore_energy_buckets_();
-      void save_energy_buckets_(int day);
-      esphome::ESPPreferenceObject energy_buckets_pref_;
-      bool restore_attempted_ = false;
-
-      // 10-minute wind-down window: keeps buckets open after compressor stops
-      // to catch delayed meter ticks. Initialised to UINT32_MAX - 700000 so the
-      // window is guaranteed expired at boot regardless of millis() value.
-      bool     last_was_dhw_                = false;
-      bool     last_was_heating_            = false;
-      bool     last_was_cooling_            = false;
-      uint32_t last_run_time_               = UINT32_MAX - 700000UL;
-
-      // Free cooling window tracking (HP-off period, any time of day)
-      // Measures HL×TM product from unregulated cooldown, free of solar/DHW contamination.
-      bool     fc_active_        = false;
-      float    fc_room_start_    = NAN;
-      float    fc_outside_sum_   = 0.0f;
-      int      fc_outside_count_ = 0;
-      float    fc_hours_         = 0.0f;
-      float    fc_solar_sum_     = 0.0f;
-      
-      // ODIN solver data
-      std::atomic<bool> odin_fetch_requested_{false};
-      std::vector<float> odin_production_;
-      std::vector<float> odin_solar_forecast_;
-      std::vector<float> odin_operation_mode_;
-      // Per-zone production plans (two-zone ODIN solve)
-      std::vector<float> odin_production_z1_;
-      std::vector<float> odin_production_z2_;
-      float odin_min_output_{0};
-      float odin_max_output_{0};
-
-      int      odin_data_day_   {-1};
-      bool     odin_data_ready_ {false};
-      SemaphoreHandle_t odin_mutex_ = NULL;
-
-      // Solver soft-stop state (per-zone: [0]=Z1, [1]=Z2)
-      int  solver_stop_hour_   [2] {-1, -1};
-      bool solver_stop_active_ [2] {false, false};
-      int  solver_resume_hour_ [2] {-1, -1};
       bool adaptive_loop_running_ {false};
 
       // ── adaptive_loop.cpp ──────────────────────────────────────────────
       HeatingProfile   get_heating_profile_(int type_index);
-      struct SolverResult { float load_ratio; bool heatpump_off; OptimizerOperationMode mode{OptimizerOperationMode::UNAVAILABLE}; int current_hour{-1}; };
       DefrostState resolve_defrost_state_();
-      SolverResult resolve_solver_result_(std::size_t zone, float room_target_temp, float current_room_temp);
       float            calculate_heating_flow_(std::size_t zone_i,
                                                const ecodan::Status &status,
                                                const HeatingProfile &prof,
@@ -209,8 +112,6 @@ namespace esphome
       // ── smart_boost.cpp ───────────────────────────────────────────────
       float calculate_smart_boost(int profile, float error);
 
-      // ── solver.cpp ────────────────────────────────────────────────────
-      void apply_solver_soft_stop(bool should_stop, OptimizerZone zone);
 
       // ── events.cpp ────────────────────────────────────────────────────
       void on_feed_temp_change(float actual_flow_temp, OptimizerZone zone);
@@ -222,9 +123,6 @@ namespace esphome
       void predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone, bool is_cooling);
       void clear_predictive_boost_(OptimizerZone zone, bool restore);
       void apply_flow_lockout_setpoint_(const ecodan::Status &status, OptimizerZone zone, float actual_flow_temp, bool initial);
-
-      // ── stats.cpp ─────────────────────────────────────────────────────
-      void update_learning_model(int day_of_year);
 
       // ── utility.cpp ───────────────────────────────────────────────────
       bool  is_system_hands_off(const ecodan::Status &status);
@@ -243,7 +141,6 @@ namespace esphome
       // Main loops
       void run_auto_adaptive_loop();
       void predictive_short_cycle_check();
-      void update_heat_model();
 
       // Compressor / defrost events
       void on_compressor_stop();
@@ -268,40 +165,12 @@ namespace esphome
       FlowLimits get_flow_limits(OptimizerZone zone);
       FlowLimits get_cool_flow_limits(OptimizerZone zone);
 
+      float apply_flow_limits(OptimizerZone zone, float calculated, float target_delta_t, float guard_return_temp);
+      float limit_external_flow(OptimizerZone zone, float requested);
+
       // Solver / ODIN
       bool aa_enabled() const;
-      bool solver_enabled() const;
-      uint8_t get_current_operation_mode();
-      float get_current_solar_irradiance();
-      
-      float get_heating_produced_kwh() const { return last_total_heating_produced_; }
-      float get_heating_consumed_kwh() const { return last_total_heating_consumed_; }
-      float get_cooling_produced_kwh() const { return last_total_cooling_produced_; }
-      float get_cooling_consumed_kwh() const { return last_total_cooling_consumed_; }
-      float get_dhw_produced_kwh() const { return last_total_dhw_produced_; }
-      float get_dhw_consumed_kwh() const { return last_total_dhw_consumed_; }
-      float get_total_consumed_kwh() const { return this->last_total_all_consumed_; }
-
-      int  get_current_ecodan_hour();
-      int  get_current_ecodan_day();
-      bool has_old_odin_data();
-      void store_odin_data(int current_hour, float min_output, float max_output, const std::vector<float>& prod, const std::vector<float>& prod_z1, const std::vector<float>& prod_z2, const std::vector<float>& solar, const std::vector<float>& op_mode);
-      // Brings odin_data_day_ in sync with the new day without forcing a new solve 
-      // the existing forecast (from the 23:55 solve) is still valid, only the "is this stale" check
-      // needs to know we're now on the new day.
-      void sync_odin_data_day() {
-          int d = this->get_current_ecodan_day();
-          if (d >= 0 && this->odin_mutex_ != NULL && xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
-              this->odin_data_day_ = d;
-              xSemaphoreGive(this->odin_mutex_);
-          }
-      }
-      bool check_and_clear_odin_fetch_request() {
-          return odin_fetch_requested_.exchange(false);
-      }
-      void set_odin_fetch_request() {
-        this->odin_fetch_requested_ = true;
-      }
+      bool odin_forwarder_takeover_active() const;
     };
 
     // Dummy ESPHome component — triggers codegen, stays empty

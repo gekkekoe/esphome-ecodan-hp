@@ -78,7 +78,6 @@ struct DashboardSnapshot {
   float dhw_consumed{NAN};
   float dhw_delivered{NAN};
   float dhw_cop{NAN};
-  int solver_dhw_mode{-1};
 
   // Legionella DHW setpoint automation
   bool sw_legionella_enable{false};
@@ -142,10 +141,6 @@ struct DashboardSnapshot {
   char version[32]{0};
   char local_ip[16]{0};
 
-  // Solver
-  bool sw_use_solver{false};
-  bool sw_show_solver_tab{false};
-  bool bin_solver_connected{false};
 
   // Server control
   bool sw_server_control{false};
@@ -159,38 +154,15 @@ struct DashboardSnapshot {
   bool sw_service_codes_enabled{false};
   bool sw_holiday_mode{false};
 
-  NumData num_raw_heat_produced;
-  NumData num_raw_elec_consumed;
-  NumData num_raw_runtime_hours;
-  NumData num_raw_avg_outside_temp;
-  NumData num_raw_avg_room_temp;
-  NumData num_raw_delta_room_temp;
-  NumData num_raw_hl_tm_product;
-  NumData num_raw_solar_factor;
-  // Zone-2 daily stats (two-zone builds only; nullptr elsewhere)
-  NumData num_raw_heat_produced_z2;
-  NumData num_raw_elec_consumed_z2;
-  NumData num_raw_runtime_hours_z2;
-  NumData num_raw_avg_room_temp_z2;
-  NumData num_raw_delta_room_temp_z2;
-
-  NumData num_raw_cool_produced;
-  NumData num_raw_cool_elec_consumed;
-  NumData num_raw_cool_runtime_hours;
-  NumData num_raw_cool_avg_outside_temp;
-  NumData num_raw_cool_avg_room_temp;
-  NumData num_raw_cool_produced_z2;
-  NumData num_raw_cool_elec_consumed_z2;
-  NumData num_raw_cool_runtime_hours_z2;
-  NumData num_raw_cool_avg_room_temp_z2;
-
-  NumData num_battery_soc_kwh;
-  NumData num_battery_max_discharge_kw;
-
-  NumData num_dhw_start_threshold;
   NumData num_legionella_dhw_setpoint;
 
-  char txt_solver_ip[32]{0};
+
+  // Odin MQTT config (System tab)
+  char txt_mqtt_broker_ip[32]{0};
+  char txt_mqtt_broker_port[8]{0};
+  char txt_mqtt_user[32]{0};
+  char txt_mqtt_password[32]{0};
+  char txt_mqtt_topic_prefix[32]{0};
 };
 
 class EcodanDashboard : public Component, public AsyncWebHandler {
@@ -225,7 +197,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_dhw_consumed(sensor::Sensor *s)                    { dhw_consumed_ = s; }
   void set_dhw_delivered(sensor::Sensor *s)                   { dhw_delivered_ = s; }
   void set_dhw_cop(sensor::Sensor *s)                         { dhw_cop_ = s; }
-  void set_solver_dhw_mode(select::Select *s)                 { solver_dhw_mode_ = s; }
 
   void set_heating_consumed(sensor::Sensor *s)                { heating_consumed_ = s; }
   void set_heating_produced(sensor::Sensor *s)                { heating_produced_ = s; }
@@ -291,7 +262,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_min_flow_temp_z2(number::Number *n)            { num_min_flow_temp_z2_ = n; }
   void set_num_hysteresis_z1(number::Number *n)               { num_hysteresis_z1_ = n; }
   void set_num_hysteresis_z2(number::Number *n)               { num_hysteresis_z2_ = n; }
-  void set_num_dhw_start_threshold(number::Number *n)         { num_dhw_start_threshold_ = n; }
   void set_num_legionella_dhw_setpoint(number::Number *n)      { num_legionella_dhw_setpoint_ = n; }
   void set_minimum_compressor_on_time(number::Number *n)      { minimum_compressor_on_time_ = n; }
 
@@ -318,12 +288,13 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   // Buttons
   void set_short_cycle_mitigation_button(button::Button *b)   { short_cycle_mitigation_button_ = b; }
+  void set_reboot_button(button::Button *b)                   { reboot_button_ = b; }
 
-  // Solver
-  void set_sw_use_solver(switch_::Switch *s)                  { sw_use_solver_ = s; }
-  void set_sw_show_solver_tab(switch_::Switch *s)             { sw_show_solver_tab_ = s; }
-  void set_bin_solver_connected(binary_sensor::BinarySensor *b) { bin_solver_connected_ = b; }
-  void set_txt_solver_ip(text::Text *t)                       { txt_solver_ip_ = t; }
+  void set_txt_mqtt_broker_ip(text::Text *t)                  { txt_mqtt_broker_ip_ = t; }
+  void set_txt_mqtt_broker_port(text::Text *t)                { txt_mqtt_broker_port_ = t; }
+  void set_txt_mqtt_user(text::Text *t)                       { txt_mqtt_user_ = t; }
+  void set_txt_mqtt_password(text::Text *t)                   { txt_mqtt_password_ = t; }
+  void set_txt_mqtt_topic_prefix(text::Text *t)               { txt_mqtt_topic_prefix_ = t; }
   void set_solver_kwh_meter_feedback_source(select::Select *s) { solver_kwh_meter_feedback_source_ = s; }
   void set_solver_kwh_meter_feedback(number::Number *n)       { solver_kwh_meter_feedback_ = n; }
 
@@ -351,8 +322,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_num_raw_cool_runtime_hours_z2(number::Number *n) { num_raw_cool_runtime_hours_z2_ = n; }
   void set_num_raw_cool_avg_room_temp_z2(number::Number *n) { num_raw_cool_avg_room_temp_z2_ = n; }
 
-  void set_num_battery_soc_kwh(number::Number *n)             { num_battery_soc_kwh_ = n; }
-  void set_num_battery_max_discharge_kw(number::Number *n)    { num_battery_max_discharge_kw_ = n; }
 
   // AsyncWebHandler
   bool canHandle(AsyncWebServerRequest *request) const override;
@@ -364,60 +333,12 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   // *before* calling handleRequest()
   void handleBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) override;
 
-  // Solver run stats — populated from YAML after each solve
-  struct LastRunStats {
-    uint32_t execution_ms{0};
-    uint32_t evaluated_nodes{0};
-    int current_hour{-1};
-    float heat_loss{0.0f}, base_cop{0.0f}, thermal_mass{0.0f};
-    float exp_consumption{0.0f}, exp_production{0.0f}, exp_solar{0.0f}, exp_solar_total{0.0f};
-    float total_cost{0.0f};
-    float used_solar_kwp{0.0f};
-    float used_solar_correction{1.0f};
-    float used_battery_soc_kwh{0.0f};
-    float min_output{0.0f};
-    float max_output{0.0f};
-    std::string bidding_zone;
-  } last_run_stats_;
-
-  // Called from YAML after each successful solver response
-  void store_odin_data(int current_hour, int current_day,
-                       const std::vector<float>& expected_end_temp,
-                       const std::vector<float>& energy,
-                       const std::vector<float>& production,
-                       const std::vector<float>& exp_temp,
-                       const std::vector<float>& cost,
-                       const std::vector<float>& battery_discharge,
-                       const std::vector<float>& sched_base,
-                       const std::vector<float>& sched_min,
-                       const std::vector<float>& sched_max,
-                       const std::vector<float>& weather,
-                       const std::vector<float>& solar,
-                       const std::vector<float>& prices,
-                       const std::vector<float>& op_mode,
-                       const std::vector<float>& decision_reason,
-                       const LastRunStats& run_stats,
-                       const std::vector<float>& exp_temp_z2 = {});
-
-  void load_odin_data(int current_day, int current_hour = 0);
-
-  // Called each hour by YAML to record actual consumption / room temp.
-  // hour is 0-23 (today's hour); stored at index 24+hour in the 72-slot window.
-  void update_actual_data(int hour, int day,
-                          float actual_cons_kwh, float actual_prod_kwh,
-                          float dhw_cons, float dhw_prod,
-                          float actual_room_temp, float standby_cons,
-                          float actual_room_temp_z2 = NAN);
-
-  void sync_odin_day();
-  float get_odin_value(const char* name, int idx);
 
  protected:
   void handle_root_(AsyncWebServerRequest *request);
   void handle_setup_(AsyncWebServerRequest *request);
   void handle_state_(AsyncWebServerRequest *request);
   void handle_set_(AsyncWebServerRequest *request);
-  void handle_odin_request_(AsyncWebServerRequest *request);
   void dispatch_set_(const std::string &key, const std::string &sval, float fval, bool is_string);
 
   std::vector<DashboardAction> action_queue_;
@@ -502,7 +423,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   select::Select *sel_operating_mode_z2_{nullptr};
   select::Select *sel_temp_source_z1_{nullptr};
   select::Select *sel_temp_source_z2_{nullptr};
-  select::Select *solver_dhw_mode_{nullptr};
   select::Select *lockout_duration_{nullptr};
   select::Select *lockout_strategy_{nullptr};
 
@@ -534,10 +454,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   esphome::globals::RestoringGlobalsComponent<bool> *ui_use_room_z2_{nullptr};
   esphome::globals::RestoringGlobalsComponent<float> *legionella_saved_dhw_setpoint_{nullptr};
 
-  // Solver
-  switch_::Switch *sw_use_solver_{nullptr};
-  switch_::Switch *sw_show_solver_tab_{nullptr};
-  binary_sensor::BinarySensor *bin_solver_connected_{nullptr};
 
   // Server control switches
   switch_::Switch *sw_server_control_{nullptr};
@@ -546,7 +462,11 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   switch_::Switch *sw_sc_prohibit_z1_cooling_{nullptr};
   switch_::Switch *sw_sc_prohibit_z2_heating_{nullptr};
   switch_::Switch *sw_sc_prohibit_z2_cooling_{nullptr};
-  text::Text *txt_solver_ip_{nullptr};
+  text::Text *txt_mqtt_broker_ip_{nullptr};
+  text::Text *txt_mqtt_broker_port_{nullptr};
+  text::Text *txt_mqtt_user_{nullptr};
+  text::Text *txt_mqtt_password_{nullptr};
+  text::Text *txt_mqtt_topic_prefix_{nullptr};
   select::Select *solver_kwh_meter_feedback_source_{nullptr};
   number::Number *solver_kwh_meter_feedback_{nullptr};
 
@@ -572,15 +492,14 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_raw_cool_elec_consumed_z2_{nullptr};
   number::Number *num_raw_cool_runtime_hours_z2_{nullptr};
   number::Number *num_raw_cool_avg_room_temp_z2_{nullptr};
-  number::Number *num_battery_soc_kwh_{nullptr};
-  number::Number *num_battery_max_discharge_kw_{nullptr};
-  number::Number *num_dhw_start_threshold_{nullptr};
   number::Number *num_legionella_dhw_setpoint_{nullptr};
 
   // Buttons
   button::Button *short_cycle_mitigation_button_{nullptr};
+  button::Button *reboot_button_{nullptr};
 
  private:
+
   // ── LittleFS history buffers ──────────────────────────────────────────────
 
   // Minute-record RAM buffers (batch writes to reduce flash wear)
@@ -605,30 +524,11 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   size_t hourly_count_{0};
 
   void setup_lfs();
-  void record_hourly_data(const HourlyRecord& rec);
   static void lfs_task_(void* arg);
 
   TaskHandle_t      lfs_task_handle_{nullptr};
   SemaphoreHandle_t lfs_trigger_{nullptr};
 
-  // ── ODIN forecast persistence ─────────────────────────────────────────────
-
-  // Used by lfs_persist_odin_, load_odin_data, and handle_odin_request_.
-  struct OdinArrayEntry {
-    int                  slot; // LFS cache-slot index
-    const char* name; // JSON key used in the API response
-    std::vector<float>* vec;  // pointer to the corresponding member vector
-  };
-
-  static constexpr int ODIN_ARRAY_COUNT = 22;
-  std::array<OdinArrayEntry, ODIN_ARRAY_COUNT> odin_array_map_();
-  void ensure_odin_vectors_();
-
-  static void lfs_odin_task_(void* arg);
-  void lfs_persist_odin_();
-
-  TaskHandle_t      lfs_odin_task_handle_{nullptr};
-  SemaphoreHandle_t lfs_odin_trigger_{nullptr};
   bool              lfs_mounted_{false}; 
 
   // ── Snapshot (thread-safe sensor cache) ──────────────────────────────────
@@ -638,42 +538,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   uint32_t          last_snapshot_time_{0};
   void update_snapshot_();
 
-  int get_current_ecodan_day();
-  void align_odin_day_(int current_day);
 
-  // ── ODIN solver arrays (72-slot window: yesterday / today / tomorrow) ────
-
-  std::vector<float> odin_expected_end_temp_;
-  std::vector<float> odin_energy_;
-  std::vector<float> odin_production_;          // heat kWh produced per hour
-  std::vector<float> odin_expected_temp_;
-  std::vector<float> odin_expected_temp_z2_;    // zone-2 expected room temp per hour (two-zone builds only)
-  std::vector<float> odin_cost_;
-  std::vector<float> odin_battery_discharge_;
-  std::vector<float> odin_actual_dhw_cons_;     // actual kWh consumed during DHW
-  std::vector<float> odin_actual_dhw_prod_;     // actual kWh heat produced during DHW
-  std::vector<float> odin_actual_cons_;         // actual kWh consumed per hour (LFS persisted)
-  std::vector<float> odin_actual_prod_;         // actual kWh produced per hour (LFS persisted)
-  std::vector<float> odin_actual_room_;         // room temp at start of each hour (LFS persisted)
-  std::vector<float> odin_actual_room_z2_;      // zone-2 room temp per hour (two-zone builds only)
-  std::vector<float> odin_actual_standby_cons_; // standby/idle kWh per hour (LFS persisted)
-  std::vector<float> odin_sched_base_;          // schedule base setpoint per hour
-  std::vector<float> odin_sched_min_;           // absolute min (base + min_offset)
-  std::vector<float> odin_sched_max_;           // absolute max (base + max_offset)
-  std::vector<float> odin_weather_;             // outside temp forecast °C
-  std::vector<float> odin_solar_;               // effective solar irradiance W/m²
-  std::vector<float> odin_prices_;              // electricity prices EUR/MWh
-  std::vector<float> odin_operation_mode_;
-
-  // 0=NONE 1=IDLE 2=COMFORT_HARD 3=COMFORT_SOFT 4=THERMAL_BUFFER 5=MODULATION
-  // 6=ENERGY_COST 7=DHW 8=BLOCKED_STOP_PRICE 9=BLOCKED_SOLAR_ONLY 10=BLOCKED_LIMIT.
-  std::vector<float> odin_decision_reason_;
-
-  bool              odin_data_ready_{false};
-  int               odin_stored_day_{-1};
-  std::atomic<bool> odin_lfs_dirty_{false};
-  uint32_t          odin_lfs_last_write_ms_{0};
-  std::atomic<bool> lfs_show_tab_cache_{false};
 
   // ── HTTP helpers ──────────────────────────────────────────────────────────
 
@@ -681,6 +546,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void handle_history_request_(AsyncWebServerRequest *request);
   void send_hourly_history_(httpd_req_t *req, uint32_t from_ts, uint32_t to_ts);
   void send_minute_history_(httpd_req_t *req, uint32_t from_ts, uint32_t to_ts);
+  void handle_export_hourly_(AsyncWebServerRequest *request);
+  void handle_export_physics_(AsyncWebServerRequest *request);
   void handle_js_(AsyncWebServerRequest *request);
   void send_chunked_(AsyncWebServerRequest *request, const char *content_type,
                      const uint8_t *data, size_t length, const char *cache_control);

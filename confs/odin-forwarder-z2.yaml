@@ -1,0 +1,5 @@
+odin:
+  relay_z2_id: asgard_relay_z2
+  override_z2_id: sw_odin_override_z2
+  climate_z2_id: heatpump_climate_z2
+

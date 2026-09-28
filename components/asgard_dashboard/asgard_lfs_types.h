@@ -8,12 +8,10 @@ namespace asgard_dashboard {
 // ── File paths ────────────────────────────────────────────────────────────────
 inline constexpr const char* LFS_MINUTES_PATH = "/lfs/history_mins.bin";
 inline constexpr const char* LFS_HOURLY_PATH  = "/lfs/history_hour.bin";
-inline constexpr const char* LFS_ODIN_PATH    = "/lfs/odin_data.bin";
 
 // ── Magic numbers / versioning ────────────────────────────────────────────────
 inline constexpr uint32_t HISTORY_MAGIC   = 0xDA741001UL;
 inline constexpr uint16_t HISTORY_VERSION = 1;
-inline constexpr uint32_t ODIN_MAGIC      = 0x0D100001UL;
 
 // ── Buffer / capacity constants ───────────────────────────────────────────────
 inline constexpr size_t MAX_MINUTES     = 10080; // 7 days  × 24h × 60min
@@ -91,17 +89,6 @@ struct CircularFileHeader {
 };
 static_assert(sizeof(CircularFileHeader) == 64, "CircularFileHeader must be 64 bytes");
 
-// ── ODIN 72-hour forecast cache (~9.2 KB) ─────────────────────────────────────
-// 32 slots × 72 floats; slots 0-21 are active, 22-31 are reserved (stored as NaN).
-#pragma pack(push, 1)
-struct OdinCacheStruct {
-    uint32_t magic;
-    int32_t  stored_day;
-    uint8_t  show_tab;
-    uint8_t  padding[3];
-    float    arrays[32][72];
-};
-#pragma pack(pop)
 
 } // namespace asgard_dashboard
 } // namespace esphome

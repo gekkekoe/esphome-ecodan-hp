@@ -1,0 +1,67 @@
+mqtt:
+  broker: ${odin_broker}
+  reboot_timeout: 0s  # never reboot just because the broker/ODIN is unreachable
+  discovery: false    # no HA discovery traffic on this broker
+  idf_send_async: true
+
+binary_sensor:
+  - platform: template
+    name: "ODIN Forwarder Active"
+    id: bin_odin_forwarder_active
+  - platform: template
+    name: "ODIN Forwarder Takeover"
+    id: bin_odin_forwarder_takeover
+
+odin:
+  id: odin_forwarder
+  ecodan_id: ecodan_instance
+  hp_id: ${odin_hp_id}
+  topic_prefix: ${odin_topic_prefix}
+  thermal_total_id: daily_computed_output_power
+  # Daily consumption ("Reported Total Daily Energy Consumption", base.yaml).
+  daily_consumption_id: delta_energy_consumed_increasing
+  # Energy Meter Source (auto-adaptive.yaml): on "Home Assistant or REST
+  # API" the feedback number — the real energy meter — replaces the
+  # internal delta counter as the forwarded daily consumption.
+  meter_source_id: solver_kwh_meter_feedback_source
+  meter_feedback_id: solver_kwh_meter_feedback
+  # Soft stop cuts the zone demand (virtual-thermostat relay) instead of the
+  # compressor power — same mechanism as the local auto-adaptive control.
+  relay_z1_id: asgard_relay_z1
+  # Held on while the forwarder is active so the virtual-thermostat climate
+  # entity does not re-engage a relay against the plan.
+  override_z1_id: sw_odin_override_z1
+  # The dashboard's Odin config card (System tab) configures the broker:
+  # this forwarder runs against the broker set in the card (overriding the
+  # build-time ${odin_broker} above).
+  broker_ip_id: txt_mqtt_broker_ip
+  broker_port_id: txt_mqtt_broker_port
+  mqtt_user_id: txt_mqtt_user
+  mqtt_password_id: txt_mqtt_password
+  mqtt_topic_prefix_id: txt_mqtt_topic_prefix
+  # Expose the forwarder's active state as a binary sensor.
+  # active_sensor_id is the LIVE MQTT-connection state. takeover_sensor_id
+  # is the LIVE takeover state (a valid command is held, valid_until not
+  # expired) — the local auto-adaptive loop gates its flow-setpoint writes
+  # on this.
+  active_sensor_id: bin_odin_forwarder_active
+  takeover_sensor_id: bin_odin_forwarder_takeover
+  # Short-cycle lockout (shared entity from auto-adaptive.yaml): while the
+  # optimizer is locked out it owns the relays and flow setpoints.
+  lockout_sensor_id: status_short_cycle_lockout
+  climate_id: heatpump_climate_z1
+  # DHW configuration — the solver uses these to schedule DHW cycles
+  dhw_flow_temp_target_id: dhw_flow_temp_target
+  dhw_flow_temp_drop_id: dhw_flow_temp_drop
+  dhw_start_threshold_id: dhw_start_threshold
+  # Legionella: the pre-cycle DHW setpoint is stored in the shared NVS
+  # global (with the local optimizer) so the timed restore survives reboots.
+  legionella_saved_dhw_setpoint_id: legionella_saved_dhw_setpoint
+  # The DHW climate entity — its target temperature is the HP's DHW setpoint
+  # (legionella override/restore, same mechanism as the local optimizer).
+  dhw_climate_id: heatpump_climate_dhw
+  # DHW triggers — the same switches the local auto-adaptive control uses.
+  # turn_on runs trigger_dhw_script / set_dhw_force (base.yaml). ODIN does
+  # not switch the heat/cool operating mode — that stays a local decision.
+  regular_dhw_switch_id: heatpump_switch_regular_dhw
+  force_dhw_switch_id: heatpump_switch_force_dhw

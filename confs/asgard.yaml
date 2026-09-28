@@ -14,6 +14,13 @@ substitutions:
     vars: 
       zone_identifier: "z2"
       gpio: "GPIO41"
+  z2_odin_forwarder: !include
+    file: odin-forwarder-z2.yaml
+  # forwarder definitions
+  odin_broker: 192.168.2.190  # ODIN LAN IP — its embedded broker (0.0.0.0:1883)
+  odin_hp_id: hp1
+  odin_topic_prefix: hp
+
 
 <<: !include proxy-base.yaml
 
@@ -58,11 +65,13 @@ esp32:
 
 <<: !include asgard-sensors.yaml
 <<: !include slave.yaml
-<<: !include asgard-odin.yaml
+<<: !include odin-forwarder.yaml
 
 packages:
  thermostat-room-0: !include { file: asgard-thermostat.yaml, vars: { zone_identifier: "z1", gpio: "GPIO40" } }
  thermostat-room-1: ${ z2_thermostat if z2_enabled else {} }
  dashboard-z1: !include asgard-dashboard-z1.yaml
+ odin-settings: !include odin-settings.yaml
  dashboard-z2: ${ z2_dashboard if z2_enabled else {} }
+ odin-z2: ${ z2_odin_forwarder if z2_enabled else {} }
 

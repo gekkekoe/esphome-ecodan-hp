@@ -166,26 +166,19 @@ substitutions:
   pump_feedback_status: 'Status Pumpen-Feedback'
   master_thermostat: 'Master-Raumsensor'
 
-  solver_kwh_meter_feedback_source: Energy Meter Source
-  solver_kwh_meter_option_internal: Internal Energy Meter
-  solver_kwh_meter_feedback: kWh meter feedback
 
-  solver_dhw_mode: Solver Warmwassermodus
-  solver_dhw_mode_option_regular: Normal
-  solver_dhw_mode_option_forced: Erzwungen
 
   asgard_vt_temp_sensor_source: 'Quelle Virtuelles Thermostat'
 
-  sw_use_solver: "Dynamischen Kosten-Solver aktivieren"
-  bin_solver_connected: "Solver Online-Status"
+  solver_kwh_meter_feedback: kWh meter feedback
+  solver_kwh_meter_option_internal: Internal Energy Meter
+  solver_kwh_meter_feedback_source: Energy Meter Source
   num_raw_heat_produced: "Rohwert Erzeugte Wärme (kWh)"
   num_raw_elec_consumed: "Rohwert Stromverbrauch (kWh)"
   num_raw_runtime_hours: "Rohwert Laufzeit (Stunden)"
   num_raw_avg_outside_temp: "Rohwert Durchschn. Außentemp. (°C)"
   num_raw_avg_room_temp: "Rohwert Durchschn. Raumtemp. (°C)"
   num_raw_delta_room_temp: "Rohwert Delta Raumtemp. (°C)"
-  num_battery_soc_kwh: "Batterie-Ladezustand (kWh)"
-  num_battery_max_discharge_kw: "Max. Batterieentladung (kW)"
   num_raw_hl_tm_product: "Rohes HL×TM-Produkt"
   num_raw_solar_factor: "Passiver Solargewinnfaktor"
 

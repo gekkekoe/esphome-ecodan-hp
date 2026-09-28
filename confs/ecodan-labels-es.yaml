@@ -167,26 +167,19 @@ substitutions:
   pump_feedback_status: 'Estado Retroalimentación Bomba'
   master_thermostat: 'Sensor de Habitación Principal'
 
-  solver_kwh_meter_feedback_source: "Fuente del medidor"
-  solver_kwh_meter_option_internal: "Medidor interno"
-  solver_kwh_meter_feedback: "Retroalimentación kWh"
 
-  solver_dhw_mode: Modo ACS del Solver
-  solver_dhw_mode_option_regular: Normal
-  solver_dhw_mode_option_forced: Forzado
 
   asgard_vt_temp_sensor_source: 'Fuente Termostato Virtual'
 
-  sw_use_solver: "Habilitar solucionador de costos dinámicos"
-  bin_solver_connected: "Estado en línea del solucionador"
+  solver_kwh_meter_feedback: "Retroalimentación kWh"
+  solver_kwh_meter_option_internal: "Medidor interno"
+  solver_kwh_meter_feedback_source: "Fuente del medidor"
   num_raw_heat_produced: "Calor bruto producido (kWh)"
   num_raw_elec_consumed: "Electricidad bruta consumida (kWh)"
   num_raw_runtime_hours: "Tiempo de ejecución bruto (Horas)"
   num_raw_avg_outside_temp: "Temp. ext. promedio bruta (°C)"
   num_raw_avg_room_temp: "Temp. ambiente promedio bruta (°C)"
   num_raw_delta_room_temp: "Delta temp. ambiente bruta (°C)"
-  num_battery_soc_kwh: "Estado de carga de la batería (kWh)"
-  num_battery_max_discharge_kw: "Descarga máx. de la batería (kW)"
   num_raw_hl_tm_product: "Producto HL×TM bruto"
   num_raw_solar_factor: "Factor de ganancia solar pasiva"
 

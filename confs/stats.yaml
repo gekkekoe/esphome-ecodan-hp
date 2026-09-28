@@ -226,31 +226,6 @@ number:
     max_value: 35.0
     step: 0.1
 
-  - platform: template
-    id: num_battery_soc_kwh
-    name: ${num_battery_soc_kwh}
-    internal: ${is_internal_asgard_only}
-    icon: mdi:battery-charging
-    optimistic: true
-    restore_value: true
-    initial_value: 0.0
-    min_value: 0.0
-    max_value: 100.0
-    step: 0.1
-    unit_of_measurement: kWh
-
-  - platform: template
-    id: num_battery_max_discharge_kw
-    name: ${num_battery_max_discharge_kw}
-    internal: ${is_internal_asgard_only}
-    icon: mdi:lightning-bolt
-    optimistic: true
-    restore_value: true
-    initial_value: 3.0
-    min_value: 0.5
-    max_value: 15.0
-    step: 0.1
-    unit_of_measurement: kW
 
   - platform: template
     id: num_raw_hl_tm_product

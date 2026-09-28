@@ -176,27 +176,20 @@ substitutions:
   master_thermostat: Hlavný izbový snímač
 
   # stats collection
-  solver_kwh_meter_feedback_source: Zdroj elektromera
-  solver_kwh_meter_option_internal: Interný elektromer
-  solver_kwh_meter_feedback: Spätná väzba elektromera
 
-  solver_dhw_mode: Režim TÚV solvera
-  solver_dhw_mode_option_regular: Bežný
-  solver_dhw_mode_option_forced: Vynútený
 
   asgard_vt_temp_sensor_source: Zdroj virtuálneho termostatu
 
   # solver settings
-  sw_use_solver: "Povoliť dynamický cenový solver"
-  bin_solver_connected: "Stav pripojenia solvera"
+  solver_kwh_meter_feedback: Spätná väzba elektromera
+  solver_kwh_meter_option_internal: Interný elektromer
+  solver_kwh_meter_feedback_source: Zdroj elektromera
   num_raw_heat_produced: "Hrubé vyrobené teplo (kWh)"
   num_raw_elec_consumed: "Hrubá spotrebovaná elektrina (kWh)"
   num_raw_runtime_hours: "Hrubý prevádzkový čas (hodiny)"
   num_raw_avg_outside_temp: "Hrubá priemerná vonkajšia teplota (°C)"
   num_raw_avg_room_temp: "Hrubá priemerná teplota miestnosti (°C)"
   num_raw_delta_room_temp: "Hrubá odchýlka teploty miestnosti (°C)"
-  num_battery_soc_kwh: "Stav nabitia batérie (kWh)"
-  num_battery_max_discharge_kw: "Max. vybíjací výkon batérie (kW)"
   num_raw_hl_tm_product: "Hrubý súčin HL×TM"
   num_raw_solar_factor: "Faktor pasívnych solárnych ziskov"
 

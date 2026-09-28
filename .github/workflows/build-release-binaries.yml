@@ -42,9 +42,9 @@ jobs:
           echo "<<: !include ota.yaml" >> build.yaml
 
       - if: contains(matrix.board, 'asgard')
-        name: add asgard_dashboard to external_components
+        name: add asgard_dashboard and odin to external_components
         run: |
-          sed -i "s/components: \[ ecodan, optimizer \]/components: [ ecodan, optimizer, asgard_dashboard ]/" build.yaml
+          sed -i "s/components: \[ ecodan, optimizer \]/components: [ ecodan, optimizer, asgard_dashboard, odin ]/" build.yaml
 
       - if: matrix.zone == 'z2'
         name: adjust build.yaml for 2 zones

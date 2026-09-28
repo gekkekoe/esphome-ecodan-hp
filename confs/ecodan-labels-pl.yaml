@@ -166,26 +166,19 @@ substitutions:
   pump_feedback_status: 'Status Informacji Zwrotnej Pompy'
   master_thermostat: 'Główny Czujnik Pokojowy'
 
-  solver_kwh_meter_feedback_source: "Źródło licznika energii"
-  solver_kwh_meter_option_internal: "Wewnętrzny licznik energii"
-  solver_kwh_meter_feedback: "Sprzężenie zwrotne licznika"
 
-  solver_dhw_mode: Tryb CWU solvera
-  solver_dhw_mode_option_regular: Normalny
-  solver_dhw_mode_option_forced: Wymuszony
 
   asgard_vt_temp_sensor_source: 'Źródło Wirtualnego Termostatu'
 
-  sw_use_solver: "Włącz dynamiczny kalkulator kosztów"
-  bin_solver_connected: "Status online kalkulatora"
+  solver_kwh_meter_feedback: "Sprzężenie zwrotne licznika"
+  solver_kwh_meter_option_internal: "Wewnętrzny licznik energii"
+  solver_kwh_meter_feedback_source: "Źródło licznika energii"
   num_raw_heat_produced: "Surowe wyprodukowane ciepło (kWh)"
   num_raw_elec_consumed: "Surowe zużycie prądu (kWh)"
   num_raw_runtime_hours: "Surowy czas pracy (Godziny)"
   num_raw_avg_outside_temp: "Surowa śr. temp. na zewnątrz (°C)"
   num_raw_avg_room_temp: "Surowa śr. temp. w pomieszczeniu (°C)"
   num_raw_delta_room_temp: "Surowa delta temp. w pomieszczeniu (°C)"
-  num_battery_soc_kwh: "Stan naładowania baterii (kWh)"
-  num_battery_max_discharge_kw: "Maks. rozładowanie baterii (kW)"
   num_raw_hl_tm_product: "Surowy iloczyn HL×TM"
   num_raw_solar_factor: "Współczynnik pasywnych zysków słonecznych"
 

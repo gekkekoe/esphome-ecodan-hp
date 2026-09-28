@@ -29,11 +29,11 @@ header {
     gap: 10px; 
   }
   
-  .header-right {
-    display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
-    font-family: var(--mono); font-size: 10px; color: var(--text3); min-width: 80px;
+  .brand-logo {
+    font-family: var(--sans); font-size: 26px; font-weight: 700; line-height: 1;
+    letter-spacing: 2px; color: var(--accent); white-space: nowrap;
+    user-select: none; padding-right: 2px; flex: 0 0 auto;
   }
-  .fw-version { color: var(--accent); font-weight: 600; margin-bottom: 2px; }
 
   .tab-bar { 
     display: flex; gap: 10px; padding: 10px 16px; margin: 0; 
@@ -52,13 +52,13 @@ header {
 
   @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-  .header-badges { 
-    display: flex; gap: 6px; flex: 1; 
+  .badges-row { 
+    display: flex; gap: 6px; 
     flex-wrap: nowrap; overflow-x: auto; 
-    padding-bottom: 4px; scrollbar-width: none; 
+    padding: 8px 16px 12px; scrollbar-width: none; 
     -webkit-overflow-scrolling: touch;
   }
-  .header-badges::-webkit-scrollbar { display: none; }
+  .badges-row::-webkit-scrollbar { display: none; }
   .badge { 
     display: flex; flex-direction: column; align-items: center; background: var(--bg3); 
     border: 1px solid var(--border); border-radius: 8px; padding: 3px 8px; 
@@ -145,7 +145,7 @@ header {
   .step-input:focus { background: rgba(0,200,255,0.1); border-radius: 4px; box-shadow: 0 0 0 1px var(--accent); }
 
 
-  /* Physics param tooltips */
+  /* Param tooltips */
   .param-label { position: relative; display: inline-flex; align-items: center; gap: 4px; cursor: default; }
   .param-label .tip-icon { width: 13px; height: 13px; border-radius: 50%; border: 1px solid var(--text3); color: var(--text3); font-size: 9px; font-family: var(--mono); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0.6; transition: opacity 0.15s; }
   .param-label:hover .tip-icon { opacity: 1; border-color: var(--accent); color: var(--accent); }
@@ -238,10 +238,32 @@ header {
     cursor: grabbing;
   }
 
+  /* Kanban columns: three real flex stacks. Each card lives INSIDE a
+     column container, so a drop inserts within that column only and the
+     other columns' cards never move (the CSS-columns/grid layout let
+     the browser re-balance after every insertion, so drops landed
+     inconsistently). */
+  #view-settings #settings-card-container { display: flex; gap: 14px; align-items: flex-start; }
+  #view-settings .settings-col { flex: 1 1 0; min-width: 0; min-height: 48px; display: flex; flex-direction: column; gap: 14px; }
+  #view-settings .ctrl-card { position: relative; }
+  /* Drop indicator: a line painted above/below the hovered card. */
+  .ctrl-card.drop-before::before, .ctrl-card.drop-after::after {
+    content: ''; position: absolute; left: 6px; right: 6px; height: 3px;
+    background: var(--accent); border-radius: 2px; pointer-events: none;
+  }
+  .ctrl-card.drop-before::before { top: -9px; }
+  .ctrl-card.drop-after::after { bottom: -9px; }
+  @media (max-width: 860px) {
+    /* One column on phones. flex-basis 0 is for the ROW layout; in
+       column direction it would collapse every column to min-height
+       and stack the cards on top of each other. */
+    #view-settings #settings-card-container { flex-direction: column; }
+    #view-settings .settings-col { flex: 0 0 auto; width: 100%; }
+  }
+
   @media (min-width: 768px) { .chart-container { height: 200px; } .full-width { grid-column: 1 / -1; } }
   @media (max-width: 480px) {
-      header { flex-wrap: wrap; }
-      .header-right { flex-direction: row; justify-content: space-between; width: 100%; margin-top: 5px; }
+    header { padding: 10px 12px; }
       .ctrl-card { padding: 12px; }
       .stat-row { gap: 8px; justify-content: space-between; }
       .ctrl-label { font-size: 10px; }
@@ -275,13 +297,10 @@ header {
   #view-system .ctrl-card.collapsed .ctrl-card-body { display: none; }
   #view-system > .ctrl-card { margin-bottom: 14px; }
   #view-system > .ctrl-card:last-child { margin-bottom: 0; }
+  /* Odin MQTT / Settings Backup / Data Backup share one row; stretch keeps the
+     cards the same height even when one is collapsed (odin-next parity). */
+  #view-system .sys-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; align-items: stretch; margin-bottom: 14px; }
 
-  /* ── Physics Card Tabs & Steppers ── */
-  .physics-card .step-input { width: 72px; font-size: 12px; }
-  .phys-tabs { display: flex; background: var(--bg); border-radius: 8px; margin-bottom: 18px; padding: 4px; gap: 4px; }
-  .phys-tabs button { flex: 1; background: transparent; border: none; color: var(--text3); padding: 8px 0; border-radius: 6px; cursor: pointer; font-family: var(--sans); font-size: 13px; transition: 0.2s; }
-  .phys-tabs button.active-heat { background: var(--heat); color: #fff; font-weight: 600; }
-  .phys-tabs button.active-cool { background: var(--cool); color: #fff; font-weight: 600; }
   .condensation-warning {
     display: none;
     background: rgba(255, 176, 32, 0.08);
@@ -299,7 +318,20 @@ header {
 <body>
 
 <header>
-  <div class="header-badges" id="headerBadges">
+  <span class="brand-logo">ASGARD</span>
+  <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+    <!-- Update indicator (hidden by default) -->
+    <span id="update-indicator" style="display: none; cursor: pointer; align-items: center; gap: 5px; color: var(--warn);" onclick="goToUpdateTab()" title="Update Available! Click to view.">
+      <svg style="flex: 0 0 auto;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+      <span style="font-family: var(--mono); font-size: 10px; white-space: nowrap;">New Firmware</span>
+    </span>
+  </div>
+</header>
+<div class="badges-row" id="headerBadges">
     <div class="badge">
       <span class="badge-label">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -414,26 +446,11 @@ header {
       <span class="badge-value" id="b-wifi">—</span>
     </div>
   </div>
-  
-<div class="header-right">
-    <div style="display: flex; align-items: center; gap: 6px;">
-      <div class="fw-version" id="disp-ver">v—</div>
-      <!-- Update indicator icon (hidden by default) -->
-      <svg id="update-icon" style="display: none; cursor: pointer; color: var(--warn);" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" onclick="goToUpdateTab()" title="Update Available! Click to view.">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="16" x2="12" y2="12"></line>
-        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-      </svg>
-    </div>
-    <div id="lastUpdate">—</div>
-  </div>
-</header>
 
 <div class="sticky-top">
   <nav class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('monitor', this)">Monitor</button>
     <button class="tab-btn" onclick="switchTab('settings', this)">Settings</button>
-    <button class="tab-btn" id="tab-btn-solver" style="display:none;" onclick="switchTab('solver', this)">Solver</button>
     <button class="tab-btn" onclick="switchTab('system', this)">System</button>
   </nav>
 </div>
@@ -569,7 +586,7 @@ header {
 </div>
 
 <div id="view-settings" class="view-section">
-  <div id="settings-card-container" style="display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+  <div id="settings-card-container">
     
     <div class="ctrl-card" id="card-z1">
       <div class="section-title">Zone 1</div>
@@ -911,19 +928,6 @@ header {
         </div>
       </div>
 
-      <div class="sub-card" id="sub-odin" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
-        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-odin')">Odin Solver <span class="collapse-icon">▼</span></div>
-        <div class="sub-card-body">
-          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
-            <span class="ctrl-label param-label">Show Solver Tab<span class="tip-icon">?</span><span class="tip-box">Shows or hides the Solver navigation tab in this dashboard. Enable when Odin is used.</span></span>
-            <label class="toggle-wrap">
-              <input type="checkbox" id="sw-show-solver" onchange="sendSwitch('show_solver_tab_enabled', this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
       <div class="sub-card" id="sub-server" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-server')">Server Control <span class="collapse-icon">▼</span></div>
         <div class="sub-card-body">
@@ -1036,363 +1040,59 @@ header {
 </div>
 </div>
 
-<div id="view-solver" class="view-section">
-  <div class="ctrl-card" style="margin-bottom: 20px; padding: 15px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span class="ctrl-label" style="font-weight: 600;">Time View:</span>
-        <div style="background: var(--bg); padding: 3px; border-radius: 7px; display: inline-flex; border: 1px solid var(--border);">
-          <button id="solver-btn-live" onclick="setSolverMode('live')" class="log-btn active" style="border: none; padding: 4px 10px;">Live</button>
-          <button id="solver-btn-hist" onclick="setSolverMode('history')" class="log-btn" style="border: none; padding: 4px 10px; margin-left: 4px;">Calendar</button>
-        </div>
-      </div>
-      <div id="solver-calendar-container" style="display: none; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px;">
-        <span style="color: var(--text3);">Date:</span>
-        <input type="date" id="solver-hist-date" onchange="onSolverDateChanged()" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 7px; outline: none; cursor: pointer;">
-        <span style="color: var(--text3); margin-left: 5px;">Range:</span>
-        <select id="solver-hist-range" onchange="onSolverDateChanged()" class="ctrl-select" style="max-width: 90px; margin-left: 0; padding: 4px 8px;">
-          <option value="1">1 Day</option><option value="2">2 Days</option><option value="3">3 Days</option>
-        </select>
-      </div>
-    </div>
-  </div>
-  
-  <div style="display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-    
-    <div class="ctrl-card" id="card-odin-settings">
-      <div class="section-title section-header-toggle" onclick="toggleCard('card-odin-settings')">
-        <span>Odin Settings</span>
-        <span class="collapse-icon">▼</span>
-      </div>
-      <div class="collapsible-content">
-      
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Enable Dynamic Cost Solver<span class="tip-icon">?</span><span class="tip-box">Lets ODIN's hourly plan (electricity price + weather + solar optimised) drive the heat pump instead of Asgard's standalone Auto-Adaptive control.</span></span>
-          <label class="toggle-wrap">
-            <input type="checkbox" id="sw-solver" onchange="handleSolverToggle(this)">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label">Connection Status</span>
-          <span class="ctrl-value" id="badge-solver-conn" style="font-weight:600;">—</span>
-        </div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Odin IP Address<span class="tip-icon">?</span><span class="tip-box">Manual override for the ODIN device's address.</span></span>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <input type="text" id="ui-solver-ip" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 110px; text-align: right; outline: none;" placeholder="0.0.0.0">
-            <button class="step-btn" style="width: 26px; border-color: var(--accent); color: var(--accent);" onclick="sendInputString('solver_ip_address', 'ui-solver-ip')" title="Save IP">✓</button>
-          </div>
-        </div>
-
-        <div class="ctrl-row" style="align-items: center;">
-          <span class="ctrl-label param-label">DHW Threshold<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>If DHW temp drops below (Target - Drop) + Threshold, Odin schedules DHW during a cheap/sunny hour. 0 = disabled.</span></span>
-          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-            <div class="stepper">
-              <button class="step-btn" onclick="step('dhw-thresh', -0.5)">−</button>
-              <input type="number" class="step-input" id="dhw-thresh-val" onchange="manualInput('dhw-thresh', this.value)" />
-              <button class="step-btn" onclick="step('dhw-thresh', +0.5)">+</button>
-              <button class="step-btn" style="margin-left: 6px; border-color: var(--accent); color: var(--accent);" onclick="sendOdinThresh(this)" title="Apply Threshold">✓</button>
-            </div>
-            <span id="dhw-probe-temp" style="font-family: var(--mono); font-size: 10px; color: var(--text3); min-height: 12px;"></span>
-          </div>
-        </div>
-        
-        <div class="ctrl-row" style="border-bottom: none;">
-          <span class="ctrl-label param-label">ODIN DHW Trigger<span class="tip-icon">?</span><span class="tip-box">
-            <span class="tip-unit">Mode</span>Method used when ODIN schedules DHW. Regular uses ECO mode, Forced is faster but at the cost of higher consumption</span></span>
-          <select class="ctrl-select" id="sel-odin-dhw-mode" onchange="sendSelect('solver_dhw_mode', this)">
-            <option>Regular</option>
-            <option>Forced</option>
-          </select>
-        </div>
-        
-        <div id="run-solver-row" style="display:none; margin-top: 12px; gap: 8px; align-items: stretch; flex-wrap: nowrap;">
-          <div style="display: flex; align-items: center; gap: 5px; flex-shrink: 0; background: var(--bg2); padding: 0 8px; border: 1px solid var(--border); border-radius: 8px;">
-            <label style="font-size: 9px; color: var(--text3); white-space: nowrap; text-transform: uppercase;">From hour</label>
-            <input id="ui-solver-hour" type="number" min="0" max="23" step="1" class="step-input" style="width: 30px; font-size: 12px;" title="Override start hour (default = current hour)">
-          </div>
-          <button id="btn-run-solver" class="send-btn" style="margin-top: 0; border-color: var(--accent3); color: var(--accent3); background: rgba(127,255,127,0.1); flex: 1;" onclick="runOdinSolver()">Run Optimization</button>
-          <button id="btn-odin" class="send-btn" style="margin-top: 0; flex: 0.5; display: none;" onclick="openOdin()">Open ODIN</button>
-        </div>
-        </div>
-      </div>
-
-      <div class="ctrl-card physics-card" id="card-physics-data">
-      <div class="section-title section-header-toggle" onclick="toggleCard('card-physics-data')">
-        <span>Physics Data (Daily Averages)</span>
-        <span class="collapse-icon">▼</span>
-      </div>
-      <div class="collapsible-content">
-
-        <div class="phys-tabs">
-          <button id="tab-btn-heat" class="active-heat" onclick="togglePhysicsTab('heat')">Heating Profile</button>
-          <button id="tab-btn-cool" onclick="togglePhysicsTab('cool')">Cooling Profile</button>
-        </div>
-
-        <div id="phys-group-heat">
-          <div class="sub-label">Zone 1</div>
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Heat Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total heat energy produced (last session) in heating mode. DHW excluded. Used to calculate COP.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-heat', -0.1)">−</button><input type="number" class="step-input" id="raw-heat-val" onchange="manualInput('raw-heat', this.value)" /><button class="step-btn" onclick="step('raw-heat', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Eletricity Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump (last session) in heating mode. DHW excluded. COP = Heat / Elec.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-elec-val" onchange="manualInput('raw-elec', this.value)" /><button class="step-btn" onclick="step('raw-elec', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in heating mode (last session). Used to derive thermal mass.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-run', -0.1)">−</button><input type="number" class="step-input" id="raw-run-val" onchange="manualInput('raw-run', this.value)" /><button class="step-btn" onclick="step('raw-run', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Avg Ambient Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average ambient temperature (last session). Used to calculate heat loss and COP correction.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-out', -0.1)">−</button><input type="number" class="step-input" id="raw-out-val" onchange="manualInput('raw-out', this.value)" /><button class="step-btn" onclick="step('raw-out', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Heating Avg Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average room temperature on heating days. Pairs with Avg Ambient Temp above to determine heat loss coefficient. Heating-only — see Cooling Avg Room in the Cooling Profile tab for the cooling-season counterpart.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-room', -0.1)">−</button><input type="number" class="step-input" id="raw-room-val" onchange="manualInput('raw-room', this.value)" /><button class="step-btn" onclick="step('raw-room', +0.1)">+</button></div>
-          </div>
-          <div id="phys-z2-heat" style="display:none;">
-          <div class="sub-label" style="margin-top:14px;">Zone 2</div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Heat Produced Z2<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Zone 2: total heat energy produced (last session). Used to calculate COP Z2.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-heat-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-heat-z2-val" onchange="manualInput('raw-heat-z2', this.value)" /><button class="step-btn" onclick="step('raw-heat-z2', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Electricity Consumed Z2<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Zone 2: electricity used by the heat pump (last session). COP Z2 = Heat Z2 / Elec Z2.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-elec-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-elec-z2-val" onchange="manualInput('raw-elec-z2', this.value)" /><button class="step-btn" onclick="step('raw-elec-z2', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Runtime Z2<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Zone 2: hours the heat pump ran (last session). Used to derive thermal mass Z2.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-run-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-run-z2-val" onchange="manualInput('raw-run-z2', this.value)" /><button class="step-btn" onclick="step('raw-run-z2', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Zone 2 Avg Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Zone 2: average room temperature on heating days. Pairs with the shared Avg Ambient Temp above for heat loss Z2.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-room-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-room-z2-val" onchange="manualInput('raw-room-z2', this.value)" /><button class="step-btn" onclick="step('raw-room-z2', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Zone 2 Delta Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C (daily swing)</span>Zone 2: max minus min room temp yesterday. Small delta = high thermal mass.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-delta-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-delta-z2-val" onchange="manualInput('raw-delta-z2', this.value)" /><button class="step-btn" onclick="step('raw-delta-z2', +0.1)">+</button></div>
-          </div>
-          </div>
-        </div>
-
-        <div id="phys-group-cool" style="display: none;">
-          <div class="sub-label">Zone 1</div>
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Cooling Produced<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Total cooling energy produced (last session). Used to calculate EER.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-prod', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-prod-val" onchange="manualInput('raw-cool-prod', this.value)" /><button class="step-btn" onclick="step('raw-cool-prod', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Cool Eletricity Consumed<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Electricity used by the heat pump (last session) in cooling mode. EER = Cool / Elec.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-elec', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-elec-val" onchange="manualInput('raw-cool-elec', this.value)" /><button class="step-btn" onclick="step('raw-cool-elec', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Cooling Runtime<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Hours the heat pump ran in cooling mode (last session).</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-run', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-run-val" onchange="manualInput('raw-cool-run', this.value)" /><button class="step-btn" onclick="step('raw-cool-run', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Cooling Avg Ambient<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average outdoor temperature (last session) during cooling.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-out', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-out-val" onchange="manualInput('raw-cool-out', this.value)" /><button class="step-btn" onclick="step('raw-cool-out', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Cooling Avg Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Average room temperature on cooling days. Pairs with Cooling Avg Ambient above. Cooling-only — see Heating Avg Room in the Heating Profile tab for the heating-season counterpart. Kept separate to prevent seasonal drift.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-room', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-room-val" onchange="manualInput('raw-cool-room', this.value)" /><button class="step-btn" onclick="step('raw-cool-room', +0.1)">+</button></div>
-          </div>
-          <div id="phys-z2-cool" style="display:none;">
-          <div class="sub-label" style="margin-top:14px;">Zone 2</div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Cooling Produced Z2<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Zone 2: total cooling energy produced (last session). Used to calculate EER Z2.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-prod-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-prod-z2-val" onchange="manualInput('raw-cool-prod-z2', this.value)" /><button class="step-btn" onclick="step('raw-cool-prod-z2', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Cooling Electricity Z2<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh/day</span>Zone 2: electricity used in cooling mode (last session). EER Z2 = Cool Z2 / Elec Z2.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-elec-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-elec-z2-val" onchange="manualInput('raw-cool-elec-z2', this.value)" /><button class="step-btn" onclick="step('raw-cool-elec-z2', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Cooling Runtime Z2<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours/day</span>Zone 2: hours the heat pump ran in cooling mode (last session).</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-run-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-run-z2-val" onchange="manualInput('raw-cool-run-z2', this.value)" /><button class="step-btn" onclick="step('raw-cool-run-z2', +0.1)">+</button></div>
-          </div>
-
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Zone 2 Cool Avg Room<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C</span>Zone 2: average room temperature on cooling days. Pairs with the shared Cooling Avg Ambient above.</span></span>
-            <div class="stepper"><button class="step-btn" onclick="step('raw-cool-room-z2', -0.1)">−</button><input type="number" class="step-input" id="raw-cool-room-z2-val" onchange="manualInput('raw-cool-room-z2', this.value)" /><button class="step-btn" onclick="step('raw-cool-room-z2', +0.1)">+</button></div>
-          </div>
-          </div>
-        </div>
-
-        <div class="sub-label" style="margin-top:20px;">Universal Building Physics</div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Delta Room Temp<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">°C (daily swing)</span>Difference between max and min room temp yesterday. Small delta = high thermal mass (house holds heat well).</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('raw-delta', -0.1)">−</button><input type="number" class="step-input" id="raw-delta-val" onchange="manualInput('raw-delta', this.value)" /><button class="step-btn" onclick="step('raw-delta', +0.1)">+</button></div>
-        </div>
-        
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">HL × TM Product<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">hours (Tau)</span>Thermal time constant of your house. Higher = house holds heat longer. Learned automatically. Typical: 50–300h.</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('raw-hl-tm', -0.5)">−</button><input type="number" class="step-input" id="raw-hl-tm-val" onchange="manualInput('raw-hl-tm', this.value)" /><button class="step-btn" onclick="step('raw-hl-tm', +0.5)">+</button></div>
-        </div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Passive Solar Factor<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh per W/m² irradiance</span>Heat entering through windows from solar irradiance. Independent of PV panels. Typical: 0.010–0.030. Learned automatically.</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('raw-solar-factor', -0.0025)">−</button><input type="number" class="step-input" id="raw-solar-factor-val" onchange="manualInput('raw-solar-factor', this.value)" /><button class="step-btn" onclick="step('raw-solar-factor', +0.0025)">+</button></div>
-        </div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Battery SoC<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kWh</span>Current battery state of charge. Solver assigns discharge to most expensive HP hours. Set 0 if no battery.</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('batt-soc', -0.1)">−</button><input type="number" class="step-input" id="batt-soc-val" onchange="manualInput('batt-soc', this.value)" /><button class="step-btn" onclick="step('batt-soc', +0.1)">+</button></div>
-        </div>
-
-        <div class="ctrl-row">
-          <span class="ctrl-label param-label">Battery Max Discharge<span class="tip-icon">?</span><span class="tip-box"><span class="tip-unit">kW</span>Maximum discharge rate of your battery. Limits how much power solver can assign per hour.</span></span>
-          <div class="stepper"><button class="step-btn" onclick="step('batt-max-dis', -0.1)">−</button><input type="number" class="step-input" id="batt-max-dis-val" onchange="manualInput('batt-max-dis', this.value)" /><button class="step-btn" onclick="step('batt-max-dis', +0.1)">+</button></div>
-        </div>
-
-        <button class="send-btn" onclick="sendPhysics(this)" style="margin-bottom:0; margin-top:24px;">Apply Physics Data</button>
-      </div>
-    </div>
-  </div>
-  
-  <div class="chart-card full-width" style="margin-top: 15px; grid-column: 1 / -1;">
-    <div class="chart-header">
-      <div class="section-title" style="margin:0">Room Temperatures (24h)</div>
-      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-        <div class="chart-legend" style="margin:0;">          
-          <div class="legend-item">
-            <div class="legend-dot" style="background: repeating-linear-gradient(90deg, #63b3ed 0 6px, transparent 6px 9px);"></div>Scheduled
-          </div>
-          <div class="legend-item">
-            <div class="legend-dot" style="background: repeating-linear-gradient(90deg, #ffb020 0 5px, transparent 5px 10px);"></div>Expected Z1
-          </div>
-          <div class="legend-item" id="leg-odin-z2-exp" style="display:none;">
-            <div class="legend-dot" style="background: repeating-linear-gradient(90deg, #c084fc 0 5px, transparent 5px 10px);"></div>Expected Z2
-          </div>
-          <div class="legend-item">
-            <div class="legend-dot" style="background: #ffff00; display: flex; align-items: center; justify-content: center;">
-              <div style="width: 6px; height: 6px; background: #ffff00; border-radius: 50%;"></div>
-            </div>Actual Z1
-          </div>
-          <div class="legend-item" id="leg-odin-z2-act" style="display:none;">
-            <div class="legend-dot" style="background: #ff69b4; display: flex; align-items: center; justify-content: center;">
-              <div style="width: 6px; height: 6px; background: #ff69b4; border-radius: 50%;"></div>
-            </div>Actual Z2
-          </div>
-          <div class="legend-item">
-            <span style="color:#ff6b35; font-weight:bold;">12:00</span>Heating
-          </div>
-          <div class="legend-item">
-            <span style="color:#00c8ff; font-weight:bold;">12:00</span>Cooling
-          </div>
-          <div class="legend-item">
-            <span style="color:#ffb020; font-weight:bold;">12:00</span>DHW
-          </div>
-          <div class="legend-item" title="Colored strip hovering just above the highest visible line: the mode that actually ran that hour. Planned mode is shown by the x-axis label colors.">
-            <div class="legend-dot" style="height:5px; border-radius:1px; background:#8295b8;"></div>Actual mode (strip)
-          </div>
-        </div>
-        <button class="log-btn" id="btn-reset-zoom-odin" style="display:none; padding: 2px 8px; font-size: 9px;" onclick="resetOdinZoom()">Reset Zoom</button>
-      </div>
-    </div>
-    <div class="chart-container"><canvas id="odinTempChart"></canvas></div>
-  </div>
-
-  <div class="chart-card full-width" style="grid-column: 1 / -1;">
-    <div class="chart-header" style="flex-wrap: wrap; gap: 10px;">
-      <div class="section-title" style="margin:0">Energy Consumption (24h)</div>
-      <div style="display:flex; align-items:center; gap:20px; flex-wrap: wrap;">
-        <div style="text-align:right">
-          <div class="stat-label">Exp. Grid</div>
-          <div class="stat-value" id="tot-exp-cons" style="color:var(--warn)">—</div>
-        </div>
-        <div style="text-align:right">
-          <div class="stat-label">Exp. Solar</div>
-          <div class="stat-value" id="tot-solar-cons" style="color:#57B9FF">—</div>
-        </div>
-        <div style="text-align:right">
-          <div class="stat-label">Actual</div>
-          <div class="stat-value" id="tot-act-cons" style="color:var(--accent3)">—</div>
-        </div>
-      </div>
-    </div>
-    <div class="chart-container"><canvas id="odinConsChart"></canvas></div>
-  </div>
-
-  <div class="chart-card full-width" style="grid-column: 1 / -1;">
-    <div class="chart-header" style="flex-wrap: wrap; gap: 10px;">
-      <div class="section-title" style="margin:0">Energy Production (24h)</div>
-      <div style="display:flex; align-items:center; gap:20px; flex-wrap: wrap;">
-        <div style="text-align:right">
-          <div class="stat-label">Exp. Climate</div>
-          <div class="stat-value" id="tot-exp-prod" style="color:var(--warn)">—</div>
-        </div>
-        <div style="text-align:right">
-          <div class="stat-label">Exp. Solar</div>
-          <div class="stat-value" id="tot-solar-prod" style="color:#57B9FF">—</div>
-        </div>
-        <div style="text-align:right">
-          <div class="stat-label">Actual</div>
-          <div class="stat-value" id="tot-act-prod" style="color:var(--accent3)">—</div>
-        </div>
-      </div>
-    </div>
-    <div class="chart-container"><canvas id="odinProdChart"></canvas></div>
-  </div>
-
-  <div class="chart-card full-width" style="grid-column: 1 / -1;">
-    <div class="chart-header" style="flex-wrap: wrap; gap: 10px;">
-      <div class="section-title" style="margin:0">Cost (24h)</div>
-      <div style="display:flex; align-items:center; gap:20px; flex-wrap: wrap;">
-        <div style="text-align:right">
-          <div class="stat-label">Expected</div>
-          <div class="stat-value" id="tot-exp-cost" style="color:var(--warn)">—</div>
-        </div>
-        <div style="text-align:right">
-          <div class="stat-label">Actual</div>
-          <div class="stat-value" id="tot-act-cost" style="color:var(--accent3)">—</div>
-        </div>
-      </div>
-    </div>
-    <div class="chart-container"><canvas id="odinCostChart"></canvas></div>
-  </div>
-  <div id="odin-batt-card" class="chart-card full-width" style="display:none; grid-column: 1 / -1;">
-    <div class="chart-header"><div class="section-title" style="margin:0">Battery Discharge Plan (24h)</div></div>
-    <div class="chart-container"><canvas id="odinBattChart"></canvas></div>
-  </div>
-  <div class="chart-card full-width" style="grid-column: 1 / -1;">
-    <div class="chart-header"><div class="section-title" style="margin:0">Electricity Prices (24h)</div></div>
-    <div class="chart-container"><canvas id="odinPriceChart"></canvas></div>
-  </div>
-  <div class="chart-card full-width" style="grid-column: 1 / -1;">
-    <div class="chart-header"><div class="section-title" style="margin:0">Weather Forecast &amp; Solar Irradiance (24h)</div></div>
-    <div class="chart-container"><canvas id="odinWeatherChart"></canvas></div>
-  </div>
-</div>
-
 <div id="view-system" class="view-section">
+  <div class="sys-grid">
+
+   <div class="ctrl-card" id="sys-odin">
+     <div class="section-title" onclick="toggleCard('sys-odin')">Odin MQTT <span class="collapse-icon">▼</span></div>
+     <div class="ctrl-card-body">
+       <div style="color: var(--text3); font-size: 11px; margin-bottom: 12px; line-height: 1.5;">
+         MQTT forwarder to the ODIN box. ODIN box default credentials: <b>odin-user</b> / <b>odin-pwd</b>. Configure the broker it talks to below.
+       </div>
+
+       <div>
+         <div class="ctrl-row">
+           <span class="ctrl-label param-label">Broker IP<span class="tip-icon">?</span><span class="tip-box">Address of the MQTT broker (the ODIN box or any other broker). Empty keeps the build-time default.</span></span>
+           <div style="display: flex; align-items: center; gap: 6px;">
+             <input type="text" id="ui-mqtt-ip" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 130px; text-align: right; outline: none;" placeholder="(default)">
+           </div>
+         </div>
+         <div class="ctrl-row">
+           <span class="ctrl-label param-label">Broker Port<span class="tip-icon">?</span><span class="tip-box">MQTT broker port. 1883 (plain) or 8883 (TLS).</span></span>
+           <div style="display: flex; align-items: center; gap: 6px;">
+             <input type="text" id="ui-mqtt-port" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 70px; text-align: right; outline: none;" placeholder="1883">
+           </div>
+         </div>
+         <div class="ctrl-row">
+           <span class="ctrl-label param-label">Broker User<span class="tip-icon">?</span><span class="tip-box">MQTT username. ODIN box default: <b>odin-user</b>. Empty = no authentication.</span></span>
+           <div style="display: flex; align-items: center; gap: 6px;">
+             <input type="text" id="ui-mqtt-user" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 130px; text-align: right; outline: none;" placeholder="(none)">
+           </div>
+         </div>
+         <div class="ctrl-row">
+           <span class="ctrl-label param-label">Broker Password<span class="tip-icon">?</span><span class="tip-box">MQTT password. ODIN box default: <b>odin-pwd</b>. Empty = no authentication.</span></span>
+           <div style="display: flex; align-items: center; gap: 6px;">
+             <input type="password" id="ui-mqtt-password" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 130px; text-align: right; outline: none;" placeholder="(none)">
+           </div>
+         </div>
+         <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+           <span class="ctrl-label param-label">Topic Prefix<span class="tip-icon">?</span><span class="tip-box">MQTT topic prefix, must match the ODIN box (wizard: MQTT topic prefix). Default "hp".</span></span>
+           <div style="display: flex; align-items: center; gap: 6px;">
+             <input type="text" id="ui-mqtt-prefix" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 70px; text-align: right; outline: none;" placeholder="hp">
+           </div>
+         </div>
+       </div>
+
+       <button class="send-btn" onclick="sendOdin(this)" style="margin-bottom:0; margin-top:24px;">Apply Settings</button>
+     </div>
+   </div>
+
    <div class="ctrl-card collapsed" id="sys-settings-backup">
      <div class="section-title" onclick="toggleCard('sys-settings-backup')">Settings Backup <span class="collapse-icon">▼</span></div>
      <div class="ctrl-card-body">
        <div id="settings-backup-status" style="font-size:10px; font-family:var(--mono); color:var(--text3); margin-bottom:8px;"></div>
        <div style="color: var(--text3); font-size: 11px; margin-bottom: 12px; line-height: 1.5;">
-         Save every Settings and Solver tab value (numbers, switches, sliders, selects) to a JSON file, or restore them from a previously saved file.
+         Save every Settings tab value (numbers, switches, sliders, selects) to a JSON file, or restore them from a previously saved file.
        </div>
        <div class="log-controls">
           <button class="log-btn" style="border-color: var(--accent); color: var(--accent);" onclick="downloadSettingsBackup()">Save Settings</button>
@@ -1402,12 +1102,30 @@ header {
      </div>
    </div>
 
+   <div class="ctrl-card" id="sys-data-backup">
+     <div class="section-title" onclick="toggleCard('sys-data-backup')">Data Backup <span class="collapse-icon">▼</span></div>
+     <div class="ctrl-card-body">
+       <div id="data-backup-status" style="font-size:10px; font-family:var(--mono); color:var(--text3); margin-bottom:8px;"></div>
+       <div style="color: var(--text3); font-size: 11px; margin-bottom: 12px; line-height: 1.5;">
+         Export the device's hourly history archive and the learned physics values as files - for backup, or as migration input for the ODIN box.
+       </div>
+       <div class="log-controls">
+          <button class="log-btn" style="border-color: var(--accent); color: var(--accent);" onclick="backupData('hourly', this)">Backup History</button>
+          <button class="log-btn" style="border-color: var(--accent); color: var(--accent);" onclick="backupData('physics', this)">Backup Physics</button>
+       </div>
+     </div>
+   </div>
+
+  </div><!-- /sys-grid -->
+
    <div class="ctrl-card" id="sys-firmware">
      <div class="section-title" onclick="toggleCard('sys-firmware')">Firmware <span class="collapse-icon">▼</span></div>
      <div class="ctrl-card-body">
+       <div style="font-family:var(--mono); font-size:11px; color:var(--text2); margin-bottom:8px;">Version: <span id="disp-ver">—</span></div>
        <div class="log-controls">
           <button class="log-btn" style="border-color: var(--accent); color: var(--accent);" onclick="triggerUpload()">Manual Firmware Upload</button>
           <button class="log-btn" id="btn-check-update" style="border-color: var(--accent); color: var(--accent);" onclick="checkForUpdate(this)">Check for Update</button>
+         <button class="log-btn" style="border-color: var(--warn); color: var(--warn);" onclick="confirmReboot(this)" title="Restart the ESP module (settings are kept)">Reboot</button>
        </div>
        <div id="ota-update-banner" style="display:none;background:var(--card2,#1e2535);border:1px solid var(--accent);border-radius:8px;padding:12px;margin:10px 0;">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
@@ -1423,7 +1141,7 @@ header {
    <input type="file" id="ota-file" style="display:none" accept=".bin" onchange="performUpload()">
 
    <div class="ctrl-card" id="sys-logs">
-     <div class="section-title" onclick="toggleCard('sys-logs')">System Logs <span class="collapse-icon">▼</span></div>
+     <div class="section-title" onclick="toggleCard('sys-logs')" style="display:flex; justify-content:space-between; align-items:center;">System Logs <span style="display:flex; align-items:center; gap:8px;"><span id="lastUpdate" style="font-family:var(--mono); font-size:10px; color:var(--text3);">—</span><span class="collapse-icon">▼</span></span></div>
      <div class="ctrl-card-body">
        <div id="log-status" style="font-size:10px; font-family:var(--mono); color:var(--text3); margin-bottom:8px;">Connecting...</div>
        <div class="log-controls">
@@ -1459,7 +1177,7 @@ const history = {
 };
 
 // ── Central control registry ────────────────────────────────────────────────
-// Single source of truth for every editable Settings & Solver tab control.
+// Single source of truth for every editable Settings tab control.
 // To add, remove, or rename a control, edit ONLY this list — `pending`,
 // `LIMITS`, `STEP_EL`, and the Settings Backup save/restore feature (System tab)
 // are all generated from it automatically.
@@ -1520,47 +1238,15 @@ const CONTROLS = [
   { type:'switch', key:'force_dhw', el:'sw-fdhw' },
   { type:'switch', key:'sw_regular_dhw', el:'sw-regular-dhw' },
   { type:'number', pkey:'dhw-sp', key:'dhw_setpoint', el:'dhw-sp-val', min:40, max:60, step:0.5 },
-  { type:'number', pkey:'dhw-thresh', key:'dhw_start_threshold', el:'dhw-thresh-val', min:0, max:20, step:0.5 },
   { type:'switch', key:'legionella_enabled', el:'sw-legionella' },
   { type:'number', pkey:'legionella-sp', key:'legionella_dhw_setpoint', el:'legionella-sp-val', min:50, max:60, step:0.5 },
-  { type:'select', key:'solver_dhw_mode', el:'sel-odin-dhw-mode' },
+  // ── Odin MQTT ──
+  { type:'text',   key:'mqtt_broker_ip', el:'ui-mqtt-ip' },
+  { type:'text',   key:'mqtt_broker_port', el:'ui-mqtt-port' },
+  { type:'text',   key:'mqtt_user', el:'ui-mqtt-user' },
+  { type:'text',   key:'mqtt_password', el:'ui-mqtt-password' },
+  { type:'text',   key:'mqtt_topic_prefix', el:'ui-mqtt-prefix' },
 
-  // ── Solver / Odin ──
-  { type:'switch', key:'use_dynamic_cost_solver', el:'sw-solver' },
-  { type:'switch', key:'show_solver_tab_enabled', el:'sw-show-solver' },
-  { type:'text',   key:'solver_ip_address', el:'ui-solver-ip' },
-
-  // ── Physics Data (heating profile) ──
-  { type:'number', pkey:'raw-heat', key:'raw_heat_produced',    el:'raw-heat-val', min:0,   max:200, step:0.1 },
-  { type:'number', pkey:'raw-elec', key:'raw_elec_consumed',    el:'raw-elec-val', min:0,   max:100, step:0.1 },
-  { type:'number', pkey:'raw-run',  key:'raw_runtime_hours',    el:'raw-run-val',  min:0,   max:24,  step:0.1 },
-  { type:'number', pkey:'raw-out',  key:'raw_avg_outside_temp', el:'raw-out-val',  min:-25, max:40,  step:0.1 },
-  { type:'number', pkey:'raw-room', key:'raw_avg_room_temp',    el:'raw-room-val', min:10,  max:35,  step:0.1 },
-
-  // ── Physics Data (cooling profile) ──
-  { type:'number', pkey:'raw-cool-prod', key:'raw_cool_produced',         el:'raw-cool-prod-val', min:0,   max:200, step:0.1 },
-  { type:'number', pkey:'raw-cool-elec', key:'raw_cool_elec_consumed',    el:'raw-cool-elec-val', min:0,   max:100, step:0.1 },
-  { type:'number', pkey:'raw-cool-run',  key:'raw_cool_runtime_hours',    el:'raw-cool-run-val',  min:0,   max:24,  step:0.1 },
-  { type:'number', pkey:'raw-cool-out',  key:'raw_cool_avg_outside_temp', el:'raw-cool-out-val',  min:-25, max:50,  step:0.1 },
-  { type:'number', pkey:'raw-cool-room', key:'raw_cool_avg_room_temp',    el:'raw-cool-room-val', min:10,  max:35,  step:0.1 },
-
-  // ── Physics Data (zone 2 — two-zone builds only) ──
-  { type:'number', pkey:'raw-heat-z2',  key:'raw_heat_produced_z2',    el:'raw-heat-z2-val',  min:0,   max:200, step:0.1 },
-  { type:'number', pkey:'raw-elec-z2',  key:'raw_elec_consumed_z2',    el:'raw-elec-z2-val',  min:0,   max:100, step:0.1 },
-  { type:'number', pkey:'raw-run-z2',   key:'raw_runtime_hours_z2',    el:'raw-run-z2-val',   min:0,   max:24,  step:0.1 },
-  { type:'number', pkey:'raw-room-z2',  key:'raw_avg_room_temp_z2',    el:'raw-room-z2-val',  min:10,  max:35,  step:0.1 },
-  { type:'number', pkey:'raw-delta-z2', key:'raw_delta_room_temp_z2',  el:'raw-delta-z2-val', min:0,   max:10,  step:0.1 },
-  { type:'number', pkey:'raw-cool-prod-z2',  key:'raw_cool_produced_z2',      el:'raw-cool-prod-z2-val',  min:0,   max:200, step:0.1 },
-  { type:'number', pkey:'raw-cool-elec-z2',  key:'raw_cool_elec_consumed_z2', el:'raw-cool-elec-z2-val',  min:0,   max:100, step:0.1 },
-  { type:'number', pkey:'raw-cool-run-z2',   key:'raw_cool_runtime_hours_z2', el:'raw-cool-run-z2-val',   min:0,   max:24,  step:0.1 },
-  { type:'number', pkey:'raw-cool-room-z2',  key:'raw_cool_avg_room_temp_z2', el:'raw-cool-room-z2-val',  min:10,  max:35,  step:0.1 },
-
-  // ── Universal Building Physics ──
-  { type:'number', pkey:'raw-delta',        key:'raw_delta_room_temp', el:'raw-delta-val',        min:0,     max:10,   step:0.1 },
-  { type:'number', pkey:'raw-hl-tm',        key:'raw_hl_tm_product',   el:'raw-hl-tm-val',        min:0,     max:300,  step:0.5 },
-  { type:'number', pkey:'raw-solar-factor', key:'raw_solar_factor',    el:'raw-solar-factor-val', min:0.001, max:0.05, step:0.0025 },
-  { type:'number', pkey:'batt-soc',         key:'battery_soc_kwh',            el:'batt-soc-val',     min:0,   max:30, step:0.1 },
-  { type:'number', pkey:'batt-max-dis',     key:'battery_max_discharge_kw',   el:'batt-max-dis-val', min:0.5, max:15, step:0.1 },
 
   // ── Advanced Control ──
   { type:'switch', key:'power_mode', el:'sw-power-mode' },
@@ -1594,58 +1280,9 @@ CONTROLS.forEach(c => {
 
 const lastEdit = {};
 const serverState = {};
+const odinApplied = {};  // last server values for the Odin card (apply-button diffing)
 
-let hourlyHistory = [];
 let latestState = {};
-let odinDataCache = null;
-// --- Solver decision reasons ---------------------------------------------
-const REASON_INFO = [
-    { label: '—' },
-    { label: 'Coasting' },
-    { label: 'Comfort (limit)' },
-    { label: 'Comfort (drift)' },
-    // This label means the pump ran when comfort did NOT require it (room on the far
-    // side of sched_base). Hours spent holding the room near a band edge are
-    // Comfort (drift), even on free solar. Split into two sub-reasons (indices 4 and
-    // 11, index-aligned with the C++ enum) so the tooltip says WHY it was worth
-    // buffering: PV covering the draw, or just a cheap grid price/efficient COP.
-    { label: 'Buffering (cheap energy)' },
-    { label: 'Modulation / Wear' },
-    { label: 'Energy price' },
-    { label: 'Hot water' },
-    { label: 'Stop price' },
-    { label: 'Solar-only' },
-    { label: 'Power limit' },
-    { label: 'Buffering (solar)' }   // index 11 — REASON_THERMAL_BUFFER_SOLAR, appended
-                                      // after Power limit for wire-compatibility, not
-                                      // grouped next to index 4 above.
-];
-
-const reasonAt = (idx) => {
-    // First check live cache (Odin forecast)
-    let arr = odinDataCache?.decision_reason;
-    if (arr && idx >= 0 && idx < arr.length && arr[idx] !== null && arr[idx] !== undefined) {
-        const code = Math.round(arr[idx]);
-        return REASON_INFO[code] ?? null;
-    }
-    // Fallback to history mode using hourlyHistory.decision_reason
-    if (hourlyHistory && idx >= 0 && idx < hourlyHistory.length) {
-        const r = hourlyHistory[idx];
-        if (r?.decision_reason !== null && r?.decision_reason !== undefined) {
-            const code = Math.round(r.decision_reason);
-            return REASON_INFO[code] ?? null;
-        }
-    }
-    return null;
-};
-
-let odinConsChart = null;
-let odinProdChart = null;
-let odinCostChart = null;
-let odinTempChart = null;
-let odinBattChart = null;
-let odinPriceChart = null;
-let odinWeatherChart = null;
 
 let lastGraphUpdate = 0;
 let userZoomed = false;
@@ -1677,8 +1314,8 @@ function toggleSubCard(id) {
 
 // Restores the collapsed state on page load
 function initCollapsibleCards() {
-  const cards = ['card-odin-settings', 'card-physics-data', 'sys-settings-backup', 'sys-firmware', 'sys-logs'];
-  const subCards = ['sub-power', 'sub-odin', 'sub-server', 'sub-predictive', 'sub-short-cycle'];
+  const cards = ['sys-odin', 'sys-settings-backup', 'sys-firmware', 'sys-logs'];
+  const subCards = ['sub-power', 'sub-server', 'sub-predictive', 'sub-short-cycle'];
   const defaultCollapsed = ['sys-settings-backup'];
   [...cards, ...subCards].forEach(id => {
     const stored = localStorage.getItem('collapseState_' + id);
@@ -1802,7 +1439,7 @@ async function checkForUpdate(btn = null) {
   const infoEl     = document.getElementById('ota-version-info');
   const notesEl    = document.getElementById('ota-release-notes');
   const statusEl   = document.getElementById('ota-apply-status');
-  const updateIcon = document.getElementById('update-icon');
+  const updateIcon = document.getElementById('update-indicator');
   const applyBtn   = document.getElementById('btn-apply-update');
 
   // Only manipulate the UI button if this was a manual user click
@@ -1868,7 +1505,7 @@ async function checkForUpdate(btn = null) {
     bannerEl.style.display = 'block';
     
     // Light up the notification icon in the header
-    updateIcon.style.display = 'block';
+    updateIcon.style.display = 'flex';
 
   } catch(e) {
     if (btn) {
@@ -1915,7 +1552,7 @@ async function applyUpdate(btn) {
   // Hide the OTA banner after a short delay so the UI is clean again
   setTimeout(() => {
     document.getElementById('ota-update-banner').style.display = 'none';
-    document.getElementById('update-icon').style.display = 'none';
+    document.getElementById('update-indicator').style.display = 'none';
     
     // Reset button state just in case
     btn.textContent = 'Download Update';
@@ -1929,13 +1566,30 @@ function goToUpdateTab() {
   tabs.forEach(t => {
     if (t.textContent.trim() === 'System') {
       switchTab('system', t);
-      // smooth scroll to the banner
-      document.getElementById('ota-update-banner').scrollIntoView({ behavior: 'smooth' });
+      // The banner lives inside the firmware card; if it's collapsed the
+      // banner is display:none and scrollIntoView lands on the button row.
+      // Expand first (persist like toggleCard does), then scroll to the card.
+      const card = document.getElementById('sys-firmware');
+      if (card && card.classList.contains('collapsed')) {
+        card.classList.remove('collapsed');
+        localStorage.setItem('collapseState_sys-firmware', 'false');
+      }
+      document.getElementById('ota-update-banner').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   });
 }
 
 function triggerUpload() { document.getElementById('ota-file').click(); }
+
+async function confirmReboot(btn) {
+  if (!confirm('Reboot the device? Settings and learned data are kept; the page will be unreachable for ~10 seconds.')) return;
+  btn.disabled = true;
+  try {
+    await apiPost({ key: 'reboot_button', value: 1 });
+    showToast('✓ Reboot requested — the device will be back shortly.', false);
+  } catch(e) { showToast('✗ ' + e.message, true); btn.disabled = false; }
+}
+
 function performUpload() {
   const input = document.getElementById('ota-file');
   if (input.files.length === 0) return;
@@ -1961,20 +1615,11 @@ function performUpload() {
   xhr.send(formData);
 }
 
-let solverTabInitialized = false;
 function switchTab(viewId, btn) {
   document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + viewId).classList.add('active');
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   btn.classList.add('active');
-  if (viewId === 'solver') {
-    if (!solverTabInitialized) {
-      solverTabInitialized = true;
-      fetchOdinData(); // first open: fetch from ESP32 immediately
-    } else {
-      updateOdinCharts(); // already cached, just re-render
-    }
-  }
 }
 
 // -- CHARTS --
@@ -2276,349 +1921,8 @@ function initCharts() {
       }
     }
   });
-  
-  // --- Initialize ODIN Charts (Empty on load) ---
-  const labels72 = Array.from({length: 72}, (_, i) => {
-      const hour = i % 24;
-      return `${String(hour).padStart(2,'0')}:00`;
-  });
-  const monoFont = { family: "'JetBrains Mono'", size: 11 };
-const xAxis = { 
-      min: -0.5, 
-      max: 71.5,
-      ticks: { 
-          autoSkip: false,
-          color: function(context) {
-              if (odinDataCache && odinDataCache.operation_mode && context.tick && context.tick.value !== undefined) {
-                  const dataIndex = context.tick.value;
-                  
-                  // Force idle color if nothing is planned
-                  const expCons = odinDataCache.energy_consumption?.[dataIndex] || 0;
-                  const expProd = odinDataCache.heat_production?.[dataIndex] || 0;
-                  if (expCons === 0 && expProd === 0) return '#8295b8';
-
-                  const mode = odinDataCache.operation_mode[dataIndex];
-                  if (mode === 1) return '#ffb020'; // DHW (Yellow)
-                  if (mode === 2) return '#ff6b35'; // Heating (Orange/Red)
-                  if (mode === 3) return '#00c8ff'; // Cooling (Blue)
-              }
-              return '#8295b8'; // Default text color
-          },
-          
-          // Make active hours bold
-          font: function(context) {
-              let weight = 'normal';
-              if (odinDataCache && odinDataCache.operation_mode && context.tick && context.tick.value !== undefined) {
-                  const dataIndex = context.tick.value;
-                  
-                  // Force normal weight if nothing is planned
-                  const expCons = odinDataCache.energy_consumption?.[dataIndex] || 0;
-                  const expProd = odinDataCache.heat_production?.[dataIndex] || 0;
-                  if (expCons === 0 && expProd === 0) return { family: "'JetBrains Mono'", size: 11, weight: 'normal' };
-
-                  const mode = odinDataCache.operation_mode[dataIndex];
-                  if (mode === 1 || mode === 2 || mode === 3) weight = 'bold';
-              }
-              return { family: "'JetBrains Mono'", size: 11, weight: weight };
-          },
-          
-          maxRotation: 45,
-          minRotation: 45,
-          callback: function(val, index) {
-              // Hide odd hours on small screens for readability
-              if (window.innerWidth < 768 && index % 2 !== 0) return '';
-              return this.getLabelForValue(val);
-          }
-      }, 
-      grid: { color: '#1e2d4a' } 
-  };
-  const odinZoomConfig = {
-      limits: {
-          x: { min: -0.5, max: 71.5, minRange: 2 }
-      },
-      pan: {
-          enabled: true, mode: 'x', threshold: 10,
-          onPanStart({chart, event}) {
-              if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) return false;
-              chart.options.plugins.tooltip.enabled = false;
-              chart.tooltip.setActiveElements([], {x: 0, y: 0});
-              chart.update('none');
-          },
-          onPan({chart}) { odinZoomed = true; syncOdinScales(chart); },
-          onPanComplete({chart}) {
-              chart.options.plugins.tooltip.enabled = true;
-              chart.update('none');
-              syncOdinScales(chart);
-          }
-      },
-      zoom: {
-          wheel: { enabled: true, speed: 0.05, modifierKey: 'ctrl' }, pinch: { enabled: true }, mode: 'x',
-          onZoomStart({chart}) {
-              chart.options.plugins.tooltip.enabled = false;
-              chart.tooltip.setActiveElements([], {x: 0, y: 0}); 
-              chart.update('none');
-          },
-          onZoom({chart}) { odinZoomed = true; showOdinResetButton(); syncOdinScales(chart); },
-          onZoomComplete({chart}) {
-              chart.options.plugins.tooltip.enabled = true;
-              chart.update('none');
-              syncOdinScales(chart);
-          }
-      }
-  };
-
-  const getMode = (ctx) => {
-      if (ctx.dataIndex !== undefined && odinDataCache && odinDataCache.operation_mode) return odinDataCache.operation_mode[ctx.dataIndex];
-      if (typeof latestState !== 'undefined' && latestState.operation_mode !== undefined) return latestState.operation_mode;
-      return 2;
-  };
-
-
-  odinConsChart = new Chart(document.getElementById('odinConsChart').getContext('2d'), {
-      type: 'bar',
-      data: {
-          labels: labels72,
-          datasets: [
-              { label: 'Expected (Grid)',  data: [], backgroundColor: 'rgba(255,176,32,0.35)',  borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
-              { label: 'Expected (Solar)', data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)',  borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 0' },
-              { label: 'Actual Climate',   data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
-              { label: 'Actual DHW',       data: [], backgroundColor: 'rgba(255,107,53,0.35)',  borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' },
-              { label: 'Actual Standby',   data: [], backgroundColor: 'rgba(74,90,122,0.35)',   borderColor: '#4a5a7a', borderWidth: 1, stack: 'Stack 1' }
-          ]
-      },
-      options: {
-          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: {
-              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
-              zoom: odinZoomConfig
-          },
-          scales: {
-              x: { ...xAxis, stacked: true },
-              y: { stacked: true, ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' }, title: { display: true, text: 'kWh', color: '#8295b8' } }
-          }
-      }
-  });
-
-  odinProdChart = new Chart(document.getElementById('odinProdChart').getContext('2d'), {
-      type: 'bar',
-      data: {
-          labels: labels72,
-          datasets: [
-              { label: 'Expected Climate',  data: [], backgroundColor: 'rgba(255,176,32,0.35)', borderColor: '#ffb020', borderWidth: 1, stack: 'Stack 0' },
-              { label: 'Expected Solar',    data: [], backgroundColor: 'rgba(144, 213, 255, 0.35)', borderColor: '#57B9FF', borderWidth: 1, stack: 'Stack 2' },
-              { label: 'Actual Climate',    data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1, stack: 'Stack 1' },
-              { label: 'Actual DHW',        data: [], backgroundColor: 'rgba(255,107,53,0.35)', borderColor: '#ff6b35', borderWidth: 1, stack: 'Stack 1' }
-          ]
-      },
-      options: {
-          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: {
-              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
-              zoom: odinZoomConfig
-          },
-          scales: {
-              x: { ...xAxis, stacked: true },
-              y: { stacked: true, ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' }, title: { display: true, text: 'kWh', color: '#8295b8' } }
-          }
-      }
-  });
-
-  odinCostChart = new Chart(document.getElementById('odinCostChart').getContext('2d'), {
-      type: 'bar',
-      data: {
-          labels: labels72,
-          datasets: [
-              { label: 'Expected', data: [], backgroundColor: 'rgba(255,176,32,0.35)', borderColor: '#ffb020', borderWidth: 1 },
-              { label: 'Actual',   data: [], backgroundColor: 'rgba(127,255,127,0.35)', borderColor: '#7fff7f', borderWidth: 1 }
-          ]
-      },
-      options: {
-          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: {
-              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
-              zoom: odinZoomConfig
-          },
-          scales: {
-              x: xAxis,
-              y: { ticks: { color: '#8295b8', font: monoFont }, grid: { color: '#1e2d4a' },
-                   title: { display: true, text: '€', color: '#8295b8' } }
-          }
-      }
-  });
-
-  odinTempChart = new Chart(document.getElementById('odinTempChart').getContext('2d'), {
-      type: 'line',
-      plugins: [odinModeBandsPlugin],
-      data: {
-          labels: labels72,
-          datasets: [
-              // [0] Band top — fill down to dataset[1]
-              { label: 'Schedule Max (°C)',
-                data: [], borderColor: 'rgba(99,179,237,0.35)', borderWidth: 1, borderDash: [3,3],
-                backgroundColor: 'rgba(99,179,237,0.10)', fill: '+1',
-                tension: 0.2, pointRadius: 0, spanGaps: true },
-              // [1] Band bottom — no fill of its own
-              { label: 'Schedule Min (°C)',
-                data: [], borderColor: 'rgba(99,179,237,0.35)', borderWidth: 1, borderDash: [3,3],
-                backgroundColor: 'transparent', fill: false,
-                tension: 0.2, pointRadius: 0, spanGaps: true },
-              // [2] Base setpoint
-              { label: 'Scheduled',
-                data: [], borderColor: '#63b3ed', borderWidth: 1.5, borderDash: [6,3],
-                backgroundColor: 'transparent', fill: false,
-                tension: 0.2, pointRadius: 0, spanGaps: true },
-              // [3] Solver expected room temp
-              { label: 'Expected',
-                data: [], borderColor: '#ffb020', borderDash: [5,5], borderWidth: 2,
-                backgroundColor: 'transparent', fill: false,
-                tension: 0.3, pointRadius: 0, spanGaps: true },
-              // [4] Actual measured room temp
-              { label: 'Actual',
-                data: [], borderColor: '#ffff00', borderWidth: 2,
-                backgroundColor: 'transparent', fill: false,
-                tension: 0.3, pointRadius: 2, spanGaps: false },
-              // [5] Solver expected room temp — zone 2 (same colour as the
-              // monitor's Z2 Target line; shown only when the pump has two zones)
-              { label: 'Expected Z2',
-                data: [], borderColor: '#c084fc', borderDash: [5,5], borderWidth: 2,
-                backgroundColor: 'transparent', fill: false,
-                tension: 0.3, pointRadius: 0, spanGaps: true, hidden: true },
-              // [6] Actual measured room temp — zone 2 (same colour as the
-              // monitor's Z2 Current line)
-              { label: 'Actual Z2',
-                data: [], borderColor: '#ff69b4', borderWidth: 2,
-                backgroundColor: 'transparent', fill: false,
-                tension: 0.3, pointRadius: 2, spanGaps: false, hidden: true },
-              // Invisible line spanning every hour so the tooltip always has something to
-              // latch onto — including hours where none of the visible series has a point
-              // yet — which is what lets the decision-reason footer fire on every hour.
-              // Excluded from the tooltip body and has no legend entry (legend is off here).
-              { label: '_reasonHover', data: labels72.map(() => 0), borderWidth: 0,
-                pointRadius: 0, pointHitRadius: 12, fill: false, tension: 0, spanGaps: true,
-                order: 99, yAxisID: 'reasonAxis' }
-          ]
-      },
-      options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          // Use nearest on the X axis so it doesn't mix up the 15m and 1h data indexes
-          interaction: { mode: 'nearest', axis: 'x', intersect: false },
-          plugins: {
-              // Hide the default Chart.js legend boxes
-              legend: {
-                  display: false
-              },
-              zoom: odinZoomConfig,
-              tooltip: {
-                  filter: (item) => item.dataset.label !== '_reasonHover',
-                  callbacks: {
-                      title: function(ctx) {
-                          if (!ctx || !ctx.length) return '';
-                          const index = ctx[0].dataIndex;
-                          const label = ctx[0].chart.data.labels[index] || '';
-                          const isLive = (typeof solverMode !== 'undefined' && solverMode === 'live');
-                          const minutes = isLive ? getOdinHourMinutesAt(index)
-                              : (typeof hourlyHistory !== 'undefined' ? getOdinHourMinutesForRecord(hourlyHistory[index]) : null);
-                          const summary = summarizeOdinHourModes(minutes);
-                          const lines = summary ? [label, 'Actual: ' + summary] : [label];
-                          const r = reasonAt(index);
-                          if (r && r.label && r.label !== '—') {
-                              lines.push('Reason: ' + r.label);
-                          }
-                          return lines;
-                      },
-                  }
-              }
-          },
-          scales: {
-              x: xAxis,
-              y: {
-                  // Headroom above the highest line so the actual-mode strip
-                  // (drawn by odinModeBandsPlugin) always has clear space and
-                  // never touches the schedule-max band.
-                  grace: '12%',
-                  ticks: { color: '#8295b8', font: monoFont },
-                  grid: { color: '#1e2d4a' },
-                  title: { display: true, text: '°C', color: '#8295b8' }
-              },
-              // Hidden axis for the invisible _reasonHover dataset so its flat 0-line
-              // never influences the visible °C axis's autoscale range.
-              reasonAxis: { display: false, min: 0, max: 1 }
-          }
-      }
-  });
-
-  odinBattChart = new Chart(document.getElementById('odinBattChart').getContext('2d'), {
-      type: 'bar',
-      data: {
-          labels: labels72,
-          datasets: [{ label: 'Battery Discharge (kWh)', data: [], backgroundColor: 'rgba(251,191,36,0.45)', borderColor: '#fbbf24', borderWidth: 1 }]
-      },
-      options: {
-          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: {
-              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
-              zoom: odinZoomConfig
-          },
-          scales: {
-              x: xAxis,
-              y: { ticks: { color: '#fbbf24', font: monoFont }, grid: { color: '#1e2d4a' },
-                   title: { display: true, text: 'kWh', color: '#fbbf24' }, min: 0 }
-          }
-      }
-  });
-
-  odinPriceChart = new Chart(document.getElementById('odinPriceChart').getContext('2d'), {
-      type: 'bar',
-      data: {
-          labels: labels72,
-          datasets: [{ label: 'Price (EUR/kWh)', data: [], backgroundColor: 'rgba(129,140,248,0.45)', borderColor: '#818cf8', borderWidth: 1 }]
-      },
-      options: {
-          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: {
-              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
-              zoom: odinZoomConfig
-          },
-          scales: {
-              x: xAxis,
-              y: { ticks: { color: '#818cf8', font: monoFont }, grid: { color: '#1e2d4a' },
-                   title: { display: true, text: 'Currency/kWh', color: '#818cf8' } }
-          }
-      }
-  });
-
-  odinWeatherChart = new Chart(document.getElementById('odinWeatherChart').getContext('2d'), {
-      type: 'line',
-      data: {
-          labels: labels72,
-          datasets: [
-              { label: 'Ambient Temp (°C)', data: [], borderColor: '#38bdf8', borderWidth: 2,
-                backgroundColor: 'transparent', fill: false, tension: 0.3, pointRadius: 0, spanGaps: true,
-                yAxisID: 'yTemp' },
-              { label: 'Solar Irradiance (W/m²)', data: [], borderColor: '#fde68a', borderWidth: 2,
-                backgroundColor: 'rgba(253,230,138,0.12)', fill: true, tension: 0.3, pointRadius: 0, spanGaps: true,
-                yAxisID: 'ySolar' }
-          ]
-      },
-      options: {
-          responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-          plugins: {
-              legend: { display: true, position: 'top', labels: { color: '#8295b8', font: monoFont, usePointStyle: true } },
-              zoom: odinZoomConfig
-          },
-          scales: {
-              x: xAxis,
-              yTemp:  { position: 'left',  ticks: { color: '#38bdf8', font: monoFont }, grid: { color: '#1e2d4a' },
-                        title: { display: true, text: '°C', color: '#38bdf8' } },
-              ySolar: { position: 'right', ticks: { color: '#fde68a', font: monoFont }, grid: { drawOnChartArea: false },
-                        title: { display: true, text: 'W/m²', color: '#fde68a' }, min: 0 }
-          }
-      }
-  });
 }
 let monitorMode = 'live';
-let solverMode = 'live';
 
 function setMonitorMode(mode) {
     monitorMode = mode;
@@ -2661,778 +1965,6 @@ async function onMonitorDateChanged() {
     
     await loadServerHistory(fromTs, toTs, 'min');
 }
-
-function handleSolverToggle(checkbox) {
-  if (checkbox.checked) {
-    const aaToggle = document.getElementById('sw-aa');
-    const aaCard = document.getElementById('card-aa');
-    
-    const isAaEnabled = aaToggle && aaToggle.checked;
-    // AA is considered greyed out if it has the 'disabled-box' class
-    const isAaGreyedOut = aaCard && aaCard.classList.contains('disabled-box');
-
-    if (!isAaEnabled) {
-      checkbox.checked = false; // Revert the UI toggle state
-      showToast('Cannot enable Solver: Auto Adaptive control is turned off.', true);
-      return;
-    }
-
-    if (isAaGreyedOut) {
-      checkbox.checked = false;
-      showToast('Cannot enable Solver: Auto Adaptive is currently inactive. Please set the Operating Mode to a correct mode.', true);
-      return;
-    }
-  }
-
-  sendSwitch('use_dynamic_cost_solver', checkbox.checked);
-}
-
-function setSolverMode(mode) {
-    solverMode = mode;
-    const btnLive = document.getElementById('solver-btn-live');
-    const btnHist = document.getElementById('solver-btn-hist');
-    const calCont = document.getElementById('solver-calendar-container');
-    const battCard = document.getElementById('odin-batt-card');
-
-    if (mode === 'live') {
-        btnLive.classList.add('active'); btnHist.classList.remove('active');
-        calCont.style.display = 'none';
-        if (battCard) battCard.style.display = 'block';
-        
-        // Reset zoom before renderOdinLive so it starts with a clean slate.
-        odinZoomed = false;
-        document.getElementById('btn-reset-zoom-odin').style.display = 'none';
-        [odinConsChart, odinProdChart, odinCostChart, odinTempChart,
-         odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-            if (c) c.resetZoom('none');
-        });
-
-        loadServerHistory(null, null, 'min').then(() => {
-            if (solverMode === 'live') updateOdinCharts();
-        });
-        renderOdinLive();
-        fetchOdinData();
-    } else {
-        btnLive.classList.remove('active'); btnHist.classList.add('active');
-        calCont.style.display = 'flex';
-        if (battCard) battCard.style.display = 'none';
-        const dateInput = document.getElementById('solver-hist-date');
-        if (!dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
-        onSolverDateChanged();
-    }
-}
-
-async function onSolverDateChanged() {
-    if (solverMode !== 'history') return;
-    const dateVal = document.getElementById('solver-hist-date').value;
-    const rangeDays = parseInt(document.getElementById('solver-hist-range').value) || 1;
-    if (!dateVal) return;
-
-    const startDate = new Date(dateVal + 'T00:00:00Z');
-    // Shift the fetch window by 30 mins (+1800s).
-    // This skips the 00:00 record (which belongs to 23:00 yesterday)
-    // and safely grabs up to 00:30 tomorrow (which belongs to 23:00 today).
-    const fromTs = Math.floor(startDate.getTime() / 1000) + 1800;
-    const toTs = fromTs + (rangeDays * 24 * 60 * 60);
-    
-    [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
-     odinPriceChart, odinWeatherChart, odinBattChart].forEach(c => {
-        if (c) { 
-            c.resetZoom('none');
-            c.options.scales.x.min = null; c.options.scales.x.max = null; 
-            c.data.labels = []; c.data.datasets.forEach(d => d.data = []); 
-            c.update('none'); 
-        }
-    });
-    
-    await loadServerHistory(fromTs, toTs, 'hour');
-}
-/**
- * Custom historical layout rendering engine that replaces the 72h fixed slots with an elastic timeline.
- */
-function renderOdinHistory() {
-    if (!hourlyHistory || hourlyHistory.length === 0) {
-      [odinConsChart, odinProdChart, odinCostChart, odinTempChart, odinPriceChart, odinWeatherChart].forEach(c => {
-          if (c) { 
-              c.data.labels = []; 
-              c.data.datasets.forEach(d => d.data = []); 
-              c.update('none'); 
-          }
-      });
-      const battCard = document.getElementById('odin-batt-card');
-      if (battCard) battCard.style.display = 'none';
-      return;
-    }
-
-    // 1. Generate multi-day descriptive X-axis labels from Unix indices (in English)
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const labels = hourlyHistory.map(r => {
-        // Shift by 30 mins backwards to correctly label the hour block it represents
-        // (Hourly records are saved slightly after the hour, e.g. 16:00:40 for the 15:00 block)
-        const d = new Date(r.timestamp - 30 * 60 * 1000);
-        return `${days[d.getUTCDay()]} ${String(d.getUTCHours()).padStart(2,'0')}:00`;
-    });
-    
-    // Flexible configurations without constraints, matching your exact typography
-    const dynamicXAxis = getOdinXAxisConfig(false);
-    [odinConsChart, odinProdChart, odinCostChart, odinTempChart, odinPriceChart, odinWeatherChart].forEach(c => {
-        if (c) {
-            c.resetZoom('none');
-            c.options.scales.x.min = null;
-            c.options.scales.x.max = null;
-        }
-    });
-
-    const expConsGrid = [];
-    const expConsSolar = [];
-    const expProdSolar = [];
-
-    hourlyHistory.forEach(r => {
-        const expected_solar_kwh = r.exp_solar_kwh ?? 0;
-        expProdSolar.push(parseFloat(expected_solar_kwh.toFixed(2)));
-
-        if (r.exp_cons !== null) {
-            const solar_used = Math.min(r.exp_cons, expected_solar_kwh);
-            const grid_used = r.exp_cons - solar_used;
-            expConsSolar.push(parseFloat(solar_used.toFixed(2)));
-            expConsGrid.push(parseFloat(grid_used.toFixed(2)));
-        } else {
-            expConsSolar.push(null);
-            expConsGrid.push(null);
-        }
-    });
-
-    // --- 2. Consumption Datasets Mapping ---
-    odinConsChart.data.labels = labels;
-    odinConsChart.options.scales.x = dynamicXAxis;
-    odinConsChart.data.datasets[0].data = expConsGrid;
-    odinConsChart.data.datasets[1].data = expConsSolar;
-    
-    odinConsChart.data.datasets[2].data = hourlyHistory.map(r => {
-        if (r.total_cons === null) return null;
-        
-        const dhw = r.actual_dhw_cons ?? 0;
-        const standby = r.actual_standby_cons ?? 0;
-        return parseFloat(Math.max(0, r.total_cons - dhw - standby).toFixed(2));
-    }); 
-    
-    odinConsChart.data.datasets[3].data = hourlyHistory.map(r => r.actual_dhw_cons ?? null);
-    odinConsChart.data.datasets[4].data = hourlyHistory.map(r => r.actual_standby_cons ?? null);
-    odinConsChart.update('none');
-
-    // --- 3. Thermal Production Datasets Mapping ---
-    odinProdChart.data.labels = labels;
-    odinProdChart.options.scales.x = dynamicXAxis;
-    odinProdChart.data.datasets[0].data = hourlyHistory.map(r => r.exp_prod);
-    odinProdChart.data.datasets[1].data = expProdSolar; 
-    
-    odinProdChart.data.datasets[2].data = hourlyHistory.map(r => {
-        if (r.total_prod === null) return null;
-        
-        const dhw = r.actual_dhw_prod ?? 0;
-        return parseFloat(Math.max(0, r.total_prod - dhw).toFixed(2));
-    });
-    odinProdChart.data.datasets[3].data = hourlyHistory.map(r => r.actual_dhw_prod ?? null);
-    odinProdChart.update('none');
-
-    // --- 4. Cost Evaluation Mapping ---
-    const currSym = typeof getCurrencySymbol === 'function' ? getCurrencySymbol(odinDataCache?.last_run?.bidding_zone) : '€';
-    odinCostChart.data.labels = labels;
-    odinCostChart.options.scales.x = dynamicXAxis;
-    odinCostChart.options.scales.y.title.text = currSym;
-    odinCostChart.data.datasets[0].data = hourlyHistory.map(r => r.odin_cost);
-    odinCostChart.data.datasets[1].data = hourlyHistory.map(r => {
-        if (r.total_cons === null || r.price === null) return null;
-        const net_cons = Math.max(0, r.total_cons - (r.exp_solar_kwh ?? 0));
-        return parseFloat((net_cons * r.price).toFixed(4));
-    });
-    odinCostChart.update('none');
-
-    // --- 5. Temperature Envelope Bounds Mapping ---
-    odinTempChart.data.labels = labels;
-    odinTempChart.options.scales.x = dynamicXAxis;
-    odinTempChart.data.datasets[0].data = hourlyHistory.map(r => r.sched_max);
-    odinTempChart.data.datasets[1].data = hourlyHistory.map(r => r.sched_min);
-    odinTempChart.data.datasets[2].data = hourlyHistory.map(r => r.sched_base);
-    odinTempChart.data.datasets[3].data = hourlyHistory.map(r => r.exp_room_temp);
-    odinTempChart.data.datasets[4].data = hourlyHistory.map(r => r.actual_room_temp);
-    // Zone-2 room temps. Older hourly records predate the z2 columns and parse to
-    // null, so hide the lines only when no z2 sample exists in the loaded range.
-    const z2ExpArr = hourlyHistory.map(r => r.exp_room_temp_z2 ?? null);
-    const z2ActArr = hourlyHistory.map(r => r.actual_room_temp_z2 ?? null);
-    const hasZ2 = z2ExpArr.some(v => v !== null) || z2ActArr.some(v => v !== null);
-    odinTempChart.data.datasets[5].data = z2ExpArr;
-    odinTempChart.data.datasets[5].hidden = !hasZ2;
-    odinTempChart.data.datasets[6].data = z2ActArr;
-    odinTempChart.data.datasets[6].hidden = !hasZ2;
-    ['leg-odin-z2-exp', 'leg-odin-z2-act'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = hasZ2 ? 'flex' : 'none';
-    });
-    odinTempChart.update('none');
-    
-    // --- 6. Grid Tariffs Mapping ---
-    odinPriceChart.data.labels = labels;
-    odinPriceChart.options.scales.x = dynamicXAxis;
-    odinPriceChart.options.scales.y.title.text = currSym + '/kWh';
-    odinPriceChart.data.datasets[0].label = 'Price (' + currSym + '/kWh)';
-    odinPriceChart.data.datasets[0].data = hourlyHistory.map(r => r.price);
-    odinPriceChart.update('none');
-
-    // --- 7. Irradiance & Climate Mapping ---
-    odinWeatherChart.data.labels = labels;
-    odinWeatherChart.options.scales.x = dynamicXAxis;
-    odinWeatherChart.data.datasets[0].data = hourlyHistory.map(r => r.weather);
-    odinWeatherChart.data.datasets[1].data = hourlyHistory.map(r => r.odin_solar);
-    odinWeatherChart.update('none');
-
-    // Completely hide live solver simulation cards from history mode
-    const battCard = document.getElementById('odin-batt-card');
-    if (battCard) battCard.style.display = 'none';
-    updateOdinTotals();
-}
-
-// ── Operating-mode helpers (shared by axis ticks + temp-chart mode bands) ──
-// Extracts the solver's planned operation mode for a slot, from the live
-// 72h cache or the elastic history array. Returns 0 (idle) when nothing
-// is planned, null when unknown.
-function getOdinOpModeAt(idx, isLive) {
-    if (isLive && odinDataCache && odinDataCache.operation_mode) {
-        // left overs of previous hours, register as idle
-        const expCons = odinDataCache.energy_consumption?.[idx] || 0;
-        const expProd = odinDataCache.heat_production?.[idx] || 0;
-        if (expCons === 0 && expProd === 0) return 0; // Return Idle
-
-        return odinDataCache.operation_mode[idx];
-    } else if (!isLive && typeof hourlyHistory !== 'undefined' && hourlyHistory[idx]) {
-        // Check history array for planned activity
-        const r = hourlyHistory[idx];
-        const expCons = r.exp_cons || 0;
-        const expProd = r.exp_prod || 0;
-        if (expCons === 0 && expProd === 0) return 0; // Return Idle
-
-        return r.op_mode;
-    }
-    return null;
-}
-
-const ODIN_MODE_NAMES = { 0: 'Idle', 1: 'DHW', 2: 'Heating', 3: 'Cooling', 5: 'Frost Protect', 6: 'Legionella' };
-
-function getOdinModeRGB(mode) {
-    if (mode === 1 || mode === 6) return '255,176,32';  // DHW / Legionella (Yellow)
-    if (mode === 2 || mode === 5) return '255,107,53';  // Heating / Frost (Orange)
-    if (mode === 3) return '0,200,255';                 // Cooling (Blue)
-    return null;                                        // Idle / unknown → no band
-}
-
-// ── Actual (executed) operating mode per hour ─────────────────────────────
-// Aggregated client-side from the minute records: flags bits 6-9 carry the
-// Ecodan operating mode. No firmware change needed — coverage is limited to the
-// minute-record retention window. Each map value is an Int8Array(60): the mode
-// per minute of that hour (-1 = no sample, 0 = idle, 1..7 = a real mode).
-// Key = local-baked hour index (floor(localEpochSec / 3600)).
-let actualModeByHourKey = new Map();
-let lastActualModeFetch = 0;
-
-async function fetchActualModesRange(fromTs, toTs) {
-    try {
-        const res = await fetch('/dashboard/history?type=min&from=' + fromTs + '&to=' + toTs);
-        if (!res.ok) return false;
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) return false;
-
-        // Same uptime-fallback alignment as loadServerHistory
-        const serverLastTs = data[data.length - 1][0] * 1000;
-        let tOff = 0;
-        if (serverLastTs < 1577836800000) {
-            tOff = (Date.now() - (new Date().getTimezoneOffset() * 60000)) - serverLastTs;
-        }
-
-        // Build a per-MINUTE mode timeline for each hour block (Ecodan operation
-        // mode = flags bits 6-9), filling forward across sampling gaps. Keeping
-        // the full minute breakdown (not just the dominant mode) lets the strip
-        // be coloured proportionally: 10 min cooling then idle draws as 10/60
-        // blue + blank, and a DHW→cooling transition shows both parts in order.
-        const perHour = new Map(); // hourKey -> [{min, mode}, ...]
-        data.forEach(row => {
-            const flags = row[10];
-            const mode = (flags >> 6) & 0x0F;
-            if (mode > 7) return; // guard invalid; idle (mode 0) is kept
-            const tsSec = Math.floor((row[0] * 1000 + tOff) / 1000);
-            const key = Math.floor(tsSec / 3600);            // local-baked hour index
-            const minOfHour = Math.floor((tsSec % 3600) / 60); // 0..59
-            let arr = perHour.get(key);
-            if (!arr) { arr = []; perHour.set(key, arr); }
-            arr.push({ min: minOfHour, mode });
-        });
-
-        perHour.forEach((samples, key) => {
-            samples.sort((a, b) => a.min - b.min);
-            const minutes = new Int8Array(60).fill(-1); // -1 = no sample
-            for (let i = 0; i < samples.length; i++) {
-                const start = samples[i].min;
-                const end = (i + 1 < samples.length) ? samples[i + 1].min : 60;
-                for (let m = start; m < end && m < 60; m++) minutes[m] = samples[i].mode;
-            }
-            // Keep the hour only if it actually ran a real (non-idle) mode.
-            let hasMode = false;
-            for (let m = 0; m < 60; m++) if (minutes[m] > 0) { hasMode = true; break; }
-            if (hasMode) actualModeByHourKey.set(key, minutes);
-            else actualModeByHourKey.delete(key); // idle-only hour → clear stale strip
-        });
-        return true;
-    } catch (e) { return false; /* non-critical: bands simply stay empty */ }
-}
-
-// Live view refresh: last 30h covers the visible yesterday/today slots.
-// The ESP stores timestamps in local-baked epoch (real UTC + tz offset), so the
-// fetch window MUST be built in that same epoch. Using bare Date.now()/1000
-// (real UTC) makes the upper bound tz-offset hours too low, so the most recent
-// hours (e.g. the current and previous hour in CEST) fall outside the range and
-// never get fetched — the strip then looks like it "lost" the last hours.
-async function refreshOdinActualModes(force = false) {
-    if (!force && Date.now() - lastActualModeFetch < 5 * 60 * 1000) return;
-    lastActualModeFetch = Date.now();
-    const nowLocal = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 1000);
-    const ok = await fetchActualModesRange(nowLocal - 30 * 3600, nowLocal + 3600);
-    if (ok && odinTempChart && solverMode === 'live') odinTempChart.update('none');
-}
-
-// Per-minute mode timeline (Int8Array(60)) for a live-window slot, or null when
-// the hour is in the future or ran no real mode. Device timestamps are
-// local-baked (the dashboard reads them with getUTCHours), so hour keys are
-// local-wall-clock hour indices; build the lookup key on that same basis.
-function getOdinHourMinutesAt(idx) {
-    const nowIdx = 24 + new Date().getHours();
-    if (idx > nowIdx) return null; // future hour
-    const nowLocal = Date.now() - (new Date().getTimezoneOffset() * 60000);
-    const todayMid = Math.floor(nowLocal / 86400000) * 86400000;
-    const key = Math.floor((todayMid + (idx - 24) * 3600000) / 3600000);
-    const base = actualModeByHourKey.get(key) || null;
-
-    if (idx !== nowIdx) return base;
-
-    // Current hour: overlay the live operating mode from the last covered minute
-    // up to "now", so the strip fills toward the present between fetches.
-    const curMin = new Date().getMinutes();
-    const live = (typeof latestState !== 'undefined' && latestState && latestState.operation_mode != null)
-        ? latestState.operation_mode : null;
-    const out = base ? Int8Array.from(base) : new Int8Array(60).fill(-1);
-    if (live != null) {
-        let last = -1;
-        for (let m = 0; m < 60; m++) if (out[m] !== -1) last = m;
-        const from = (last === -1) ? curMin : last + 1; // no history yet → just the live tick
-        for (let m = from; m <= curMin && m < 60; m++) out[m] = live;
-    }
-    let any = false;
-    for (let m = 0; m < 60; m++) if (out[m] > 0) { any = true; break; }
-    return any ? out : null;
-}
-
-// Per-minute timeline for an elastic-history record (block start = ts - 30 min).
-function getOdinHourMinutesForRecord(r) {
-    if (!r) return null;
-    return actualModeByHourKey.get(Math.floor((r.timestamp - 1800000) / 3600000)) || null;
-}
-
-// Chronological "DHW → Cooling" style summary of the modes in an hour timeline.
-function summarizeOdinHourModes(minutes) {
-    if (!minutes) return null;
-    const seq = [];
-    for (let m = 0; m < 60; m++) {
-        const mode = minutes[m];
-        if (mode > 0 && seq[seq.length - 1] !== mode) seq.push(mode);
-    }
-    const names = seq.map(m => ODIN_MODE_NAMES[m]).filter(Boolean);
-    return names.length ? names.join(' → ') : null;
-}
-
-// Inline Chart.js plugin, registered on odinTempChart only:
-// A thin strip runs along the very top of the plot (in the y-axis headroom
-// created by scales.y.grace), coloured by the ACTUAL mode that ran — PER MINUTE
-// within each hour. So 10 min of cooling in an hour paints the first 10/60 of
-// that hour's width blue and leaves the rest blank; a DHW block followed by
-// cooling shows both segments in chronological order. Planned mode is shown via
-// the x-axis tick colours, not repeated here.
-const odinModeBandsPlugin = {
-    id: 'odinModeBands',
-
-    afterDatasetsDraw(chart) {
-        const { ctx, chartArea, scales } = chart;
-        if (!chartArea || !scales.x || !scales.y) return;
-
-        const isLive = (typeof solverMode !== 'undefined' && solverMode === 'live');
-        const count = isLive ? 72
-            : (typeof hourlyHistory !== 'undefined' && hourlyHistory ? hourlyHistory.length : 0);
-        if (!count) return;
-
-        const STRIP_H = 5;
-        const TOP_MARGIN = 2; // px below the plot's top edge
-        const stripY = chartArea.top + TOP_MARGIN;
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
-        ctx.clip();
-
-        for (let i = 0; i < count; i++) {
-            const left = scales.x.getPixelForValue(i - 0.5);
-            const right = scales.x.getPixelForValue(i + 0.5);
-            if (right < chartArea.left || left > chartArea.right) continue;
-
-            const minutes = isLive ? getOdinHourMinutesAt(i)
-                                   : getOdinHourMinutesForRecord(hourlyHistory[i]);
-            if (!minutes) continue;
-
-            const w = right - left;
-            // Merge contiguous same-mode minutes into runs and paint the coloured ones.
-            let m0 = 0;
-            while (m0 < 60) {
-                const mode = minutes[m0];
-                let m1 = m0 + 1;
-                while (m1 < 60 && minutes[m1] === mode) m1++;
-                const rgb = getOdinModeRGB(mode); // null for -1/idle/uncoloured modes
-                if (rgb) {
-                    const x0 = left + (m0 / 60) * w;
-                    const x1 = left + (m1 / 60) * w;
-                    ctx.fillStyle = `rgba(${rgb},0.9)`;
-                    ctx.fillRect(x0, stripY, Math.max(1, x1 - x0), STRIP_H);
-                }
-                m0 = m1;
-            }
-        }
-        ctx.restore();
-    }
-};
-
-function getOdinXAxisConfig(isLive) {
-    // Helper function to extract the operation mode depending on the active data source
-    const getOpMode = (ctx) => {
-        if (!ctx.tick || ctx.tick.value === undefined) return null;
-        return getOdinOpModeAt(ctx.tick.value, isLive);
-    };
-
-    return {
-        min: isLive ? -0.5 : null,
-        max: isLive ? 71.5 : null,
-        ticks: {
-            autoSkip: !isLive, // Only auto-skip ticks on the elastic history timeline
-            maxTicksLimit: 24,
-            maxRotation: 45,
-            minRotation: 45,
-            color: function(context) {
-                const mode = getOpMode(context);
-                if (mode === 1 || mode === 6) return '#ffb020'; // DHW / Legionella (Yellow)
-                if (mode === 2 || mode === 5) return '#ff6b35'; // Heating / Frost (Orange)
-                if (mode === 3) return '#00c8ff';               // Cooling (Blue)
-                return '#8295b8';                               // Default monitor tab text color
-            },
-            font: function(context) {
-                const mode = getOpMode(context);
-                const isBold = (mode === 1 || mode === 2 || mode === 3 || mode === 5 || mode === 6);
-                return { 
-                    family: "'JetBrains Mono', monospace", 
-                    size: 10, 
-                    weight: isBold ? 'bold' : 'normal' 
-                };
-            },
-            callback: function(val, index) {
-                // Hide odd hours on small mobile screens in live view to prevent crowding
-                if (isLive && window.innerWidth < 768 && index % 2 !== 0) return '';
-                return this.getLabelForValue(val);
-            }
-        },
-        grid: { color: '#1e2d4a' }
-    };
-}
-
-function updateOdinCharts() {
-    if (!odinConsChart) return;
-    if (solverMode === 'live') {
-        renderOdinLive(); 
-    } else {
-        renderOdinHistory(); 
-    }
-}
-
-function renderOdinLive() {
-    if (!odinConsChart || !odinCostChart || !odinTempChart || !odinBattChart || !odinPriceChart || !odinWeatherChart || !odinProdChart) return;
-
-    const labels72 = Array.from({length: 72}, (_, i) => {
-        const hour = i % 24;
-        return `${String(hour).padStart(2,'0')}:00`;
-    });
-    
-    const staticXAxis = getOdinXAxisConfig(true);
-
-    [odinConsChart, odinProdChart, odinCostChart, odinTempChart, odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-        if (c) {
-            c.data.labels = labels72;
-            if (!odinZoomed) {
-                c.options.scales.x = { ...staticXAxis };
-                c.options.scales.x.min = 23.5;
-                c.options.scales.x.max = 47.5;
-            }
-        }
-    });
-
-    const rawNvsCons        = odinDataCache ? (odinDataCache.actual_cons          || new Array(72).fill(null)) : new Array(72).fill(null);
-    const rawNvsStandbyCons = odinDataCache ? (odinDataCache.actual_standby_cons  || new Array(72).fill(null)) : new Array(72).fill(null);
-    const rawNvsProd    = odinDataCache ? (odinDataCache.actual_prod      || new Array(72).fill(null)) : new Array(72).fill(null);
-    const rawNvsDhwCons = odinDataCache ? (odinDataCache.actual_dhw_cons  || new Array(72).fill(null)) : new Array(72).fill(null);
-    const rawNvsDhwProd = odinDataCache ? (odinDataCache.actual_dhw_prod  || new Array(72).fill(null)) : new Array(72).fill(null);
-
-    const actualConsDhwByHour     = [...rawNvsDhwCons];
-    const actualConsStandbyByHour = [...rawNvsStandbyCons];
-    const actualProdDhwByHour     = [...rawNvsDhwProd];
-
-    const actualConsHeatByHour = rawNvsCons.map((total, idx) => {
-        if (total === null) return null;
-        const dhw = rawNvsDhwCons[idx] ?? 0;
-        const standby = rawNvsStandbyCons[idx] ?? 0;
-        return parseFloat(Math.max(0, total - dhw - standby).toFixed(2));
-    });
-
-    const actualProdHeatByHour = rawNvsProd.map((total, idx) => {
-        if (total === null) return null;
-        const dhw = rawNvsDhwProd[idx] ?? 0;
-        return parseFloat(Math.max(0, total - dhw).toFixed(2));
-    });
-
-    const actualTempByHour  = odinDataCache ? [...(odinDataCache.actual_room_temp || new Array(72).fill(null))] : new Array(72).fill(null);
-    // Zone 2: identical handling to zone 1 (server 72-slot array, then
-    // today's hours backfilled from the live per-hour first sample).
-    const actualTempZ2ByHour = odinDataCache ? [...(odinDataCache.actual_room_temp_z2 || new Array(72).fill(null))] : new Array(72).fill(null);
-
-    const currentLocalHour = new Date().getHours();
-
-    // In the 72-slot window, today occupies slots 24-47. 
-    if (history.timestamps && history.timestamps.length > 0) {
-        const hConsHeat  = new Array(24).fill(0);
-        const hConsDhw   = new Array(24).fill(0);
-        const hConsTotal = new Array(24).fill(0);
-        const hProdTotal = new Array(24).fill(0);
-        const hProdDhw   = new Array(24).fill(0);
-        const hHasData   = new Array(24).fill(false);
-        const firstTempByHour = new Array(24).fill(null);
-        const firstZ2TempByHour = new Array(24).fill(null);
-
-        let prevCons = null;
-        let prevProd = null;
-
-        for (let i = 0; i < history.timestamps.length; i++) {
-            const d = new Date(history.timestamps[i]);
-            
-            const isToday = d.getUTCFullYear() === new Date().getFullYear() &&
-                            d.getUTCMonth() === new Date().getMonth() &&
-                            d.getUTCDate() === new Date().getDate();
-            if (!isToday) continue;
-
-            const h = d.getUTCHours();
-            const mode = history.mode[i];
-
-            if (history.z1curr[i] != null && firstTempByHour[h] === null) firstTempByHour[h] = history.z1curr[i];
-            if (history.z2curr[i] != null && firstZ2TempByHour[h] === null) firstZ2TempByHour[h] = history.z2curr[i];
-
-            if (history.cons[i] !== null) {
-                if (prevCons !== null) {
-                    let delta = history.cons[i] - prevCons;
-                    if (delta >= 0 && delta < 5.0) {
-                        hHasData[h] = true;
-                        hConsTotal[h] += delta;
-                        
-                        const isRunning = history.bin_comp[i] === 1 || history.freq[i] > 0;
-                        if (isRunning) {
-                            if (mode === 'Heating' || mode === 'Cooling') hConsHeat[h] += delta;
-                            else if (mode === 'Hot Water' || mode === 'Legionella') hConsDhw[h] += delta;
-                        }
-                    }
-                }
-                prevCons = history.cons[i];
-            }
-
-            if (history.prod[i] !== null) {
-                if (prevProd !== null) {
-                    let delta = history.prod[i] - prevProd;
-                    
-                    if (delta >= 0 && delta < 5.0) {
-                        hHasData[h] = true;
-                        hProdTotal[h] += delta;
-                        
-                        const isRunning = history.bin_comp[i] === 1 || history.freq[i] > 0;
-                        if (isRunning) {
-                            if (mode === 'Hot Water' || mode === 'Legionella') hProdDhw[h] += delta;
-                        }
-                    }
-                }
-                prevProd = history.prod[i];
-            }
-        }
-
-        for (let h = 0; h < 24; h++) {
-            const idx = 24 + h; 
-            if (hHasData[h]) {
-                // --- 1. CONSUMPTION ---
-                actualConsHeatByHour[idx]    = parseFloat(hConsHeat[h].toFixed(2));
-                actualConsDhwByHour[idx]     = parseFloat(hConsDhw[h].toFixed(2));
-                actualConsStandbyByHour[idx] = parseFloat(Math.max(0, hConsTotal[h] - hConsHeat[h] - hConsDhw[h]).toFixed(2));
-                
-                // --- 2. PRODUCTION ---
-                const isCurrentHour = (h === currentLocalHour);
-                const backendTotalProd = rawNvsProd[idx];
-
-                if (!isCurrentHour && backendTotalProd !== null) {
-                    actualProdDhwByHour[idx]  = parseFloat(hProdDhw[h].toFixed(2));
-                    actualProdHeatByHour[idx] = parseFloat(Math.max(0, backendTotalProd - hProdDhw[h]).toFixed(2));
-                } else {
-                    actualProdHeatByHour[idx] = parseFloat(Math.max(0, hProdTotal[h] - hProdDhw[h]).toFixed(2));
-                    actualProdDhwByHour[idx]  = parseFloat(hProdDhw[h].toFixed(2));
-                }
-            }
-            if (firstTempByHour[h] !== null) {
-                if (h === currentLocalHour || actualTempByHour[idx] === null) {
-                    actualTempByHour[idx] = firstTempByHour[h];
-                }
-            }
-            if (firstZ2TempByHour[h] !== null) {
-                if (h === currentLocalHour || actualTempZ2ByHour[idx] === null) {
-                    actualTempZ2ByHour[idx] = firstZ2TempByHour[h];
-                }
-            }
-        }
-      }
-
-    const todayFutureStart = 24 + currentLocalHour + 1;
-    for (let s = todayFutureStart; s < 72; s++) {
-        actualConsHeatByHour[s] = null; actualConsDhwByHour[s] = null; actualConsStandbyByHour[s] = null;
-        actualProdHeatByHour[s] = null; actualProdDhwByHour[s] = null;
-        actualTempByHour[s] = null;
-        actualTempZ2ByHour[s] = null;
-    }
-
-    const expCons       = odinDataCache?.energy_consumption  ?? new Array(72).fill(null);
-    const expProd       = odinDataCache?.heat_production     ?? new Array(72).fill(null);
-    const expCost       = odinDataCache?.expected_cost       ?? new Array(72).fill(null);
-    const expTemp       = odinDataCache?.expected_begin_temp ?? new Array(72).fill(null);
-    const battDischarge = odinDataCache?.battery_discharge   ?? new Array(72).fill(0);
-    const prices        = odinDataCache?.prices              ?? new Array(72).fill(null);
-    const schedBase     = odinDataCache?.sched_base          ?? new Array(72).fill(null);
-    const schedMin      = odinDataCache?.sched_min           ?? new Array(72).fill(null);
-    const schedMax      = odinDataCache?.sched_max           ?? new Array(72).fill(null);
-    const weather       = odinDataCache?.weather             ?? new Array(72).fill(null);
-    const solar         = odinDataCache?.solar               ?? new Array(72).fill(null);
-
-    const pricesKwh     = prices.map(p => p !== null ? parseFloat((p).toFixed(5)) : null);
-
-    // The forecast for "tomorrow" (index 48+) doesn't exist yet until the next solve
-    // runs, so index 48 (tomorrow 00:00) is null right after the midnight shift.
-    // forward fill if data is unknown to handle this case
-    const fillSeam = (arr) => {
-        if (arr[48] !== null) return arr; // already has real data, nothing to do
-        const tomorrowHasAnyData = arr.slice(48, 72).some(v => v !== null);
-        if (!tomorrowHasAnyData && arr[47] !== null) arr[48] = arr[47];
-        return arr;
-    };
-    fillSeam(expTemp);
-    fillSeam(schedBase);
-    fillSeam(schedMin);
-    fillSeam(schedMax);
-    fillSeam(expCons);
-    fillSeam(expProd);
-
-    const actualCost = new Array(72).fill(null);
-    const expConsGrid = new Array(72).fill(null);
-    const expConsSolar = new Array(72).fill(null);
-    const expProdSolar = new Array(72).fill(null);
-    
-    const solarKwp = odinDataCache?.last_run?.used_solar_kwp || 0;
-
-    for (let h = 0; h < 72; h++) {
-        const sol_wm2 = solar[h] || 0;
-        const expected_solar_kwh = (sol_wm2 / 1000) * solarKwp;
-        expProdSolar[h] = parseFloat(expected_solar_kwh.toFixed(2));
-
-        let total_actual_cons = null;
-        if (actualConsHeatByHour[h] !== null || actualConsDhwByHour[h] !== null) {
-            total_actual_cons = (actualConsHeatByHour[h] || 0) + (actualConsDhwByHour[h] || 0);
-        }
-        
-        const price = prices[h];
-        if (total_actual_cons !== null && price !== null) {
-            const net_cons = Math.max(0, total_actual_cons - expected_solar_kwh);            
-            actualCost[h] = parseFloat((net_cons * price).toFixed(4));
-        }
-
-        const exp_cons = expCons[h];
-        if (exp_cons !== null) {
-            const solar_used = Math.min(exp_cons, expected_solar_kwh);
-            const grid_used = exp_cons - solar_used;
-            expConsSolar[h] = parseFloat(solar_used.toFixed(2));
-            expConsGrid[h] = parseFloat(grid_used.toFixed(2));
-        }
-    }
-
-    odinConsChart.data.datasets[0].data = expConsGrid;
-    odinConsChart.data.datasets[1].data = expConsSolar;
-    odinConsChart.data.datasets[2].data = actualConsHeatByHour;
-    odinConsChart.data.datasets[3].data = actualConsDhwByHour;
-    odinConsChart.data.datasets[4].data = actualConsStandbyByHour;
-    odinConsChart.update('none');
-    
-    odinProdChart.data.datasets[0].data = expProd;
-    odinProdChart.data.datasets[1].data = expProdSolar;
-    odinProdChart.data.datasets[2].data = actualProdHeatByHour;
-    odinProdChart.data.datasets[3].data = actualProdDhwByHour;
-    odinProdChart.update('none');
-
-    const currSym = getCurrencySymbol(odinDataCache?.last_run?.bidding_zone);
-    
-    odinCostChart.options.scales.y.title.text = currSym;
-    odinCostChart.data.datasets[0].data = expCost;
-    odinCostChart.data.datasets[1].data = actualCost;
-    odinCostChart.update('none');
-
-    odinPriceChart.options.scales.y.title.text = currSym + '/kWh';
-    odinPriceChart.data.datasets[0].label = 'Price (' + currSym + '/kWh)';
-    odinPriceChart.data.datasets[0].data = pricesKwh;
-    odinPriceChart.update('none');
-
-    odinTempChart.data.datasets[0].data = schedMax;
-    odinTempChart.data.datasets[1].data = schedMin;
-    odinTempChart.data.datasets[2].data = schedBase;
-    odinTempChart.data.datasets[3].data = expTemp;
-    odinTempChart.data.datasets[4].data = actualTempByHour;
-    // Zone 2 lines — same isZ2 rule as the rest of the UI (sensor absent => off)
-    const z2TempOn = (latestState.zone2_enabled !== undefined) ? latestState.zone2_enabled : true;
-    odinTempChart.data.datasets[5].hidden = !z2TempOn;
-    odinTempChart.data.datasets[6].hidden = !z2TempOn;
-    const expTempZ2     = odinDataCache?.expected_begin_temp_z2 ?? new Array(72).fill(null);
-    fillSeam(expTempZ2);
-    odinTempChart.data.datasets[5].data = expTempZ2;
-    odinTempChart.data.datasets[6].data = actualTempZ2ByHour;
-    ['leg-odin-z2-exp', 'leg-odin-z2-act'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = z2TempOn ? 'flex' : 'none';
-    });
-    odinTempChart.update('none');
-
-    const hasBatt = (odinDataCache?.last_run?.used_battery_soc_kwh || 0) > 0;
-    const battCard = document.getElementById('odin-batt-card');
-    if (battCard) battCard.style.display = hasBatt ? '' : 'none';
-    odinBattChart.data.datasets[0].data = battDischarge;
-    odinBattChart.update('none');
-
-    odinWeatherChart.data.datasets[0].data = weather;
-    odinWeatherChart.data.datasets[1].data = solar;
-    odinWeatherChart.update('none');
-
-    [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
-    odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-        if (c) c.update('none');
-    });
-    updateOdinTotals();
-}
-
 function updateCharts(d) {
   if (!tempChart || !freqChart || !statusChart) return;
   
@@ -3514,11 +2046,6 @@ function updateCharts(d) {
     // Live mode: re-render with animation after zoom is set
     monitorCharts().forEach(c => c.update());
   }
-
-  // Only re-render the odin charts on the poll tick in live mode. In history
-  // (calendar) mode they are static, and re-rendering would call
-  // renderOdinHistory() which resets the user's zoom to the full range.
-  if (solverMode === 'live') updateOdinCharts();
 }
 
 function setToggle(id, val) {
@@ -3533,6 +2060,7 @@ function setSelect(id, idx) {
     el.selectedIndex = idx;
   }
 }
+
 
 function seedPending(key, val) {
   if (val != null) {
@@ -3585,18 +2113,6 @@ function manualInput(key, val) {
     pending[key] = v;
     lastEdit[key] = Date.now();
     refreshStepVal(key);
-    if (key === 'dhw-thresh') updateDhwProbeTemp();
-}
-
-function updateDhwProbeTemp() {
-    const el = document.getElementById('dhw-probe-temp');
-    if (!el) return;
-    const th = (pending['dhw-thresh'] != null) ? pending['dhw-thresh']
-             : (latestState.dhw_start_threshold != null ? latestState.dhw_start_threshold : 0);
-    if (th <= 0) { el.textContent = 'off'; return; }
-    const sp = latestState.dhw_flow_temp_target;
-    const drop = latestState.dhw_flow_temp_drop != null ? latestState.dhw_flow_temp_drop : 0;
-    el.textContent = (sp != null) ? `starts looking at ${fmt1(sp - drop + th)}°C` : 'starts looking at —';
 }
 
 function hasChanged(key) {
@@ -3613,24 +2129,6 @@ function updateDot(id, action) {
     el.classList.add('heating');
   } else if (action === 'cooling') {
     el.classList.add('cooling');
-  }
-}
-
-let physTabUserToggled = false;
-
-function togglePhysicsTab(mode) {
-  physTabUserToggled = true;
-  
-  if (mode === 'cool') {
-    document.getElementById('phys-group-heat').style.display = 'none';
-    document.getElementById('phys-group-cool').style.display = 'block';
-    document.getElementById('tab-btn-heat').classList.remove('active-heat');
-    document.getElementById('tab-btn-cool').classList.add('active-cool');
-  } else {
-    document.getElementById('phys-group-heat').style.display = 'block';
-    document.getElementById('phys-group-cool').style.display = 'none';
-    document.getElementById('tab-btn-heat').classList.add('active-heat');
-    document.getElementById('tab-btn-cool').classList.remove('active-cool');
   }
 }
 
@@ -3678,15 +2176,6 @@ function toggleCoolingUI() {
     aaCard.classList.toggle('disabled-box', !(z1Valid && z2Valid));
   }
 
-  if (!physTabUserToggled) {
-    if (isCoolingMode) {
-      togglePhysicsTab('cool');
-      physTabUserToggled = false;
-    } else {
-      togglePhysicsTab('heat');
-      physTabUserToggled = false;
-    }
-  }
 }
 
 function render(d) {
@@ -3748,20 +2237,6 @@ function render(d) {
   if (d.min_flow_lim) { LIMITS['aa-min'].min = d.min_flow_lim.min; LIMITS['aa-min'].max = d.min_flow_lim.max; LIMITS['aa-min'].step = 0.1; }
   if (d.max_flow_z2_lim) { LIMITS['aa-max-z2'].min = d.max_flow_z2_lim.min; LIMITS['aa-max-z2'].max = d.max_flow_z2_lim.max; LIMITS['aa-max-z2'].step = 0.1; }
   if (d.min_flow_z2_lim) { LIMITS['aa-min-z2'].min = d.min_flow_z2_lim.min; LIMITS['aa-min-z2'].max = d.min_flow_z2_lim.max; LIMITS['aa-min-z2'].step = 0.1; }
-  if (d.raw_cool_produced_lim) { LIMITS['raw-cool-prod'].min = d.raw_cool_produced_lim.min; LIMITS['raw-cool-prod'].max = d.raw_cool_produced_lim.max; LIMITS['raw-cool-prod'].step = d.raw_cool_produced_lim.step; }
-  if (d.raw_cool_elec_consumed_lim) { LIMITS['raw-cool-elec'].min = d.raw_cool_elec_consumed_lim.min; LIMITS['raw-cool-elec'].max = d.raw_cool_elec_consumed_lim.max; LIMITS['raw-cool-elec'].step = d.raw_cool_elec_consumed_lim.step; }
-  if (d.raw_cool_runtime_hours_lim) { LIMITS['raw-cool-run'].min = d.raw_cool_runtime_hours_lim.min; LIMITS['raw-cool-run'].max = d.raw_cool_runtime_hours_lim.max; LIMITS['raw-cool-run'].step = d.raw_cool_runtime_hours_lim.step; }
-  if (d.raw_cool_avg_outside_temp_lim) { LIMITS['raw-cool-out'].min = d.raw_cool_avg_outside_temp_lim.min; LIMITS['raw-cool-out'].max = d.raw_cool_avg_outside_temp_lim.max; LIMITS['raw-cool-out'].step = d.raw_cool_avg_outside_temp_lim.step; }
-  if (d.raw_cool_avg_room_temp_lim) { LIMITS['raw-cool-room'].min = d.raw_cool_avg_room_temp_lim.min; LIMITS['raw-cool-room'].max = d.raw_cool_avg_room_temp_lim.max; LIMITS['raw-cool-room'].step = d.raw_cool_avg_room_temp_lim.step; }
-  if (d.raw_heat_produced_z2_lim) { LIMITS['raw-heat-z2'].min = d.raw_heat_produced_z2_lim.min; LIMITS['raw-heat-z2'].max = d.raw_heat_produced_z2_lim.max; LIMITS['raw-heat-z2'].step = d.raw_heat_produced_z2_lim.step; }
-  if (d.raw_elec_consumed_z2_lim) { LIMITS['raw-elec-z2'].min = d.raw_elec_consumed_z2_lim.min; LIMITS['raw-elec-z2'].max = d.raw_elec_consumed_z2_lim.max; LIMITS['raw-elec-z2'].step = d.raw_elec_consumed_z2_lim.step; }
-  if (d.raw_runtime_hours_z2_lim) { LIMITS['raw-run-z2'].min = d.raw_runtime_hours_z2_lim.min; LIMITS['raw-run-z2'].max = d.raw_runtime_hours_z2_lim.max; LIMITS['raw-run-z2'].step = d.raw_runtime_hours_z2_lim.step; }
-  if (d.raw_avg_room_temp_z2_lim) { LIMITS['raw-room-z2'].min = d.raw_avg_room_temp_z2_lim.min; LIMITS['raw-room-z2'].max = d.raw_avg_room_temp_z2_lim.max; LIMITS['raw-room-z2'].step = d.raw_avg_room_temp_z2_lim.step; }
-  if (d.raw_delta_room_temp_z2_lim) { LIMITS['raw-delta-z2'].min = d.raw_delta_room_temp_z2_lim.min; LIMITS['raw-delta-z2'].max = d.raw_delta_room_temp_z2_lim.max; LIMITS['raw-delta-z2'].step = d.raw_delta_room_temp_z2_lim.step; }
-  if (d.raw_cool_produced_z2_lim) { LIMITS['raw-cool-prod-z2'].min = d.raw_cool_produced_z2_lim.min; LIMITS['raw-cool-prod-z2'].max = d.raw_cool_produced_z2_lim.max; LIMITS['raw-cool-prod-z2'].step = d.raw_cool_produced_z2_lim.step; }
-  if (d.raw_cool_elec_consumed_z2_lim) { LIMITS['raw-cool-elec-z2'].min = d.raw_cool_elec_consumed_z2_lim.min; LIMITS['raw-cool-elec-z2'].max = d.raw_cool_elec_consumed_z2_lim.max; LIMITS['raw-cool-elec-z2'].step = d.raw_cool_elec_consumed_z2_lim.step; }
-  if (d.raw_cool_runtime_hours_z2_lim) { LIMITS['raw-cool-run-z2'].min = d.raw_cool_runtime_hours_z2_lim.min; LIMITS['raw-cool-run-z2'].max = d.raw_cool_runtime_hours_z2_lim.max; LIMITS['raw-cool-run-z2'].step = d.raw_cool_runtime_hours_z2_lim.step; }
-  if (d.raw_cool_avg_room_temp_z2_lim) { LIMITS['raw-cool-room-z2'].min = d.raw_cool_avg_room_temp_z2_lim.min; LIMITS['raw-cool-room-z2'].max = d.raw_cool_avg_room_temp_z2_lim.max; LIMITS['raw-cool-room-z2'].step = d.raw_cool_avg_room_temp_z2_lim.step; }
 
   if (d.cool_smart_z1_lim) { LIMITS['cool-start-z1'].min = d.cool_smart_z1_lim.min; LIMITS['cool-start-z1'].max = d.cool_smart_z1_lim.max; LIMITS['cool-start-z1'].step = d.cool_smart_z1_lim.step || 0.5; }
   if (d.min_cool_flow_z1_lim) { LIMITS['cool-min-z1'].min = d.min_cool_flow_z1_lim.min; LIMITS['cool-min-z1'].max = d.min_cool_flow_z1_lim.max; LIMITS['cool-min-z1'].step = d.min_cool_flow_z1_lim.step || 0.1; }
@@ -3886,12 +2361,6 @@ function render(d) {
   setToggle('sw-sb', d.smart_boost_enabled);
   setToggle('sw-psc', d.pred_sc_en);
   
-  // SOLVER SETTINGS & UI Auto-Toggle
-  setToggle('sw-show-solver', d.show_solver_tab);
-  setToggle('sw-solver', d.use_dynamic_cost_solver);
-  
-  const tabSolver = document.getElementById('tab-btn-solver');
-  if (tabSolver) tabSolver.style.display = d.show_solver_tab ? 'block' : 'none';
 
   setSelect('sel-hst',    d.heating_system_type);
   setSelect('sel-z1src',  d.room_temp_source_z1);
@@ -3900,7 +2369,6 @@ function render(d) {
   setSelect('sel-z2mode', d.operating_mode_z2);
   setSelect('sel-z1ts',   d.temp_sensor_source_z1);
   setSelect('sel-z2ts',   d.temp_sensor_source_z2);
-  setSelect('sel-odin-dhw-mode', d.solver_dhw_mode);
   setSelect('sel-lockout-strategy', d.lockout_strategy);
   setSelect('sel-lockout-dur', d.lockout_duration);
 
@@ -3912,8 +2380,6 @@ function render(d) {
   seedPending('cool-start-z1', d.cooling_smart_start_z1);
   seedPending('cool-min-z1', d.minimum_cooling_flow_z1);
   seedPending('cool-min-z2', d.minimum_cooling_flow_z2);
-  seedPending('dhw-thresh', d.dhw_start_threshold);
-  updateDhwProbeTemp();
 
   seedPending('min-on-time', d.min_compressor_on_time);
 
@@ -3937,76 +2403,26 @@ function render(d) {
     btnCancelLockout.style.display = d.status_short_cycle_lockout ? "flex" : "none";
   }
 
-  // SOLVER TAB VALUES
-  const badgeConn = document.getElementById('badge-solver-conn');
-  if (badgeConn) {
-    if (d.solver_connected) {
-      badgeConn.textContent = "Online";
-      badgeConn.style.color = "var(--accent3)";
-    } else {
-      badgeConn.textContent = "Offline / Searching...";
-      badgeConn.style.color = "var(--danger)";
-    }
-  }
 
   const safeSetInput = (id, val) => {
     const el = document.getElementById(id);
     if (el && document.activeElement !== el && val !== undefined && val !== null) el.value = val;
   };
   
-  safeSetInput('ui-solver-ip', d.solver_ip_address);
-  safeSetInput('ui-solver-hour', new Date().getHours());
 
-  const btnOdin = document.getElementById('btn-odin');
-  const runSolverRow = document.getElementById('run-solver-row');
-  
-  if (btnOdin && runSolverRow) {
-    const hasValidIP = d.solver_ip_address && d.solver_ip_address !== "" && d.solver_ip_address !== "0.0.0.0";
+  // Odin config card (System tab)
+  safeSetInput('ui-mqtt-ip', d.mqtt_broker_ip);
+  if (d.mqtt_broker_ip != null) odinApplied.mqtt_broker_ip = d.mqtt_broker_ip;
+  safeSetInput('ui-mqtt-port', d.mqtt_broker_port);
+  if (d.mqtt_broker_port != null) odinApplied.mqtt_broker_port = d.mqtt_broker_port;
+  safeSetInput('ui-mqtt-user', d.mqtt_user);
+  if (d.mqtt_user != null) odinApplied.mqtt_user = d.mqtt_user;
+  safeSetInput('ui-mqtt-password', d.mqtt_password);
+  if (d.mqtt_password != null) odinApplied.mqtt_password = d.mqtt_password;
+  safeSetInput('ui-mqtt-prefix', d.mqtt_topic_prefix);
+  if (d.mqtt_topic_prefix != null) odinApplied.mqtt_topic_prefix = d.mqtt_topic_prefix;
 
-    if (hasValidIP) {
-      btnOdin.style.display = 'block';
-      runSolverRow.style.display = 'flex';
 
-      if (d.solver_connected === true) {
-        btnOdin.disabled = false;
-        btnOdin.style.opacity = '1';
-        btnOdin.style.cursor = 'pointer';
-      } else {
-        btnOdin.disabled = true;
-        btnOdin.style.opacity = '0.5';
-        btnOdin.style.cursor = 'not-allowed';
-      }
-    } else {
-      btnOdin.style.display = 'none';
-      runSolverRow.style.display = 'none';
-    }
-  }
-
-  seedPending('raw-heat', d.raw_heat_produced);
-  seedPending('raw-elec', d.raw_elec_consumed);
-  seedPending('raw-run', d.raw_runtime_hours);
-  seedPending('raw-out', d.raw_avg_outside_temp);
-  seedPending('raw-room', d.raw_avg_room_temp);
-  seedPending('raw-delta', d.raw_delta_room_temp);
-  seedPending('raw-hl-tm', d.raw_hl_tm_product);
-  seedPending('raw-solar-factor', d.raw_solar_factor);
-  seedPending('batt-soc', d.battery_soc_kwh);
-  seedPending('batt-max-dis', d.battery_max_discharge_kw);
-
-  seedPending('raw-cool-prod', d.raw_cool_produced);
-  seedPending('raw-cool-elec', d.raw_cool_elec_consumed);
-  seedPending('raw-cool-run',  d.raw_cool_runtime_hours);
-  seedPending('raw-cool-out',  d.raw_cool_avg_outside_temp);
-  seedPending('raw-cool-room', d.raw_cool_avg_room_temp);
-  seedPending('raw-heat-z2',  d.raw_heat_produced_z2);
-  seedPending('raw-elec-z2',  d.raw_elec_consumed_z2);
-  seedPending('raw-run-z2',   d.raw_runtime_hours_z2);
-  seedPending('raw-room-z2',  d.raw_avg_room_temp_z2);
-  seedPending('raw-delta-z2', d.raw_delta_room_temp_z2);
-  seedPending('raw-cool-prod-z2',  d.raw_cool_produced_z2);
-  seedPending('raw-cool-elec-z2',  d.raw_cool_elec_consumed_z2);
-  seedPending('raw-cool-run-z2',   d.raw_cool_runtime_hours_z2);
-  seedPending('raw-cool-room-z2',  d.raw_cool_avg_room_temp_z2);
 
   // --- SERVER CONTROL ---
   if (d.server_control_enabled !== undefined) {
@@ -4064,7 +2480,6 @@ function step(key, delta) {
   const decimals = stepSize < 0.01 ? 4 : stepSize < 0.1 ? 3 : stepSize < 1 ? 2 : 1;
   pending[key] = +newVal.toFixed(decimals);
   refreshStepVal(key);
-  if (key === 'dhw-thresh') updateDhwProbeTemp();
 }
 
 function hystInput(zone) {
@@ -4098,11 +2513,6 @@ async function sendSwitch(key, val) {
     await apiPost({ key, value: val ? 1 : 0 }); 
     showToast('✓ ' + key); 
     
-    // Immediately show or hide the solver tab in the UI
-    if (key === 'show_solver_tab_enabled') {
-      const tabSolver = document.getElementById('tab-btn-solver');
-      if (tabSolver) tabSolver.style.display = val ? 'block' : 'none';
-    }
   } 
   catch(e) { showToast('✗ ' + e.message, true); }
 }
@@ -4153,18 +2563,6 @@ async function sendLegionella(btn) {
     showToast('✓ Legionella setpoint updated');
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');
-}
-
-async function sendOdinThresh(btn) {
-    btn.classList.add('sending');
-    try {
-        if (hasChanged('dhw-thresh')) {
-            await apiPost({ key: 'dhw_start_threshold', value: pending['dhw-thresh'] });
-            serverState['dhw-thresh'] = pending['dhw-thresh'];
-            showToast('✓ DHW Threshold updated');
-        } else { showToast('No changes'); }
-    } catch(e) { showToast('✗ ' + e.message, true); }
-    btn.classList.remove('sending');
 }
 
 async function sendZone(zone, btn) {
@@ -4294,224 +2692,36 @@ async function sendInputString(key, elId) {
     showToast('✗ ' + e.message, true); 
   }
 }
-
-async function sendPhysics(btn) {
-  btn.classList.add('sending');
+// Odin config card: one Apply button for all broker fields.
+// Only the values that differ from the last server snapshot are sent.
+async function sendOdin(btn) {
+  const fields = [
+    { key: 'mqtt_broker_ip',    el: document.getElementById('ui-mqtt-ip') },
+    { key: 'mqtt_broker_port',  el: document.getElementById('ui-mqtt-port') },
+    { key: 'mqtt_user',         el: document.getElementById('ui-mqtt-user') },
+    { key: 'mqtt_password',     el: document.getElementById('ui-mqtt-password') },
+    { key: 'mqtt_topic_prefix', el: document.getElementById('ui-mqtt-prefix') },
+  ];
+  const changes = [];
+  for (const f of fields) {
+    if (!f.el || odinApplied[f.key] === undefined) continue;
+    const cur = (f.el.tagName === 'SELECT') ? f.el.selectedIndex : f.el.value;
+    if (cur !== odinApplied[f.key]) changes.push({ key: f.key, value: cur });
+  }
+  if (changes.length === 0) { showToast('No changes to apply'); return; }
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
   let c = 0;
   try {
-    const physicsKeys = ['raw-heat','raw-elec','raw-run','raw-out','raw-room','raw-delta','raw-hl-tm','raw-solar-factor','batt-soc','batt-max-dis', 'raw-cool-prod', 'raw-cool-elec', 'raw-cool-run', 'raw-cool-out', 'raw-cool-room', 'raw-heat-z2','raw-elec-z2','raw-run-z2','raw-room-z2','raw-delta-z2','raw-cool-prod-z2','raw-cool-elec-z2','raw-cool-run-z2','raw-cool-room-z2'];
-
-    const physicsMap = {
-      'raw-heat': 'raw_heat_produced', 'raw-elec': 'raw_elec_consumed', 'raw-run': 'raw_runtime_hours',
-      'raw-out': 'raw_avg_outside_temp', 'raw-room': 'raw_avg_room_temp', 'raw-delta': 'raw_delta_room_temp',
-      'raw-hl-tm': 'raw_hl_tm_product', 'raw-solar-factor': 'raw_solar_factor',
-      'batt-soc': 'battery_soc_kwh', 'batt-max-dis': 'battery_max_discharge_kw',
-      'raw-cool-prod': 'raw_cool_produced', 'raw-cool-elec': 'raw_cool_elec_consumed',
-      'raw-cool-run': 'raw_cool_runtime_hours', 'raw-cool-out': 'raw_cool_avg_outside_temp',
-      'raw-cool-room': 'raw_cool_avg_room_temp',
-      'raw-heat-z2': 'raw_heat_produced_z2', 'raw-elec-z2': 'raw_elec_consumed_z2',
-      'raw-run-z2': 'raw_runtime_hours_z2', 'raw-room-z2': 'raw_avg_room_temp_z2',
-      'raw-delta-z2': 'raw_delta_room_temp_z2',
-      'raw-cool-prod-z2': 'raw_cool_produced_z2', 'raw-cool-elec-z2': 'raw_cool_elec_consumed_z2',
-      'raw-cool-run-z2': 'raw_cool_runtime_hours_z2', 'raw-cool-room-z2': 'raw_cool_avg_room_temp_z2'
-    };
-    for (const k of physicsKeys) {
-      if (hasChanged(k)) {
-        await apiPost({ key: physicsMap[k], value: pending[k] });
-        serverState[k] = pending[k];  // update serverState immediately to prevent poll overwrite
-        c++;
-      }
+    for (const ch of changes) {
+      await apiPost({ key: ch.key, value: ch.value });
+      odinApplied[ch.key] = ch.value;
+      c++;
     }
-    showToast(c > 0 ? '✓ Physics Data updated' : 'No changes');
-  } catch(e) { showToast('✗ ' + e.message, true); }
-  btn.classList.remove('sending');
-}
-
-async function runOdinSolver() {
-    if (!latestState.solver_ip_address || latestState.solver_ip_address === "0.0.0.0") return;
-    const btn = document.getElementById('btn-run-solver');
-    btn.classList.add('sending');
-    btn.textContent = "Calculating...";
-
-    const hourInput = document.getElementById('ui-solver-hour');
-    const actualHour = new Date().getHours();
-    let solveHour = actualHour;
-    if (hourInput && hourInput.value !== "" && hourInput.value !== null) {
-        const parsed = parseInt(hourInput.value, 10);
-        if (!isNaN(parsed) && parsed >= 0 && parsed <= 23) solveHour = parsed;
-    }
-
-    const elMode = document.getElementById('sel-z1mode');
-    const opModeZ1 = elMode ? elMode.selectedIndex : -1;
-    
-    let selectedMode = 0; 
-
-    // Index 3, 4 and 6 are cooling modes (Target, Flow, Curve)
-    if (opModeZ1 === 3 || opModeZ1 === 4 || opModeZ1 === 6) {
-        selectedMode = 3; // COOL_ON
-    } else if (opModeZ1 === 0 || opModeZ1 === 1 || opModeZ1 === 2 || opModeZ1 === 5) {
-        selectedMode = 2; // HEAT_ON
-    }
-
-    
-    let minCoolFlow = pending['cool-min-z1'] ?? latestState.minimum_cooling_flow_z1;
-    if (minCoolFlow === undefined || minCoolFlow === null || isNaN(minCoolFlow)) {
-        const el = document.getElementById('cool-min-z1-val');
-        minCoolFlow = el ? parseFloat(el.value) : NaN;
-    }
-    if (isNaN(minCoolFlow)) {
-        minCoolFlow = 18.0;
-    }
-    
-    let solarFactor = pending['raw-solar-factor'] ?? latestState.raw_solar_factor;
-    if (solarFactor === undefined || solarFactor === null || isNaN(solarFactor) || solarFactor <= 0.001) {
-        solarFactor = 0.015;
-    }
-
-    const isLegionellaActive = latestState.operation_mode === 6;
-    const dhwThresh = isLegionellaActive ? 0.0 : (pending['dhw-thresh'] ?? latestState.dhw_start_threshold ?? 0.0);
-
-    const payload = {
-        params: {
-            heat_produced: pending['raw-heat'] || latestState.raw_heat_produced || 0,
-            elec_consumed: pending['raw-elec'] || latestState.raw_elec_consumed || 0,
-            runtime_hours: pending['raw-run'] || latestState.raw_runtime_hours || 0,
-            avg_outside_temp: pending['raw-out'] || latestState.raw_avg_outside_temp || 7,
-            avg_room_temp: pending['raw-room'] || latestState.raw_avg_room_temp || 20,
-            delta_room_temp: pending['raw-delta'] ?? latestState.raw_delta_room_temp ?? 0,
-            cool_produced: pending['raw-cool-prod'] || latestState.raw_cool_produced || 0,
-            cool_elec_consumed: pending['raw-cool-elec'] || latestState.raw_cool_elec_consumed || 0,
-            cool_runtime_hours: pending['raw-cool-run'] || latestState.raw_cool_runtime_hours || 0,
-            cool_avg_outside_temp: pending['raw-cool-out'] || latestState.raw_cool_avg_outside_temp || 20,
-            cool_avg_room_temp: pending['raw-cool-room'] || latestState.raw_cool_avg_room_temp || latestState.raw_avg_room_temp || 20,
-            hl_tm_product: pending['raw-hl-tm'] ?? latestState.raw_hl_tm_product ?? 0.0,
-            passive_solar_gain_factor: solarFactor,
-            current_room_temp: latestState.z1_current_temp || 20.0,
-            // ── Zone 2 — always sent, in full. The client never guesses: the
-            // solver decides whether to run the two-zone pass (its
-            // z2_separate_solve switch + the topology flag below). Single-zone
-            // builds send zeros/echoes — the solver ignores them when the flag
-            // is 0, and treats them as "no z2 data yet" when it is 1.
-            independent_zones: (latestState.zone2_enabled === false) ? 0 : 1,
-            current_room_temp_z2: latestState.z2_current_temp || 20.0,
-            heat_produced_z2: pending['raw-heat-z2'] || latestState.raw_heat_produced_z2 || 0,
-            elec_consumed_z2: pending['raw-elec-z2'] || latestState.raw_elec_consumed_z2 || 0,
-            runtime_hours_z2: pending['raw-run-z2'] || latestState.raw_runtime_hours_z2 || 0,
-            avg_room_temp_z2: pending['raw-room-z2'] || latestState.raw_avg_room_temp_z2 || latestState.raw_avg_room_temp || 20,
-            delta_room_temp_z2: pending['raw-delta-z2'] ?? latestState.raw_delta_room_temp_z2 ?? 0.0,
-            hl_tm_product_z2: pending['raw-hl-tm'] ?? latestState.raw_hl_tm_product ?? 0.0,
-            cool_produced_z2: pending['raw-cool-prod-z2'] || latestState.raw_cool_produced_z2 || 0,
-            cool_elec_consumed_z2: pending['raw-cool-elec-z2'] || latestState.raw_cool_elec_consumed_z2 || 0,
-            cool_runtime_hours_z2: pending['raw-cool-run-z2'] || latestState.raw_cool_runtime_hours_z2 || 0,
-            cool_avg_room_temp_z2: pending['raw-cool-room-z2'] || latestState.raw_cool_avg_room_temp_z2 || latestState.raw_cool_avg_room_temp || 20,
-            current_hour: solveHour,
-            battery_soc_kwh: pending['batt-soc'] ?? latestState.battery_soc_kwh ?? 0.0,
-            battery_max_discharge_kw: pending['batt-max-dis'] ?? latestState.battery_max_discharge_kw ?? 3.0,
-            dhw_temp: latestState.dhw_temp || 0,
-            dhw_target: latestState.dhw_flow_temp_target || 0,
-            dhw_drop: latestState.dhw_flow_temp_drop || 0,
-            dhw_start_threshold: dhwThresh,
-            // 0=OFF,1=DHW_ON,2=HEAT_ON,3=COOL_ON,5=FROST_PROTECT,6=LEGIONELLA,255=UNAVAILABLE
-            current_operation_mode: selectedMode,
-            min_cool_flow: minCoolFlow
-        }
-    };
-
-    try {
-        const res = await fetch(`http://${latestState.solver_ip_address}/api/solve`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        
-        if (data.success) {
-          if (!odinDataCache) odinDataCache = {};
-            
-            // Inject the 48h solver response into today+tomorrow slots (24-71) of the 72-slot cache.
-            // slot 24+i = today/tomorrow hour i from the solver's perspective.
-            const inject72 = (key, new48, preserveCurrentHour = false) => {
-                if (!odinDataCache[key] || odinDataCache[key].length !== 72) {
-                    odinDataCache[key] = new Array(72).fill(null);
-                }
-                if (new48 && new48.length >= 48) {
-                    for (let i = 0; i < 48; i++) {
-                        const slot = 24 + i; // map solver index into 72-slot window
-                        let isCurrent = (i === solveHour);
-                        
-                        // Protect the current hour from jumping mid-hour if requested
-                        if (preserveCurrentHour && isCurrent && odinDataCache[key][slot] !== null) continue;
-
-                        if (new48[i] !== null && new48[i] !== undefined) {
-                            odinDataCache[key][slot] = new48[i];
-                        }
-                    }
-                }
-            };
-
-            inject72('expected_end_temp', data.expected_end_temp);
-            inject72('expected_begin_temp', data.expected_begin_temp, true); // true = lock current hour
-            inject72('expected_begin_temp_z2', data.expected_begin_temp_z2, true);
-            inject72('operation_mode', data.operation_mode, true);
-            inject72('prices', data.prices);
-            inject72('sched_base', data.sched_base);
-            inject72('sched_min', data.sched_min);
-            inject72('sched_max', data.sched_max);
-            inject72('weather', data.weather);
-            inject72('solar', data.solar);
-            inject72('energy_consumption', data.energy_consumption);
-            inject72('heat_production', data.heat_production);
-            inject72('expected_cost', data.expected_cost);
-            inject72('battery_discharge', data.battery_discharge);
-            inject72('decision_reason', data.decision_reason);
-
-            odinDataCache.last_run = {
-                execution_ms:    data.execution_ms                 || 0,
-                evaluated_nodes: data.evaluated_nodes              || 0,
-                heat_loss:       data.used_heat_loss               || 0,
-                base_cop:        data.used_base_cop                || 0,
-                thermal_mass:    data.used_thermal_mass            || 0,
-                exp_consumption: data.total_consumption_kwh        || 0,
-                exp_production:  data.total_heat_produced_kwh      || 0,
-                exp_solar:       data.total_solar_used_kwh         || 0,
-                exp_solar_total: data.total_solar_kwh              || data.total_solar_used_kwh || 0,
-                total_cost:      data.total_cost                   || 0,
-                used_solar_kwp:  data.used_solar_kwp               || 0,
-                used_solar_correction: data.used_solar_correction  || 1.0,
-                used_battery_soc_kwh:  data.used_battery_soc_kwh   || 0
-            };
-
-            updateOdinCharts();
-            showToast(`✓ Optimized from hour ${solveHour}`);
-        } else {
-          const errorMsg = data.error ? data.error : `HTTP ${res.status}`;
-          showToast("✗ Solver failed: " + errorMsg, true);
-        }
-    } catch (err) {
-        showToast("✗ Request failed: " + err.message, true);
-    }
-
-    btn.classList.remove('sending');
-    btn.textContent = "Run Optimization";
-}
-
-async function fetchOdinData() {
-    if (typeof solverMode !== 'undefined' && solverMode === 'history') return;
-
-    try {
-        const res = await fetch('/dashboard/odin');
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.success) {
-          odinDataCache = data;
-          updateOdinCharts();
-        }
-    } catch(e) {
-      console.warn("Failed to load local ODIN cache", e);
-    }
-    // Keep the actual-mode bands of the temp chart up to date (throttled internally)
-    refreshOdinActualModes();
+    showToast('✓ Applied ' + c + ' Odin setting' + (c > 1 ? 's' : ''));
+  } catch(e) {
+    showToast('✗ ' + e.message, true);
+  }
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
 }
 
 
@@ -4544,13 +2754,6 @@ function showToast(msg, isError=false) {
   t.className = 'toast show' + (isError ? ' error' : '');
   clearTimeout(t._timer);
   t._timer = setTimeout(() => t.className = 'toast', 2800);
-}
-
-function openOdin() {
-  const ip = document.getElementById('ui-solver-ip').value.trim();
-  if (ip && ip !== "0.0.0.0") {
-    window.open(`http://${ip}`, '_blank');
-  }
 }
 
 let eventSource = null;
@@ -4719,6 +2922,29 @@ function downloadSettingsBackup() {
   setSettingsBackupStatus(`Last save: ${keyCount} settings, ${new Date().toLocaleTimeString()}`);
 }
 
+// ── Data Backup (history archive + physics values) ─────────────────────
+// Triggers an attachment download of the raw export endpoint. The browser
+// keeps the page (Content-Disposition: attachment), so the status is reset
+// on a short timer.
+function backupData(kind, btn) {
+  const isHourly = (kind === 'hourly');
+  const what = isHourly ? 'history archive' : 'physics values';
+  const status = document.getElementById('data-backup-status');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+  if (status) {
+    status.textContent = 'Downloading ' + what + '...';
+    status.style.color = 'var(--warn)';
+  }
+  window.location.href = isHourly ? '/dashboard/export/hourly' : '/dashboard/export/physics';
+  setTimeout(() => {
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    if (status) {
+      status.textContent = 'Download started: ' + what;
+      status.style.color = 'var(--text3)';
+    }
+  }, 2500);
+}
+
 function triggerRestoreSettings() {
   document.getElementById('settings-restore-file').click();
 }
@@ -4750,7 +2976,7 @@ async function restoreSettingsFromFile() {
     return;
   }
 
-  const ok = confirm(`Restore ${keys.length} settings from this file?\n\nThis will overwrite your current Settings and Solver configuration on the device.`);
+  const ok = confirm(`Restore ${keys.length} settings from this file?\n\nThis will overwrite your current Settings configuration on the device.`);
   if (!ok) return;
 
   const btn = document.getElementById('btn-restore-settings');
@@ -4859,103 +3085,6 @@ function resetAllZoom() {
 function showResetButton() {
   document.getElementById('btn-reset-zoom').style.display = 'block';
 }
-
-let odinZoomed = false;
-let isSyncingOdin = false;
-
-function updateOdinTotals() {
-  if (!odinCostChart || !odinConsChart || !odinProdChart) return;
-
-  let minRaw = odinCostChart.scales.x.min ?? 0;
-  let maxRaw = odinCostChart.scales.x.max ?? (odinCostChart.data.datasets[0].data.length - 1);
-
-  let minIdx = Math.max(0, Math.ceil(minRaw));
-  let maxIdx = Math.min(odinCostChart.data.datasets[0].data.length - 1, Math.floor(maxRaw));
-
-  let sumCostExp = 0, sumCostAct = 0;
-  let sumConsGrid = 0, sumConsSolar = 0, sumConsAct = 0;
-  let sumProdHP = 0, sumProdSolar = 0, sumProdAct = 0;
-
-  for (let i = minIdx; i <= maxIdx; i++) {
-    // Cost
-    if (odinCostChart.data.datasets[0].data[i]) sumCostExp += odinCostChart.data.datasets[0].data[i];
-    if (odinCostChart.data.datasets[1].data[i]) sumCostAct += odinCostChart.data.datasets[1].data[i];
-
-    // Consumption (Exp: 0 Grid, 1 Solar | Act: 2 Climate, 3 DHW, 4 Standby)
-    if (odinConsChart.data.datasets[0].data[i]) sumConsGrid += odinConsChart.data.datasets[0].data[i];
-    if (odinConsChart.data.datasets[1].data[i]) sumConsSolar += odinConsChart.data.datasets[1].data[i];
-    if (odinConsChart.data.datasets[2].data[i]) sumConsAct += odinConsChart.data.datasets[2].data[i];
-    if (odinConsChart.data.datasets[3].data[i]) sumConsAct += odinConsChart.data.datasets[3].data[i];
-    if (odinConsChart.data.datasets[4].data[i]) sumConsAct += odinConsChart.data.datasets[4].data[i];
-
-    // Production (Exp: 0 Climate, 1 Solar | Act: 2 Climate, 3 DHW)
-    if (odinProdChart.data.datasets[0].data[i]) sumProdHP += odinProdChart.data.datasets[0].data[i];
-    if (odinProdChart.data.datasets[1].data[i]) sumProdSolar += odinProdChart.data.datasets[1].data[i];
-    if (odinProdChart.data.datasets[2].data[i]) sumProdAct += odinProdChart.data.datasets[2].data[i];
-    if (odinProdChart.data.datasets[3].data[i]) sumProdAct += odinProdChart.data.datasets[3].data[i];
-  }
-
-  const currSym = typeof getCurrencySymbol === 'function' 
-    ? getCurrencySymbol(odinDataCache?.last_run?.bidding_zone) 
-    : '€';
-
-  document.getElementById('tot-exp-cost').textContent = `${currSym} ${sumCostExp.toFixed(2)}`;
-  document.getElementById('tot-act-cost').textContent = `${currSym} ${sumCostAct.toFixed(2)}`;
-
-  document.getElementById('tot-exp-cons').textContent = `${sumConsGrid.toFixed(1)} kWh`;
-  document.getElementById('tot-solar-cons').textContent = `${sumConsSolar.toFixed(1)} kWh`;
-  document.getElementById('tot-act-cons').textContent = `${sumConsAct.toFixed(1)} kWh`;
-
-  document.getElementById('tot-exp-prod').textContent = `${sumProdHP.toFixed(1)} kWh`;
-  document.getElementById('tot-solar-prod').textContent = `${sumProdSolar.toFixed(1)} kWh`;
-  document.getElementById('tot-act-prod').textContent = `${sumProdAct.toFixed(1)} kWh`;
-}
-
-function syncOdinScales(sourceChart) {
-  if (isSyncingOdin) return; 
-  
-  isSyncingOdin = true;
-
-  const min = sourceChart.scales.x.min;
-  const max = sourceChart.scales.x.max;
-  
-  [odinConsChart, odinProdChart, odinCostChart, odinTempChart, odinBattChart, odinPriceChart, odinWeatherChart].forEach(c => {
-    if (c && c !== sourceChart) {
-      // Use the plugin's native API instead of overriding chart options
-      c.zoomScale('x', {min: min, max: max}, 'none');
-    }
-  });
-  
-  showOdinResetButton();
-
-  isSyncingOdin = false;
-  updateOdinTotals();
-}
-
-function resetOdinZoom() {
-    odinZoomed = false;
-    const charts = [odinConsChart, odinProdChart, odinCostChart, odinTempChart, 
-     odinBattChart, odinPriceChart, odinWeatherChart];
-    if (typeof solverMode !== 'undefined' && solverMode === 'history') {
-        // History (calendar) mode: reset to the full history range, not the
-        // hardcoded live window (23.5-47.5 is outside the history data range).
-        charts.forEach(c => {
-            if (c) c.resetZoom('none');
-        });
-    } else {
-        // Live mode: reset to the live window.
-        charts.forEach(c => {
-            if (c) c.zoomScale('x', {min: 23.5, max: 47.5}, 'none');
-        });
-    }
-    document.getElementById('btn-reset-zoom-odin').style.display = 'none';
-    updateOdinTotals();
-}
-
-function showOdinResetButton() {
-  document.getElementById('btn-reset-zoom-odin').style.display = 'block';
-}
-
 // Helper function: returns Unix timestamp for 00:00:00 of X days ago
 function getMidnight(daysAgo = 0) {
     const d = new Date();
@@ -4987,12 +3116,9 @@ async function loadServerHistory(fromTs, toTs, type = 'min') {
         monitorCharts().forEach(c => {
           c.data.labels = []; c.data.datasets.forEach(d => d.data = []); c.update('none');
         });
-      } else if (type === 'hour') {
-        hourlyHistory = [];
-        if (globalMode !== 'live') updateOdinCharts();
-      }
       return;
     }
+  }
     
     const serverLastTs = data[data.length - 1][0] * 1000; 
     let timeOffset = 0;
@@ -5065,54 +3191,6 @@ async function loadServerHistory(fromTs, toTs, type = 'min') {
           const lastIdx = history.timestamps.length - 1;
           forceMonitorXRange(0, lastIdx);
         }        
-      } else if (type === 'hour') {
-        console.log(`Loaded ${data.length} hourly records.`);
-        hourlyHistory = data.map(row => {
-            const getF = (val, scale) => val === -32768 ? null : val / scale;
-            return {
-                timestamp: (row[0] * 1000) + timeOffset,
-                avg_outside: getF(row[1], 10.0),
-                total_cons: getF(row[2], 100.0),
-                total_prod: getF(row[3], 100.0),
-                odin_heat_loss: getF(row[4], 100.0),
-                odin_cop: getF(row[5], 100.0),
-                odin_cost: getF(row[6], 100.0),
-                odin_solar: getF(row[7], 10.0),
-                exp_cons: getF(row[8], 100.0),
-                exp_prod: getF(row[9], 100.0),
-                exp_room_temp: getF(row[10], 100.0),
-                actual_room_temp: getF(row[11], 100.0),
-                actual_dhw_cons: getF(row[12], 100.0),
-                actual_dhw_prod: getF(row[13], 100.0),
-                actual_standby_cons: getF(row[14], 100.0),
-                price: getF(row[15], 10000.0),
-                weather: getF(row[16], 100.0),
-                batt_discharge: getF(row[17], 100.0),
-                op_mode: getF(row[18], 1.0),
-                sched_base: getF(row[19], 100.0),
-                sched_min: getF(row[20], 100.0),
-                sched_max: getF(row[21], 100.0),
-                exp_solar_kwh: getF(row[22], 100.0),
-                decision_reason: row.length > 23 ? getF(row[23], 1.0) : null,
-                // Zone-2 room temps (appended by the v2 hourly layout). Records
-                // written before that layout have zeroed bytes → treat 0 as missing.
-                exp_room_temp_z2: row.length > 25 ? (row[25] === 0 ? null : getF(row[25], 100.0)) : null,
-                actual_room_temp_z2: row.length > 26 ? (row[26] === 0 ? null : getF(row[26], 100.0)) : null
-            };
-        });
-
-        if (solverMode !== 'live') {
-            updateOdinCharts();
-        }
-
-        // Resolve the actually-executed mode per hour from the minute records
-        // for the same range (as far as minute retention reaches), then repaint
-        // the temperature chart's mode bands.
-        if (fromTs && toTs) {
-            fetchActualModesRange(fromTs, toTs).then(ok => {
-                if (ok && solverMode !== 'live' && odinTempChart) odinTempChart.update('none');
-            });
-        }
     }
   } catch(e) { console.error("History fetch failed", e); }
 }
@@ -5137,28 +3215,68 @@ function initSettingsDragAndDrop() {
   const container = document.getElementById('settings-card-container');
   if (!container) return;
 
-  // 1. Restore the saved order from LocalStorage
-  const savedOrder = JSON.parse(localStorage.getItem('settingsCardOrder'));
-  if (savedOrder && Array.isArray(savedOrder)) {
-    savedOrder.forEach(id => {
-      const el = document.getElementById(id);
-      // Append moves the element to the end of the container, reordering them
-      if (el) container.appendChild(el); 
+  const NCOLS = 3;
+  let cols = Array.from(container.querySelectorAll('.settings-col'));
+  if (cols.length !== NCOLS) {
+    const flat = Array.from(container.querySelectorAll('.ctrl-card'));
+    cols.forEach(c => container.removeChild(c));
+    cols = [];
+    const per = Math.ceil(flat.length / NCOLS);
+    for (let i = 0; i < NCOLS; i++) {
+      const col = document.createElement('div');
+      col.className = 'settings-col';
+      flat.slice(i * per, (i + 1) * per).forEach(c => col.appendChild(c));
+      container.appendChild(col);
+      cols.push(col);
+    }
+  }
+  const colOf = el => el.closest('.settings-col');
+  // Saved as {order:[ids...], split:[n0,n1,n2]} so column membership
+  // survives a reload; a legacy flat array re-splits ceil(n/3).
+  const saved = JSON.parse(localStorage.getItem('settingsCardOrder'));
+  const savedOrder = saved && Array.isArray(saved) ? saved : (saved && saved.order);
+  if (Array.isArray(savedOrder)) {
+    const present = savedOrder.map(id => document.getElementById(id)).filter(Boolean);
+    let split = saved && saved.split;
+    if (!Array.isArray(split) || split.length !== NCOLS ||
+        present.length !== split.reduce((a, b) => a + b, 0)) {
+      const per = Math.ceil(present.length / NCOLS);
+      split = present.map((_, i) => Math.min(per, Math.max(0, present.length - i * per)));
+    }
+    let at = 0;
+    cols.forEach((col, i) => {
+      present.slice(at, at + split[i]).forEach(c => col.appendChild(c));
+      at += split[i];
     });
   }
 
-  // 2. Setup Drag and Drop event listeners
-  const cards = container.querySelectorAll('.ctrl-card');
-  let draggedCard = null;
+  container.querySelectorAll('.ctrl-card').forEach(c => {
+    if (c.style.display === 'none' && colOf(c) !== cols[0]) cols[0].appendChild(c);
+  });
 
+  const visCards = Array.from(container.querySelectorAll('.ctrl-card'))
+    .filter(c => c.style.display !== 'none');
+  if (visCards.length >= NCOLS &&
+      cols.some(c => !Array.from(c.querySelectorAll('.ctrl-card'))
+        .some(x => x.style.display !== 'none'))) {
+    visCards.forEach((c, i) => cols[i % NCOLS].appendChild(c));
+  }
+
+  let draggedCard = null, dropTarget = null, dropBefore = false, dropped = false;
+
+  const clearIndicator = () => {
+    if (dropTarget) { dropTarget.classList.remove('drop-before', 'drop-after'); dropTarget = null; }
+  };
+
+  const cards = container.querySelectorAll('.ctrl-card');
   cards.forEach(card => {
     const title = card.querySelector('.section-title');
-    
+
     // Only allow dragging from the title area to protect inputs/sliders
     if (title) {
       const makeDraggable = () => card.setAttribute('draggable', 'true');
       const makeUndraggable = () => card.removeAttribute('draggable');
-      
+
       title.addEventListener('mouseenter', makeDraggable);
       title.addEventListener('mouseleave', makeUndraggable);
       title.addEventListener('touchstart', makeDraggable, {passive: true});
@@ -5167,6 +3285,7 @@ function initSettingsDragAndDrop() {
 
     card.addEventListener('dragstart', (e) => {
       draggedCard = card;
+      dropped = false;
       // setTimeout ensures the drag image captures the normal state before applying transparency
       setTimeout(() => card.classList.add('dragging'), 0);
       e.dataTransfer.effectAllowed = 'move';
@@ -5175,37 +3294,79 @@ function initSettingsDragAndDrop() {
 
     card.addEventListener('dragend', () => {
       card.classList.remove('dragging');
-      draggedCard = null;
       card.removeAttribute('draggable');
-      
-      // Save the new DOM order to LocalStorage
-      const newOrder = Array.from(container.querySelectorAll('.ctrl-card')).map(c => c.id);
-      localStorage.setItem('settingsCardOrder', JSON.stringify(newOrder));
+      clearIndicator();
+      draggedCard = null;
+      // A cancelled drag (Esc, drop outside any target) never sets
+      // dropped - the order is unchanged, so nothing is saved.
+      if (dropped) {
+        const newOrder = [], split = [];
+        cols.forEach(col => {
+          const inCol = Array.from(col.querySelectorAll('.ctrl-card')).map(c => c.id);
+          split.push(inCol.length);
+          newOrder.push(...inCol);
+        });
+        localStorage.setItem('settingsCardOrder', JSON.stringify({ order: newOrder, split }));
+      }
     });
 
     card.addEventListener('dragover', (e) => {
       e.preventDefault(); // Required to allow dropping
       if (!draggedCard || card === draggedCard) return;
-
+      e.dataTransfer.dropEffect = 'move';
       const rect = card.getBoundingClientRect();
-      const isGridMulticolumn = window.innerWidth > 768; 
-
-      // Determine whether to insert before or after the hovered card
-      let insertBefore = false;
-      if (isGridMulticolumn) {
-        // Multi-column grid logic (Desktop)
-        insertBefore = e.clientX < rect.left + rect.width / 2;
-      } else {
-        // Single column stack logic (Mobile)
-        insertBefore = e.clientY < rect.top + rect.height / 2;
-      }
-
-      if (insertBefore) {
-        container.insertBefore(draggedCard, card);
-      } else {
-        container.insertBefore(draggedCard, card.nextSibling);
+      const before = e.clientY < rect.top + rect.height / 2;
+      if (card !== dropTarget || before !== dropBefore) {
+        clearIndicator();
+        dropTarget = card;
+        dropBefore = before;
+        card.classList.add(before ? 'drop-before' : 'drop-after');
       }
     });
+
+    card.addEventListener('dragleave', (e) => {
+      if (card === dropTarget && !card.contains(e.relatedTarget)) clearIndicator();
+    });
+
+    card.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!draggedCard || card === draggedCard) return;
+      if (dropTarget !== card) {
+        const rect = card.getBoundingClientRect();
+        dropBefore = e.clientY < rect.top + rect.height / 2;
+      }
+      clearIndicator();
+      colOf(card).insertBefore(draggedCard, dropBefore ? card : card.nextSibling);
+      dropped = true;
+    });
+  });
+
+  container.addEventListener('dragover', (e) => { e.preventDefault(); });
+  container.addEventListener('drop', (e) => {
+    if (e.defaultPrevented || !draggedCard) return;
+    e.preventDefault();
+    let col = cols[0], bestCx = Infinity, inCol = false;
+    cols.forEach(c => {
+      const r = c.getBoundingClientRect();
+      if (e.clientX >= r.left && e.clientX <= r.right) { col = c; inCol = true; }
+      const d = Math.min(Math.abs(e.clientX - r.left), Math.abs(e.clientX - r.right));
+      if (!inCol && d < bestCx) { bestCx = d; col = c; }
+    });
+    clearIndicator();
+    let best = null, bestD = Infinity;
+    col.querySelectorAll('.ctrl-card').forEach(c => {
+      if (c === draggedCard) return;
+      const r = c.getBoundingClientRect();
+      const d = Math.abs(e.clientY - (r.top + r.height / 2));
+      if (d < bestD) { bestD = d; best = c; }
+    });
+    if (!best) col.appendChild(draggedCard);
+    else {
+      const r = best.getBoundingClientRect();
+      col.insertBefore(draggedCard, e.clientY < r.top + r.height / 2 ? best : best.nextSibling);
+    }
+    dropped = true;
   });
 }
 
@@ -5229,7 +3390,6 @@ function initSettingsDragAndDrop() {
         fetchState(); 
         startLog(); 
         setInterval(fetchState, POLL_MS); 
-        setInterval(fetchOdinData, 60000);
       };
       
       document.head.appendChild(z);

@@ -221,5 +221,118 @@ namespace esphome
 
             return calculated_flow;
         }
+
+        float Optimizer::apply_flow_limits(OptimizerZone zone, float calculated, float target_delta_t, float guard_return_temp)
+        {
+            auto &status = this->state_.ecodan_instance->get_status();
+            bool cooling = this->is_cooling_mode(status, zone);
+            float feed = this->get_feed_temp(zone);
+            float ret = guard_return_temp;
+
+            bool guard_enabled = status.has_independent_zone_temps() && !isnan(feed) && !isnan(ret);
+
+            if (cooling)
+            {
+                if (guard_enabled && (ret - feed) > target_delta_t && calculated > feed)
+                {
+                    ESP_LOGI(OPTIMIZER_TAG,
+                        "[Buffer] Z%d Short-cycle guard (Cooling): ΔT actual %.2f > target %.2f — held %.2f → %.2f",
+                        (int)zone, ret - feed, target_delta_t, calculated, feed);
+                    calculated = feed;
+                }
+
+                // Step limit only protects a running compressor.
+                if (this->is_compressor_active(status))
+                    calculated = this->enforce_step_limit(status, feed, calculated, true);
+
+                float min_cool_target = 18.0f;
+                if (zone == OptimizerZone::ZONE_1)
+                {
+                    if (this->state_.minimum_cooling_flow_temp_z1 != nullptr)
+                        min_cool_target = this->state_.minimum_cooling_flow_temp_z1->state;
+                }
+                else if (zone == OptimizerZone::ZONE_2)
+                {
+                    min_cool_target = this->state_.minimum_cooling_flow_temp_z2->state;
+                }
+
+                // smart_start caps the flow on startup (water still warm) to avoid a slam-start.
+                bool cooling_active = status.is_cooling_active();
+                if (!cooling_active)
+                {
+                    float smart_start = this->state_.cooling_smart_start_temp->state;
+                    if (min_cool_target > smart_start)
+                    {
+                        ESP_LOGW(OPTIMIZER_TAG,
+                            "Z%d COOLING: min_cool_target (%.1f) > smart_start (%.1f) — clamping to min_cool_target.",
+                            (int)zone, min_cool_target, smart_start);
+                        smart_start = min_cool_target;
+                    }
+                    calculated = this->clamp_flow_temp(calculated, min_cool_target, smart_start);
+                }
+                else
+                {
+                    calculated = std::max(calculated, min_cool_target);
+                }
+            }
+            else
+            {
+                if (guard_enabled && (feed - ret) > target_delta_t && calculated < feed)
+                {
+                    ESP_LOGI(OPTIMIZER_TAG,
+                        "[Buffer] Z%d Short-cycle guard (Heating): ΔT actual %.2f > target %.2f — held %.2f → %.2f",
+                        (int)zone, feed - ret, target_delta_t, calculated, feed);
+                    calculated = feed;
+                }
+
+                calculated = this->round_nearest(calculated);
+
+                auto limits = this->get_flow_limits(zone);
+                // Stepdown: after a DHW run, always step down during the
+                // post-DHW window (5 min) — clamp first, so the setpoint
+                // follows the hot feed down in 0.5° steps. Otherwise step
+                // down whenever the compressor is running. Compressor off
+                // and no window: only the zone clamp applies.
+                if (this->is_post_dhw_window(status))
+                {
+                    calculated = this->clamp_flow_temp(calculated, limits.min, limits.max);
+                    calculated = this->enforce_step_limit(status, feed, calculated, false);
+                }
+                else if (this->is_compressor_active(status))
+                {
+                    calculated = this->enforce_step_limit(status, feed, calculated, false);
+                    calculated = this->clamp_flow_temp(calculated, limits.min, limits.max);
+                }
+                else
+                {
+                    calculated = this->clamp_flow_temp(calculated, limits.min, limits.max);
+                }
+            }
+
+            return calculated;
+        }
+
+        float Optimizer::limit_external_flow(OptimizerZone zone, float requested)
+        {
+            auto &status = this->state_.ecodan_instance->get_status();
+            if (isnan(requested))
+                return requested;
+            if (this->is_dhw_active(status))
+                return requested;
+
+            bool cooling = this->is_cooling_mode(status, zone);
+            float ret = this->get_return_temp(zone);
+            
+            float target_delta_t = isnan(ret) ? 0.0f : (cooling ? (ret - requested) : (requested - ret));
+
+            float limited = this->apply_flow_limits(zone, requested, target_delta_t, ret);
+            if (limited != requested)
+            {
+                ESP_LOGD(OPTIMIZER_TAG,
+                    "Z%d External flow limited: %.2f → %.2f (feed %.2f, %s)",
+                    (int)zone, requested, limited, this->get_feed_temp(zone), cooling ? "cooling" : "heating");
+            }
+            return limited;
+        }
     } // namespace optimizer
 } // namespace esphome

@@ -32,7 +32,6 @@ asgard_dashboard:
   dhw_temp_id:                       dhw_temp
   dhw_flow_temp_target_id:           dhw_flow_temp_target
   dhw_flow_temp_drop_id:             dhw_flow_temp_drop
-  num_dhw_start_threshold_id:        dhw_start_threshold
   dhw_consumed_id:                   dhw_consumed
   dhw_delivered_id:                  dhw_delivered
   dhw_cop_id:                        ddhw_cop
@@ -73,7 +72,6 @@ asgard_dashboard:
   sel_room_temp_source_z1_id:        temperature_feedback_source_z1
   operating_mode_z1_id:              heatpump_select_operating_mode
   sel_temp_source_z1_id:             asgard_vt_temp_sensor_source_z1
-  solver_dhw_mode_id:                solver_dhw_mode
  
   # ── Numbers 
   num_aa_setpoint_bias_id:           auto_adaptive_setpoint_bias
@@ -90,17 +88,18 @@ asgard_dashboard:
   # ── Cycle prevention 
   predictive_short_cycle_control_enabled_id: predictive_short_cycle_control_enabled 
 
-# ── Solver & Physics
-  sw_show_solver_tab_id:             sw_show_solver_tab
+  # ── Odin MQTT config
+  txt_mqtt_broker_ip_id:             txt_mqtt_broker_ip
+  txt_mqtt_broker_port_id:           txt_mqtt_broker_port
+  txt_mqtt_user_id:                  txt_mqtt_user
+  txt_mqtt_password_id:              txt_mqtt_password
+  txt_mqtt_topic_prefix_id:          txt_mqtt_topic_prefix
 
   # ── Server Control
   sw_server_control_id:              heatpump_switch_server_control_mode
   sw_sc_prohibit_dhw_id:             heatpump_switch_server_control_prohibit_dhw
   sw_sc_prohibit_z1_heating_id:      heatpump_switch_server_control_prohibit_z1_heating
   sw_sc_prohibit_z1_cooling_id:      heatpump_switch_server_control_prohibit_z1_cooling
-  sw_use_solver_id:                  sw_use_solver
-  bin_solver_connected_id:           bin_solver_connected
-  txt_solver_ip_id:                  txt_solver_ip
   num_raw_heat_produced_id:          num_raw_heat_produced
   num_raw_elec_consumed_id:          num_raw_elec_consumed
   num_raw_runtime_hours_id:          num_raw_runtime_hours
@@ -108,8 +107,6 @@ asgard_dashboard:
   num_raw_avg_room_temp_id:          num_raw_avg_room_temp
   num_raw_delta_room_temp_id:        num_raw_delta_room_temp
   num_raw_hl_tm_product_id:          num_raw_hl_tm_product
-  num_battery_soc_kwh_id:            num_battery_soc_kwh
-  num_battery_max_discharge_kw_id:   num_battery_max_discharge_kw
   num_raw_solar_factor_id: num_raw_solar_factor
 
   num_raw_cool_produced_id:          num_raw_cool_produced
@@ -145,3 +142,6 @@ asgard_dashboard:
   lockout_strategy_id: lockout_strategy
   status_short_cycle_lockout_id: status_short_cycle_lockout
   short_cycle_mitigation_button_id: short_cycle_mitigation_button
+
+  # System
+  reboot_button_id: restart_button

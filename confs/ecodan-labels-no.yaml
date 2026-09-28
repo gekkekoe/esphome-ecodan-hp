@@ -166,26 +166,19 @@ substitutions:
   pump_feedback_status: 'Status Pumpe-tilbakemelding'
   master_thermostat: 'Hovedromsensor'
 
-  solver_kwh_meter_feedback_source: "Energimåler kilde"
-  solver_kwh_meter_option_internal: "Intern energimåler"
-  solver_kwh_meter_feedback: "kWh-måler tilbakemelding"
 
-  solver_dhw_mode: Solver varmtvannsmodus
-  solver_dhw_mode_option_regular: Normal
-  solver_dhw_mode_option_forced: Tvunget
 
   asgard_vt_temp_sensor_source: 'Kilde Virtuell Termostat'
 
-  sw_use_solver: "Aktiver dynamisk kostnadsberegner"
-  bin_solver_connected: "Beregner online-status"
+  solver_kwh_meter_feedback: "kWh-måler tilbakemelding"
+  solver_kwh_meter_option_internal: "Intern energimåler"
+  solver_kwh_meter_feedback_source: "Energimåler kilde"
   num_raw_heat_produced: "Rå produsert varme (kWh)"
   num_raw_elec_consumed: "Rå forbrukt strøm (kWh)"
   num_raw_runtime_hours: "Rå driftstid (Timer)"
   num_raw_avg_outside_temp: "Rå gj.snitt utetemp. (°C)"
   num_raw_avg_room_temp: "Rå gj.snitt romtemp. (°C)"
   num_raw_delta_room_temp: "Rå delta romtemp. (°C)"
-  num_battery_soc_kwh: "Batteri SoC (kWh)"
-  num_battery_max_discharge_kw: "Maks. batteriutlading (kW)"
   num_raw_hl_tm_product: "Rått HL×TM-produkt"
   num_raw_solar_factor: "Passiv solvarmefaktor"
 

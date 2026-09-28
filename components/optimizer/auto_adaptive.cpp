@@ -64,116 +64,6 @@ namespace esphome
             return this->state_before_defrost_;
         }
 
-        // ─────────────────────────────────────────────────────────────────
-        // ODIN solver bias — mutex-safe, returns {bias, heatpump_off}
-        // ─────────────────────────────────────────────────────────────────
-        Optimizer::SolverResult Optimizer::resolve_solver_result_(std::size_t zone, float room_target_temp, float current_room_temp) {
-            SolverResult result{-1.0f, false, OptimizerOperationMode::UNAVAILABLE, -1 };
-
-            if (this->state_.sw_use_solver == nullptr || !this->state_.sw_use_solver->state)
-                return result;
-
-            if (this->odin_mutex_ == NULL || xSemaphoreTake(this->odin_mutex_, pdMS_TO_TICKS(10)) != pdTRUE)
-                return result;
-
-            // Check if we have both energy (for on/off) and production (for scaling)
-            if (this->odin_data_ready_ && !this->odin_production_.empty() && !this->odin_operation_mode_.empty()) {
-                int current_day  = this->get_current_ecodan_day();
-                int current_hour = this->get_current_ecodan_hour();
-
-                if (current_day != this->odin_data_day_) {
-                    // Day rolled over — data is stale, wait for new solve
-                    this->odin_data_ready_ = false;
-                    xSemaphoreGive(this->odin_mutex_);
-                    return result;
-                }
-                
-                if (current_hour >= 0 && current_hour < 24) {
-                    auto mode = to_operation_mode(this->odin_operation_mode_[current_hour]);
-                    // Per-zone production plan from the two-zone solve. Falls
-                    // back to the combined (whole-pump) plan when the solver
-                    // answered single-zone (the zone vectors stay empty then).
-                    const std::vector<float> &prod_vec =
-                        (zone == 1 && this->odin_production_z2_.size() == this->odin_production_.size())
-                            ? this->odin_production_z2_
-                            : (zone == 0 && this->odin_production_z1_.size() == this->odin_production_.size())
-                                ? this->odin_production_z1_
-                                : this->odin_production_;
-                    float odin_prod   = prod_vec[current_hour];
-
-                    // look ahead during lock
-                    int next_hour = (current_hour + 1) % 24;
-                    auto next_mode = to_operation_mode(this->odin_operation_mode_[next_hour]);
-                    float next_prod  = prod_vec[next_hour];
-
-                    xSemaphoreGive(this->odin_mutex_);
-
-                    if (mode != OptimizerOperationMode::DHW_ON && mode != OptimizerOperationMode::LEGIONELLA_PREVENTION) {
-                        this->odin_last_executed_dhw_hour_ = -1;
-                    }
-
-                    // NAN = no data for this hour yet — fall back to AA, no soft-stop
-                    if (std::isnan(odin_prod) || mode == OptimizerOperationMode::UNAVAILABLE) {
-                        ESP_LOGW(OPTIMIZER_TAG, "ODIN data is NAN at hour %d. Forcing fallback.", current_hour);
-                        return result;
-                    }
-
-                    result.current_hour = current_hour;
-                    result.mode = mode;
-                    result.heatpump_off = (odin_prod < 0.1f &&
-                                          mode != OptimizerOperationMode::COOL_ON &&
-                                          mode != OptimizerOperationMode::HEAT_ON);
-
-                    // Fall-forward logic: if currently off or doing DHW/Legionella, 
-                    if (odin_last_executed_dhw_hour_ != -1
-                        && (result.heatpump_off || mode == OptimizerOperationMode::DHW_ON || mode == OptimizerOperationMode::LEGIONELLA_PREVENTION)) {
-
-                        if (!std::isnan(next_prod) && next_mode != OptimizerOperationMode::UNAVAILABLE) {
-                            bool next_off = (next_prod < 0.1f &&
-                                            next_mode != OptimizerOperationMode::COOL_ON &&
-                                            next_mode != OptimizerOperationMode::HEAT_ON);
-                            
-                            if (!next_off) {
-                                ESP_LOGI(OPTIMIZER_TAG, "DHW/Legionella complete (or off) at hour %d, resuming with next hour plan (mode=%d, prod=%.2f)",
-                                    current_hour, (int)next_mode, next_prod);
-                                
-                                // Overwrite current working variables to "fall through" to standard logic below
-                                mode = next_mode;
-                                odin_prod = next_prod;
-                                result.mode = mode;
-                                result.heatpump_off = false;
-                            }
-                        }
-                    }
-
-                    OptimizerZone oz = (zone == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2;
-
-                    if (result.heatpump_off || odin_prod < 0.1f) {
-                        apply_solver_soft_stop(true, oz);
-                        return result;
-                    }
-                    
-                    apply_solver_soft_stop(false, oz);
-                    
-                    float max_out = 7.0f;
-                    if (this->odin_max_output_ != 0) {
-                        max_out = this->odin_max_output_;
-                    }
-                    if (max_out < 1.0f) max_out = 7.0f;
-                    
-                    // Calculate how hard ODIN wants the heat pump to work (ratio 0.0–1.0).
-                    result.load_ratio = std::clamp(odin_prod / max_out, 0.0f, 1.0f);
-                    
-                    ESP_LOGD(OPTIMIZER_TAG, "ODIN -> Hour %d | Prod: %.1f/%.1f | factor: %.2f | mode: %d",
-                             current_hour, odin_prod, max_out, result.load_ratio, static_cast<uint8_t>(mode));
-                    
-                    return result;
-                }
-            }
-
-            xSemaphoreGive(this->odin_mutex_);
-            return result;
-        }
 
         // ─────────────────────────────────────────────────────────────────
         // Heating flow calculation (Delta-T + defrost ramp + step-down)
@@ -241,43 +131,17 @@ namespace esphome
                     calculated_flow = actual_return_temp + target_delta;
                 }
 
-                // Fetch feed temp once (reused by the buffer guard below).
-                float actual_flow_temp = this->get_feed_temp(
-                    (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
-
-                // Buffer short-cycle guard: if actual ΔT (feed − return) already exceeds
-                // the target ΔT, (return + target_delta) falls below the current feed
-                // temperature — sending that setpoint would stop the compressor.
-                // Hold at actual feed instead.
-                if (status.has_independent_zone_temps() && !std::isnan(actual_flow_temp)
-                    && (actual_flow_temp - actual_return_temp) > target_delta && calculated_flow < actual_flow_temp) {
-
-                    ESP_LOGI(OPTIMIZER_TAG,
-                        "[Buffer] Z%d Short-cycle guard (Heating): ΔT actual %.2f > target %.2f — held %.2f → %.2f",
-                        (zone_i + 1),
-                        actual_flow_temp - actual_return_temp, target_delta,
-                        calculated_flow, actual_flow_temp);
-                    calculated_flow = actual_flow_temp;
-                }
-
-                calculated_flow = this->round_nearest(calculated_flow);
-
                 ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING: flow=%.2f°C, return=%.2f°C", (zone_i + 1), calculated_flow, actual_return_temp);
             }
 
-            bool cooling_mode = is_cooling_mode(status, (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
-            // Clamp + step-down (order depends on post-DHW window)
-            if (this->is_post_dhw_window(status)) {
-                calculated_flow = this->clamp_flow_temp(calculated_flow, zone_min, zone_max);
-                calculated_flow = this->enforce_step_limit(status,
-                    this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2),
-                    calculated_flow, cooling_mode);
-            } else {
-                calculated_flow = this->enforce_step_limit(status,
-                    this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2),
-                    calculated_flow, cooling_mode);
-                calculated_flow = this->clamp_flow_temp(calculated_flow, zone_min, zone_max);
-            }
+            // Write-path limits (short-cycle guard, rounding, step limit
+            // vs. actual feed, zone clamp) — shared with the ODIN forwarder.
+            // The guard uses the (possibly defrost-locked) return temp and is
+            // skipped during the defrost recovery ramp — pre-refactor behavior.
+            calculated_flow = this->apply_flow_limits(
+                (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2,
+                calculated_flow, target_delta,
+                (is_defrost_weather && defrost_enabled) ? NAN : actual_return_temp);
 
             return calculated_flow;
         }
@@ -299,49 +163,15 @@ namespace esphome
             } else {
                 calculated_flow = actual_return_temp - target_delta_t;
 
-                float actual_flow_temp = this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
-                if (status.has_independent_zone_temps() && !std::isnan(actual_flow_temp)
-                    && (actual_return_temp - actual_flow_temp) > target_delta_t && calculated_flow > actual_flow_temp) {
-
-                    ESP_LOGI(OPTIMIZER_TAG,
-                        "[Buffer] Z%d Short-cycle guard (Cooling): ΔT actual %.2f > target %.2f — held %.2f → %.2f",
-                        (zone_i + 1),
-                        actual_return_temp - actual_flow_temp, target_delta_t,
-                        calculated_flow, actual_flow_temp);
-                    calculated_flow = actual_flow_temp;
-                }
-
                 ESP_LOGD(OPTIMIZER_TAG, "Z%d COOLING: calc=%.1f°C (return %.1f - delta %.1f)",
                          (zone_i + 1), calculated_flow, actual_return_temp, target_delta_t);
             }
 
-            float min_cool_target = 18.0f;
-            if (zone_i == 0) {
-                if (this->state_.minimum_cooling_flow_temp_z1 != nullptr)
-                    min_cool_target = state_.minimum_cooling_flow_temp_z1->state;
-            } else {
-                if (state_.minimum_cooling_flow_temp_z2 != nullptr)
-                    min_cool_target = state_.minimum_cooling_flow_temp_z2->state;
-            }
-
-            calculated_flow = this->enforce_step_limit(status,
-                    this->get_feed_temp((zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2),
-                    calculated_flow, true);
-
-            // smart_start caps the flow on startup (water still warm) to avoid a slam-start.
-            bool cooling_active = status.is_cooling_active();
-            if (!cooling_active) {
-                float smart_start = this->state_.cooling_smart_start_temp->state;
-                if (min_cool_target > smart_start) {
-                    ESP_LOGW(OPTIMIZER_TAG,
-                        "Z%d COOLING: min_cool_target (%.1f) > smart_start (%.1f) — clamping to min_cool_target.",
-                        (zone_i + 1), min_cool_target, smart_start);
-                    smart_start = min_cool_target;
-                }
-                calculated_flow = this->clamp_flow_temp(calculated_flow, min_cool_target, smart_start);
-            } else {
-                calculated_flow = std::max(calculated_flow, min_cool_target);
-            }
+            // Write-path limits (short-cycle guard, step limit vs. actual
+            // feed, cooling clamp) — shared with the ODIN forwarder.
+            calculated_flow = this->apply_flow_limits(
+                (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2,
+                calculated_flow, target_delta_t, actual_return_temp);
 
             return calculated_flow;
         }
@@ -359,6 +189,18 @@ namespace esphome
                                                float &out_flow_heat,
                                                float &out_flow_cool) {
             auto zone = (i == 0) ? esphome::ecodan::Zone::ZONE_1 : esphome::ecodan::Zone::ZONE_2;
+            // ODIN is in direct control via the MQTT forwarder: it is the
+            // sole writer of the flow setpoint. Computing and writing a local
+            // value would fight ODIN on every 5-minute cycle. The AA loop
+            // keeps running (lockouts, DHW, stats) but leaves zone flow
+            // control to ODIN while it holds a valid command. It resumes
+            // writing when the forwarder releases (valid_until expired /
+            // ODIN unreachable — the designed ASGARD 2b.5 failure case); the
+            // live takeover sensor clears on that release.
+            if (this->odin_forwarder_takeover_active()) {
+                ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN forwarder active — AA flow setpoint write skipped.", (i + 1));
+                return;
+            }
             auto heating_type_index = this->state_.heating_system_type->active_index().value_or(0);
 
             bool is_heating_mode   = status.is_auto_adaptive_heating(zone);
@@ -411,89 +253,11 @@ namespace esphome
             float dynamic_min     = prof.base_min_delta_t + cold_factor * (prof.min_delta_cold_limit - prof.base_min_delta_t);
 
             bool set_point_reached = error < 0.0f;
-            bool solver_enabled = this->solver_enabled();
-
-            if (solver_enabled) {
-                auto [solver_load_ratio, solver_heatpump_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(i, room_target_temp, room_temp);
-                
-                if (solver_operating_mode == OptimizerOperationMode::DHW_ON || solver_operating_mode == OptimizerOperationMode::LEGIONELLA_PREVENTION) {
-                    return; 
-                }
-
-                if (solver_load_ratio < 0.0f && !solver_heatpump_off) {
-                    if (millis() < 2 * 60000) {
-                        ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN enabled but data not ready. Skipping one AA iteration.", (i + 1));
-                        return;
-                    } else {
-                        ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN data still pending (+5m). Falling back to auto adaptive.", (i + 1));
-                    }
-                } 
-                else if (solver_heatpump_off || solver_operating_mode == OptimizerOperationMode::OFF) {
-                    ESP_LOGD(OPTIMIZER_TAG,
-                        "Z%d ODIN heating/cooling stopped, solver_load_ratio: %.2f, mode: %d",
-                        (i + 1), solver_load_ratio, static_cast<uint8_t>(solver_operating_mode));
-                    return;
-                }
-                else {
-                    // --- UNIFIED PHYSICAL MODEL FOR HEATING & COOLING ---
-                    float desired_delta = 0.0f;
-                    float max_out = (this->odin_max_output_ != 0) ? this->odin_max_output_ : 7.0f;
-                    float target_kw = solver_load_ratio * max_out;
-
-                    // Calculate required Delta T using physics if flow is reliable
-                    if (flow_rate > 5.0f) {
-                        float shc_override = this->state_.ecodan_instance->get_specific_heat_constant();
-                        float specific_heat_constant = std::isnan(shc_override) ? status.estimate_water_constant(actual_flow_temp) : shc_override;
-                        float physical_delta = (target_kw * 60.0f) / (flow_rate * specific_heat_constant);
-                        desired_delta = std::clamp(physical_delta, prof.base_min_delta_t, prof.max_delta_t);
-
-                        ESP_LOGD(OPTIMIZER_TAG,
-                            "Z%d ODIN (Physical) demands %.1fkW. Flow: %.1f L/min -> \u0394T: %.2f (Clamped: %.2f)",
-                            (i + 1), target_kw, flow_rate, physical_delta, desired_delta);
-                    } else {
-                        // Fallback heuristic when flow is too low
-                        desired_delta = prof.base_min_delta_t + solver_load_ratio * (prof.max_delta_t - prof.base_min_delta_t);
-                        
-                        ESP_LOGD(OPTIMIZER_TAG,
-                            "Z%d ODIN (Heuristic) Low Flow (%.1f L/min). Load Ratio: %.2f -> \u0394T: %.2f",
-                            (i + 1), flow_rate, solver_load_ratio, desired_delta);
-                    }
-
-                    // --- APPLY TO SPECIFIC OPERATION MODE ---
-                    if (solver_operating_mode == OptimizerOperationMode::COOL_ON) {
-                        if (!is_cooling_mode) {
-                            ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN wants cooling but zone is not in cooling mode — skip.", (i + 1));
-                            return;
-                        }
-                        
-                        // Apply the physical delta directly to the cooling calculation
-                        out_flow_cool = this->calculate_cooling_flow_(i, status, desired_delta);
-                        ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN COOLING: delta=%.1f → flow=%.1f°C", (i + 1), desired_delta, out_flow_cool);
-                        return; // Done with this zone for cooling
-                    } 
-                    else {
-                        // Heating mode: Reverse-engineer the error_factor so the rest of the function
-                        // can apply its defrost recovery and step-down logic correctly.
-                        if (prof.max_delta_t > dynamic_min) {
-                            error_factor = (desired_delta - dynamic_min) / (prof.max_delta_t - dynamic_min);
-                            error_factor = std::max(0.0f, error_factor); // Allow > 1.0 if physical demand is high
-                        } else {
-                            error_factor = 1.0f;
-                        }
-                        
-                        // Disable local smart boost, and setpoint reached
-                        smart_boost = 1.0f; 
-                        set_point_reached = false;
-
-                        ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN HEATING mapped error_factor: %.2f", (i + 1), error_factor);
-                    }
-                }
-            }
 
             float target_delta = dynamic_min + error_factor * smart_boost * (prof.max_delta_t - dynamic_min);
             ESP_LOGD(OPTIMIZER_TAG,
-                "Z%d target_delta=%.2f cold_factor=%.2f dyn_min=%.2f eff_range=%.2f error_factor=%.2f boost=%.2f linear=%d, use_solver=%d",
-                (i + 1), target_delta, cold_factor, dynamic_min, effective_error_range, error_factor, smart_boost, use_linear, solver_enabled);
+                "Z%d target_delta=%.2f cold_factor=%.2f dyn_min=%.2f eff_range=%.2f error_factor=%.2f boost=%.2f linear=%d",
+                (i + 1), target_delta, cold_factor, dynamic_min, effective_error_range, error_factor, smart_boost, use_linear);
 
             if (is_heating_mode) {
                 out_flow_heat = this->calculate_heating_flow_(
@@ -517,23 +281,27 @@ namespace esphome
             this->adaptive_loop_running_ = true;
 
             bool aa_enabled = this->aa_enabled();
-            bool solver_enabled = this->solver_enabled();
             auto *override_z1 = this->state_.sw_odin_override_z1;
             auto *override_z2 = this->state_.sw_odin_override_z2;
 
-            // If the user disables Auto Adaptive or the Solver, we must ensure the hardware relays are released.
-            if (!aa_enabled || !solver_enabled) {
-                bool z1_locked = override_z1 != nullptr && override_z1->state;
-                bool z2_locked = override_z2 != nullptr && override_z2->state;
-                
-                if (z1_locked || z2_locked || this->solver_stop_active_[0] || this->solver_stop_active_[1]) {
-                    ESP_LOGI(OPTIMIZER_TAG, "Solver/AA disabled, but override switches are active. Forcing release.");
-                    if (override_z1 != nullptr && override_z1->state) override_z1->turn_off();
-                    if (override_z2 != nullptr && override_z2->state) override_z2->turn_off();
+            // If the user disables Auto Adaptive, we must ensure the hardware relays are released.
+            if (!aa_enabled) {
+                // While the ODIN forwarder is still holding a valid command,
+                // it owns the relay override. Releasing it here would hand
+                // the relay back to the virtual thermostat under ODIN's feet.
+                if (!this->odin_forwarder_takeover_active()) {
+                    bool z1_locked = override_z1 != nullptr && override_z1->state;
+                    bool z2_locked = override_z2 != nullptr && override_z2->state;
+
+                    if (z1_locked || z2_locked) {
+                        ESP_LOGI(OPTIMIZER_TAG, "AA disabled, but override switches are active. Forcing release.");
+                        if (override_z1 != nullptr && override_z1->state) override_z1->turn_off();
+                        if (override_z2 != nullptr && override_z2->state) override_z2->turn_off();
+                    }
                 }
             }
             else {
-                // aa and solver enabled, ensure that override is on
+                // AA enabled, ensure that override is on
                 if (override_z1 != nullptr && !override_z1->state) override_z1->turn_on();
                 if (override_z2 != nullptr && !override_z2->state) override_z2->turn_on();
             }
@@ -545,43 +313,6 @@ namespace esphome
 
             auto &status = this->state_.ecodan_instance->get_status();
 
-            if (solver_enabled) {
-                auto [solver_load_ratio, solver_heatpump_off, solver_operating_mode, current_hour] = this->resolve_solver_result_(0, 0.0f, 0.0f);
-                
-                if (solver_operating_mode == OptimizerOperationMode::DHW_ON) {
-                    int dhw_mode = 0; // 0 = Regular, 1 = Forced
-                    if (this->state_.solver_dhw_mode != nullptr && this->state_.solver_dhw_mode->active_index().has_value()) {
-                        dhw_mode = this->state_.solver_dhw_mode->active_index().value();
-                    }
-
-                    if (odin_last_executed_dhw_hour_ != current_hour) {
-                        if (!this->is_dhw_active(status)) {
-                            ESP_LOGI(OPTIMIZER_TAG, "ODIN Starting executing planned DHW (Mode: %s)", dhw_mode == 0 ? "Regular" : "Forced");
-                            
-                            if (dhw_mode == 1) { // Forced
-                                if (this->state_.sw_force_dhw != nullptr) {
-                                    if (!this->state_.sw_force_dhw->state) this->state_.sw_force_dhw->turn_on();
-                                    odin_last_executed_dhw_hour_ = current_hour;
-                                } else {
-                                    ESP_LOGD(OPTIMIZER_TAG, "ODIN DHW Forced planned, but not configured");
-                                }
-                            } else { // Regular
-                                if (this->state_.sw_regular_dhw != nullptr) {
-                                    if (this->state_.sw_regular_dhw->state)  {
-                                        this->state_.sw_regular_dhw->turn_off();
-                                        ESP_LOGD(OPTIMIZER_TAG, "ODIN DHW Regular planned, switch was still on, toggle to off first");
-                                    }
-                                    
-                                    this->state_.sw_regular_dhw->turn_on();
-                                    odin_last_executed_dhw_hour_ = current_hour;
-                                } else {
-                                    ESP_LOGD(OPTIMIZER_TAG, "ODIN DHW Regular planned, but not configured");
-                                }
-                            }
-                        }
-                    }
-                }
-            }
 
             if (this->is_system_hands_off(status)) {
                 ESP_LOGD(OPTIMIZER_TAG, "System is busy (DHW/Defrost/Lockout). Exiting.");

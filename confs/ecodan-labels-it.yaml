@@ -167,26 +167,19 @@ substitutions:
   pump_feedback_status: 'Stato Feedback Pompa'
   master_thermostat: 'Sensore Ambiente Master'
 
-  solver_kwh_meter_feedback_source: "Fonte contatore"
-  solver_kwh_meter_option_internal: "Contatore interno"
-  solver_kwh_meter_feedback: "Feedback contatore kWh"
 
-  solver_dhw_mode: Modalità ACS del Solver
-  solver_dhw_mode_option_regular: Normale
-  solver_dhw_mode_option_forced: Forzato
 
   asgard_vt_temp_sensor_source: 'Sorgente Termostato Virtuale'
 
-  sw_use_solver: "Abilita risolutore di costi dinamici"
-  bin_solver_connected: "Stato online risolutore"
+  solver_kwh_meter_feedback: "Feedback contatore kWh"
+  solver_kwh_meter_option_internal: "Contatore interno"
+  solver_kwh_meter_feedback_source: "Fonte contatore"
   num_raw_heat_produced: "Calore grezzo prodotto (kWh)"
   num_raw_elec_consumed: "Elettricità grezza consumata (kWh)"
   num_raw_runtime_hours: "Tempo di esecuzione grezzo (Ore)"
   num_raw_avg_outside_temp: "Temp. esterna media grezza (°C)"
   num_raw_avg_room_temp: "Temp. ambiente media grezza (°C)"
   num_raw_delta_room_temp: "Delta temp. ambiente grezza (°C)"
-  num_battery_soc_kwh: "Stato di carica batteria (kWh)"
-  num_battery_max_discharge_kw: "Scarica max batteria (kW)"
   num_raw_hl_tm_product: "Prodotto HL×TM grezzo"
   num_raw_solar_factor: "Fattore di guadagno solare passivo"
 

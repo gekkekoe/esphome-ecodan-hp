@@ -18,7 +18,7 @@ asgard_dashboard:
   num_min_cooling_flow_z2_id: minimum_cooling_flow_temp_z2
   num_temperature_feedback_z2_id: temperature_feedback_z2
 
-  # ── Zone 2 physics data (Solver tab: Z2 sub-cards + solve payload) ──
+  # ── Zone 2 physics data (migration export to the ODIN box) ──
   num_raw_heat_produced_z2_id: num_raw_heat_produced_z2
   num_raw_elec_consumed_z2_id: num_raw_elec_consumed_z2
   num_raw_runtime_hours_z2_id: num_raw_runtime_hours_z2
