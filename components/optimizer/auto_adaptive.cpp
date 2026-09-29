@@ -301,9 +301,16 @@ namespace esphome
                 }
             }
             else {
-                // AA enabled, ensure that override is on
-                if (override_z1 != nullptr && !override_z1->state) override_z1->turn_on();
-                if (override_z2 != nullptr && !override_z2->state) override_z2->turn_on();
+                // AA enabled: the override belongs to the ODIN forwarder only
+                // while it holds a valid command. Outside takeover the virtual
+                // thermostat must keep owning the relay — otherwise a released
+                // or absent ODIN freezes the demand here and the local
+                // fallback never survives the next AA cycle.
+                bool hold = this->odin_forwarder_takeover_active();
+                if (override_z1 != nullptr && override_z1->state != hold)
+                    hold ? override_z1->turn_on() : override_z1->turn_off();
+                if (override_z2 != nullptr && override_z2->state != hold)
+                    hold ? override_z2->turn_on() : override_z2->turn_off();
             }
 
             if (!aa_enabled) {

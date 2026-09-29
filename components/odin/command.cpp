@@ -55,12 +55,19 @@ void OdinForwarder::handle_command(const std::string &payload) {
 void OdinForwarder::take_over() {
   ESP_LOGI(TAG, "Odin takeover: relay override held; demand via soft stop only");
   this->hold_override(true);
+  // Publish now, not on the next update() poll: the AA loop gates its flow
+  // writes on this sensor, and a stale "no takeover" would let one local
+  // write slip through right after the first ODIN command.
+  if (this->takeover_sensor_ != nullptr)
+    this->takeover_sensor_->publish_state(true);
 }
 
 void OdinForwarder::release() {
   this->taken_over_ = false;
   this->valid_until_ = 0;
   this->hold_override(false);
+  if (this->takeover_sensor_ != nullptr)
+    this->takeover_sensor_->publish_state(false);
 
   ESP_LOGW(TAG, "Odin command expired — released to local control");
 }
