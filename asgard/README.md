@@ -28,7 +28,7 @@
 
 | Standard Order (NL) |
 | :--- |
-| [![Order Standard](https://img.shields.io/badge/Order-Standard%20Order-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFa6oIblrcIPaNN3Wq4AU00) |
+| [![Order Standard](https://img.shields.io/badge/Order-Standard%20Order-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/bJe4gAgFL5gn7BBakO4AU07) |
 
 </div>
 
