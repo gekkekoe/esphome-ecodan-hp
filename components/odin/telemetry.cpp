@@ -45,8 +45,8 @@ void OdinForwarder::publish_telemetry() {
   emit_zone({"room_temp", "zone1_setpoint", "flow_temp", "return_temp", optimizer::OptimizerZone::ZONE_1,
              &ecodan::Status::Zone1RoomTemperature, &ecodan::Status::Zone1SetTemperature,
              &ecodan::Status::HpFeedTemperature, &ecodan::Status::HpReturnTemperature});
-  put_float("dhw_temp", status.DhwTemperature);
-  put_float("dhw_temp_bottom", status.DhwSecondaryTemperature);
+  put_float("dhw_temp", status.get_tank_temperature());
+  put_float("dhw_temp_bottom", status.get_lower_tank_temperature());
 
   put_float("dhw_target", this->dhw_flow_temp_target_ ? this->dhw_flow_temp_target_->state : NAN);
   put_float("dhw_drop", this->dhw_flow_temp_drop_ ? this->dhw_flow_temp_drop_->state : NAN);
