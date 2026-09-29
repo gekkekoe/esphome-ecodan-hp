@@ -83,6 +83,23 @@ void OdinForwarder::publish_telemetry() {
                &ecodan::Status::Z2FeedTemperature, &ecodan::Status::Z2ReturnTemperature});
   }
 
+  // Flow-temperature limits for ODIN-side clamping: a directly-connected pump
+  // (HeishaMon) has no apply_flow_target equivalent, so ODIN must clamp the
+  // flow temp it sends to the limits configured here. get_*_flow_limits already
+  // applies the entity min<=max guard.
+  if (opt != nullptr) {
+    auto hl1 = opt->get_flow_limits(optimizer::OptimizerZone::ZONE_1);
+    put_float("heating_min_flow_temp_z1", hl1.min);
+    put_float("heating_max_flow_temp_z1", hl1.max);
+    put_float("cooling_min_flow_temp_z1", opt->get_cool_flow_limits(optimizer::OptimizerZone::ZONE_1).min);
+    if (status.has_2zones()) {
+      auto hl2 = opt->get_flow_limits(optimizer::OptimizerZone::ZONE_2);
+      put_float("heating_min_flow_temp_z2", hl2.min);
+      put_float("heating_max_flow_temp_z2", hl2.max);
+      put_float("cooling_min_flow_temp_z2", opt->get_cool_flow_limits(optimizer::OptimizerZone::ZONE_2).min);
+    }
+  }
+
   float electric_kwh_total = NAN;
   if (this->meter_source_ != nullptr && this->meter_source_->active_index().value_or(0) != 0) {
     if (this->meter_feedback_ != nullptr && this->meter_feedback_->has_state())
