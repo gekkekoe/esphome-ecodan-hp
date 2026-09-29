@@ -26,7 +26,7 @@ text:
     mode: text
     optimistic: true
     restore_value: true
-    initial_value: ""
+    initial_value: "odin-user"
     max_length: 31
   - platform: template
     id: txt_mqtt_password
@@ -34,7 +34,7 @@ text:
     mode: text
     optimistic: true
     restore_value: true
-    initial_value: ""
+    initial_value: "odin-pwd"
     max_length: 31
   - platform: template
     id: txt_mqtt_topic_prefix
