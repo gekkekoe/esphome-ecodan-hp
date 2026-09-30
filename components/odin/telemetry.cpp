@@ -74,6 +74,12 @@ void OdinForwarder::publish_telemetry() {
     doc["compressor_on"] = status.CompressorOn ? 1 : 0;
   doc["defrost"] = status.DefrostActive;
   doc["booster"] = status.BoosterActive;
+
+  doc["buffer_discharging"] = status.WaterPump2Active ? 1 : 0;
+  // Zone 2 only discharges when the second zone exists and its own pump
+  // P3 runs; anything else reports idle
+  doc["buffer_discharging_z2"] =
+      (status.has_2zones() && status.WaterPump3Active) ? 1 : 0;
   doc["multi_zone_status"] = static_cast<uint8_t>(status.MultiZoneStatus);
 
   if (status.has_2zones()) {

@@ -56,8 +56,8 @@ namespace ecodan
         uint8_t PumpPWM;
         uint8_t PumpFeedback;
         
-        bool WaterPump2Active;
-        bool WaterPump3Active;
+        bool WaterPump2Active{false};
+        bool WaterPump3Active{false};
         bool WaterPump4Active;
         bool ThreeWayValveActive;
         bool ThreeWayValve2Active;
