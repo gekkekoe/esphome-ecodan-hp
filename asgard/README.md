@@ -14,7 +14,7 @@
 
 # Ordering & Availability
 * **Product:** Asgard PCB: ESP32-S3 Development Sub-assembly + **50cm** Connector cable (Odin enclosure optional)
-* **Price:** From € 65,- (including VAT)
+* **Price:** From € 69,50 (including VAT)
 * **Delivery:** Shipped within 3 business days from The Netherlands (When in stock)
 
 > **New to ODIN?** Read the [ODIN whitepaper](https://gekkekoe.github.io/heatpump-optimizer/) first — what it does and a payback calculator — before ordering the bundle below.
