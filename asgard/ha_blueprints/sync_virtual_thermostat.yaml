@@ -7,6 +7,10 @@ blueprint:
     It automatically detects whether to read the state (for sensors) or the
     'current_temperature' attribute (for climate entities) and only updates
     the Ecodan device if the value has changed to prevent unnecessary traffic.
+
+    Only valid readings are forwarded: the value must be a number and within
+    the target's own min/max range, so unavailable sensors and bogus readings
+    (e.g. a 0 published by an offline device) are ignored.
   domain: automation
   input:
     source_entity:
@@ -44,10 +48,16 @@ action:
   - variables:
       current_temp: >-
         {% if states[source].domain == 'climate' %}
-          {{ state_attr(source, 'current_temperature') | float(0) }}
+          {{ state_attr(source, 'current_temperature') | float(-999) }}
         {% else %}
-          {{ states(source) | float(0) }}
+          {{ states(source) | float(-999) }}
         {% endif %}
+      temp_min: state_attr(target, 'min')
+      temp_max: state_attr(target, 'max')
+  - condition: template
+    value_template: >-
+      {{ current_temp >= (temp_min if is_number(temp_min) else -50)
+         and current_temp <= (temp_max if is_number(temp_max) else 125) }}
   - condition: template
     value_template: "{{ current_temp != states(target) | float(0) }}"
 
