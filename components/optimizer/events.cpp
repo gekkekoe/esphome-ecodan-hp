@@ -42,6 +42,12 @@ namespace esphome
                 }
             }
 
+            if (this->is_cooling_mode(status, zone))
+            {
+                this->clear_dhw_follow_state_(status, zone);
+                return;
+            }
+
             float current_flow_setpoint = (zone == OptimizerZone::ZONE_2) ? status.Zone2FlowTemperatureSetPoint : status.Zone1FlowTemperatureSetPoint;
             float adjusted_flow = actual_flow_temp;
 
@@ -88,9 +94,17 @@ namespace esphome
                             this->dhw_post_run_expiration_ = 0;
                     }
                 }
-                else {
+                else if (status.is_heating_active())
+                {
                     // also add 0.5 during post dhw while heating
                     adjusted_flow += 0.5f;
+                }
+                else
+                {
+                    // Neither heating nor cooling runs this zone (manual
+                    // cooling without auto-adaptive, defrost): the following
+                    // does not apply, hands off.
+                    return;
                 }
             }   
             else {
@@ -102,6 +116,24 @@ namespace esphome
             {
                 set_flow_temp(adjusted_flow, zone);
             }
+        }
+
+        // Drop the DHW feed-temp following state: the saved (heating) flow
+        // setpoints and, once both are gone, the post-DHW window - the same
+        // closing the post-DHW restore does.
+        void Optimizer::clear_dhw_follow_state_(const ecodan::Status &status, OptimizerZone zone)
+        {
+            if (zone == OptimizerZone::ZONE_2)
+                this->dhw_old_z2_setpoint_ = NAN;
+            else
+            {
+                this->dhw_old_z1_setpoint_ = NAN;
+                if (!status.has_2zones())
+                    this->dhw_old_z2_setpoint_ = NAN;
+            }
+
+            if (std::isnan(this->dhw_old_z1_setpoint_) && std::isnan(this->dhw_old_z2_setpoint_))
+                this->dhw_post_run_expiration_ = 0;
         }
 
         bool Optimizer::set_flow_temp(float flow, OptimizerZone zone) {

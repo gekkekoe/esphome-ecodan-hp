@@ -116,6 +116,7 @@ namespace esphome
       // ── events.cpp ────────────────────────────────────────────────────
       void on_feed_temp_change(float actual_flow_temp, OptimizerZone zone);
       void handle_dhw_feed_temp_(float actual_flow_temp, OptimizerZone zone);
+      void clear_dhw_follow_state_(const ecodan::Status& status, OptimizerZone zone);
       void on_operation_mode_change(uint8_t new_mode, uint8_t previous_mode);
       void handle_legionella_transition_(bool entering);
 
