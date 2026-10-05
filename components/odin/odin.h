@@ -56,8 +56,6 @@ public:
   void set_climate_z2(climate::Climate *c) { this->climate_z2_ = c; }
   void handle_command(const std::string &payload);
   void set_dhw_flow_temp_target(sensor::Sensor *s) { this->dhw_flow_temp_target_ = s; }
-  void set_dhw_flow_temp_drop(sensor::Sensor *s) { this->dhw_flow_temp_drop_ = s; }
-  void set_dhw_start_threshold(number::Number *n) { this->dhw_start_threshold_ = n; }
 
   void set_regular_dhw_switch(switch_::Switch *sw) { this->regular_dhw_switch_ = sw; }
 
@@ -109,8 +107,6 @@ protected:
   binary_sensor::BinarySensor *takeover_sensor_{nullptr};
   binary_sensor::BinarySensor *lockout_sensor_{nullptr};
   sensor::Sensor *dhw_flow_temp_target_{nullptr};
-  sensor::Sensor *dhw_flow_temp_drop_{nullptr};
-  number::Number *dhw_start_threshold_{nullptr};
   switch_::Switch *regular_dhw_switch_{nullptr};
   globals::RestoringGlobalsComponent<float> *legionella_saved_setpoint_{nullptr};
   climate::Climate *dhw_climate_{nullptr};

@@ -35,8 +35,6 @@ CONF_MQTT_TOPIC_PREFIX_ID = "mqtt_topic_prefix_id"
 CONF_CLIMATE_ID = "climate_id"
 CONF_CLIMATE_Z2_ID = "climate_z2_id"
 CONF_DHW_FLOW_TEMP_TARGET_ID = "dhw_flow_temp_target_id"
-CONF_DHW_FLOW_TEMP_DROP_ID = "dhw_flow_temp_drop_id"
-CONF_DHW_START_THRESHOLD_ID = "dhw_start_threshold_id"
 CONF_REGULAR_DHW_SWITCH_ID = "regular_dhw_switch_id"
 CONF_FORCE_DHW_SWITCH_ID = "force_dhw_switch_id"
 CONF_LEGIONELLA_SAVED_SETPOINT_ID = "legionella_saved_dhw_setpoint_id"
@@ -59,8 +57,6 @@ _OPTIONAL_ENTITIES = [
     (CONF_CLIMATE_ID, "set_climate", climate.Climate),
     (CONF_CLIMATE_Z2_ID, "set_climate_z2", climate.Climate),
     (CONF_DHW_FLOW_TEMP_TARGET_ID, "set_dhw_flow_temp_target", sensor.Sensor),
-    (CONF_DHW_FLOW_TEMP_DROP_ID, "set_dhw_flow_temp_drop", sensor.Sensor),
-    (CONF_DHW_START_THRESHOLD_ID, "set_dhw_start_threshold", number.Number),
     (CONF_REGULAR_DHW_SWITCH_ID, "set_regular_dhw_switch", switch.Switch),
     (CONF_FORCE_DHW_SWITCH_ID, "set_force_dhw_switch", switch.Switch),
     (CONF_ACTIVE_SENSOR_ID, "set_active_sensor", binary_sensor.BinarySensor),

@@ -53,8 +53,6 @@ void OdinForwarder::publish_telemetry() {
             status.has_mixing_tank() ? status.MixingTankTemperature : NAN);
 
   put_float("dhw_target", this->dhw_flow_temp_target_ ? this->dhw_flow_temp_target_->state : NAN);
-  put_float("dhw_drop", this->dhw_flow_temp_drop_ ? this->dhw_flow_temp_drop_->state : NAN);
-  put_float("dhw_start_threshold", this->dhw_start_threshold_ ? this->dhw_start_threshold_->state : NAN);
 
   if (status.Operation != ecodan::Status::OperationMode::UNAVAILABLE)
     doc["operation_mode"] = static_cast<uint8_t>(status.Operation);

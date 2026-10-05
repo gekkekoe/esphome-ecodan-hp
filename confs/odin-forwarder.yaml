@@ -50,10 +50,8 @@ odin:
   # optimizer is locked out it owns the relays and flow setpoints.
   lockout_sensor_id: status_short_cycle_lockout
   climate_id: heatpump_climate_z1
-  # DHW configuration — the solver uses these to schedule DHW cycles
+  # DHW setpoint — the pump owns this one, so it is forwarded. Max drop and
   dhw_flow_temp_target_id: dhw_flow_temp_target
-  dhw_flow_temp_drop_id: dhw_flow_temp_drop
-  dhw_start_threshold_id: dhw_start_threshold
   # Legionella: the pre-cycle DHW setpoint is stored in the shared NVS
   # global (with the local optimizer) so the timed restore survives reboots.
   legionella_saved_dhw_setpoint_id: legionella_saved_dhw_setpoint
