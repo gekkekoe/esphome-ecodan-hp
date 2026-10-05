@@ -48,6 +48,10 @@ void OdinForwarder::publish_telemetry() {
   put_float("dhw_temp", status.get_tank_temperature());
   put_float("dhw_temp_bottom", status.get_lower_tank_temperature());
 
+  // THW10 / mixing-tank temperature. 
+  put_float("mixing_tank_temp",
+            status.has_mixing_tank() ? status.MixingTankTemperature : NAN);
+
   put_float("dhw_target", this->dhw_flow_temp_target_ ? this->dhw_flow_temp_target_->state : NAN);
   put_float("dhw_drop", this->dhw_flow_temp_drop_ ? this->dhw_flow_temp_drop_->state : NAN);
   put_float("dhw_start_threshold", this->dhw_start_threshold_ ? this->dhw_start_threshold_->state : NAN);
