@@ -21,8 +21,10 @@ void OdinForwarder::handle_command(const std::string &payload) {
     return;
   }
   uint32_t valid_until = doc["valid_until"] | 0;
-  if (valid_until == 0)
+  if (valid_until == 0) {
+    ESP_LOGW(TAG, "Rejected command: valid_until missing/0 - nothing applied");
     return;
+  }
 
   uint8_t mode = doc["mode"] | 0;
   bool soft_stop = doc["soft_stop"] | false;
@@ -47,9 +49,10 @@ void OdinForwarder::handle_command(const std::string &payload) {
   this->apply_soft_stop(soft_stop, z2_stop, status);
 
   ESP_LOGI(TAG,
-           "Odin command applied: z1 flow %.1f -> %.1f, z2 flow %.1f -> %.1f, mode=%u soft_stop=%d valid_until=%lu",
+           "Odin command applied: z1 flow %.1f -> %.1f, z2 flow %.1f -> %.1f, mode=%u soft_stop=%d "
+           "z2_plan=%.2fkWh z2_stop=%d valid_until=%lu",
            flow_req, flow, flow_z2_req, flow_z2, static_cast<unsigned>(mode), static_cast<unsigned>(soft_stop),
-           static_cast<unsigned long>(valid_until));
+           z2_production, static_cast<unsigned>(z2_stop), static_cast<unsigned long>(valid_until));
 }
 
 void OdinForwarder::take_over() {
@@ -112,31 +115,46 @@ float OdinForwarder::apply_flow_target(const ecodan::Status &status, uint8_t mod
   if (zone == ecodan::Zone::ZONE_2 && !status.has_2zones())
     return requested;
 
-  if (status.DefrostActive || (this->lockout_sensor_ != nullptr && this->lockout_sensor_->state))
+  if (status.DefrostActive || (this->lockout_sensor_ != nullptr && this->lockout_sensor_->state)) {
+    ESP_LOGI(TAG, "Z%d flow %.1f not written: %s - pump keeps its own setpoint.", (int) zone + 1, requested,
+             status.DefrostActive ? "defrost" : "lockout");
     return requested;
+  }
 
-  if (!status.is_auto_adaptive_heating(zone) && !status.is_auto_adaptive_cooling(zone))
+  if (!status.is_auto_adaptive_heating(zone) && !status.is_auto_adaptive_cooling(zone)) {
+    // The zone is not in flow-control mode, so there is no setpoint here to
+    // move: the number ODIN asked for simply never reaches the pump.
+    ESP_LOGI(TAG, "Z%d flow %.1f not written: zone not in auto-adaptive flow control.", (int) zone + 1, requested);
     return requested;
+  }
 
   if (mode == 2) {
     if (!status.is_heating_active(zone)) {
-      ESP_LOGD(TAG, "Z%d flow target %.1f not applied — heating not active (mode 2).", (int)zone + 1, requested);
+      ESP_LOGI(TAG, "Z%d flow %.1f not written: heating not active (mode 2).", (int) zone + 1, requested);
       return requested;
     }
   } else if (mode == 3) {
     if (!status.is_cooling_active(zone)) {
-      ESP_LOGD(TAG, "Z%d flow target %.1f not applied — cooling not active (mode 3).", (int)zone + 1, requested);
+      ESP_LOGI(TAG, "Z%d flow %.1f not written: cooling not active (mode 3).", (int) zone + 1, requested);
       return requested;
     }
   }
+  const float asked = requested;
   if (this->optimizer_ != nullptr) {
     auto oz = zone == ecodan::Zone::ZONE_1 ? optimizer::OptimizerZone::ZONE_1 : optimizer::OptimizerZone::ZONE_2;
     requested = this->optimizer_->limit_external_flow(oz, requested);
   }
+  // The auto-adaptive bounds are the only thing standing between ODIN's number
+  // and the pump. Without this line a rewritten target looks like a pump that
+  // ignored the command.
+  if (!std::isnan(requested) && std::fabsf(requested - asked) > 0.05f)
+    ESP_LOGI(TAG, "Z%d flow %.1f limited to %.1f by auto-adaptive bounds.", (int) zone + 1, asked, requested);
   float current =
       (zone == ecodan::Zone::ZONE_1) ? status.Zone1FlowTemperatureSetPoint : status.Zone2FlowTemperatureSetPoint;
-  if (std::isnan(current) || std::fabsf(current - requested) > 0.05f)
+  if (std::isnan(current) || std::fabsf(current - requested) > 0.05f) {
+    ESP_LOGI(TAG, "Z%d writing flow setpoint %.1f -> %.1f", (int) zone + 1, current, requested);
     this->ecodan_->set_flow_target_temperature(requested, zone);
+  }
   return requested;
 }
 

@@ -47,7 +47,15 @@ void OdinForwarder::update() {
   bool mqtt_up = (mqtt::global_mqtt_client != nullptr) && mqtt::global_mqtt_client->is_connected();
   if (millis() - this->last_status_log_ms_ > 60000) {
     this->last_status_log_ms_ = millis();
-    ESP_LOGI(TAG, "Status: mqtt_connected=%d active=%d", mqtt_up ? 1 : 0, this->active_ ? 1 : 0);
+    // Also what the forwarder is doing when nothing arrives: whether it holds
+    // a command, how long it still holds it and what demand it left switched.
+    // "ODIN did nothing for an hour" has to be answerable from this line.
+    const uint32_t now = static_cast<uint32_t>(time(nullptr));
+    ESP_LOGI(TAG, "Status: mqtt_connected=%d active=%d takeover=%d valid_left=%lus demand z1=%s z2=%s",
+             mqtt_up ? 1 : 0, this->active_ ? 1 : 0, this->taken_over_ ? 1 : 0,
+             static_cast<unsigned long>(this->valid_until_ > now ? this->valid_until_ - now : 0),
+             this->relay_z1_ == nullptr ? "none" : (this->relay_z1_->state ? "on" : "off"),
+             this->relay_z2_ == nullptr ? "none" : (this->relay_z2_->state ? "on" : "off"));
   }
   if (this->active_ != mqtt_up) {
     ESP_LOGI(TAG, "Forwarder %s (MQTT %s)", mqtt_up ? "ACTIVE" : "INACTIVE", mqtt_up ? "connected" : "disconnected");
