@@ -26,7 +26,7 @@ The strategy follows these steps:
 5.  **Calculate Target Flow**: The final target flow is calculated based on the real-time return temperature.
     `Calculated Flow = return_temp + target_delta_t`
 6.  **Apply Boost (if active)**: The controller checks if the **Predictive Short-Cycle Prevention** is active. If it is, the calculated boost (e.g., +0.5°C) is added to the `Calculated Flow` *before* limits are applied.
-7.  **Apply Limits & Rounding**: The final value is capped by your `minimum_heating_flow_temp` and `maximum_heating_flow_temp` settings. It is then rounded **down** (floored) to the nearest 0.5°C to ensure stable operation.
+7.  **Apply Limits & Rounding**: The value is rounded to the nearest **0.1 °C**, then held within one step of the water the pump is actually delivering: if the requested target sits more than 1.0 °C below the measured feed it is moved by only 0.5 °C this cycle (a setpoint under a running feed stops the compressor), and only then is it clamped to your `minimum_heating_flow_temp` / `maximum_heating_flow_temp`. When the circuit already runs a wider ΔT than asked for (independent zone temperatures), the target is additionally held at the measured feed instead of below it.
 
 ### Understanding the Profiles (Simulator)
 
