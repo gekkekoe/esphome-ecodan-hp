@@ -71,6 +71,10 @@ void OdinForwarder::publish_telemetry() {
   if (status.Operation != ecodan::Status::OperationMode::UNAVAILABLE)
     doc["operation_mode"] = static_cast<uint8_t>(status.Operation);
 
+  doc["heat_mode_z1"] = static_cast<uint8_t>(status.HeatingCoolingMode);
+  if (status.has_2zones())
+    doc["heat_mode_z2"] = static_cast<uint8_t>(status.HeatingCoolingModeZone2);
+
   auto put_selected_mode = [&doc](const char *key, climate::Climate *cl) {
     if (cl == nullptr)
       return;
