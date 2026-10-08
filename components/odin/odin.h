@@ -77,7 +77,6 @@ protected:
   void take_over();
   void release();
 
-  bool system_hands_off(const ecodan::Status &status);
   void apply_soft_stop(bool z1_stop, bool z2_stop, const ecodan::Status &status);
   float apply_flow_target(const ecodan::Status &status, uint8_t mode, ecodan::Zone zone, float requested);
   void apply_legionella(const JsonDocument &doc);

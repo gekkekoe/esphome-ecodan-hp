@@ -75,23 +75,11 @@ void OdinForwarder::release() {
   ESP_LOGW(TAG, "Odin command expired — released to local control");
 }
 
-bool OdinForwarder::system_hands_off(const ecodan::Status &status) {
-  if (status.DefrostActive)
-    return true;
-  if (this->lockout_sensor_ != nullptr && this->lockout_sensor_->state)
-    return true;
-  return status.Operation == ecodan::Status::OperationMode::DHW_ON ||
-         status.Operation == ecodan::Status::OperationMode::LEGIONELLA_PREVENTION;
-}
-
 void OdinForwarder::apply_soft_stop(bool z1_stop, bool z2_stop, const ecodan::Status &status) {
 
   if (this->relay_z1_ == nullptr && this->relay_z2_ == nullptr) {
     return;
   }
-
-  if (this->system_hands_off(status))
-    return;
 
   auto apply_zone = [](switch_::Switch *relay, bool stop, const char *zl) {
     if (relay == nullptr || relay->state == !stop)
