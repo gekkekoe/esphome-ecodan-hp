@@ -49,6 +49,10 @@ sensor:
     name: "DS18x20 Sensor 0"
     update_interval: 5s
     resolution: 12
+    filters:
+      - offset: !lambda |-
+          // The offset number restores on setup; a NAN offset would blank the probe.
+          return isnan(id(ow_off_0).state) ? 0.0f : id(ow_off_0).state;
 
   - platform: dallas_temp
     index: 1
@@ -56,6 +60,9 @@ sensor:
     name: "DS18x20 Sensor 1"
     update_interval: 5s
     resolution: 12
+    filters:
+      - offset: !lambda |-
+          return isnan(id(ow_off_1).state) ? 0.0f : id(ow_off_1).state;
 
   - platform: dallas_temp
     index: 2
@@ -63,6 +70,9 @@ sensor:
     name: "DS18x20 Sensor 2"
     update_interval: 5s
     resolution: 12
+    filters:
+      - offset: !lambda |-
+          return isnan(id(ow_off_2).state) ? 0.0f : id(ow_off_2).state;
 
   - platform: dallas_temp
     index: 3
@@ -70,6 +80,9 @@ sensor:
     name: "DS18x20 Sensor 3"
     update_interval: 5s
     resolution: 12
+    filters:
+      - offset: !lambda |-
+          return isnan(id(ow_off_3).state) ? 0.0f : id(ow_off_3).state;
 
   - platform: template
     name: "DS18x20 Feed temp"
@@ -167,6 +180,65 @@ sensor:
     state_class: measurement
     device_class: temperature
     update_interval: 3s
+
+# --- CALIBRATION OFFSETS ---
+# One offset per physical probe, applied on the probe's own sensor: whichever role
+# the selects below give it (feed, return, zone 1, zone 2) the correction travels
+# with it, and Delta T and every thermostat input follow from these numbers. The
+# raw "DS18x20 Sensor N" entity shows the corrected value too, so what HA displays
+# is what everything else in this file uses. Applied on the next probe read (5 s).
+number:
+  - platform: template
+    id: ow_off_0
+    name: "DS18x20 Sensor 0 Offset"
+    unit_of_measurement: "°C"
+    entity_category: config
+    mode: box
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: -10.0
+    max_value: 10.0
+    step: 0.1
+
+  - platform: template
+    id: ow_off_1
+    name: "DS18x20 Sensor 1 Offset"
+    unit_of_measurement: "°C"
+    entity_category: config
+    mode: box
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: -10.0
+    max_value: 10.0
+    step: 0.1
+
+  - platform: template
+    id: ow_off_2
+    name: "DS18x20 Sensor 2 Offset"
+    unit_of_measurement: "°C"
+    entity_category: config
+    mode: box
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: -10.0
+    max_value: 10.0
+    step: 0.1
+
+  - platform: template
+    id: ow_off_3
+    name: "DS18x20 Sensor 3 Offset"
+    unit_of_measurement: "°C"
+    entity_category: config
+    mode: box
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: -10.0
+    max_value: 10.0
+    step: 0.1
 
 select:  
   # --- FEED SELECT ---

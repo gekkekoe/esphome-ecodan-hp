@@ -296,6 +296,8 @@ If you chose **Asgard Virtual Thermostat**, also set the **Temp Sensor Source** 
 | **DS18x20 (Dallas)** | A wired DS18B20 sensor physically connected to the One Wire header on the Asgard PCB. |
 | **MRC / Wireless** | The room sensor of the Mitsubishi main display — or the wireless RCx thermostat, when routed through the MRC's *Room sensor settings → Room RC zone select*. *Warning: low resolution (0.5 °C steps) — use only if no other sensor is available.* |
 
+Every DS18B20 on the One Wire header also has a **DS18x20 Sensor N Offset** number in Home Assistant (a *Config* entity, −10.0 … +10.0 °C in 0.1 °C steps, restored across reboots). The offset is applied to the probe itself, so it follows that probe when you reassign it between feed / return / zone 1 / zone 2, and **Delta T** and every thermostat input use the corrected value. **DS18x20 Sensor N** shows the corrected reading as well — what you see in Home Assistant is what the logic uses. A changed offset takes effect on the next probe read (5 s).
+
 ### Step 5 — Zone 2 Sensors
 
 Identical layout to Step 4 for the second zone (Room Temp Source + Temp Sensor Source). If you left **Enable Zone 2 Settings** off in Step 3, this step is skipped and the wizard counts the remaining steps down accordingly.
