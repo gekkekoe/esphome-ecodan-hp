@@ -321,11 +321,10 @@ namespace esphome
                 return requested;
 
             bool cooling = this->is_cooling_mode(status, zone);
-            float ret = this->get_return_temp(zone);
-            
-            float target_delta_t = isnan(ret) ? 0.0f : (cooling ? (ret - requested) : (requested - ret));
 
-            float limited = this->apply_flow_limits(zone, requested, target_delta_t, ret);
+            // The buffer short-cycle guard stays off here, in both directions because:
+            // (feed − ret) > (requested − ret) is equal to  feed > requested
+            float limited = this->apply_flow_limits(zone, requested, NAN, NAN);
             if (limited != requested)
             {
                 ESP_LOGD(OPTIMIZER_TAG,
