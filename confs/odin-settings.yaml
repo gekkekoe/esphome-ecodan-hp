@@ -1,7 +1,5 @@
 # ODIN MQTT config (System tab of the asgard dashboard).
 #
-# The ODIN forwarder (odin-forwarder.yaml) uses these MQTT broker
-# settings instead of the build-time ${odin_broker}.
 
 text:
   - platform: template

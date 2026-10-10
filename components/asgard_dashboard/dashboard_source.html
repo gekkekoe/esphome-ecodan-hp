@@ -1047,14 +1047,14 @@ header {
      <div class="section-title" onclick="toggleCard('sys-odin')">Odin MQTT <span class="collapse-icon">▼</span></div>
      <div class="ctrl-card-body">
        <div style="color: var(--text3); font-size: 11px; margin-bottom: 12px; line-height: 1.5;">
-         MQTT forwarder to the ODIN box. ODIN box default credentials: <b>odin-user</b> / <b>odin-pwd</b>. Configure the broker it talks to below.
+         MQTT forwarder to the ODIN box. ODIN box default credentials: <b>odin-user</b> / <b>odin-pwd</b>. Leave Broker IP empty to keep the forwarder off.
        </div>
 
        <div>
          <div class="ctrl-row">
-           <span class="ctrl-label param-label">Broker IP<span class="tip-icon">?</span><span class="tip-box">Address of the MQTT broker (the ODIN box or any other broker). Empty keeps the build-time default.</span></span>
+           <span class="ctrl-label param-label">Broker IP<span class="tip-icon">?</span><span class="tip-box">Address of the MQTT broker (the ODIN box or any other broker). Empty = off: the device connects to no broker at all. Fill in an address to switch the forwarder on; moving to a different address needs a reboot.</span></span>
            <div style="display: flex; align-items: center; gap: 6px;">
-             <input type="text" id="ui-mqtt-ip" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 130px; text-align: right; outline: none;" placeholder="(default)">
+             <input type="text" id="ui-mqtt-ip" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 7px; width: 130px; text-align: right; outline: none;" placeholder="(empty = off)">
            </div>
          </div>
          <div class="ctrl-row">

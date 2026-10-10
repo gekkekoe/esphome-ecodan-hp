@@ -119,6 +119,7 @@ protected:
   std::string last_mqtt_password_{};
 
   bool broker_settings_applied_{false};
+  bool mqtt_broker_enabled_{false};
   climate::Climate *climate_{nullptr};
   climate::Climate *climate_z2_{nullptr};
   optimizer::Optimizer *optimizer_{nullptr};

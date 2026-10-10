@@ -1,5 +1,6 @@
 mqtt:
   broker: ${odin_broker}
+  enable_on_boot: false
   reboot_timeout: 0s  # never reboot just because the broker/ODIN is unreachable
   discovery: false    # no HA discovery traffic on this broker
   idf_send_async: true
@@ -31,9 +32,6 @@ odin:
   # Held on while the forwarder is active so the virtual-thermostat climate
   # entity does not re-engage a relay against the plan.
   override_z1_id: sw_odin_override_z1
-  # The dashboard's Odin config card (System tab) configures the broker:
-  # this forwarder runs against the broker set in the card (overriding the
-  # build-time ${odin_broker} above).
   broker_ip_id: txt_mqtt_broker_ip
   broker_port_id: txt_mqtt_broker_port
   mqtt_user_id: txt_mqtt_user

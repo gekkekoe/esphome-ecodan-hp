@@ -42,34 +42,41 @@ void OdinForwarder::sync_broker_settings() {
   const std::string password =
       (this->mqtt_password_ != nullptr && this->mqtt_password_->has_state()) ? this->mqtt_password_->state : "";
 
+
+  const bool want_enabled = this->broker_ip_ == nullptr || !ip.empty();
+
   const bool changed =
-      this->broker_settings_applied_ && (ip != this->last_broker_ip_ || port != this->last_broker_port_ ||
-                                         user != this->last_mqtt_user_ || password != this->last_mqtt_password_);
+      this->broker_settings_applied_ && (want_enabled != this->mqtt_broker_enabled_ || ip != this->last_broker_ip_ ||
+                                         port != this->last_broker_port_ || user != this->last_mqtt_user_ ||
+                                         password != this->last_mqtt_password_);
   if (!this->broker_settings_applied_ && !changed) {
     this->broker_settings_applied_ = true;
+    if (!want_enabled)
+      ESP_LOGI(TAG, "No MQTT broker address (dashboard: System → Odin MQTT) — forwarder off");
   } else if (!changed) {
     return;
   } else {
     ESP_LOGI(TAG, "Broker settings changed: %s:%u user=%s (was %s:%u user=%s)",
-             ip.empty() ? "(build-time)" : ip.c_str(), port, user.c_str(),
-             this->last_broker_ip_.empty() ? "(build-time)" : this->last_broker_ip_.c_str(), this->last_broker_port_,
+             ip.empty() ? "(off)" : ip.c_str(), port, user.c_str(),
+             this->last_broker_ip_.empty() ? "(off)" : this->last_broker_ip_.c_str(), this->last_broker_port_,
              this->last_mqtt_user_.c_str());
   }
+  this->mqtt_broker_enabled_ = want_enabled;
 
-  const bool force_reconnect = client->is_connected();
-  if (force_reconnect)
-    client->disable();
-  if (!ip.empty())
-    client->set_broker_address(ip);
-  client->set_broker_port(port);
-  client->set_username(user);
-  client->set_password(password);
+
+  client->disable();
+  if (want_enabled) {
+    if (!ip.empty())
+      client->set_broker_address(ip);
+    client->set_broker_port(port);
+    client->set_username(user);
+    client->set_password(password);
+    client->enable();
+  }
   this->last_broker_ip_ = ip;
   this->last_broker_port_ = port;
   this->last_mqtt_user_ = user;
   this->last_mqtt_password_ = password;
-  if (force_reconnect)
-    client->enable();
 }
 
 void OdinForwarder::sync_topic_prefix() {

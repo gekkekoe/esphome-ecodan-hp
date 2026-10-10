@@ -17,7 +17,7 @@ substitutions:
   z2_odin_forwarder: !include
     file: odin-forwarder-z2.yaml
   # forwarder definitions
-  odin_broker: 192.168.2.190  # ODIN LAN IP — its embedded broker (0.0.0.0:1883)
+  odin_broker: ""  # empty = MQTT off
   odin_hp_id: hp1
   odin_topic_prefix: hp
 
