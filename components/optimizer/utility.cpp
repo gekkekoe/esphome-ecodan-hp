@@ -194,9 +194,11 @@ namespace esphome
             const float MAX_FEED_STEP_CHANGE = 1.0f;
             const float MAX_FEED_STEP_ADJUSTMENT = 0.5f;
 
+            // The boundary counts: a setpoint exactly 1.0 °C below the measured feed is
+            // already a stop risk, and both readings sit on the 0.1 °C grid.
             if (is_cooling_mode) 
             {
-                if ((calculated_flow - actual_flow_temp) > MAX_FEED_STEP_CHANGE)
+                if ((calculated_flow - actual_flow_temp) >= MAX_FEED_STEP_CHANGE)
                 {
                     float adjusted_target = actual_flow_temp + MAX_FEED_STEP_ADJUSTMENT;
                     
@@ -208,7 +210,7 @@ namespace esphome
             }
             else 
             {
-                if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_CHANGE)
+                if ((actual_flow_temp - calculated_flow) >= MAX_FEED_STEP_CHANGE)
                 {
                     float adjusted_target = actual_flow_temp - MAX_FEED_STEP_ADJUSTMENT;
                     
