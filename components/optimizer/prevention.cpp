@@ -1,4 +1,5 @@
 #include "optimizer.h"
+#include <algorithm>
 
 using std::isnan;
 
@@ -13,7 +14,10 @@ namespace esphome
             // base_setpoint != NAN is the single source of truth for "a boost is active".
             float &base_setpoint = (zone == OptimizerZone::ZONE_2) ? this->predictive_boost_base_z2_setpoint_ : this->predictive_boost_base_z1_setpoint_;
 
-            if (this->is_system_hands_off(status) || !status.CompressorOn)
+            // A pump-only start (feed water still warm from the previous run) is not a
+            // short-cycle risk, so require a running compressor — the same qualification
+            // the auto-adaptive write path uses.
+            if (this->is_system_hands_off(status) || !this->is_compressor_active(status))
             {
                 // Dropping out of protection: if we had raised the setpoint, put the
                 // original back so a boosted value isn't left stranded on the heat pump.
@@ -40,6 +44,13 @@ namespace esphome
             float requested_flow = isnan(base_setpoint) ? live_setpoint : base_setpoint;
 
             float step_limited = this->enforce_step_limit(status, actual_flow, requested_flow, is_cooling);
+            // One protective adjustment moves the flow setpoint at most 0.5°C.
+            const float MAX_BOOST_STEP = 0.5f;
+            step_limited = is_cooling
+                ? std::max(step_limited, live_setpoint - MAX_BOOST_STEP)
+                : std::min(step_limited, live_setpoint + MAX_BOOST_STEP);
+            step_limited = this->round_nearest(step_limited);
+
             // Boost is happening exactly when this cycle adjusted the setpoint.
             bool boosting = (step_limited != requested_flow);
 
