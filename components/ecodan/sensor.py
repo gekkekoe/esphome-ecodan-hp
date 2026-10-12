@@ -314,6 +314,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("compressor_starts"): sensor.sensor_schema(
             icon="mdi:counter",
             entity_category=ENTITY_CATEGORY_NONE,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
         ),
         cv.Optional("discharge_temp"): sensor.sensor_schema(
             unit_of_measurement=UNIT_CELSIUS,
