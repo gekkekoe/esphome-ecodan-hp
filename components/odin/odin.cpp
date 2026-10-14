@@ -50,7 +50,7 @@ void OdinForwarder::update() {
     // Also what the forwarder is doing when nothing arrives: whether it holds
     // a command, how long it still holds it and what demand it left switched.
     // "ODIN did nothing for an hour" has to be answerable from this line.
-    const uint32_t now = static_cast<uint32_t>(time(nullptr));
+    const uint32_t now = static_cast<uint32_t>(::time(nullptr));
     ESP_LOGI(TAG, "Status: mqtt_connected=%d active=%d takeover=%d valid_left=%lus demand z1=%s z2=%s",
              mqtt_up ? 1 : 0, this->active_ ? 1 : 0, this->taken_over_ ? 1 : 0,
              static_cast<unsigned long>(this->valid_until_ > now ? this->valid_until_ - now : 0),
@@ -78,7 +78,7 @@ void OdinForwarder::update() {
 void OdinForwarder::check_watchdog() {
   if (!this->taken_over_)
     return;
-  time_t now = time(nullptr);
+  time_t now = ::time(nullptr);
   if (now >= static_cast<time_t>(this->valid_until_))
     this->release();
 }
