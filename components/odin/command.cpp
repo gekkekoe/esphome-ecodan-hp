@@ -169,7 +169,7 @@ void OdinForwarder::apply_legionella(const JsonDocument &doc) {
         this->legionella_saved_setpoint_->value() = current;
     }
     this->legionella_active_ = true;
-    this->legionella_end_epoch_ = static_cast<uint32_t>(time(nullptr)) + static_cast<uint32_t>(leg_duration_min) * 60;
+    this->legionella_end_epoch_ = static_cast<uint32_t>(::time(nullptr)) + static_cast<uint32_t>(leg_duration_min) * 60;
     ESP_LOGI(TAG, "Legionella: setpoint=%.1fC duration=%d min (restore %.1fC, ends at epoch %lu)", leg_setpoint,
              leg_duration_min, this->legionella_saved_setpoint_ ? this->legionella_saved_setpoint_->value() : -1.0f,
              static_cast<unsigned long>(this->legionella_end_epoch_));
@@ -184,7 +184,7 @@ void OdinForwarder::apply_legionella(const JsonDocument &doc) {
 
 void OdinForwarder::update_legionella() {
 
-  if (!this->legionella_active_ || static_cast<uint32_t>(time(nullptr)) < this->legionella_end_epoch_)
+  if (!this->legionella_active_ || static_cast<uint32_t>(::time(nullptr)) < this->legionella_end_epoch_)
     return;
 
   this->legionella_active_ = false;
