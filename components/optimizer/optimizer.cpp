@@ -1,4 +1,5 @@
 #include "optimizer.h"
+#include "esphome/core/preferences.h"
 
 using std::isnan;
 
@@ -10,7 +11,6 @@ namespace esphome
 
         Optimizer::Optimizer(OptimizerState state) : state_(state) {
 
-            this->odin_mutex_ = xSemaphoreCreateMutex();
 
             auto update_if_changed = [this](float &storage, float new_val, auto callback) {
                 if (std::isnan(new_val)) return;
@@ -24,9 +24,7 @@ namespace esphome
             if (this->state_.hp_feed_temp != nullptr) {
                 this->state_.hp_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
                     update_if_changed(this->last_hp_feed_temp_, x, [this](float new_v, float) {
-                        auto &status = this->state_.ecodan_instance->get_status();
-                        if (this->is_dhw_active(status) || this->is_post_dhw_window(status))
-                            this->on_feed_temp_change(new_v, OptimizerZone::SINGLE);
+                        this->on_feed_temp_change(new_v, OptimizerZone::SINGLE);
                     });
                 });
             }
@@ -34,9 +32,7 @@ namespace esphome
             if (this->state_.z1_feed_temp != nullptr) {
                 this->state_.z1_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
                     update_if_changed(this->last_z1_feed_temp_, x, [this](float new_v, float) {
-                        auto &status = this->state_.ecodan_instance->get_status();
-                        if (this->is_dhw_active(status) || this->is_post_dhw_window(status))
-                            this->on_feed_temp_change(new_v, OptimizerZone::ZONE_1);
+                        this->on_feed_temp_change(new_v, OptimizerZone::ZONE_1);
                     });
                 });
             }
@@ -44,9 +40,7 @@ namespace esphome
             if (this->state_.z2_feed_temp != nullptr) {
                 this->state_.z2_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
                     update_if_changed(this->last_z2_feed_temp_, x, [this](float new_v, float) {
-                        auto &status = this->state_.ecodan_instance->get_status();
-                        if (this->is_dhw_active(status) || this->is_post_dhw_window(status))
-                            this->on_feed_temp_change(new_v, OptimizerZone::ZONE_2);
+                        this->on_feed_temp_change(new_v, OptimizerZone::ZONE_2);
                     });
                 });
             }
@@ -74,6 +68,14 @@ namespace esphome
                     });
                 });
             }
+        }
+
+        bool Optimizer::aa_enabled() const {
+            return this->state_.auto_adaptive_control_enabled != nullptr && this->state_.auto_adaptive_control_enabled->state;
+        }
+
+        bool Optimizer::odin_forwarder_takeover_active() const {
+            return this->state_.bin_odin_forwarder_takeover != nullptr && this->state_.bin_odin_forwarder_takeover->state;
         }
 
     } // namespace optimizer

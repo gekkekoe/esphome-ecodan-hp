@@ -1,0 +1,207 @@
+substitutions:
+  status_three_way_valve: 3-potni ventil
+  status_three_way_valve_2: 3-potni ventil 2
+  heatpump_climate_dhw: TSV regulacija
+  dhw_temp: TSV trenutna temperatura
+  dhw_secondary_temp: TSV sekundarna temperatura
+  status_dhw_forced: TSV prisilno
+  dhw_flow_temp_drop: TSV največji padec temperature
+  status_prohibit_dhw: TSV prepoved
+  dhw_flow_temp_target: TSV nastavljena vrednost
+  status_dhw_eco: TSV eko
+  esp_ip: ESP IP
+  internal_esp_temperature: ESP notranja temperatura
+  esp_sidd: ESP SSID
+  uptime: ESP čas delovanja
+  esp_version: ESP različica
+  restart_button: ESP ponovni zagon
+  status_in1_request: In1 termostat
+  status_in6_request: In6 termostat 2
+  status_in5_request: In5 zunanji termostat
+  heatpump_select_dhw_mode: TSV način
+  normal: Normalno
+  eco: Eko
+  version: ESP različica
+  led_brightness: Svetlost LED
+  led_switch: LED
+  heatpump_switch_regular_dhw: Redna TSV
+  heatpump_switch_force_dhw: Prisilna TSV
+  heatpump_switch_power_mode: Toplotna črpalka
+  heatpump_switch_holiday: Počitniški način
+  wifi_signal_proc: WiFi signal %
+  wifi_signal_db: WiFi signal dB
+  z1_flow_temp_target: Cona 1 nastavljena vrednost
+  status_prohibit_cool_z1: Cona 1 status prepovedi hlajenja
+  status_prohibit_heating_z1: Cona 1 prepoved ogrevanja
+  heatpump_climate_z1: Cona 1 temperatura dovoda
+  heatpump_climate_room_z1: Cona 1 sobna temperatura
+  z1_room_temp_target: Cona 1 nastavljena sobna temperatura
+  z1_room_temp: Cona 1 sobna temperatura
+  heatpump_number_z2_set_flow_temperature: Cona 2 nastavitev
+  z2_flow_temp_target: Cona 2 nastavljena vrednost
+  status_prohibit_cool_z2: Cona 2 prepoved hlajenja
+  status_prohibit_heating_z2: Cona 2 prepoved ogrevanja
+  heatpump_number_z2_set_room_temperature: Cona 2 nastavitev sobne temperature
+  heatpump_climate_z2: Cona 2 temperatura dovoda
+  heatpump_climate_room_z2: Cona 2 sobna temperatura
+  z2_room_temp_target: Cona 2 nastavljena sobna temperatura
+  z2_room_temp: Cona 2 sobna temperatura
+  mixing_tank_temp: Temperatura mešalnega hranilnika
+  boiler_flow_temp: Kotel temperatura dovoda
+  boiler_return_temp: Kotel temperatura povratka
+  status_booster: Dodatni grelnik
+  compressor_frequency: Frekvenca kompresorja
+  status_compressor: Kompresor
+  controller_version_text: Različica krmilnika
+  controller_firmware_text: Firmware krmilnika
+  controller_datetime_text: Datum krmilnika
+  cool_consumed: Hlajenje porabljeno
+  cool_cop: Hlajenje COP
+  cool_delivered: Hlajenje oddano
+  status_defrost: Odtajevanje
+  dhw_consumed: TSV porabljeno
+  dhw_cop: TSV COP
+  dhw_delivered: TSV oddano
+  hp_feed_temp: Temperatura dovoda
+  z1_feed_temp: C1 temperatura dovoda
+  z2_feed_temp: C2 temperatura dovoda
+  flow_rate: Pretok
+  heat_source_text: Vir toplote
+  heatpump: Toplotna črpalka
+  immersion_heater: Potopni grelnik
+  booster_heater: Dodatni grelnik
+  immersion_and_booster_heater: Potopni in dodatni grelnik
+  boiler: Kotel
+  energy_consumed_increasing: Skupna porabljena energija
+  heating_consumed: Ogrevanje porabljeno
+  heating_cop: Ogrevanje COP
+  heating_delivered: Ogrevanje oddano
+  status_holiday: Počitniški način
+  status_immersion: Potopni grelnik
+  legionella_prevention_temp: Temperatura zaščite pred legionelo
+  heatpump_select_operating_mode: Izbrani način delovanja
+  heat_target_temperature: Ogrevanje ciljna temperatura
+  heat_flow_temperature: Ogrevanje temperatura dovoda
+  heat_compensation_curve: Ogrevanje ogrevalna krivulja
+  cool_target_temperature: Hlajenje ciljna temperatura
+  cool_flow_temperature: Hlajenje temperatura dovoda
+  floor_dry_up: Sušenje estriha
+  cool_compensation_curve: Hlajenje krivulja hlajenja
+  operation_off: "Izklopljeno"
+  hotwater: Ogrevanje TSV
+  heating: Ogrevanje prostorov
+  cooling: Hlajenje prostorov
+  frost_protection: Zaščita pred zmrzaljo
+  legionella_prevention: Zaščita pred legionelo
+  runtime: Čas delovanja
+  status_operation: Način delovanja
+  output_power: Izhodna moč
+  computed_output_power: Ocenjena izhodna moč
+  computed_cop: Ocenjen COP
+  daily_computed_output_power: Ocenjena dnevno proizvedena energija
+  daily_repported_input_power: Sporočena dnevna poraba energije
+  outside_temp: Zunanja temperatura
+  hp_refrigerant_temp: Temperatura tekočega hladiva
+  hp_refrigerant_condensing_temp: Temperatura kondenzacije hladiva
+  hp_return_temp: Temperatura povratka
+  z1_return_temp: C1 temperatura povratka
+  z2_return_temp: C2 temperatura povratka
+  status_water_pump: Status obtočne črpalke
+  status_water_pump_2: Status obtočne črpalke 2
+  status_water_pump_3: Status obtočne črpalke 3
+  status_water_pump_4: Status obtočne črpalke 4
+  status_mixing_valve: Status mešalnega ventila
+  mixing_valve_step: Korak mešalnega ventila
+  status_multi_zone: Status več con
+  status_multi_zone_idle: Mirovanje
+  status_multi_zone_both: Obe
+  status_multi_zone_zone1: C1 deluje
+  status_multi_zone_zone2: C2 deluje
+  fault_code_text: Koda napake
+  refrigerant_error_code_text: Koda napake hladiva
+  # refrigerant_code: Hladivo
+  compressor_starts: Skupno število zagonov kompresorja
+  discharge_temp: Temperatura iztoka kompresorja
+  ou_liquid_pipe_temp: Zunanja enota temperatura cevi tekočine 1
+  ou_two_phase_pipe_temp: Zunanja enota temperatura dvofazne cevi
+  ou_suction_pipe_temp: Zunanja enota temperatura sesalne cevi
+  ou_heatsink_temp: Zunanja enota temperatura hladilnega rebra
+  ou_compressor_surface_temp: Zunanja enota temperatura površine kompresorja
+  super_heat_temp: Pregretje na iztoku
+  sub_cool_temp: Podhladitev
+  fan_speed: Hitrost ventilatorja
+  # short cycle translations
+  status_short_cycle_lockout: 'Kratki cikli: Zaklep'
+  minimum_compressor_on_time: 'Kratki cikli: Najkrajši čas delovanja'
+  lockout_duration: 'Kratki cikli: Trajanje zaklepa (min)'
+  lockout_strategy: 'Kratki cikli: Strategija zaklepa'
+  lockout_strategy_option_server_control: 'Strežniško krmiljenje'
+  lockout_strategy_option_flow_control: 'Krmiljenje temperature dovoda'
+  short_cycle_mitigation_button: 'Kratki cikli: Prekliči zaklep'
+  predictive_short_cycle_control_enabled: 'Kratki cikli: Napovedno preprečevanje'
+  status_predictive_boost_active: 'Kratki cikli: Napovedni boost aktiven'
+  # auto adaptive translations
+  auto_adaptive_control_enabled: 'Samoprilagajanje: Krmiljenje'
+  maximum_heating_flow_temp: 'Samoprilagajanje: Najvišja temperatura dovoda ogrevanja'
+  minimum_heating_flow_temp: 'Samoprilagajanje: Najnižja temperatura dovoda ogrevanja'
+  minimum_cooling_flow_temp: 'Samoprilagajanje: Najnižja temperatura dovoda hlajenja'
+  cooling_smart_start_temp: 'Samoprilagajanje: Temperatura pametnega zagona hlajenja'
+  temperature_feedback_source: 'Samoprilagajanje: Vir sobne temperature'
+  temperature_feedback_option_room: 'Sobni termostat'
+  select_feedback_option_api: 'Home Assistant ali REST API'
+  select_feedback_option_asgard_vt: 'Asgard virtualni termostat'
+  heating_system_type: 'Samoprilagajanje: Vrsta ogrevalnega sistema'
+  heating_system_type_option_ufh: 'Talno ogrevanje'
+  heating_system_type_option_ufh_rad: 'Talno ogrevanje + radiatorji'
+  heating_system_type_option_rad: 'Radiatorji'
+  auto_adaptive_setpoint_bias: 'Samoprilagajanje: Odmik nastavljene vrednosti'
+  temperature_feedback: 'Samoprilagajanje: Trenutna povratna sobna temperatura'
+  defrost_risk_handling_enabled: 'Samoprilagajanje: Blaženje odtajevanja'
+  smart_boost_enabled: 'Samoprilagajanje: Pametni boost'
+
+  # total increasing energy totals
+  total_increasing_heating_consumed: Skupaj ogrevanje porabljeno
+  total_increasing_heating_delivered: Skupaj ogrevanje oddano
+  total_increasing_cool_consumed: Skupaj hlajenje porabljeno
+  total_increasing_cool_delivered: Skupaj hlajenje oddano
+  total_increasing_dhw_consumed: Skupaj TSV porabljeno
+  total_increasing_dhw_delivered: Skupaj TSV oddano
+
+  # pump details
+  pump_speed: Hitrost črpalke
+  pump_feedback: Poraba črpalke
+  pump_feedback_status: Status povratne informacije črpalke
+
+  # master thermostats
+  master_thermostat: Glavni sobni senzor
+
+  # stats collection
+
+  asgard_vt_temp_sensor_source: Vir virtualnega termostata
+
+  # solver settings
+  solver_kwh_meter_feedback: Povratna informacija števca kWh
+  solver_kwh_meter_option_internal: Notranji števec energije
+  solver_kwh_meter_feedback_source: Vir števca energije
+  num_raw_heat_produced: "Surova proizvedena toplota (kWh)"
+  num_raw_elec_consumed: "Surova porabljena elektrika (kWh)"
+  num_raw_runtime_hours: "Surov čas delovanja (ure)"
+  num_raw_avg_outside_temp: "Surova povpr. zunanja temp. (°C)"
+  num_raw_avg_room_temp: "Surova povpr. sobna temp. (°C)"
+  num_raw_delta_room_temp: "Surova razlika sobne temp. (°C)"
+  num_raw_hl_tm_product: "Surov produkt HL×TM"
+  num_raw_solar_factor: "Faktor pasivnih sončnih dobitkov"
+  num_raw_cool_produced: "Surovo proizvedeno hlajenje"
+  num_raw_cool_elec_consumed: "Surova porabljena elektrika hlajenja"
+  num_raw_cool_runtime_hours: "Surov čas delovanja hlajenja"
+  num_raw_cool_avg_outside_temp: "Surova povpr. zunanja temp. hlajenja"
+  num_raw_cool_avg_room_temp: "Surova povpr. sobna temp. hlajenja"
+  num_raw_heat_produced_z2: "Surova proizvedena toplota C2"
+  num_raw_elec_consumed_z2: "Surova porabljena elektrika C2"
+  num_raw_runtime_hours_z2: "Surov čas delovanja C2 (ure)"
+  num_raw_avg_room_temp_z2: "Surova povpr. sobna temp. C2 (°C)"
+  num_raw_delta_room_temp_z2: "Surova razlika sobne temp. C2 (°C)"
+  num_raw_cool_produced_z2: "Surovo proizvedeno hlajenje C2"
+  num_raw_cool_elec_consumed_z2: "Surova porabljena elektrika hlajenja C2"
+  num_raw_cool_runtime_hours_z2: "Surov čas delovanja hlajenja C2"
+  num_raw_cool_avg_room_temp_z2: "Surova povpr. sobna temp. hlajenja C2"

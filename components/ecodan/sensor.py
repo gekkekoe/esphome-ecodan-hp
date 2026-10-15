@@ -11,6 +11,7 @@ from esphome.const import (
     DEVICE_CLASS_WATER,
     ENTITY_CATEGORY_NONE,
     ENTITY_CATEGORY_DIAGNOSTIC,
+    STATE_CLASS_NONE,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
@@ -297,7 +298,7 @@ CONFIG_SCHEMA = cv.Schema(
         ),
         cv.Optional("status_mixing_valve"): sensor.sensor_schema(
             icon="mdi:valve",
-            state_class=ENTITY_CATEGORY_NONE,
+            state_class=STATE_CLASS_NONE,
         ), 
         cv.Optional("mixing_valve_step"): sensor.sensor_schema(
             icon="mdi:valve",
@@ -309,11 +310,12 @@ CONFIG_SCHEMA = cv.Schema(
         ),
         cv.Optional("status_multi_zone"): sensor.sensor_schema(
             icon="mdi:thermostat",
-            state_class=ENTITY_CATEGORY_NONE
+            state_class=STATE_CLASS_NONE
         ),
         cv.Optional("compressor_starts"): sensor.sensor_schema(
             icon="mdi:counter",
             entity_category=ENTITY_CATEGORY_NONE,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
         ),
         cv.Optional("discharge_temp"): sensor.sensor_schema(
             unit_of_measurement=UNIT_CELSIUS,

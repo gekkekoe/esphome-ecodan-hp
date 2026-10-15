@@ -109,6 +109,7 @@ substitutions:
   status_water_pump: Pompa Circolazione
   status_water_pump_2: Pompa Circolazione 2
   status_water_pump_3: Pompa Circolazione 3
+  status_water_pump_4: Pompa Circolazione 4
   status_mixing_valve: Mixing Valvola Status
   mixing_valve_step: Mixing Valvola Step
   status_multi_zone: Stato multizona
@@ -132,10 +133,11 @@ substitutions:
   status_short_cycle_lockout: 'Ciclo breve: Blocco'
   minimum_compressor_on_time: 'Ciclo breve: Tempo minimo compressore'
   lockout_duration: 'Ciclo breve: Durata blocco (min)'
+  lockout_strategy: 'Ciclo breve: Strategia di blocco'
+  lockout_strategy_option_server_control: 'Controllo server'
+  lockout_strategy_option_flow_control: 'Controllo flusso'
   short_cycle_mitigation_button: 'Ciclo breve: Annulla blocco'
   predictive_short_cycle_control_enabled: 'Ciclo breve: Prevenzione Predittiva'
-  predictive_short_cycle_high_delta_time_window: 'Ciclo breve: Durata Delta Elevato'
-  predictive_short_cycle_high_delta_threshold: 'Ciclo breve: Soglia Delta Alta'
   status_predictive_boost_active: 'Ciclo breve: Boost Predittivo Attivo'
   auto_adaptive_control_enabled: 'Autoadattivo: Controllo'
   maximum_heating_flow_temp: 'Autoadattivo: Temp. Max. Mandata Riscaldamento'
@@ -165,26 +167,19 @@ substitutions:
   pump_feedback_status: 'Stato Feedback Pompa'
   master_thermostat: 'Sensore Ambiente Master'
 
-  solver_kwh_meter_feedback_source: "Fonte contatore"
-  solver_kwh_meter_option_internal: "Contatore interno"
-  solver_kwh_meter_feedback: "Feedback contatore kWh"
 
-  solver_dhw_mode: Modalità ACS del Solver
-  solver_dhw_mode_option_regular: Normale
-  solver_dhw_mode_option_forced: Forzato
 
   asgard_vt_temp_sensor_source: 'Sorgente Termostato Virtuale'
 
-  sw_use_solver: "Abilita risolutore di costi dinamici"
-  bin_solver_connected: "Stato online risolutore"
+  solver_kwh_meter_feedback: "Feedback contatore kWh"
+  solver_kwh_meter_option_internal: "Contatore interno"
+  solver_kwh_meter_feedback_source: "Fonte contatore"
   num_raw_heat_produced: "Calore grezzo prodotto (kWh)"
   num_raw_elec_consumed: "Elettricità grezza consumata (kWh)"
   num_raw_runtime_hours: "Tempo di esecuzione grezzo (Ore)"
   num_raw_avg_outside_temp: "Temp. esterna media grezza (°C)"
   num_raw_avg_room_temp: "Temp. ambiente media grezza (°C)"
   num_raw_delta_room_temp: "Delta temp. ambiente grezza (°C)"
-  num_battery_soc_kwh: "Stato di carica batteria (kWh)"
-  num_battery_max_discharge_kw: "Scarica max batteria (kW)"
   num_raw_hl_tm_product: "Prodotto HL×TM grezzo"
   num_raw_solar_factor: "Fattore di guadagno solare passivo"
 
@@ -192,3 +187,13 @@ substitutions:
   num_raw_cool_elec_consumed: "Consumo elet. raffredd. (Grezzo)"
   num_raw_cool_runtime_hours: "Tempo funz. raffreddamento (Grezzo)"
   num_raw_cool_avg_outside_temp: "Temp. est. media raffredd. (Grezzo)"
+  num_raw_cool_avg_room_temp: "Temp. media stanza raffreddamento grezza"
+  num_raw_heat_produced_z2: "Calore prodotto grezzo Z2"
+  num_raw_elec_consumed_z2: "Elettricità consumata grezza Z2"
+  num_raw_runtime_hours_z2: "Tempo di esecuzione grezzo Z2 (Ore)"
+  num_raw_avg_room_temp_z2: "Temp. ambiente media grezza Z2 (°C)"
+  num_raw_delta_room_temp_z2: "Delta temp. ambiente grezza Z2 (°C)"
+  num_raw_cool_produced_z2: "Raffreddamento prodotto grezzo Z2"
+  num_raw_cool_elec_consumed_z2: "Consumo elet. raffredd. grezzo Z2"
+  num_raw_cool_runtime_hours_z2: "Tempo funz. raffreddamento grezzo Z2"
+  num_raw_cool_avg_room_temp_z2: "Temp. media stanza raffredd. grezza Z2"

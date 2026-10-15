@@ -7,15 +7,27 @@ namespace esphome
     namespace optimizer
     {
         using namespace esphome::ecodan;
+
+        void Optimizer::on_feed_temp_change(float actual_flow_temp, OptimizerZone zone) {
+            if (std::isnan(actual_flow_temp))
+                return;
+
+            this->predictive_short_cycle_check();
+            this->handle_dhw_feed_temp_(actual_flow_temp, zone);
+        }
+
         // callbacks to monitor step down, need to keep within 1.0C else compressor will halt
-        void Optimizer::on_feed_temp_change(float actual_flow_temp, OptimizerZone zone) {            
-            if (std::isnan(actual_flow_temp) 
-                || (this->state_.status_short_cycle_lockout != nullptr && this->state_.status_short_cycle_lockout->state)
+        void Optimizer::handle_dhw_feed_temp_(float actual_flow_temp, OptimizerZone zone) {
+            auto &status = this->state_.ecodan_instance->get_status();
+            bool post_dhw_window = this->is_post_dhw_window(status);
+            if (!this->is_dhw_active(status) && !post_dhw_window)
+                return;
+
+            if ((this->state_.status_short_cycle_lockout != nullptr && this->state_.status_short_cycle_lockout->state)
                 || (this->state_.auto_adaptive_control_enabled != nullptr && !this->state_.auto_adaptive_control_enabled->state)) {
                 return;
             }
 
-            auto &status = this->state_.ecodan_instance->get_status();
 
             if (status.has_independent_zone_temps()) 
             {
@@ -30,13 +42,23 @@ namespace esphome
                 }
             }
 
+            if (this->is_cooling_mode(status, zone))
+            {
+                this->clear_dhw_follow_state_(status, zone);
+                return;
+            }
+
             float current_flow_setpoint = (zone == OptimizerZone::ZONE_2) ? status.Zone2FlowTemperatureSetPoint : status.Zone1FlowTemperatureSetPoint;
             float adjusted_flow = actual_flow_temp;
 
             time_t current_timestamp = status.timestamp();
-            bool post_dhw_window = this->is_post_dhw_window(status);
 
             if (this->is_dhw_active(status)) {
+                // Only follow flow temp during DHW if we transitioned from heating.
+                float saved_setpoint = (zone == OptimizerZone::ZONE_2) ? this->dhw_old_z2_setpoint_ : this->dhw_old_z1_setpoint_;
+                if (std::isnan(saved_setpoint))
+                    return;
+
                 if (status.DhwFlowTemperatureSetPoint > actual_flow_temp)
                     return;
 
@@ -47,31 +69,47 @@ namespace esphome
                 if (status.CompressorOn && current_timestamp > 0) {
                     const uint32_t after_dhw_monitoring_duration_s = 5 * 60UL;
                     this->dhw_post_run_expiration_ = (uint32_t)(current_timestamp + after_dhw_monitoring_duration_s);
-                    ESP_LOGD(OPTIMIZER_TAG, "Setting monitor expiration to: %d", this->dhw_post_run_expiration_);
+                    ESP_LOGD(OPTIMIZER_TAG, "Setting monitor expiration to: %lu", this->dhw_post_run_expiration_);
                 }
             }
             else if (post_dhw_window) {
-                if (!this->is_heating_active(status)) {
+                if (!status.is_heating_active() && !status.is_cooling_active()) {
                     // no demand, restore saved setpoint
-                    float restore_val = (zone == OptimizerZone::ZONE_2) ? this->dhw_old_z2_setpoint_ : this->dhw_old_z1_setpoint_;
-                    
+                    float restore_val = NAN;
+                    if (zone == OptimizerZone::ZONE_2) {
+                        restore_val = this->dhw_old_z2_setpoint_;
+                        this->dhw_old_z2_setpoint_ = NAN;
+                    } else {
+                        restore_val = this->dhw_old_z1_setpoint_;
+                        this->dhw_old_z1_setpoint_ = NAN;
+                        if (!status.has_2zones())
+                            this->dhw_old_z2_setpoint_ = NAN;
+                    }
+
+                    ESP_LOGD(OPTIMIZER_TAG, "Post-DHW: Heat/Cool demand gone. Restoring original setpoint Z%d: %.1f.", static_cast<uint8_t>(zone), restore_val);
+
                     if (!std::isnan(restore_val)) {
                         adjusted_flow = restore_val;
-                        
-                        // Also stop timer
-                        this->dhw_post_run_expiration_ = 0; 
-                        this->dhw_old_z1_setpoint_ = NAN;
-                        this->dhw_old_z2_setpoint_ = NAN;
-                        ESP_LOGD(OPTIMIZER_TAG, "Post-DHW: Heat demand gone. Restoring original setpoint %.1f and clearing timer.", adjusted_flow);
+                        if (std::isnan(this->dhw_old_z1_setpoint_) && std::isnan(this->dhw_old_z2_setpoint_))
+                            this->dhw_post_run_expiration_ = 0;
                     }
                 }
-                else {
+                else if (status.is_heating_active())
+                {
                     // also add 0.5 during post dhw while heating
                     adjusted_flow += 0.5f;
                 }
+                else
+                {
+                    // Neither heating nor cooling runs this zone (manual
+                    // cooling without auto-adaptive, defrost): the following
+                    // does not apply, hands off.
+                    return;
+                }
             }   
             else {
-                adjusted_flow = enforce_step_down(status, actual_flow_temp, current_flow_setpoint);
+                bool cooling_mode = is_cooling_mode(status, zone);
+                adjusted_flow = enforce_step_limit(status, actual_flow_temp, current_flow_setpoint, cooling_mode);
             }
     
             if (adjusted_flow != current_flow_setpoint)
@@ -80,19 +118,42 @@ namespace esphome
             }
         }
 
+        // Drop the DHW feed-temp following state: the saved (heating) flow
+        // setpoints and, once both are gone, the post-DHW window - the same
+        // closing the post-DHW restore does.
+        void Optimizer::clear_dhw_follow_state_(const ecodan::Status &status, OptimizerZone zone)
+        {
+            if (zone == OptimizerZone::ZONE_2)
+                this->dhw_old_z2_setpoint_ = NAN;
+            else
+            {
+                this->dhw_old_z1_setpoint_ = NAN;
+                if (!status.has_2zones())
+                    this->dhw_old_z2_setpoint_ = NAN;
+            }
+
+            if (std::isnan(this->dhw_old_z1_setpoint_) && std::isnan(this->dhw_old_z2_setpoint_))
+                this->dhw_post_run_expiration_ = 0;
+        }
+
         bool Optimizer::set_flow_temp(float flow, OptimizerZone zone) {
             auto &status = this->state_.ecodan_instance->get_status();
-            
+
+            // Treat setpoints within half the 0.1°C control resolution as unchanged, so
+            // float-noise between the stored setpoint and a recomputed value doesn't
+            // trigger a redundant write (and log line) every cycle.
+            auto differs = [](float current, float target) { return std::fabs(current - target) >= 0.05f; };
+
             if (status.has_independent_zone_temps())
             {
                 if (zone == OptimizerZone::ZONE_1) {
-                    if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && status.Zone1FlowTemperatureSetPoint != flow)
+                    if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) && differs(status.Zone1FlowTemperatureSetPoint, flow))
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z1 Heat Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_1);
                         return true;
                     }
-                    else if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) && status.Zone1FlowTemperatureSetPoint != flow)
+                    else if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_1) && differs(status.Zone1FlowTemperatureSetPoint, flow))
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z1 Cool Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_1);
@@ -100,13 +161,13 @@ namespace esphome
                     }
 
                 } else if (zone == OptimizerZone::ZONE_2) {
-                    if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) && status.Zone2FlowTemperatureSetPoint != flow)
+                    if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) && differs(status.Zone2FlowTemperatureSetPoint, flow))
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z2 Heat Flow -> %.1f°C (%.1f°C)", flow, status.Zone2FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_2);
                         return true;
                     }
-                    else if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2) && status.Zone2FlowTemperatureSetPoint != flow)
+                    else if (status.is_auto_adaptive_cooling(esphome::ecodan::Zone::ZONE_2) && differs(status.Zone2FlowTemperatureSetPoint, flow))
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Z2 Cool Flow -> %.1f°C (%.1f°C)", flow, status.Zone2FlowTemperatureSetPoint);
                         this->state_.ecodan_instance->set_flow_target_temperature(flow, esphome::ecodan::Zone::ZONE_2);
@@ -116,7 +177,7 @@ namespace esphome
             }
             else
             {
-                if (status.Zone1FlowTemperatureSetPoint != flow) {
+                if (differs(status.Zone1FlowTemperatureSetPoint, flow)) {
                     if (status.HeatingCoolingMode == esphome::ecodan::Status::HpMode::HEAT_FLOW_TEMP)
                     {
                         ESP_LOGD(OPTIMIZER_TAG, "CMD: Set Dependent Heat Flow -> %.1f°C (%.1f°C)", flow, status.Zone1FlowTemperatureSetPoint);
@@ -133,47 +194,10 @@ namespace esphome
             }
             return false;
         }
-
-        float Optimizer::enforce_step_down(const ecodan::Status &status, float actual_flow_temp, float calculated_flow) 
-        {
-            const float MAX_FEED_STEP_DOWN = 1.0f;
-            const float MAX_FEED_STEP_DOWN_ADJUSTMENT = 0.5f;
-            
-            if ((actual_flow_temp - calculated_flow) > MAX_FEED_STEP_DOWN)
-            {
-                ESP_LOGW(OPTIMIZER_TAG, "Flow adjust: %.2f°C to prevent compressor stop! (setpoint: %.2f°C is %.2f°C below actual feed temp)",
-                        actual_flow_temp - MAX_FEED_STEP_DOWN_ADJUSTMENT, calculated_flow, (actual_flow_temp - calculated_flow));
-
-                return actual_flow_temp - MAX_FEED_STEP_DOWN_ADJUSTMENT;
-            }
-            return calculated_flow;
-        }
-
+        
         void Optimizer::on_compressor_stop()
         {
             auto &status = this->state_.ecodan_instance->get_status();
-            bool stand_alone_predictive_active = !this->state_.auto_adaptive_control_enabled->state && this->state_.predictive_short_cycle_control_enabled->state;
-
-            ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Compressor stop event: stand-alone-cycle prevention: %d, saved z1 flow setpoint: %.1f, saved z2 flow setpoint: %.1f"
-                , stand_alone_predictive_active, this->pcp_old_z1_setpoint_, this->pcp_old_z2_setpoint_);
-
-            // don't restore feed temp when defrost is active
-            if (!status.DefrostActive && stand_alone_predictive_active && (!isnan(this->pcp_old_z1_setpoint_) || !isnan(this->pcp_old_z2_setpoint_)))
-            {
-                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Restoring flow setpoint after predictive boost.");
-
-                if (!isnan(this->pcp_old_z1_setpoint_)) {
-                    this->state_.ecodan_instance->set_flow_target_temperature(this->pcp_old_z1_setpoint_, esphome::ecodan::Zone::ZONE_1);
-                    this->pcp_old_z1_setpoint_ = NAN;
-                    this->pcp_adjustment_z1_ = 0.0f;
-                }
-
-                if (status.has_2zones() && !isnan(this->pcp_old_z2_setpoint_)) {
-                    this->state_.ecodan_instance->set_flow_target_temperature(this->pcp_old_z2_setpoint_, esphome::ecodan::Zone::ZONE_2);
-                    this->pcp_old_z2_setpoint_ = NAN;
-                    this->pcp_adjustment_z2_ = 0.0f;
-                }
-            }
 
             if (this->state_.lockout_duration->active_index().value_or(0) == 0)
             {
@@ -207,20 +231,88 @@ namespace esphome
                 return;
 
             auto heating_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::HEAT_ON);
-            auto dhw_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::DHW_ON);
+            auto dhw_mode     = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::DHW_ON);
+            auto legionella_mode = static_cast<uint8_t>(esphome::ecodan::Status::OperationMode::LEGIONELLA_PREVENTION);
             auto &status = this->state_.ecodan_instance->get_status();
 
-            if (new_mode == dhw_mode && previous_mode == heating_mode) {
-                this->dhw_old_z1_setpoint_ = status.Zone1FlowTemperatureSetPoint;
-                this->dhw_old_z2_setpoint_ = status.Zone2FlowTemperatureSetPoint;
+            bool entering_dhw = (new_mode == dhw_mode || new_mode == legionella_mode)
+                             && (previous_mode != dhw_mode && previous_mode != legionella_mode);
 
-                ESP_LOGD(OPTIMIZER_TAG, "Switching to DHW. Saved heating setpoints: Z1=%.1f, Z2=%.1f", 
-                    this->dhw_old_z1_setpoint_, this->dhw_old_z2_setpoint_);
+            // Legionella DHW setpoint automation: save/raise the DHW setpoint when a
+            // Legionella Prevention run starts, restore the saved value when it ends.
+            bool entering_legionella = (new_mode == legionella_mode) && (previous_mode != legionella_mode);
+            bool leaving_legionella  = (previous_mode == legionella_mode) && (new_mode != legionella_mode);
+            if (entering_legionella || leaving_legionella)
+                this->handle_legionella_transition_(entering_legionella);
+
+            // Only save heating setpoints when coming from heating — this is the signal
+            // on_feed_temp_change uses to know whether DHW flow-temp following is needed.
+            if (entering_dhw) {
+                if (previous_mode == heating_mode) {
+                    this->dhw_old_z1_setpoint_ = status.Zone1FlowTemperatureSetPoint;
+                    this->dhw_old_z2_setpoint_ = status.Zone2FlowTemperatureSetPoint;
+
+                    ESP_LOGD(OPTIMIZER_TAG, "Heating → DHW/Legionella. Saved heating setpoints: Z1=%.1f, Z2=%.1f", 
+                        this->dhw_old_z1_setpoint_, this->dhw_old_z2_setpoint_);
+                } else {
+                    // always clear setpoint
+                    this->dhw_old_z1_setpoint_ = NAN;
+                    this->dhw_old_z2_setpoint_ = NAN;
+                }   
             }
 
             if (new_mode == heating_mode && previous_mode != heating_mode && this->state_.auto_adaptive_control_enabled->state) {
                 ESP_LOGD(OPTIMIZER_TAG, "Operation Mode Changed to heating: %d -> %d", previous_mode, new_mode);
                 this->run_auto_adaptive_loop();
+            }
+        }
+
+        void Optimizer::handle_legionella_transition_(bool entering)
+        {
+            if (this->state_.legionella_dhw_automation_enabled == nullptr
+                || !this->state_.legionella_dhw_automation_enabled->state)
+                return;
+            if (this->state_.dhw_climate == nullptr)
+                return;
+
+            float current = this->state_.dhw_climate->target_temperature;
+            if (std::isnan(current))
+                return;
+
+            auto *saved_global = this->state_.legionella_saved_dhw_setpoint;
+
+            if (entering) {
+                float legionella_sp = (this->state_.legionella_dhw_setpoint != nullptr
+                                       && this->state_.legionella_dhw_setpoint->has_state())
+                                          ? this->state_.legionella_dhw_setpoint->state
+                                          : 56.0f;
+
+                if (current < legionella_sp - 0.05f) {
+                    if (saved_global != nullptr)
+                        saved_global->value() = current;
+
+                    auto call = this->state_.dhw_climate->make_call();
+                    call.set_target_temperature(legionella_sp);
+                    call.perform();
+
+                    ESP_LOGI(OPTIMIZER_TAG, "Legionella start: DHW setpoint %.1f -> %.1f (stored %.1f)",
+                             current, legionella_sp,
+                             saved_global != nullptr ? saved_global->value() : NAN);
+                }
+            } else {
+                float saved_sp = (saved_global != nullptr) ? saved_global->value() : -1.0f;
+
+                if (saved_sp > 0.0f && current > saved_sp + 0.05f) {
+                    auto call = this->state_.dhw_climate->make_call();
+                    call.set_target_temperature(saved_sp);
+                    call.perform();
+
+                    ESP_LOGI(OPTIMIZER_TAG, "Legionella end: restoring DHW setpoint to %.1f", saved_sp);
+                }
+
+                // clear the stored value for the next run
+                if (saved_global != nullptr)
+                    saved_global->value() = -1.0f;
             }
         }
 

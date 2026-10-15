@@ -1,0 +1,134 @@
+blueprint:
+  name: Sync a Home Assistant Value to ODIN (REST)
+  description: >
+    Forwards a numeric sensor value to an ODIN device through its REST API, so
+    Home Assistant can feed the solver's numbers without MQTT. Four fields to
+    choose from: the two battery numbers (state of charge in kWh, maximum
+    discharge in kW) and the room temperature override of zone 1 or zone 2 —
+    the temperature the planner uses when the pump has no room sensor of its
+    own (or reads the boiler room instead of the living room).
+
+
+    Only valid readings are forwarded: the value must be a number and inside
+    the band the chosen field accepts, and it is written only when it differs
+    from what the ODIN currently holds by more than 0.05. The device stores the
+    value in single precision, so comparing for exact equality would rewrite
+    the same number on every sensor update and wear at the flash.
+
+
+    Accepted bands: battery SOC 0..2000 kWh, discharge limit 0..100 kW, room
+    temperature override 0 (off) or 5..40 °C. The gap between 0 and 5 is refused
+    on purpose — it is the difference between "override off" and "a room that is
+    being heated" — so a reading inside it (a frosty hallway, a sensor that just
+    came back online) is never forwarded and the ODIN keeps whatever it had.
+
+
+    A room temperature override replaces the measured room temperature for
+    PLANNING only: the flow controller, the solve and the tank's standing loss
+    use it, while the history and the learned heat model keep the real sensor.
+    Set the field back to 0 in the ODIN dashboard to hand control back to the
+    sensor. The battery is only planned with while battery planning is enabled
+    on the ODIN.
+
+
+    One-time setup: add these two generic commands to configuration.yaml
+    and restart Home Assistant (they serve every ODIN on the network):
+
+
+        rest_command:
+          odin_get:
+            url: "http://{{ host }}/dashboard/state"
+            method: GET
+          odin_set:
+            url: "http://{{ host }}/dashboard/set"
+            method: POST
+            payload: '{"key": "{{ key }}", "value": {{ value }}}'
+            content_type: "application/json"
+  domain: automation
+  input:
+    source_entity:
+      name: Source Sensor
+      description: >
+        The numeric sensor to forward: a battery energy sensor in kWh (for SOC),
+        a power sensor in kW (for the discharge limit) or a room temperature
+        sensor in °C (for the room temperature override).
+      selector:
+        entity:
+          domain: sensor
+
+    odin_host:
+      name: ODIN Address
+      description: IP or hostname of the ODIN on the LAN (e.g. 192.168.2.190).
+      selector:
+        text: {}
+
+    target_field:
+      name: ODIN Field
+      description: >
+        Which ODIN value this sensor feeds. room_override_z1/_z2 replaces that
+        zone's room temperature for planning; 0 turns the override off.
+      default: battery_soc_kwh
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - battery_soc_kwh
+            - battery_max_discharge_kw
+            - room_override_z1
+            - room_override_z2
+
+variables:
+  source: !input source_entity
+  host: !input odin_host
+  field: !input target_field
+  # The two room fields share a band that is not one interval: 0 (off) or
+  # 5..40 °C. Everything else is a plain range.
+  is_room_field: "{{ field in ('room_override_z1', 'room_override_z2') }}"
+  battery_range: >-
+    {{ {'battery_soc_kwh': [0, 2000],
+        'battery_max_discharge_kw': [0, 100]}.get(field, [0, 2000]) }}
+
+trigger:
+  - platform: state
+    entity_id: !input source_entity
+
+condition:
+  - condition: template
+    value_template: >-
+      {% set raw = states(source) | float(-99999) %}
+      {% if not is_number(states(source)) %}
+        {{ false }}
+      {% elif is_room_field %}
+        {{ raw == 0 or (raw >= 5 and raw <= 40) }}
+      {% else %}
+        {% set lo, hi = battery_range %}
+        {{ raw >= lo and raw <= hi }}
+      {% endif %}
+
+action:
+  - variables:
+      value: "{{ states(source) | float(-99999) }}"
+
+  - service: rest_command.odin_get
+    response_variable: odin_resp
+    continue_on_error: true
+    data:
+      host: "{{ host }}"
+
+  - condition: template
+    value_template: >-
+      {% set v = value | float(-99999) %}
+      {% if odin_resp is defined and odin_resp is not none %}
+        {% set body = odin_resp['content'] %}
+        {% if body is string %}{% set body = body | from_json %}{% endif %}
+        {{ (v - (body.get(field, -99999) | float(-99999))) | abs > 0.05 }}
+      {% else %}{{ true }}{% endif %}
+
+  - service: rest_command.odin_set
+    data:
+      host: "{{ host }}"
+      key: "{{ field }}"
+      value: "{{ value }}"
+
+mode: single
+max_exceeded: silent

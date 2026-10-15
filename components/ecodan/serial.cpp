@@ -49,7 +49,11 @@ namespace ecodan
                             buffer.reset();
                             //ESP_LOGD(TAG, "Dropping slave cmd");
                             return;
-                        break;
+                        case SetType::CONTROLLER_SETTING:
+                        case SetType::REMOTE_ROOM_SETTINGS:
+                        default:
+                            // not a slave cmd we drop -- fall through to normal proxy forwarding below
+                            break;
                         }
                     }
                     

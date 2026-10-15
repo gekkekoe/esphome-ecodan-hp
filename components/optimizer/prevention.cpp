@@ -1,4 +1,5 @@
 #include "optimizer.h"
+#include <algorithm>
 
 using std::isnan;
 
@@ -8,151 +9,248 @@ namespace esphome
     {
         using namespace esphome::ecodan;
 
-        bool Optimizer::get_predictive_boost_state()
-        {
-            return (!isnan(this->pcp_adjustment_z1_) && this->pcp_adjustment_z1_ > 0.0f) 
-                || (!isnan(this->pcp_adjustment_z2_) && this->pcp_adjustment_z2_ > 0.0f);
-        }
+        void Optimizer::predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone, bool is_cooling) {
 
-        void Optimizer::reset_predictive_boost()
-        {
-            this->pcp_adjustment_z1_ = 0.0f;
-            this->pcp_adjustment_z2_ = 0.0f;
-            this->update_boost_sensor();
-        }
+            // base_setpoint != NAN is the single source of truth for "a boost is active".
+            float &base_setpoint = (zone == OptimizerZone::ZONE_2) ? this->predictive_boost_base_z2_setpoint_ : this->predictive_boost_base_z1_setpoint_;
 
-        void Optimizer::predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone) {
-
-            auto &mapped_delta_start_time_ = (zone == OptimizerZone::ZONE_2) ? this->predictive_delta_start_time_z2_ : this->predictive_delta_start_time_z1_;
-            auto &mapped_pcp_old_flow_setpoint_ = (zone == OptimizerZone::ZONE_2) ? this->pcp_old_z2_setpoint_ : this->pcp_old_z1_setpoint_;
-            auto &mapped_pcp_adjustment_ = (zone == OptimizerZone::ZONE_2) ? this->pcp_adjustment_z2_ : this->pcp_adjustment_z1_;
-            auto ecodan_zone = (zone == OptimizerZone::ZONE_2) ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1;
-
-            auto start_time = mapped_delta_start_time_;
-            if (this->is_system_hands_off(status) || !status.CompressorOn)
+            // A pump-only start (feed water still warm from the previous run) is not a
+            // short-cycle risk, so require a running compressor — the same qualification
+            // the auto-adaptive write path uses.
+            if (this->is_system_hands_off(status) || !this->is_compressor_active(status))
             {
-                if (start_time > 0)
-                    mapped_delta_start_time_ = 0;
+                // Dropping out of protection: if we had raised the setpoint, put the
+                // original back so a boosted value isn't left stranded on the heat pump.
+                if (!isnan(base_setpoint))
+                {
+                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d: protection ended, restoring flow setpoint %.1f°C",
+                        static_cast<uint8_t>(zone), base_setpoint);
+                    this->set_flow_temp(base_setpoint, zone);
+                    base_setpoint = NAN;
+                }
                 return;
             }
 
-            float requested_flow = this->get_flow_setpoint(zone);
+            float live_setpoint = this->get_flow_setpoint(zone);
             float actual_flow = this->get_feed_temp(zone);
-            //ESP_LOGD(OPTIMIZER_CYCLE_TAG, "PCP: Zone: %d: actual flow (%.1f°C), requested flow (%.1f°C)", static_cast<uint8_t>(zone), actual_flow, requested_flow);
 
-            if (isnan(requested_flow) || isnan(actual_flow))
+            if (isnan(live_setpoint) || isnan(actual_flow))
             {
+                // Leave any active boost in place — the boosted setpoint is still applied.
                 ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Requested or Actual feed temperature unavailable. Exiting.");
-                if (start_time > 0)
-                    mapped_delta_start_time_ = 0;
                 return;
             }
 
-            float predictive_short_cycle_high_delta_threshold = this->state_.predictive_short_cycle_high_delta_threshold->state;
-            if (isnan(predictive_short_cycle_high_delta_threshold) || predictive_short_cycle_high_delta_threshold < 0.5f)
+            float requested_flow = isnan(base_setpoint) ? live_setpoint : base_setpoint;
+
+            float step_limited = this->enforce_step_limit(status, actual_flow, requested_flow, is_cooling);
+            // One protective adjustment moves the flow setpoint at most 0.5°C.
+            const float MAX_BOOST_STEP = 0.5f;
+            step_limited = is_cooling
+                ? std::max(step_limited, live_setpoint - MAX_BOOST_STEP)
+                : std::min(step_limited, live_setpoint + MAX_BOOST_STEP);
+            step_limited = this->round_nearest(step_limited);
+
+            // Boost is happening exactly when this cycle adjusted the setpoint.
+            bool boosting = (step_limited != requested_flow);
+
+            if (boosting)
             {
-                predictive_short_cycle_high_delta_threshold = 1.0f;
+                // Remember the original target once, on the first boost of a run.
+                if (isnan(base_setpoint))
+                    base_setpoint = requested_flow;
+                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): step-limit flow %.1f°C -> %.1f°C (actual feed %.1f°C)",
+                    static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", requested_flow, step_limited, actual_flow);
+            }
+            else if (!isnan(base_setpoint))
+            {
+                // No longer boosting — restore the original setpoint we were protecting.
+                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): boost cleared, restoring flow setpoint %.1f°C",
+                    static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", requested_flow);
             }
 
-            float time_window_setting = this->state_.predictive_short_cycle_high_delta_time_window->state;
-            if (isnan(time_window_setting) || time_window_setting < 1.0f || time_window_setting > 5.0f)
+            auto limits = is_cooling ? this->get_cool_flow_limits(zone) : this->get_flow_limits(zone);
+            step_limited = this->clamp_flow_temp(step_limited, limits.min, limits.max);
+            this->set_flow_temp(step_limited, zone);
+
+            // step_limited == requested (== base) here when not boosting, so the write above
+            // already restored the original; drop the base so the next run starts fresh.
+            if (!boosting)
+                base_setpoint = NAN;
+        }
+
+        void Optimizer::clear_predictive_boost_(OptimizerZone zone, bool restore)
+        {
+            float &base_setpoint = (zone == OptimizerZone::ZONE_2) ? this->predictive_boost_base_z2_setpoint_ : this->predictive_boost_base_z1_setpoint_;
+
+            // If asked, and we had raised the setpoint, put the original back before letting go.
+            if (restore && !isnan(base_setpoint))
             {
-                ESP_LOGE(OPTIMIZER_CYCLE_TAG, "Corrupt value for time_window: %.2f. Reverting to 4.0", time_window_setting);
-                time_window_setting = 4.0f;
+                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d: predictive released, restoring flow setpoint %.1f°C",
+                    static_cast<uint8_t>(zone), base_setpoint);
+                this->set_flow_temp(base_setpoint, zone);
             }
-            uint32_t trigger_duration_ms = time_window_setting * 60000UL;
-
-            float delta = actual_flow - requested_flow;
-            const float adjustment_factor = 0.5f;
-
-            if (delta >= predictive_short_cycle_high_delta_threshold)
-            {
-                if (mapped_delta_start_time_ == 0)
-                {
-                    mapped_delta_start_time_ = millis();
-                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Zone: %d: High Delta T detected (%.1f°C). Starting timer.", static_cast<uint8_t>(zone), delta);
-                }
-                else if (((millis() - mapped_delta_start_time_) >= trigger_duration_ms))
-                {
-                    ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Short-cycle predicted! Increasing Feed temps to force a longer cycle. Current saved Z%d setpoin: %.1f°", static_cast<uint8_t>(zone), mapped_pcp_old_flow_setpoint_);
-                    mapped_delta_start_time_ = 0;
-
-                    if (isnan(mapped_pcp_old_flow_setpoint_)) {
-                        mapped_pcp_old_flow_setpoint_ = this->get_flow_setpoint(zone);
-                        ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Updating Z%d Saved setpont to:  %.1f", static_cast<uint8_t>(zone), mapped_pcp_old_flow_setpoint_);
-                    }
-                    mapped_pcp_adjustment_ += adjustment_factor;
-
-                    auto limits = this->get_flow_limits(zone);
-                    float adjusted_flow = this->get_flow_setpoint(zone) + adjustment_factor;
-                    adjusted_flow = this->clamp_flow_temp(adjusted_flow, limits.min, limits.max);
-                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "(Delta T) CMD: Increase Z%d Heat Flow to -> %.1f°C", static_cast<uint8_t>(zone), adjusted_flow);
-                    this->state_.ecodan_instance->set_flow_target_temperature(adjusted_flow, ecodan_zone);
-                }
-            }
-            else
-            {
-                if (start_time != 0)
-                {
-                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Zone: %d: High Delta T has disappeared. Resetting timer.", static_cast<uint8_t>(zone));
-                    mapped_delta_start_time_ = 0;
-                }
-            }
-
+            base_setpoint = NAN;
         }
 
         void Optimizer::predictive_short_cycle_check()
         {
-            if (!this->state_.predictive_short_cycle_control_enabled->state)
-                return;
-            
             auto &status = this->state_.ecodan_instance->get_status();
 
-            auto multizone_status = status.MultiZoneStatus;
-            bool is_heating_z1 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_1) 
-                || status.is_heating(esphome::ecodan::Zone::ZONE_1)
-                || (status.has_2zones() && (multizone_status == 1 || multizone_status == 2));
-
-            bool is_heating_z2 = status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) 
-                || status.is_heating(esphome::ecodan::Zone::ZONE_2)
-                || (status.has_2zones() && (multizone_status == 1 || multizone_status == 3));
-
-            if (is_heating_z1)
-                this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_1);
-            if (status.has_2zones() && is_heating_z2)
-                this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_2);
-        }
-
-        void Optimizer::restore_svc_state()
-        {
-            auto flag_before_lockout = this->state_.ecodan_instance->get_svc_state_before_lockout();
-
-            if (flag_before_lockout.has_value())
+            // lockout active, monitor feed temp vs flow setpoint
+            if (this->state_.status_short_cycle_lockout != nullptr && this->state_.status_short_cycle_lockout->state)
             {
-                auto flag = *flag_before_lockout;
+                if (this->active_lockout_strategy_ == 1)
+                {
+                    this->apply_flow_lockout_setpoint_(status, OptimizerZone::ZONE_1, this->get_feed_temp(OptimizerZone::ZONE_1), false);
+                    if (status.has_2zones())
+                        this->apply_flow_lockout_setpoint_(status, OptimizerZone::ZONE_2, this->get_feed_temp(OptimizerZone::ZONE_2), false);
+                }
+                // Lockout owns the setpoint now — drop our boost claim without restoring.
+                this->clear_predictive_boost_(OptimizerZone::ZONE_1, false);
+                this->clear_predictive_boost_(OptimizerZone::ZONE_2, false);
+                this->update_boost_sensor();
+                return;
+            }
 
-                auto &status = this->state_.ecodan_instance->get_status();
-                auto current_flag = status.get_svc_flags();
-                auto dhw_mask = esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW;
-                flag = (flag & ~dhw_mask) | (current_flag & dhw_mask);
+            if (!this->state_.predictive_short_cycle_control_enabled->state)
+            {
+                // Feature turned off — undo any boost we still have applied.
+                this->clear_predictive_boost_(OptimizerZone::ZONE_1, true);
+                this->clear_predictive_boost_(OptimizerZone::ZONE_2, true);
+                this->update_boost_sensor();
+                return;
+            }
 
-                flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
-                this->state_.ecodan_instance->set_controller_mode(flag, true);
+            if (status.is_heating_active(esphome::ecodan::Zone::ZONE_1))
+                this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_1, false);
+            else if (status.is_cooling_active(esphome::ecodan::Zone::ZONE_1))
+                this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_1, true);
+            else
+                this->clear_predictive_boost_(OptimizerZone::ZONE_1, true); // zone idle → restore + release
+
+            if (status.has_2zones())
+            {
+                if (status.is_heating_active(esphome::ecodan::Zone::ZONE_2))
+                    this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_2, false);
+                else if (status.is_cooling_active(esphome::ecodan::Zone::ZONE_2))
+                    this->predictive_short_cycle_check_for_zone_(status, OptimizerZone::ZONE_2, true);
+                else
+                    this->clear_predictive_boost_(OptimizerZone::ZONE_2, true);
             }
             else
             {
-                this->state_.ecodan_instance->set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
+                this->clear_predictive_boost_(OptimizerZone::ZONE_2, true);
             }
+
+            this->update_boost_sensor();
+        }
+
+        bool Optimizer::get_predictive_boost_state()
+        {
+            // A boost is active whenever a pre-boost base setpoint is being held for a zone.
+            return !isnan(this->predictive_boost_base_z1_setpoint_) || !isnan(this->predictive_boost_base_z2_setpoint_);
+        }
+
+        void Optimizer::update_boost_sensor()
+        {
+            if (this->state_.status_predictive_boost_active != nullptr)
+                this->state_.status_predictive_boost_active->publish_state(this->get_predictive_boost_state());
+        }
+
+        void Optimizer::restore_pre_lockout_state()
+        {
+            if (this->active_lockout_strategy_ == 1)
+            {
+                if (!isnan(this->flow_lockout_old_z1_setpoint_)) {
+                    ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Restoring Z1 flow setpoint after Flow Control Lockout: %.1f°C", this->flow_lockout_old_z1_setpoint_);
+                    this->set_flow_temp(this->flow_lockout_old_z1_setpoint_, OptimizerZone::ZONE_1);
+                    this->flow_lockout_old_z1_setpoint_ = NAN;
+                }
+                if (!isnan(this->flow_lockout_old_z2_setpoint_)) {
+                    ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Restoring Z2 flow setpoint after Flow Control Lockout: %.1f°C", this->flow_lockout_old_z2_setpoint_);
+                    this->set_flow_temp(this->flow_lockout_old_z2_setpoint_, OptimizerZone::ZONE_2);
+                    this->flow_lockout_old_z2_setpoint_ = NAN;
+                }
+            }
+            else
+            {
+                auto flag_before_lockout = this->state_.ecodan_instance->get_svc_state_before_lockout();
+
+                if (flag_before_lockout.has_value())
+                {
+                    auto flag = *flag_before_lockout;
+
+                    auto &status = this->state_.ecodan_instance->get_status();
+                    auto current_flag = status.get_svc_flags();
+                    auto dhw_mask = esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW;
+                    flag = (flag & ~dhw_mask) | (current_flag & dhw_mask);
+
+                    flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
+                    this->state_.ecodan_instance->set_controller_mode(flag, true);
+                }
+                else
+                {
+                    this->state_.ecodan_instance->set_controller_mode(esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL, false);
+                }
+            }
+
             this->state_.lockout_expiration_timestamp = 0;
             if (this->state_.status_short_cycle_lockout != nullptr) {
                 this->state_.status_short_cycle_lockout->publish_state(false);
             }
         }
 
+        //   initial = true  : lockout is starting — snapshot the current setpoint (so we
+        //                      can restore it later) and force the offset unconditionally.
+        //   initial = false : chasing during the lockout — the feed temp can drift back
+        //                      toward the forced setpoint 
+        void Optimizer::apply_flow_lockout_setpoint_(const ecodan::Status &status, OptimizerZone zone, float actual_flow_temp, bool initial)
+        {
+            auto ecodan_zone = (zone == OptimizerZone::ZONE_2) ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1;
+            auto &mapped_old_setpoint_ = (zone == OptimizerZone::ZONE_2) ? this->flow_lockout_old_z2_setpoint_ : this->flow_lockout_old_z1_setpoint_;
+
+            bool cooling = status.is_cooling(ecodan_zone);
+            bool heating = status.is_heating(ecodan_zone);
+            if (!cooling && !heating)
+                return;
+
+            if (isnan(actual_flow_temp))
+            {
+                if (initial)
+                    ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout: Z%d actual feed temp unavailable. Skipping.", static_cast<uint8_t>(zone));
+                return;
+            }
+
+            // Chasing but this zone was never forced (idle at lockout start) — nothing to do.
+            if (!initial && isnan(mapped_old_setpoint_))
+                return;
+
+            const float FLOW_LOCKOUT_OFFSET = 5.0f;
+            float target = cooling ? (actual_flow_temp + FLOW_LOCKOUT_OFFSET) : (actual_flow_temp - FLOW_LOCKOUT_OFFSET);
+
+            if (initial)
+            {
+                mapped_old_setpoint_ = this->get_flow_setpoint(zone);
+                ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout Z%d (%s): actual %.1f°C -> forcing setpoint %.1f°C (was %.1f°C)",
+                    static_cast<uint8_t>(zone), cooling ? "cooling" : "heating", actual_flow_temp, target, mapped_old_setpoint_);
+                this->set_flow_temp(target, zone);
+                return;
+            }
+
+            float current_setpoint = this->get_flow_setpoint(zone);
+            bool needs_chase = cooling ? (target > current_setpoint) : (target < current_setpoint);
+            if (!needs_chase)
+                return;
+
+            ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Flow Control Lockout Z%d (%s): actual feed drifted to %.1f°C, re-chasing setpoint %.1f°C -> %.1f°C",
+                static_cast<uint8_t>(zone), cooling ? "cooling" : "heating", actual_flow_temp, current_setpoint, target);
+            this->set_flow_temp(target, zone);
+        }
+
         void Optimizer::start_lockout()
         {
             auto &status = this->state_.ecodan_instance->get_status();
-            auto flag = status.get_svc_flags();
             time_t current_timestamp = status.timestamp();
 
             if (current_timestamp == -1)
@@ -161,30 +259,46 @@ namespace esphome
                 return;
             }
 
-            if (status.ServerControl)
-                this->state_.ecodan_instance->set_svc_state_before_lockout(flag);
+            int strategy = 0; // 0 = Server Control, 1 = Flow Control
+            if (this->state_.lockout_strategy != nullptr && this->state_.lockout_strategy->active_index().has_value())
+                strategy = this->state_.lockout_strategy->active_index().value();
+            this->active_lockout_strategy_ = strategy;
+
+            if (strategy == 1)
+            {
+                this->apply_flow_lockout_setpoint_(status, OptimizerZone::ZONE_1, this->get_feed_temp(OptimizerZone::ZONE_1), true);
+                if (status.has_2zones())
+                    this->apply_flow_lockout_setpoint_(status, OptimizerZone::ZONE_2, this->get_feed_temp(OptimizerZone::ZONE_2), true);
+            }
             else
-                this->state_.ecodan_instance->reset_svc_state_before_lockout();
+            {
+                auto flag = status.get_svc_flags();
 
-            if (status.is_heating(esphome::ecodan::Zone::ZONE_1))
-                flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_HEATING;
-            else if (status.is_cooling(esphome::ecodan::Zone::ZONE_1))
-                flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_COOLING;
+                if (status.ServerControl)
+                    this->state_.ecodan_instance->set_svc_state_before_lockout(flag);
+                else
+                    this->state_.ecodan_instance->reset_svc_state_before_lockout();
 
-            if (status.is_heating(esphome::ecodan::Zone::ZONE_2))
-                flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_HEATING;
-            else if (status.is_cooling(esphome::ecodan::Zone::ZONE_2))
-                flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_COOLING;
+                if (status.is_heating(esphome::ecodan::Zone::ZONE_1))
+                    flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_HEATING;
+                else if (status.is_cooling(esphome::ecodan::Zone::ZONE_1))
+                    flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z1_COOLING;
 
-            flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
-            this->state_.ecodan_instance->set_controller_mode(flag, true);
+                if (status.is_heating(esphome::ecodan::Zone::ZONE_2))
+                    flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_HEATING;
+                else if (status.is_cooling(esphome::ecodan::Zone::ZONE_2))
+                    flag |= esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_Z2_COOLING;
+
+                flag |= esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL;
+                this->state_.ecodan_instance->set_controller_mode(flag, true);
+            }
 
             auto val = esphome::parse_number<int>(this->state_.lockout_duration->current_option());
             uint32_t duration_s = (val.has_value() ? *val : 0) * 60UL;
             if (duration_s > 0)
             {
                 this->state_.lockout_expiration_timestamp = (uint32_t)(current_timestamp + duration_s);
-                ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Lockout active. Expiration timestamp set to: %u", this->state_.lockout_expiration_timestamp);
+                ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Lockout active. Expiration timestamp set to: %lu", this->state_.lockout_expiration_timestamp);
             }
         }
 
@@ -208,22 +322,17 @@ namespace esphome
 
             if (current_time >= expiration)
             {
-                ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Lockout period has expired (Ecodan Time: %u, Expiration: %u). Restoring operations.", current_time, expiration);
-                this->restore_svc_state();
+                ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Lockout period has expired (Ecodan Time: %lu, Expiration: %lu). Restoring operations.", current_time, expiration);
+                this->restore_pre_lockout_state();
             }
             else
             {
                 if (this->state_.status_short_cycle_lockout != nullptr && !this->state_.status_short_cycle_lockout->state)
                 {
-                    ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Booted during active lockout. Re-enabling lockout sensor. (Ecodan Time: %u, Expiration: %u)", current_time, expiration);
+                    ESP_LOGI(OPTIMIZER_CYCLE_TAG, "Booted during active lockout. Re-enabling lockout sensor. (Ecodan Time: %lu, Expiration: %lu)", current_time, expiration);
                     this->state_.status_short_cycle_lockout->publish_state(true);
                 }
             }
-        }
-
-        void Optimizer::update_boost_sensor()
-        {
-            this->state_.status_predictive_boost_active->publish_state(this->get_predictive_boost_state());
         }
 
     } // namespace optimizer

@@ -109,6 +109,7 @@ substitutions:
   status_water_pump: Water Pump Status
   status_water_pump_2: Water Pump 2 Status
   status_water_pump_3: Water Pump 3 Status
+  status_water_pump_4: Water Pump 4 Status
   status_mixing_valve: Mixing Valve Status
   mixing_valve_step: Mixing Valve Step
   status_multi_zone: Multi Zone Status
@@ -133,10 +134,11 @@ substitutions:
   status_short_cycle_lockout: 'Short-Cycle: Lockout'
   minimum_compressor_on_time: 'Short-Cycle: Minimum On-Time'
   lockout_duration: 'Short-Cycle: Lockout Duration (min)'
+  lockout_strategy: 'Short-Cycle: Lockout Strategy'
+  lockout_strategy_option_server_control: 'Server Control'
+  lockout_strategy_option_flow_control: 'Flow Control'
   short_cycle_mitigation_button: 'Short-Cycle: Cancel Lockout'
   predictive_short_cycle_control_enabled: 'Short-Cycle: Predictive Prevention'
-  predictive_short_cycle_high_delta_time_window: 'Short-Cycle: High Delta Duration'
-  predictive_short_cycle_high_delta_threshold: 'Short-Cycle: High Delta Threshold'
   status_predictive_boost_active: 'Short-Cycle: Predictive Boost Active'
   # auto adaptive translations
   auto_adaptive_control_enabled: 'Auto-Adaptive: Control'
@@ -174,29 +176,32 @@ substitutions:
   master_thermostat: Master Room Sensor
 
   # stats collection
-  solver_kwh_meter_feedback_source: Energy Meter Source
-  solver_kwh_meter_option_internal: Internal Energy Meter
-  solver_kwh_meter_feedback: kWh meter feedback
-  solver_dhw_mode: Solver DHW Mode
-  solver_dhw_mode_option_regular: Regular
-  solver_dhw_mode_option_forced: Forced
 
   asgard_vt_temp_sensor_source: Virtual Thermostat Source
 
   # solver settings
-  sw_use_solver:  "Enable Dynamic Cost Solver"
-  bin_solver_connected: "Solver Online Status"
+  solver_kwh_meter_feedback: kWh meter feedback
+  solver_kwh_meter_option_internal: Internal Energy Meter
+  solver_kwh_meter_feedback_source: Energy Meter Source
   num_raw_heat_produced: "Raw Heat Produced (kWh)"
   num_raw_elec_consumed: "Raw Electricity Consumed (kWh)"
   num_raw_runtime_hours: "Raw Runtime (Hours)"
   num_raw_avg_outside_temp: "Raw Avg Outside Temp (°C)"
   num_raw_avg_room_temp: "Raw Avg Room Temp (°C)"
   num_raw_delta_room_temp: "Raw Delta Room Temp (°C)"
-  num_battery_soc_kwh: "Battery SoC (kWh)"
-  num_battery_max_discharge_kw: "Battery Max Discharge (kW)"
   num_raw_hl_tm_product: "Raw HL×TM Product"
   num_raw_solar_factor: "Passive Solar Gain Factor"
   num_raw_cool_produced: "Raw Cool Produced"
-  num_raw_cool_elec_consumed: "Raw Cool Elec Consumed"
+  num_raw_cool_elec_consumed: "Raw Cool Eletricity Consumed"
   num_raw_cool_runtime_hours: "Raw Cool Runtime"
   num_raw_cool_avg_outside_temp: "Raw Cool Avg Outside Temp"
+  num_raw_cool_avg_room_temp: "Raw Cool Avg Room Temp"
+  num_raw_heat_produced_z2: "Raw Heat Produced Z2"
+  num_raw_elec_consumed_z2: "Raw Electricity Consumed Z2"
+  num_raw_runtime_hours_z2: "Raw Runtime Z2 (Hours)"
+  num_raw_avg_room_temp_z2: "Raw Avg Room Temp Z2 (°C)"
+  num_raw_delta_room_temp_z2: "Raw Delta Room Temp Z2 (°C)"
+  num_raw_cool_produced_z2: "Raw Cool Produced Z2"
+  num_raw_cool_elec_consumed_z2: "Raw Cool Electricity Consumed Z2"
+  num_raw_cool_runtime_hours_z2: "Raw Cool Runtime Z2"
+  num_raw_cool_avg_room_temp_z2: "Raw Cool Avg Room Temp Z2"

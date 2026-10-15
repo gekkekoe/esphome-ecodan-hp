@@ -1,5 +1,5 @@
 wifi:
-  power_save_mode: high
+  power_save_mode: LIGHT
   reboot_timeout: 0s
   ap:
     ssid: "${name}"

@@ -105,6 +105,17 @@ number:
     step: 0.1
 
   - platform: template
+    id: num_raw_cool_avg_room_temp
+    name: ${num_raw_cool_avg_room_temp}
+    internal: ${is_internal_asgard_only}
+    optimistic: true
+    restore_value: true
+    initial_value: 20.0
+    min_value: 10.0
+    max_value: 35.0
+    step: 0.1
+
+  - platform: template
     id: num_raw_delta_room_temp
     name: ${num_raw_delta_room_temp}
     internal: ${is_internal_asgard_only}
@@ -115,31 +126,106 @@ number:
     max_value: 10.0
     step: 0.1
 
+  # --- ZONE-2 LEARNING SET (M-flag-gated; see optimizer/stats.cpp) ---
   - platform: template
-    id: num_battery_soc_kwh
-    name: ${num_battery_soc_kwh}
+    id: num_raw_heat_produced_z2
+    name: ${num_raw_heat_produced_z2}
     internal: ${is_internal_asgard_only}
-    icon: mdi:battery-charging
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: 0.0
+    max_value: 200.0
+    step: 0.1
+
+  - platform: template
+    id: num_raw_elec_consumed_z2
+    name: ${num_raw_elec_consumed_z2}
+    internal: ${is_internal_asgard_only}
     optimistic: true
     restore_value: true
     initial_value: 0.0
     min_value: 0.0
     max_value: 100.0
     step: 0.1
-    unit_of_measurement: kWh
 
   - platform: template
-    id: num_battery_max_discharge_kw
-    name: ${num_battery_max_discharge_kw}
+    id: num_raw_runtime_hours_z2
+    name: ${num_raw_runtime_hours_z2}
     internal: ${is_internal_asgard_only}
-    icon: mdi:lightning-bolt
     optimistic: true
     restore_value: true
-    initial_value: 3.0
-    min_value: 0.5
-    max_value: 15.0
+    initial_value: 0.0
+    min_value: 0.0
+    max_value: 24.0
     step: 0.1
-    unit_of_measurement: kW
+
+  - platform: template
+    id: num_raw_avg_room_temp_z2
+    name: ${num_raw_avg_room_temp_z2}
+    internal: ${is_internal_asgard_only}
+    optimistic: true
+    restore_value: true
+    initial_value: 20.0
+    min_value: 10.0
+    max_value: 35.0
+    step: 0.1
+
+  - platform: template
+    id: num_raw_delta_room_temp_z2
+    name: ${num_raw_delta_room_temp_z2}
+    internal: ${is_internal_asgard_only}
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: 0.0
+    max_value: 10.0
+    step: 0.1
+
+  - platform: template
+    id: num_raw_cool_produced_z2
+    name: ${num_raw_cool_produced_z2}
+    internal: ${is_internal_asgard_only}
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: 0.0
+    max_value: 200.0
+    step: 0.1
+
+  - platform: template
+    id: num_raw_cool_elec_consumed_z2
+    name: ${num_raw_cool_elec_consumed_z2}
+    internal: ${is_internal_asgard_only}
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: 0.0
+    max_value: 100.0
+    step: 0.1
+
+  - platform: template
+    id: num_raw_cool_runtime_hours_z2
+    name: ${num_raw_cool_runtime_hours_z2}
+    internal: ${is_internal_asgard_only}
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: 0.0
+    max_value: 24.0
+    step: 0.1
+
+  - platform: template
+    id: num_raw_cool_avg_room_temp_z2
+    name: ${num_raw_cool_avg_room_temp_z2}
+    internal: ${is_internal_asgard_only}
+    optimistic: true
+    restore_value: true
+    initial_value: 20.0
+    min_value: 10.0
+    max_value: 35.0
+    step: 0.1
+
 
   - platform: template
     id: num_raw_hl_tm_product
@@ -148,7 +234,7 @@ number:
     unit_of_measurement: "kWh²/K"
     optimistic: true
     restore_value: true
-    initial_value: 0.0
+    initial_value: 100.0
     min_value: 0.0
     max_value: 300.0
     step: 0.001

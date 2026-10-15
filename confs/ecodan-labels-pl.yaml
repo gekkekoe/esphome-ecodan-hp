@@ -109,6 +109,7 @@ substitutions:
   status_water_pump: Status pompy obiegowej
   status_water_pump_2: Status pompy obiegowej 2
   status_water_pump_3: Status pompy obiegowej 3
+  status_water_pump_4: Status pompy obiegowej 4
   status_mixing_valve: Status zaworu mieszającego
   mixing_valve_step: Krok zaworu mieszającego
   status_multi_zone: Status wielu stref
@@ -131,10 +132,11 @@ substitutions:
   status_short_cycle_lockout: 'Krótki cykl: Zablokowane'
   minimum_compressor_on_time: 'Krótki cykl: Minimalny czas pracy'
   lockout_duration: 'Krótki cykl: Czas blokady (min)'
+  lockout_strategy: 'Krótki cykl: Strategia blokady'
+  lockout_strategy_option_server_control: 'Sterowanie serwerem'
+  lockout_strategy_option_flow_control: 'Sterowanie przepływem'
   short_cycle_mitigation_button: 'Krótki cykl: Anuluj blokadę'
   predictive_short_cycle_control_enabled: 'Krótki cykl: Prewencja Predykcyjna'
-  predictive_short_cycle_high_delta_time_window: 'Krótki cykl: Czas Trwania Wysokiej Delty'
-  predictive_short_cycle_high_delta_threshold: 'Krótki cykl: Wysoki Próg Delty'
   status_predictive_boost_active: 'Krótki cykl: Wzmocnienie Predykcyjne Aktywne'
   auto_adaptive_control_enabled: 'Autoadaptacja: Sterowanie'
   maximum_heating_flow_temp: 'Autoadaptacja: Maks. Temp. Zasilania Ogrzewanie'
@@ -164,26 +166,19 @@ substitutions:
   pump_feedback_status: 'Status Informacji Zwrotnej Pompy'
   master_thermostat: 'Główny Czujnik Pokojowy'
 
-  solver_kwh_meter_feedback_source: "Źródło licznika energii"
-  solver_kwh_meter_option_internal: "Wewnętrzny licznik energii"
-  solver_kwh_meter_feedback: "Sprzężenie zwrotne licznika"
 
-  solver_dhw_mode: Tryb CWU solvera
-  solver_dhw_mode_option_regular: Normalny
-  solver_dhw_mode_option_forced: Wymuszony
 
   asgard_vt_temp_sensor_source: 'Źródło Wirtualnego Termostatu'
 
-  sw_use_solver: "Włącz dynamiczny kalkulator kosztów"
-  bin_solver_connected: "Status online kalkulatora"
+  solver_kwh_meter_feedback: "Sprzężenie zwrotne licznika"
+  solver_kwh_meter_option_internal: "Wewnętrzny licznik energii"
+  solver_kwh_meter_feedback_source: "Źródło licznika energii"
   num_raw_heat_produced: "Surowe wyprodukowane ciepło (kWh)"
   num_raw_elec_consumed: "Surowe zużycie prądu (kWh)"
   num_raw_runtime_hours: "Surowy czas pracy (Godziny)"
   num_raw_avg_outside_temp: "Surowa śr. temp. na zewnątrz (°C)"
   num_raw_avg_room_temp: "Surowa śr. temp. w pomieszczeniu (°C)"
   num_raw_delta_room_temp: "Surowa delta temp. w pomieszczeniu (°C)"
-  num_battery_soc_kwh: "Stan naładowania baterii (kWh)"
-  num_battery_max_discharge_kw: "Maks. rozładowanie baterii (kW)"
   num_raw_hl_tm_product: "Surowy iloczyn HL×TM"
   num_raw_solar_factor: "Współczynnik pasywnych zysków słonecznych"
 
@@ -191,3 +186,13 @@ substitutions:
   num_raw_cool_elec_consumed: "Zużycie prądu chłodzenie (Surowe)"
   num_raw_cool_runtime_hours: "Czas pracy chłodzenia (Surowe)"
   num_raw_cool_avg_outside_temp: "Śr. temp. zewn. chłodzenia (Surowe)"
+  num_raw_cool_avg_room_temp: "Surowa średnia temp. pokojowa chłodzenia"
+  num_raw_heat_produced_z2: "Surowo wyprodukowane ciepło Z2"
+  num_raw_elec_consumed_z2: "Surowe zużycie prądu Z2"
+  num_raw_runtime_hours_z2: "Surowy czas pracy Z2 (Godziny)"
+  num_raw_avg_room_temp_z2: "Surowa śr. temp. w pomieszczeniu Z2 (°C)"
+  num_raw_delta_room_temp_z2: "Surowa delta temp. w pomieszczeniu Z2 (°C)"
+  num_raw_cool_produced_z2: "Wyprodukowane chłodzenie Z2 (Surowe)"
+  num_raw_cool_elec_consumed_z2: "Zużycie prądu chłodzenie Z2 (Surowe)"
+  num_raw_cool_runtime_hours_z2: "Czas pracy chłodzenia Z2 (Surowe)"
+  num_raw_cool_avg_room_temp_z2: "Surowa średnia temp. pokojowa chłodzenia Z2"

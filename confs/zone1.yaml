@@ -2,6 +2,7 @@ substitutions:
   zone_identifier_z1: "0"
   z2_cpp_prefix: "//"
   z2_enabled: false
+  z2_room_temp_arg: ""
 
 binary_sensor:
   - platform: ecodan
@@ -14,6 +15,9 @@ binary_sensor:
     status_water_pump_2:
       id: status_water_pump_2
       name: ${status_water_pump_2}
+    status_water_pump_4:
+      id: status_water_pump_4
+      name: ${status_water_pump_4}
 
 climate:
   - platform: ecodan

@@ -112,6 +112,7 @@ substitutions:
   status_water_pump: Wasserpumpen-Status
   status_water_pump_2: Wasserpumpen-Status 2
   status_water_pump_3: Wasserpumpen-Status 3
+  status_water_pump_4: Wasserpumpen-Status 4
   sub_cool_temp: Unterkühlungstemperatur
   super_heat_temp: Ablass-Überhitzungstemperatur
   uptime: ESP Betriebszeit
@@ -131,10 +132,11 @@ substitutions:
   status_short_cycle_lockout: 'Kurzzyklus: Sperre'
   minimum_compressor_on_time: 'Kurzzyklus: Minimale Laufzeit'
   lockout_duration: 'Kurzzyklus: Sperrdauer (min)'
+  lockout_strategy: 'Kurzzyklus: Sperrstrategie'
+  lockout_strategy_option_server_control: 'Serversteuerung'
+  lockout_strategy_option_flow_control: 'Durchflusssteuerung'
   short_cycle_mitigation_button: 'Kurzzyklus: Sperre abbrechen'
   predictive_short_cycle_control_enabled: 'Kurzzyklus: Vorausschauende Verhinderung'
-  predictive_short_cycle_high_delta_time_window: 'Kurzzyklus: Hohe Delta-Dauer'
-  predictive_short_cycle_high_delta_threshold: 'Kurzzyklus: Hohe Delta-Schwelle'
   status_predictive_boost_active: 'Kurzzyklus: Vorausschauender Boost Aktiv'
   auto_adaptive_control_enabled: 'Auto-Adaptiv: Steuerung'
   maximum_heating_flow_temp: 'Auto-Adaptiv: Max. Vorlauftemperatur Heizen'
@@ -164,26 +166,19 @@ substitutions:
   pump_feedback_status: 'Status Pumpen-Feedback'
   master_thermostat: 'Master-Raumsensor'
 
-  solver_kwh_meter_feedback_source: Energy Meter Source
-  solver_kwh_meter_option_internal: Internal Energy Meter
-  solver_kwh_meter_feedback: kWh meter feedback
 
-  solver_dhw_mode: Solver Warmwassermodus
-  solver_dhw_mode_option_regular: Normal
-  solver_dhw_mode_option_forced: Erzwungen
 
   asgard_vt_temp_sensor_source: 'Quelle Virtuelles Thermostat'
 
-  sw_use_solver: "Dynamischen Kosten-Solver aktivieren"
-  bin_solver_connected: "Solver Online-Status"
+  solver_kwh_meter_feedback: kWh meter feedback
+  solver_kwh_meter_option_internal: Internal Energy Meter
+  solver_kwh_meter_feedback_source: Energy Meter Source
   num_raw_heat_produced: "Rohwert Erzeugte Wärme (kWh)"
   num_raw_elec_consumed: "Rohwert Stromverbrauch (kWh)"
   num_raw_runtime_hours: "Rohwert Laufzeit (Stunden)"
   num_raw_avg_outside_temp: "Rohwert Durchschn. Außentemp. (°C)"
   num_raw_avg_room_temp: "Rohwert Durchschn. Raumtemp. (°C)"
   num_raw_delta_room_temp: "Rohwert Delta Raumtemp. (°C)"
-  num_battery_soc_kwh: "Batterie-Ladezustand (kWh)"
-  num_battery_max_discharge_kw: "Max. Batterieentladung (kW)"
   num_raw_hl_tm_product: "Rohes HL×TM-Produkt"
   num_raw_solar_factor: "Passiver Solargewinnfaktor"
 
@@ -191,3 +186,13 @@ substitutions:
   num_raw_cool_elec_consumed: "Stromverbrauch Kühlen (Rohdaten)"
   num_raw_cool_runtime_hours: "Laufzeit Kühlen (Rohdaten)"
   num_raw_cool_avg_outside_temp: "Mittl. Außentemp. Kühlen (Rohdaten)"
+  num_raw_cool_avg_room_temp: "Rohe durchschn. Raumtemp. (Kühlen)"
+  num_raw_heat_produced_z2: "Erzeugte Wärme (Rohdaten) Z2"
+  num_raw_elec_consumed_z2: "Stromverbrauch (Rohdaten) Z2"
+  num_raw_runtime_hours_z2: "Laufzeit (Rohdaten) Z2 (Stunden)"
+  num_raw_avg_room_temp_z2: "Rohwert Durchschn. Raumtemp. Z2 (°C)"
+  num_raw_delta_room_temp_z2: "Rohwert Delta Raumtemp. Z2 (°C)"
+  num_raw_cool_produced_z2: "Erzeugte Kälte (Rohdaten) Z2"
+  num_raw_cool_elec_consumed_z2: "Stromverbrauch Kühlen (Rohdaten) Z2"
+  num_raw_cool_runtime_hours_z2: "Laufzeit Kühlen (Rohdaten) Z2"
+  num_raw_cool_avg_room_temp_z2: "Rohe durchschn. Raumtemp. (Kühlen) Z2"

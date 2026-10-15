@@ -211,6 +211,10 @@ namespace ecodan
             status.DhwTemperature = res.get_float16(7);
             status.DhwSecondaryTemperature = res.get_float16(10); 
 
+            // First 0x17 status frame = status is populated (consumed by the
+            // ODIN forwarder's publish gate).
+            status.Initialized = true;
+
             publish_state("hp_feed_temp", status.HpFeedTemperature);
             publish_state("hp_return_temp", status.HpReturnTemperature);
             publish_state("dhw_temp", status.DhwTemperature);
@@ -349,7 +353,7 @@ namespace ecodan
                 break;
             }
             publish_state("pump_speed", static_cast<float>(mapped_pump_speed));
-            publish_state("pump_feedback", static_cast<float>((status.PumpFeedback == 100 | status.PumpFeedback == 255) ? 0 : status.PumpFeedback));
+            publish_state("pump_feedback", static_cast<float>((status.PumpFeedback == 100 || status.PumpFeedback == 255) ? 0 : status.PumpFeedback));
             publish_state("status_water_pump", status.WaterPumpActive);
             publish_state("status_three_way_valve", status.ThreeWayValveActive);
             publish_state("status_water_pump_2", status.WaterPump2Active);
@@ -362,6 +366,8 @@ namespace ecodan
             break;
         case GetType::PUMP_STATUS_B:
         {   
+            status.WaterPump4Active = res[1] != 0;
+            publish_state("status_water_pump_4", status.WaterPump4Active);
             // byte 8 - Z1  Mixing valve step
             status.MixingValveStep = res[8];   
             publish_state("mixing_valve_step_z1", static_cast<float>(status.MixingValveStepZ1));

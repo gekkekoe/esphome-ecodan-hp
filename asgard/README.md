@@ -9,20 +9,26 @@
 ### Why use the Asgard Sub-assembly?
 * Enables Virtual Thermostat control (IN1/IN6) as a modern alternative to CNRF.
 * High-resolution temperature sensor integration (DS18B20 support).
-* Pass-through (Slave) port functionality for Melcloud or Procon modules.
+* Pass-through (Proxy) port functionality for Melcloud or Procon modules.
 * 100% Local control (No Cloud dependency).
 
 # Ordering & Availability
-* **Product:** Asgard PCB: ESP32-S3 Development Sub-assembly + **50cm** Connector cable
-* **Price:** € 65,- (including VAT)
+* **Product:** Asgard PCB: ESP32-S3 Development Sub-assembly + **50cm** Connector cable (Odin enclosure optional)
+* **Price:** From € 69,50 (including VAT)
 * **Delivery:** Shipped within 3 business days from The Netherlands (When in stock)
 
-<div align="center">
-  <h2>Order via the link/button below:</h2>
+> **New to ODIN?** Read the [ODIN whitepaper](https://gekkekoe.github.io/heatpump-optimizer/) first — what it does and a payback calculator — before ordering the bundle below.
 
-| Standard Order (NL/EU) | UK Special Bundle (3 Units) |
-| :--- | :--- |
-| [![Order Asgard](https://img.shields.io/badge/Order-Single%20Unit-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/aFa6oIblrcIPaNN3Wq4AU00) | [![Order UK Bundle](https://img.shields.io/badge/Order-UK%203--Unit%20Bundle-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/14AeVefBH8sz9JJ0Ke4AU01) |
+<div align="center">
+  <h2>Order via the links/buttons below:</h2>
+
+  ⚠️ **Asgard and Odin are currently in stock** <br>
+  ⚠️ **Due to regulation (PPWR), shipping to EU countries other than NL has been [suspended](https://github.com/gekkekoe/esphome-ecodan-hp/discussions/399)**
+
+
+| Standard Order (NL) |
+| :--- |
+| [![Order Standard](https://img.shields.io/badge/Order-Standard%20Order-0070BA?style=for-the-badge&logo=stripe&logoColor=white)](https://buy.stripe.com/bJe4gAgFL5gn7BBakO4AU07) |
 
 </div>
 
@@ -66,9 +72,13 @@
 > * **Liability:** Installation is entirely at your own risk. The seller is **not responsible** for any damage to your heat pump, property, or consequential damages resulting from the use or installation of this interface.
 
 ## Installation Guides
-[![Hardware Setup](https://img.shields.io/badge/Hardware-Setup-333333?style=for-the-badge&logo=arduino&logoColor=white)](./manual.md)
-[![Software Setup](https://img.shields.io/badge/Standalone-Setup-333333?style=for-the-badge&logo=home-assistant&logoColor=white)](./sa-config.md)
-[![Software Setup](https://img.shields.io/badge/HA-Setup-333333?style=for-the-badge&logo=home-assistant&logoColor=white)](./ha-config.md)
+
+To get started, complete the physical hardware installation, then choose your preferred software configuration.
+
+| Step | User Path | Guide |
+| :--- | :--- | :--- |
+| **1. Getting Started** | All Users | [![Getting Started](https://img.shields.io/badge/Getting_Started_Guide-333333?style=for-the-badge&logo=arduino&logoColor=white)](./manual.md) |
+| **2. Software** | Home Assistant | [![HA Setup](https://img.shields.io/badge/Home_Assistant-41BDF5?style=for-the-badge&logo=home-assistant&logoColor=white)](./ha-config.md) |
 
 ---
 

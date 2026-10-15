@@ -110,6 +110,7 @@ substitutions:
   status_water_pump: Vattenpump status
   status_water_pump_2: Vattenpump 2 status
   status_water_pump_3: Vattenpump 3 status
+  status_water_pump_4: Vattenpump 4 status
   status_mixing_valve: Blandningsventil status
   mixing_valve_step: Blandningsventil steg
   status_multi_zone: Multi-zon status
@@ -132,10 +133,11 @@ substitutions:
   status_short_cycle_lockout: 'Kort cykel: Låst'
   minimum_compressor_on_time: 'Kort cykel: Min drifttid'
   lockout_duration: 'Kort cykel: Låstid (min)'
+  lockout_strategy: 'Kort cykel: Låsstrategi'
+  lockout_strategy_option_server_control: 'Serverkontroll'
+  lockout_strategy_option_flow_control: 'Flödeskontroll'
   short_cycle_mitigation_button: 'Kort cykel: Avbryt lås'
   predictive_short_cycle_control_enabled: 'Kort cykel: Förebyggande Skydd'
-  predictive_short_cycle_high_delta_time_window: 'Kort cykel: Hög Deltavaraktighet'
-  predictive_short_cycle_high_delta_threshold: 'Kort cykel: Hög Deltatröskel'
   status_predictive_boost_active: 'Kort cykel: Prediktiv Boost Aktiv'
   auto_adaptive_control_enabled: 'Autoadaptiv: Styrning'
   maximum_heating_flow_temp: 'Autoadaptiv: Max. Framledningstemp. Värme'
@@ -165,26 +167,19 @@ substitutions:
   pump_feedback_status: 'Status Pumpåterkoppling'
   master_thermostat: 'Huvudrumsgivare'
 
-  solver_kwh_meter_feedback_source: "Källa för energimätare"
-  solver_kwh_meter_option_internal: "Intern energimätare"
-  solver_kwh_meter_feedback: "kWh-mätare återkoppling"
 
-  solver_dhw_mode: Solver varmvattenläge
-  solver_dhw_mode_option_regular: Normalt
-  solver_dhw_mode_option_forced: Tvingat
 
   asgard_vt_temp_sensor_source: 'Källa Virtuell Termostat'
 
-  sw_use_solver: "Aktivera dynamisk kostnadsberäknare"
-  bin_solver_connected: "Beräknare onlinestatus"
+  solver_kwh_meter_feedback: "kWh-mätare återkoppling"
+  solver_kwh_meter_option_internal: "Intern energimätare"
+  solver_kwh_meter_feedback_source: "Källa för energimätare"
   num_raw_heat_produced: "Rå producerad värme (kWh)"
   num_raw_elec_consumed: "Rå förbrukad el (kWh)"
   num_raw_runtime_hours: "Rå drifttid (Timmar)"
   num_raw_avg_outside_temp: "Rå genomsnittlig utetemp. (°C)"
   num_raw_avg_room_temp: "Rå genomsnittlig rumstemp. (°C)"
   num_raw_delta_room_temp: "Rå delta rumstemp. (°C)"
-  num_battery_soc_kwh: "Batteri SoC (kWh)"
-  num_battery_max_discharge_kw: "Max. batteriurladdning (kW)"
   num_raw_hl_tm_product: "Rå HL×TM-produkt"
   num_raw_solar_factor: "Passiv solvärmefaktor"
 
@@ -192,3 +187,13 @@ substitutions:
   num_raw_cool_elec_consumed: "Elförbrukning kyla (Rådata)"
   num_raw_cool_runtime_hours: "Drifttid kyla (Rådata)"
   num_raw_cool_avg_outside_temp: "Genomsnittlig utetemp. kyla (Rådata)"
+  num_raw_cool_avg_room_temp: "Rå kylning genomsnittlig rumstemp."
+  num_raw_heat_produced_z2: "Rå producerad värme Z2"
+  num_raw_elec_consumed_z2: "Rå förbrukad el Z2"
+  num_raw_runtime_hours_z2: "Rå drifttid Z2 (Timmar)"
+  num_raw_avg_room_temp_z2: "Rå genomsnittlig rumstemp. Z2 (°C)"
+  num_raw_delta_room_temp_z2: "Rå delta rumstemp. Z2 (°C)"
+  num_raw_cool_produced_z2: "Producerad kyla Z2 (Rådata)"
+  num_raw_cool_elec_consumed_z2: "Elförbrukning kyla Z2 (Rådata)"
+  num_raw_cool_runtime_hours_z2: "Drifttid kyla Z2 (Rådata)"
+  num_raw_cool_avg_room_temp_z2: "Rå kylning genomsn. rumstemp. Z2"

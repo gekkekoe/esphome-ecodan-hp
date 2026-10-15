@@ -51,7 +51,7 @@ substitutions:
   boiler_return_temp: Kattilan paluulämpötila
   status_booster: Tehostinlämmitin
   compressor_frequency: Kompressorin taajuus
-  status_compressor: Kompressorin
+  status_compressor: Kompressori
   controller_version_text: Ohjaimen versio
   controller_firmware_text: Ohjaimen laiteohjelmisto
   controller_datetime_text: Ohjaimen päivämäärä
@@ -109,6 +109,7 @@ substitutions:
   status_water_pump: Vesipumpun tila
   status_water_pump_2: Vesipumppu 2 tila
   status_water_pump_3: Vesipumppu 3 tila
+  status_water_pump_4: Vesipumppu 4 tila
   status_mixing_valve: Sekoitusventtiilin tila
   mixing_valve_step: Sekoitusventtiilin asento
   status_multi_zone: Monivyöhyketila
@@ -132,11 +133,12 @@ substitutions:
   status_short_cycle_lockout: 'Lyhytsykli: Lukitus'
   minimum_compressor_on_time: 'Lyhytsykli: Vähimmäiskäyntiaika'
   lockout_duration: 'Lyhytsykli: Lukitusaika (min)'
+  lockout_strategy: 'Lyhytsykli: Lukitusstrategia'
+  lockout_strategy_option_server_control: 'Palvelinohjaus'
+  lockout_strategy_option_flow_control: 'Virtausohjaus'
   short_cycle_mitigation_button: 'Lyhytsykli: Peruuta lukitus'
   predictive_short_cycle_control_enabled: 'Lyhytsykli: Ennakoiva esto'
-  predictive_short_cycle_high_delta_time_window: 'Lyhytsykli: Korkean delta-arvon aikaikkuna'
-  predictive_short_cycle_high_delta_threshold: 'Lyhytsykli: Korkea delta-arvon kynnysarvo'
-  status_predictive_boost_active: 'Lyhytsykli: Ennakoiva Tehostus Aktiivinen'
+  status_predictive_boost_active: 'Lyhytsykli: Ennakoiva tehostus aktiivinen'
   auto_adaptive_control_enabled: 'Mukautuva ohjaus'
   maximum_heating_flow_temp: 'Mukautuva ohjaus: Lämmityksen enimmäismenovesilämpötila'
   minimum_heating_flow_temp: 'Mukautuva ohjaus: Lämmityksen vähimmäismenovesilämpötila'
@@ -152,7 +154,7 @@ substitutions:
   heating_system_type_option_rad: 'Patterit'
   auto_adaptive_setpoint_bias: 'Mukautuva ohjaus: Asetusarvon poikkeama'
   temperature_feedback: 'Mukautuva ohjaus: Huonelämpötilan palaute'
-  defrost_risk_handling_enabled: 'Mukautuva ohjaus: Sulatuksen Vähentäminen'
+  defrost_risk_handling_enabled: 'Mukautuva ohjaus: Sulatuksen vähentäminen'
   smart_boost_enabled: 'Mukautuva ohjaus: Älykäs tehostus'
   total_increasing_heating_consumed: Lämmityksen kokonaiskulutus
   total_increasing_heating_delivered: Lämmityksen kokonaistuotto
@@ -160,31 +162,24 @@ substitutions:
   total_increasing_cool_delivered: Jäähdytyksen kokonaistuotto
   total_increasing_dhw_consumed: LKV kokonaiskulutus
   total_increasing_dhw_delivered: LKV kokonaistuotto
-  pump_speed: 'Pumpun Nopeus'
-  pump_feedback: 'Pumpun Kulutus'
-  pump_feedback_status: 'Pumpun Palautteen Tila'
-  master_thermostat: 'Päähuoneen Anturi'
+  pump_speed: 'Pumpun nopeus'
+  pump_feedback: 'Pumpun kulutus'
+  pump_feedback_status: 'Pumpun tila'
+  master_thermostat: 'Päähuoneen anturi'
 
-  solver_kwh_meter_feedback_source: "Energiamittarin lähde"
-  solver_kwh_meter_option_internal: "Sisäinen energiamittari"
-  solver_kwh_meter_feedback: "kWh-mittarin palaute"
 
-  solver_dhw_mode: Ratkaisimen käyttövesitila
-  solver_dhw_mode_option_regular: Normaali
-  solver_dhw_mode_option_forced: Pakotettu
 
   asgard_vt_temp_sensor_source: 'Virtuaalisen Termostaatin Lähde'
 
-  sw_use_solver: "Ota käyttöön dynaaminen kustannusratkaisija"
-  bin_solver_connected: "Ratkaisijan online-tila"
+  solver_kwh_meter_feedback: "kWh-mittarin palaute"
+  solver_kwh_meter_option_internal: "Sisäinen energiamittari"
+  solver_kwh_meter_feedback_source: "Energiamittarin lähde"
   num_raw_heat_produced: "Raaka tuotettu lämpö (kWh)"
   num_raw_elec_consumed: "Raaka kulutettu sähkö (kWh)"
   num_raw_runtime_hours: "Raaka käyntiaika (Tuntia)"
   num_raw_avg_outside_temp: "Raaka keskim. ulkolämpötila (°C)"
   num_raw_avg_room_temp: "Raaka keskim. huonelämpötila (°C)"
   num_raw_delta_room_temp: "Raaka huonelämpötilan delta (°C)"
-  num_battery_soc_kwh: "Akun varaustila (kWh)"
-  num_battery_max_discharge_kw: "Akun maksimipurkaus (kW)"
   num_raw_hl_tm_product: "Raaka HL×TM-tulo"
   num_raw_solar_factor: "Passiivisen aurinkolämmön kerroin"
 
@@ -192,3 +187,13 @@ substitutions:
   num_raw_cool_elec_consumed: "Jäähdytyksen sähkönkulutus (Raaka)"
   num_raw_cool_runtime_hours: "Jäähdytyksen käyntiaika (Raaka)"
   num_raw_cool_avg_outside_temp: "Keskim. ulkolämpötila jäähd. (Raaka)"
+  num_raw_cool_avg_room_temp: "Raaka jäähdytys keskim. huonelämpötila"
+  num_raw_heat_produced_z2: "Raaka tuotettu lämpö Z2"
+  num_raw_elec_consumed_z2: "Raaka kulutettu sähkö Z2"
+  num_raw_runtime_hours_z2: "Raaka käyntiaika Z2 (Tuntia)"
+  num_raw_avg_room_temp_z2: "Raaka keskim. huonelämpötila Z2 (°C)"
+  num_raw_delta_room_temp_z2: "Raaka huonelämpötilan delta Z2 (°C)"
+  num_raw_cool_produced_z2: "Tuotettu jäähdytys Z2 (Raaka)"
+  num_raw_cool_elec_consumed_z2: "Jäähdytyksen sähkönkulutus Z2 (Raaka)"
+  num_raw_cool_runtime_hours_z2: "Jäähdytyksen käyntiaika Z2 (Raaka)"
+  num_raw_cool_avg_room_temp_z2: "Raaka jäähdytys keskim. huonelämpötila Z2"

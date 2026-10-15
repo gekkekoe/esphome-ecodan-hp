@@ -113,7 +113,7 @@ sections:
               type: entities
               entities:
                 - entity: >-
-                    number.ecodan_heatpump_auto_adaptive_min_cooling_flow_temperature
+                    number.ecodan_heatpump_auto_adaptive_min_cooling_flow_temperature_z1
                   name: Min. Cooling Flow Temperature
                 - entity: >-
                     number.ecodan_heatpump_auto_adaptive_cooling_smart_start_temp
@@ -135,10 +135,6 @@ sections:
                 name: Minimum On-Time
               - entity: switch.ecodan_heatpump_short_cycle_predictive_prevention
                 name: Predictive Short Cycle Prevention
-              - entity: number.ecodan_heatpump_short_cycle_high_delta_duration
-                name: High Delta T Detection Duration
-              - entity: number.ecodan_heatpump_short_cycle_high_delta_threshold
-                name: High Delta T Threshold
             show_header_toggle: false
             state_color: true
             title: Short Cycle
@@ -285,8 +281,12 @@ badges:
     show_name: true
     show_state: true
     show_icon: true
-    entity: sensor.ecodan_heatpump_dhw_current_temp
-    name: 'DHW '
+    entity: climate.ecodan_heatpump_dhw_climate
+    show_entity_picture: false
+    state_content:
+      - current_temperature
+      - hvac_action
+    name: DHW
   - type: entity
     show_name: true
     show_state: true

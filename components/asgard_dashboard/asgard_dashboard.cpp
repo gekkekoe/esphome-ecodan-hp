@@ -5,13 +5,16 @@
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
 #include <esp_http_server.h>
+#include <esp_netif.h>
 #include <cstdio>
 #include <cstring>
 #include <cmath>
-#include "nvs_flash.h"
-#include "nvs.h"
+#include <memory>
+#include <esp_littlefs.h>
+#include <sys/stat.h>
+#include <string>
+#include "esphome/components/ecodan/ecodan.h"
 
-// #include "esp_system.h"
 // #include "esp_heap_caps.h"
 
 namespace esphome {
@@ -19,60 +22,71 @@ namespace asgard_dashboard {
 
 static const char *const TAG = "asgard_dashboard";
 
+//#define TEST_TS
+time_t EcodanDashboard::timestamp() const {
+#ifndef TEST_TS
+  if (this->ecodan_ != nullptr) {
+    auto status = this->ecodan_->get_status();
+    return status.timestamp();
+  }
+
+  return -1; 
+#else
+  struct tm t = {0};
+  t.tm_year = 2026 - 1900;
+  t.tm_mon  = 5 - 1;       
+  t.tm_mday = 22;          // (1 - 31)
+  t.tm_hour = 18;          // (0 - 23)
+  t.tm_min  = 54;          // mins (0 - 59)
+  t.tm_sec  = 0;           // secs (0 - 59)
+  time_t simulated_start_time = mktime(&t);
+  auto new_time = simulated_start_time + (millis() / 1000);
+  return new_time;
+#endif
+}
+
 void EcodanDashboard::setup() {
   ESP_LOGI(TAG, "Setting up Ecodan Dashboard on /dashboard");
   
   action_lock_ = xSemaphoreCreateMutex();
   snapshot_mutex_ = xSemaphoreCreateMutex();
   history_mutex_ = xSemaphoreCreateMutex();
-  // prevent premature nvs flushes
-  this->odin_nvs_last_write_ms_ = millis();
 
-  // NVS writes run in a dedicated low-priority task to avoid blocking lwIP
-  this->nvs_trigger_ = xSemaphoreCreateBinary();
-  xTaskCreate(
-      EcodanDashboard::nvs_task_,
-      "nvs_persist",
+  this->setup_lfs();
+
+  if (this->lfs_mounted_) {
+    // ── LFS task (history persistence) ────────────────────────────────────
+    this->lfs_trigger_ = xSemaphoreCreateBinary();
+    xTaskCreatePinnedToCore(
+      EcodanDashboard::lfs_task_,
+      "lfs_hist",
       8192,
       this,
-      1,                           // priority 1 = lowest above idle, well below lwIP (18)
-      &this->nvs_task_handle_
-  );
+      1,
+      &this->lfs_task_handle_,
+      1
+    );
+  }
 
   base_->init();
   base_->add_handler(this);
 }
 
 void EcodanDashboard::loop() {
-
   uint32_t now = millis();
-  if (now - last_history_time_ >= 60000 || last_history_time_ == 0) {
-    last_history_time_ = now;
-    record_history_();
+
+  if (this->lfs_mounted_) {
+    if (now - last_history_time_ >= 60000 || last_history_time_ == 0) {
+      last_history_time_ = now;
+      record_history_();
+    }
   }
 
-  // update state every second
   if (now - last_snapshot_time_ >= 1000 || last_snapshot_time_ == 0) {
     last_snapshot_time_ = now;
     update_snapshot_();
   }
 
-  // Signal the NVS task — never call nvs_persist_odin_() directly from loop()
-  // as flash writes block the CPU and cause lwIP TCP assert crashes.
-  if (this->odin_nvs_dirty_) {
-    const uint32_t NVS_FLUSH_INTERVAL_MS = 10 * 60 * 1000;
-    if (this->odin_nvs_last_write_ms_ == 0 || (now - this->odin_nvs_last_write_ms_) >= NVS_FLUSH_INTERVAL_MS) {
-      this->odin_nvs_dirty_ = false;
-      this->odin_nvs_last_write_ms_ = now;
-      // Snapshot switch state here (loop task context) so nvs_persist_odin_()
-      // can read it safely from the NVS task without touching ESPHome objects.
-      this->nvs_show_tab_cache_.store(
-          this->sw_show_solver_tab_ != nullptr && this->sw_show_solver_tab_->state);
-      if (this->nvs_trigger_ != nullptr) {
-        xSemaphoreGive(this->nvs_trigger_);  // wake the NVS task
-      }
-    }
-  }
 
   std::vector<DashboardAction> todo;
   
@@ -95,14 +109,17 @@ void EcodanDashboard::loop() {
   }
 }
 
+
 bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
   char url_buf[AsyncWebServerRequest::URL_BUF_SIZE];
   auto url = request->url_to(url_buf);
   return (url == "/dashboard" || url == "/dashboard/" ||
+          url == "/setup" ||
           url == "/dashboard/setup" ||
           url == "/dashboard/state" || url == "/dashboard/set" ||
           url == "/dashboard/history" || url == "/dashboard/odin" ||
-          url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js"); 
+          url == "/dashboard/export/hourly" || url == "/dashboard/export/physics" ||
+          url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js");
 }
 
 void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
@@ -110,11 +127,12 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
   auto url = request->url_to(url_buf);
   
   if      (url == "/dashboard" || url == "/dashboard/") handle_root_(request);
-  else if (url == "/dashboard/setup")                   handle_setup_(request);
+  else if (url == "/setup" || url == "/dashboard/setup")   handle_setup_(request);
   else if (url == "/dashboard/state")                   handle_state_(request);
   else if (url == "/dashboard/set")                     handle_set_(request);
   else if (url == "/dashboard/history")                 handle_history_request_(request);
-  else if (url == "/dashboard/odin")                    handle_odin_request_(request);
+  else if (url == "/dashboard/export/hourly")        handle_export_hourly_(request);
+  else if (url == "/dashboard/export/physics")       handle_export_physics_(request);
   else if (url == "/js/chart.js" || url == "/js/hammer.js" || url == "/js/zoom.js") {
     handle_js_(request);
   }
@@ -122,6 +140,7 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
     httpd_req_t *req_404 = *request;
     httpd_resp_set_status(req_404, "404 Not Found");
     httpd_resp_set_type(req_404, "text/plain");
+    httpd_resp_set_hdr(req_404, "Connection", "close");
     httpd_resp_send(req_404, "Not found", HTTPD_RESP_USE_STRLEN);
   }
 }
@@ -132,7 +151,8 @@ void EcodanDashboard::send_chunked_(AsyncWebServerRequest *request, const char *
   httpd_resp_set_status(req, "200 OK");
   httpd_resp_set_type(req, content_type);
   httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-  
+  httpd_resp_set_hdr(req, "Connection", "close");
+
   if (cache_control != nullptr) {
     httpd_resp_set_hdr(req, "Cache-Control", cache_control);
   }
@@ -184,11 +204,27 @@ void EcodanDashboard::handle_js_(AsyncWebServerRequest *request) {
     httpd_req_t *req_404 = *request;
     httpd_resp_set_status(req_404, "404 Not Found");
     httpd_resp_set_type(req_404, "text/plain");
+    httpd_resp_set_hdr(req_404, "Connection", "close");
     httpd_resp_send(req_404, "File not found", HTTPD_RESP_USE_STRLEN);
     return;
   }
 
   send_chunked_(request, "application/javascript", file_data, file_len, "public, max-age=31536000");
+}
+
+void EcodanDashboard::handleBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index,
+                                  size_t total) {
+  if (index == 0) {
+    this->post_body_.clear();
+    this->post_body_oversized_ = total > 1024;
+    if (!this->post_body_oversized_) {
+      this->post_body_.reserve(total);
+    }
+  }
+  if (this->post_body_oversized_) {
+    return;  // still drained by the framework; just don't accumulate it
+  }
+  this->post_body_.append(reinterpret_cast<const char *>(data), len);
 }
 
 void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
@@ -197,43 +233,41 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   if (request->method() != HTTP_POST) {
     httpd_resp_set_status(req, "405 Method Not Allowed");
     httpd_resp_set_type(req, "text/plain");
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, "Method Not Allowed", HTTPD_RESP_USE_STRLEN);
     return;
   }
 
-  size_t content_len = req->content_len;
-  if (content_len == 0 || content_len > 1024) {
+  // The request body was already fully consumed by the framework's
+  // handle_raw_body_() before handleRequest()/handle_set_() ever runs (see
+  // handleBody() above for why) -- there is nothing left to read from `req`
+  // here, so we use the buffer handleBody() filled instead of httpd_req_recv().
+  if (this->post_body_oversized_) {
+    this->post_body_.clear();
+    this->post_body_oversized_ = false;
     httpd_resp_set_status(req, "400 Bad Request");
     httpd_resp_set_type(req, "text/plain");
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, "Bad Request", HTTPD_RESP_USE_STRLEN);
     return;
   }
 
-  // Memory-safe allocation on the heap instead of the stack
-  char *body = (char *)malloc(content_len + 1);
-  if (body == nullptr) {
-    httpd_resp_set_status(req, "500 Internal Server Error");
-    httpd_resp_set_type(req, "text/plain");
-    httpd_resp_send(req, "Out of Memory", HTTPD_RESP_USE_STRLEN);
-    return;
-  }
-  memset(body, 0, content_len + 1);
-
-  int received = httpd_req_recv(req, body, content_len);
-  if (received <= 0) {
-    free(body);
+  if (this->post_body_.empty()) {
     httpd_resp_set_status(req, "400 Bad Request");
     httpd_resp_set_type(req, "text/plain");
-    httpd_resp_send(req, "Read failed", HTTPD_RESP_USE_STRLEN);
+    httpd_resp_set_hdr(req, "Connection", "close");
+    httpd_resp_send(req, "Empty body", HTTPD_RESP_USE_STRLEN);
     return;
   }
-  body[received] = '\0';
 
-  ESP_LOGI(TAG, "Dashboard POST body: %s", body);
+  const std::string body = std::move(this->post_body_);
+  this->post_body_.clear();
+
+  ESP_LOGI(TAG, "Dashboard POST body: %s", body.c_str());
 
   // Restore the original JSON parsing logic for keys and values
   char key[64] = {0};
-  const char *kp = strstr(body, "\"key\":");
+  const char *kp = strstr(body.c_str(), "\"key\":");
   if (kp) {
     kp += 6;
     while (*kp == ' ' || *kp == '"') kp++;
@@ -242,9 +276,9 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   }
 
   if (strlen(key) == 0) {
-    free(body);
     httpd_resp_set_status(req, "400 Bad Request");
     httpd_resp_set_type(req, "text/plain");
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, "Missing key", HTTPD_RESP_USE_STRLEN);
     return;
   }
@@ -253,7 +287,7 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
   float fval = 0.0f;
   bool is_string = false;
 
-  const char *vp = strstr(body, "\"value\":");
+  const char *vp = strstr(body.c_str(), "\"value\":");
   if (vp) {
     vp += 8;
     while (*vp == ' ') vp++;
@@ -266,9 +300,6 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
       fval = static_cast<float>(atof(vp));
     }
   }
-
-  // Always free heap memory immediately after extracting values
-  free(body);
 
   ESP_LOGI(TAG, "Dashboard set: key=%s value=%s/%.2f", key,
            is_string ? strval : "-", is_string ? 0.0f : fval);
@@ -285,28 +316,42 @@ void EcodanDashboard::handle_set_(AsyncWebServerRequest *request) {
     httpd_resp_set_status(req, "200 OK");
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, "{\"ok\":true}", HTTPD_RESP_USE_STRLEN);
   } else {
     ESP_LOGW(TAG, "Failed to acquire action_lock_ in handle_set_ (Timeout)");
     httpd_resp_set_status(req, "503 Service Unavailable");
     httpd_resp_set_type(req, "text/plain");
+    httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send(req, "System busy, try again", HTTPD_RESP_USE_STRLEN);
   }
 }
 
 
 void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &sval, float fval, bool is_string) {
+  if (key == "short_cycle_mitigation_button") {
+      if (short_cycle_mitigation_button_ != nullptr) short_cycle_mitigation_button_->press();
+      return;
+  }
+  if (key == "reboot_button") {
+      if (reboot_button_ != nullptr) reboot_button_->press();
+      return;
+  }
+
   auto doSwitch = [&](switch_::Switch *sw) {
-    if (!sw) { ESP_LOGW(TAG, "Switch not configured"); return; }
+    if (!sw) { ESP_LOGW(TAG, "Switch not configured: key=%s", key.c_str()); return; }
     fval > 0.5f ? sw->turn_on() : sw->turn_off();
   };
   if (key == "auto_adaptive_control_enabled") { doSwitch(sw_auto_adaptive_); return; }
   if (key == "defrost_risk_handling_enabled") { doSwitch(sw_defrost_mit_);   return; }
   if (key == "smart_boost_enabled")           { doSwitch(sw_smart_boost_);   return; }
   if (key == "force_dhw")                     { doSwitch(sw_force_dhw_);     return; } 
+  if (key == "sw_regular_dhw")                { doSwitch(sw_regular_dhw_);   return; }
+  if (key == "power_mode")                    { doSwitch(sw_power_mode_);    return; }
+  if (key == "service_codes_enabled")           { doSwitch(sw_service_codes_enabled_); return; }
+  if (key == "holiday_mode")                    { doSwitch(sw_holiday_mode_);        return; }
+  if (key == "legionella_enabled")                { doSwitch(sw_legionella_dhw_automation_); return; }
   if (key == "predictive_short_cycle_control_enabled") { doSwitch(pred_sc_switch_);   return; }
-  if (key == "use_dynamic_cost_solver")       { doSwitch(sw_use_solver_);    return; }
-  if (key == "show_solver_tab_enabled")       { doSwitch(sw_show_solver_tab_); this->odin_nvs_dirty_ = true; return; }
 
   // Server control
   if (key == "server_control_enabled")             { doSwitch(sw_server_control_);          return; }
@@ -317,7 +362,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "server_control_prohibit_z2_cooling") { doSwitch(sw_sc_prohibit_z2_cooling_);  return; }
 
   auto doSelect = [&](select::Select *sel) {
-    if (!sel) { ESP_LOGW(TAG, "Select not configured"); return; }
+    if (!sel) { ESP_LOGW(TAG, "Select not configured: key=%s", key.c_str()); return; }
     auto call = sel->make_call();
     if (is_string) {
       call.set_option(sval);
@@ -334,10 +379,11 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "operating_mode_z2")     { doSelect(sel_operating_mode_z2_); return; }
   if (key == "temp_sensor_source_z1") { doSelect(sel_temp_source_z1_); return; } 
   if (key == "temp_sensor_source_z2") { doSelect(sel_temp_source_z2_); return; } 
-  if (key == "solver_dhw_mode")       { doSelect(solver_dhw_mode_); return; }
+  if (key == "lockout_duration")      { doSelect(lockout_duration_); return; }
+  if (key == "lockout_strategy")      { doSelect(lockout_strategy_); return; }
 
   auto doNumber = [&](number::Number *n) {
-    if (!n) { ESP_LOGW(TAG, "Number not configured"); return; }
+    if (!n) { ESP_LOGW(TAG, "Number not configured: key=%s", key.c_str()); return; }
     auto call = n->make_call();
     call.set_value(fval);
     call.perform();
@@ -349,28 +395,16 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "minimum_heating_flow_temp_z2") { doNumber(num_min_flow_temp_z2_); return; }
   if (key == "cooling_smart_start_z1")       { doNumber(num_cooling_smart_start_z1_); return; }
   if (key == "minimum_cooling_flow_z1")      { doNumber(num_min_cooling_flow_z1_); return; }
+  if (key == "minimum_cooling_flow_z2")      { doNumber(num_min_cooling_flow_z2_); return; }
+  if (key == "temperature_feedback_z1")      { doNumber(num_temperature_feedback_z1_); return; }
+  if (key == "temperature_feedback_z2")      { doNumber(num_temperature_feedback_z2_); return; }
+  if (key == "minimum_compressor_on_time")   { doNumber(minimum_compressor_on_time_); return; }
 
   if (key == "thermostat_hysteresis_z1")    { doNumber(num_hysteresis_z1_);    return; }
   if (key == "thermostat_hysteresis_z2")    { doNumber(num_hysteresis_z2_);    return; }
-  if (key == "raw_heat_produced") { doNumber(num_raw_heat_produced_); return; }
-  if (key == "raw_elec_consumed") { doNumber(num_raw_elec_consumed_); return; }
-  if (key == "raw_runtime_hours") { doNumber(num_raw_runtime_hours_); return; }
-  if (key == "raw_avg_outside_temp") { doNumber(num_raw_avg_outside_temp_); return; }
-  if (key == "raw_avg_room_temp") { doNumber(num_raw_avg_room_temp_); return; }
-  if (key == "raw_delta_room_temp") { doNumber(num_raw_delta_room_temp_); return; }
-  if (key == "raw_hl_tm_product") { doNumber(num_raw_hl_tm_product_); return; }
-  if (key == "raw_solar_factor") { doNumber(num_raw_solar_factor_); return; }
-  if (key == "battery_soc_kwh") { doNumber(num_battery_soc_kwh_); return; }
-  if (key == "battery_max_discharge_kw") { doNumber(num_battery_max_discharge_kw_); return; }
-  if (key == "dhw_start_threshold") { doNumber(num_dhw_start_threshold_); return; }
+  if (key == "legionella_dhw_setpoint") { doNumber(num_legionella_dhw_setpoint_); return; }
 
-  if (key == "raw_cool_produced") { doNumber(num_raw_cool_produced_); return; }
-  if (key == "raw_cool_elec_consumed") { doNumber(num_raw_cool_elec_consumed_); return; }
-  if (key == "raw_cool_runtime_hours") { doNumber(num_raw_cool_runtime_hours_); return; }
-  if (key == "raw_cool_avg_outside_temp") { doNumber(num_raw_cool_avg_outside_temp_); return; }
 
-  if (key == "predictive_short_cycle_high_delta_time_window")    { doNumber(pred_sc_time_);    return; }
-  if (key == "predictive_short_cycle_high_delta_threshold")    { doNumber(pred_sc_delta_);    return; }
 
   if (key == "dhw_setpoint" && dhw_climate_ != nullptr) {
     auto call = dhw_climate_->make_call();
@@ -381,7 +415,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   }
 
   auto doClimate = [&](climate::Climate *c, const char *name) {
-    if (!c) { ESP_LOGW(TAG, "%s climate not configured", name); return; }
+    if (!c) { ESP_LOGW(TAG, "%s climate not configured: key=%s", name, key.c_str()); return; }
     auto call = c->make_call();
     call.set_target_temperature(fval);
     call.perform();
@@ -398,31 +432,39 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   
   if (key == "virtual_climate_z1_mode" || key == "virtual_climate_z2_mode") {
     climate::Climate *c = (key == "virtual_climate_z1_mode") ? virtual_climate_z1_ : virtual_climate_z2_;
-    if (c && is_string) {
-      auto call = c->make_call();
-      if (sval == "heat") call.set_mode(climate::CLIMATE_MODE_HEAT);
-      else if (sval == "cool") call.set_mode(climate::CLIMATE_MODE_COOL);
-      else if (sval == "auto") call.set_mode(climate::CLIMATE_MODE_AUTO);
-      else call.set_mode(climate::CLIMATE_MODE_OFF);
-      call.perform();
-      ESP_LOGI(TAG, "%s set to %s", key.c_str(), sval.c_str());
-    }
+    if (!c) { ESP_LOGW(TAG, "Climate not configured: key=%s", key.c_str()); return; }
+    if (!is_string) { ESP_LOGW(TAG, "Expected string value for key=%s", key.c_str()); return; }
+    auto call = c->make_call();
+    if (sval == "heat") call.set_mode(climate::CLIMATE_MODE_HEAT);
+    else if (sval == "cool") call.set_mode(climate::CLIMATE_MODE_COOL);
+    else if (sval == "auto") call.set_mode(climate::CLIMATE_MODE_AUTO);
+    else call.set_mode(climate::CLIMATE_MODE_OFF);
+    call.perform();
+    ESP_LOGI(TAG, "%s set to %s", key.c_str(), sval.c_str());
     return;
   }
 
   if (key == "ui_use_room_z1" && ui_use_room_z1_) { ui_use_room_z1_->value() = (fval > 0.5); return; }
   if (key == "ui_use_room_z2" && ui_use_room_z2_) { ui_use_room_z2_->value() = (fval > 0.5); return; }
 
-  if (key == "solver_ip_address" && txt_solver_ip_ != nullptr && is_string) {
-    auto call = txt_solver_ip_->make_call();
+
+  auto doText = [&](text::Text *t) {
+    if (!t) { ESP_LOGW(TAG, "Text not configured: key=%s", key.c_str()); return; }
+    auto call = t->make_call();
     call.set_value(sval);
     call.perform();
-    ESP_LOGI(TAG, "Solver IP Address set and saved to: %s", sval.c_str());
-    return;
-  }
+    ESP_LOGI(TAG, "%s saved: %s", key.c_str(), sval.c_str());
+  };
+  if (key == "mqtt_broker_ip" && is_string)       { doText(txt_mqtt_broker_ip_); return; }
+  if (key == "mqtt_broker_port" && is_string)     { doText(txt_mqtt_broker_port_); return; }
+  if (key == "mqtt_user" && is_string)            { doText(txt_mqtt_user_); return; }
+  if (key == "mqtt_password" && is_string)        { doText(txt_mqtt_password_); return; }
+  if (key == "mqtt_topic_prefix" && is_string)    { doText(txt_mqtt_topic_prefix_); return; }
 
   if (is_string) {
      ESP_LOGW(TAG, "Unknown string key: %s", key.c_str());
+  } else {
+     ESP_LOGW(TAG, "Unknown key: %s (value=%.4f)", key.c_str(), fval);
   }
 }
 
@@ -472,15 +514,14 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.status_in1_request = get_b(status_in1_request_);
   current_snapshot_.status_in6_request = get_b(status_in6_request_);
   current_snapshot_.status_zone2_enabled = get_b(status_zone2_enabled_);
-  current_snapshot_.bin_solver_connected = get_b(bin_solver_connected_);
+  current_snapshot_.status_short_cycle_lockout = get_b(status_short_cycle_lockout_);
 
   current_snapshot_.pred_sc_switch = get_sw(pred_sc_switch_);
   current_snapshot_.sw_auto_adaptive = get_sw(sw_auto_adaptive_);
   current_snapshot_.sw_defrost_mit = get_sw(sw_defrost_mit_);
   current_snapshot_.sw_smart_boost = get_sw(sw_smart_boost_);
   current_snapshot_.sw_force_dhw = get_sw(sw_force_dhw_);
-  current_snapshot_.sw_use_solver = get_sw(sw_use_solver_);
-  current_snapshot_.sw_show_solver_tab = get_sw(sw_show_solver_tab_);
+  current_snapshot_.sw_regular_dhw = get_sw(sw_regular_dhw_);
 
   // Server control
   current_snapshot_.sw_server_control        = get_sw(sw_server_control_);
@@ -510,7 +551,12 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.dhw_consumed = get_f(dhw_consumed_);
   current_snapshot_.dhw_delivered = get_f(dhw_delivered_);
   current_snapshot_.dhw_cop = get_f(dhw_cop_);
-  current_snapshot_.solver_dhw_mode = get_sel(solver_dhw_mode_);
+  current_snapshot_.sel_lockout_duration = get_sel(lockout_duration_);
+  current_snapshot_.sel_lockout_strategy = get_sel(lockout_strategy_);
+  current_snapshot_.sw_power_mode = get_sw(sw_power_mode_);
+  current_snapshot_.sw_service_codes_enabled = get_sw(sw_service_codes_enabled_);
+  current_snapshot_.sw_holiday_mode = get_sw(sw_holiday_mode_);
+  current_snapshot_.sw_legionella_enable = get_sw(sw_legionella_dhw_automation_);
 
   current_snapshot_.heating_consumed = get_f(heating_consumed_);
   current_snapshot_.heating_produced = get_f(heating_produced_);
@@ -530,39 +576,55 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_min_flow_temp_z2_, current_snapshot_.num_min_flow_temp_z2);
   get_n(num_hysteresis_z1_, current_snapshot_.num_hysteresis_z1);
   get_n(num_hysteresis_z2_, current_snapshot_.num_hysteresis_z2);
-  get_n(pred_sc_time_, current_snapshot_.pred_sc_time);
-  get_n(pred_sc_delta_, current_snapshot_.pred_sc_delta);
+  get_n(minimum_compressor_on_time_, current_snapshot_.num_min_compressor_on_time);
 
   // cooling settings
   get_n(num_cooling_smart_start_z1_, current_snapshot_.num_cooling_smart_start_z1);
   get_n(num_min_cooling_flow_z1_, current_snapshot_.num_min_cooling_flow_z1);
+  get_n(num_min_cooling_flow_z2_, current_snapshot_.num_min_cooling_flow_z2);
+  get_n(num_temperature_feedback_z1_, current_snapshot_.num_temperature_feedback_z1);
+  get_n(num_temperature_feedback_z2_, current_snapshot_.num_temperature_feedback_z2);
 
-  // solver data
-  get_n(num_raw_heat_produced_, current_snapshot_.num_raw_heat_produced);
-  get_n(num_raw_elec_consumed_, current_snapshot_.num_raw_elec_consumed);
-  get_n(num_raw_runtime_hours_, current_snapshot_.num_raw_runtime_hours);
-  get_n(num_raw_avg_outside_temp_, current_snapshot_.num_raw_avg_outside_temp);
-  get_n(num_raw_avg_room_temp_, current_snapshot_.num_raw_avg_room_temp);
-  get_n(num_raw_delta_room_temp_, current_snapshot_.num_raw_delta_room_temp);
-  get_n(num_raw_hl_tm_product_, current_snapshot_.num_raw_hl_tm_product);
-  get_n(num_raw_solar_factor_, current_snapshot_.num_raw_solar_factor);
+  get_n(num_legionella_dhw_setpoint_, current_snapshot_.num_legionella_dhw_setpoint);
 
-  get_n(num_raw_cool_produced_, current_snapshot_.num_raw_cool_produced);
-  get_n(num_raw_cool_elec_consumed_, current_snapshot_.num_raw_cool_elec_consumed);
-  get_n(num_raw_cool_runtime_hours_, current_snapshot_.num_raw_cool_runtime_hours);
-  get_n(num_raw_cool_avg_outside_temp_, current_snapshot_.num_raw_cool_avg_outside_temp);
-
-  get_n(num_battery_soc_kwh_, current_snapshot_.num_battery_soc_kwh);
-  get_n(num_battery_max_discharge_kw_, current_snapshot_.num_battery_max_discharge_kw);
-
-  get_n(num_dhw_start_threshold_, current_snapshot_.num_dhw_start_threshold);
-
-  if (txt_solver_ip_ && txt_solver_ip_->has_state()) {
-    strncpy(current_snapshot_.txt_solver_ip, txt_solver_ip_->state.c_str(), sizeof(current_snapshot_.txt_solver_ip) - 1);
-    current_snapshot_.txt_solver_ip[sizeof(current_snapshot_.txt_solver_ip) - 1] = '\0';
+  // -1.0 is the "no stored setpoint" sentinel — surface it as null
+  if (legionella_saved_dhw_setpoint_ != nullptr && legionella_saved_dhw_setpoint_->value() >= 0.0f) {
+    current_snapshot_.legionella_saved_dhw_setpoint = legionella_saved_dhw_setpoint_->value();
   } else {
-    current_snapshot_.txt_solver_ip[0] = '\0';
+    current_snapshot_.legionella_saved_dhw_setpoint = NAN;
   }
+
+  if (txt_mqtt_broker_ip_ && txt_mqtt_broker_ip_->has_state()) {
+    strncpy(current_snapshot_.txt_mqtt_broker_ip, txt_mqtt_broker_ip_->state.c_str(), sizeof(current_snapshot_.txt_mqtt_broker_ip) - 1);
+    current_snapshot_.txt_mqtt_broker_ip[sizeof(current_snapshot_.txt_mqtt_broker_ip) - 1] = '\0';
+  } else {
+    current_snapshot_.txt_mqtt_broker_ip[0] = '\0';
+  }
+  if (txt_mqtt_broker_port_ && txt_mqtt_broker_port_->has_state()) {
+    strncpy(current_snapshot_.txt_mqtt_broker_port, txt_mqtt_broker_port_->state.c_str(), sizeof(current_snapshot_.txt_mqtt_broker_port) - 1);
+    current_snapshot_.txt_mqtt_broker_port[sizeof(current_snapshot_.txt_mqtt_broker_port) - 1] = '\0';
+  } else {
+    strncpy(current_snapshot_.txt_mqtt_broker_port, "1883", sizeof(current_snapshot_.txt_mqtt_broker_port) - 1);
+  }
+  if (txt_mqtt_user_ && txt_mqtt_user_->has_state()) {
+    strncpy(current_snapshot_.txt_mqtt_user, txt_mqtt_user_->state.c_str(), sizeof(current_snapshot_.txt_mqtt_user) - 1);
+    current_snapshot_.txt_mqtt_user[sizeof(current_snapshot_.txt_mqtt_user) - 1] = '\0';
+  } else {
+    current_snapshot_.txt_mqtt_user[0] = '\0';
+  }
+  if (txt_mqtt_password_ && txt_mqtt_password_->has_state()) {
+    strncpy(current_snapshot_.txt_mqtt_password, txt_mqtt_password_->state.c_str(), sizeof(current_snapshot_.txt_mqtt_password) - 1);
+    current_snapshot_.txt_mqtt_password[sizeof(current_snapshot_.txt_mqtt_password) - 1] = '\0';
+  } else {
+    current_snapshot_.txt_mqtt_password[0] = '\0';
+  }
+  if (txt_mqtt_topic_prefix_ && txt_mqtt_topic_prefix_->has_state()) {
+    strncpy(current_snapshot_.txt_mqtt_topic_prefix, txt_mqtt_topic_prefix_->state.c_str(), sizeof(current_snapshot_.txt_mqtt_topic_prefix) - 1);
+    current_snapshot_.txt_mqtt_topic_prefix[sizeof(current_snapshot_.txt_mqtt_topic_prefix) - 1] = '\0';
+  } else {
+    current_snapshot_.txt_mqtt_topic_prefix[0] = '\0';
+  }
+
 
   // Use external kWh meter if selected, otherwise fallback to internal Ecodan sensor
   if (solver_kwh_meter_feedback_source_ != nullptr && solver_kwh_meter_feedback_source_->active_index().value_or(0) != 0) {
@@ -597,11 +659,32 @@ void EcodanDashboard::update_snapshot_() {
     current_snapshot_.version[0] = '\0';
   }
 
+  // Local IP via esp_netif
+  {
+    esp_netif_t *netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    // REMOVED: esp_netif_next_unsafe to prevent TLSF heap corruption during reconnects
+    esp_netif_ip_info_t ip_info{};
+    if (netif && esp_netif_get_ip_info(netif, &ip_info) == ESP_OK && ip_info.ip.addr != 0) {
+      snprintf(current_snapshot_.local_ip, sizeof(current_snapshot_.local_ip),
+               IPSTR, IP2STR(&ip_info.ip));
+    } else {
+      current_snapshot_.local_ip[0] = '\0';
+    }
+  }
+
   xSemaphoreGive(snapshot_mutex_);
 }
 
 void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
-  DashboardSnapshot snap;
+  // Move ~800-byte structure to the heap to protect the task stack
+  auto snap_ptr = std::unique_ptr<DashboardSnapshot>(new DashboardSnapshot());
+  if (!snap_ptr) {
+    httpd_req_t *req_err = *request;
+    httpd_resp_set_status(req_err, "500 Internal Server Error");
+    httpd_resp_send(req_err, "Out of Memory", HTTPD_RESP_USE_STRLEN);
+    return;
+  }
+  DashboardSnapshot &snap = *snap_ptr;
 
   if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(500)) == pdTRUE) {
     snap = current_snapshot_;
@@ -611,6 +694,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
     httpd_req_t *req_err = *request;
     httpd_resp_set_status(req_err, "503 Service Unavailable");
     httpd_resp_set_type(req_err, "text/plain");
+    httpd_resp_set_hdr(req_err, "Connection", "close");
     httpd_resp_send(req_err, "System busy, try again", HTTPD_RESP_USE_STRLEN);
     return;
   }
@@ -620,14 +704,12 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   httpd_resp_set_type(req, "application/json");
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+  httpd_resp_set_hdr(req, "Connection", "close");
 
-  // Shared 2KB heap buffer — flushed per logical block to stay well within limits.
-  // Each block is at most ~600 bytes so there is comfortable headroom.
   constexpr size_t BUF_SIZE = 2048;
   std::vector<char> buf(BUF_SIZE);
   int off = 0;
 
-  // Send current buffer contents and reset offset. Returns false on TCP error.
   auto flush = [&]() -> bool {
     if (off <= 0) return true;
     bool ok = (httpd_resp_send_chunk(req, buf.data(), off) == ESP_OK);
@@ -635,31 +717,46 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
     return ok;
   };
 
-  // Append helpers — write into buf[], flush automatically when >75% full.
+  auto space_left = [&]() -> size_t {
+    return (off < (int)BUF_SIZE) ? (BUF_SIZE - (size_t)off) : 0;
+  };
+
+  // Safe snprintf accumulation logic to prevent offset runaway
+  auto safe_add_offset = [&](int written) {
+      if (written > 0) {
+          off += (written < (int)space_left()) ? written : (int)space_left();
+      }
+      if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+  };
+
   auto p_f = [&](const char* k, float v) {
-    if (!std::isnan(v)) off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":%.2f,", k, v);
-    else                off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":null,", k);
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    int w;
+    if (!std::isnan(v)) w = snprintf(buf.data() + off, space_left(), "\"%s\":%.2f,", k, v);
+    else                w = snprintf(buf.data() + off, space_left(), "\"%s\":null,", k);
+    safe_add_offset(w);
   };
   auto p_b = [&](const char* k, bool v) {
-    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":%s,", k, v ? "true" : "false");
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    int w = snprintf(buf.data() + off, space_left(), "\"%s\":%s,", k, v ? "true" : "false");
+    safe_add_offset(w);
   };
   auto p_n = [&](const char* k, float v) {
-    if (!std::isnan(v)) off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":%.4g,", k, v);
-    else                off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":null,", k);
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    int w;
+    if (!std::isnan(v)) w = snprintf(buf.data() + off, space_left(), "\"%s\":%.4g,", k, v);
+    else                w = snprintf(buf.data() + off, space_left(), "\"%s\":null,", k);
+    safe_add_offset(w);
   };
   auto p_lim = [&](const char* k, const DashboardSnapshot::NumData& d) {
-    if (!std::isnan(d.min)) off += snprintf(buf.data() + off, BUF_SIZE - off,
+    int w;
+    if (!std::isnan(d.min)) w = snprintf(buf.data() + off, space_left(),
                                 "\"%s\":{\"min\":%.4g,\"max\":%.4g,\"step\":%.4g},", k, d.min, d.max, d.step);
-    else                    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":null,", k);
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    else                    w = snprintf(buf.data() + off, space_left(), "\"%s\":null,", k);
+    safe_add_offset(w);
   };
   auto p_sel = [&](const char* k, int v) {
-    if (v >= 0) off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":\"%d\",", k, v);
-    else        off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":null,", k);
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    int w;
+    if (v >= 0) w = snprintf(buf.data() + off, space_left(), "\"%s\":\"%d\",", k, v);
+    else        w = snprintf(buf.data() + off, space_left(), "\"%s\":null,", k);
+    safe_add_offset(w);
   };
   auto p_act = [&](const char* k, int a) {
     const char* s = "idle";
@@ -668,25 +765,24 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
     else if (a == climate::CLIMATE_ACTION_COOLING)    s = "cooling";
     else if (a == climate::CLIMATE_ACTION_HEATING)    s = "heating";
     else if (a == climate::CLIMATE_ACTION_DRYING)     s = "drying";
-    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":\"%s\",", k, s);
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    int w = snprintf(buf.data() + off, space_left(), "\"%s\":\"%s\",", k, s);
+    safe_add_offset(w);
   };
   auto p_mod = [&](const char* k, int m) {
     const char* s = "off";
     if      (m == climate::CLIMATE_MODE_HEAT) s = "heat";
     else if (m == climate::CLIMATE_MODE_COOL) s = "cool";
     else if (m == climate::CLIMATE_MODE_AUTO) s = "auto";
-    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"%s\":\"%s\",", k, s);
-    if (off > (int)(BUF_SIZE * 3 / 4)) flush();
+    int w = snprintf(buf.data() + off, space_left(), "\"%s\":\"%s\",", k, s);
+    safe_add_offset(w);
   };
 
-  // --- Opening brace + ui flags ---
-  off += snprintf(buf.data() + off, BUF_SIZE - off,
+  int w_start = snprintf(buf.data() + off, space_left(),
     "{\"ui_use_room_z1\":%s,\"ui_use_room_z2\":%s,",
     snap.ui_use_room_z1 ? "true" : "false",
     snap.ui_use_room_z2 ? "true" : "false");
+  safe_add_offset(w_start);
 
-  // --- HP sensor floats ---
   p_f("hp_feed_temp",                  snap.hp_feed_temp);
   p_f("hp_return_temp",                snap.hp_return_temp);
   p_f("outside_temp",                  snap.outside_temp);
@@ -702,7 +798,6 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_f("wifi_signal_db",                snap.wifi_signal_db);
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // --- DHW ---
   p_f("dhw_temp",              snap.dhw_temp);
   p_f("dhw_flow_temp_target",  snap.dhw_flow_temp_target);
   p_f("dhw_flow_temp_drop",    snap.dhw_flow_temp_drop);
@@ -710,7 +805,6 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_f("dhw_delivered",         snap.dhw_delivered);
   p_f("dhw_cop",               snap.dhw_cop);
 
-  // --- Heating / cooling ---
   p_f("heating_consumed",  snap.heating_consumed);
   p_f("heating_produced",  snap.heating_produced);
   p_f("heating_cop",       snap.heating_cop);
@@ -721,7 +815,6 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_f("z2_flow_temp_target", snap.z2_flow_temp_target);
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // --- Number settings ---
   p_n("auto_adaptive_setpoint_bias",   snap.num_aa_setpoint_bias.val);
   p_lim("aa_bias_lim",                 snap.num_aa_setpoint_bias);
   p_n("maximum_heating_flow_temp",     snap.num_max_flow_temp.val);
@@ -736,13 +829,10 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_lim("hysteresis_z1_lim",           snap.num_hysteresis_z1);
   p_n("thermostat_hysteresis_z2",      snap.num_hysteresis_z2.val);
   p_lim("hysteresis_z2_lim",           snap.num_hysteresis_z2);
-  p_n("pred_sc_time",                  snap.pred_sc_time.val);
-  p_lim("pred_sc_time_lim",            snap.pred_sc_time);
-  p_n("pred_sc_delta",                 snap.pred_sc_delta.val);
-  p_lim("pred_sc_delta_lim",           snap.pred_sc_delta);
+  p_n("min_compressor_on_time",        snap.num_min_compressor_on_time.val);
+  p_lim("min_compressor_on_time_lim",  snap.num_min_compressor_on_time);
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // --- Climate zones ---
   p_n("z1_current_temp", snap.virt_z1.curr);  p_n("z1_setpoint", snap.virt_z1.tar);
   p_act("z1_action", snap.virt_z1.action);    p_mod("z1_mode", snap.virt_z1.mode);
   p_n("z2_current_temp", snap.virt_z2.curr);  p_n("z2_setpoint", snap.virt_z2.tar);
@@ -755,7 +845,6 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_n("flow_z2_current", snap.flow_z2.curr);  p_n("flow_z2_setpoint", snap.flow_z2.tar);
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // --- Binary / switch status ---
   p_b("status_compressor",           snap.status_compressor);
   p_b("status_booster",              snap.status_booster);
   p_b("status_defrost",              snap.status_defrost);
@@ -763,26 +852,34 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("status_in1_request",          snap.status_in1_request);
   p_b("status_in6_request",          snap.status_in6_request);
   p_b("zone2_enabled",               snap.status_zone2_enabled);
+  p_b("status_short_cycle_lockout",  snap.status_short_cycle_lockout);
   p_b("pred_sc_en",                  snap.pred_sc_switch);
   p_b("auto_adaptive_control_enabled", snap.sw_auto_adaptive);
   p_b("defrost_risk_handling_enabled", snap.sw_defrost_mit);
   p_b("smart_boost_enabled",         snap.sw_smart_boost);
   p_b("force_dhw",                   snap.sw_force_dhw);
+  p_b("sw_regular_dhw",              snap.sw_regular_dhw);
+  p_b("power_mode", snap.sw_power_mode);
+  p_b("service_codes_enabled", snap.sw_service_codes_enabled);
+  p_b("holiday_mode",          snap.sw_holiday_mode);
+  p_b("legionella_enabled", snap.sw_legionella_enable);
 
-  // --- Cooling settings ---
   p_n("cooling_smart_start_z1",  snap.num_cooling_smart_start_z1.val);
   p_lim("cool_smart_z1_lim",     snap.num_cooling_smart_start_z1);
   p_n("minimum_cooling_flow_z1", snap.num_min_cooling_flow_z1.val);
   p_lim("min_cool_flow_z1_lim",  snap.num_min_cooling_flow_z1);
+  p_n("minimum_cooling_flow_z2", snap.num_min_cooling_flow_z2.val);
+  p_lim("min_cool_flow_z2_lim",  snap.num_min_cooling_flow_z2);
+  p_n("temperature_feedback_z1", snap.num_temperature_feedback_z1.val);
+  p_lim("temp_feedback_z1_lim",  snap.num_temperature_feedback_z1);
+  p_n("temperature_feedback_z2", snap.num_temperature_feedback_z2.val);
+  p_lim("temp_feedback_z2_lim",  snap.num_temperature_feedback_z2);
+
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // --- Solver ---
-  p_b("use_dynamic_cost_solver", snap.sw_use_solver);
-  p_b("show_solver_tab",         snap.sw_show_solver_tab);
-  p_b("solver_connected",        snap.bin_solver_connected);
-  p_sel("solver_dhw_mode", snap.solver_dhw_mode);
+  p_sel("lockout_duration", snap.sel_lockout_duration);
+  p_sel("lockout_strategy", snap.sel_lockout_strategy);
 
-  // --- Server control ---
   p_b("server_control_enabled",          snap.sw_server_control);
   p_b("server_control_prohibit_dhw",     snap.sw_sc_prohibit_dhw);
   p_b("server_control_prohibit_z1_heating", snap.sw_sc_prohibit_z1_heating);
@@ -790,60 +887,51 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("server_control_prohibit_z2_heating", snap.sw_sc_prohibit_z2_heating);
   p_b("server_control_prohibit_z2_cooling", snap.sw_sc_prohibit_z2_cooling);
 
-  // --- Raw physics EMA numbers ---
-  p_n("raw_heat_produced",      snap.num_raw_heat_produced.val);
-  p_lim("raw_heat_produced_lim",snap.num_raw_heat_produced);
-  p_n("raw_elec_consumed",      snap.num_raw_elec_consumed.val);
-  p_lim("raw_elec_consumed_lim",snap.num_raw_elec_consumed);
-  p_n("raw_runtime_hours",      snap.num_raw_runtime_hours.val);
-  p_lim("raw_runtime_hours_lim",snap.num_raw_runtime_hours);
-  p_n("raw_avg_outside_temp",   snap.num_raw_avg_outside_temp.val);
-  p_lim("raw_avg_outside_temp_lim", snap.num_raw_avg_outside_temp);
-  p_n("raw_avg_room_temp",      snap.num_raw_avg_room_temp.val);
-  p_lim("raw_avg_room_temp_lim",snap.num_raw_avg_room_temp);
-  p_n("raw_delta_room_temp",    snap.num_raw_delta_room_temp.val);
-  p_lim("raw_delta_room_temp_lim", snap.num_raw_delta_room_temp);
-  p_n("raw_hl_tm_product",      snap.num_raw_hl_tm_product.val);
-  p_n("raw_solar_factor",       snap.num_raw_solar_factor.val);
-  p_lim("raw_solar_factor_lim", snap.num_raw_solar_factor);
-  p_n("battery_soc_kwh",        snap.num_battery_soc_kwh.val);
-  p_lim("battery_soc_kwh_lim",  snap.num_battery_soc_kwh);
-  p_n("battery_max_discharge_kw",     snap.num_battery_max_discharge_kw.val);
-  p_lim("battery_max_discharge_kw_lim", snap.num_battery_max_discharge_kw);
-  p_n("dhw_start_threshold",    snap.num_dhw_start_threshold.val);
-  p_lim("dhw_start_threshold_lim", snap.num_dhw_start_threshold);
+  p_n("legionella_dhw_setpoint",  snap.num_legionella_dhw_setpoint.val);
+  p_lim("legionella_dhw_setpoint_lim", snap.num_legionella_dhw_setpoint);
+  p_f("legionella_saved_dhw_setpoint", snap.legionella_saved_dhw_setpoint);
 
-  p_n("raw_cool_produced",      snap.num_raw_cool_produced.val);
-  p_lim("raw_cool_produced_lim",snap.num_raw_cool_produced);
-  p_n("raw_cool_elec_consumed", snap.num_raw_cool_elec_consumed.val);
-  p_lim("raw_cool_elec_consumed_lim",snap.num_raw_cool_elec_consumed);
-  p_n("raw_cool_runtime_hours", snap.num_raw_cool_runtime_hours.val);
-  p_lim("raw_cool_runtime_hours_lim",snap.num_raw_cool_runtime_hours);
-  p_n("raw_cool_avg_outside_temp",   snap.num_raw_cool_avg_outside_temp.val);
-  p_lim("raw_cool_avg_outside_temp_lim", snap.num_raw_cool_avg_outside_temp);
-  
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
-  // --- String fields (solver IP, version) — escape inline into buf ---
-  off += snprintf(buf.data() + off, BUF_SIZE - off, "\"solver_ip_address\":\"");
-  for (char *c = snap.txt_solver_ip; *c != '\0'; ++c) {
-    if      (*c == '"')  { buf[off++] = '\\'; buf[off++] = '"'; }
-    else if (*c == '\\') { buf[off++] = '\\'; buf[off++] = '\\'; }
-    else                 { buf[off++] = *c; }
-  }
-  off += snprintf(buf.data() + off, BUF_SIZE - off, "\",\"latest_version\":\"");
-  for (char *c = snap.version; *c != '\0'; ++c) {
-    if      (*c == '"')  { buf[off++] = '\\'; buf[off++] = '"'; }
-    else if (*c == '\\') { buf[off++] = '\\'; buf[off++] = '\\'; }
-    else                 { buf[off++] = *c; }
-  }
-  off += snprintf(buf.data() + off, BUF_SIZE - off, "\",");
+  // Safe string appending (prevents manual array out-of-bounds writes)
+  auto append_safe_char = [&](char c) {
+      if (off >= (int)BUF_SIZE - 1) flush();
+      buf[off++] = c;
+  };
 
-  // --- operation_mode + selects + closing ---
-  if (!std::isnan(snap.operation_mode))
-    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"operation_mode\":%d,", (int)snap.operation_mode);
-  else
-    off += snprintf(buf.data() + off, BUF_SIZE - off, "\"operation_mode\":null,");
+  // Append "key":"escaped-value", for Odin config card text fields
+  auto p_txt = [&](const char* k, const char* v, int maxlen) {
+    int w = snprintf(buf.data() + off, space_left(), "\"%s\":\"", k);
+    safe_add_offset(w);
+    for (int i = 0; i < maxlen && v[i] != '\0'; ++i) {
+      char c = v[i];
+      if      (c == '"')  { append_safe_char('\\'); append_safe_char('"'); }
+      else if (c == '\\') { append_safe_char('\\'); append_safe_char('\\'); }
+      else                { append_safe_char(c); }
+    }
+    int w2 = snprintf(buf.data() + off, space_left(), "\",");
+    safe_add_offset(w2);
+  };
+
+  int w1 = snprintf(buf.data() + off, space_left(), "\"latest_version\":\"");
+  safe_add_offset(w1);
+  for (int i = 0; i < 31 && snap.version[i] != '\0'; ++i) {
+    char c = snap.version[i];
+    if      (c == '"')  { append_safe_char('\\'); append_safe_char('"'); }
+    else if (c == '\\') { append_safe_char('\\'); append_safe_char('\\'); }
+    else                { append_safe_char(c); }
+  }
+  
+  int w3 = snprintf(buf.data() + off, space_left(), "\",");
+  safe_add_offset(w3);
+
+  if (!std::isnan(snap.operation_mode)) {
+    int w4 = snprintf(buf.data() + off, space_left(), "\"operation_mode\":%d,", (int)snap.operation_mode);
+    safe_add_offset(w4);
+  } else {
+    int w5 = snprintf(buf.data() + off, space_left(), "\"operation_mode\":null,");
+    safe_add_offset(w5);
+  }
 
   p_sel("heating_system_type",   snap.sel_heating_system_type);
   p_sel("room_temp_source_z1",   snap.sel_room_temp_source_z1);
@@ -853,7 +941,15 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_sel("temp_sensor_source_z1", snap.sel_temp_source_z1);
   p_sel("temp_sensor_source_z2", snap.sel_temp_source_z2);
 
-  off += snprintf(buf.data() + off, BUF_SIZE - off, "\"_uptime_ms\":%u}", millis());
+  p_txt("mqtt_broker_ip",      snap.txt_mqtt_broker_ip,      31);
+  p_txt("mqtt_broker_port",    snap.txt_mqtt_broker_port,     7);
+  p_txt("mqtt_user",           snap.txt_mqtt_user,           31);
+  p_txt("mqtt_password",       snap.txt_mqtt_password,       31);
+  p_txt("mqtt_topic_prefix",   snap.txt_mqtt_topic_prefix,   31);
+
+  int w6 = snprintf(buf.data() + off, space_left(), "\"local_ip\":\"%s\",\"_uptime_ms\":%lu}", snap.local_ip, (unsigned long)millis());
+  safe_add_offset(w6);
+  
   flush();
   httpd_resp_send_chunk(req, nullptr, 0);
 }
@@ -869,8 +965,16 @@ bool EcodanDashboard::bin_state_(binary_sensor::BinarySensor *b) {
 }
 
 void EcodanDashboard::record_history_() {
-  HistoryRecord rec;
-  rec.timestamp = time(nullptr); 
+  MinuteRecord rec;
+  
+  auto ts = this->timestamp();
+  if (ts == -1) {
+    // no valid time yet
+    ESP_LOGI(TAG, "record_history_: no valid timestamp");
+    return;
+  }
+
+  rec.timestamp = ts;
 
   auto get_sensor = [](sensor::Sensor *s) { return (s && s->has_state()) ? s->state : NAN; };
   auto get_curr = [](climate::Climate *c) { return (c) ? c->current_temperature : NAN; };
@@ -889,13 +993,10 @@ void EcodanDashboard::record_history_() {
   rec.liquid_pipe = pack_temp_(get_sensor(liquid_pipe_temp_));
   rec.condensing  = pack_temp_(get_sensor(condensing_temp_));
   
-  // Determine if the system is actively running AND in a thermal output mode
   bool is_running = bin_state_(status_compressor_) || (get_sensor(compressor_frequency_) > 0.0f);
   bool is_thermal_active = false;
-  
   if (operation_mode_ && operation_mode_->has_state() && !std::isnan(operation_mode_->state)) {
       int mode_val = (int)operation_mode_->state;
-      // Mode 2 = HEAT_ON, 1 = DHW, 6 = LEGIONELLA
       is_thermal_active = (mode_val == 2 || mode_val == 1 || mode_val == 6); 
   }
 
@@ -905,24 +1006,14 @@ void EcodanDashboard::record_history_() {
   } else {
       current_cons = get_sensor(daily_total_energy_consumption_);
   }
-
   rec.cons = pack_temp_(current_cons);
 
   if (is_running && is_thermal_active) {
       rec.prod = pack_temp_(get_sensor(daily_computed_output_power_));
   } else {
-      // Not heating: carry over the last recorded production value from the history array
-      if (history_count_ > 0) {
-          if (history_mutex_ != NULL && xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
-              size_t prev_idx = (history_head_ + MAX_HISTORY - 1) % MAX_HISTORY;
-              rec.prod = history_buffer_[prev_idx].prod;
-              xSemaphoreGive(history_mutex_);
-          } else {
-              rec.prod = pack_temp_(get_sensor(daily_computed_output_power_));
-          }
-      } else {
-          rec.prod = pack_temp_(get_sensor(daily_computed_output_power_));
-      }
+      // Carry forward last known production value (stored in RAM, no disk read needed)
+      rec.prod = (last_hist_prod_ != -32768) ? last_hist_prod_
+                                             : pack_temp_(get_sensor(daily_computed_output_power_));
   }
 
   rec.flags = 0;
@@ -933,690 +1024,500 @@ void EcodanDashboard::record_history_() {
   if (bin_state_(status_in1_request_)) rec.flags |= (1 << 4);
   if (bin_state_(status_in6_request_)) rec.flags |= (1 << 5);
 
-  uint8_t mode_enc = 0; // Default to OFF
+  uint8_t mode_enc = 0;
   if (operation_mode_ && operation_mode_->has_state() && !std::isnan(operation_mode_->state)) {
     int val = (int)operation_mode_->state;
-    if (val != 255) mode_enc = val & 0x0F; // enum value
+    if (val != 255) mode_enc = val & 0x0F;
   }
   rec.flags |= ((mode_enc & 0x0F) << 6);
 
-  // Write under lock — handle_history_request_ runs on httpd task and reads concurrently
+  // Append to RAM write buffer; flush to LFS when full
+  bool do_flush = false;
+  size_t flush_write_pos = 0;
+
   if (history_mutex_ != NULL && xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
-      history_buffer_[history_head_] = rec;
-      history_head_ = (history_head_ + 1) % MAX_HISTORY;
-      if (history_count_ < MAX_HISTORY) history_count_++;
+      last_hist_prod_ = rec.prod;  // update carry-forward
+      lfs_write_buf_[lfs_write_buf_count_++] = rec;
+      history_head_  = (history_head_ + 1) % MAX_MINUTES;
+      if (history_count_ < MAX_MINUTES) history_count_++;
+
+      if (lfs_write_buf_count_ >= LFS_FLUSH_COUNT) {
+          // Snapshot for lfs_task_; compute where in the file to write
+          flush_write_pos = (history_head_ + MAX_MINUTES - LFS_FLUSH_COUNT) % MAX_MINUTES;
+          memcpy(lfs_flush_snap_, lfs_write_buf_, LFS_FLUSH_COUNT * sizeof(MinuteRecord));
+          lfs_flush_snap_count_ = LFS_FLUSH_COUNT;
+          lfs_flush_write_pos_  = flush_write_pos;
+          lfs_write_buf_count_  = 0;
+          do_flush = true;
+      }
       xSemaphoreGive(history_mutex_);
   } else {
       ESP_LOGW(TAG, "record_history_: failed to acquire history_mutex_, record dropped");
+  }
+
+  if (do_flush && lfs_trigger_ != nullptr) {
+      //ESP_LOGI(TAG, "record_history_: trigger flush lfs_trigger_");
+      xSemaphoreGive(lfs_trigger_);
   }
 }
 
 void EcodanDashboard::handle_history_request_(AsyncWebServerRequest *request) {
   httpd_req_t *req = *request;
+  
+  bool is_hourly = false;
+  if (request->hasParam("type") && request->getParam("type")->value() == "hour") {
+      is_hourly = true;
+  }
+
+  // ── 1. Parse optional ?from=<unix>&to=<unix> query params ──
+  uint32_t from_ts = 0, to_ts = 0;
+  char query[64] = {0};
+  if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK) {
+      char val[16] = {0};
+      if (httpd_query_key_value(query, "from", val, sizeof(val)) == ESP_OK) from_ts = (uint32_t)atol(val);
+      memset(val, 0, sizeof(val));
+      if (httpd_query_key_value(query, "to", val, sizeof(val)) == ESP_OK) to_ts = (uint32_t)atol(val);
+  }
+  
+  // Default: last 24 hours based on Ecodan's clock
+  if (from_ts == 0) {
+      auto current_ts = this->timestamp();
+      if (current_ts != -1) {
+          from_ts = (uint32_t)(current_ts - 86400);
+          to_ts   = (uint32_t)(current_ts + 60);
+      } else {
+          ESP_LOGI(TAG, "handle_history_request_: no valid timestamp");
+      }
+  }
+
+  // Set standard headers
   httpd_resp_set_status(req, "200 OK");
   httpd_resp_set_type(req, "application/json");
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+  httpd_resp_set_hdr(req, "Connection", "close");
 
-  // Snapshot count/head under lock
-  size_t current_count, current_head;
-  if (history_mutex_ == NULL || xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(200)) != pdTRUE) {
-      ESP_LOGW(TAG, "handle_history_request_: failed to acquire history_mutex_");
-      httpd_resp_send_chunk(req, "[]", 2);
-      httpd_resp_send_chunk(req, nullptr, 0);
-      return;
+  // Route to the appropriate helper
+  if (is_hourly) {
+      send_hourly_history_(req, from_ts, to_ts);
+  } else {
+      send_minute_history_(req, from_ts, to_ts);
   }
-  current_count = history_count_;
-  current_head  = history_head_;
+}
+
+void EcodanDashboard::send_hourly_history_(httpd_req_t *req, uint32_t from_ts, uint32_t to_ts) {
+    size_t current_h_count, current_h_head;
+    if (history_mutex_ == NULL || xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(200)) != pdTRUE) {
+        httpd_resp_send_chunk(req, "[]", 2);
+        httpd_resp_send_chunk(req, nullptr, 0);
+        return;
+    }
+    current_h_count = hourly_count_;
+    current_h_head  = hourly_head_;
+    xSemaphoreGive(history_mutex_);
+
+    FILE *f = fopen(LFS_HOURLY_PATH, "rb");
+    if (!f || current_h_count == 0) {
+        if (f) fclose(f);
+        httpd_resp_send_chunk(req, "[]", 2);
+        httpd_resp_send_chunk(req, nullptr, 0);
+        return;
+    }
+
+    const size_t oldest_h = (current_h_count == MAX_HOURLY)
+                              ? current_h_head
+                              : (current_h_head + MAX_HOURLY - current_h_count) % MAX_HOURLY;
+
+    // Binary search: first record with timestamp >= from_ts
+    size_t lo = 0, hi = current_h_count;
+    if (from_ts > 0) {
+        while (lo < hi) {
+            size_t mid = (lo + hi) / 2;
+            size_t fidx = (oldest_h + mid) % MAX_HOURLY;
+            uint32_t ts = 0;
+            fseek(f, (long)(LFS_DATA_OFFSET + fidx * sizeof(HourlyRecord)), SEEK_SET);
+            fread(&ts, sizeof(uint32_t), 1, f);
+            if (ts < from_ts) lo = mid + 1; else hi = mid;
+        }
+    }
+    const size_t first_h = lo;
+
+    // Binary search: one past last record with timestamp <= to_ts
+    lo = first_h; hi = current_h_count;
+    if (to_ts > 0) {
+        while (lo < hi) {
+            size_t mid = (lo + hi) / 2;
+            size_t fidx = (oldest_h + mid) % MAX_HOURLY;
+            uint32_t ts = 0;
+            fseek(f, (long)(LFS_DATA_OFFSET + fidx * sizeof(HourlyRecord)), SEEK_SET);
+            fread(&ts, sizeof(uint32_t), 1, f);
+            if (ts <= to_ts) lo = mid + 1; else hi = mid;
+        }
+    }
+    const size_t last_h = lo;
+
+    if (httpd_resp_send_chunk(req, "[", 1) != ESP_OK) { fclose(f); return; }
+
+    constexpr size_t H_BATCH = 16;
+    auto hbatch_mem = std::unique_ptr<HourlyRecord[]>(new HourlyRecord[H_BATCH]);
+    HourlyRecord* hbatch = hbatch_mem.get();
+
+    // 2KB Output buffer
+    constexpr size_t OUT_BUF_SIZE = 2048;
+    auto out_buf = std::unique_ptr<char[]>(new char[OUT_BUF_SIZE]);
+    int out_len = 0;
+
+    auto flush_out = [&]() -> bool {
+        if (out_len <= 0) return true;
+        bool ok = (httpd_resp_send_chunk(req, out_buf.get(), out_len) == ESP_OK);
+        out_len = 0;
+        return ok;
+    };
+
+    bool first = true;
+    auto send_h_segment = [&](size_t file_pos, size_t n) -> bool {
+        if (fseek(f, (long)(LFS_DATA_OFFSET + file_pos * sizeof(HourlyRecord)), SEEK_SET) != 0)
+            return false;
+        size_t done = 0;
+        while (done < n) {
+            size_t chunk = std::min(n - done, H_BATCH);
+            size_t got   = fread(hbatch, sizeof(HourlyRecord), chunk, f);
+            for (size_t j = 0; j < got; j++) {
+                if (hbatch[j].timestamp == 0 || hbatch[j].timestamp <= 1000000000UL) continue;
+                
+                if (out_len + 200 >= OUT_BUF_SIZE) {
+                    if (!flush_out()) return false;
+                }
+
+                if (!first) out_buf.get()[out_len++] = ',';
+                first = false;
+
+                int len = snprintf(out_buf.get() + out_len, OUT_BUF_SIZE - out_len,
+                    "[%lu,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
+                    hbatch[j].timestamp, hbatch[j].avg_outside,
+                    hbatch[j].total_cons, hbatch[j].total_prod,
+                    hbatch[j].odin_heat_loss, hbatch[j].odin_cop,
+                    hbatch[j].odin_cost, hbatch[j].odin_solar,
+                    hbatch[j].exp_cons, hbatch[j].exp_prod,
+                    hbatch[j].exp_room_temp, hbatch[j].actual_room_temp,
+                    hbatch[j].actual_dhw_cons, hbatch[j].actual_dhw_prod,
+                    hbatch[j].actual_standby_cons, hbatch[j].price,
+                    hbatch[j].weather, hbatch[j].batt_discharge,
+                    hbatch[j].op_mode, hbatch[j].sched_base,
+                    hbatch[j].sched_min, hbatch[j].sched_max,
+                    hbatch[j].exp_solar_kwh, hbatch[j].decision_reason,
+                    hbatch[j].exp_room_temp_z2, hbatch[j].actual_room_temp_z2);
+                out_len += len;
+            }
+            done += got;
+            if (got < chunk) break;
+            vTaskDelay(pdMS_TO_TICKS(2));
+        }
+        return true;
+    };
+
+    if (first_h < last_h) {
+        const size_t count    = last_h - first_h;
+        const size_t seg1_pos = (oldest_h + first_h) % MAX_HOURLY;
+        const size_t seg1_len = std::min(count, MAX_HOURLY - seg1_pos);
+        const size_t seg2_len = count - seg1_len;
+        if (!send_h_segment(seg1_pos, seg1_len)) { fclose(f); return; }
+        if (seg2_len > 0 && !send_h_segment(0, seg2_len)) { fclose(f); return; }
+    }
+
+    flush_out();
+    fclose(f);
+    httpd_resp_send_chunk(req, "]", 1);
+    httpd_resp_send_chunk(req, nullptr, 0);
+}
+
+void EcodanDashboard::send_minute_history_(httpd_req_t *req, uint32_t from_ts, uint32_t to_ts) {
+    size_t current_count, current_head;
+    if (history_mutex_ == NULL || xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(200)) != pdTRUE) {
+        httpd_resp_send_chunk(req, "[]", 2);
+        httpd_resp_send_chunk(req, nullptr, 0);
+        return;
+    }
+    current_count  = history_count_;
+    current_head   = history_head_;
+    http_wb_count_ = lfs_write_buf_count_;
+    if (http_wb_count_ > 0) memcpy(http_wb_snap_, lfs_write_buf_, http_wb_count_ * sizeof(MinuteRecord));
+    xSemaphoreGive(history_mutex_);
+
+    if (current_count == 0 && http_wb_count_ == 0) {
+        httpd_resp_send_chunk(req, "[]", 2);
+        httpd_resp_send_chunk(req, nullptr, 0);
+        return;
+    }
+
+    FILE *f = fopen(LFS_MINUTES_PATH, "rb");
+    if (!f && current_count > 0) {
+        httpd_resp_send_chunk(req, "[]", 2);
+        httpd_resp_send_chunk(req, nullptr, 0);
+        return;
+    }
+
+    auto rec_offset = [](size_t idx) -> long { return (long)(LFS_DATA_OFFSET + idx * sizeof(MinuteRecord)); };
+    const size_t oldest_idx = (current_count == MAX_MINUTES) ? current_head : (current_head + MAX_MINUTES - current_count) % MAX_MINUTES;
+
+    size_t lo = 0, hi = current_count;
+    if (f && current_count > 0) {
+        while (lo < hi) {
+            size_t mid = (lo + hi) / 2;
+            size_t file_idx = (oldest_idx + mid) % MAX_MINUTES;
+            uint32_t ts = 0;
+            fseek(f, rec_offset(file_idx), SEEK_SET);
+            fread(&ts, sizeof(uint32_t), 1, f);
+            if (ts < from_ts) lo = mid + 1; else hi = mid;
+        }
+    }
+    size_t first_idx = lo;
+
+    size_t lo2 = first_idx, hi2 = current_count;
+    if (f && current_count > first_idx) {
+        while (lo2 < hi2) {
+            size_t mid = (lo2 + hi2) / 2;
+            size_t file_idx = (oldest_idx + mid) % MAX_MINUTES;
+            uint32_t ts = 0;
+            fseek(f, rec_offset(file_idx), SEEK_SET);
+            fread(&ts, sizeof(uint32_t), 1, f);
+            if (ts <= to_ts) lo2 = mid + 1; else hi2 = mid;
+        }
+    }
+    size_t last_idx = lo2;
+
+    size_t wb_in_range = 0;
+    for (size_t i = 0; i < http_wb_count_; i++) {
+        if (http_wb_snap_[i].timestamp >= from_ts && http_wb_snap_[i].timestamp <= to_ts) wb_in_range++;
+    }
+    size_t total_in_range = (last_idx - first_idx) + wb_in_range;
+    size_t step = (total_in_range > 1440) ? (total_in_range / 1440) : 1;
+
+    if (httpd_resp_send_chunk(req, "[", 1) != ESP_OK) { if (f) fclose(f); return; }
+
+    constexpr size_t OUT_BUF_SIZE = 2048;
+    auto out_buf = std::unique_ptr<char[]>(new char[OUT_BUF_SIZE]);
+    int out_len = 0;
+
+    auto flush_out = [&]() -> bool {
+        if (out_len <= 0) return true;
+        bool ok = (httpd_resp_send_chunk(req, out_buf.get(), out_len) == ESP_OK);
+        out_len = 0;
+        return ok;
+    };
+
+    bool first = true;
+    auto send_record = [&](const MinuteRecord &rec) -> bool {
+        if (out_len + 170 >= OUT_BUF_SIZE) {
+            if (!flush_out()) return false;
+        }
+
+        if (!first) out_buf.get()[out_len++] = ',';
+        first = false;
+
+        int len = snprintf(out_buf.get() + out_len, OUT_BUF_SIZE - out_len,
+            "[%lu,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u,%d,%d,%d,%d,%d]",
+            rec.timestamp, rec.hp_feed, rec.hp_return,
+            rec.z1_sp, rec.z2_sp, rec.z1_curr, rec.z2_curr,
+            rec.z1_flow, rec.z2_flow, rec.freq, rec.flags,
+            rec.cons, rec.prod, rec.outside, rec.liquid_pipe, rec.condensing);
+        
+        out_len += len;
+        return true;
+    };
+
+    if (f && first_idx < last_idx) {
+        constexpr size_t M_BATCH = 16;
+        auto mbatch_mem = std::unique_ptr<MinuteRecord[]>(new MinuteRecord[M_BATCH]);
+        MinuteRecord* mbatch = mbatch_mem.get();
+        const size_t count    = last_idx - first_idx;
+        const size_t seg1_pos = (oldest_idx + first_idx) % MAX_MINUTES;
+        const size_t seg1_len = std::min(count, MAX_MINUTES - seg1_pos);
+        const size_t seg2_len = count - seg1_len;
+
+        auto read_m_segment = [&](size_t file_pos, size_t n, size_t logical_base) -> bool {
+            if (fseek(f, (long)(LFS_DATA_OFFSET + file_pos * sizeof(MinuteRecord)), SEEK_SET) != 0)
+                return false;
+            size_t done = 0;
+            while (done < n) {
+                size_t chunk = std::min(n - done, M_BATCH);
+                size_t got   = fread(mbatch, sizeof(MinuteRecord), chunk, f);
+                for (size_t j = 0; j < got; j++) {
+                    if ((logical_base + done + j) % step != 0) continue;
+                    if (mbatch[j].timestamp < from_ts || mbatch[j].timestamp > to_ts) continue;
+                    if (!send_record(mbatch[j])) return false;
+                }
+                done += got;
+                if (got < chunk) break;
+                vTaskDelay(pdMS_TO_TICKS(2));
+            }
+            return true;
+        };
+
+        if (!read_m_segment(seg1_pos, seg1_len, 0)) { fclose(f); return; }
+        if (seg2_len > 0 && !read_m_segment(0, seg2_len, seg1_len)) { fclose(f); return; }
+    }
+    if (f) fclose(f);
+
+    for (size_t i = 0; i < http_wb_count_; i++) {
+        if (http_wb_snap_[i].timestamp >= from_ts && http_wb_snap_[i].timestamp <= to_ts)
+            if (!send_record(http_wb_snap_[i])) return;
+    }
+
+    flush_out();
+    httpd_resp_send_chunk(req, "]", 1);
+    httpd_resp_send_chunk(req, nullptr, 0);
+}
+
+void EcodanDashboard::handle_export_hourly_(AsyncWebServerRequest *request) {
+  httpd_req_t *req = *request;
+
+  size_t count, head;
+  if (history_mutex_ == NULL ||
+      xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(200)) != pdTRUE) {
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, "{\"error\":\"busy\"}", HTTPD_RESP_USE_STRLEN);
+    return;
+  }
+  count = hourly_count_;
+  head  = hourly_head_;
   xSemaphoreGive(history_mutex_);
 
-  if (current_count == 0) {
-    httpd_resp_send_chunk(req, "[]", 2);
-    httpd_resp_send_chunk(req, nullptr, 0);
+  if (count == 0) {
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, "{\"error\":\"no archive\"}", HTTPD_RESP_USE_STRLEN);
     return;
   }
 
-  size_t start_idx = (current_count == MAX_HISTORY) ? current_head : 0;
-  size_t step = (current_count > 360) ? (current_count / 360) : 1;
-  if (step < 1) step = 1;
-
-  if (httpd_resp_send_chunk(req, "[", 1) != ESP_OK) return;
-
-  bool first = true;
-  for (size_t i = 0; i < current_count; i += step) {
-    size_t idx = (start_idx + i) % MAX_HISTORY;
-
-    HistoryRecord rec;
-    if (history_mutex_ != NULL && xSemaphoreTake(history_mutex_, pdMS_TO_TICKS(10)) == pdTRUE) {
-        rec = history_buffer_[idx];
-        xSemaphoreGive(history_mutex_);
-    } else {
-        continue;
-    }
-
-    if (!first) {
-        if (httpd_resp_send_chunk(req, ",", 1) != ESP_OK) return;
-    }
-    first = false;
-
-    char item[160]; 
-    int len = snprintf(item, sizeof(item), "[%u,%d,%d,%d,%d,%d,%d,%d,%d,%d,%u,%d,%d,%d,%d,%d]",
-      rec.timestamp, rec.hp_feed, rec.hp_return,
-      rec.z1_sp, rec.z2_sp, rec.z1_curr, rec.z2_curr,
-      rec.z1_flow, rec.z2_flow, rec.freq, rec.flags,
-      rec.cons, rec.prod, rec.outside, rec.liquid_pipe, rec.condensing
-    );
-    
-    if (len >= sizeof(item)) len = sizeof(item) - 1;
-
-    // Abort loop immediately if client drops the connection
-    if (httpd_resp_send_chunk(req, item, len) != ESP_OK) {
-        return; 
-    }
+  FILE *f = fopen(LFS_HOURLY_PATH, "rb");
+  if (!f) {
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, "{\"error\":\"archive unreadable\"}", HTTPD_RESP_USE_STRLEN);
+    return;
   }
-  
-  if (httpd_resp_send_chunk(req, "]", 1) == ESP_OK) {
-      // Send 0-length chunk to signal the end of the transmission
-      httpd_resp_send_chunk(req, nullptr, 0);
-  }
-}
 
-// solver
-// ---------------------------------------------------------------------------
-// NVS persistence for ODIN arrays
-// Namespace: "odin_cache"  Keys: "day", "sched", "energy", "prod", "exp_t",
-//            "cost", "cost_tax", "batt", "act_cons", "act_room", "act_prod"
-//            (each 24 floats = 96 bytes)
-// ---------------------------------------------------------------------------
-static const char* NVS_ODIN_NS = "odin_cache";
-
-void EcodanDashboard::update_actual_data(int hour, int day, float actual_cons_kwh, float actual_prod_kwh, float dhw_cons, float dhw_prod, float actual_room_temp, float standby_cons) {
-    // hour is last_hour (0-23, the hour just completed).
-    // In the 72-slot window: 0-23=yesterday, 24-47=today, 48-71=tomorrow.
-    //   stored_day == current ecodan day → shift has happened → write to slot 23
-    //   stored_day != current ecodan day → shift not yet done → write to slot 47
-    //                                       (shift will carry it to slot 23)
-
-    if (snapshot_mutex_ == NULL || xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) return;
-
-    if (odin_actual_dhw_cons_.size() != 72)     odin_actual_dhw_cons_.assign(72, NAN);
-    if (odin_actual_dhw_prod_.size() != 72)     odin_actual_dhw_prod_.assign(72, NAN);
-    if (odin_actual_cons_.size() != 72)         odin_actual_cons_.assign(72, NAN);
-    if (odin_actual_prod_.size() != 72)         odin_actual_prod_.assign(72, NAN);
-    if (odin_actual_room_.size() != 72)         odin_actual_room_.assign(72, NAN);
-    if (odin_actual_standby_cons_.size() != 72) odin_actual_standby_cons_.assign(72, NAN);
-
-    int target_idx = 24 + hour;
-
-    if (hour == 23) {
-        if (day >= 0 && this->odin_stored_day_ == day) {
-            // Shift has already happened: slot 23 is yesterday's last hour
-            target_idx = 23;
-            esp_log_write(ESP_LOG_DEBUG, TAG, "update_actual_data: hour 23 post-shift -> slot 23 (yesterday)\n");
-        } else {
-            // Shift not yet happened: write to slot 47, shift will carry it to slot 23
-            target_idx = 47;
-            esp_log_write(ESP_LOG_DEBUG, TAG, "update_actual_data: hour 23 pre-shift -> slot 47 (shift will move to 23)\n");
-        }
-    }
-
-    if (target_idx < 0 || target_idx >= 72) {
-        xSemaphoreGive(snapshot_mutex_);
-        return;
-    }
-
-    odin_actual_cons_[target_idx]         = actual_cons_kwh;
-    odin_actual_prod_[target_idx]         = actual_prod_kwh;
-    odin_actual_dhw_cons_[target_idx]     = dhw_cons;
-    odin_actual_dhw_prod_[target_idx]     = dhw_prod;
-    odin_actual_room_[target_idx]         = actual_room_temp;
-    odin_actual_standby_cons_[target_idx] = standby_cons;
-
-    xSemaphoreGive(snapshot_mutex_);
-    this->odin_nvs_dirty_ = true;
-}
-
-void EcodanDashboard::nvs_task_(void *arg) {
-    EcodanDashboard *self = static_cast<EcodanDashboard *>(arg);
-    while (true) {
-        // Block indefinitely until loop() signals a write is needed.
-        // This task runs at priority 1 so flash writes never preempt lwIP (prio 18)
-        // or the ESPHome loop task (prio ~5).
-        if (xSemaphoreTake(self->nvs_trigger_, portMAX_DELAY) == pdTRUE) {
-            self->nvs_persist_odin_();
-        }
-    }
-}
-
-void EcodanDashboard::nvs_persist_odin_() {
-    nvs_handle_t h;
-    if (nvs_open("odin_cache", NVS_READWRITE, &h) != ESP_OK) {
-        esp_log_write(ESP_LOG_WARN, TAG, "NVS: failed to open odin_cache for write\n");
-        return;
-    }
-
-    // snapshot all data under mutex (fast memcpy only, no NVS I/O) ---
-    // The mutex is held for the shortest possible time — just copying vectors to local arrays.
-    // All slow NVS reads and writes happen AFTER the mutex is released.
-    static const int N = 72;
-    static const int NUM_ARRS = 19;
-
-    // Local stack copies — 19 × 72 × 4 = 5472 bytes on NVS task stack (fits in 8192).
-    std::vector<float> snap_buffer(NUM_ARRS * N, NAN);
-    float* snap[NUM_ARRS];
-    for (int k = 0; k < NUM_ARRS; k++) {
-        snap[k] = &snap_buffer[k * N];
-    }
-    int32_t snap_day = -1;
-    bool snap_show_tab = false;
-
-    if (this->snapshot_mutex_ != NULL && xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(200)) == pdTRUE) {
-        snap_day      = this->odin_stored_day_;
-        snap_show_tab = this->nvs_show_tab_cache_.load();
-
-        auto copy_arr = [&](int idx, const std::vector<float>& v) {
-            if (v.size() == N) memcpy(snap[idx], v.data(), N * sizeof(float));
-            else               for (int i = 0; i < N; i++) snap[idx][i] = NAN;
-        };
-        copy_arr(0,  this->odin_expected_end_temp_);
-        copy_arr(1,  this->odin_energy_);
-        copy_arr(2,  this->odin_production_);
-        copy_arr(3,  this->odin_expected_temp_);
-        copy_arr(4,  this->odin_cost_);
-        copy_arr(5,  this->odin_battery_discharge_);
-        copy_arr(6,  this->odin_actual_dhw_cons_);
-        copy_arr(7,  this->odin_actual_dhw_prod_);
-        copy_arr(8,  this->odin_actual_cons_);
-        copy_arr(9,  this->odin_actual_prod_);
-        copy_arr(10, this->odin_actual_room_);
-        copy_arr(11, this->odin_prices_);
-        copy_arr(12, this->odin_weather_);
-        copy_arr(13, this->odin_solar_);
-        copy_arr(14, this->odin_operation_mode_);
-        copy_arr(15, this->odin_sched_base_);
-        copy_arr(16, this->odin_sched_min_);
-        copy_arr(17, this->odin_sched_max_);
-        copy_arr(18, this->odin_actual_standby_cons_);
-
-        xSemaphoreGive(this->snapshot_mutex_);
-    } else {
-        esp_log_write(ESP_LOG_WARN, TAG, "NVS persist: failed to acquire snapshot mutex, skipping\n");
-        nvs_close(h);
-        return;
-    }
-
-    // write to NVS — no mutex held, safe to take as long as needed ---
-    bool has_changes = false;
-
-    int32_t stored_day = -1;
-    if (nvs_get_i32(h, "day", &stored_day) != ESP_OK || stored_day != snap_day) {
-        nvs_set_i32(h, "day", snap_day);
-        has_changes = true;
-    }
-
-    uint8_t current_show_tab = snap_show_tab ? 1 : 0;
-    uint8_t stored_show_tab = 0;
-    if (nvs_get_u8(h, "show_tab", &stored_show_tab) != ESP_OK || stored_show_tab != current_show_tab) {
-        nvs_set_u8(h, "show_tab", current_show_tab);
-        has_changes = true;
-    }
-
-    static const char* KEYS[NUM_ARRS] = {
-        "exp_end", "energy",  "prod",    "exp_t",   "cost",    "batt",
-        "act_dhw_cons", "act_dhw_prod",
-        "act_cons", "act_prod", "act_room",
-        "prices", "weather", "solar", "op_mode", "sb", "smn", "smx",
-        "act_standby"
-    };
-
-    std::vector<float> temp_vec(N);
-    float* temp = temp_vec.data();
-
-    for (int k = 0; k < NUM_ARRS; k++) {
-        size_t required_size = 0;
-        bool needs_write = true;
-
-        if (nvs_get_blob(h, KEYS[k], NULL, &required_size) == ESP_OK && required_size == N * sizeof(float)) {
-            if (nvs_get_blob(h, KEYS[k], temp, &required_size) == ESP_OK) {
-                needs_write = false;
-                for (int i = 0; i < N; i++) {
-                    bool t_nan = std::isnan(temp[i]);
-                    bool s_nan = std::isnan(snap[k][i]);
-                    if (t_nan != s_nan || (!t_nan && std::abs(temp[i] - snap[k][i]) > 0.001f)) {
-                        needs_write = true;
-                        break;
-                    }
-                }
-            }
-        }
-        if (needs_write) {
-            nvs_set_blob(h, KEYS[k], snap[k], N * sizeof(float));
-            has_changes = true;
-            vTaskDelay(pdMS_TO_TICKS(30));
-        }
-    }
-
-    if (has_changes) {
-        nvs_commit(h);
-        vTaskDelay(pdMS_TO_TICKS(30));
-        esp_log_write(ESP_LOG_INFO, TAG, "NVS: ODIN arrays persisted (day=%d, stack: %u words)\n", snap_day, uxTaskGetStackHighWaterMark(NULL));
-    } else {
-        esp_log_write(ESP_LOG_DEBUG, TAG, "NVS: no changes, skipping write (day=%d)\n", snap_day);
-    }
-    nvs_close(h);
-}
-
-void EcodanDashboard::load_odin_data(int current_day) {
-    // Only load once
-    if (this->odin_data_ready_) return;
-
-    // ── 1. All NVS reads OUTSIDE the mutex ────────────────────────────────
-    // Flash reads can take hundreds of ms. Never hold the mutex during NVS I/O
-    // — it blocks the HTTP handler task and crashes lwIP (recv_tcp assert).
-    static const int N = 72;
-    static const int NUM_ARRS = 19;
-
-    // Same order as KEYS[] in nvs_persist_odin_
-    static const char* KEYS[NUM_ARRS] = {
-        "exp_end", "energy",  "prod",    "exp_t",   "cost",    "batt",
-        "act_dhw_cons", "act_dhw_prod",
-        "act_cons", "act_prod", "act_room",
-        "prices", "weather", "solar", "op_mode", "sb", "smn", "smx",
-        "act_standby"
-    };
-    // Default fill per array — NAN for actuals/temps, 0 for the rest
-    static const float FILL[NUM_ARRS] = {
-        NAN,   NAN,   NAN,   NAN,   NAN,   0.0f,  // exp_end..batt
-        NAN,   NAN,                                 // act_dhw_cons, act_dhw_prod
-        NAN,   NAN,   NAN,                          // act_cons, act_prod, act_room
-        0.0f,  0.0f,  0.0f,  0.0f,                 // prices, weather, solar, op_mode
-        0.0f,  0.0f,  0.0f,                         // sb, smn, smx
-        NAN                                          // act_standby
-    };
-
-    nvs_handle_t h;
-    if (nvs_open(NVS_ODIN_NS, NVS_READONLY, &h) != ESP_OK) {
-        // Fresh device — no NVS data present
-        ESP_LOGI(TAG, "NVS: no odin_cache found, starting fresh");
-        if (this->snapshot_mutex_ != NULL && xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(500)) == pdTRUE) {
-            this->odin_stored_day_ = current_day;
-            this->odin_data_ready_ = true;
-            xSemaphoreGive(this->snapshot_mutex_);
-        }
-        return;
-    }
-
-    // Read scalars into local variables
-    uint8_t stored_show_tab = 0;
-    nvs_get_u8(h, "show_tab", &stored_show_tab);
-
-    int32_t stored_day = -1;
-    bool has_day = (nvs_get_i32(h, "day", &stored_day) == ESP_OK);
-
-    // Read all arrays into local snap buffers
-    std::vector<float> snap_buffer(NUM_ARRS * N, NAN);
-    float* snap[NUM_ARRS];
-    for (int k = 0; k < NUM_ARRS; k++) {
-        snap[k] = &snap_buffer[k * N];
-    }
-    bool snap_ok[NUM_ARRS];
-
-    // Index 0 = exp_end: try new key first, fall back to legacy "sched"
-    {
-        size_t len = N * sizeof(float);
-        snap_ok[0] = (nvs_get_blob(h, "exp_end", snap[0], &len) == ESP_OK && len == N * sizeof(float));
-        if (!snap_ok[0]) {
-            len = N * sizeof(float);
-            snap_ok[0] = (nvs_get_blob(h, "sched", snap[0], &len) == ESP_OK && len == N * sizeof(float));
-            if (snap_ok[0]) ESP_LOGI(TAG, "NVS: loaded expected_end_temp from legacy key 'sched'");
-        }
-        if (!snap_ok[0]) for (int i = 0; i < N; i++) snap[0][i] = FILL[0];
-    }
-
-    // Overige arrays
-    for (int k = 1; k < NUM_ARRS; k++) {
-        size_t len = N * sizeof(float);
-        snap_ok[k] = (nvs_get_blob(h, KEYS[k], snap[k], &len) == ESP_OK && len == N * sizeof(float));
-        if (!snap_ok[k]) for (int i = 0; i < N; i++) snap[k][i] = FILL[k];
-    }
-
-    nvs_close(h);
-
-    // ── 2. Day alignment on local snap buffers (still outside mutex) ──────
-    // ok = all critical arrays present
-    bool ok = has_day && snap_ok[0] && snap_ok[1] && snap_ok[2] &&
-              snap_ok[3] && snap_ok[4] && snap_ok[5];
-
-    int32_t aligned_day = ok ? stored_day : (int32_t)current_day;
-
-    if (ok && current_day != (int)stored_day) {
-        int day_delta = current_day - (int)stored_day;
-        if (day_delta == 1 || day_delta == -364 || day_delta == -365) {
-            ESP_LOGI(TAG, "NVS Load: Day transition (%d -> %d), shifting 72h window by 24h", stored_day, current_day);
-            for (int k = 0; k < NUM_ARRS; k++) {
-                // Shift 24 slots left: yesterday slots 0-23 are discarded,
-                // today (24-47) becomes yesterday (0-23),
-                // tomorrow (48-71) becomes today (24-47),
-                // new tomorrow (48-71) is cleared.
-                for (int i = 0; i < 48; i++) snap[k][i] = snap[k][i + 24];
-                for (int i = 48; i < N; i++) snap[k][i] = FILL[k];
-            }
-        } else {
-            ESP_LOGI(TAG, "NVS Load: Day jump (%d -> %d), clearing stale actuals", stored_day, current_day);
-            // Clear only the actuals (indices 6-10 + 18 = act_dhw_cons..act_room + act_standby)
-            for (int k : {6, 7, 8, 9, 10, 18})
-                for (int i = 0; i < N; i++) snap[k][i] = NAN;
-        }
-        aligned_day = current_day;
-    }
-
-    // ── 3. Acquire mutex only for the fast copy into member vectors ───────
-    if (this->snapshot_mutex_ == NULL ||
-        xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(500)) != pdTRUE) {
-        ESP_LOGW(TAG, "NVS Load: Failed to acquire mutex after NVS read, deferring.");
-        return;
-    }
-
-    if (ok) {
-        // Copy local snap buffers into member vectors
-        auto copy_snap = [&](int idx, std::vector<float>& v) {
-            v.assign(snap[idx], snap[idx] + N);
-        };
-        copy_snap(0,  this->odin_expected_end_temp_);
-        copy_snap(1,  this->odin_energy_);
-        copy_snap(2,  this->odin_production_);
-        copy_snap(3,  this->odin_expected_temp_);
-        copy_snap(4,  this->odin_cost_);
-        copy_snap(5,  this->odin_battery_discharge_);
-        copy_snap(6,  this->odin_actual_dhw_cons_);
-        copy_snap(7,  this->odin_actual_dhw_prod_);
-        copy_snap(8,  this->odin_actual_cons_);
-        copy_snap(9,  this->odin_actual_prod_);
-        copy_snap(10, this->odin_actual_room_);
-        copy_snap(11, this->odin_prices_);
-        copy_snap(12, this->odin_weather_);
-        copy_snap(13, this->odin_solar_);
-        copy_snap(14, this->odin_operation_mode_);
-        copy_snap(15, this->odin_sched_base_);
-        copy_snap(16, this->odin_sched_min_);
-        copy_snap(17, this->odin_sched_max_);
-        copy_snap(18, this->odin_actual_standby_cons_);
-
-        this->odin_stored_day_ = (int)aligned_day;
-        this->odin_data_ready_ = true;
-        ESP_LOGI(TAG, "NVS: ODIN arrays restored and time-aligned (day=%d)", aligned_day);
-    } else {
-        ESP_LOGW(TAG, "NVS: ODIN cache incomplete, discarding");
-        this->odin_stored_day_ = current_day;
-        this->odin_data_ready_ = true;
-    }
-
-    xSemaphoreGive(this->snapshot_mutex_);
-
-    // Restore show_tab AFTER releasing the mutex.
-    if (this->sw_show_solver_tab_ != nullptr) {
-        if (stored_show_tab) this->sw_show_solver_tab_->turn_on();
-        else                 this->sw_show_solver_tab_->turn_off();
-        ESP_LOGI(TAG, "NVS: show_solver_tab restored to %d", stored_show_tab);
-    }
-}
-
-void EcodanDashboard::store_odin_data(int current_hour, int current_day,
-                                      const std::vector<float>& expected_end_temp,
-                                      const std::vector<float>& energy,
-                                      const std::vector<float>& production,
-                                      const std::vector<float>& exp_temp,
-                                      const std::vector<float>& cost,
-                                      const std::vector<float>& battery_discharge,
-                                      const std::vector<float>& sched_base,
-                                      const std::vector<float>& sched_min,
-                                      const std::vector<float>& sched_max,
-                                      const std::vector<float>& weather,
-                                      const std::vector<float>& solar,
-                                      const std::vector<float>& prices,
-                                      const std::vector<float>& op_mode,
-                                      const LastRunStats& run_stats) {
-    if (current_hour < 0) return;
-
-    if (this->snapshot_mutex_ == NULL ||
-        xSemaphoreTake(this->snapshot_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) {
-        ESP_LOGW(TAG, "Failed to acquire snapshot mutex during ODIN store.");
-        return;
-    }
-
-    auto ensure_72 = [](std::vector<float>& v, float fill_val) {
-        if (v.size() != 72) v.assign(72, fill_val);
-    };
-
-    ensure_72(this->odin_expected_end_temp_, NAN);
-    ensure_72(this->odin_energy_, NAN);
-    ensure_72(this->odin_production_, NAN);
-    ensure_72(this->odin_expected_temp_, NAN);
-    ensure_72(this->odin_cost_, NAN);
-    ensure_72(this->odin_actual_dhw_cons_, NAN);
-    ensure_72(this->odin_actual_dhw_prod_, NAN);
-    ensure_72(this->odin_actual_cons_, NAN);
-    ensure_72(this->odin_actual_prod_, NAN);
-    ensure_72(this->odin_actual_room_, NAN);
-    ensure_72(this->odin_actual_standby_cons_, NAN);
-
-    ensure_72(this->odin_battery_discharge_, 0.0f);
-    ensure_72(this->odin_sched_base_, 0.0f);
-    ensure_72(this->odin_sched_min_, 0.0f);
-    ensure_72(this->odin_sched_max_, 0.0f);
-    ensure_72(this->odin_weather_, 0.0f);
-    ensure_72(this->odin_solar_, 0.0f);
-    ensure_72(this->odin_prices_, 0.0f);
-    ensure_72(this->odin_operation_mode_, 0.0f);
-
-    if (!this->odin_data_ready_) {
-        this->odin_data_ready_ = true;
-        this->odin_stored_day_ = current_day;
-    }
-
-    // 2. Real day transition: Shift array left by 24h within the 72-slot window
-    if (current_day != this->odin_stored_day_) {
-        int day_delta = current_day - this->odin_stored_day_;
-        if (day_delta == 1 || day_delta == -364 || day_delta == -365) {
-            ESP_LOGI(TAG, "ODIN day transition (%d -> %d): shifting 72h window by 24h", this->odin_stored_day_, current_day);
-            // yesterday (0-23) is discarded, today (24-47) → yesterday (0-23),
-            // tomorrow (48-71) → today (24-47), new tomorrow (48-71) is cleared.
-            auto shift_arr = [](std::vector<float>& v, float fill_val) {
-                for (int i = 0; i < 48; i++) v[i] = v[i + 24];
-                for (int i = 48; i < 72; i++) v[i] = fill_val;
-            };
-            shift_arr(this->odin_expected_end_temp_, NAN);
-            shift_arr(this->odin_energy_, NAN);
-            shift_arr(this->odin_production_, NAN);
-            shift_arr(this->odin_expected_temp_, NAN);
-            shift_arr(this->odin_cost_, NAN);
-            shift_arr(this->odin_battery_discharge_, 0.0f);
-            shift_arr(this->odin_sched_base_, 0.0f);
-            shift_arr(this->odin_sched_min_, 0.0f);
-            shift_arr(this->odin_sched_max_, 0.0f);
-            shift_arr(this->odin_weather_, 0.0f);
-            shift_arr(this->odin_solar_, 0.0f);
-            shift_arr(this->odin_prices_, 0.0f);
-            shift_arr(this->odin_operation_mode_, 0.0f);
-            shift_arr(this->odin_actual_dhw_cons_, NAN);
-            shift_arr(this->odin_actual_dhw_prod_, NAN);
-            shift_arr(this->odin_actual_cons_, NAN);
-            shift_arr(this->odin_actual_prod_, NAN);
-            shift_arr(this->odin_actual_room_, NAN);
-            shift_arr(this->odin_actual_standby_cons_, NAN);
-        } else {
-            ESP_LOGI(TAG, "ODIN day jump (%d -> %d): clearing old actuals", this->odin_stored_day_, current_day);
-            this->odin_actual_dhw_cons_.assign(72, NAN);
-            this->odin_actual_dhw_prod_.assign(72, NAN);
-            this->odin_actual_cons_.assign(72, NAN);
-            this->odin_actual_prod_.assign(72, NAN);
-            this->odin_actual_room_.assign(72, NAN);
-            this->odin_actual_standby_cons_.assign(72, NAN);
-        }
-        this->odin_stored_day_ = current_day;
-    }
-    
-    // 3. Unified Data Update
-    // The solver delivers 48 values covering today (0-23) and tomorrow (24-47).
-    // In the 72-slot window: yesterday=0-23, today=24-47, tomorrow=48-71.
-    // So solver index i maps to target slot 24+i.
-    for (int i = 0; i < 48; i++) {
-        int target_idx = 24 + i;   // offset into 72-slot window
-
-        // Static data (always overwrite — comes from fresh forecast)
-        if (i < (int)sched_base.size() && !std::isnan(sched_base[i]))  this->odin_sched_base_[target_idx] = sched_base[i];
-        if (i < (int)sched_min.size()  && !std::isnan(sched_min[i]))   this->odin_sched_min_[target_idx]  = sched_min[i];
-        if (i < (int)sched_max.size()  && !std::isnan(sched_max[i]))   this->odin_sched_max_[target_idx]  = sched_max[i];
-        if (i < (int)weather.size()    && !std::isnan(weather[i]))     this->odin_weather_[target_idx]    = weather[i];
-        if (i < (int)solar.size()      && !std::isnan(solar[i]))       this->odin_solar_[target_idx]      = solar[i];
-        if (i < (int)prices.size()     && !std::isnan(prices[i]))      this->odin_prices_[target_idx]     = prices[i];
-
-        // Calculated data (only overwrite future hours or empty slots)
-        bool is_future = (i > current_hour); // current_hour is still 0-23 relative to today
-        bool is_empty_slot = std::isnan(this->odin_production_[target_idx]);
-
-        if (is_future || is_empty_slot) {
-            if (i < (int)energy.size()     && !std::isnan(energy[i]))      this->odin_energy_[target_idx]            = energy[i];
-            if (i < (int)production.size() && !std::isnan(production[i]))  this->odin_production_[target_idx]        = production[i];
-            if (i < (int)cost.size()       && !std::isnan(cost[i]))        this->odin_cost_[target_idx]              = cost[i];
-            if (i < (int)battery_discharge.size() && !std::isnan(battery_discharge[i])) this->odin_battery_discharge_[target_idx] = battery_discharge[i];
-            if (i < (int)op_mode.size()    && !std::isnan(op_mode[i]))     this->odin_operation_mode_[target_idx]    = op_mode[i];
-            if (i < (int)exp_temp.size()   && !std::isnan(exp_temp[i]))    this->odin_expected_temp_[target_idx]     = exp_temp[i];
-            if (i < (int)expected_end_temp.size() && !std::isnan(expected_end_temp[i])) this->odin_expected_end_temp_[target_idx] = expected_end_temp[i];
-        }
-    }
-
-    this->last_run_stats_ = run_stats;
-
-    xSemaphoreGive(this->snapshot_mutex_);
-    ESP_LOGI(TAG, "ODIN arrays stored (hour=%d, day=%d)", current_hour, current_day);
-    this->odin_nvs_dirty_ = true;
-}
-
-void EcodanDashboard::handle_odin_request_(AsyncWebServerRequest *request) {
-  constexpr int JSON_BUFFER_SIZE = 4096;
-  constexpr size_t ODIN_HOURS = 72;
-
-  httpd_req_t *req = *request;
   httpd_resp_set_status(req, "200 OK");
-  httpd_resp_set_type(req, "application/json");
-  httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+  httpd_resp_set_type(req, "application/octet-stream");
   httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+  httpd_resp_set_hdr(req, "Content-Disposition", "attachment; filename=asgard_history_backup.bin");
+  httpd_resp_set_hdr(req, "Connection", "close");
 
-  bool is_ready = false;
-  if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
-      is_ready = this->odin_data_ready_;
-      xSemaphoreGive(snapshot_mutex_);
+  // The export header describes the chronological layout: head == count, so
+  // the box can validate the stream and know how many records to expect.
+  // max_records identifies the ring size (the box truncates to its own).
+  CircularFileHeader hdr{};
+  hdr.magic       = HISTORY_MAGIC;
+  hdr.version     = HISTORY_VERSION;
+  hdr.record_size = sizeof(HourlyRecord);
+  hdr.max_records = MAX_HOURLY;
+  hdr.head        = count;
+  hdr.count       = count;
+  if (httpd_resp_send_chunk(req, (const char *)&hdr, sizeof(hdr)) != ESP_OK) {
+    fclose(f);
+    return;
   }
 
-  if (!is_ready) {
-      httpd_resp_send_chunk(req, "{\"success\":false}", 17);
-      httpd_resp_send_chunk(req, nullptr, 0);
-      return;
-  }
+  const size_t oldest = (count == MAX_HOURLY) ? head
+                                              : (head + MAX_HOURLY - count) % MAX_HOURLY;
+  const size_t seg1   = std::min(count, MAX_HOURLY - oldest);
+  const size_t seg2   = count - seg1;
 
-  if (httpd_resp_send_chunk(req, "{\"success\":true,", 16) != ESP_OK) return;
+  constexpr size_t BATCH = 16;  // 16 * 64 B = 1 KB
+  // Heap, not stack: the httpd task stack is too small for a 1 KB array.
+  auto batch_mem = std::unique_ptr<HourlyRecord[]>(new HourlyRecord[BATCH]);
+  HourlyRecord* batch = batch_mem.get();
 
-  // pre allocate buffer
-  std::vector<char> buffer_vec(JSON_BUFFER_SIZE);
-  char* json_buf = buffer_vec.data();
-
-  // single array, do not put in lambda due to inlining duplication
-  float temp_arr[ODIN_HOURS];
-
-  auto send_arr_chunk = [&](const char* name, std::vector<float>* src_arr, bool last) __attribute__((noinline)) -> bool {
-      bool got_data = false;
-
-      if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
-          if (src_arr->size() == ODIN_HOURS) {
-              memcpy(temp_arr, src_arr->data(), ODIN_HOURS * sizeof(float));
-              got_data = true;
-          }
-          xSemaphoreGive(snapshot_mutex_);
-      }
-
-      if (!got_data) return true;
-
-      int offset = snprintf(json_buf, JSON_BUFFER_SIZE, "\"%s\":[", name);
-      for (size_t i = 0; i < ODIN_HOURS; i++) {
-          int space_left = (JSON_BUFFER_SIZE > offset) ? (JSON_BUFFER_SIZE - offset) : 0;
-          
-          if (std::isnan(temp_arr[i])) {
-              offset += snprintf(json_buf + offset, space_left, "null");
-          } else {
-              offset += snprintf(json_buf + offset, space_left, "%.2f", temp_arr[i]);
-          }
-          
-          space_left = (JSON_BUFFER_SIZE > offset) ? (JSON_BUFFER_SIZE - offset) : 0;
-          if (i < ODIN_HOURS - 1) offset += snprintf(json_buf + offset, space_left, ",");
-      }
-      
-      int space_left = (JSON_BUFFER_SIZE > offset) ? (JSON_BUFFER_SIZE - offset) : 0;
-      offset += snprintf(json_buf + offset, space_left, last ? "]" : "],");
-      
-      if (offset >= JSON_BUFFER_SIZE) offset = JSON_BUFFER_SIZE - 1;
-
-      return (httpd_resp_send_chunk(req, json_buf, offset) == ESP_OK);
+  auto send_segment = [&](size_t file_pos, size_t n) -> bool {
+    if (n == 0) return true;
+    if (fseek(f, (long)(LFS_DATA_OFFSET + file_pos * sizeof(HourlyRecord)), SEEK_SET) != 0)
+      return false;
+    size_t done = 0;
+    while (done < n) {
+      size_t chunk = std::min(n - done, BATCH);
+      size_t got   = fread(batch, sizeof(HourlyRecord), chunk, f);
+      if (got == 0) return false;
+      if (httpd_resp_send_chunk(req, (const char *)batch, got * sizeof(HourlyRecord)) != ESP_OK)
+        return false;
+      done += got;
+      vTaskDelay(pdMS_TO_TICKS(2));
+    }
+    return true;
   };
 
-  bool success = 
-    send_arr_chunk("expected_end_temp",      &this->odin_expected_end_temp_, false) &&
-    send_arr_chunk("energy_consumption",     &this->odin_energy_, false)            &&
-    send_arr_chunk("heat_production",        &this->odin_production_, false)        &&
-    send_arr_chunk("expected_begin_temp",    &this->odin_expected_temp_, false)     &&
-    send_arr_chunk("expected_cost",          &this->odin_cost_, false)              &&
-    send_arr_chunk("battery_discharge",      &this->odin_battery_discharge_, false) &&
-    send_arr_chunk("sched_base",             &this->odin_sched_base_, false)        &&
-    send_arr_chunk("sched_min",              &this->odin_sched_min_, false)         &&
-    send_arr_chunk("sched_max",              &this->odin_sched_max_, false)         &&
-    send_arr_chunk("weather",                &this->odin_weather_, false)           &&
-    send_arr_chunk("solar",                  &this->odin_solar_, false)             &&
-    send_arr_chunk("prices",                 &this->odin_prices_, false)            &&
-    send_arr_chunk("actual_dhw_cons",        &this->odin_actual_dhw_cons_, false)   &&
-    send_arr_chunk("actual_dhw_prod",        &this->odin_actual_dhw_prod_, false)   &&
-    send_arr_chunk("actual_cons",            &this->odin_actual_cons_, false)       &&
-    send_arr_chunk("actual_prod",            &this->odin_actual_prod_, false)       &&
-    send_arr_chunk("actual_room_temp",       &this->odin_actual_room_, false)       &&
-    send_arr_chunk("actual_standby_cons",    &this->odin_actual_standby_cons_, false) &&
-    send_arr_chunk("operation_mode",         &this->odin_operation_mode_, false);
-
-  if (success) {
-      LastRunStats stats;
-      if (snapshot_mutex_ != NULL && xSemaphoreTake(snapshot_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
-          stats = this->last_run_stats_;
-          xSemaphoreGive(snapshot_mutex_);
-      }
-
-      int offset = snprintf(json_buf, JSON_BUFFER_SIZE,
-          "\"current_hour\":%d,"
-          "\"today_start_index\":24,"
-          "\"last_run\":{\"execution_ms\":%u,\"evaluated_nodes\":%u,\"bidding_zone\":\"%s\",\"heat_loss\":%.3f,\"base_cop\":%.2f,"
-          "\"thermal_mass\":%.1f,\"exp_consumption\":%.2f,\"exp_production\":%.2f,"
-          "\"exp_solar\":%.2f,\"exp_solar_total\":%.2f,\"used_solar_kwp\":%.2f,"
-          "\"used_solar_correction\":%.3f,\"used_battery_soc_kwh\":%.2f,\"total_cost\":%.4f}}",
-          stats.current_hour,
-          stats.execution_ms,
-          stats.evaluated_nodes,
-          stats.bidding_zone.c_str(),
-          stats.heat_loss,
-          stats.base_cop,
-          stats.thermal_mass,
-          stats.exp_consumption,
-          stats.exp_production,
-          stats.exp_solar,
-          stats.exp_solar_total,
-          stats.used_solar_kwp,
-          stats.used_solar_correction,
-          stats.used_battery_soc_kwh,
-          stats.total_cost);
-
-      if (offset > 0 && offset < JSON_BUFFER_SIZE) {
-          httpd_resp_send_chunk(req, json_buf, offset);
-      }
+  const bool ok = send_segment(oldest, seg1) && send_segment(0, seg2);
+  fclose(f);
+  if (!ok) {
+    // Client went away; the box will see a truncated stream and reject the
+    // import. Nothing to clean up on this side (read-only endpoint).
+    ESP_LOGW(TAG, "export hourly: stream interrupted");
+    return;
   }
-
   httpd_resp_send_chunk(req, nullptr, 0);
+  ESP_LOGI(TAG, "export hourly: %lu records sent", (unsigned long)count);
 }
+
+void EcodanDashboard::handle_export_physics_(AsyncWebServerRequest *request) {
+  httpd_req_t *req = *request;
+
+  httpd_resp_set_status(req, "200 OK");
+  httpd_resp_set_type(req, "application/json");
+  httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+  httpd_resp_set_hdr(req, "Content-Disposition", "attachment; filename=asgard_physics_backup.json");
+  httpd_resp_set_hdr(req, "Connection", "close");
+
+  // The raw_* entities are the pump's EMA'd "typical day" values - the same
+  // numbers the box's learning step starts from. Absent pointers (single-zone
+  // builds), NaN (never learned) and "not measured" zeros are omitted; the
+  // box's import only writes the keys it receives.
+  char buf[96];
+  auto send_part = [&](const char *s, size_t n) -> bool {
+    return httpd_resp_send_chunk(req, s, n) == ESP_OK;
+  };
+
+  if (!send_part("{", 1)) return;
+  bool first = true;
+  auto add = [&](const char *key, number::Number *n, float min_ok) -> bool {
+    if (n == nullptr) return true;
+    const float v = n->state;
+    if (std::isnan(v) || v <= min_ok) return true;
+    int len = snprintf(buf, sizeof(buf), "%s\"%s\":%.6g",
+                       first ? "" : ",", key, (double)v);
+    if (len < 0 || (size_t)len >= sizeof(buf)) {
+      ESP_LOGW(TAG, "export physics: %s truncated, skipping", key);
+      return true;
+    }
+    first = false;
+    return send_part(buf, (size_t)len);
+  };
+
+  bool ok = true;
+  ok = ok && add("raw_heat_produced",         num_raw_heat_produced_,         -0.001f);
+  ok = ok && add("raw_elec_consumed",         num_raw_elec_consumed_,         -0.001f);
+  ok = ok && add("raw_runtime_hours",         num_raw_runtime_hours_,         -0.001f);
+  ok = ok && add("raw_avg_outside_temp",      num_raw_avg_outside_temp_,      -100.0f);
+  ok = ok && add("raw_avg_room_temp",         num_raw_avg_room_temp_,         -100.0f);
+  ok = ok && add("raw_delta_room_temp",       num_raw_delta_room_temp_,       -100.0f);
+  ok = ok && add("raw_cool_produced",         num_raw_cool_produced_,         -0.001f);
+  ok = ok && add("raw_cool_elec_consumed",    num_raw_cool_elec_consumed_,    -0.001f);
+  ok = ok && add("raw_cool_runtime_hours",    num_raw_cool_runtime_hours_,    -0.001f);
+  ok = ok && add("raw_cool_avg_outside_temp", num_raw_cool_avg_outside_temp_, -100.0f);
+  ok = ok && add("raw_cool_avg_room_temp",    num_raw_cool_avg_room_temp_,    -100.0f);
+  ok = ok && add("raw_hl_tm_product",         num_raw_hl_tm_product_,         0.0f);   // 0 = not measured
+  ok = ok && add("raw_solar_factor",          num_raw_solar_factor_,          0.0f);   // 0 = not learned
+  ok = ok && add("raw_heat_produced_z2",      num_raw_heat_produced_z2_,      -0.001f);
+  ok = ok && add("raw_elec_consumed_z2",      num_raw_elec_consumed_z2_,      -0.001f);
+  ok = ok && add("raw_runtime_hours_z2",      num_raw_runtime_hours_z2_,      -0.001f);
+  ok = ok && add("raw_avg_room_temp_z2",      num_raw_avg_room_temp_z2_,      -100.0f);
+  ok = ok && add("raw_delta_room_temp_z2",    num_raw_delta_room_temp_z2_,    -100.0f);
+  ok = ok && add("raw_cool_produced_z2",      num_raw_cool_produced_z2_,      -0.001f);
+  ok = ok && add("raw_cool_elec_consumed_z2", num_raw_cool_elec_consumed_z2_, -0.001f);
+  ok = ok && add("raw_cool_runtime_hours_z2", num_raw_cool_runtime_hours_z2_, -0.001f);
+  ok = ok && add("raw_cool_avg_room_temp_z2", num_raw_cool_avg_room_temp_z2_, -100.0f);
+  ok = ok && send_part("}", 1);
+  if (ok) send_part(nullptr, 0);
+  else ESP_LOGW(TAG, "export physics: stream interrupted");
+}
+
 
 }  // namespace asgard_dashboard
 }  // namespace esphome

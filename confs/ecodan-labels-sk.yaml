@@ -109,6 +109,7 @@ substitutions:
   status_water_pump: Čerpadlo - stav
   status_water_pump_2: Čerpadlo 2 - stav
   status_water_pump_3: Čerpadlo 3 - stav
+  status_water_pump_4: Čerpadlo 4 - stav
   status_mixing_valve: Zmiešavací ventil
   mixing_valve_step: Poloha zmiešavacieho ventilu
   status_multi_zone: Viaczónový režim
@@ -133,10 +134,11 @@ substitutions:
   status_short_cycle_lockout: 'Blokovanie krátkeho cyklu'
   minimum_compressor_on_time: 'Minimálny čas zapnutia kompresora'
   lockout_duration: 'Dĺžka blokovania (min)'
+  lockout_strategy: 'Stratégia blokovania cyklu'
+  lockout_strategy_option_server_control: 'Ovládanie serverom'
+  lockout_strategy_option_flow_control: 'Ovládanie prietoku'
   short_cycle_mitigation_button: 'Zrušiť blokovanie cyklu'
   predictive_short_cycle_control_enabled: 'Prediktívna prevencia krátkeho cyklu'
-  predictive_short_cycle_high_delta_time_window: 'Krátky cyklus: trvanie vysokej odchýlky'
-  predictive_short_cycle_high_delta_threshold: 'Krátky cyklus: prahová hodnota odchýlky'
   status_predictive_boost_active: 'Prediktívne zvýšenie výkonu je aktívne'
   # auto adaptive translations
   auto_adaptive_control_enabled: 'Auto-adaptívne riadenie'
@@ -174,27 +176,20 @@ substitutions:
   master_thermostat: Hlavný izbový snímač
 
   # stats collection
-  solver_kwh_meter_feedback_source: Zdroj elektromera
-  solver_kwh_meter_option_internal: Interný elektromer
-  solver_kwh_meter_feedback: Spätná väzba elektromera
 
-  solver_dhw_mode: Režim TÚV solvera
-  solver_dhw_mode_option_regular: Bežný
-  solver_dhw_mode_option_forced: Vynútený
 
   asgard_vt_temp_sensor_source: Zdroj virtuálneho termostatu
 
   # solver settings
-  sw_use_solver: "Povoliť dynamický cenový solver"
-  bin_solver_connected: "Stav pripojenia solvera"
+  solver_kwh_meter_feedback: Spätná väzba elektromera
+  solver_kwh_meter_option_internal: Interný elektromer
+  solver_kwh_meter_feedback_source: Zdroj elektromera
   num_raw_heat_produced: "Hrubé vyrobené teplo (kWh)"
   num_raw_elec_consumed: "Hrubá spotrebovaná elektrina (kWh)"
   num_raw_runtime_hours: "Hrubý prevádzkový čas (hodiny)"
   num_raw_avg_outside_temp: "Hrubá priemerná vonkajšia teplota (°C)"
   num_raw_avg_room_temp: "Hrubá priemerná teplota miestnosti (°C)"
   num_raw_delta_room_temp: "Hrubá odchýlka teploty miestnosti (°C)"
-  num_battery_soc_kwh: "Stav nabitia batérie (kWh)"
-  num_battery_max_discharge_kw: "Max. vybíjací výkon batérie (kW)"
   num_raw_hl_tm_product: "Hrubý súčin HL×TM"
   num_raw_solar_factor: "Faktor pasívnych solárnych ziskov"
 
@@ -202,3 +197,13 @@ substitutions:
   num_raw_cool_elec_consumed: "Spotreba elektriny chladenie (Surové)"
   num_raw_cool_runtime_hours: "Čas behu chladenia (Surové)"
   num_raw_cool_avg_outside_temp: "Priem. vonk. tepl. chladenia (Surové)"
+  num_raw_cool_avg_room_temp: "Hrubá priemerná izbová teplota chladenia"
+  num_raw_heat_produced_z2: "Hrubé vyrobené teplo Z2"
+  num_raw_elec_consumed_z2: "Hrubá spotrebovaná elektrina Z2"
+  num_raw_runtime_hours_z2: "Hrubý prevádzkový čas Z2 (hodiny)"
+  num_raw_avg_room_temp_z2: "Hrubá priemerná teplota miestnosti Z2 (°C)"
+  num_raw_delta_room_temp_z2: "Hrubá odchýlka teploty miestnosti Z2 (°C)"
+  num_raw_cool_produced_z2: "Vyrobené chladenie Z2 (Surové)"
+  num_raw_cool_elec_consumed_z2: "Spotreba elektriny chladenie Z2 (Surové)"
+  num_raw_cool_runtime_hours_z2: "Čas behu chladenia Z2 (Surové)"
+  num_raw_cool_avg_room_temp_z2: "Hrubá priemerná izbová teplota chladenia Z2"

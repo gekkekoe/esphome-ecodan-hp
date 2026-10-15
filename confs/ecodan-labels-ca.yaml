@@ -1,0 +1,207 @@
+substitutions:
+  status_three_way_valve: Vàlvula de 3 vies
+  status_three_way_valve_2: Vàlvula de 3 vies 2
+  heatpump_climate_dhw: Termòstat ACS
+  dhw_temp: Temp. actual ACS
+  dhw_secondary_temp: Temp. secundària ACS
+  status_dhw_forced: ACS forçada
+  dhw_flow_temp_drop: Caiguda màx. de temp. ACS
+  status_prohibit_dhw: Prohibició ACS
+  dhw_flow_temp_target: Valor de consigna ACS
+  status_dhw_eco: ACS eco
+  esp_ip: "IP de l'ESP"
+  internal_esp_temperature: "Temperatura interna de l'ESP"
+  esp_sidd: "SSID de l'ESP"
+  uptime: "Temps en marxa de l'ESP"
+  esp_version: "Versió de l'ESP"
+  restart_button: "Reinicia l'ESP"
+  status_in1_request: Termòstat In1
+  status_in6_request: Termòstat 2 In6
+  status_in5_request: Termòstat exterior In5
+  heatpump_select_dhw_mode: Mode ACS
+  normal: Normal
+  eco: Eco
+  version: "Versió de l'ESP"
+  led_brightness: Brillantor del LED
+  led_switch: LED
+  heatpump_switch_regular_dhw: ACS normal
+  heatpump_switch_force_dhw: Força ACS
+  heatpump_switch_power_mode: Bomba de calor
+  heatpump_switch_holiday: Mode vacances
+  wifi_signal_proc: "Senyal WiFi %"
+  wifi_signal_db: Senyal WiFi dB
+  z1_flow_temp_target: "Valor de consigna d'impulsió zona 1"
+  status_prohibit_cool_z1: Estat prohibició refrigeració zona 1
+  status_prohibit_heating_z1: Prohibició calefacció zona 1
+  heatpump_climate_z1: Zona 1 temp. impulsió
+  heatpump_climate_room_z1: Zona 1 temp. ambient
+  z1_room_temp_target: Valor de consigna ambient zona 1
+  z1_room_temp: Temp. ambient zona 1
+  heatpump_number_z2_set_flow_temperature: "Consigna d'impulsió zona 2"
+  z2_flow_temp_target: "Valor de consigna d'impulsió zona 2"
+  status_prohibit_cool_z2: Prohibició refrigeració zona 2
+  status_prohibit_heating_z2: Prohibició calefacció zona 2
+  heatpump_number_z2_set_room_temperature: Consigna ambient zona 2
+  heatpump_climate_z2: Zona 2 temp. impulsió
+  heatpump_climate_room_z2: Zona 2 temp. ambient
+  z2_room_temp_target: Valor de consigna ambient zona 2
+  z2_room_temp: Temp. ambient zona 2
+  mixing_tank_temp: Temp. dipòsit de mescla
+  boiler_flow_temp: Temp. impulsió caldera
+  boiler_return_temp: Temp. retorn caldera
+  status_booster: Escalfador de suport
+  compressor_frequency: Freqüència del compressor
+  status_compressor: Compressor
+  controller_version_text: Versió del controlador
+  controller_firmware_text: Firmware del controlador
+  controller_datetime_text: Data del controlador
+  cool_consumed: Consum de refrigeració
+  cool_cop: COP de refrigeració
+  cool_delivered: Producció de refrigeració
+  status_defrost: Desglaç
+  dhw_consumed: "Consum d'ACS"
+  dhw_cop: "COP d'ACS"
+  dhw_delivered: "Producció d'ACS"
+  hp_feed_temp: Temp. impulsió
+  z1_feed_temp: Temp. impulsió Z1
+  z2_feed_temp: Temp. impulsió Z2
+  flow_rate: Cabal
+  heat_source_text: Font de calor
+  heatpump: Bomba de calor
+  immersion_heater: "Escalfador d'immersió"
+  booster_heater: Escalfador de suport
+  immersion_and_booster_heater: "Escalfador d'immersió i de suport"
+  boiler: Caldera
+  energy_consumed_increasing: Energia total consumida
+  heating_consumed: Consum de calefacció
+  heating_cop: COP de calefacció
+  heating_delivered: Producció de calefacció
+  status_holiday: Mode vacances
+  status_immersion: "Escalfador d'immersió"
+  legionella_prevention_temp: Temp. prevenció de legionel·la
+  heatpump_select_operating_mode: Mode de funcionament seleccionat
+  heat_target_temperature: Temperatura objectiu calefacció
+  heat_flow_temperature: "Temperatura d'impulsió calefacció"
+  heat_compensation_curve: Corba de compensació calefacció
+  cool_target_temperature: Temperatura objectiu refrigeració
+  cool_flow_temperature: "Temperatura d'impulsió refrigeració"
+  floor_dry_up: Assecatge de la solera
+  cool_compensation_curve: Corba de compensació refrigeració
+  operation_off: Aturada
+  hotwater: Escalfant ACS
+  heating: Calefacció
+  cooling: Refrigeració
+  frost_protection: Protecció antigel
+  legionella_prevention: Prevenció de legionel·la
+  runtime: Temps de funcionament
+  status_operation: Mode de funcionament
+  output_power: Potència de sortida
+  computed_output_power: Potència de sortida estimada
+  computed_cop: COP estimat
+  daily_computed_output_power: Energia diària produïda estimada
+  daily_repported_input_power: Energia diària consumida informada
+  outside_temp: Temp. exterior
+  hp_refrigerant_temp: Temp. líquid refrigerant
+  hp_refrigerant_condensing_temp: Temp. condensació refrigerant
+  hp_return_temp: Temp. retorn
+  z1_return_temp: Temp. retorn Z1
+  z2_return_temp: Temp. retorn Z2
+  status_water_pump: "Estat bomba d'aigua"
+  status_water_pump_2: "Estat bomba d'aigua 2"
+  status_water_pump_3: "Estat bomba d'aigua 3"
+  status_water_pump_4: "Estat bomba d'aigua 4"
+  status_mixing_valve: Estat vàlvula mescladora
+  mixing_valve_step: Pas vàlvula mescladora
+  status_multi_zone: Estat multizona
+  status_multi_zone_idle: Inactiu
+  status_multi_zone_both: Totes dues
+  status_multi_zone_zone1: Z1 en marxa
+  status_multi_zone_zone2: Z2 en marxa
+  fault_code_text: "Codi d'avaria"
+  refrigerant_error_code_text: "Codi d'error del refrigerant"
+  # refrigerant_code: Refrigerant
+  compressor_starts: Arrencades acumulades del compressor
+  discharge_temp: Temp. descàrrega
+  ou_liquid_pipe_temp: Temp. canonada de líquid 1 unitat exterior
+  ou_two_phase_pipe_temp: Temp. canonada bifàsica unitat exterior
+  ou_suction_pipe_temp: "Temp. canonada d'aspiració unitat exterior"
+  ou_heatsink_temp: Temp. dissipador unitat exterior
+  ou_compressor_surface_temp: Temp. superfície compressor unitat exterior
+  super_heat_temp: Temp. sobreescalfament descàrrega
+  sub_cool_temp: Temp. subrefredament
+  fan_speed: Velocitat del ventilador
+  # short cycle translations
+  status_short_cycle_lockout: "Cicle curt: bloqueig"
+  minimum_compressor_on_time: "Cicle curt: temps mínim en marxa"
+  lockout_duration: "Cicle curt: durada del bloqueig (min)"
+  lockout_strategy: "Cicle curt: estratègia de bloqueig"
+  lockout_strategy_option_server_control: Control per servidor
+  lockout_strategy_option_flow_control: Control per impulsió
+  short_cycle_mitigation_button: "Cicle curt: cancel·la el bloqueig"
+  predictive_short_cycle_control_enabled: "Cicle curt: prevenció predictiva"
+  status_predictive_boost_active: "Cicle curt: impuls predictiu actiu"
+  # auto adaptive translations
+  auto_adaptive_control_enabled: "Autoadaptatiu: control"
+  maximum_heating_flow_temp: "Autoadaptatiu: temperatura màx. d'impulsió calefacció"
+  minimum_heating_flow_temp: "Autoadaptatiu: temperatura mín. d'impulsió calefacció"
+  minimum_cooling_flow_temp: "Autoadaptatiu: temperatura mín. d'impulsió refrigeració"
+  cooling_smart_start_temp: "Autoadaptatiu: temp. d'arrencada intel·ligent refrigeració"
+  temperature_feedback_source: "Autoadaptatiu: font de la temperatura ambient"
+  temperature_feedback_option_room: Termòstat ambient
+  select_feedback_option_api: Home Assistant o API REST
+  select_feedback_option_asgard_vt: Termòstat virtual Asgard
+  heating_system_type: "Autoadaptatiu: tipus de sistema de calefacció"
+  heating_system_type_option_ufh: Terra radiant
+  heating_system_type_option_ufh_rad: Terra radiant + radiadors
+  heating_system_type_option_rad: Radiadors
+  auto_adaptive_setpoint_bias: "Autoadaptatiu: biaix de consigna"
+  temperature_feedback: "Autoadaptatiu: retroacció de la temperatura ambient actual"
+  defrost_risk_handling_enabled: "Autoadaptatiu: mitigació del desglaç"
+  smart_boost_enabled: "Autoadaptatiu: impuls intel·ligent"
+
+  # total increasing energy totals
+  total_increasing_heating_consumed: Consum total de calefacció
+  total_increasing_heating_delivered: Producció total de calefacció
+  total_increasing_cool_consumed: Consum total de refrigeració
+  total_increasing_cool_delivered: Producció total de refrigeració
+  total_increasing_dhw_consumed: "Consum total d'ACS"
+  total_increasing_dhw_delivered: "Producció total d'ACS"
+
+  # pump details
+  pump_speed: Velocitat de la bomba
+  pump_feedback: Consum de la bomba
+  pump_feedback_status: Estat de la retroacció de la bomba
+
+  # master thermostats
+  master_thermostat: Sensor ambient principal
+
+  # stats collection
+
+  asgard_vt_temp_sensor_source: Font del termòstat virtual
+
+  # solver settings
+  solver_kwh_meter_feedback: Lectura del comptador de kWh
+  solver_kwh_meter_option_internal: "Comptador d'energia intern"
+  solver_kwh_meter_feedback_source: "Font del comptador d'energia"
+  num_raw_heat_produced: Calor produïda en brut (kWh)
+  num_raw_elec_consumed: Electricitat consumida en brut (kWh)
+  num_raw_runtime_hours: Temps de funcionament en brut (hores)
+  num_raw_avg_outside_temp: "Temp. exterior mitjana en brut (°C)"
+  num_raw_avg_room_temp: "Temp. ambient mitjana en brut (°C)"
+  num_raw_delta_room_temp: "Delta temp. ambient en brut (°C)"
+  num_raw_hl_tm_product: "Producte HL×TM en brut"
+  num_raw_solar_factor: Factor de guany solar passiu
+  num_raw_cool_produced: Fred produït en brut
+  num_raw_cool_elec_consumed: Electricitat consumida en fred en brut
+  num_raw_cool_runtime_hours: Temps de funcionament en fred en brut
+  num_raw_cool_avg_outside_temp: Temp. exterior mitjana en fred en brut
+  num_raw_cool_avg_room_temp: Temp. ambient mitjana en fred en brut
+  num_raw_heat_produced_z2: Calor produïda en brut Z2
+  num_raw_elec_consumed_z2: Electricitat consumida en brut Z2
+  num_raw_runtime_hours_z2: Temps de funcionament en brut Z2 (hores)
+  num_raw_avg_room_temp_z2: "Temp. ambient mitjana en brut Z2 (°C)"
+  num_raw_delta_room_temp_z2: "Delta temp. ambient en brut Z2 (°C)"
+  num_raw_cool_produced_z2: Fred produït en brut Z2
+  num_raw_cool_elec_consumed_z2: Electricitat consumida en fred en brut Z2
+  num_raw_cool_runtime_hours_z2: Temps de funcionament en fred en brut Z2
+  num_raw_cool_avg_room_temp_z2: Temp. ambient mitjana en fred en brut Z2

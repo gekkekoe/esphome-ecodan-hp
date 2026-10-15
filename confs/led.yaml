@@ -5,7 +5,7 @@ light:
     name: Led
     id: id_led
     internal: true
-    rgb_order: GRB
+    channel_colors: GRB
     pin: ${led_gpio_pin}
     num_leds: 4
     chipset: ws2812

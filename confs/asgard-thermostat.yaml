@@ -57,10 +57,10 @@ sensor:
         return id(gl_temp_${zone_identifier});
       }
 
-      // Index 2: MRC
+      // Index 2: MRC/RCx
       if (idx == 2) {
         auto& status = id(ecodan_instance).get_status();
-        return "${zone_identifier}" == "z1" ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
+        return strcmp("${zone_identifier}", "z1") == 0 ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
       }
       return NAN;
 
@@ -73,7 +73,7 @@ select:
     options:
       - "Virtual Thermostat Input ${zone_identifier}" 
       - "DS18x20 ${zone_identifier}"
-      - "MRC"
+      - "MRC or RCx"
     initial_option: "Virtual Thermostat Input ${zone_identifier}" 
     set_action:
       then:
@@ -150,10 +150,16 @@ climate:
             lambda: 'return !id(sw_odin_override_${zone_identifier}).state;'
           then:
             - switch.turn_off: asgard_relay_${zone_identifier}
+    off_mode:
+      - if:
+          condition:
+            switch.is_on: sw_odin_override_${zone_identifier}
+          then:
+            - switch.turn_off: sw_odin_override_${zone_identifier}
 
-    # enfore min runtime of 15m, or user supplied
-    min_heating_run_time: 15min
-    min_cooling_run_time: 15min
+    # disabled min runtimes, too many questions
+    min_heating_run_time: 0s
+    min_cooling_run_time: 0s
     min_idle_time: 0s        
     min_heating_off_time: 0s 
     min_cooling_off_time: 0s

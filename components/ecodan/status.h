@@ -56,8 +56,9 @@ namespace ecodan
         uint8_t PumpPWM;
         uint8_t PumpFeedback;
         
-        bool WaterPump2Active;
-        bool WaterPump3Active;
+        bool WaterPump2Active{false};
+        bool WaterPump3Active{false};
+        bool WaterPump4Active;
         bool ThreeWayValveActive;
         bool ThreeWayValve2Active;
         uint8_t MixingValveStatus;
@@ -175,7 +176,7 @@ namespace ecodan
         float EnergyConsumedIncreasing{0};
 
         // Service codes
-        uint16_t RcCompressorStarts;
+        uint32_t RcCompressorStarts;
         float RcDischargeTemp;
         float RcOuLiquidPipeTemp;
         float RcOuTwoPhasePipeTemp;
@@ -197,7 +198,7 @@ namespace ecodan
             return ControllerDateTime.tm_yday;
         }
 
-        const time_t timestamp() const {
+        time_t timestamp() const {
             if (ControllerDateTime.tm_year < 100)
                 return -1;
             struct tm dt = ControllerDateTime; 
@@ -229,9 +230,29 @@ namespace ecodan
             return false;
         }
 
+        bool is_ftc5_or_lower() const {
+            return Controller < 3;
+        }
+
+        float get_tank_temperature() const { 
+            if ((is_ftc5_or_lower() || DhwSecondaryTemperature == 0.0f) || DhwSecondaryTemperature == 25.0f)
+                return DhwTemperature;
+            
+            // for package units, the secondary temp is the top tank temp
+            // DhwSecondaryTemperature == 25.0f for ftc6+ without secondary sensor
+            return DhwSecondaryTemperature;
+        }
+
+        float get_lower_tank_temperature() const {
+            if ((is_ftc5_or_lower() || DhwSecondaryTemperature == 0.0f) || DhwSecondaryTemperature == 25.0f)
+                return NAN;
+            
+            return DhwTemperature;
+        }
+
         CONTROLLER_FLAG get_svc_flags() const
         {
-            CONTROLLER_FLAG flag;
+            CONTROLLER_FLAG flag{};
             if (ProhibitDhw)
                 flag |= CONTROLLER_FLAG::PROHIBIT_DHW;
             if (ProhibitHeatingZ1)
@@ -286,6 +307,50 @@ namespace ecodan
             }
 
             return false;
+        }
+
+        bool is_heating_active() const {
+            return Operation == esphome::ecodan::Status::OperationMode::HEAT_ON;
+        }
+
+        bool is_heating_active(Zone zone) const {
+
+            bool is_heating_mode = is_auto_adaptive_heating(zone) || is_heating(zone);
+            auto is_heating = is_heating_active();
+
+            if (!is_heating || !is_heating_mode)
+                return false;
+
+            if (has_2zones()) {
+                auto mz_status_active = zone == Zone::ZONE_1 ? 
+                    (MultiZoneStatus == 1 || MultiZoneStatus == 2) : (MultiZoneStatus == 1 || MultiZoneStatus == 3);
+
+                return mz_status_active;
+            }
+
+            return true;
+        }
+
+        bool is_cooling_active() const {
+            return Operation == esphome::ecodan::Status::OperationMode::COOL_ON;
+        }
+
+        bool is_cooling_active(Zone zone) const {
+
+            bool is_cooling_mode = is_auto_adaptive_cooling(zone) || is_cooling(zone);
+            auto is_cooling = is_cooling_active();
+
+            if (!is_cooling || !is_cooling_mode)
+                return false;
+
+            if (has_2zones()) {
+                auto mz_status_active = zone == Zone::ZONE_1 ? 
+                    (MultiZoneStatus == 1 || MultiZoneStatus == 2) : (MultiZoneStatus == 1 || MultiZoneStatus == 3);
+
+                return mz_status_active;
+            }
+
+            return true;
         }
 
 /* polynomial fit for
