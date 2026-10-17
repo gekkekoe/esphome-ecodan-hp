@@ -19,6 +19,10 @@ inline constexpr size_t MAX_HOURLY      = 26280; // 3 years × 365d × 24h
 inline constexpr size_t LFS_FLUSH_COUNT = 5;    // flush every 5 minute-records
 inline constexpr size_t LFS_DATA_OFFSET = 64;    // file header is exactly 64 bytes
 
+inline constexpr uint32_t LFS_HEADER_PERSIST_MS = 3600000;  // 60 min
+
+inline constexpr size_t LFS_HEAD_REPAIR_SCAN = 90;
+
 // ── Minute record (64 bytes) ──────────────────────────────────────────────────
 struct MinuteRecord {
     uint32_t timestamp;

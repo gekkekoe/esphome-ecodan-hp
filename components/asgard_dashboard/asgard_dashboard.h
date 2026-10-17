@@ -519,6 +519,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   size_t            history_count_{0};
   SemaphoreHandle_t history_mutex_{NULL};
   uint32_t          last_history_time_{0};
+  uint32_t          last_header_persist_ms_{0};   // head/count bookmark, see LFS_HEADER_PERSIST_MS
 
   size_t hourly_head_{0};
   size_t hourly_count_{0};

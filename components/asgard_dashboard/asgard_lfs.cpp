@@ -1,6 +1,7 @@
 #include "asgard_lfs.h"
 #include "asgard_dashboard.h"
 #include "esphome/core/log.h"
+#include "esphome/core/hal.h"
 #include "freertos/task.h"
 #include <esp_littlefs.h>
 #include <algorithm>
@@ -133,6 +134,44 @@ bool init_circular_file(const char* path, uint16_t record_size, uint32_t max_rec
     return false; // new file, not restored
 }
 
+// Re-sync head/count with the data area; see the declaration in asgard_lfs.h.
+void repair_head(const char* path, size_t max_records,
+                 size_t& head, size_t& count) {
+    FILE* f = fopen(path, "rb");
+    if (!f) return;
+
+    auto ts_at = [&](size_t idx) -> uint32_t {
+        uint32_t ts = 0;
+        if (fseek(f, (long)(LFS_DATA_OFFSET + idx * sizeof(MinuteRecord)), SEEK_SET) != 0) return 0;
+        if (fread(&ts, sizeof(ts), 1, f) != 1) return 0;
+        return ts;
+    };
+
+    // What the bookmark believes is newest, and the newest record inside the
+    // window the bookmark can have missed.
+    const uint32_t newest_per_header = ts_at((head + max_records - 1) % max_records);
+    uint32_t best_ts = 0;
+    size_t   best    = 0;
+    bool     found   = false;
+    for (size_t j = 0; j < LFS_HEAD_REPAIR_SCAN; j++) {
+        const size_t idx = (head + j) % max_records;
+        const uint32_t ts = ts_at(idx);
+        if (ts > best_ts) { best_ts = ts; best = idx; found = true; }
+    }
+    fclose(f);
+
+    if (!found || best_ts <= newest_per_header) return;
+    const size_t advance = (best + max_records - head) % max_records + 1;
+    if (advance >= LFS_HEAD_REPAIR_SCAN) return;
+
+    head = (best + 1) % max_records;
+    if (count < max_records) {
+        count += advance;
+        if (count > max_records) count = max_records;
+    }
+    ESP_LOGI(TAG_LFS, "LFS: %s bookmark was %zu record(s) stale, head corrected", path, advance);
+}
+
 } // namespace lfs_helper
 
 // ── LittleFS mount + file initialisation ─────────────────────────────────────
@@ -161,6 +200,12 @@ void EcodanDashboard::setup_lfs() {
 
     lfs_helper::init_circular_file(LFS_MINUTES_PATH, sizeof(MinuteRecord),
                                    MAX_MINUTES, history_head_, history_count_);
+
+    // The head/count bookmark is written at most once an hour (see the flush
+    // task), so records flushed after it are newer than it knows. Find the real
+    // head before anything reads or writes: resuming at the bookmark would
+    // overwrite the newest records of the last hour instead of the oldest.
+    lfs_helper::repair_head(LFS_MINUTES_PATH, MAX_MINUTES, history_head_, history_count_);
 
     lfs_helper::init_circular_file(LFS_HOURLY_PATH, sizeof(HourlyRecord),
                                    MAX_HOURLY, hourly_head_, hourly_count_);
@@ -212,23 +257,30 @@ void EcodanDashboard::lfs_task_(void* arg) {
             }
         }
 
-        // Persist updated head / count in the file header.
-        // Read the current head/count under the mutex so we don't race with
-        // record_history_() advancing them while we write.
-        size_t cur_head = 0, cur_count = 0;
-        if (self->history_mutex_ != NULL &&
-            xSemaphoreTake(self->history_mutex_, pdMS_TO_TICKS(100)) == pdTRUE) {
-            cur_head  = self->history_head_;
-            cur_count = self->history_count_;
-            xSemaphoreGive(self->history_mutex_);
+        // Persist the head/count bookmark, but at most once per interval
+        const uint32_t now_ms = millis();
+        if (now_ms - self->last_header_persist_ms_ < LFS_HEADER_PERSIST_MS) {
+            fclose(f);
+            continue;
         }
+        size_t cur_head = 0, cur_count = 0;
+        if (self->history_mutex_ == NULL ||
+            xSemaphoreTake(self->history_mutex_, pdMS_TO_TICKS(100)) != pdTRUE) {
+            // Never persist a zeroed bookmark, and take the write again next
+            // flush rather than store a head that was never read.
+            fclose(f);
+            continue;
+        }
+        cur_head  = self->history_head_;
+        cur_count = self->history_count_;
+        xSemaphoreGive(self->history_mutex_);
         CircularFileHeader hdr{};
         fseek(f, 0, SEEK_SET);
         if (fread(&hdr, sizeof(hdr), 1, f) == 1) {
             hdr.head  = cur_head;
             hdr.count = cur_count;
             fseek(f, 0, SEEK_SET);
-            fwrite(&hdr, sizeof(hdr), 1, f);
+            if (fwrite(&hdr, sizeof(hdr), 1, f) == 1) self->last_header_persist_ms_ = now_ms;
         }
         fclose(f);
     }

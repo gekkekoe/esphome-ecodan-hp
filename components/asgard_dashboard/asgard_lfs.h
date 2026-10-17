@@ -27,6 +27,9 @@ bool write_circular(const char* path, size_t offset, size_t max_records,
 bool init_circular_file(const char* path, uint16_t record_size, uint32_t max_records,
                         size_t& head_out, size_t& count_out);
 
+void repair_head(const char* path, size_t max_records,
+                 size_t& head, size_t& count);
+
 } // namespace lfs_helper
 } // namespace asgard_dashboard
 } // namespace esphome
