@@ -69,8 +69,12 @@ namespace esphome
                     static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", requested_flow);
             }
 
-            auto limits = is_cooling ? this->get_cool_flow_limits(zone) : this->get_flow_limits(zone);
-            step_limited = this->clamp_flow_temp(step_limited, limits.min, limits.max);
+            // Inside a post-DHW window the flow limits are not enforced
+            if (is_cooling || !this->is_post_dhw_window(status))
+            {
+                auto limits = is_cooling ? this->get_cool_flow_limits(zone) : this->get_flow_limits(zone);
+                step_limited = this->clamp_flow_temp(step_limited, limits.min, limits.max);
+            }
             this->set_flow_temp(step_limited, zone);
 
             // step_limited == requested (== base) here when not boosting, so the write above
