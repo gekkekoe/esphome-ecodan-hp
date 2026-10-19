@@ -179,6 +179,15 @@ Look at the main control board for a connector labelled **CN105**.
 
 ![Schematic](./img/HP-schematic.jpg)
 
+The virtual thermostat can take its room temperature from three sources — the DIP switches and the MRC room-sensor selection differ per source:
+
+| Temperature source for virtual thermostat | **MRC** | **Mitsubishi Wireless thermostat or CNRF** | **Other temp sensor** |
+|---|---|---|---|
+| **DIP switches** | **SW2-1 ON**, **SW1-8 OFF** | **SW2-1 ON**, **SW1-8 ON** | **SW2-1 ON**, **SW1-8 OFF** |
+| **Master or zone config** <br>*Initial settings → Room sensor settings → Sensor setting → Sensor setting* | **MRC** | **RCx** | **MRC** |
+
+The full option list per source lives in [Section 8 — Setup Wizard](#8-setup-wizard).
+
 ### Step 4 — Mounting
 
 Secure the Asgard inside the casing with a screw or a 10×2 mm magnet (not supplied). Asgard can also be mounted **outside** the unit with a magnet.
