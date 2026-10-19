@@ -54,15 +54,15 @@ namespace esphome
             time_t current_timestamp = status.timestamp();
 
             if (this->is_dhw_active(status)) {
-                // Only follow flow temp during DHW if we transitioned from heating.
+                // Trail already when nearly at the DHW target: within 1 °C of it.
+                if (std::isnan(status.DhwFlowTemperatureSetPoint) ||
+                    (status.DhwFlowTemperatureSetPoint - actual_flow_temp) > 1.0f)
+                    return;
+
                 float saved_setpoint = (zone == OptimizerZone::ZONE_2) ? this->dhw_old_z2_setpoint_ : this->dhw_old_z1_setpoint_;
                 if (std::isnan(saved_setpoint))
                     return;
 
-                if (status.DhwFlowTemperatureSetPoint > actual_flow_temp)
-                    return;
-
-                // adjust during first part of heating
                 adjusted_flow += 0.5f;
                 // Each time we adjust for dhw, set the post dhw timer expiration
                 time_t current_timestamp = status.timestamp();
@@ -86,18 +86,18 @@ namespace esphome
                             this->dhw_old_z2_setpoint_ = NAN;
                     }
 
+                    if (std::isnan(restore_val))
+                        return;
+
                     ESP_LOGD(OPTIMIZER_TAG, "Post-DHW: Heat/Cool demand gone. Restoring original setpoint Z%d: %.1f.", static_cast<uint8_t>(zone), restore_val);
 
-                    if (!std::isnan(restore_val)) {
-                        adjusted_flow = restore_val;
-                        if (std::isnan(this->dhw_old_z1_setpoint_) && std::isnan(this->dhw_old_z2_setpoint_))
-                            this->dhw_post_run_expiration_ = 0;
-                    }
+                    adjusted_flow = restore_val;
+                    if (std::isnan(this->dhw_old_z1_setpoint_) && std::isnan(this->dhw_old_z2_setpoint_))
+                        this->dhw_post_run_expiration_ = 0;
                 }
                 else if (status.is_heating_active())
                 {
-                    // also add 0.5 during post dhw while heating
-                    adjusted_flow += 0.5f;
+                    adjusted_flow = enforce_step_limit(status, actual_flow_temp, current_flow_setpoint, false);
                 }
                 else
                 {
