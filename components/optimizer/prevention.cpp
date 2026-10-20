@@ -41,6 +41,10 @@ namespace esphome
                 return;
             }
 
+            // An ODIN command supersedes the boost's private base.
+            if (!isnan(base_setpoint) && this->odin_forwarder_takeover_active())
+                base_setpoint = NAN;
+
             float requested_flow = isnan(base_setpoint) ? live_setpoint : base_setpoint;
 
             float step_limited = this->enforce_step_limit(status, actual_flow, requested_flow, is_cooling);
