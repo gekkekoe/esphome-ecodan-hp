@@ -23,6 +23,8 @@ void OdinForwarder::setup() {
   }
 
   this->subscribe_command_topic();
+  // Subscribed unconditionally
+  this->subscribe_room_topic();
 
   if (this->optimizer_ == nullptr) {
 
@@ -38,6 +40,12 @@ void OdinForwarder::dump_config() {
   LOG_UPDATE_INTERVAL(this);
   ESP_LOGCONFIG(TAG, "  HP ID: %s", this->hp_id_.c_str());
   ESP_LOGCONFIG(TAG, "  Topic Prefix: %s", this->topic_prefix_.c_str());
+}
+
+void OdinForwarder::set_optimizer(optimizer::Optimizer *opt) {
+  this->optimizer_ = opt;
+  if (opt != nullptr)
+    opt->set_odin_room_feed(this);
 }
 
 void OdinForwarder::update() {

@@ -93,8 +93,10 @@ void OdinForwarder::sync_topic_prefix() {
 
   ESP_LOGI(TAG, "Topic prefix changed: %s -> %s", this->topic_prefix_.c_str(), prefix.c_str());
   client->unsubscribe(this->topic_prefix_ + "/" + this->hp_id_ + "/commands/setpoint");
+  client->unsubscribe(this->topic_prefix_ + "/" + this->hp_id_ + "/room_feedback/+");
   this->topic_prefix_ = prefix;
   this->subscribe_command_topic();
+  this->subscribe_room_topic();
 }
 
 void OdinForwarder::subscribe_command_topic() {
@@ -106,6 +108,18 @@ void OdinForwarder::subscribe_command_topic() {
       command_topic,
       [this](const std::string & , const std::string &payload) { this->handle_command(payload); }, 1);
   ESP_LOGI(TAG, "Subscribed to '%s'", command_topic.c_str());
+}
+
+// The room temperature ODIN hands back
+void OdinForwarder::subscribe_room_topic() {
+  auto *client = mqtt::global_mqtt_client;
+  if (client == nullptr)
+    return;
+  const std::string room_topic = this->topic_prefix_ + "/" + this->hp_id_ + "/room_feedback/+";
+  client->subscribe(
+      room_topic,
+      [this](const std::string &topic, const std::string &payload) { this->handle_room_feedback(topic, payload); }, 1);
+  ESP_LOGI(TAG, "Subscribed to '%s'", room_topic.c_str());
 }
 
 }

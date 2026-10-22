@@ -61,6 +61,10 @@ esphome:
             state.temperature_feedback_source_z1 = id(temperature_feedback_source_z1);
             ${z2_cpp_prefix} state.temperature_feedback_source_z2 = id(temperature_feedback_source_z2);
 
+            ${asgard_prefix} state.odin_inherit_max_age = id(odin_inherit_max_age);
+            ${asgard_prefix} state.vt_temp_sensor_source_z1 = id(asgard_vt_temp_sensor_source_z1);
+            ${asgard_prefix} ${z2_cpp_prefix} state.vt_temp_sensor_source_z2 = id(asgard_vt_temp_sensor_source_z2);
+
             state.lockout_duration = id(lockout_duration);
             state.lockout_strategy = id(lockout_strategy);
             state.status_compressor = id(status_compressor);

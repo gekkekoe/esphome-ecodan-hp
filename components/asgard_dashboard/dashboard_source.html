@@ -621,11 +621,12 @@ header {
             <span class="tip-box">
               <span class="tip-unit">Virtual Thermostat Input</span>REST API sensor (Home Assistant, REST API).<br><br>
               <span class="tip-unit">DS18x20</span>Wired Dallas DS18B20 sensor.<br><br>
-              <span class="tip-unit">MRC or RCx</span>Main display sensor or Wireless thermostat (low resolution, 0.5°C steps).
+              <span class="tip-unit">MRC or RCx</span>Main display sensor or Wireless thermostat (low resolution, 0.5°C steps).<br><br>
+              <span class="tip-unit">ODIN</span>Room temperature ODIN hands back for this zone — its Bluetooth room sensor or a reading pushed to ODIN. Followed only while it is fresh: past "Max Age of ODIN Room Temperature" the reading is refused and the pump's own sensor answers again.
             </span>
           </span>
           <select class="ctrl-select" id="sel-z1ts" onchange="sendSelect('temp_sensor_source_z1', this)">
-            <option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC or RCx</option>
+            <option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC or RCx</option><option>ODIN</option>
           </select>
         </div>        
         
@@ -682,11 +683,12 @@ header {
             <span class="tip-box">
               <span class="tip-unit">Virtual Thermostat Input</span>REST API sensor (Home Assistant, REST API).<br><br>
               <span class="tip-unit">DS18x20</span>Wired Dallas DS18B20 sensor.<br><br>
-              <span class="tip-unit">MRC or RCx</span>Main display sensor or Wireless thermostat (low resolution, 0.5°C steps).
+              <span class="tip-unit">MRC or RCx</span>Main display sensor or Wireless thermostat (low resolution, 0.5°C steps).<br><br>
+              <span class="tip-unit">ODIN</span>Room temperature ODIN hands back for this zone — its Bluetooth room sensor or a reading pushed to ODIN. Followed only while it is fresh: past "Max Age of ODIN Room Temperature" the reading is refused and the pump's own sensor answers again.
             </span>
           </span>
           <select class="ctrl-select" id="sel-z2ts" onchange="sendSelect('temp_sensor_source_z2', this)">
-            <option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC or RCx</option>
+            <option>Virtual Thermostat Input</option><option>DS18x20</option><option>MRC or RCx</option><option>ODIN</option>
           </select>
         </div>
 
@@ -745,7 +747,7 @@ header {
             <span class="tip-box">
               <span class="tip-unit">Room Thermostat</span>MRC or Wireless thermostat.<br><br>
               <span class="tip-unit">HA / REST API</span>Reads temp pushed via REST API or HA. ('number.temperature_feedback_z1')<br><br>
-              <span class="tip-unit">Asgard Virtual Thermostat</span>Uses the Virtual Thermostat.
+              <span class="tip-unit">Asgard Virtual Thermostat</span>Uses the Virtual Thermostat — including when the Virtual Thermostat itself reads ODIN's room temperature.
             </span>
           </span>
           <select class="ctrl-select" id="sel-z1src" onchange="sendSelect('room_temp_source_z1', this)">
@@ -790,7 +792,7 @@ header {
               <span class="tip-box">
                 <span class="tip-unit">Room Thermostat</span>MRC or Wireless thermostat.<br><br>
                 <span class="tip-unit">HA / REST API</span>Reads temp pushed via REST API or HA. ('number.temperature_feedback_z2')<br><br>
-                <span class="tip-unit">Asgard Virtual Thermostat</span>Uses the Virtual Thermostat.
+                <span class="tip-unit">Asgard Virtual Thermostat</span>Uses the Virtual Thermostat — including when the Virtual Thermostat itself reads ODIN's room temperature.
               </span>
             </span>
             <select class="ctrl-select" id="sel-z2src" onchange="sendSelect('room_temp_source_z2', this)">

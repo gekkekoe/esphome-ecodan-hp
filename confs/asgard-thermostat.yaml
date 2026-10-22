@@ -62,6 +62,10 @@ sensor:
         auto& status = id(ecodan_instance).get_status();
         return strcmp("${zone_identifier}", "z1") == 0 ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
       }
+
+      if (idx == 3) {
+        return id(odin_forwarder).inherited_room_temp(strcmp("${zone_identifier}", "z1") == 0 ? 0 : 1);
+      }
       return NAN;
 
 select:
@@ -74,6 +78,7 @@ select:
       - "Virtual Thermostat Input ${zone_identifier}" 
       - "DS18x20 ${zone_identifier}"
       - "MRC or RCx"
+      - "ODIN"
     initial_option: "Virtual Thermostat Input ${zone_identifier}" 
     set_action:
       then:

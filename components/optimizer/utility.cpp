@@ -90,7 +90,7 @@ namespace esphome
             return status.Zone1FlowTemperatureSetPoint;
         }
 
-        float Optimizer::get_room_current_temp(OptimizerZone zone) {
+        float Optimizer::resolve_room_temp_(OptimizerZone zone, int *answered) {
             auto &status = this->state_.ecodan_instance->get_status();
 
             auto *src_cur = (zone == OptimizerZone::ZONE_2)
@@ -115,10 +115,62 @@ namespace esphome
                 }
             }
 
-            if (isnan(current_temp))
+            int answered_source = temp_feedback_source;
+            if (temp_feedback_source == 2 && !isnan(current_temp)) {
+                auto *vt_src = (zone == OptimizerZone::ZONE_2) ? this->state_.vt_temp_sensor_source_z2
+                                                               : this->state_.vt_temp_sensor_source_z1;
+                if (vt_src != nullptr && vt_src->active_index().value_or(0) == 3 &&
+                    this->odin_room_gate_(zone, nullptr, nullptr, nullptr)) answered_source = 3;
+            }
+
+            if (isnan(current_temp)) {
+                if (answered != nullptr) *answered = 0;
                 current_temp = (zone == OptimizerZone::ZONE_1) ? status.Zone1RoomTemperature : status.Zone2RoomTemperature;
+            } else if (answered != nullptr) {
+                *answered = answered_source;
+            }
 
             return current_temp;
+        }
+
+        bool Optimizer::odin_room_gate_(OptimizerZone zone, float *value, float *age, float *max_age) {
+            // Read when the decision is made: a published mirror is one component interval
+            // stale and cannot tell a silent ODIN from a refresh that did not run.
+            auto *feed = this->state_.odin_room_feed;
+            const float limit = (this->state_.odin_inherit_max_age != nullptr && this->state_.odin_inherit_max_age->has_state())
+                ? this->state_.odin_inherit_max_age->state : 900.0f;
+            float v = NAN, a = NAN;
+            const bool have = feed != nullptr &&
+                feed->room_feed(zone == OptimizerZone::ZONE_2 ? 1 : 0, &v, &a);
+            if (value != nullptr) *value = v;
+            if (age != nullptr) *age = a;
+            if (max_age != nullptr) *max_age = limit;
+            return have && v >= -20.0f && v <= 60.0f && a >= 0.0f && a <= limit;
+        }
+
+        float Optimizer::room_temp_from_odin(OptimizerZone zone) {
+            float v = NAN, a = NAN, max_age = 900.0f;
+            if (this->odin_room_gate_(zone, &v, &a, &max_age))
+                return v;
+            if (!isnan(v) || !isnan(a)) {
+                ESP_LOGI(OPTIMIZER_TAG,
+                         "ODIN room temp z%u refused (value=%.2f age=%.0fs, max %.0fs): nothing "
+                         "inherited, HP room temp stays in charge",
+                         zone == OptimizerZone::ZONE_2 ? 2 : 1, v, a, max_age);
+            }
+            return NAN;
+        }
+
+        void Optimizer::set_odin_room_feed(OdinRoomFeed *feed) {
+            this->state_.odin_room_feed = feed;
+        }
+
+        float Optimizer::get_room_current_temp(OptimizerZone zone) {
+            return this->resolve_room_temp_(zone, nullptr);
+        }
+
+        float Optimizer::room_temp_and_source(OptimizerZone zone, int *answered) {
+            return this->resolve_room_temp_(zone, answered);
         }
 
         float Optimizer::get_room_target_temp(OptimizerZone zone) {

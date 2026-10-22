@@ -132,6 +132,8 @@ namespace esphome
       bool  is_compressor_active(const ecodan::Status &status);
       float clamp_flow_temp(float flow, float min_temp, float max_temp);
       float enforce_step_limit(const ecodan::Status &status, float actual_flow, float calculated_flow, bool is_cooling_mode);
+      float resolve_room_temp_(OptimizerZone zone, int *answered);
+      bool  odin_room_gate_(OptimizerZone zone, float *value, float *age, float *max_age);
       bool  set_flow_temp(float flow, OptimizerZone zone);
       float round_nearest(float input)      { return round(input * 10.0f) / 10.0f; }
       float round_nearest_half(float input) { return floor(input * 2.0) / 2.0f; }
@@ -159,6 +161,9 @@ namespace esphome
 
       // Temperature helpers (used by YAML / dashboard)
       float get_room_current_temp(OptimizerZone zone);
+      float room_temp_and_source(OptimizerZone zone, int *answered);
+
+      float room_temp_from_odin(OptimizerZone zone);
       float get_room_target_temp(OptimizerZone zone);
       float get_feed_temp(OptimizerZone zone);
       float get_return_temp(OptimizerZone zone);
@@ -172,6 +177,8 @@ namespace esphome
       // Solver / ODIN
       bool aa_enabled() const;
       bool odin_forwarder_takeover_active() const;
+      // The ODIN forwarder registers itself here (OdinRoomFeed, optimizer_state.h).
+      void set_odin_room_feed(OdinRoomFeed *feed);
     };
 
     // Dummy ESPHome component — triggers codegen, stays empty

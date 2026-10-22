@@ -26,15 +26,18 @@ void OdinForwarder::publish_telemetry() {
   };
 
   struct ZoneTemps {
-    const char *room_key, *setpoint_key;
+    const char *room_key, *setpoint_key, *source_key;
     optimizer::OptimizerZone zone;
     float ecodan::Status::*room;
     float ecodan::Status::*setpoint;
   };
   auto *opt = this->optimizer_;
+  static const char *const kRoomSourceWords[] = {"pump", "api", "virtual", "odin"};
   auto emit_zone = [&](const ZoneTemps &z) {
-    put_float(z.room_key, opt ? opt->get_room_current_temp(z.zone) : status.*(z.room));
+    int answered = 0;
+    put_float(z.room_key, opt ? opt->room_temp_and_source(z.zone, &answered) : status.*(z.room));
     put_float(z.setpoint_key, opt ? opt->get_room_target_temp(z.zone) : status.*(z.setpoint));
+    doc[z.source_key] = kRoomSourceWords[(answered >= 0 && answered < 4) ? answered : 0];
   };
 
   auto emit_zone_temps = [&](const char *feed_key, const char *return_key,
@@ -46,7 +49,7 @@ void OdinForwarder::publish_telemetry() {
   };
 
   put_float("outside_temp", status.OutsideTemperature);
-  emit_zone({"room_temp", "zone1_setpoint", optimizer::OptimizerZone::ZONE_1,
+  emit_zone({"room_temp", "zone1_setpoint", "room_temp_source", optimizer::OptimizerZone::ZONE_1,
              &ecodan::Status::Zone1RoomTemperature, &ecodan::Status::Zone1SetTemperature});
   put_float("dhw_temp", status.get_tank_temperature());
   put_float("dhw_temp_bottom", status.get_lower_tank_temperature());
@@ -62,6 +65,7 @@ void OdinForwarder::publish_telemetry() {
             status.has_mixing_tank() ? status.MixingTankTemperature : NAN);
   doc["mixing_tank"] = status.has_mixing_tank();
   doc["independent_zone_temps"] = status.has_independent_zone_temps();
+  doc["room_inherit"] = opt != nullptr;
 
   // DHW setpoint and max drop: pump properties. The start threshold is not
   // published - Odin has that as its own setting now.
@@ -104,7 +108,7 @@ void OdinForwarder::publish_telemetry() {
 
   if (status.has_2zones()) {
     doc["zone2_enabled"] = true;
-    emit_zone({"room_temp_z2", "zone2_setpoint", optimizer::OptimizerZone::ZONE_2,
+    emit_zone({"room_temp_z2", "zone2_setpoint", "room_temp_source_z2", optimizer::OptimizerZone::ZONE_2,
                &ecodan::Status::Zone2RoomTemperature, &ecodan::Status::Zone2SetTemperature});
     emit_zone_temps("z2_feed_temp", "z2_return_temp", &ecodan::Status::Z2FeedTemperature,
                     &ecodan::Status::Z2ReturnTemperature);

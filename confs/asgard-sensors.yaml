@@ -240,6 +240,19 @@ number:
     max_value: 10.0
     step: 0.1
 
+  - platform: template
+    id: odin_inherit_max_age
+    name: "Auto-Adaptive: Max Age of ODIN Room Temperature"
+    optimistic: true
+    restore_value: false
+    min_value: 60
+    max_value: 3600
+    step: 30
+    initial_value: "900"
+    unit_of_measurement: "s"
+    icon: "mdi:clock-fast"
+    entity_category: "config"
+
 select:  
   # --- FEED SELECT ---
   - platform: template

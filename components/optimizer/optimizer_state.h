@@ -1,5 +1,6 @@
 #pragma once
 
+#include "odin_room_feed.h"
 #include "esphome.h"
 #include "esphome/components/climate/climate.h"
 #include "esphome/components/globals/globals_component.h"
@@ -97,6 +98,13 @@ namespace esphome
         esphome::select::Select *temperature_feedback_source_z2;
         esphome::select::Select *lockout_duration;
         esphome::select::Select *lockout_strategy{nullptr};
+
+        // nullptr in a build without the ODIN forwarder: then there is nothing to inherit.
+        OdinRoomFeed *odin_room_feed{nullptr};
+        esphome::number::Number *odin_inherit_max_age{nullptr};
+
+        esphome::select::Select *vt_temp_sensor_source_z1{nullptr};
+        esphome::select::Select *vt_temp_sensor_source_z2{nullptr};
 
         // Only base climate::Climate state (current_temperature/target_temperature)
         // is read via these pointers (see optimizer/utility.cpp), so they don't

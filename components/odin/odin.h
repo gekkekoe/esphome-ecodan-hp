@@ -8,6 +8,8 @@
 #include "esphome/components/text/text.h"
 #include "esphome/core/component.h"
 
+#include "esphome/components/optimizer/odin_room_feed.h"
+
 namespace esphome {
 namespace optimizer {
 class Optimizer;
@@ -20,7 +22,7 @@ class Optimizer;
 namespace esphome {
 namespace odin {
 
-class OdinForwarder : public PollingComponent {
+class OdinForwarder : public PollingComponent, public optimizer::OdinRoomFeed {
 public:
   void setup() override;
   void update() override;
@@ -48,7 +50,7 @@ public:
   void set_lockout_sensor(binary_sensor::BinarySensor *lockout_sensor) { this->lockout_sensor_ = lockout_sensor; }
 
   void set_takeover_sensor(binary_sensor::BinarySensor *takeover_sensor) { this->takeover_sensor_ = takeover_sensor; }
-  void set_optimizer(optimizer::Optimizer *opt) { this->optimizer_ = opt; }
+  void set_optimizer(optimizer::Optimizer *opt);
 
   void set_dhw_climate(climate::Climate *c) { this->dhw_climate_ = c; }
   void set_climate(climate::Climate *climate) { this->climate_ = climate; }
@@ -65,12 +67,18 @@ public:
   }
   void set_force_dhw_switch(switch_::Switch *sw) { this->force_dhw_switch_ = sw; }
 
+  // ── The room temperature ODIN hands back ───────────────────────────────────
+  float inherited_room_temp(int zone);
+  void handle_room_feedback(const std::string &topic, const std::string &payload);
+  bool room_feed(int zone, float *value, float *age_s) const override;
+
 protected:
 
   void sync_broker_settings();
   void sync_topic_prefix();
 
   void subscribe_command_topic();
+  void subscribe_room_topic();
 
   void publish_telemetry();
 
@@ -112,6 +120,13 @@ protected:
   globals::RestoringGlobalsComponent<float> *legionella_saved_setpoint_{nullptr};
   climate::Climate *dhw_climate_{nullptr};
   switch_::Switch *force_dhw_switch_{nullptr};
+
+  // The inherited fix as it arrived, and when that message arrived on THIS device's
+  // clock (there is no wall clock here, so ODIN's `ts` cannot be compared against
+  // anything). RAM only: a reboot must not resurrect a room temperature nothing
+  // confirms, and the broker restates the retained frame on the first subscribe.
+  float room_feed_[2] = {NAN, NAN};
+  uint32_t room_feed_ms_[2] = {0, 0};
 
   std::string last_broker_ip_{};
   uint16_t last_broker_port_{0};
