@@ -342,25 +342,10 @@ namespace esphome
                 calculated = this->round_nearest(calculated);
 
                 auto limits = this->get_flow_limits(zone);
-                // Stepdown: after a DHW run, always step down during the
-                // post-DHW window (5 min) — clamp first, so the setpoint
-                // follows the hot feed down in 0.5° steps. Otherwise step
-                // down whenever the compressor is running. Compressor off
-                // and no window: only the zone clamp applies.
-                if (this->is_post_dhw_window(status))
-                {
+                calculated = this->enforce_step_limit(status, feed, calculated, false);
+                // only skip clamp during post dhw window
+                if (!this->is_post_dhw_window(status))
                     calculated = this->clamp_flow_temp(calculated, limits.min, limits.max);
-                    calculated = this->enforce_step_limit(status, feed, calculated, false);
-                }
-                else if (this->is_compressor_active(status))
-                {
-                    calculated = this->enforce_step_limit(status, feed, calculated, false);
-                    calculated = this->clamp_flow_temp(calculated, limits.min, limits.max);
-                }
-                else
-                {
-                    calculated = this->clamp_flow_temp(calculated, limits.min, limits.max);
-                }
             }
 
             return calculated;
