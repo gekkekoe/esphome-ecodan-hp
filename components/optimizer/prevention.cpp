@@ -45,9 +45,10 @@ namespace esphome
             if (!isnan(base_setpoint) && this->odin_forwarder_takeover_active())
                 base_setpoint = NAN;
 
-            float requested_flow = isnan(base_setpoint) ? live_setpoint : base_setpoint;
+            // if step limited did nothing, then boosting is not needed anymore if it was applied
+            float step_limited = this->enforce_step_limit(status, actual_flow, live_setpoint, is_cooling);
+            bool boosting = (step_limited != live_setpoint);
 
-            float step_limited = this->enforce_step_limit(status, actual_flow, requested_flow, is_cooling);
             // One protective adjustment moves the flow setpoint at most 0.5°C.
             const float MAX_BOOST_STEP = 0.5f;
             step_limited = is_cooling
@@ -55,22 +56,20 @@ namespace esphome
                 : std::min(step_limited, live_setpoint + MAX_BOOST_STEP);
             step_limited = this->round_nearest(step_limited);
 
-            // Boost is happening exactly when this cycle adjusted the setpoint.
-            bool boosting = (step_limited != requested_flow);
-
             if (boosting)
             {
                 // Remember the original target once, on the first boost of a run.
                 if (isnan(base_setpoint))
-                    base_setpoint = requested_flow;
+                    base_setpoint = live_setpoint;
                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): step-limit flow %.1f°C -> %.1f°C (actual feed %.1f°C)",
-                    static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", requested_flow, step_limited, actual_flow);
+                    static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", live_setpoint, step_limited, actual_flow);
             }
             else if (!isnan(base_setpoint))
             {
-                // No longer boosting — restore the original setpoint we were protecting.
-                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): boost cleared, restoring flow setpoint %.1f°C",
-                    static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", requested_flow);
+                // Back within 1.0°C of the feed: no longer needed.
+                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): boost no longer needed (feed %.1f°C), letting go of %.1f°C",
+                    static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", actual_flow, base_setpoint);
+                base_setpoint = NAN;
             }
 
             // Inside a post-DHW window the flow limits are not enforced
@@ -80,11 +79,6 @@ namespace esphome
                 step_limited = this->clamp_flow_temp(step_limited, limits.min, limits.max);
             }
             this->set_flow_temp(step_limited, zone);
-
-            // step_limited == requested (== base) here when not boosting, so the write above
-            // already restored the original; drop the base so the next run starts fresh.
-            if (!boosting)
-                base_setpoint = NAN;
         }
 
         void Optimizer::clear_predictive_boost_(OptimizerZone zone, bool restore)
