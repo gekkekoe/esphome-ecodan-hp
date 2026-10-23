@@ -243,9 +243,6 @@ namespace esphome
 
         float Optimizer::enforce_step_limit(const ecodan::Status &status, float actual_flow_temp, float calculated_flow, bool is_cooling_mode) 
         {
-            const float MAX_FEED_STEP_CHANGE = 1.0f;
-            const float MAX_FEED_STEP_ADJUSTMENT = 0.5f;
-
             // The boundary counts: a setpoint exactly 1.0 °C below the measured feed is
             // already a stop risk, and both readings sit on the 0.1 °C grid.
             if (is_cooling_mode) 

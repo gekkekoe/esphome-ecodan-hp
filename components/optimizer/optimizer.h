@@ -64,10 +64,12 @@ namespace esphome
         return status.has_cooling() && status.is_auto_adaptive_cooling(ecodan_zone);
       }
 
+      const float MAX_FEED_STEP_CHANGE = 1.0f;
+      const float MAX_FEED_STEP_ADJUSTMENT = 0.7f;
+
       uint32_t compressor_start_time_ = 0;
       uint32_t last_defrost_time_     = 0;
       DefrostState state_before_defrost_;
-
 
       // Callback state (detect change before firing)
       float last_hp_feed_temp_      = NAN;
