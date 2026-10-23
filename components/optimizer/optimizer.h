@@ -65,7 +65,7 @@ namespace esphome
       }
 
       const float MAX_FEED_STEP_CHANGE = 1.0f;
-      const float MAX_FEED_STEP_ADJUSTMENT = 0.7f;
+      const float MAX_FEED_STEP_ADJUSTMENT = 1.0f;
 
       uint32_t compressor_start_time_ = 0;
       uint32_t last_defrost_time_     = 0;
