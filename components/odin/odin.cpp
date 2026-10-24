@@ -10,6 +10,8 @@ namespace odin {
 
 static const char *TAG = "odin_forwarder";
 
+static const uint32_t TAKEOVER_BOOT_GRACE_MS = 5 * 60 * 1000;
+
 void OdinForwarder::setup() {
   if (this->ecodan_ == nullptr) {
     ESP_LOGE(TAG, "No ecodan instance configured — forwarder disabled");
@@ -59,8 +61,8 @@ void OdinForwarder::update() {
     // a command, how long it still holds it and what demand it left switched.
     // "ODIN did nothing for an hour" has to be answerable from this line.
     const uint32_t now = static_cast<uint32_t>(::time(nullptr));
-    ESP_LOGI(TAG, "Status: mqtt_connected=%d active=%d takeover=%d valid_left=%lus demand z1=%s z2=%s",
-             mqtt_up ? 1 : 0, this->active_ ? 1 : 0, this->taken_over_ ? 1 : 0,
+    ESP_LOGI(TAG, "Status: mqtt_connected=%d active=%d takeover=%d owns_flow=%d valid_left=%lus demand z1=%s z2=%s",
+             mqtt_up ? 1 : 0, this->active_ ? 1 : 0, this->taken_over_ ? 1 : 0, this->owns_flow_setpoint() ? 1 : 0,
              static_cast<unsigned long>(this->valid_until_ > now ? this->valid_until_ - now : 0),
              this->relay_z1_ == nullptr ? "none" : (this->relay_z1_->state ? "on" : "off"),
              this->relay_z2_ == nullptr ? "none" : (this->relay_z2_->state ? "on" : "off"));
@@ -89,6 +91,22 @@ void OdinForwarder::check_watchdog() {
   time_t now = ::time(nullptr);
   if (now >= static_cast<time_t>(this->valid_until_))
     this->release();
+}
+
+bool OdinForwarder::forwarder_configured() const {
+  if (this->mqtt_broker_enabled_)
+    return true;
+  if (this->broker_ip_ == nullptr)
+    return false;
+  return this->broker_ip_->has_state() && !this->broker_ip_->state.empty();
+}
+
+bool OdinForwarder::owns_flow_setpoint() const {
+  if (this->taken_over_)
+    return true;
+  if (this->is_failed())
+    return false;
+  return millis() < TAKEOVER_BOOT_GRACE_MS && this->forwarder_configured();
 }
 
 }

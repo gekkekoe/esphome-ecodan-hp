@@ -72,10 +72,14 @@ public:
   void handle_room_feedback(const std::string &topic, const std::string &payload);
   bool room_feed(int zone, float *value, float *age_s) const override;
 
+  bool owns_flow_setpoint() const override;
+
 protected:
 
   void sync_broker_settings();
   void sync_topic_prefix();
+
+  bool forwarder_configured() const;
 
   void subscribe_command_topic();
   void subscribe_room_topic();

@@ -42,7 +42,7 @@ namespace esphome
             }
 
             // An ODIN command supersedes the boost's private base.
-            if (!isnan(base_setpoint) && this->odin_forwarder_takeover_active())
+            if (!isnan(base_setpoint) && this->odin_owns_flow_setpoint())
                 base_setpoint = NAN;
 
             // if step limited did nothing, then boosting is not needed anymore if it was applied

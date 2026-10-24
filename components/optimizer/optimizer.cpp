@@ -78,5 +78,11 @@ namespace esphome
             return this->state_.bin_odin_forwarder_takeover != nullptr && this->state_.bin_odin_forwarder_takeover->state;
         }
 
+        bool Optimizer::odin_owns_flow_setpoint() const {
+            if (this->odin_forwarder_takeover_active())
+                return true;
+            return this->state_.odin_room_feed != nullptr && this->state_.odin_room_feed->owns_flow_setpoint();
+        }
+
     } // namespace optimizer
 } // namespace esphome

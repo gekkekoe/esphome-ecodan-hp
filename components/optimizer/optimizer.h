@@ -179,6 +179,7 @@ namespace esphome
       // Solver / ODIN
       bool aa_enabled() const;
       bool odin_forwarder_takeover_active() const;
+      bool odin_owns_flow_setpoint() const;
       // The ODIN forwarder registers itself here (OdinRoomFeed, optimizer_state.h).
       void set_odin_room_feed(OdinRoomFeed *feed);
     };

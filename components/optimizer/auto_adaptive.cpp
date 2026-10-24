@@ -197,8 +197,8 @@ namespace esphome
             // writing when the forwarder releases (valid_until expired /
             // ODIN unreachable — the designed ASGARD 2b.5 failure case); the
             // live takeover sensor clears on that release.
-            if (this->odin_forwarder_takeover_active()) {
-                ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN forwarder active — AA flow setpoint write skipped.", (i + 1));
+            if (this->odin_owns_flow_setpoint()) {
+                ESP_LOGD(OPTIMIZER_TAG, "Z%d ODIN owns the flow setpoint — AA write skipped.", (i + 1));
                 return;
             }
             auto heating_type_index = this->state_.heating_system_type->active_index().value_or(0);
