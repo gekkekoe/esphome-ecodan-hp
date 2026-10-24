@@ -221,6 +221,27 @@ namespace ecodan
             return has_mixing_tank() || (IS_BIT_SET(DipSwitch2, 6) && !IS_BIT_SET(DipSwitch3, 5));
         }
 
+        static bool zone_thermistors_fitted(float feed, float ret) {
+            return !std::isnan(feed) && !std::isnan(ret) &&
+                !(feed == 25.0f && ret == 25.0f) &&
+                feed != ret;
+        }
+
+        bool has_zone1_temps() const {
+            return zone_thermistors_fitted(Z1FeedTemperature, Z1ReturnTemperature);
+        }
+
+        bool has_zone2_temps() const {
+            return zone_thermistors_fitted(Z2FeedTemperature, Z2ReturnTemperature);
+        }
+
+        bool has_zone_temps(Zone zone) const {
+            if (IS_BIT_SET(DipSwitch2, 6) && !IS_BIT_SET(DipSwitch3, 5))
+                return true; // SW2-7: the controller regulates on the zone thermistors itself
+            return has_mixing_tank() &&
+                (zone == Zone::ZONE_2 ? has_zone2_temps() : has_zone1_temps());
+        }
+
         bool has_2zones() const {
             if (IS_BIT_SET(DipSwitch3, 5) && !IS_BIT_SET(DipSwitch2, 6)) // SW3-6 True, SW2-7 False
                 return true; // z1, z2 -> same flow

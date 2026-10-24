@@ -81,7 +81,7 @@ namespace esphome
 
             auto defrost_state = this->resolve_defrost_state_();
             float locked_return_temp = defrost_state.get_return_temp(
-                status.has_independent_zone_temps(),
+                status.has_zone_temps((zone_i == 0) ? esphome::ecodan::Zone::ZONE_1 : esphome::ecodan::Zone::ZONE_2),
                 (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
 
             float actual_return_temp = this->get_return_temp(
