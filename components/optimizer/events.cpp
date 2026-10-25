@@ -219,6 +219,29 @@ namespace esphome
         {
             auto &status = this->state_.ecodan_instance->get_status();
 
+            // restore saved setpoint if it was set, only for non - AA and predictive cycle prevention on
+            const bool stand_alone_predictive = !this->aa_enabled() && this->predictive_cycle_enabled();
+            const bool boosted_z1 = !isnan(this->predictive_boost_base_z1_setpoint_);
+            const bool boosted_z2 = status.has_2zones() && !isnan(this->predictive_boost_base_z2_setpoint_);
+            if (!status.DefrostActive && stand_alone_predictive && (boosted_z1 || boosted_z2))
+            {
+                if (boosted_z1)
+                {
+                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Restoring Z1 flow setpoint %.1f°C after predictive boost.",
+                        this->predictive_boost_base_z1_setpoint_);
+                    this->state_.ecodan_instance->set_flow_target_temperature(this->predictive_boost_base_z1_setpoint_, esphome::ecodan::Zone::ZONE_1);
+                    this->predictive_boost_base_z1_setpoint_ = NAN;
+                }
+                if (boosted_z2)
+                {
+                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Restoring Z2 flow setpoint %.1f°C after predictive boost.",
+                        this->predictive_boost_base_z2_setpoint_);
+                    this->state_.ecodan_instance->set_flow_target_temperature(this->predictive_boost_base_z2_setpoint_, esphome::ecodan::Zone::ZONE_2);
+                    this->predictive_boost_base_z2_setpoint_ = NAN;
+                }
+                this->update_boost_sensor();
+            }
+
             if (this->state_.lockout_duration->active_index().value_or(0) == 0)
             {
                 this->compressor_start_time_ = 0;

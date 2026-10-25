@@ -11,7 +11,8 @@ namespace esphome
 
         void Optimizer::predictive_short_cycle_check_for_zone_(const ecodan::Status &status, OptimizerZone zone, bool is_cooling) {
 
-            // base_setpoint != NAN is the single source of truth for "a boost is active".
+            // base_setpoint != NAN is the single source of truth for "a boost is active": only the
+            // stand-alone path holds a target of ours that has to be handed back.
             float &base_setpoint = (zone == OptimizerZone::ZONE_2) ? this->predictive_boost_base_z2_setpoint_ : this->predictive_boost_base_z1_setpoint_;
 
             // A pump-only start (feed water still warm from the previous run) is not a
@@ -19,15 +20,6 @@ namespace esphome
             // the auto-adaptive write path uses.
             if (this->is_system_hands_off(status) || !this->is_compressor_active(status))
             {
-                // Dropping out of protection: if we had raised the setpoint, put the
-                // original back so a boosted value isn't left stranded on the heat pump.
-                if (!isnan(base_setpoint))
-                {
-                    ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d: protection ended, restoring flow setpoint %.1f°C",
-                        static_cast<uint8_t>(zone), base_setpoint);
-                    this->set_flow_temp(base_setpoint, zone);
-                    base_setpoint = NAN;
-                }
                 return;
             }
 
@@ -42,7 +34,7 @@ namespace esphome
             }
 
             // An ODIN command supersedes the boost's private base.
-            if (!isnan(base_setpoint) && this->odin_owns_flow_setpoint())
+            if (this->odin_owns_flow_setpoint())
                 base_setpoint = NAN;
 
             // if step limited did nothing, then boosting is not needed anymore if it was applied
@@ -66,10 +58,10 @@ namespace esphome
             }
             else if (!isnan(base_setpoint))
             {
-                // Back within 1.0°C of the feed: no longer needed.
-                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): boost no longer needed (feed %.1f°C), letting go of %.1f°C",
+                // Back within 1.0°C of the feed: nothing left to raise. The value already applied
+                // stays for the rest of the run; on_compressor_stop() puts the original back.
+                ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): boost no longer needed (feed %.1f°C), holding until the run ends (original %.1f°C)",
                     static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", actual_flow, base_setpoint);
-                base_setpoint = NAN;
             }
 
             // Inside a post-DHW window the flow limits are not enforced
@@ -85,7 +77,6 @@ namespace esphome
         {
             float &base_setpoint = (zone == OptimizerZone::ZONE_2) ? this->predictive_boost_base_z2_setpoint_ : this->predictive_boost_base_z1_setpoint_;
 
-            // If asked, and we had raised the setpoint, put the original back before letting go.
             if (restore && !isnan(base_setpoint))
             {
                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d: predictive released, restoring flow setpoint %.1f°C",
@@ -115,7 +106,7 @@ namespace esphome
                 return;
             }
 
-            if (!this->state_.predictive_short_cycle_control_enabled->state)
+            if (!this->predictive_cycle_enabled() && !this->aa_enabled())
             {
                 // Feature turned off — undo any boost we still have applied.
                 this->clear_predictive_boost_(OptimizerZone::ZONE_1, true);

@@ -74,6 +74,10 @@ namespace esphome
             return this->state_.auto_adaptive_control_enabled != nullptr && this->state_.auto_adaptive_control_enabled->state;
         }
 
+        bool Optimizer::predictive_cycle_enabled() const {
+            return this->state_.predictive_short_cycle_control_enabled != nullptr && this->state_.predictive_short_cycle_control_enabled->state;
+        }
+
         bool Optimizer::odin_forwarder_takeover_active() const {
             return this->state_.bin_odin_forwarder_takeover != nullptr && this->state_.bin_odin_forwarder_takeover->state;
         }

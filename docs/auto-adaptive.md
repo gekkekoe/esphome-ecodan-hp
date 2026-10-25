@@ -25,8 +25,8 @@ The strategy follows these steps:
     `target_delta_t = dynamic_min_delta_t + (error_factor * (max_delta_t - dynamic_min_delta_t))`
 5.  **Calculate Target Flow**: The final target flow is calculated based on the real-time return temperature.
     `Calculated Flow = return_temp + target_delta_t`
-6.  **Apply Boost (if active)**: The controller checks if the **Predictive Short-Cycle Prevention** is active. If it is, the calculated boost (e.g., +0.5°C) is added to the `Calculated Flow` *before* limits are applied.
-7.  **Apply Limits & Rounding**: The value is rounded to the nearest **0.1 °C**, then held within one step of the water the pump is actually delivering: if the requested target sits more than 1.0 °C below the measured feed it is moved by only 0.5 °C this cycle (a setpoint under a running feed stops the compressor), and only then is it clamped to your `minimum_heating_flow_temp` / `maximum_heating_flow_temp`. When the circuit already runs a wider ΔT than asked for (independent zone temperatures), the target is additionally held at the measured feed instead of below it.
+6.  **Predictive Boost interaction**: this calculation does **not** add a separate boost term. The short-cycle poll (see *Predictive Short-Cycle Prevention*) raises the flow setpoint on its own, and step 7 applies the identical guard to the value computed here — both writers therefore land on the same target instead of pulling it in opposite directions.
+7.  **Apply Limits & Rounding**: The value is rounded to the nearest **0.1 °C**, then held close to the water the pump is actually delivering: if the target sits **1.0 °C or more below** the measured feed, it is lifted to `feed − 1.0 °C` in a single correction (a setpoint that far under a running feed stops the compressor), and only then is it clamped to your `minimum_heating_flow_temp` / `maximum_heating_flow_temp`. Cooling mirrors this: a target 1.0 °C or more **above** the feed is pulled down to `feed + 1.0 °C`. When the circuit already runs a wider ΔT than asked for (independent zone temperatures), the target is additionally held at the measured feed instead of below it.
 
 ### Understanding the Profiles (Simulator)
 
@@ -78,15 +78,35 @@ This transforms your controller from a reactive system into a predictive one, en
 
 This feature predicts imminent short cycles that can occur when the home's heat demand is lower than the heat pump's minimum power output.
 
-When it detects a high-risk situation — the actual flow temperature rising too
-far above the requested flow — it proactively applies a **+0.5°C boost** (−0.5°C
-in cooling). Two settings control it: **`High Delta Threshold`** (how far the
-actual flow may exceed the request before it counts as high-risk; default
-**1.0°C**, minimum 0.5°C) and **`High Delta Duration`** (how long that high-risk
-condition must persist before the boost is applied).
+When the requested flow temperature sits too far **under** the water the pump is actually
+delivering, the compressor cuts out shortly afterwards. A dedicated poll (every 30 s, while
+the compressor runs and the system is not in DHW, VC4 or defrost) compares each zone's
+**current** flow setpoint with the measured feed temperature:
 
-* **In Auto-Adaptive Mode:** This boost is stored in the `predictive_short_cycle_total_adjusted` variable. The main `auto_adaptive_loop` sees this boost and adds it to its own calculation. The loop is also responsible for resetting the boost to 0 when the risk is gone.
-* **In Standalone Mode:** The boost is applied directly to the flow setpoint and added to the `predictive_short_cycle_total_adjusted` variable. It remains active for the entire compressor cycle and is reset by the `on_compressor_stop` script.
+* **Heating:** if the setpoint is **1.0 °C or more below** the feed, it is raised toward
+  `feed − 1.0 °C` — by **at most 0.5 °C** per adjustment, and only inside your
+  `minimum_heating_flow_temp` / `maximum_heating_flow_temp`.
+* **Cooling:** mirrored — a setpoint 1.0 °C or more **above** the feed is lowered toward
+  `feed + 1.0 °C`.
+
+This is the same rule Auto-Adaptive applies to its own calculation (step 7 above), so the
+two writers always agree on the value; the poll is just the faster of the two — 30 s
+against the Auto-Adaptive `update_interval_minutes`. There are no separate threshold or
+duration settings.
+
+* **In Auto-Adaptive Mode:** the poll runs regardless of the
+  **`Short-Cycle: Predictive Prevention`** switch. Nothing is remembered and nothing is
+  written back afterwards: Auto-Adaptive owns the flow target and recomputes it every
+  update.
+* **In Standalone Mode:** the switch enables the poll. The setpoint in force when the first
+  boost of a run happens is remembered; once the risk has passed the raised value is held
+  for the rest of the run instead of being pulled back mid-run, and the remembered value is
+  restored when the compressor stops, when the zone goes idle, or when the switch is turned
+  off. If ODIN owns the flow setpoint, the remembered value is dropped on the next poll —
+  ODIN commands always win.
+
+The **`Short-Cycle: Predictive Boost Active`** binary sensor reports the boost of the
+standalone mode; in Auto-Adaptive mode there is no boost state to report, so it stays off.
 
 ---
 
