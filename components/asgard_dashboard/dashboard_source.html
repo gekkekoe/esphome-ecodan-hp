@@ -1123,20 +1123,24 @@ header {
    <div class="ctrl-card" id="sys-firmware">
      <div class="section-title" onclick="toggleCard('sys-firmware')">Firmware <span class="collapse-icon">▼</span></div>
      <div class="ctrl-card-body">
-       <div style="font-family:var(--mono); font-size:11px; color:var(--text2); margin-bottom:8px;">Version: <span id="disp-ver">—</span></div>
+      <div style="font-family:var(--mono); font-size:11px; color:var(--text2); margin-bottom:8px;">Version: <span id="disp-ver">—</span><span id="fw-channel-badge" title="This device runs a pre-release build" style="display:none;margin-left:6px;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.4px;color:var(--warn);border:1px solid var(--warn);vertical-align:middle;">PRE-RELEASE</span></div>
        <div class="log-controls">
           <button class="log-btn" style="border-color: var(--accent); color: var(--accent);" onclick="triggerUpload()">Manual Firmware Upload</button>
           <button class="log-btn" id="btn-check-update" style="border-color: var(--accent); color: var(--accent);" onclick="checkForUpdate(this)">Check for Update</button>
          <button class="log-btn" style="border-color: var(--warn); color: var(--warn);" onclick="confirmReboot(this)" title="Restart the ESP module (settings are kept)">Reboot</button>
        </div>
-       <div id="ota-update-banner" style="display:none;background:var(--card2,#1e2535);border:1px solid var(--accent);border-radius:8px;padding:12px;margin:10px 0;">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-              <span id="ota-version-info" style="font-size:12px;color:var(--text);font-family:var(--mono);font-weight:600;"></span>
-              <button class="log-btn" id="btn-apply-update" style="border-color:#e07b39;color:#e07b39;font-weight:bold;" onclick="applyUpdate(this)">Download</button>
-          </div>
-          <div id="ota-release-notes" style="margin-top:12px; font-size:11px; color:var(--text2); font-family:var(--mono); line-height:1.5; border-top:1px solid var(--border); padding-top:10px; display:none;"></div>
-          <span id="ota-apply-status" style="display:block; margin-top:8px; font-size:11px; color:var(--text3); font-family:var(--mono);"></span>
-       </div>
+      <div id="ota-update-banner" style="display:none;background:var(--card2,#1e2535);border:1px solid var(--accent);border-radius:8px;padding:12px;margin:10px 0;">
+         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+             <span style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+               <span id="ota-prerelease-badge" title="The image on offer is a pre-release build" style="display:none;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.4px;color:#1a1e28;background:var(--warn);">PRE-RELEASE</span>
+               <span id="ota-version-info" style="font-size:12px;color:var(--text);font-family:var(--mono);font-weight:600;"></span>
+             </span>
+             <button class="log-btn" id="btn-apply-update" style="border-color:#e07b39;color:#e07b39;font-weight:bold;" onclick="applyUpdate(this)">Download</button>
+         </div>
+         <div id="ota-prerelease-warn" style="display:none;margin-top:8px;font-size:11px;color:var(--warn);font-family:var(--mono);line-height:1.45;">Pre-release: test software. Expect bugs and rough edges — install only if you are willing to debug them. Stable is the safe channel.</div>
+         <div id="ota-release-notes" style="margin-top:12px; font-size:11px; color:var(--text2); font-family:var(--mono); line-height:1.5; border-top:1px solid var(--border); padding-top:10px; display:none;"></div>
+         <span id="ota-apply-status" style="display:block; margin-top:8px; font-size:11px; color:var(--text3); font-family:var(--mono);"></span>
+      </div>
      </div>
    </div>
 
@@ -1399,29 +1403,47 @@ function getCurrencySymbol(bzn) {
 const GITHUB_OWNER = 'gekkekoe';
 const GITHUB_REPO  = 'esphome-ecodan-hp';
 
-function extractPrefix(version) {
-  if (!version) return null;
-  const match = version.match(/^(.+)-\d{4}-\d{2}-\d{2}\.\d+$/);
-  return match ? match[1] : null;
+function parseTag(tag) {
+  const m = String(tag || '').trim().match(/(\d{4}-\d{2}-\d{2})[-.](\d+)$/);
+  if (!m) return null;
+  return { date: m[1], build: +m[2] };
 }
 
-function parseVersionString(v) {
-  const match = v.match(/(\d{4}-\d{2}-\d{2})\.(\d+)$/);
-  if (!match) return { date: "", build: 0 };
-  return {
-    date: match[1],
-    build: parseInt(match[2], 10) // Parses .01 and .1 as 1
-  };
+function parseVersion(v) {
+  const m = String(v || '').trim().match(/^(.+)-(\d{4}-\d{2}-\d{2}[-.]\d+)$/);
+  if (!m) return null;
+  const stamp = parseTag(m[2]);
+  return stamp ? { variant: m[1], tag: m[2], date: stamp.date, build: stamp.build } : null;
 }
 
-function isNewer(current, latest) {
-  const cur = parseVersionString(current);
-  const lat = parseVersionString(latest);
-
-  if (lat.date > cur.date) return true;
-  if (lat.date < cur.date) return false;
-  
+function isNewer(cur, lat) {
+  if (lat.date !== cur.date) return lat.date > cur.date;
   return lat.build > cur.build;
+}
+
+const sameStamp = (a, b) => a.date === b.date && a.build === b.build;
+const otaAssetName = (variant, tag) => `${variant}-${tag}.ota.bin`;
+const isBetaChannel = (mine) => !mine || !!mine.prerelease;
+
+function pickOffer(current, releases, beta) {
+  const cur = parseVersion(current);
+  if (!cur) throw new Error(`Could not parse this firmware version: ${current}`);
+
+  const allowed = (Array.isArray(releases) ? releases : [])
+    .filter(r => r && r.tag_name && (beta || !r.prerelease))
+    .map(r => ({ release: r, stamp: parseTag(r.tag_name) }))
+    .filter(r => r.stamp && isNewer(cur, r.stamp))
+    .map(r => {
+      const name  = otaAssetName(cur.variant, r.release.tag_name);
+      const asset = (r.release.assets || []).find(a => a.name === name) || null;
+      return { release: r.release, stamp: r.stamp, name, asset };
+    });
+  if (!allowed.length) return null;
+  return allowed.reduce((best, r) => (isNewer(best.stamp, r.stamp) ? r : best));
+}
+
+function markPreRelease(el, on) {
+  if (el) el.style.display = on ? '' : 'none';
 }
 
 // Lightweight Markdown to HTML formatter for release notes
@@ -1434,6 +1456,14 @@ function formatReleaseNotes(body) {
         .replace(/`(.*?)`/g, '<span style="background:var(--bg);padding:2px 4px;border-radius:4px;color:var(--accent);">$1</span>') // Inline code
         .replace(/^- (.*)/gm, '&bull; $1') // List items
         .replace(/\n/g, '<br>'); // Line breaks
+}
+
+async function githubJSON(path, allowMissing = false) {
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}${path}`,
+                          { headers: { 'Accept': 'application/vnd.github+json' } });
+  if (res.status === 404 && allowMissing) return null;
+  if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+  return res.json();
 }
 
 async function checkForUpdate(btn = null) {
@@ -1453,6 +1483,16 @@ async function checkForUpdate(btn = null) {
     statusEl.textContent = '';
   }
 
+  markPreRelease(document.getElementById('ota-prerelease-badge'), false);
+  markPreRelease(document.getElementById('ota-prerelease-warn'), false);
+  bannerEl.style.borderColor = 'var(--accent)';
+  applyBtn.textContent = 'Download';
+  applyBtn.style.display = 'none';
+  applyBtn.dataset.downloadUrl   = '';
+  applyBtn.dataset.latestVersion = '';
+  applyBtn.dataset.assetName     = '';
+
+  let upToDate = false;
   try {
     const current = (latestState && latestState.latest_version) ? latestState.latest_version : null;
     if (!current) {
@@ -1460,52 +1500,65 @@ async function checkForUpdate(btn = null) {
         return; // Silent exit for background check
     }
 
-    const prefix = extractPrefix(current);
-    if (!prefix) {
-        if (btn) throw new Error(`Could not parse version prefix from: ${current}`);
+    const cur = parseVersion(current);
+    if (!cur) {
+        // The old 31-char snapshot buffer clipped long variant names: name the fix.
+        const clipped = /-\d{4}-\d{2}-\d{2}$/.test(current);
+        if (btn) throw new Error(clipped
+          ? `This build reports a truncated version (${current}) — flash once manually, then updates check again`
+          : `Could not parse this firmware version: ${current}`);
         return;
     }
 
-    const ghRes = await fetch(
-      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`,
-      { headers: { 'Accept': 'application/vnd.github+json' } }
-    );
-    if (!ghRes.ok) {
-        if (btn) throw new Error(`GitHub API error: ${ghRes.status}`);
-        return;
-    }
+    // /releases/latest is GitHub's newest non-prerelease; a beta also takes the first page, which holds both channels.
+    const mine   = await githubJSON(`/releases/tags/${encodeURIComponent(cur.tag)}`, true);
+    const beta   = isBetaChannel(mine);
+    const listed = beta ? await githubJSON('/releases?per_page=5')
+                        : [await githubJSON('/releases/latest', true)].filter(Boolean);
+    const offer  = pickOffer(current, listed, beta);
 
-    const release = await ghRes.json();
-    const tag     = release.tag_name; 
-    const expectedAsset = `${prefix}-${tag}.ota.bin`;
+    // The channel badge shows even when nothing is offered, and on the silent check too.
+    markPreRelease(document.getElementById('fw-channel-badge'), beta);
 
-    if (!isNewer(current, `${prefix}-${tag}`)) {
-      if (btn) {
-        btn.textContent = '✓ Up to date';
-        setTimeout(() => { btn.textContent = 'Check for Update'; btn.disabled = false; }, 3000);
-      }
+    if (!offer) {
+      upToDate = true;
+      infoEl.textContent = `Up to date — no newer ${beta ? 'pre-release' : 'release'} than ${current}`;
+      bannerEl.style.display = 'block';
       updateIcon.style.display = 'none';
+      if (btn) btn.textContent = '✓ Up to date';
       return;
     }
 
-    const asset = release.assets.find(a => a.name === expectedAsset);
-    if (!asset) {
-      const available = release.assets.map(a => a.name).join(', ');
-      if (btn) throw new Error(`Asset '${expectedAsset}' not found. Available: ${available}`);
+    const tag       = String(offer.release.tag_name || '').trim();
+    const target    = `${cur.variant}-${tag}`;
+    const targetPre = !!offer.release.prerelease;
+    markPreRelease(document.getElementById('ota-prerelease-badge'), targetPre);
+    bannerEl.style.borderColor = targetPre ? 'var(--warn)' : 'var(--accent)';
+    applyBtn.textContent = targetPre ? 'Download pre-release' : 'Download';
+
+    if (!offer.asset) {
+      // A newer release exists but was not built for this board/zone/language.
+      const named = (offer.release.assets || []).filter(a => a.name.startsWith(cur.variant + '-'));
+      const why = named.length
+        ? `it has ${named.slice(0, 3).map(a => a.name).join(', ')}`
+        : `none of its ${(offer.release.assets || []).length} assets is named for ${cur.variant}`;
+      if (btn) throw new Error(`Release ${tag} carries no ${offer.name} — ${why}`);
       return;
     }
 
     // Store data directly on the APPLY button so it's always accessible
-    applyBtn.dataset.downloadUrl   = asset.browser_download_url;
-    applyBtn.dataset.latestVersion = `${prefix}-${tag}`;
-    applyBtn.dataset.assetName     = expectedAsset;
+    applyBtn.dataset.downloadUrl   = offer.asset.browser_download_url;
+    applyBtn.dataset.latestVersion = target;
+    applyBtn.dataset.assetName     = offer.name;
 
     // Apply texts and release notes to UI
-    infoEl.textContent = `Update available: ${current} → ${prefix}-${tag}`;
-    notesEl.innerHTML = formatReleaseNotes(release.body);
+    markPreRelease(document.getElementById('ota-prerelease-warn'), targetPre);
+    infoEl.textContent = `Update available${targetPre ? ' (pre-release)' : ''}: ${current} → ${target}`;
+    notesEl.innerHTML = formatReleaseNotes(offer.release.body);
     notesEl.style.display = 'block';
     bannerEl.style.display = 'block';
-    
+    applyBtn.style.display = 'block';
+
     // Light up the notification icon in the header
     updateIcon.style.display = 'flex';
 
@@ -1516,8 +1569,8 @@ async function checkForUpdate(btn = null) {
     }
   } finally {
     if (btn) {
-      btn.textContent = 'Check for Update';
       btn.disabled = false;
+      if (!upToDate) btn.textContent = 'Check for Update';
     }
   }
 }
@@ -1557,7 +1610,7 @@ async function applyUpdate(btn) {
     document.getElementById('update-indicator').style.display = 'none';
     
     // Reset button state just in case
-    btn.textContent = 'Download Update';
+    btn.textContent = 'Download';
     btn.disabled = false;
     statusEl.textContent = '';
   }, 5000);

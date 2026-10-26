@@ -915,7 +915,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
 
   int w1 = snprintf(buf.data() + off, space_left(), "\"latest_version\":\"");
   safe_add_offset(w1);
-  for (int i = 0; i < 31 && snap.version[i] != '\0'; ++i) {
+  for (size_t i = 0; i < sizeof(snap.version) - 1 && snap.version[i] != '\0'; ++i) {
     char c = snap.version[i];
     if      (c == '"')  { append_safe_char('\\'); append_safe_char('"'); }
     else if (c == '\\') { append_safe_char('\\'); append_safe_char('\\'); }

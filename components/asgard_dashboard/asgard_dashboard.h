@@ -138,7 +138,7 @@ struct DashboardSnapshot {
   int sel_lockout_strategy{-1};
 
   // Text sensors (fixed-size to avoid heap allocation in snapshot)
-  char version[32]{0};
+  char version[40]{0};
   char local_ip[16]{0};
 
 
