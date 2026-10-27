@@ -40,12 +40,11 @@ void OdinForwarder::publish_telemetry() {
     doc[z.source_key] = kRoomSourceWords[(answered >= 0 && answered < 4) ? answered : 0];
   };
 
-  auto emit_zone_temps = [&](const char *feed_key, const char *return_key,
-                             float ecodan::Status::*feed, float ecodan::Status::*ret) {
-    if (!status.has_independent_zone_temps())
+  auto emit_zone_temps = [&](const char *feed_key, const char *return_key, ecodan::Zone zone) {
+    if (!status.has_independent_zone_temps() && !status.has_dallas_zone_temps(zone))
       return;
-    put_float(feed_key, status.*(feed));
-    put_float(return_key, status.*(ret));
+    put_float(feed_key, status.zone_feed_temperature(zone));
+    put_float(return_key, status.zone_return_temperature(zone));
   };
 
   put_float("outside_temp", status.OutsideTemperature);
@@ -57,8 +56,7 @@ void OdinForwarder::publish_telemetry() {
   put_float("hp_feed_temp", status.HpFeedTemperature);
   put_float("hp_return_temp", status.HpReturnTemperature);
 
-  emit_zone_temps("z1_feed_temp", "z1_return_temp", &ecodan::Status::Z1FeedTemperature,
-                  &ecodan::Status::Z1ReturnTemperature);
+  emit_zone_temps("z1_feed_temp", "z1_return_temp", ecodan::Zone::ZONE_1);
 
   // THW10 / mixing-tank temperature.
   put_float("mixing_tank_temp",
@@ -110,8 +108,7 @@ void OdinForwarder::publish_telemetry() {
     doc["zone2_enabled"] = true;
     emit_zone({"room_temp_z2", "zone2_setpoint", "room_temp_source_z2", optimizer::OptimizerZone::ZONE_2,
                &ecodan::Status::Zone2RoomTemperature, &ecodan::Status::Zone2SetTemperature});
-    emit_zone_temps("z2_feed_temp", "z2_return_temp", &ecodan::Status::Z2FeedTemperature,
-                    &ecodan::Status::Z2ReturnTemperature);
+    emit_zone_temps("z2_feed_temp", "z2_return_temp", ecodan::Zone::ZONE_2);
   }
 
   // Flow-temperature limits for ODIN-side clamping: a directly-connected pump

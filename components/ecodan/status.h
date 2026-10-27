@@ -40,6 +40,13 @@ namespace ecodan
         float Z1ReturnTemperature{NAN};
         float Z2FeedTemperature{NAN};
         float Z2ReturnTemperature{NAN};
+        // Zone temperatures measured outside the heat pump: a DS18x20 probe mapped
+        // to a zone's feed / return role on the Misc tab. NAN while nothing is
+        // mapped; while set they win over the bus values above.
+        float Z1DallasFeedTemperature{NAN};
+        float Z1DallasReturnTemperature{NAN};
+        float Z2DallasFeedTemperature{NAN};
+        float Z2DallasReturnTemperature{NAN};
         float MixingTankTemperature{NAN};
         float HpRefrigerantLiquidTemperature;
         float HpRefrigerantCondensingTemperature;
@@ -225,6 +232,29 @@ namespace ecodan
             return !std::isnan(feed) && !std::isnan(ret) &&
                 !(feed == 25.0f && ret == 25.0f) &&
                 feed != ret;
+        }
+
+        static float prefer_measured(float measured, float bus) {
+            return std::isnan(measured) ? bus : measured;
+        }
+
+        float z1_feed_temperature() const { return prefer_measured(Z1DallasFeedTemperature, Z1FeedTemperature); }
+        float z1_return_temperature() const { return prefer_measured(Z1DallasReturnTemperature, Z1ReturnTemperature); }
+        float z2_feed_temperature() const { return prefer_measured(Z2DallasFeedTemperature, Z2FeedTemperature); }
+        float z2_return_temperature() const { return prefer_measured(Z2DallasReturnTemperature, Z2ReturnTemperature); }
+
+        float zone_feed_temperature(Zone zone) const {
+            return zone == Zone::ZONE_2 ? z2_feed_temperature() : z1_feed_temperature();
+        }
+
+        float zone_return_temperature(Zone zone) const {
+            return zone == Zone::ZONE_2 ? z2_return_temperature() : z1_return_temperature();
+        }
+
+        bool has_dallas_zone_temps(Zone zone) const {
+            return zone == Zone::ZONE_2
+                ? (!std::isnan(Z2DallasFeedTemperature) || !std::isnan(Z2DallasReturnTemperature))
+                : (!std::isnan(Z1DallasFeedTemperature) || !std::isnan(Z1DallasReturnTemperature));
         }
 
         bool has_zone1_temps() const {

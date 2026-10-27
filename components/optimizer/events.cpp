@@ -369,11 +369,11 @@ namespace esphome
                 if (!std::isnan(status.HpReturnTemperature))
                     state_before_defrost.locked_return_temp_ = status.HpReturnTemperature;
 
-                if (!std::isnan(status.Z1ReturnTemperature))
-                    state_before_defrost.locked_return_temp_z1_ = status.Z1ReturnTemperature;
+                if (!std::isnan(status.z1_return_temperature()))
+                    state_before_defrost.locked_return_temp_z1_ = status.z1_return_temperature();
 
-                if (!std::isnan(status.Z2ReturnTemperature))
-                    state_before_defrost.locked_return_temp_z2_ = status.Z2ReturnTemperature;
+                if (!std::isnan(status.z2_return_temperature()))
+                    state_before_defrost.locked_return_temp_z2_ = status.z2_return_temperature();
 
                 this->state_before_defrost_ = state_before_defrost;
                 ESP_LOGD(OPTIMIZER_TAG, "Defrost started. Locking states: outside temp: %.1f, hp return: %.1f, z1 return: %.1f, z2 return: %.1f for adaptive calculations.", 

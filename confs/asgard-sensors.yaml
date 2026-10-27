@@ -232,6 +232,8 @@ sensor:
       if (idx == 5) return id(ow_raw_4).state;
       if (idx == 6) return id(ow_raw_5).state;
       return NAN;
+    on_value:
+      - lambda: 'id(ecodan_instance).set_dallas_zone_feed_temperature(esphome::ecodan::Zone::ZONE_1, x);'
 
   - platform: template
     name: "DS18x20 Zone 1 Return temp"
@@ -250,6 +252,8 @@ sensor:
       if (idx == 5) return id(ow_raw_4).state;
       if (idx == 6) return id(ow_raw_5).state;
       return NAN;
+    on_value:
+      - lambda: 'id(ecodan_instance).set_dallas_zone_return_temperature(esphome::ecodan::Zone::ZONE_1, x);'
 
   - platform: template
     name: "DS18x20 Zone 2 Feed temp"
@@ -268,6 +272,8 @@ sensor:
       if (idx == 5) return id(ow_raw_4).state;
       if (idx == 6) return id(ow_raw_5).state;
       return NAN;
+    on_value:
+      - lambda: 'id(ecodan_instance).set_dallas_zone_feed_temperature(esphome::ecodan::Zone::ZONE_2, x);'
 
   - platform: template
     name: "DS18x20 Zone 2 Return temp"
@@ -286,6 +292,8 @@ sensor:
       if (idx == 5) return id(ow_raw_4).state;
       if (idx == 6) return id(ow_raw_5).state;
       return NAN;
+    on_value:
+      - lambda: 'id(ecodan_instance).set_dallas_zone_return_temperature(esphome::ecodan::Zone::ZONE_2, x);'
 
   # --- DELTA T ---
   - platform: template
