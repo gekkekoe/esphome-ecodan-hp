@@ -118,6 +118,24 @@ namespace ecodan
     {
         static auto last_response = std::chrono::steady_clock::now();
 
+#if defined(USE_MDNS) && defined(USE_ESP32)
+        static bool mdns_alias_applied = false;
+        if (!mdns_alias_applied) {
+            mdns_alias_applied = true;
+            static constexpr size_t MAC_SUFFIX_LEN = 7;  // '-' plus 6 hex characters
+            auto name = App.get_name();
+            if (App.is_name_add_mac_suffix_enabled() && name.size() > MAC_SUFFIX_LEN) {
+                size_t len = name.size() - MAC_SUFFIX_LEN;
+                char alias[64];
+                if (len < sizeof(alias)) {
+                    memcpy(alias, name.c_str(), len);
+                    alias[len] = '\0';
+                    mdns_hostname_set(alias);
+                }
+            }
+        }
+#endif
+
         static Message received_message;
         // Get messages from queue
         while (xQueueReceive(this->rx_message_queue_, &received_message, (TickType_t)0) == pdTRUE) {

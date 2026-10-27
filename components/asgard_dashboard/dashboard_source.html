@@ -298,6 +298,10 @@ header {
   #view-system .ctrl-card.collapsed .ctrl-card-body, #view-misc .ctrl-card.collapsed .ctrl-card-body { display: none; }
   #view-system > .ctrl-card, #view-misc > .ctrl-card { margin-bottom: 14px; }
   #view-system > .ctrl-card:last-child, #view-misc > .ctrl-card:last-child { margin-bottom: 0; }
+  #card-dallas #ow-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; align-items: start; }
+  #card-dallas #ow-grid .sub-card { margin-top: 0; }
+  @media (max-width: 860px) { #card-dallas #ow-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { #card-dallas #ow-grid { grid-template-columns: 1fr; } }
   /* Odin MQTT / Settings Backup / Data Backup share one row; stretch keeps the
      cards the same height even when one is collapsed (odin-next parity). */
   #view-system .sys-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; align-items: stretch; margin-bottom: 14px; }
@@ -1055,6 +1059,7 @@ header {
         <span style="color: var(--text3);">Zone 2</span><span>Sensor <span id="ow-sum-z2">—</span> · Feed <span id="ow-sum-z2f">—</span> · Return <span id="ow-sum-z2r">—</span></span>
       </div>
 
+      <div id="ow-grid">
       <div class="sub-card" id="sub-ow-0" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
         <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-ow-0')">
           DS18x20 Sensor 0
@@ -1245,6 +1250,7 @@ header {
           </div>
           <button class="send-btn" onclick="sendOwOffset(5, this)" style="margin-bottom: 0; margin-top: 12px;">Apply Offset</button>
         </div>
+      </div>
       </div>
 
     </div>

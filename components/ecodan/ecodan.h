@@ -21,6 +21,11 @@
 #include "freertos/queue.h" 
 #include "freertos/semphr.h"
 
+#if defined(USE_MDNS) && defined(USE_ESP32)
+#include <cstring>
+#include <mdns.h>
+#endif
+
 #include "proto.h"
 #include "status.h"
 
