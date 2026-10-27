@@ -53,8 +53,8 @@ void OdinForwarder::publish_telemetry() {
   put_float("dhw_temp", status.get_tank_temperature());
   put_float("dhw_temp_bottom", status.get_lower_tank_temperature());
 
-  put_float("hp_feed_temp", status.HpFeedTemperature);
-  put_float("hp_return_temp", status.HpReturnTemperature);
+  put_float("hp_feed_temp", status.primary_feed_temperature());
+  put_float("hp_return_temp", status.primary_return_temperature());
 
   emit_zone_temps("z1_feed_temp", "z1_return_temp", ecodan::Zone::ZONE_1);
 

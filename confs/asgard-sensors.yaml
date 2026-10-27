@@ -145,6 +145,7 @@ sensor:
         - globals.set:
             id: gl_temp_feed
             value: !lambda 'return x;'
+        - lambda: 'id(ecodan_instance).set_dallas_hp_feed_temperature(x);'
 
   - platform: template
     name: "DS18x20 Return Temp"
@@ -168,6 +169,7 @@ sensor:
         - globals.set:
             id: gl_ow_temp_return
             value: !lambda 'return x;'
+        - lambda: 'id(ecodan_instance).set_dallas_hp_return_temperature(x);'
 
   - platform: template
     name: "DS18x20 Virtual Thermostat input z1"

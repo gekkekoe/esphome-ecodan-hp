@@ -366,8 +366,8 @@ namespace esphome
                 if (!std::isnan(status.OutsideTemperature))
                     state_before_defrost.locked_outside_temp_ = status.OutsideTemperature;
 
-                if (!std::isnan(status.HpReturnTemperature))
-                    state_before_defrost.locked_return_temp_ = status.HpReturnTemperature;
+                if (!std::isnan(status.primary_return_temperature()))
+                    state_before_defrost.locked_return_temp_ = status.primary_return_temperature();
 
                 if (!std::isnan(status.z1_return_temperature()))
                     state_before_defrost.locked_return_temp_z1_ = status.z1_return_temperature();

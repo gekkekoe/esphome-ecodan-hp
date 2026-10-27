@@ -100,6 +100,8 @@ namespace ecodan
             if (zone == esphome::ecodan::Zone::ZONE_2) status.Z2DallasReturnTemperature = value;
             else status.Z1DallasReturnTemperature = value;
         }
+        void set_dallas_hp_feed_temperature(float value) { status.HpDallasFeedTemperature = value; }
+        void set_dallas_hp_return_temperature(float value) { status.HpDallasReturnTemperature = value; }
         const Status& get_status() const { return status; }
         std::optional<CONTROLLER_FLAG> get_svc_state_before_lockout() { return serverControlFlagBeforeLockout; }
 

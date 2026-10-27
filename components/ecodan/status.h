@@ -36,6 +36,9 @@ namespace ecodan
         float OutsideTemperature{NAN};
         float HpFeedTemperature{NAN};
         float HpReturnTemperature{NAN};
+
+        float HpDallasFeedTemperature{NAN};
+        float HpDallasReturnTemperature{NAN};
         float Z1FeedTemperature{NAN};
         float Z1ReturnTemperature{NAN};
         float Z2FeedTemperature{NAN};
@@ -243,6 +246,15 @@ namespace ecodan
         float z2_feed_temperature() const { return prefer_measured(Z2DallasFeedTemperature, Z2FeedTemperature); }
         float z2_return_temperature() const { return prefer_measured(Z2DallasReturnTemperature, Z2ReturnTemperature); }
 
+        float primary_feed_temperature() const { return prefer_measured(HpDallasFeedTemperature, HpFeedTemperature); }
+        float primary_return_temperature() const { return prefer_measured(HpDallasReturnTemperature, HpReturnTemperature); }
+
+        // Both ends or neither: a delta subtracts one sensor from the other, so a
+        // single mapped probe must not mix into the bus thermistor's reading.
+        bool has_dallas_hp_temps() const {
+            return !std::isnan(HpDallasFeedTemperature) && !std::isnan(HpDallasReturnTemperature);
+        }
+
         float zone_feed_temperature(Zone zone) const {
             return zone == Zone::ZONE_2 ? z2_feed_temperature() : z1_feed_temperature();
         }
@@ -423,16 +435,19 @@ Temp C	specific heat (J/Kg. K)
         }
 
         void update_output_power_estimation(float specific_heat_constant_override = NAN) {
-            if (!std::isnan(HpFeedTemperature) && !std::isnan(HpReturnTemperature) && FlowRate > 0) {
-                float specific_heat_constant = std::isnan(specific_heat_constant_override) ? estimate_water_constant(HpFeedTemperature) : specific_heat_constant_override;
+            float feed = has_dallas_hp_temps() ? HpDallasFeedTemperature : HpFeedTemperature;
+            float ret = has_dallas_hp_temps() ? HpDallasReturnTemperature : HpReturnTemperature;
+
+            if (!std::isnan(feed) && !std::isnan(ret) && FlowRate > 0) {
+                float specific_heat_constant = std::isnan(specific_heat_constant_override) ? estimate_water_constant(feed) : specific_heat_constant_override;
 
                 float delta_t = 0.0f;
 
                 if (this->Operation == ecodan::Status::OperationMode::COOL_ON) {
-                    delta_t = HpReturnTemperature - HpFeedTemperature;
-                } 
+                    delta_t = ret - feed;
+                }
                 else {
-                    delta_t = HpFeedTemperature - HpReturnTemperature;
+                    delta_t = feed - ret;
                 }
 
                 if (delta_t < 0.0f)

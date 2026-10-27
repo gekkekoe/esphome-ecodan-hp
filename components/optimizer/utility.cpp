@@ -73,7 +73,7 @@ namespace esphome
             auto ecodan_zone = (zone == OptimizerZone::ZONE_2) ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1;
             if (status.has_zone_temps(ecodan_zone))
                 return status.zone_feed_temperature(ecodan_zone);
-            return status.HpFeedTemperature;
+            return status.primary_feed_temperature();
         }
 
         float Optimizer::get_return_temp(OptimizerZone zone) {
@@ -81,7 +81,7 @@ namespace esphome
             auto ecodan_zone = (zone == OptimizerZone::ZONE_2) ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1;
             if (status.has_zone_temps(ecodan_zone))
                 return status.zone_return_temperature(ecodan_zone);
-            return status.HpReturnTemperature;
+            return status.primary_return_temperature();
         }
 
 

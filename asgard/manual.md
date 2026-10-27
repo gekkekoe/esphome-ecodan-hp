@@ -624,11 +624,11 @@ The **What the roles read** block lists what each role currently resolves to, gr
 
 | Group | Roles |
 |-------|-------|
-| **Heat pump** | **Feed** and **Return** are the water-side temperatures; their difference is published as the `DS18x20 Delta T` sensor. |
+| **Heat pump** | **Feed** and **Return** are the water-side temperatures; their difference is published as the `DS18x20 Delta T` sensor, and once mapped they replace the heat pump's own feed / return reading (see below). |
 | **Zone 1** | **Sensor** is the Asgard Virtual Thermostat input for zone 1 (`DS18x20 Virtual Thermostat input z1`), so mapping a probe there is what makes it that zone's room sensor; **Feed** / **Return** are the temperatures you clamp on that zone's own pipes. |
 | **Zone 2** | the same three for zone 2. |
 
-Once a zone's **Feed** / **Return** probe is mapped it wins wherever that zone temperature is used: Auto-Adaptive, the flow-setpoint guards and the defrost lock read the probe instead of the heat pump's thermistor. Whether Asgard works from zone temperatures at all stays what the controller says (SW2-7 or a mixing tank with zone thermistors); on a system without them it keeps using the heat-pump feed / return, while the probe still reports on Home Assistant and to ODIN. Unmapping hands the reading back to the bus on the next cycle. Every probe stays available under its own name (`DS18x20 Sensor N`), mapped or not, and the heat pump's own `z1_feed_temp` / `z2_return_temp` entities keep reporting what the bus says.
+A mapped **Feed** / **Return** probe wins wherever that temperature is used: Auto-Adaptive, the flow-setpoint guards, the defrost lock and the reported temperatures read the probe instead of the heat pump's thermistor. The heat-pump pair swaps over as a whole — the output-power estimate subtracts one sensor from the other, so a lone mapped probe is never mixed with the bus thermistor. Whether Asgard works from *zone* temperatures at all stays what the controller says (SW2-7, or a mixing tank with zone thermistors): on a system without them it keeps using the heat-pump feed / return and the zone probe only reports. Unmapping hands every reading back to the bus on the next cycle. Every probe stays available under its own name (`DS18x20 Sensor N`), mapped or not, and the heat pump's own entities (`hp_feed_temp`, `z1_feed_temp`, …) keep reporting what the bus says.
 
 > [!NOTE]
 > An offset belongs to the probe, not to the role: move the probe to another role and the correction travels with it. Offsets take effect on the next probe read (5 s) and survive a reboot; both the offsets and the mapping are part of the **Settings Backup** on the System tab (see [Section 17](#17-system-tab)).
