@@ -38,6 +38,20 @@ struct DashboardAction {
   bool is_string;
 };
 
+static constexpr int OW_PROBE_COUNT = 6;
+
+enum OwRole {
+  OW_FEED = 0,
+  OW_RETURN,
+  OW_Z1,
+  OW_Z2,
+  OW_Z1_FEED,
+  OW_Z1_RETURN,
+  OW_Z2_FEED,
+  OW_Z2_RETURN,
+  OW_ROLE_COUNT
+};
+
 struct DashboardSnapshot {
   // Boolean sensors
   bool ui_use_room_z1{false};
@@ -137,6 +151,11 @@ struct DashboardSnapshot {
   int sel_lockout_duration{-1};
   int sel_lockout_strategy{-1};
 
+  float ow_sensor[OW_PROBE_COUNT]{NAN, NAN, NAN, NAN, NAN, NAN};
+  NumData ow_offset[OW_PROBE_COUNT];
+  int ow_map[OW_ROLE_COUNT]{-1, -1, -1, -1, -1, -1, -1, -1};
+  float ow_role[OW_ROLE_COUNT]{NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN};
+
   // Text sensors (fixed-size to avoid heap allocation in snapshot)
   char version[40]{0};
   char local_ip[16]{0};
@@ -209,6 +228,35 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   // Flow temp targets
   void set_z1_flow_temp_target(sensor::Sensor *s)             { z1_flow_temp_target_ = s; }
   void set_z2_flow_temp_target(sensor::Sensor *s)             { z2_flow_temp_target_ = s; }
+
+  void set_ow_sensor_0(sensor::Sensor *s)                     { ow_sensor_[0] = s; }
+  void set_ow_sensor_1(sensor::Sensor *s)                     { ow_sensor_[1] = s; }
+  void set_ow_sensor_2(sensor::Sensor *s)                     { ow_sensor_[2] = s; }
+  void set_ow_sensor_3(sensor::Sensor *s)                     { ow_sensor_[3] = s; }
+  void set_ow_sensor_4(sensor::Sensor *s)                     { ow_sensor_[4] = s; }
+  void set_ow_sensor_5(sensor::Sensor *s)                     { ow_sensor_[5] = s; }
+  void set_ow_offset_0(number::Number *n)                     { ow_offset_[0] = n; }
+  void set_ow_offset_1(number::Number *n)                     { ow_offset_[1] = n; }
+  void set_ow_offset_2(number::Number *n)                     { ow_offset_[2] = n; }
+  void set_ow_offset_3(number::Number *n)                     { ow_offset_[3] = n; }
+  void set_ow_offset_4(number::Number *n)                     { ow_offset_[4] = n; }
+  void set_ow_offset_5(number::Number *n)                     { ow_offset_[5] = n; }
+  void set_ow_sel_feed(select::Select *s)                     { ow_sel_[OW_FEED] = s; }
+  void set_ow_sel_return(select::Select *s)                   { ow_sel_[OW_RETURN] = s; }
+  void set_ow_sel_z1(select::Select *s)                       { ow_sel_[OW_Z1] = s; }
+  void set_ow_sel_z2(select::Select *s)                       { ow_sel_[OW_Z2] = s; }
+  void set_ow_sel_z1_feed(select::Select *s)                  { ow_sel_[OW_Z1_FEED] = s; }
+  void set_ow_sel_z1_return(select::Select *s)                { ow_sel_[OW_Z1_RETURN] = s; }
+  void set_ow_sel_z2_feed(select::Select *s)                  { ow_sel_[OW_Z2_FEED] = s; }
+  void set_ow_sel_z2_return(select::Select *s)                { ow_sel_[OW_Z2_RETURN] = s; }
+  void set_ow_role_feed(sensor::Sensor *s)                    { ow_role_[OW_FEED] = s; }
+  void set_ow_role_return(sensor::Sensor *s)                  { ow_role_[OW_RETURN] = s; }
+  void set_ow_role_z1(sensor::Sensor *s)                      { ow_role_[OW_Z1] = s; }
+  void set_ow_role_z2(sensor::Sensor *s)                      { ow_role_[OW_Z2] = s; }
+  void set_ow_role_z1_feed(sensor::Sensor *s)                 { ow_role_[OW_Z1_FEED] = s; }
+  void set_ow_role_z1_return(sensor::Sensor *s)               { ow_role_[OW_Z1_RETURN] = s; }
+  void set_ow_role_z2_feed(sensor::Sensor *s)                 { ow_role_[OW_Z2_FEED] = s; }
+  void set_ow_role_z2_return(sensor::Sensor *s)               { ow_role_[OW_Z2_RETURN] = s; }
 
   // Binary sensors
   void set_status_compressor(binary_sensor::BinarySensor *b)  { status_compressor_ = b; }
@@ -493,6 +541,11 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   number::Number *num_raw_cool_runtime_hours_z2_{nullptr};
   number::Number *num_raw_cool_avg_room_temp_z2_{nullptr};
   number::Number *num_legionella_dhw_setpoint_{nullptr};
+
+  sensor::Sensor *ow_sensor_[OW_PROBE_COUNT]{nullptr};
+  number::Number *ow_offset_[OW_PROBE_COUNT]{nullptr};
+  select::Select *ow_sel_[OW_ROLE_COUNT]{nullptr};
+  sensor::Sensor *ow_role_[OW_ROLE_COUNT]{nullptr};
 
   // Buttons
   button::Button *short_cycle_mitigation_button_{nullptr};

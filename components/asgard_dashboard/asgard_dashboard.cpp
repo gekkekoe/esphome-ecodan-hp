@@ -22,6 +22,21 @@ namespace asgard_dashboard {
 
 static const char *const TAG = "asgard_dashboard";
 
+static const char *const OW_MAP_KEYS[OW_ROLE_COUNT] = {
+    "ow_map_feed", "ow_map_return", "ow_map_z1", "ow_map_z2",
+    "ow_map_z1_feed", "ow_map_z1_return", "ow_map_z2_feed", "ow_map_z2_return"};
+static const char *const OW_ROLE_KEYS[OW_ROLE_COUNT] = {
+    "ow_role_feed", "ow_role_return", "ow_role_z1", "ow_role_z2",
+    "ow_role_z1_feed", "ow_role_z1_return", "ow_role_z2_feed", "ow_role_z2_return"};
+
+static const char *const OW_SENSOR_KEYS[OW_PROBE_COUNT] = {"ow_sensor_0", "ow_sensor_1", "ow_sensor_2",
+                                                           "ow_sensor_3", "ow_sensor_4", "ow_sensor_5"};
+static const char *const OW_OFFSET_KEYS[OW_PROBE_COUNT] = {"ow_offset_0", "ow_offset_1", "ow_offset_2",
+                                                           "ow_offset_3", "ow_offset_4", "ow_offset_5"};
+static const char *const OW_OFFSET_LIM_KEYS[OW_PROBE_COUNT] = {"ow_offset_0_lim", "ow_offset_1_lim",
+                                                               "ow_offset_2_lim", "ow_offset_3_lim",
+                                                               "ow_offset_4_lim", "ow_offset_5_lim"};
+
 //#define TEST_TS
 time_t EcodanDashboard::timestamp() const {
 #ifndef TEST_TS
@@ -381,6 +396,9 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "temp_sensor_source_z2") { doSelect(sel_temp_source_z2_); return; } 
   if (key == "lockout_duration")      { doSelect(lockout_duration_); return; }
   if (key == "lockout_strategy")      { doSelect(lockout_strategy_); return; }
+  for (int i = 0; i < OW_ROLE_COUNT; i++) {
+    if (key == OW_MAP_KEYS[i]) { doSelect(ow_sel_[i]); return; }
+  }
 
   auto doNumber = [&](number::Number *n) {
     if (!n) { ESP_LOGW(TAG, "Number not configured: key=%s", key.c_str()); return; }
@@ -403,6 +421,10 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "thermostat_hysteresis_z1")    { doNumber(num_hysteresis_z1_);    return; }
   if (key == "thermostat_hysteresis_z2")    { doNumber(num_hysteresis_z2_);    return; }
   if (key == "legionella_dhw_setpoint") { doNumber(num_legionella_dhw_setpoint_); return; }
+  if (key == "ow_offset_0") { doNumber(ow_offset_[0]); return; }
+  if (key == "ow_offset_1") { doNumber(ow_offset_[1]); return; }
+  if (key == "ow_offset_2") { doNumber(ow_offset_[2]); return; }
+  if (key == "ow_offset_3") { doNumber(ow_offset_[3]); return; }
 
 
 
@@ -650,6 +672,13 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.sel_operating_mode_z2 = get_sel(sel_operating_mode_z2_);
   current_snapshot_.sel_temp_source_z1 = get_sel(sel_temp_source_z1_);
   current_snapshot_.sel_temp_source_z2 = get_sel(sel_temp_source_z2_);
+
+  for (int i = 0; i < OW_PROBE_COUNT; i++) current_snapshot_.ow_sensor[i] = get_f(ow_sensor_[i]);
+  for (int i = 0; i < OW_PROBE_COUNT; i++) get_n(ow_offset_[i], current_snapshot_.ow_offset[i]);
+  for (int i = 0; i < OW_ROLE_COUNT; i++) {
+    current_snapshot_.ow_map[i]  = get_sel(ow_sel_[i]);
+    current_snapshot_.ow_role[i] = get_f(ow_role_[i]);
+  }
 
   // Safely copy string into fixed char array
   if (version_ && version_->has_state()) {
@@ -946,6 +975,16 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_txt("mqtt_user",           snap.txt_mqtt_user,           31);
   p_txt("mqtt_password",       snap.txt_mqtt_password,       31);
   p_txt("mqtt_topic_prefix",   snap.txt_mqtt_topic_prefix,   31);
+
+  for (int i = 0; i < OW_PROBE_COUNT; i++) {
+    p_f(OW_SENSOR_KEYS[i], snap.ow_sensor[i]);
+    p_n(OW_OFFSET_KEYS[i], snap.ow_offset[i].val);
+    p_lim(OW_OFFSET_LIM_KEYS[i], snap.ow_offset[i]);
+  }
+  for (int i = 0; i < OW_ROLE_COUNT; i++) {
+    p_sel(OW_MAP_KEYS[i], snap.ow_map[i]);
+    p_f(OW_ROLE_KEYS[i], snap.ow_role[i]);
+  }
 
   int w6 = snprintf(buf.data() + off, space_left(), "\"local_ip\":\"%s\",\"_uptime_ms\":%lu}", snap.local_ip, (unsigned long)millis());
   safe_add_offset(w6);

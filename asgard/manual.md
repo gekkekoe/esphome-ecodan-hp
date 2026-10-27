@@ -23,14 +23,15 @@
 12. [Settings — Auto Adaptive](#12-settings--auto-adaptive)
 13. [Settings — DHW & Legionella](#13-settings--dhw--legionella)
 14. [Settings — Advanced Control](#14-settings--advanced-control)
-15. [Solver Tab (ODIN Module)](#15-solver-tab-odin-module)
-16. [System Tab](#16-system-tab)
-17. [Firmware — Variants, OTA & USB Recovery](#17-firmware--variants-ota--usb-recovery)
-18. [REST API & Dashboard Endpoints](#18-rest-api--dashboard-endpoints)
-19. [Home Assistant (Optional)](#19-home-assistant-optional)
-20. [Quick-Start Checklist](#20-quick-start-checklist)
-21. [Troubleshooting](#21-troubleshooting)
-22. [Legal Disclaimer](#22-legal-disclaimer)
+15. [Misc Tab — Power, Modes & 1-Wire Sensors](#15-misc-tab--power-modes--1-wire-sensors)
+16. [Solver Tab (ODIN Module)](#16-solver-tab-odin-module)
+17. [System Tab](#17-system-tab)
+18. [Firmware — Variants, OTA & USB Recovery](#18-firmware--variants-ota--usb-recovery)
+19. [REST API & Dashboard Endpoints](#19-rest-api--dashboard-endpoints)
+20. [Home Assistant (Optional)](#20-home-assistant-optional)
+21. [Quick-Start Checklist](#21-quick-start-checklist)
+22. [Troubleshooting](#22-troubleshooting)
+23. [Legal Disclaimer](#23-legal-disclaimer)
 
 ---
 
@@ -44,7 +45,7 @@
 - **A 2.4 GHz Wi-Fi network** and a phone or laptop with a browser to complete initial setup
 - Basic knowledge of your installation: single or two zones, heating system type (underfloor heating / radiators), DHW tank size
 
-> **Note:** Asgard is a local device — it requires no cloud subscription or external account. All control, logging, and the dashboard run on the device itself. Home Assistant integration is optional (see [Section 19](#19-home-assistant-optional)).
+> **Note:** Asgard is a local device — it requires no cloud subscription or external account. All control, logging, and the dashboard run on the device itself. Home Assistant integration is optional (see [Section 20](#20-home-assistant-optional)).
 
 ---
 
@@ -323,13 +324,14 @@ Identical layout to Step 4 for the second zone (Room Temp Source + Temp Sensor S
 
 ## 9. Navigating the Dashboard
 
-The standalone dashboard is served by the device itself at `http://ecodan-heatpump.local/dashboard`. It has four tabs:
+The standalone dashboard is served by the device itself at `http://ecodan-heatpump.local/dashboard`. It has five tabs:
 
 | Tab | Purpose |
 |-----|---------|
 | **Monitor** | Live charts — system status timeline, temperatures, compressor frequency, condenser performance, COP stats |
 | **Settings** | All configuration: zones, Auto Adaptive, DHW, Advanced Control |
-| **Solver** | ODIN integration — hidden by default, enabled in Advanced Control (see [Section 15](#15-solver-tab-odin-module)) |
+| **Misc** | Power / Stand-by, Service Codes and Holiday Mode, plus 1-Wire / DS18x20 probe readings, calibration offsets and role mapping (see [Section 15](#15-misc-tab--power-modes--1-wire-sensors)) |
+| **Solver** | ODIN integration — hidden by default, enabled in Advanced Control (see [Section 16](#16-solver-tab-odin-module)) |
 | **System** | Settings backup, firmware updates (OTA), system logs |
 
 ### Header
@@ -511,7 +513,7 @@ Auto Adaptive is Asgard's built-in flow-temperature algorithm: it continuously c
 | Option | Description |
 |--------|-------------|
 | **Room Thermostat** | The Mitsubishi MRC or wireless thermostat (or CNRF project). |
-| **Home Assistant / REST API** | Reads the temperature from a value pushed via the REST API or a Home Assistant blueprint. Use this when you did not wire R1/R2. See [Section 18](#18-rest-api--dashboard-endpoints). |
+| **Home Assistant / REST API** | Reads the temperature from a value pushed via the REST API or a Home Assistant blueprint. Use this when you did not wire R1/R2. See [Section 19](#19-rest-api--dashboard-endpoints). |
 | **Asgard Virtual Thermostat** | Uses the Virtual Thermostat relay (R1/R2) as the control signal and its room temperature as the source. Requires R1/R2 to be wired. |
 
 ### Settings Z2
@@ -558,21 +560,13 @@ When enabled, Asgard handles the DHW setpoint automatically while a Legionella P
 
 ## 14. Settings — Advanced Control
 
-The **ADVANCED CONTROL** card contains five collapsible sub-sections.
-
-### Power & Modes
-
-| Control | Description |
-|---------|-------------|
-| **Power** | Power On / Stand-by for the whole heat pump. |
-| **Service Codes** | Enables service-codes mode to read additional diagnostic sensors (compressor starts, pipe temperatures, super/subcool, fan speed). **Turn OFF before manually reading codes from your MRC display** and turn back ON when done. Always return to the MRC main screen before toggling — service codes will not work otherwise. |
-| **Holiday Mode** | Enables Holiday Mode on the heat pump, overriding normal scheduling. |
+The **ADVANCED CONTROL** card contains four collapsible sub-sections.
 
 ### Odin Solver
 
 | Control | Description |
 |---------|-------------|
-| **Show Solver Tab** | Shows or hides the **Solver** navigation tab in this dashboard. Enable it when you use ODIN (see [Section 15](#15-solver-tab-odin-module)). |
+| **Show Solver Tab** | Shows or hides the **Solver** navigation tab in this dashboard. Enable it when you use ODIN (see [Section 16](#16-solver-tab-odin-module)). |
 
 ### Server Control
 
@@ -606,7 +600,44 @@ Protects the compressor from very short run cycles:
 
 ---
 
-## 15. Solver Tab (ODIN Module)
+## 15. Misc Tab — Power, Modes & 1-Wire Sensors
+
+The **Misc** tab holds the heat-pump switches that don't belong to a zone, plus the **1-Wire / DS18x20 temperature probes** on the Asgard 1-Wire bus — **Sensor 0 … Sensor 5**, one sub-card each, reading in the sub-card header. A probe that isn't on the bus reads **—**; the tab is always in the navigation bar.
+
+### Power & Modes
+
+| Control | Description |
+|---------|-------------|
+| **Power** | Power On / Stand-by for the whole heat pump. |
+| **Service Codes** | Enables service-codes mode to read additional diagnostic sensors (compressor starts, pipe temperatures, super/subcool, fan speed). **Turn OFF before manually reading codes from your MRC display** and turn back ON when done. Always return to the MRC main screen before toggling — service codes will not work otherwise. |
+| **Holiday Mode** | Enables Holiday Mode on the heat pump, overriding normal scheduling. |
+
+### 1-Wire Temperature Probes
+
+| Control | Description |
+|---------|-------------|
+| **Header value** | What the probe reads right now, calibration offset already included — the same number everything else uses. |
+| **Role** | What this probe is used for: **Feed**, **Return**, **Zone 1 sensor**, **Zone 2 sensor**, **Zone 1 feed**, **Zone 1 return**, **Zone 2 feed**, **Zone 2 return**, or **Unmapped**. Applies immediately. A probe serves one role only, so picking a new role releases it from the old one, and a role another probe already holds is greyed out in the list. |
+| **Offset (°C)** | Calibration offset for that probe, −10.0 … +10.0 °C in 0.1 °C steps; press **Apply Offset** in that probe's sub-card to store it. |
+
+The **What the roles read** block lists what each role currently resolves to, grouped by what it belongs to:
+
+| Group | Roles |
+|-------|-------|
+| **Heat pump** | **Feed** and **Return** are the water-side temperatures; their difference is published as the `DS18x20 Delta T` sensor. |
+| **Zone 1** | **Sensor** is the Asgard Virtual Thermostat input for zone 1 (`DS18x20 Virtual Thermostat input z1`), so mapping a probe there is what makes it that zone's room sensor; **Feed** / **Return** are the temperatures you clamp on that zone's own pipes. |
+| **Zone 2** | the same three for zone 2. |
+
+A zone's **Feed** / **Return** roles are monitoring only — the heat pump drives its zones through its own zone outputs — and each role is published as its own Home Assistant entity (`DS18x20 Zone 1 Feed temp`, `DS18x20 Zone 2 Return temp`, …). Every probe also stays available under its own name (`DS18x20 Sensor N`), mapped or not.
+
+> [!NOTE]
+> An offset belongs to the probe, not to the role: move the probe to another role and the correction travels with it. Offsets take effect on the next probe read (5 s) and survive a reboot; both the offsets and the mapping are part of the **Settings Backup** on the System tab (see [Section 17](#17-system-tab)).
+>
+> Sensor numbers follow the probe's position on the bus (the first six devices, ordered by ROM code), not where the wire is plugged in. After adding or swapping a probe, check the role mapping again — the devices after the one you changed can shift by one.
+
+---
+
+## 16. Solver Tab (ODIN Module)
 
 > **Note:** This section will be moved to Odin in the future.
 
@@ -614,11 +645,11 @@ The **Solver** tab is where you connect Asgard to an **ODIN** (Dynamic Cost Opti
 
 > **To show the Solver tab:** go to **Settings → ADVANCED CONTROL → Odin Solver** and enable **Show Solver Tab**. The tab will appear in the navigation bar.
 
-### 15.1 Time View
+### 16.1 Time View
 
 Like the Monitor tab, the Solver tab can show **Live** data or a **Calendar** view (date + 1/2/3 day range) from the cached ODIN data (last 72 hours, stored on the device).
 
-### 15.2 Odin Settings
+### 16.2 Odin Settings
 
 | Control | Description |
 |---------|-------------|
@@ -629,7 +660,7 @@ Like the Monitor tab, the Solver tab can show **Live** data or a **Calendar** vi
 | **ODIN DHW Trigger** | **Regular** — ODIN schedules DHW using ECO mode. **Forced** — faster, but at the cost of higher consumption. |
 | **Run Optimization** | Triggers an immediate solve so you can preview how setting changes affect the plan *(preview only — it is replaced by the next regular hourly refresh)*. The **From hour** field (0–23) overrides the start hour; leave it blank to use the current hour. |
 
-### 15.3 Physics Data (Daily Averages)
+### 16.3 Physics Data (Daily Averages)
 
 This section shows the values Asgard sends to ODIN with every solve request. They are derived automatically from your heat pump's real measured data over the past day *(they are only auto-populated after a heating or cooling session has actually taken place)*. You can override any value manually and click **Apply Physics Data** to force specific values for testing — Asgard uses your overrides until the next automatic daily update.
 
@@ -664,7 +695,7 @@ This section shows the values Asgard sends to ODIN with every solve request. The
 | **Battery SoC** | Current state of charge of a home battery, in kWh. ODIN uses this to recommend which hours to discharge it to cover heat pump electricity costs (recommendation only — it does not control your battery). Set **0** if you have no battery. |
 | **Battery Max Discharge** | Maximum discharge rate of your battery in kW (0.5–15). ODIN will never assign more than this to any single hour. |
 
-### 15.4 Solver Charts
+### 16.4 Solver Charts
 
 The bottom of the tab shows the day's plan and reality side by side (24 h, or the selected calendar range):
 
@@ -688,13 +719,13 @@ The bottom of the tab shows the day's plan and reality side by side (24 h, or th
 
 ---
 
-## 16. System Tab
+## 17. System Tab
 
 The **System** tab holds device maintenance: settings backup, firmware, and logs.
 
 ### Settings Backup
 
-Saves **every** Settings and Solver tab value (numbers, switches, sliders, selects) to a JSON file — or restores them from a previously saved file.
+Saves **every** Settings, Misc and Solver tab value (numbers, switches, sliders, selects) to a JSON file — or restores them from a previously saved file.
 
 - **Save Settings** — downloads the current configuration as JSON (a snapshot with the device's firmware version and timestamp).
 - **Restore Settings** — pick a JSON file; all matching values are re-applied to the device.
@@ -722,7 +753,7 @@ A live, scrolling log of all Asgard activity, streamed over the local network. C
 
 ---
 
-## 17. Firmware — Variants, OTA & USB Recovery
+## 18. Firmware — Variants, OTA & USB Recovery
 
 ### Language & Zone Variants
 
@@ -748,7 +779,7 @@ If the device is unresponsive over Wi-Fi, flash it via USB-C:
 
 ---
 
-## 18. REST API & Dashboard Endpoints
+## 19. REST API & Dashboard Endpoints
 
 Asgard exposes two families of HTTP endpoints: the standard **ESPHome REST API** (all entities) and the **dashboard endpoints** used by the web UI.
 
@@ -786,7 +817,7 @@ This is how the **Home Assistant / REST API** room-temperature source works (see
 
 ---
 
-## 19. Home Assistant (Optional)
+## 20. Home Assistant (Optional)
 
 Home Assistant integration is optional — Asgard runs fully standalone without it.
 
@@ -798,7 +829,7 @@ If you also add the Asgard dashboard layout to Home Assistant, follow the [dashb
 
 ---
 
-## 20. Quick-Start Checklist
+## 21. Quick-Start Checklist
 
 Use this checklist after first-time setup to confirm everything is configured correctly:
 
@@ -819,7 +850,7 @@ Use this checklist after first-time setup to confirm everything is configured co
 
 ---
 
-## 21. Troubleshooting
+## 22. Troubleshooting
 
 **The LED does not light up:**
 - Check that the cable is firmly seated in the CN105 port.
@@ -850,7 +881,7 @@ Use this checklist after first-time setup to confirm everything is configured co
 
 ---
 
-## 22. Legal Disclaimer
+## 23. Legal Disclaimer
 
 This project is open-source and independent. It is not affiliated with, endorsed by, or associated with Mitsubishi Electric. The use of the trade names "Mitsubishi" or "Ecodan" is for identification purposes only.
 

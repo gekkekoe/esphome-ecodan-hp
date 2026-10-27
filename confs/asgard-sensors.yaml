@@ -28,6 +28,25 @@ globals:
     type: int
     restore_value: true
     initial_value: '0'
+  - id: idx_z1_feed
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: idx_z1_return
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: idx_z2_feed
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: idx_z2_return
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: ow_self_role
+    type: int
+    initial_value: '0'
 
 one_wire:
   - platform: gpio
@@ -84,6 +103,26 @@ sensor:
       - offset: !lambda |-
           return isnan(id(ow_off_3).state) ? 0.0f : id(ow_off_3).state;
 
+  - platform: dallas_temp
+    index: 4
+    id: ow_raw_4
+    name: "DS18x20 Sensor 4"
+    update_interval: 5s
+    resolution: 12
+    filters:
+      - offset: !lambda |-
+          return isnan(id(ow_off_4).state) ? 0.0f : id(ow_off_4).state;
+
+  - platform: dallas_temp
+    index: 5
+    id: ow_raw_5
+    name: "DS18x20 Sensor 5"
+    update_interval: 5s
+    resolution: 12
+    filters:
+      - offset: !lambda |-
+          return isnan(id(ow_off_5).state) ? 0.0f : id(ow_off_5).state;
+
   - platform: template
     name: "DS18x20 Feed temp"
     id: ow_temp_feed
@@ -98,6 +137,8 @@ sensor:
       if (idx == 2) return id(ow_raw_1).state;
       if (idx == 3) return id(ow_raw_2).state;
       if (idx == 4) return id(ow_raw_3).state;
+      if (idx == 5) return id(ow_raw_4).state;
+      if (idx == 6) return id(ow_raw_5).state;
       return NAN;
     on_value:
       then:
@@ -119,6 +160,8 @@ sensor:
       if (idx == 2) return id(ow_raw_1).state;
       if (idx == 3) return id(ow_raw_2).state;
       if (idx == 4) return id(ow_raw_3).state;
+      if (idx == 5) return id(ow_raw_4).state;
+      if (idx == 6) return id(ow_raw_5).state;
       return NAN;
     on_value:
       then:
@@ -140,6 +183,8 @@ sensor:
       if (idx == 2) return id(ow_raw_1).state;
       if (idx == 3) return id(ow_raw_2).state;
       if (idx == 4) return id(ow_raw_3).state;
+      if (idx == 5) return id(ow_raw_4).state;
+      if (idx == 6) return id(ow_raw_5).state;
       return NAN;
     on_value:
       then:
@@ -161,12 +206,86 @@ sensor:
       if (idx == 2) return id(ow_raw_1).state;
       if (idx == 3) return id(ow_raw_2).state;
       if (idx == 4) return id(ow_raw_3).state;
+      if (idx == 5) return id(ow_raw_4).state;
+      if (idx == 6) return id(ow_raw_5).state;
       return NAN;
     on_value:
       then:
         - globals.set:
             id: gl_temp_z2
             value: !lambda 'return x;'
+
+  - platform: template
+    name: "DS18x20 Zone 1 Feed temp"
+    id: ow_temp_z1_feed
+    unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
+    accuracy_decimals: 1
+    update_interval: 3s
+    lambda: |-
+      int idx = id(idx_z1_feed);
+      if (idx == 1) return id(ow_raw_0).state;
+      if (idx == 2) return id(ow_raw_1).state;
+      if (idx == 3) return id(ow_raw_2).state;
+      if (idx == 4) return id(ow_raw_3).state;
+      if (idx == 5) return id(ow_raw_4).state;
+      if (idx == 6) return id(ow_raw_5).state;
+      return NAN;
+
+  - platform: template
+    name: "DS18x20 Zone 1 Return temp"
+    id: ow_temp_z1_return
+    unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
+    accuracy_decimals: 1
+    update_interval: 3s
+    lambda: |-
+      int idx = id(idx_z1_return);
+      if (idx == 1) return id(ow_raw_0).state;
+      if (idx == 2) return id(ow_raw_1).state;
+      if (idx == 3) return id(ow_raw_2).state;
+      if (idx == 4) return id(ow_raw_3).state;
+      if (idx == 5) return id(ow_raw_4).state;
+      if (idx == 6) return id(ow_raw_5).state;
+      return NAN;
+
+  - platform: template
+    name: "DS18x20 Zone 2 Feed temp"
+    id: ow_temp_z2_feed
+    unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
+    accuracy_decimals: 1
+    update_interval: 3s
+    lambda: |-
+      int idx = id(idx_z2_feed);
+      if (idx == 1) return id(ow_raw_0).state;
+      if (idx == 2) return id(ow_raw_1).state;
+      if (idx == 3) return id(ow_raw_2).state;
+      if (idx == 4) return id(ow_raw_3).state;
+      if (idx == 5) return id(ow_raw_4).state;
+      if (idx == 6) return id(ow_raw_5).state;
+      return NAN;
+
+  - platform: template
+    name: "DS18x20 Zone 2 Return temp"
+    id: ow_temp_z2_return
+    unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
+    accuracy_decimals: 1
+    update_interval: 3s
+    lambda: |-
+      int idx = id(idx_z2_return);
+      if (idx == 1) return id(ow_raw_0).state;
+      if (idx == 2) return id(ow_raw_1).state;
+      if (idx == 3) return id(ow_raw_2).state;
+      if (idx == 4) return id(ow_raw_3).state;
+      if (idx == 5) return id(ow_raw_4).state;
+      if (idx == 6) return id(ow_raw_5).state;
+      return NAN;
 
   # --- DELTA T ---
   - platform: template
@@ -183,10 +302,11 @@ sensor:
 
 # --- CALIBRATION OFFSETS ---
 # One offset per physical probe, applied on the probe's own sensor: whichever role
-# the selects below give it (feed, return, zone 1, zone 2) the correction travels
-# with it, and Delta T and every thermostat input follow from these numbers. The
-# raw "DS18x20 Sensor N" entity shows the corrected value too, so what HA displays
-# is what everything else in this file uses. Applied on the next probe read (5 s).
+# the selects below give it — heat pump feed / return, a zone's room sensor, or a
+# zone's feed / return — the correction travels with it, and Delta T and every
+# thermostat input follow from these numbers. The raw "DS18x20 Sensor N" entity
+# shows the corrected value too, so what HA displays is what everything else in
+# this file uses. Applied on the next probe read (5 s).
 number:
   - platform: template
     id: ow_off_0
@@ -241,6 +361,32 @@ number:
     step: 0.1
 
   - platform: template
+    id: ow_off_4
+    name: "DS18x20 Sensor 4 Offset"
+    unit_of_measurement: "°C"
+    entity_category: config
+    mode: box
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: -10.0
+    max_value: 10.0
+    step: 0.1
+
+  - platform: template
+    id: ow_off_5
+    name: "DS18x20 Sensor 5 Offset"
+    unit_of_measurement: "°C"
+    entity_category: config
+    mode: box
+    optimistic: true
+    restore_value: true
+    initial_value: 0.0
+    min_value: -10.0
+    max_value: 10.0
+    step: 0.1
+
+  - platform: template
     id: odin_inherit_max_age
     name: "Auto-Adaptive: Max Age of ODIN Room Temperature"
     optimistic: true
@@ -253,115 +399,108 @@ number:
     icon: "mdi:clock-fast"
     entity_category: "config"
 
-select:  
-  # --- FEED SELECT ---
+select:
   - platform: template
     name: "DS18x20 Select Feed Sensor"
     id: ow_sel_feed
     optimistic: true
     restore_value: true
     entity_category: config
-    options: ["None", "DS18x20 - 0", "DS18x20 - 1", "DS18x20 - 2", "DS18x20 - 3"]
+    options: &ow_options ["None", "DS18x20 - 0", "DS18x20 - 1", "DS18x20 - 2", "DS18x20 - 3", "DS18x20 - 4", "DS18x20 - 5"]
     set_action:
-      - lambda: |-
-          int new_idx = id(ow_sel_feed).index_of(x).value_or(0);
-          id(idx_feed) = new_idx;
-
+      - lambda: 'id(ow_self_role) = 0;'
+      - &ow_apply
+        lambda: |-
+          int self = id(ow_self_role);
+          esphome::select::Select *sels[] = { id(ow_sel_feed), id(ow_sel_return),
+                                              id(ow_sel_z1), id(ow_sel_z2),
+                                              id(ow_sel_z1_feed), id(ow_sel_z1_return),
+                                              id(ow_sel_z2_feed), id(ow_sel_z2_return) };
+          int *idxs[] = { &id(idx_feed), &id(idx_return), &id(idx_z1), &id(idx_z2),
+                          &id(idx_z1_feed), &id(idx_z1_return),
+                          &id(idx_z2_feed), &id(idx_z2_return) };
+          int new_idx = sels[self]->index_of(x).value_or(0);
+          *idxs[self] = new_idx;
           if (new_idx == 0) return;
-
-          if (id(idx_return) == new_idx) { 
-            id(idx_return) = 0; 
-            id(ow_sel_return).publish_state("None"); 
-          }
-          if (id(idx_z1) == new_idx) { 
-            id(idx_z1) = 0; 
-            id(ow_sel_z1).publish_state("None"); 
-          }
-          if (id(idx_z2) == new_idx) { 
-            id(idx_z2) = 0; 
-            id(ow_sel_z2).publish_state("None"); 
+          for (int i = 0; i < 8; i++) {
+            if (i == self || *idxs[i] != new_idx) continue;
+            *idxs[i] = 0;
+            sels[i]->publish_state("None");
           }
 
-  # --- RETURN SELECT ---
   - platform: template
     name: "DS18x20 Select Return Sensor"
     id: ow_sel_return
     optimistic: true
     restore_value: true
     entity_category: config
-    options: ["None", "DS18x20 - 0", "DS18x20 - 1", "DS18x20 - 2", "DS18x20 - 3"]
+    options: *ow_options
     set_action:
-      - lambda: |-
-          int new_idx = id(ow_sel_return).index_of(x).value_or(0);
-          id(idx_return) = new_idx;
+      - lambda: 'id(ow_self_role) = 1;'
+      - *ow_apply
 
-          if (new_idx == 0) return;
-
-          if (id(idx_feed) == new_idx) { 
-            id(idx_feed) = 0; 
-            id(ow_sel_feed).publish_state("None"); 
-          }
-          if (id(idx_z1) == new_idx) { 
-            id(idx_z1) = 0; 
-            id(ow_sel_z1).publish_state("None"); 
-          }
-          if (id(idx_z2) == new_idx) { 
-            id(idx_z2) = 0; 
-            id(ow_sel_z2).publish_state("None"); 
-          }
-
-  # --- Virtual Thermostat ZONE 1 SELECT ---
   - platform: template
     name: "DS18x20 Select z1 Sensor"
     id: ow_sel_z1
     optimistic: true
     restore_value: true
     entity_category: config
-    options: ["None", "DS18x20 - 0", "DS18x20 - 1", "DS18x20 - 2", "DS18x20 - 3"]
+    options: *ow_options
     set_action:
-      - lambda: |-
-          int new_idx = id(ow_sel_z1).index_of(x).value_or(0);
-          id(idx_z1) = new_idx;
+      - lambda: 'id(ow_self_role) = 2;'
+      - *ow_apply
 
-          if (new_idx == 0) return;
-
-          if (id(idx_feed) == new_idx) { 
-            id(idx_feed) = 0; 
-            id(ow_sel_feed).publish_state("None"); 
-          }
-          if (id(idx_return) == new_idx) { 
-            id(idx_return) = 0; 
-            id(ow_sel_return).publish_state("None"); 
-          }
-          if (id(idx_z2) == new_idx) { 
-            id(idx_z2) = 0; 
-            id(ow_sel_z2).publish_state("None"); 
-          }
-
-  # --- Virtual Thermostat ZONE 2 SELECT ---
   - platform: template
     name: "DS18x20 Select z2 Sensor"
     id: ow_sel_z2
     optimistic: true
     restore_value: true
     entity_category: config
-    options: ["None", "DS18x20 - 0", "DS18x20 - 1", "DS18x20 - 2", "DS18x20 - 3"]
+    options: *ow_options
     set_action:
-      - lambda: |-
-          int new_idx = id(ow_sel_z2).index_of(x).value_or(0);
-          id(idx_z2) = new_idx;
+      - lambda: 'id(ow_self_role) = 3;'
+      - *ow_apply
 
-          if (new_idx == 0) return;
+  - platform: template
+    name: "DS18x20 Select Zone 1 Feed Sensor"
+    id: ow_sel_z1_feed
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    options: *ow_options
+    set_action:
+      - lambda: 'id(ow_self_role) = 4;'
+      - *ow_apply
 
-          if (id(idx_feed) == new_idx) { 
-            id(idx_feed) = 0; 
-            id(ow_sel_feed).publish_state("None"); 
-          }
-          if (id(idx_return) == new_idx) { 
-            id(idx_return) = 0; 
-            id(ow_sel_return).publish_state("None"); 
-          }
-          if (id(idx_z1) == new_idx) { 
-            id(idx_z1) = 0; 
-            id(ow_sel_z1).publish_state("None"); 
-          }
+  - platform: template
+    name: "DS18x20 Select Zone 1 Return Sensor"
+    id: ow_sel_z1_return
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    options: *ow_options
+    set_action:
+      - lambda: 'id(ow_self_role) = 5;'
+      - *ow_apply
+
+  - platform: template
+    name: "DS18x20 Select Zone 2 Feed Sensor"
+    id: ow_sel_z2_feed
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    options: *ow_options
+    set_action:
+      - lambda: 'id(ow_self_role) = 6;'
+      - *ow_apply
+
+  - platform: template
+    name: "DS18x20 Select Zone 2 Return Sensor"
+    id: ow_sel_z2_return
+    optimistic: true
+    restore_value: true
+    entity_category: config
+    options: *ow_options
+    set_action:
+      - lambda: 'id(ow_self_role) = 7;'
+      - *ow_apply

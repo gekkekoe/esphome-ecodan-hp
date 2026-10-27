@@ -134,6 +134,7 @@ header {
     text-align-last: right; /* This forces Safari/Chrome to respect the alignment */
   }
   .ctrl-select:focus { border-color: var(--accent); }
+  .ctrl-select option:disabled { color: var(--text3); }
   
   .stepper { display: flex; align-items: center; gap: 5px; }
   .step-btn { width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
@@ -291,12 +292,12 @@ header {
   .sub-card.collapsed .collapse-icon { transform: rotate(-90deg); }
   .sub-card.collapsed .sub-card-body { display: none; }
 
-  #view-system .section-title { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-  #view-system .section-title:hover { color: var(--text); }
-  #view-system .ctrl-card.collapsed .collapse-icon { transform: rotate(-90deg); }
-  #view-system .ctrl-card.collapsed .ctrl-card-body { display: none; }
-  #view-system > .ctrl-card { margin-bottom: 14px; }
-  #view-system > .ctrl-card:last-child { margin-bottom: 0; }
+  #view-system .section-title, #view-misc .section-title { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  #view-system .section-title:hover, #view-misc .section-title:hover { color: var(--text); }
+  #view-system .ctrl-card.collapsed .collapse-icon, #view-misc .ctrl-card.collapsed .collapse-icon { transform: rotate(-90deg); }
+  #view-system .ctrl-card.collapsed .ctrl-card-body, #view-misc .ctrl-card.collapsed .ctrl-card-body { display: none; }
+  #view-system > .ctrl-card, #view-misc > .ctrl-card { margin-bottom: 14px; }
+  #view-system > .ctrl-card:last-child, #view-misc > .ctrl-card:last-child { margin-bottom: 0; }
   /* Odin MQTT / Settings Backup / Data Backup share one row; stretch keeps the
      cards the same height even when one is collapsed (odin-next parity). */
   #view-system .sys-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; align-items: stretch; margin-bottom: 14px; }
@@ -451,6 +452,7 @@ header {
   <nav class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('monitor', this)">Monitor</button>
     <button class="tab-btn" onclick="switchTab('settings', this)">Settings</button>
+    <button class="tab-btn" id="tab-misc" onclick="switchTab('misc', this)">Misc</button>
     <button class="tab-btn" onclick="switchTab('system', this)">System</button>
   </nav>
 </div>
@@ -903,34 +905,7 @@ header {
     <div class="ctrl-card" id="card-advanced-control">
       <div class="section-title">ADVANCED CONTROL</div>
 
-      <div class="sub-card" id="sub-power" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
-        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-power')">Power & Modes <span class="collapse-icon">▼</span></div>
-        <div class="sub-card-body">
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Power<span class="tip-icon">?</span><span class="tip-box">Power On / Stand-by</span></span>
-            <label class="toggle-wrap">
-              <input type="checkbox" id="sw-power-mode" onchange="sendSwitch('power_mode', this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div class="ctrl-row">
-            <span class="ctrl-label param-label">Service Codes<span class="tip-icon">?</span><span class="tip-box">Enable service codes mode to see additional diagnostic sensors (compressor starts, pipe temperatures, super/subcool, fan speed). <b>Turn OFF before manually reading codes from your MRC display.</b> Turn back ON when done. Always return to the MRC main screen before toggling — service codes will not work otherwise.</span></span>
-            <label class="toggle-wrap">
-              <input type="checkbox" id="sw-service-codes" onchange="sendSwitch('service_codes_enabled', this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
-            <span class="ctrl-label param-label">Holiday Mode<span class="tip-icon">?</span><span class="tip-box">Enables Holiday Mode on the heat pump, overriding normal scheduling.</span></span>
-            <label class="toggle-wrap">
-              <input type="checkbox" id="sw-holiday-mode" onchange="sendSwitch('holiday_mode', this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div class="sub-card" id="sub-server" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+      <div class="sub-card" id="sub-server" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--bg2);">
         <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-server')">Server Control <span class="collapse-icon">▼</span></div>
         <div class="sub-card-body">
           <div class="ctrl-row">
@@ -1040,6 +1015,240 @@ header {
       </div>
     </div>
 </div>
+</div>
+
+<div id="view-misc" class="view-section">
+  <div class="ctrl-card" id="card-power">
+    <div class="section-title" onclick="toggleCard('card-power')">Power & Modes <span class="collapse-icon">▼</span></div>
+    <div class="ctrl-card-body">
+      <div class="ctrl-row">
+        <span class="ctrl-label param-label">Power<span class="tip-icon">?</span><span class="tip-box">Power On / Stand-by</span></span>
+        <label class="toggle-wrap">
+          <input type="checkbox" id="sw-power-mode" onchange="sendSwitch('power_mode', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label param-label">Service Codes<span class="tip-icon">?</span><span class="tip-box">Enable service codes mode to see additional diagnostic sensors (compressor starts, pipe temperatures, super/subcool, fan speed). <b>Turn OFF before manually reading codes from your MRC display.</b> Turn back ON when done. Always return to the MRC main screen before toggling — service codes will not work otherwise.</span></span>
+        <label class="toggle-wrap">
+          <input type="checkbox" id="sw-service-codes" onchange="sendSwitch('service_codes_enabled', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+        <span class="ctrl-label param-label">Holiday Mode<span class="tip-icon">?</span><span class="tip-box">Enables Holiday Mode on the heat pump, overriding normal scheduling.</span></span>
+        <label class="toggle-wrap">
+          <input type="checkbox" id="sw-holiday-mode" onchange="sendSwitch('holiday_mode', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="ctrl-card" id="card-dallas">
+    <div class="section-title" onclick="toggleCard('card-dallas')">1-Wire Temperature Probes <span class="collapse-icon">▼</span></div>
+    <div class="ctrl-card-body">
+      <div class="sub-label" style="margin-top: 0; padding-bottom: 5px;">What the roles read</div>
+      <div style="font-family: var(--mono); font-size: 11px; color: var(--text2); display: grid; grid-template-columns: max-content 1fr; gap: 3px 14px;">
+        <span style="color: var(--text3);">Heat pump</span><span>Feed <span id="ow-sum-feed">—</span> · Return <span id="ow-sum-return">—</span> · ΔT <span id="ow-sum-delta">—</span></span>
+        <span style="color: var(--text3);">Zone 1</span><span>Sensor <span id="ow-sum-z1">—</span> · Feed <span id="ow-sum-z1f">—</span> · Return <span id="ow-sum-z1r">—</span></span>
+        <span style="color: var(--text3);">Zone 2</span><span>Sensor <span id="ow-sum-z2">—</span> · Feed <span id="ow-sum-z2f">—</span> · Return <span id="ow-sum-z2r">—</span></span>
+      </div>
+
+      <div class="sub-card" id="sub-ow-0" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-ow-0')">
+          DS18x20 Sensor 0
+          <span style="display: flex; align-items: center; gap: 8px;"><span class="ctrl-value" id="ow-v-0">—</span><span class="collapse-icon">▼</span></span>
+        </div>
+        <div class="sub-card-body">
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Role<span class="tip-icon">?</span><span class="tip-box">One role per probe: picking a role releases the probe from the one it was on, and a role another probe already holds is greyed out. Unmapped leaves it a plain temperature sensor.</span></span>
+            <select class="ctrl-select" id="ow-role-0" onchange="sendOwRole(0, this)">
+              <option value="">Unmapped</option>
+              <option value="ow_map_feed">Feed</option>
+              <option value="ow_map_return">Return</option>
+              <option value="ow_map_z1">Zone 1 sensor</option>
+              <option value="ow_map_z2">Zone 2 sensor</option>
+              <option value="ow_map_z1_feed">Zone 1 feed</option>
+              <option value="ow_map_z1_return">Zone 1 return</option>
+              <option value="ow_map_z2_feed">Zone 2 feed</option>
+              <option value="ow_map_z2_return">Zone 2 return</option>
+            </select>
+          </div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+            <span class="ctrl-label param-label">Offset (°C)<span class="tip-icon">?</span><span class="tip-box">−10.0 … +10.0 °C in 0.1 °C steps. The probe applies it itself and stores it, so every role and Delta T built on it follows.</span></span>
+            <div class="stepper">
+              <button class="step-btn" onclick="step('ow-off-0', -0.1)">−</button>
+              <div class="step-val" id="ow-off-0-val">—</div>
+              <button class="step-btn" onclick="step('ow-off-0', +0.1)">+</button>
+            </div>
+          </div>
+          <button class="send-btn" onclick="sendOwOffset(0, this)" style="margin-bottom: 0; margin-top: 12px;">Apply Offset</button>
+        </div>
+      </div>
+
+      <div class="sub-card" id="sub-ow-1" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-ow-1')">
+          DS18x20 Sensor 1
+          <span style="display: flex; align-items: center; gap: 8px;"><span class="ctrl-value" id="ow-v-1">—</span><span class="collapse-icon">▼</span></span>
+        </div>
+        <div class="sub-card-body">
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Role<span class="tip-icon">?</span><span class="tip-box">One role per probe: picking a role releases the probe from the one it was on, and a role another probe already holds is greyed out. Unmapped leaves it a plain temperature sensor.</span></span>
+            <select class="ctrl-select" id="ow-role-1" onchange="sendOwRole(1, this)">
+              <option value="">Unmapped</option>
+              <option value="ow_map_feed">Feed</option>
+              <option value="ow_map_return">Return</option>
+              <option value="ow_map_z1">Zone 1 sensor</option>
+              <option value="ow_map_z2">Zone 2 sensor</option>
+              <option value="ow_map_z1_feed">Zone 1 feed</option>
+              <option value="ow_map_z1_return">Zone 1 return</option>
+              <option value="ow_map_z2_feed">Zone 2 feed</option>
+              <option value="ow_map_z2_return">Zone 2 return</option>
+            </select>
+          </div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+            <span class="ctrl-label param-label">Offset (°C)<span class="tip-icon">?</span><span class="tip-box">−10.0 … +10.0 °C in 0.1 °C steps. The probe applies it itself and stores it, so every role and Delta T built on it follows.</span></span>
+            <div class="stepper">
+              <button class="step-btn" onclick="step('ow-off-1', -0.1)">−</button>
+              <div class="step-val" id="ow-off-1-val">—</div>
+              <button class="step-btn" onclick="step('ow-off-1', +0.1)">+</button>
+            </div>
+          </div>
+          <button class="send-btn" onclick="sendOwOffset(1, this)" style="margin-bottom: 0; margin-top: 12px;">Apply Offset</button>
+        </div>
+      </div>
+
+      <div class="sub-card" id="sub-ow-2" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-ow-2')">
+          DS18x20 Sensor 2
+          <span style="display: flex; align-items: center; gap: 8px;"><span class="ctrl-value" id="ow-v-2">—</span><span class="collapse-icon">▼</span></span>
+        </div>
+        <div class="sub-card-body">
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Role<span class="tip-icon">?</span><span class="tip-box">One role per probe: picking a role releases the probe from the one it was on, and a role another probe already holds is greyed out. Unmapped leaves it a plain temperature sensor.</span></span>
+            <select class="ctrl-select" id="ow-role-2" onchange="sendOwRole(2, this)">
+              <option value="">Unmapped</option>
+              <option value="ow_map_feed">Feed</option>
+              <option value="ow_map_return">Return</option>
+              <option value="ow_map_z1">Zone 1 sensor</option>
+              <option value="ow_map_z2">Zone 2 sensor</option>
+              <option value="ow_map_z1_feed">Zone 1 feed</option>
+              <option value="ow_map_z1_return">Zone 1 return</option>
+              <option value="ow_map_z2_feed">Zone 2 feed</option>
+              <option value="ow_map_z2_return">Zone 2 return</option>
+            </select>
+          </div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+            <span class="ctrl-label param-label">Offset (°C)<span class="tip-icon">?</span><span class="tip-box">−10.0 … +10.0 °C in 0.1 °C steps. The probe applies it itself and stores it, so every role and Delta T built on it follows.</span></span>
+            <div class="stepper">
+              <button class="step-btn" onclick="step('ow-off-2', -0.1)">−</button>
+              <div class="step-val" id="ow-off-2-val">—</div>
+              <button class="step-btn" onclick="step('ow-off-2', +0.1)">+</button>
+            </div>
+          </div>
+          <button class="send-btn" onclick="sendOwOffset(2, this)" style="margin-bottom: 0; margin-top: 12px;">Apply Offset</button>
+        </div>
+      </div>
+
+      <div class="sub-card" id="sub-ow-3" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-ow-3')">
+          DS18x20 Sensor 3
+          <span style="display: flex; align-items: center; gap: 8px;"><span class="ctrl-value" id="ow-v-3">—</span><span class="collapse-icon">▼</span></span>
+        </div>
+        <div class="sub-card-body">
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Role<span class="tip-icon">?</span><span class="tip-box">One role per probe: picking a role releases the probe from the one it was on, and a role another probe already holds is greyed out. Unmapped leaves it a plain temperature sensor.</span></span>
+            <select class="ctrl-select" id="ow-role-3" onchange="sendOwRole(3, this)">
+              <option value="">Unmapped</option>
+              <option value="ow_map_feed">Feed</option>
+              <option value="ow_map_return">Return</option>
+              <option value="ow_map_z1">Zone 1 sensor</option>
+              <option value="ow_map_z2">Zone 2 sensor</option>
+              <option value="ow_map_z1_feed">Zone 1 feed</option>
+              <option value="ow_map_z1_return">Zone 1 return</option>
+              <option value="ow_map_z2_feed">Zone 2 feed</option>
+              <option value="ow_map_z2_return">Zone 2 return</option>
+            </select>
+          </div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+            <span class="ctrl-label param-label">Offset (°C)<span class="tip-icon">?</span><span class="tip-box">−10.0 … +10.0 °C in 0.1 °C steps. The probe applies it itself and stores it, so every role and Delta T built on it follows.</span></span>
+            <div class="stepper">
+              <button class="step-btn" onclick="step('ow-off-3', -0.1)">−</button>
+              <div class="step-val" id="ow-off-3-val">—</div>
+              <button class="step-btn" onclick="step('ow-off-3', +0.1)">+</button>
+            </div>
+          </div>
+          <button class="send-btn" onclick="sendOwOffset(3, this)" style="margin-bottom: 0; margin-top: 12px;">Apply Offset</button>
+        </div>
+      </div>
+
+      <div class="sub-card" id="sub-ow-4" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-ow-4')">
+          DS18x20 Sensor 4
+          <span style="display: flex; align-items: center; gap: 8px;"><span class="ctrl-value" id="ow-v-4">—</span><span class="collapse-icon">▼</span></span>
+        </div>
+        <div class="sub-card-body">
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Role<span class="tip-icon">?</span><span class="tip-box">One role per probe: picking a role releases the probe from the one it was on, and a role another probe already holds is greyed out. Unmapped leaves it a plain temperature sensor.</span></span>
+            <select class="ctrl-select" id="ow-role-4" onchange="sendOwRole(4, this)">
+              <option value="">Unmapped</option>
+              <option value="ow_map_feed">Feed</option>
+              <option value="ow_map_return">Return</option>
+              <option value="ow_map_z1">Zone 1 sensor</option>
+              <option value="ow_map_z2">Zone 2 sensor</option>
+              <option value="ow_map_z1_feed">Zone 1 feed</option>
+              <option value="ow_map_z1_return">Zone 1 return</option>
+              <option value="ow_map_z2_feed">Zone 2 feed</option>
+              <option value="ow_map_z2_return">Zone 2 return</option>
+            </select>
+          </div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+            <span class="ctrl-label param-label">Offset (°C)<span class="tip-icon">?</span><span class="tip-box">−10.0 … +10.0 °C in 0.1 °C steps. The probe applies it itself and stores it, so every role and Delta T built on it follows.</span></span>
+            <div class="stepper">
+              <button class="step-btn" onclick="step('ow-off-4', -0.1)">−</button>
+              <div class="step-val" id="ow-off-4-val">—</div>
+              <button class="step-btn" onclick="step('ow-off-4', +0.1)">+</button>
+            </div>
+          </div>
+          <button class="send-btn" onclick="sendOwOffset(4, this)" style="margin-bottom: 0; margin-top: 12px;">Apply Offset</button>
+        </div>
+      </div>
+
+      <div class="sub-card" id="sub-ow-5" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
+        <div class="sub-label sub-label-toggle" style="margin-top: 0; border: none; padding-bottom: 5px;" onclick="toggleSubCard('sub-ow-5')">
+          DS18x20 Sensor 5
+          <span style="display: flex; align-items: center; gap: 8px;"><span class="ctrl-value" id="ow-v-5">—</span><span class="collapse-icon">▼</span></span>
+        </div>
+        <div class="sub-card-body">
+          <div class="ctrl-row">
+            <span class="ctrl-label param-label">Role<span class="tip-icon">?</span><span class="tip-box">One role per probe: picking a role releases the probe from the one it was on, and a role another probe already holds is greyed out. Unmapped leaves it a plain temperature sensor.</span></span>
+            <select class="ctrl-select" id="ow-role-5" onchange="sendOwRole(5, this)">
+              <option value="">Unmapped</option>
+              <option value="ow_map_feed">Feed</option>
+              <option value="ow_map_return">Return</option>
+              <option value="ow_map_z1">Zone 1 sensor</option>
+              <option value="ow_map_z2">Zone 2 sensor</option>
+              <option value="ow_map_z1_feed">Zone 1 feed</option>
+              <option value="ow_map_z1_return">Zone 1 return</option>
+              <option value="ow_map_z2_feed">Zone 2 feed</option>
+              <option value="ow_map_z2_return">Zone 2 return</option>
+            </select>
+          </div>
+          <div class="ctrl-row" style="border-bottom: none; padding-bottom: 0;">
+            <span class="ctrl-label param-label">Offset (°C)<span class="tip-icon">?</span><span class="tip-box">−10.0 … +10.0 °C in 0.1 °C steps. The probe applies it itself and stores it, so every role and Delta T built on it follows.</span></span>
+            <div class="stepper">
+              <button class="step-btn" onclick="step('ow-off-5', -0.1)">−</button>
+              <div class="step-val" id="ow-off-5-val">—</div>
+              <button class="step-btn" onclick="step('ow-off-5', +0.1)">+</button>
+            </div>
+          </div>
+          <button class="send-btn" onclick="sendOwOffset(5, this)" style="margin-bottom: 0; margin-top: 12px;">Apply Offset</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <div id="view-system" class="view-section">
@@ -1267,6 +1476,13 @@ const CONTROLS = [
   { type:'select', key:'lockout_strategy', el:'sel-lockout-strategy' },
   { type:'select', key:'lockout_duration', el:'sel-lockout-dur' },
   { type:'number', pkey:'min-on-time', key:'minimum_compressor_on_time', el:'min-on-time-val', min:1, max:20, step:1 },
+
+  { type:'number', pkey:'ow-off-0', key:'ow_offset_0', el:'ow-off-0-val', min:-10, max:10, step:0.1 },
+  { type:'number', pkey:'ow-off-1', key:'ow_offset_1', el:'ow-off-1-val', min:-10, max:10, step:0.1 },
+  { type:'number', pkey:'ow-off-2', key:'ow_offset_2', el:'ow-off-2-val', min:-10, max:10, step:0.1 },
+  { type:'number', pkey:'ow-off-3', key:'ow_offset_3', el:'ow-off-3-val', min:-10, max:10, step:0.1 },
+  { type:'number', pkey:'ow-off-4', key:'ow_offset_4', el:'ow-off-4-val', min:-10, max:10, step:0.1 },
+  { type:'number', pkey:'ow-off-5', key:'ow_offset_5', el:'ow-off-5-val', min:-10, max:10, step:0.1 },
 ];
 
 // `pending`, `LIMITS`, and `STEP_EL` are derived from CONTROLS so they can
@@ -1320,8 +1536,9 @@ function toggleSubCard(id) {
 
 // Restores the collapsed state on page load
 function initCollapsibleCards() {
-  const cards = ['sys-odin', 'sys-settings-backup', 'sys-firmware', 'sys-logs'];
-  const subCards = ['sub-power', 'sub-server', 'sub-predictive', 'sub-short-cycle'];
+  const cards = ['sys-odin', 'sys-settings-backup', 'sys-firmware', 'sys-logs', 'card-power', 'card-dallas'];
+  const subCards = ['sub-server', 'sub-predictive', 'sub-short-cycle',
+                    'sub-ow-0', 'sub-ow-1', 'sub-ow-2', 'sub-ow-3', 'sub-ow-4', 'sub-ow-5'];
   const defaultCollapsed = ['sys-settings-backup'];
   [...cards, ...subCards].forEach(id => {
     const stored = localStorage.getItem('collapseState_' + id);
@@ -2504,6 +2721,8 @@ function render(d) {
 
   setText('disp-ver', d.latest_version || '—');
   setText('lastUpdate', formatUptime(d._uptime_ms, d.local_ip));
+
+  renderDallas(d);
 }
 
 function setText(id, val) {
@@ -2548,6 +2767,71 @@ function hystInput(zone) {
   lastEdit[key] = Date.now();
   pending[key] = parseFloat(document.getElementById(zone + '-hyst').value);
   setText(zone + '-hyst-val', pending[key].toFixed(1));
+}
+
+const owT = v => (v === undefined || v === null || isNaN(v)) ? '—' : fmt1(v) + '°';
+
+const OW_ROLES = ['ow_map_feed', 'ow_map_return', 'ow_map_z1', 'ow_map_z2',
+                  'ow_map_z1_feed', 'ow_map_z1_return', 'ow_map_z2_feed', 'ow_map_z2_return'];
+
+function owRoleOfProbe(d, probe) {
+  for (const k of OW_ROLES) {
+    const v = d[k];
+    if (v !== undefined && v !== null && parseInt(v) === probe + 1) return k;
+  }
+  return '';
+}
+
+async function sendOwRole(probe, el) {
+  const role = el.value;
+  const prev = owRoleOfProbe(latestState, probe);
+  try {
+    if (role === '') { if (prev) await apiPost({ key: prev, value: 0 }); }
+    else             { await apiPost({ key: role, value: probe + 1 }); }
+    showToast('✓ DS18x20 Sensor ' + probe + ' → ' + el.options[el.selectedIndex].text);
+  } catch(e) { showToast('✗ ' + e.message, true); el.value = prev; }
+}
+
+function renderDallas(d) {
+  const probeKeys = [0, 1, 2, 3, 4, 5];
+  probeKeys.forEach(i => {
+    const v = d['ow_sensor_' + i];
+    setText('ow-v-' + i, owT(v));
+    const lim = d['ow_offset_' + i + '_lim'];
+    if (lim) LIMITS['ow-off-' + i] = { min: lim.min, max: lim.max, step: lim.step || 0.1 };
+    seedPending('ow-off-' + i, d['ow_offset_' + i]);
+    const el = document.getElementById('ow-role-' + i);
+    if (!el) return;
+    const own = owRoleOfProbe(d, i);
+    Array.from(el.options).forEach(o => {
+      const held = parseInt(d[o.value]) || 0;
+      o.disabled = !!o.value && held !== 0 && held !== i + 1;
+      o.title = o.disabled ? 'Used by DS18x20 Sensor ' + (held - 1) : '';
+    });
+    if (document.activeElement !== el) el.value = own;
+  });
+
+  const feed = d.ow_role_feed, ret = d.ow_role_return;
+  setText('ow-sum-feed',   owT(feed));
+  setText('ow-sum-return', owT(ret));
+  setText('ow-sum-delta',  (feed != null && ret != null) ? owT(feed - ret) : '—');
+  setText('ow-sum-z1',     owT(d.ow_role_z1));
+  setText('ow-sum-z1f',    owT(d.ow_role_z1_feed));
+  setText('ow-sum-z1r',    owT(d.ow_role_z1_return));
+  setText('ow-sum-z2',     owT(d.ow_role_z2));
+  setText('ow-sum-z2f',    owT(d.ow_role_z2_feed));
+  setText('ow-sum-z2r',    owT(d.ow_role_z2_return));
+}
+
+async function sendOwOffset(probe, btn) {
+  const pkey = 'ow-off-' + probe;
+  if (!hasChanged(pkey)) { showToast('No change on Sensor ' + probe); return; }
+  btn.classList.add('sending');
+  try {
+    await apiPost({ key: 'ow_offset_' + probe, value: pending[pkey] });
+    showToast('✓ Sensor ' + probe + ' offset ' + pending[pkey].toFixed(1) + ' °C');
+  } catch(e) { showToast('✗ ' + e.message, true); }
+  btn.classList.remove('sending');
 }
 
 async function apiPost(payload) {
@@ -2946,6 +3230,10 @@ function collectSettingsSnapshot() {
       const v = pending[c.pkey];
       if (v !== null && v !== undefined && !Number.isNaN(v)) out[c.key] = v;
     }
+  });
+  [0, 1, 2, 3, 4, 5].forEach(i => {
+    const el = document.getElementById('ow-role-' + i);
+    if (el && el.value) out[el.value] = i + 1;
   });
   return out;
 }

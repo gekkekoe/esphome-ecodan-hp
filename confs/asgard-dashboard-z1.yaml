@@ -145,3 +145,32 @@ asgard_dashboard:
 
   # System
   reboot_button_id: restart_button
+
+  ow_sensor_0_id:                    ow_raw_0
+  ow_sensor_1_id:                    ow_raw_1
+  ow_sensor_2_id:                    ow_raw_2
+  ow_sensor_3_id:                    ow_raw_3
+  ow_sensor_4_id:                    ow_raw_4
+  ow_sensor_5_id:                    ow_raw_5
+  ow_offset_0_id:                    ow_off_0
+  ow_offset_1_id:                    ow_off_1
+  ow_offset_2_id:                    ow_off_2
+  ow_offset_3_id:                    ow_off_3
+  ow_offset_4_id:                    ow_off_4
+  ow_offset_5_id:                    ow_off_5
+  ow_sel_feed_id:                    ow_sel_feed
+  ow_sel_return_id:                  ow_sel_return
+  ow_sel_z1_id:                      ow_sel_z1
+  ow_sel_z2_id:                      ow_sel_z2
+  ow_sel_z1_feed_id:                 ow_sel_z1_feed
+  ow_sel_z1_return_id:               ow_sel_z1_return
+  ow_sel_z2_feed_id:                 ow_sel_z2_feed
+  ow_sel_z2_return_id:               ow_sel_z2_return
+  ow_role_feed_id:                   ow_temp_feed
+  ow_role_return_id:                 ow_temp_return
+  ow_role_z1_id:                     ow_temp_z1
+  ow_role_z2_id:                     ow_temp_z2
+  ow_role_z1_feed_id:                ow_temp_z1_feed
+  ow_role_z1_return_id:              ow_temp_z1_return
+  ow_role_z2_feed_id:                ow_temp_z2_feed
+  ow_role_z2_return_id:              ow_temp_z2_return
