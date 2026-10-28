@@ -38,11 +38,7 @@ jobs:
           sed "s/esp32s3.yaml,/${{ matrix.board }}.yaml,/g; \
               s/ecodan-labels-en.yaml,/ecodan-labels-${{ matrix.lang }}.yaml,/g; \
               s/confs\\/wifi.yaml/confs\/wifi-ota.yaml/g" ecodan-esphome.yaml > build.yaml
-          sed "s/manifest/$MANIFEST/g; s/FIRMWARE_VERSION/$PREFIX/g" confs/ota.yaml > ota-full.yaml
-          awk 'NR == 1 { next } /^text_sensor:/ { exit } { print }' ota-full.yaml > ota-core.yaml
-          sed -n '/^text_sensor:/,$p' ota-full.yaml > ota.yaml
-          awk 'NR == FNR { core[NR] = $0; n = NR; next } { print } /^esphome:$/ { for (i = 1; i <= n; i++) print core[i] }' ota-core.yaml build.yaml > build-merged.yaml
-          mv build-merged.yaml build.yaml
+          sed "s/manifest/$MANIFEST/g; s/FIRMWARE_VERSION/$PREFIX/g" confs/ota.yaml > ota.yaml
           echo "<<: !include ota.yaml" >> build.yaml
 
       - if: contains(matrix.board, 'asgard')

@@ -1,4 +1,5 @@
 esphome:
+  name_add_mac_suffix: true
   project:
     name: Gekkekoe.Ecodan ESPHome Heatpump
     version: "FIRMWARE_VERSION"
