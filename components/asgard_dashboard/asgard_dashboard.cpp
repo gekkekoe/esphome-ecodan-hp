@@ -362,6 +362,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "smart_boost_enabled")           { doSwitch(sw_smart_boost_);   return; }
   if (key == "force_dhw")                     { doSwitch(sw_force_dhw_);     return; } 
   if (key == "sw_regular_dhw")                { doSwitch(sw_regular_dhw_);   return; }
+  if (key == "ow_enable")                     { doSwitch(sw_ow_enable_);     return; }
   if (key == "power_mode")                    { doSwitch(sw_power_mode_);    return; }
   if (key == "service_codes_enabled")           { doSwitch(sw_service_codes_enabled_); return; }
   if (key == "holiday_mode")                    { doSwitch(sw_holiday_mode_);        return; }
@@ -544,6 +545,7 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.sw_smart_boost = get_sw(sw_smart_boost_);
   current_snapshot_.sw_force_dhw = get_sw(sw_force_dhw_);
   current_snapshot_.sw_regular_dhw = get_sw(sw_regular_dhw_);
+  current_snapshot_.sw_ow_enable = get_sw(sw_ow_enable_);
 
   // Server control
   current_snapshot_.sw_server_control        = get_sw(sw_server_control_);
@@ -888,6 +890,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("smart_boost_enabled",         snap.sw_smart_boost);
   p_b("force_dhw",                   snap.sw_force_dhw);
   p_b("sw_regular_dhw",              snap.sw_regular_dhw);
+  p_b("ow_enable",                   snap.sw_ow_enable);
   p_b("power_mode", snap.sw_power_mode);
   p_b("service_codes_enabled", snap.sw_service_codes_enabled);
   p_b("holiday_mode",          snap.sw_holiday_mode);

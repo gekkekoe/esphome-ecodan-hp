@@ -174,3 +174,4 @@ asgard_dashboard:
   ow_role_z1_return_id:              ow_temp_z1_return
   ow_role_z2_feed_id:                ow_temp_z2_feed
   ow_role_z2_return_id:              ow_temp_z2_return
+  sw_ow_enable_id:                   ow_enable

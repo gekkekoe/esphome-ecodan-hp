@@ -83,6 +83,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("sw_power_mode_id"):                   cv.use_id(switch.Switch),
         cv.Optional("sw_service_codes_enabled_id"):        cv.use_id(switch.Switch),
         cv.Optional("sw_holiday_mode_id"):                 cv.use_id(switch.Switch),
+        cv.Optional("sw_ow_enable_id"):                    cv.use_id(switch.Switch),
 
         # Server control
         cv.Optional("sw_server_control_id"):               cv.use_id(switch.Switch),
@@ -262,6 +263,7 @@ async def to_code(config):
         ("sw_smart_boost_id",                 "set_sw_smart_boost"),
         ("sw_force_dhw_id",                   "set_sw_force_dhw"),
         ("sw_regular_dhw_id",                 "set_sw_regular_dhw"),
+        ("sw_ow_enable_id",                   "set_sw_ow_enable"),
         ("sel_heating_system_type_id",        "set_sel_heating_system_type"),
         ("sel_room_temp_source_z1_id",        "set_sel_room_temp_source_z1"),
         ("sel_room_temp_source_z2_id",        "set_sel_room_temp_source_z2"),

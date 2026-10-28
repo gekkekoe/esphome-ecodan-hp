@@ -69,6 +69,7 @@ struct DashboardSnapshot {
   bool sw_smart_boost{false};
   bool sw_force_dhw{false};
   bool sw_regular_dhw{false};
+  bool sw_ow_enable{false};
   bool status_short_cycle_lockout{false};
 
   // Float sensors
@@ -277,6 +278,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_sw_smart_boost(switch_::Switch *s)                 { sw_smart_boost_ = s; }
   void set_sw_force_dhw(switch_::Switch *s)                   { sw_force_dhw_ = s; }
   void set_sw_regular_dhw(switch_::Switch *s)                 { sw_regular_dhw_ = s; }
+  void set_sw_ow_enable(switch_::Switch *s)                   { sw_ow_enable_ = s; }
   void set_pred_sc_switch(switch_::Switch *s)                 { pred_sc_switch_ = s; }
   void set_sw_power_mode(switch_::Switch *s)                  { sw_power_mode_ = s; }
   void set_sw_service_codes_enabled(switch_::Switch *s)        { sw_service_codes_enabled_ = s; }
@@ -457,6 +459,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   switch_::Switch *sw_smart_boost_{nullptr};
   switch_::Switch *sw_force_dhw_{nullptr};
   switch_::Switch *sw_regular_dhw_{nullptr};
+  switch_::Switch *sw_ow_enable_{nullptr};
   switch_::Switch *pred_sc_switch_{nullptr};
   switch_::Switch *sw_power_mode_{nullptr};
   switch_::Switch *sw_service_codes_enabled_{nullptr};

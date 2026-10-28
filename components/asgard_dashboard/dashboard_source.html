@@ -1058,6 +1058,7 @@ header {
         <span style="color: var(--text3);">Zone 1</span><span>Sensor <span id="ow-sum-z1">—</span> · Feed <span id="ow-sum-z1f">—</span> · Return <span id="ow-sum-z1r">—</span></span>
         <span style="color: var(--text3);">Zone 2</span><span>Sensor <span id="ow-sum-z2">—</span> · Feed <span id="ow-sum-z2f">—</span> · Return <span id="ow-sum-z2r">—</span></span>
       </div>
+      <div class="ctrl-row" style="margin-top: 12px;"><span class="ctrl-label param-label">Use DS18x20 Probes for Calculations<span class="tip-icon">?</span><span class="tip-box">When off, every probe reads as absent: the Auto-Adaptive output-power estimate and the zone feed and return temperatures fall back to the heat pump's own thermistors.</span></span><label class="toggle-wrap"><input type="checkbox" id="sw-ow" onchange="sendSwitch('ow_enable', this.checked)"><span class="toggle-slider"></span></label></div>
 
       <div id="ow-grid">
       <div class="sub-card" id="sub-ow-0" style="border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 15px; background: var(--bg2);">
@@ -1070,10 +1071,10 @@ header {
             <span class="ctrl-label param-label">Role<span class="tip-icon">?</span><span class="tip-box">One role per probe: picking a role releases the probe from the one it was on, and a role another probe already holds is greyed out. Unmapped leaves it a plain temperature sensor.</span></span>
             <select class="ctrl-select" id="ow-role-0" onchange="sendOwRole(0, this)">
               <option value="">Unmapped</option>
-              <option value="ow_map_feed">Feed</option>
-              <option value="ow_map_return">Return</option>
-              <option value="ow_map_z1">Zone 1 sensor</option>
-              <option value="ow_map_z2">Zone 2 sensor</option>
+              <option value="ow_map_z1">Virtual thermostat z1 sensor</option>
+              <option value="ow_map_z2">Virtual thermostat z2 sensor</option>
+              <option value="ow_map_feed">Primary feed</option>
+              <option value="ow_map_return">Primary return</option>
               <option value="ow_map_z1_feed">Zone 1 feed</option>
               <option value="ow_map_z1_return">Zone 1 return</option>
               <option value="ow_map_z2_feed">Zone 2 feed</option>
@@ -1102,10 +1103,10 @@ header {
             <span class="ctrl-label param-label">Role<span class="tip-icon">?</span><span class="tip-box">One role per probe: picking a role releases the probe from the one it was on, and a role another probe already holds is greyed out. Unmapped leaves it a plain temperature sensor.</span></span>
             <select class="ctrl-select" id="ow-role-1" onchange="sendOwRole(1, this)">
               <option value="">Unmapped</option>
-              <option value="ow_map_feed">Feed</option>
-              <option value="ow_map_return">Return</option>
-              <option value="ow_map_z1">Zone 1 sensor</option>
-              <option value="ow_map_z2">Zone 2 sensor</option>
+              <option value="ow_map_z1">Virtual thermostat z1 sensor</option>
+              <option value="ow_map_z2">Virtual thermostat z2 sensor</option>
+              <option value="ow_map_feed">Primary feed</option>
+              <option value="ow_map_return">Primary return</option>
               <option value="ow_map_z1_feed">Zone 1 feed</option>
               <option value="ow_map_z1_return">Zone 1 return</option>
               <option value="ow_map_z2_feed">Zone 2 feed</option>
@@ -1134,10 +1135,10 @@ header {
             <span class="ctrl-label param-label">Role<span class="tip-icon">?</span><span class="tip-box">One role per probe: picking a role releases the probe from the one it was on, and a role another probe already holds is greyed out. Unmapped leaves it a plain temperature sensor.</span></span>
             <select class="ctrl-select" id="ow-role-2" onchange="sendOwRole(2, this)">
               <option value="">Unmapped</option>
-              <option value="ow_map_feed">Feed</option>
-              <option value="ow_map_return">Return</option>
-              <option value="ow_map_z1">Zone 1 sensor</option>
-              <option value="ow_map_z2">Zone 2 sensor</option>
+              <option value="ow_map_z1">Virtual thermostat z1 sensor</option>
+              <option value="ow_map_z2">Virtual thermostat z2 sensor</option>
+              <option value="ow_map_feed">Primary feed</option>
+              <option value="ow_map_return">Primary return</option>
               <option value="ow_map_z1_feed">Zone 1 feed</option>
               <option value="ow_map_z1_return">Zone 1 return</option>
               <option value="ow_map_z2_feed">Zone 2 feed</option>
@@ -1166,10 +1167,10 @@ header {
             <span class="ctrl-label param-label">Role<span class="tip-icon">?</span><span class="tip-box">One role per probe: picking a role releases the probe from the one it was on, and a role another probe already holds is greyed out. Unmapped leaves it a plain temperature sensor.</span></span>
             <select class="ctrl-select" id="ow-role-3" onchange="sendOwRole(3, this)">
               <option value="">Unmapped</option>
-              <option value="ow_map_feed">Feed</option>
-              <option value="ow_map_return">Return</option>
-              <option value="ow_map_z1">Zone 1 sensor</option>
-              <option value="ow_map_z2">Zone 2 sensor</option>
+              <option value="ow_map_z1">Virtual thermostat z1 sensor</option>
+              <option value="ow_map_z2">Virtual thermostat z2 sensor</option>
+              <option value="ow_map_feed">Primary feed</option>
+              <option value="ow_map_return">Primary return</option>
               <option value="ow_map_z1_feed">Zone 1 feed</option>
               <option value="ow_map_z1_return">Zone 1 return</option>
               <option value="ow_map_z2_feed">Zone 2 feed</option>
@@ -1198,10 +1199,10 @@ header {
             <span class="ctrl-label param-label">Role<span class="tip-icon">?</span><span class="tip-box">One role per probe: picking a role releases the probe from the one it was on, and a role another probe already holds is greyed out. Unmapped leaves it a plain temperature sensor.</span></span>
             <select class="ctrl-select" id="ow-role-4" onchange="sendOwRole(4, this)">
               <option value="">Unmapped</option>
-              <option value="ow_map_feed">Feed</option>
-              <option value="ow_map_return">Return</option>
-              <option value="ow_map_z1">Zone 1 sensor</option>
-              <option value="ow_map_z2">Zone 2 sensor</option>
+              <option value="ow_map_z1">Virtual thermostat z1 sensor</option>
+              <option value="ow_map_z2">Virtual thermostat z2 sensor</option>
+              <option value="ow_map_feed">Primary feed</option>
+              <option value="ow_map_return">Primary return</option>
               <option value="ow_map_z1_feed">Zone 1 feed</option>
               <option value="ow_map_z1_return">Zone 1 return</option>
               <option value="ow_map_z2_feed">Zone 2 feed</option>
@@ -1230,10 +1231,10 @@ header {
             <span class="ctrl-label param-label">Role<span class="tip-icon">?</span><span class="tip-box">One role per probe: picking a role releases the probe from the one it was on, and a role another probe already holds is greyed out. Unmapped leaves it a plain temperature sensor.</span></span>
             <select class="ctrl-select" id="ow-role-5" onchange="sendOwRole(5, this)">
               <option value="">Unmapped</option>
-              <option value="ow_map_feed">Feed</option>
-              <option value="ow_map_return">Return</option>
-              <option value="ow_map_z1">Zone 1 sensor</option>
-              <option value="ow_map_z2">Zone 2 sensor</option>
+              <option value="ow_map_z1">Virtual thermostat z1 sensor</option>
+              <option value="ow_map_z2">Virtual thermostat z2 sensor</option>
+              <option value="ow_map_feed">Primary feed</option>
+              <option value="ow_map_return">Primary return</option>
               <option value="ow_map_z1_feed">Zone 1 feed</option>
               <option value="ow_map_z1_return">Zone 1 return</option>
               <option value="ow_map_z2_feed">Zone 2 feed</option>
@@ -1433,6 +1434,7 @@ const CONTROLS = [
   { type:'switch', key:'defrost_risk_handling_enabled', el:'sw-dm' },
   { type:'switch', key:'smart_boost_enabled', el:'sw-sb' },
   { type:'switch', key:'predictive_short_cycle_control_enabled', el:'sw-psc' },
+  { type:'switch', key:'ow_enable', el:'sw-ow' },
   { type:'select', key:'heating_system_type', el:'sel-hst' },
   { type:'select', key:'room_temp_source_z1', el:'sel-z1src' },
   { type:'select', key:'room_temp_source_z2', el:'sel-z2src' },
@@ -2645,6 +2647,7 @@ function render(d) {
   setToggle('sw-sb', d.smart_boost_enabled);
   setToggle('sw-psc', d.pred_sc_en);
   
+  setToggle('sw-ow', d.ow_enable);
 
   setSelect('sel-hst',    d.heating_system_type);
   setSelect('sel-z1src',  d.room_temp_source_z1);

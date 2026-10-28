@@ -53,6 +53,14 @@ one_wire:
     pin: GPIO02
     id: dallas_bus
 
+switch:
+  - platform: template
+    name: "DS18x20 Sensors Enabled"
+    id: ow_enable
+    icon: mdi:thermometer-lines
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+
 sensor:
   - platform: internal_temperature
     name: ${internal_esp_temperature}
@@ -72,6 +80,7 @@ sensor:
       - offset: !lambda |-
           // The offset number restores on setup; a NAN offset would blank the probe.
           return isnan(id(ow_off_0).state) ? 0.0f : id(ow_off_0).state;
+      - lambda: 'return id(ow_enable).state ? x : NAN;'
 
   - platform: dallas_temp
     index: 1
@@ -82,6 +91,7 @@ sensor:
     filters:
       - offset: !lambda |-
           return isnan(id(ow_off_1).state) ? 0.0f : id(ow_off_1).state;
+      - lambda: 'return id(ow_enable).state ? x : NAN;'
 
   - platform: dallas_temp
     index: 2
@@ -92,6 +102,7 @@ sensor:
     filters:
       - offset: !lambda |-
           return isnan(id(ow_off_2).state) ? 0.0f : id(ow_off_2).state;
+      - lambda: 'return id(ow_enable).state ? x : NAN;'
 
   - platform: dallas_temp
     index: 3
@@ -102,6 +113,7 @@ sensor:
     filters:
       - offset: !lambda |-
           return isnan(id(ow_off_3).state) ? 0.0f : id(ow_off_3).state;
+      - lambda: 'return id(ow_enable).state ? x : NAN;'
 
   - platform: dallas_temp
     index: 4
@@ -112,6 +124,7 @@ sensor:
     filters:
       - offset: !lambda |-
           return isnan(id(ow_off_4).state) ? 0.0f : id(ow_off_4).state;
+      - lambda: 'return id(ow_enable).state ? x : NAN;'
 
   - platform: dallas_temp
     index: 5
@@ -122,6 +135,7 @@ sensor:
     filters:
       - offset: !lambda |-
           return isnan(id(ow_off_5).state) ? 0.0f : id(ow_off_5).state;
+      - lambda: 'return id(ow_enable).state ? x : NAN;'
 
   - platform: template
     name: "DS18x20 Feed temp"
