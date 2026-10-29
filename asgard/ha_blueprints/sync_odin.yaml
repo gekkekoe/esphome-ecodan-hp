@@ -17,10 +17,15 @@ blueprint:
 
 
     Accepted bands: battery SOC 0..2000 kWh, discharge limit 0..100 kW, room
-    temperature override 0 (off) or 5..40 °C. The gap between 0 and 5 is refused
-    on purpose — it is the difference between "override off" and "a room that is
-    being heated" — so a reading inside it (a frosty hallway, a sensor that just
-    came back online) is never forwarded and the ODIN keeps whatever it had.
+    temperature override 5..40 °C. Below 5 °C a number is a device that stopped
+    measuring rather than a cold room, so the 0 of an offline sensor never turns
+    the override off — that stays a dashboard action.
+
+
+    The sync re-arms itself: it compares and re-sends at Home Assistant start and
+    every five minutes, not only when the sensor changes, so a reboot or a stretch
+    without a network does not end it. That also refreshes the arrival stamp of a
+    room temperature, which is what lets the ODIN keep trusting it as a measurement.
 
 
     A room temperature override replaces the measured room temperature for
@@ -66,7 +71,8 @@ blueprint:
       name: ODIN Field
       description: >
         Which ODIN value this sensor feeds. room_override_z1/_z2 replaces that
-        zone's room temperature for planning; 0 turns the override off.
+        zone's room temperature for planning. The sync never turns the override
+        off; that stays an action in the ODIN dashboard.
       default: battery_soc_kwh
       selector:
         select:
@@ -81,8 +87,7 @@ variables:
   source: !input source_entity
   host: !input odin_host
   field: !input target_field
-  # The two room fields share a band that is not one interval: 0 (off) or
-  # 5..40 °C. Everything else is a plain range.
+  # Below 5 °C a number is a device that stopped measuring, not a cold room.
   is_room_field: "{{ field in ('room_override_z1', 'room_override_z2') }}"
   battery_range: >-
     {{ {'battery_soc_kwh': [0, 2000],
@@ -92,6 +97,14 @@ trigger:
   - platform: state
     entity_id: !input source_entity
 
+  # The ODIN is not an entity here, so these two are the resume after a reboot.
+  - platform: event
+    event_type: homeassistant_start
+
+  # "/5" is every five minutes; a bare 5 would fire once an hour.
+  - platform: time_pattern
+    minutes: "/5"
+
 condition:
   - condition: template
     value_template: >-
@@ -99,7 +112,7 @@ condition:
       {% if not is_number(states(source)) %}
         {{ false }}
       {% elif is_room_field %}
-        {{ raw == 0 or (raw >= 5 and raw <= 40) }}
+        {{ raw >= 5 and raw <= 40 }}
       {% else %}
         {% set lo, hi = battery_range %}
         {{ raw >= lo and raw <= hi }}
@@ -125,10 +138,13 @@ action:
       {% else %}{{ true }}{% endif %}
 
   - service: rest_command.odin_set
+    continue_on_error: true
     data:
       host: "{{ host }}"
       key: "{{ field }}"
       value: "{{ value }}"
 
-mode: single
+# Queued: a reading that arrives while an attempt is still talking to a device
+# that is not answering is the newer one, and an offline device is no error.
+mode: queued
 max_exceeded: silent

@@ -3,12 +3,17 @@ blueprint:
   description: >
     Synchronizes the current temperature from a separate sensor to the Asgard 'Virtual Thermostat' number input.
 
-    It automatically reads the state of the sensor and only updates
-    the Ecodan device if the value has changed to prevent unnecessary traffic.
+    It automatically reads the state of the sensor and only writes a value that
+    differs from what the device holds by more than 0.05.
 
-    Only valid readings are forwarded: the value must be a number and within
-    the target's own min/max range, so unavailable sensors and bogus readings
-    (e.g. a 0 published by an offline device) are ignored.
+    Only valid readings are forwarded: a number, above the floor below, and inside
+    the target's own range. The floor is separate on purpose: the number accepts
+    down to -10 °C, so its range alone would let a 0 through.
+
+    The sync re-arms itself. The value goes again when the device reports a value
+    of its own (a reboot or a dropout resetting it), when Home Assistant starts,
+    and every five minutes while the two disagree. An equal value is never re-sent,
+    so the re-check costs nothing.
   domain: automation
   input:
     source_entity:
@@ -25,37 +30,82 @@ blueprint:
         entity:
           domain: number
 
+    min_valid_temperature:
+      name: Lowest reading to forward
+      description: >
+        A reading at or below this value is never sent. A sensor that fell off the
+        network publishes 0, and the number's own range reaches -10 °C, so this
+        floor is the guard. Lower it only for a genuinely frosty room.
+      default: 0.1
+      selector:
+        number:
+          min: -20.0
+          max: 20.0
+          step: 0.1
+          unit_of_measurement: "°C"
+          mode: slider
+
 variables:
   source: !input source_entity
   target: !input target_input
+  floor: !input min_valid_temperature
 
 trigger:
   - platform: state
     entity_id: !input source_entity
 
+  # The device reporting its own value is how a reboot shows up: it restored something else.
+  - platform: state
+    entity_id: !input target_input
+    not_from:
+      - unknown
+      - unavailable
+
+  - platform: event
+    event_type: homeassistant_start
+
+  # "/5" is every five minutes; a bare 5 would fire once an hour.
+  - platform: time_pattern
+    minutes: "/5"
+
 action:
   - condition: template
     value_template: "{{ is_number(states(source)) }}"
-  
+
+  # A write to a target that cannot be read would only fail; its own trigger resumes.
+  - condition: template
+    value_template: "{{ states(target) not in ('unknown', 'unavailable') }}"
+
   - variables:
       current_temp: "{{ states(source) | float(-999) }}"
-      temp_min: state_attr(target, 'min')
-      temp_max: state_attr(target, 'max')
+      # Braces required: bare state_attr(...) is literal text, so the band would not hold.
+      temp_min: "{{ state_attr(target, 'min') | float(-50) }}"
+      temp_max: "{{ state_attr(target, 'max') | float(125) }}"
+      step: "{{ state_attr(target, 'step') | float(0.1) }}"
+      # On the device's own step: a finer reading would never match and rewrite forever.
+      send: "{{ (((current_temp / step) | round(0)) * step) | round(2) }}"
+      held: "{{ states(target) | float(-999) }}"
 
   - condition: template
     value_template: >-
-      {{ current_temp >= (temp_min if is_number(temp_min) else -50)
-         and current_temp <= (temp_max if is_number(temp_max) else 125) }}
+      {{ send > (floor | float(0.1))
+         and send >= temp_min
+         and send <= temp_max }}
 
+  # 0.05, not equality: the device keeps single precision.
   - condition: template
-    value_template: "{{ current_temp != states(target) | float(0) }}"
+    value_template: "{{ (send - held) | abs > 0.05 }}"
 
   - service: number.set_value
     target:
       entity_id: !input target_input
     data:
-      value: "{{ current_temp }}"
-      
+      value: "{{ send }}"
+    continue_on_error: true
+
   - delay: "00:01:00"
 
-mode: single
+# Queued: a reading that arrives during the minute of rest is the newest there is,
+# and a device that is offline is not an automation error.
+mode: queued
+max_exceeded: silent
