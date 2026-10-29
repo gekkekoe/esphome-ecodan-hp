@@ -727,7 +727,7 @@ script:
             - wait_until:
                 condition:
                   lambda: 'return id(ecodan_instance).get_status().ServerControl;'
-                timeout: 90s
+                timeout: 180s
 
       # Respect an already-active user prohibit
       - if:
@@ -751,18 +751,18 @@ script:
                   lambda: |-
                     auto flags = id(ecodan_instance).get_status().get_svc_flags();
                     return static_cast<uint8_t>(flags & esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW) != 0;
-                timeout: 90s
+                timeout: 180s
             - switch.turn_off: heatpump_switch_server_control_prohibit_dhw
             - wait_until:
                 condition:
                   lambda: |-
                     auto flags = id(ecodan_instance).get_status().get_svc_flags();
                     return static_cast<uint8_t>(flags & esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW) == 0;
-                timeout: 90s
+                timeout: 180s
             - wait_until:
                 condition:
                   lambda: 'return id(ecodan_instance).get_status().Operation == esphome::ecodan::Status::OperationMode::DHW_ON;'
-                timeout: 5min
+                timeout: 180s
             - logger.log:
                 format: "DHW started."
                 tag: "asgard"
