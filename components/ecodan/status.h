@@ -233,8 +233,7 @@ namespace ecodan
 
         static bool zone_thermistors_fitted(float feed, float ret) {
             return !std::isnan(feed) && !std::isnan(ret) &&
-                !(feed == 25.0f && ret == 25.0f) &&
-                feed != ret;
+                !(feed == 25.0f && ret == 25.0f);
         }
 
         static float prefer_measured(float measured, float bus) {
