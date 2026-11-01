@@ -259,7 +259,8 @@ namespace esphome
                 "Z%d target_delta=%.2f cold_factor=%.2f dyn_min=%.2f eff_range=%.2f error_factor=%.2f boost=%.2f linear=%d",
                 (i + 1), target_delta, cold_factor, dynamic_min, effective_error_range, error_factor, smart_boost, use_linear);
 
-            if (is_heating_mode) {
+            // don't write flow temp when there's no heating
+            if (is_heating_mode && is_heating_active) {
                 out_flow_heat = this->calculate_heating_flow_(
                     i, status, prof, set_point_reached,
                     cold_factor, actual_outside_temp,
