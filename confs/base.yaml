@@ -29,12 +29,11 @@ globals:
     restore_value: yes
     initial_value: 'false'
 
-  # DHW trigger: remembers whether WE turned Server Control on, so we only
-  # restore it to off if it wasn't already on for some other reason.
-  - id: dhw_trigger_scm_was_off
-    type: bool
+  # DHW trigger: store state prior to dhw trigger
+  - id: scm_flag_before_trigger
+    type: uint8_t
     restore_value: no
-    initial_value: 'false'
+    initial_value: '0'
 
 ####################
 # heatpump commands
@@ -711,23 +710,9 @@ script:
             - switch.turn_off: heatpump_switch_regular_dhw
             - script.stop: trigger_dhw_script
 
-      # Server Control must be on before any flag can be toggled at all.
-      # Remember whether it was off, so we only restore it.
+      # Save the flags once.
       - lambda: |-
-          id(dhw_trigger_scm_was_off) = !id(ecodan_instance).get_status().ServerControl;
-      - if:
-          condition:
-            lambda: 'return id(dhw_trigger_scm_was_off);'
-          then:
-            - logger.log:
-                format: "DHW trigger: Server Control was off — enabling it."
-                tag: "asgard"
-                level: INFO
-            - switch.turn_on: heatpump_switch_server_control_mode
-            - wait_until:
-                condition:
-                  lambda: 'return id(ecodan_instance).get_status().ServerControl;'
-                timeout: 180s
+          id(scm_flag_before_trigger) = static_cast<uint8_t>(id(ecodan_instance).get_status().get_svc_flags());
 
       # Respect an already-active user prohibit
       - if:
@@ -745,39 +730,32 @@ script:
                 format: "DHW trigger: toggling Prohibit DHW on, then off, to force an immediate start."
                 tag: "asgard"
                 level: INFO
-            - switch.turn_on: heatpump_switch_server_control_prohibit_dhw
+            # combined trigger on: server control | prohibit dhw
+            - lambda: |-
+                auto flag = esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL | esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW;
+                id(ecodan_instance).set_controller_mode(flag, true);
+
             - wait_until:
                 condition:
                   lambda: |-
                     auto flags = id(ecodan_instance).get_status().get_svc_flags();
                     return static_cast<uint8_t>(flags & esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW) != 0;
-                timeout: 180s
-            - switch.turn_off: heatpump_switch_server_control_prohibit_dhw
-            - wait_until:
-                condition:
-                  lambda: |-
-                    auto flags = id(ecodan_instance).get_status().get_svc_flags();
-                    return static_cast<uint8_t>(flags & esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW) == 0;
-                timeout: 180s
-            - wait_until:
-                condition:
-                  lambda: 'return id(ecodan_instance).get_status().Operation == esphome::ecodan::Status::OperationMode::DHW_ON;'
-                timeout: 180s
+                timeout: 3min
+            # combined trigger off: server control | prohibit dhw
+            - lambda: |-
+                auto flag = esphome::ecodan::CONTROLLER_FLAG::SERVER_CONTROL | esphome::ecodan::CONTROLLER_FLAG::PROHIBIT_DHW;
+                id(ecodan_instance).set_controller_mode(flag, false);
+
             - logger.log:
-                format: "DHW started."
+                format: "DHW Start CMD issued."
                 tag: "asgard"
                 level: INFO
 
-      # Restore Server Control to off, but only if we were the one who enabled it
-      - if:
-          condition:
-            lambda: 'return id(dhw_trigger_scm_was_off);'
-          then:
-            - logger.log:
-                format: "DHW trigger: restoring Server Control to off."
-                tag: "asgard"
-                level: INFO
-            - switch.turn_off: heatpump_switch_server_control_mode
+      # restore svc flag
+      - lambda: |-
+          auto saved = static_cast<esphome::ecodan::CONTROLLER_FLAG>(id(scm_flag_before_trigger));
+          if (static_cast<uint8_t>(saved) != 0)
+            id(ecodan_instance).set_controller_mode(saved, true);
 
       - logger.log:
           format: "DHW trigger complete. Turning off switch."
