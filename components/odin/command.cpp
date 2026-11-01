@@ -103,9 +103,18 @@ float OdinForwarder::apply_flow_target(const ecodan::Status &status, uint8_t mod
   if (zone == ecodan::Zone::ZONE_2 && !status.has_2zones())
     return requested;
 
-  if (status.DefrostActive || (this->lockout_sensor_ != nullptr && this->lockout_sensor_->state)) {
-    ESP_LOGI(TAG, "Z%d flow %.1f not written: %s - pump keeps its own setpoint.", (int) zone + 1, requested,
-             status.DefrostActive ? "defrost" : "lockout");
+  const char *hands_off = nullptr;
+  if (status.DefrostActive)
+    hands_off = "defrost";
+  else if (this->lockout_sensor_ != nullptr && this->lockout_sensor_->state)
+    hands_off = "lockout";
+  else if (status.Operation == ecodan::Status::OperationMode::DHW_ON ||
+           status.Operation == ecodan::Status::OperationMode::LEGIONELLA_PREVENTION)
+    hands_off = "DHW";
+
+  if (hands_off != nullptr) {
+    ESP_LOGI(TAG, "Z%d flow %.1f not written: hands off (%s) - pump keeps its own setpoint.", (int) zone + 1,
+             requested, hands_off);
     return requested;
   }
 
