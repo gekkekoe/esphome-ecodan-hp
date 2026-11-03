@@ -214,15 +214,29 @@ void OdinForwarder::trigger_dhw(uint8_t mode, const std::string &dhw_mode) {
   if (mode != 1)
     return;
 
+
+  const int operation = static_cast<int>(this->ecodan_->get_status().Operation);
+
   if (dhw_mode == "forced") {
-    if (this->force_dhw_switch_ != nullptr && !this->force_dhw_switch_->state) {
+    if (this->force_dhw_switch_ == nullptr) {
+      ESP_LOGW(TAG, "DHW ask (forced): no force switch wired - nothing done");
+    } else if (this->force_dhw_switch_->state) {
+      ESP_LOGI(TAG, "DHW ask (forced): force switch already ON - not re-asked (Operation=%d)", operation);
+    } else {
       this->force_dhw_switch_->turn_on();
-      ESP_LOGI(TAG, "Odin command: DHW cycle forced (force switch on)");
+      ESP_LOGI(TAG, "Odin command: DHW cycle forced (force switch on, Operation=%d)", operation);
     }
-  } else if (this->regular_dhw_switch_ != nullptr && !this->regular_dhw_switch_->state) {
-    this->regular_dhw_switch_->turn_on();
-    ESP_LOGI(TAG, "Odin command: DHW cycle triggered (regular switch on)");
+    return;
   }
+
+  if (this->regular_dhw_switch_ == nullptr) {
+    ESP_LOGW(TAG, "DHW ask (regular): no regular switch wired - nothing done");
+    return;
+  }
+  const bool was_on = this->regular_dhw_switch_->state;
+  this->regular_dhw_switch_->turn_on();
+  ESP_LOGI(TAG, "Odin command: DHW cycle triggered (regular switch%s, Operation=%d)",
+           was_on ? " already ON - trigger re-run, the script's mode decides" : " on", operation);
 }
 
 void OdinForwarder::hold_override(bool hold) {
