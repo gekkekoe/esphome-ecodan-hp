@@ -71,7 +71,7 @@ switch:
     # This is a trigger, not a persistent state: never restore it ON after a
     # reboot — the trigger script does not resume, so a restored ON would
     # look like a stuck switch (same convention as the force DHW switch).
-    restore_mode: DISABLED
+    restore_mode: ALWAYS_OFF
     icon: "mdi:water-boiler-auto"
     turn_on_action:
       - script.execute: trigger_dhw_script
@@ -79,7 +79,7 @@ switch:
   - platform: template
     name: ${heatpump_switch_force_dhw}
     id: heatpump_switch_force_dhw
-    restore_mode: DISABLED
+    restore_mode: ALWAYS_OFF
     optimistic: true
     turn_on_action:
       - lambda: |-
