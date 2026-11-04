@@ -41,13 +41,6 @@ namespace esphome
             float step_limited = this->enforce_step_limit(status, actual_flow, live_setpoint, is_cooling);
             bool boosting = (step_limited != live_setpoint);
 
-            // One protective adjustment moves the flow setpoint at most 0.5°C.
-            const float MAX_BOOST_STEP = 0.5f;
-            step_limited = is_cooling
-                ? std::max(step_limited, live_setpoint - MAX_BOOST_STEP)
-                : std::min(step_limited, live_setpoint + MAX_BOOST_STEP);
-            step_limited = this->round_nearest(step_limited);
-
             if (boosting)
             {
                 // Remember the original target once, on the first boost of a run.
