@@ -172,7 +172,7 @@
                     name: Heatpump
                   - entity: select.ecodan_heatpump_dhw_mode
                     name: DHW Mode
-                  - entity: switch.ecodan_heatpump_force_dhw
+                  - entity: button.ecodan_heatpump_force_dhw
                     name: Force DHW
                   - entity: switch.ecodan_heatpump_holiday_mode
                     name: Holiday Mode

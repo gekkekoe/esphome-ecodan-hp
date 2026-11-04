@@ -67,8 +67,6 @@ struct DashboardSnapshot {
   bool sw_auto_adaptive{false};
   bool sw_defrost_mit{false};
   bool sw_smart_boost{false};
-  bool sw_force_dhw{false};
-  bool sw_regular_dhw{false};
   bool sw_ow_enable{false};
   bool status_short_cycle_lockout{false};
 
@@ -276,8 +274,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_sw_auto_adaptive(switch_::Switch *s)               { sw_auto_adaptive_ = s; }
   void set_sw_defrost_mit(switch_::Switch *s)                 { sw_defrost_mit_ = s; }
   void set_sw_smart_boost(switch_::Switch *s)                 { sw_smart_boost_ = s; }
-  void set_sw_force_dhw(switch_::Switch *s)                   { sw_force_dhw_ = s; }
-  void set_sw_regular_dhw(switch_::Switch *s)                 { sw_regular_dhw_ = s; }
   void set_sw_ow_enable(switch_::Switch *s)                   { sw_ow_enable_ = s; }
   void set_pred_sc_switch(switch_::Switch *s)                 { pred_sc_switch_ = s; }
   void set_sw_power_mode(switch_::Switch *s)                  { sw_power_mode_ = s; }
@@ -338,6 +334,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   // Buttons
   void set_short_cycle_mitigation_button(button::Button *b)   { short_cycle_mitigation_button_ = b; }
+  void set_regular_dhw_button(button::Button *b)              { regular_dhw_button_ = b; }
+  void set_force_dhw_button(button::Button *b)                { force_dhw_button_ = b; }
   void set_reboot_button(button::Button *b)                   { reboot_button_ = b; }
 
   void set_txt_mqtt_broker_ip(text::Text *t)                  { txt_mqtt_broker_ip_ = t; }
@@ -457,8 +455,6 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   switch_::Switch *sw_auto_adaptive_{nullptr};
   switch_::Switch *sw_defrost_mit_{nullptr};
   switch_::Switch *sw_smart_boost_{nullptr};
-  switch_::Switch *sw_force_dhw_{nullptr};
-  switch_::Switch *sw_regular_dhw_{nullptr};
   switch_::Switch *sw_ow_enable_{nullptr};
   switch_::Switch *pred_sc_switch_{nullptr};
   switch_::Switch *sw_power_mode_{nullptr};
@@ -552,6 +548,8 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
 
   // Buttons
   button::Button *short_cycle_mitigation_button_{nullptr};
+  button::Button *regular_dhw_button_{nullptr};
+  button::Button *force_dhw_button_{nullptr};
   button::Button *reboot_button_{nullptr};
 
  private:

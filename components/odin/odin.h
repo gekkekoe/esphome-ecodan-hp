@@ -6,6 +6,7 @@
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/select/select.h"
 #include "esphome/components/text/text.h"
+#include "esphome/components/button/button.h"
 #include "esphome/core/component.h"
 
 #include "esphome/components/optimizer/odin_room_feed.h"
@@ -60,12 +61,13 @@ public:
   void set_dhw_flow_temp_target(sensor::Sensor *s) { this->dhw_flow_temp_target_ = s; }
   void set_dhw_flow_temp_drop(sensor::Sensor *s) { this->dhw_flow_temp_drop_ = s; }
 
-  void set_regular_dhw_switch(switch_::Switch *sw) { this->regular_dhw_switch_ = sw; }
+  void set_regular_dhw_button(button::Button *b) { this->regular_dhw_button_ = b; }
 
   void set_legionella_saved_setpoint(globals::RestoringGlobalsComponent<float> *g) {
     this->legionella_saved_setpoint_ = g;
   }
-  void set_force_dhw_switch(switch_::Switch *sw) { this->force_dhw_switch_ = sw; }
+
+  void set_force_dhw_button(button::Button *b) { this->force_dhw_button_ = b; }
 
   // ── The room temperature ODIN hands back ───────────────────────────────────
   float inherited_room_temp(int zone);
@@ -120,10 +122,10 @@ protected:
   binary_sensor::BinarySensor *lockout_sensor_{nullptr};
   sensor::Sensor *dhw_flow_temp_target_{nullptr};
   sensor::Sensor *dhw_flow_temp_drop_{nullptr};
-  switch_::Switch *regular_dhw_switch_{nullptr};
+  button::Button *regular_dhw_button_{nullptr};
   globals::RestoringGlobalsComponent<float> *legionella_saved_setpoint_{nullptr};
   climate::Climate *dhw_climate_{nullptr};
-  switch_::Switch *force_dhw_switch_{nullptr};
+  button::Button *force_dhw_button_{nullptr};
 
   // The inherited fix as it arrived, and when that message arrived on THIS device's
   // clock (there is no wall clock here, so ODIN's `ts` cannot be compared against

@@ -51,7 +51,7 @@ Download/save the [logviewer.html](https://raw.githubusercontent.com/gekkekoe/es
 
 Asgard users can navigate to `http://esp_ip/dashboard` and click on the Logs tab.
 
-## 6. Why is the force DHW switch not working?
+## 6. Why does the Force DHW button not do anything?
 
 DHW is prohibited by one of the following:
 * Hour schedules in MRC/Melcloud

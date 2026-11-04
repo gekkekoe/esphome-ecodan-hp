@@ -848,19 +848,13 @@ header {
         
         <div class="ctrl-row" style="border-bottom: 1px solid var(--border); padding: 0 0 12px 0;">
           <span class="ctrl-label param-label">Force DHW Now<span class="tip-icon">?</span><span class="tip-box">Triggers non-ECO mode DHW.</span></span>
-          <label class="toggle-wrap">
-            <input type="checkbox" id="sw-fdhw" onchange="sendSwitch('force_dhw', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
+          <button class="step-btn" id="btn-force-dhw" title="Force a DHW cycle now (non-ECO)" onclick="pressForceDHW()" style="width:auto; padding:0 9px; gap:5px; font-family:var(--mono); font-size:10px; letter-spacing:1px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg>Start</button>
         </div>
         
         <div class="ctrl-row" style="border-bottom: none; padding: 12px 0 0 0;">
-          <span class="ctrl-label param-label">Trigger Regular DHW<span class="tip-icon">?</span>
+          <span class="ctrl-label param-label">Regular DHW<span class="tip-icon">?</span>
           <span class="tip-box">Triggers ECO mode DHW.</span></span>
-          <label class="toggle-wrap">
-            <input type="checkbox" id="sw-regular-dhw" onchange="sendSwitch('sw_regular_dhw', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
+          <button class="step-btn" id="btn-regular-dhw" title="Start a regular DHW cycle (ECO)" onclick="pressRegularDHW()" style="width:auto; padding:0 9px; gap:5px; font-family:var(--mono); font-size:10px; letter-spacing:1px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s5.5 6 5.5 10.2A5.5 5.5 0 0 1 6.5 13.2C6.5 9 12 3 12 3z"/></svg>Start</button>
         </div>
         
       </div>
@@ -1458,8 +1452,6 @@ const CONTROLS = [
   { type:'number', pkey:'flow-z2-sp', key:'flow_climate_z2_setpoint', el:'flow-z2-sp-val', min:10, max:60, step:0.1 },
 
   // ── DHW ──
-  { type:'switch', key:'force_dhw', el:'sw-fdhw' },
-  { type:'switch', key:'sw_regular_dhw', el:'sw-regular-dhw' },
   { type:'number', pkey:'dhw-sp', key:'dhw_setpoint', el:'dhw-sp-val', min:40, max:60, step:0.5 },
   { type:'switch', key:'legionella_enabled', el:'sw-legionella' },
   { type:'number', pkey:'legionella-sp', key:'legionella_dhw_setpoint', el:'legionella-sp-val', min:50, max:60, step:0.5 },
@@ -2577,8 +2569,6 @@ function render(d) {
   setText('dhw-cons',     fmt1(d.dhw_consumed) + ' kWh');
   setText('dhw-prod',     fmt1(d.dhw_delivered) + ' kWh');
   seedPending('dhw-sp', d.dhw_flow_temp_target);
-  setToggle('sw-fdhw', d.force_dhw); 
-  setToggle('sw-regular-dhw', d.sw_regular_dhw);
   setToggle('sw-legionella', d.legionella_enabled);
   seedPending('legionella-sp', d.legionella_dhw_setpoint);
   const legSavedEl = document.getElementById('legionella-saved');
@@ -2907,6 +2897,16 @@ async function sendDHW(btn) {
     showToast('✓ DHW updated');
   } catch(e) { showToast('✗ ' + e.message, true); }
   btn.classList.remove('sending');
+}
+
+async function pressRegularDHW() {
+  try { await apiPost({ key: 'regular_dhw_button', value: 1 }); showToast('✓ Regular DHW started'); }
+  catch(e) { showToast('✗ ' + e.message, true); }
+}
+
+async function pressForceDHW() {
+  try { await apiPost({ key: 'force_dhw_button', value: 1 }); showToast('✓ Forced DHW requested'); }
+  catch(e) { showToast('✗ ' + e.message, true); }
 }
 
 async function sendLegionella(btn) {

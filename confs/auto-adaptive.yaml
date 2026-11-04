@@ -37,9 +37,6 @@ esphome:
             state.status_short_cycle_lockout = id(status_short_cycle_lockout);
             state.status_predictive_boost_active = id(status_predictive_boost_active);
 
-            state.sw_force_dhw = id(heatpump_switch_force_dhw);
-            state.sw_regular_dhw = id(heatpump_switch_regular_dhw);
-
             // Legionella DHW setpoint automation
             state.legionella_dhw_automation_enabled = id(legionella_dhw_automation_enabled);
             state.legionella_dhw_setpoint = id(legionella_dhw_setpoint);

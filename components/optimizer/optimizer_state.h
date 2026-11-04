@@ -66,8 +66,6 @@ namespace esphome
         esphome::switch_::Switch *relay_switch_z2{nullptr};
         esphome::switch_::Switch *sw_odin_override_z1{nullptr};
         esphome::switch_::Switch *sw_odin_override_z2{nullptr};
-        esphome::switch_::Switch *sw_force_dhw{nullptr};
-        esphome::switch_::Switch *sw_regular_dhw{nullptr};
 
         esphome::binary_sensor::BinarySensor *status_short_cycle_lockout;
         esphome::binary_sensor::BinarySensor *status_predictive_boost_active{nullptr};

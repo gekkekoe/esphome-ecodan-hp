@@ -64,8 +64,6 @@ asgard_dashboard:
   sw_auto_adaptive_id:               auto_adaptive_control_enabled
   sw_defrost_mit_id:                 defrost_risk_handling_enabled
   sw_smart_boost_id:                 smart_boost_enabled
-  sw_force_dhw_id:                   heatpump_switch_force_dhw
-  sw_regular_dhw_id:                    heatpump_switch_regular_dhw
 
   # ── Selects 
   sel_heating_system_type_id:        heating_system_type 
@@ -142,6 +140,8 @@ asgard_dashboard:
   lockout_strategy_id: lockout_strategy
   status_short_cycle_lockout_id: status_short_cycle_lockout
   short_cycle_mitigation_button_id: short_cycle_mitigation_button
+  force_dhw_button_id: heatpump_button_force_dhw
+  regular_dhw_button_id: heatpump_button_regular_dhw
 
   # System
   reboot_button_id: restart_button

@@ -531,7 +531,7 @@ Click **Apply Settings** to save all Auto Adaptive values.
 | Control | Description |
 |---------|-------------|
 | **Force DHW Now** | Triggers an immediate **non-ECO** (forced) DHW cycle — the heat pump heats the tank at full power regardless of the current mode. |
-| **Trigger Regular DHW** | Triggers an **ECO** mode DHW cycle — the heat pump schedules the DHW heating in its normal energy-saving fashion. |
+| **Regular DHW** | Triggers an **ECO** mode DHW cycle — the heat pump schedules the DHW heating in its normal energy-saving fashion. |
 
 ### DHW Status & Setpoint
 

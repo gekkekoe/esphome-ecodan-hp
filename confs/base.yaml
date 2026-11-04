@@ -53,6 +53,21 @@ climate:
       current_temp_func: |-
         return id(ecodan_instance).get_status().get_tank_temperature();
 
+button:
+  - platform: template
+    name: ${heatpump_button_regular_dhw}
+    id: heatpump_button_regular_dhw
+    icon: "mdi:water-boiler-auto"
+    on_press:
+      - script.execute: trigger_dhw_script
+
+  - platform: template
+    name: ${heatpump_button_force_dhw}
+    id: heatpump_button_force_dhw
+    on_press:
+      - lambda: |-
+          id(ecodan_instance).set_dhw_force(true);
+
 switch:
   - platform: template
     name: UART Logging
@@ -63,30 +78,6 @@ switch:
       - logger.set_level: VERBOSE
     turn_off_action:
       - logger.set_level: ERROR
-
-  - platform: template
-    name: ${heatpump_switch_regular_dhw}
-    id: heatpump_switch_regular_dhw
-    optimistic: true
-    # This is a trigger, not a persistent state: never restore it ON after a
-    # reboot — the trigger script does not resume, so a restored ON would
-    # look like a stuck switch (same convention as the force DHW switch).
-    restore_mode: ALWAYS_OFF
-    icon: "mdi:water-boiler-auto"
-    turn_on_action:
-      - script.execute: trigger_dhw_script
-
-  - platform: template
-    name: ${heatpump_switch_force_dhw}
-    id: heatpump_switch_force_dhw
-    restore_mode: ALWAYS_OFF
-    optimistic: true
-    turn_on_action:
-      - lambda: |-
-         id(ecodan_instance).set_dhw_force(true);
-    turn_off_action:
-      - lambda: |-
-         id(ecodan_instance).set_dhw_force(false);
 
   - platform: template
     name: ${heatpump_switch_holiday}
@@ -606,27 +597,6 @@ binary_sensor:
     status_dhw_forced:
       name: ${status_dhw_forced}
       id: status_dhw_forced
-      trigger_on_initial_state: true
-      on_state:
-        if:
-          condition:
-            and:
-              - binary_sensor.is_off: status_dhw_forced
-              - switch.is_on: heatpump_switch_force_dhw
-          then:
-            - switch.template.publish:
-                id: heatpump_switch_force_dhw
-                state: OFF
-          else:
-            if:
-              condition:
-                and:
-                  - binary_sensor.is_on: status_dhw_forced
-                  - switch.is_off: heatpump_switch_force_dhw
-              then:
-                - switch.template.publish:
-                    id: heatpump_switch_force_dhw
-                    state: ON
     status_power:
       internal: true
       id: status_power
@@ -707,7 +677,6 @@ script:
                 format: "DHW is already running. Skipping script."
                 tag: "asgard"
                 level: INFO
-            - switch.turn_off: heatpump_switch_regular_dhw
             - script.stop: trigger_dhw_script
 
       # Save the flags once.
@@ -758,9 +727,8 @@ script:
             id(ecodan_instance).set_controller_mode(saved, true);
 
       - logger.log:
-          format: "DHW trigger complete. Turning off switch."
+          format: "DHW trigger complete."
           tag: "asgard"
           level: INFO
-      - switch.turn_off: heatpump_switch_regular_dhw
 
 <<: !include stats.yaml
