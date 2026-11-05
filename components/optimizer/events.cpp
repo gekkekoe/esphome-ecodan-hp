@@ -51,19 +51,11 @@ namespace esphome
             float current_flow_setpoint = (zone == OptimizerZone::ZONE_2) ? status.Zone2FlowTemperatureSetPoint : status.Zone1FlowTemperatureSetPoint;
             float adjusted_flow = actual_flow_temp;
 
-            time_t current_timestamp = status.timestamp();
-
             if (this->is_dhw_active(status)) {
                 const esphome::ecodan::Zone ez = (zone == OptimizerZone::ZONE_2)
                     ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1;
                 if (!status.is_auto_adaptive_heating(ez))
                     return;
-
-                if (status.CompressorOn && current_timestamp > 0) {
-                    const uint32_t after_dhw_monitoring_duration_s = 5 * 60UL;
-                    this->dhw_post_run_expiration_ = (uint32_t)(current_timestamp + after_dhw_monitoring_duration_s);
-                    ESP_LOGD(OPTIMIZER_TAG, "Setting monitor expiration to: %lu", this->dhw_post_run_expiration_);
-                }
 
                 // Trail already when nearly at the DHW target: within 1 °C of it.
                 if (std::isnan(status.DhwFlowTemperatureSetPoint) ||
@@ -298,6 +290,19 @@ namespace esphome
 
                 ESP_LOGD(OPTIMIZER_TAG, "DHW/Legionella from mode %d. Saved restore setpoints: Z1=%.1f, Z2=%.1f",
                     previous_mode, this->dhw_old_z1_setpoint_, this->dhw_old_z2_setpoint_);
+            }
+
+            // Armed on DHW -> heating transition to allow a window of 5m without clamping
+            bool dhw_to_heating = (previous_mode == dhw_mode || previous_mode == legionella_mode)
+                               && (new_mode == heating_mode);
+
+            if (dhw_to_heating) {
+                time_t current_timestamp = status.timestamp();
+                if (current_timestamp > 0) {
+                    const uint32_t after_dhw_monitoring_duration_s = 5 * 60UL;
+                    this->dhw_post_run_expiration_ = (uint32_t)(current_timestamp + after_dhw_monitoring_duration_s);
+                    ESP_LOGD(OPTIMIZER_TAG, "Setting monitor expiration to: %lu", this->dhw_post_run_expiration_);
+                }
             }
 
             if (new_mode == heating_mode && previous_mode != heating_mode && this->state_.auto_adaptive_control_enabled->state) {
