@@ -447,7 +447,7 @@ sensor:
           }
 
           if (controller_day != last_day_of_year) {
-            ESP_LOGI("ecodan.energy", "day key %d -> %d, first observer", last_day_of_year, controller_day);
+            ESP_LOGI("ecodan.component", "day key %d -> %d, first observer", last_day_of_year, controller_day);
             last_day_of_year = controller_day;
             partial_sum = 0.0f;
             last_value = x;
