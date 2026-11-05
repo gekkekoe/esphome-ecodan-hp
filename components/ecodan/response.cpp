@@ -117,6 +117,11 @@ namespace ecodan
             break;
         case GetType::DATETIME_FIRMWARE:
             {
+                if (res[1] + 100 != status.ControllerDateTime.tm_year || res[2] != status.ControllerDateTime.tm_mon + 1 || res[3] != status.ControllerDateTime.tm_mday) {
+                    ESP_LOGI(TAG, "Date %04d-%02d-%02d, bytes %02X %02X %02X %02X %02X %02X %02X %02X, stored %04d-%02d-%02d",
+                             2000 + res[1], res[2], res[3], res[1], res[2], res[3], res[4], res[5], res[6], res[7], res[8],
+                             1900 + status.ControllerDateTime.tm_year, status.ControllerDateTime.tm_mon + 1, status.ControllerDateTime.tm_mday);
+                }
                 status.ControllerDateTime.tm_year = 100 + res[1];
                 status.ControllerDateTime.tm_mon = res[2] - 1;
                 status.ControllerDateTime.tm_mday = res[3];

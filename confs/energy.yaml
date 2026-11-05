@@ -140,6 +140,7 @@ sensor:
             if (today != last_day) {
               id(total_heating_consumed) += x;
               id(last_heating_consumed_update_day) = today;
+              ESP_LOGI("ecodan.energy", "heating_consumed day key %d -> %d, add %.2f, total %.2f", last_day, today, x, id(total_heating_consumed));
               id(sensor_heating_consumed_total).publish_state(id(total_heating_consumed));
             }
 
