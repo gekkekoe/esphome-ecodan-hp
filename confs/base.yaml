@@ -447,7 +447,7 @@ sensor:
           }
 
           if (controller_day != last_day_of_year) {
-            ESP_LOGI("ecodan.component", "day key %d -> %d, first observer", last_day_of_year, controller_day);
+            ESP_LOGI("ecodan.trace", "day key %d -> %d, first observer", last_day_of_year, controller_day);
             last_day_of_year = controller_day;
             partial_sum = 0.0f;
             last_value = x;
@@ -484,7 +484,7 @@ sensor:
       }
 
       production += status.ComputedOutputPower * 10.0 / (60.0*60.0);
-      //ESP_LOGE("ecodan.component", "last: %f, production: %f, raw: %f", last_input_value, production, status.ComputedOutputPower);
+      //ESP_LOGE("ecodan.trace", "last: %f, production: %f, raw: %f", last_input_value, production, status.ComputedOutputPower);
 
       if (last_input_value == 0.0f) {
         last_input_value = status.EnergyConsumedIncreasing;
@@ -553,7 +553,7 @@ sensor:
 
       int previous_day = (int)previous_day_float;
       if (controller_day != previous_day) {
-        ESP_LOGD("ecodan.component", "Day transition detected (%d -> %d). Resetting integration sensor.", previous_day, controller_day);        
+        ESP_LOGD("ecodan.trace", "Day transition detected (%d -> %d). Resetting integration sensor.", previous_day, controller_day);        
         id(daily_computed_output_power).reset(); 
       }
       return (float)controller_day;

@@ -91,6 +91,7 @@ logger:
   baud_rate: 115200
   logs:
     ecodan.component: WARN
+    ecodan.trace: DEBUG
     auto_adaptive: DEBUG
     short_cycle: DEBUG
 
