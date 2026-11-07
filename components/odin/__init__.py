@@ -37,7 +37,7 @@ CONF_CLIMATE_Z2_ID = "climate_z2_id"
 CONF_DHW_FLOW_TEMP_TARGET_ID = "dhw_flow_temp_target_id"
 CONF_DHW_FLOW_TEMP_DROP_ID = "dhw_flow_temp_drop_id"
 CONF_REGULAR_DHW_BUTTON_ID = "regular_dhw_button_id"
-CONF_FORCE_DHW_BUTTON_ID = "force_dhw_button_id"
+CONF_FORCE_DHW_SWITCH_ID = "force_dhw_switch_id"
 CONF_LEGIONELLA_SAVED_SETPOINT_ID = "legionella_saved_dhw_setpoint_id"
 CONF_DHW_CLIMATE_ID = "dhw_climate_id"
 
@@ -60,7 +60,7 @@ _OPTIONAL_ENTITIES = [
     (CONF_DHW_FLOW_TEMP_TARGET_ID, "set_dhw_flow_temp_target", sensor.Sensor),
     (CONF_DHW_FLOW_TEMP_DROP_ID, "set_dhw_flow_temp_drop", sensor.Sensor),
     (CONF_REGULAR_DHW_BUTTON_ID, "set_regular_dhw_button", button.Button),
-    (CONF_FORCE_DHW_BUTTON_ID, "set_force_dhw_button", button.Button),
+    (CONF_FORCE_DHW_SWITCH_ID, "set_force_dhw_switch", switch.Switch),
     (CONF_ACTIVE_SENSOR_ID, "set_active_sensor", binary_sensor.BinarySensor),
     (CONF_TAKEOVER_SENSOR_ID, "set_takeover_sensor", binary_sensor.BinarySensor),
     (CONF_LOCKOUT_SENSOR_ID, "set_lockout_sensor", binary_sensor.BinarySensor),

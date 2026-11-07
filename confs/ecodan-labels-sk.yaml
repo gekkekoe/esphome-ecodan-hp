@@ -25,7 +25,7 @@ substitutions:
   led_brightness: Jas LED
   led_switch: LED indikátor
   heatpump_button_regular_dhw: Bežná TÚV
-  heatpump_button_force_dhw: Vynútiť ohrev TÚV
+  heatpump_switch_force_dhw: Vynútiť ohrev TÚV
   heatpump_switch_power_mode: Tepelné čerpadlo
   heatpump_switch_holiday: Režim dovolenky
   wifi_signal_proc: WiFi signál (%)

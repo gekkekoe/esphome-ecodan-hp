@@ -25,7 +25,7 @@ substitutions:
   led_brightness: Svetlost LED
   led_switch: LED
   heatpump_button_regular_dhw: Redna TSV
-  heatpump_button_force_dhw: Prisilna TSV
+  heatpump_switch_force_dhw: Prisilna TSV
   heatpump_switch_power_mode: Toplotna črpalka
   heatpump_switch_holiday: Počitniški način
   wifi_signal_proc: WiFi signal %

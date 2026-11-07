@@ -25,7 +25,7 @@ substitutions:
   led_brightness: Led helderheid
   led_switch: Led schakelaar
   heatpump_button_regular_dhw: Normaal sww
-  heatpump_button_force_dhw: Forceer sww
+  heatpump_switch_force_dhw: Forceer sww
   heatpump_switch_power_mode: Warmtepomp
   heatpump_switch_holiday: Vakantie modus
   wifi_signal_proc: WiFi Signaal %

@@ -58,8 +58,9 @@ odin:
   # The DHW climate entity — its target temperature is the HP's DHW setpoint
   # (legionella override/restore, same mechanism as the local optimizer).
   dhw_climate_id: heatpump_climate_dhw
-  # DHW triggers — the same buttons the local auto-adaptive control uses:
-  # the presses run trigger_dhw_script / set_dhw_force (base.yaml). ODIN does
-  # not switch the heat/cool operating mode — that stays a local decision.
+  # DHW triggers — the same entities the local auto-adaptive control uses:
+  # the button press runs trigger_dhw_script, switching ON calls set_dhw_force
+  # (base.yaml). ODIN does not switch the heat/cool operating mode — that
+  # stays a local decision.
   regular_dhw_button_id: heatpump_button_regular_dhw
-  force_dhw_button_id: heatpump_button_force_dhw
+  force_dhw_switch_id: heatpump_switch_force_dhw

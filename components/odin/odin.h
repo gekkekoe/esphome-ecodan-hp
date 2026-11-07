@@ -66,8 +66,7 @@ public:
   void set_legionella_saved_setpoint(globals::RestoringGlobalsComponent<float> *g) {
     this->legionella_saved_setpoint_ = g;
   }
-
-  void set_force_dhw_button(button::Button *b) { this->force_dhw_button_ = b; }
+  void set_force_dhw_switch(switch_::Switch *sw) { this->force_dhw_switch_ = sw; }
 
   // ── The room temperature ODIN hands back ───────────────────────────────────
   float inherited_room_temp(int zone);
@@ -125,7 +124,7 @@ protected:
   button::Button *regular_dhw_button_{nullptr};
   globals::RestoringGlobalsComponent<float> *legionella_saved_setpoint_{nullptr};
   climate::Climate *dhw_climate_{nullptr};
-  button::Button *force_dhw_button_{nullptr};
+  switch_::Switch *force_dhw_switch_{nullptr};
 
   // The inherited fix as it arrived, and when that message arrived on THIS device's
   // clock (there is no wall clock here, so ODIN's `ts` cannot be compared against

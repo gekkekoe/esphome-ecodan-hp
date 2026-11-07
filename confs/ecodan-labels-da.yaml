@@ -25,7 +25,7 @@ substitutions:
   led_brightness: LED lysstyrke
   led_switch: LED
   heatpump_button_regular_dhw: Normalt varmt vand
-  heatpump_button_force_dhw: Tving Brugsvand
+  heatpump_switch_force_dhw: Tving Brugsvand
   heatpump_switch_power_mode: Varmepumpe
   heatpump_switch_holiday: Ferie-tilstand styring
   wifi_signal_proc: WiFi-signal %

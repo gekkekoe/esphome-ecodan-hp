@@ -25,7 +25,7 @@ substitutions:
   led_brightness: LEDin kirkkaus
   led_switch: LED
   heatpump_button_regular_dhw: Normaali LKV
-  heatpump_button_force_dhw: Pakota LKV
+  heatpump_switch_force_dhw: Pakota LKV
   heatpump_switch_power_mode: Lämpöpumppu
   heatpump_switch_holiday: Lomatoiminto
   wifi_signal_proc: WiFi-signaali %

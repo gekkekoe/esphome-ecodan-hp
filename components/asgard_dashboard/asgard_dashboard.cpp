@@ -352,10 +352,6 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
       if (regular_dhw_button_ != nullptr) regular_dhw_button_->press();
       return;
   }
-  if (key == "force_dhw_button") {
-      if (force_dhw_button_ != nullptr) force_dhw_button_->press();
-      return;
-  }
   if (key == "reboot_button") {
       if (reboot_button_ != nullptr) reboot_button_->press();
       return;
@@ -368,6 +364,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "auto_adaptive_control_enabled") { doSwitch(sw_auto_adaptive_); return; }
   if (key == "defrost_risk_handling_enabled") { doSwitch(sw_defrost_mit_);   return; }
   if (key == "smart_boost_enabled")           { doSwitch(sw_smart_boost_);   return; }
+  if (key == "force_dhw")                     { doSwitch(sw_force_dhw_);     return; }
   if (key == "ow_enable")                     { doSwitch(sw_ow_enable_);     return; }
   if (key == "power_mode")                    { doSwitch(sw_power_mode_);    return; }
   if (key == "service_codes_enabled")           { doSwitch(sw_service_codes_enabled_); return; }
@@ -549,6 +546,7 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.sw_auto_adaptive = get_sw(sw_auto_adaptive_);
   current_snapshot_.sw_defrost_mit = get_sw(sw_defrost_mit_);
   current_snapshot_.sw_smart_boost = get_sw(sw_smart_boost_);
+  current_snapshot_.sw_force_dhw = get_sw(sw_force_dhw_);
   current_snapshot_.sw_ow_enable = get_sw(sw_ow_enable_);
 
   // Server control
@@ -892,6 +890,7 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_b("auto_adaptive_control_enabled", snap.sw_auto_adaptive);
   p_b("defrost_risk_handling_enabled", snap.sw_defrost_mit);
   p_b("smart_boost_enabled",         snap.sw_smart_boost);
+  p_b("force_dhw",                   snap.sw_force_dhw);
   p_b("ow_enable",                   snap.sw_ow_enable);
   p_b("power_mode", snap.sw_power_mode);
   p_b("service_codes_enabled", snap.sw_service_codes_enabled);

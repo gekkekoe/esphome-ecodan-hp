@@ -78,6 +78,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("sw_auto_adaptive_id"):                cv.use_id(switch.Switch),
         cv.Optional("sw_defrost_mit_id"):                  cv.use_id(switch.Switch),
         cv.Optional("sw_smart_boost_id"):                  cv.use_id(switch.Switch),
+        cv.Optional("sw_force_dhw_id"):                    cv.use_id(switch.Switch),
         cv.Optional("sw_power_mode_id"):                   cv.use_id(switch.Switch),
         cv.Optional("sw_service_codes_enabled_id"):        cv.use_id(switch.Switch),
         cv.Optional("sw_holiday_mode_id"):                 cv.use_id(switch.Switch),
@@ -190,7 +191,6 @@ CONFIG_SCHEMA = cv.Schema(
         # System
         cv.Optional("reboot_button_id"): cv.use_id(button.Button),
         cv.Optional("regular_dhw_button_id"): cv.use_id(button.Button),
-        cv.Optional("force_dhw_button_id"): cv.use_id(button.Button),
 
     }
 ).extend(cv.COMPONENT_SCHEMA)
@@ -261,6 +261,7 @@ async def to_code(config):
         ("sw_auto_adaptive_id",               "set_sw_auto_adaptive"),
         ("sw_defrost_mit_id",                 "set_sw_defrost_mit"),
         ("sw_smart_boost_id",                 "set_sw_smart_boost"),
+        ("sw_force_dhw_id",                   "set_sw_force_dhw"),
         ("sw_ow_enable_id",                   "set_sw_ow_enable"),
         ("sel_heating_system_type_id",        "set_sel_heating_system_type"),
         ("sel_room_temp_source_z1_id",        "set_sel_room_temp_source_z1"),
@@ -340,7 +341,6 @@ async def to_code(config):
         ("short_cycle_mitigation_button_id",  "set_short_cycle_mitigation_button"),
         ("reboot_button_id",                "set_reboot_button"),
         ("regular_dhw_button_id",  "set_regular_dhw_button"),
-        ("force_dhw_button_id",  "set_force_dhw_button"),
 
         ("ow_sensor_0_id",                  "set_ow_sensor_0"),
         ("ow_sensor_1_id",                  "set_ow_sensor_1"),

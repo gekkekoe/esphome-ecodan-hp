@@ -140,7 +140,7 @@ asgard_dashboard:
   lockout_strategy_id: lockout_strategy
   status_short_cycle_lockout_id: status_short_cycle_lockout
   short_cycle_mitigation_button_id: short_cycle_mitigation_button
-  force_dhw_button_id: heatpump_button_force_dhw
+  sw_force_dhw_id: heatpump_switch_force_dhw
   regular_dhw_button_id: heatpump_button_regular_dhw
 
   # System

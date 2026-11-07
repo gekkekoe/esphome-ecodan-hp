@@ -57,7 +57,7 @@ substitutions:
   heatpump_select_dhw_mode: TWW-Modus
   heatpump_select_operating_mode: Betriebsmodus
   heatpump_button_regular_dhw: Normales Warmwasser
-  heatpump_button_force_dhw: TWW erzwingen
+  heatpump_switch_force_dhw: TWW erzwingen
   heatpump_switch_holiday: Urlaubsmodus
   heatpump_switch_power_mode: Wärmepumpe
   hotwater: Warmwasser

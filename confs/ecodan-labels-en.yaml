@@ -25,7 +25,7 @@ substitutions:
   led_brightness: LED Brightness
   led_switch: LED
   heatpump_button_regular_dhw: Regular DHW
-  heatpump_button_force_dhw: Force DHW
+  heatpump_switch_force_dhw: Force DHW
   heatpump_switch_power_mode: Heatpump
   heatpump_switch_holiday: Holiday Mode
   wifi_signal_proc: WiFi Signal %

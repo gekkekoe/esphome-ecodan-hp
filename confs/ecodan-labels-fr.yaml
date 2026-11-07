@@ -25,7 +25,7 @@ substitutions:
   led_brightness: Luminosité LED
   led_switch: LED
   heatpump_button_regular_dhw: ECS normale
-  heatpump_button_force_dhw: Forcer ECS
+  heatpump_switch_force_dhw: Forcer ECS
   heatpump_switch_power_mode: Pompe à chaleur
   heatpump_switch_holiday: Mode vacances
   wifi_signal_proc: Signal Wifi %

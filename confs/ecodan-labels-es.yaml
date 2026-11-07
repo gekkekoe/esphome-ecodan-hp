@@ -25,7 +25,7 @@ substitutions:
   led_brightness: Brillo del LED
   led_switch: LED
   heatpump_button_regular_dhw: ACS normal
-  heatpump_button_force_dhw: Forzar ACS
+  heatpump_switch_force_dhw: Forzar ACS
   heatpump_switch_power_mode: Bomba de calor
   heatpump_switch_holiday: Modo Vacaciones
   wifi_signal_proc: Señal WiFi %
