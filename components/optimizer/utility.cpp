@@ -71,7 +71,7 @@ namespace esphome
         float Optimizer::get_feed_temp(OptimizerZone zone) {
             auto &status = this->state_.ecodan_instance->get_status();
             auto ecodan_zone = (zone == OptimizerZone::ZONE_2) ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1;
-            if (status.has_zone_temps(ecodan_zone))
+            if (status.has_independent_zone_temps())
                 return status.zone_feed_temperature(ecodan_zone);
             return status.primary_feed_temperature();
         }
@@ -79,7 +79,7 @@ namespace esphome
         float Optimizer::get_return_temp(OptimizerZone zone) {
             auto &status = this->state_.ecodan_instance->get_status();
             auto ecodan_zone = (zone == OptimizerZone::ZONE_2) ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1;
-            if (status.has_zone_temps(ecodan_zone))
+            if (status.has_independent_zone_temps())
                 return status.zone_return_temperature(ecodan_zone);
             return status.primary_return_temperature();
         }
@@ -282,9 +282,7 @@ namespace esphome
             float feed = this->get_feed_temp(zone);
             float ret = guard_return_temp;
 
-            bool guard_zone_temps = status.has_zone_temps(zone == OptimizerZone::ZONE_2
-                ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1);
-            bool guard_enabled = guard_zone_temps && !isnan(feed) && !isnan(ret);
+            bool guard_enabled = status.has_independent_zone_temps() && !isnan(feed) && !isnan(ret);
 
             if (cooling)
             {
