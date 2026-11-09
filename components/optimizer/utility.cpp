@@ -202,6 +202,20 @@ namespace esphome
             return target_temp;
         }
 
+        bool Optimizer::vt_is_off_(OptimizerZone zone) {
+            auto *src = (zone == OptimizerZone::ZONE_2)
+                ? this->state_.temperature_feedback_source_z2
+                : this->state_.temperature_feedback_source_z1;
+            const auto source = (src != nullptr && src->has_state())
+                ? src->active_index().value_or(0) : 0;
+            if (source != 2) return false;
+
+            auto *vt = (zone == OptimizerZone::ZONE_2)
+                ? this->state_.asgard_vt_z2
+                : this->state_.asgard_vt_z1;
+            return vt != nullptr && vt->mode == esphome::climate::CLIMATE_MODE_OFF;
+        }
+
         FlowLimits Optimizer::get_flow_limits(OptimizerZone zone) {
             float min_flow, max_flow;
             if (zone == OptimizerZone::ZONE_2) {

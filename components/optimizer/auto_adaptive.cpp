@@ -189,6 +189,11 @@ namespace esphome
                                                float &out_flow_heat,
                                                float &out_flow_cool) {
             auto zone = (i == 0) ? esphome::ecodan::Zone::ZONE_1 : esphome::ecodan::Zone::ZONE_2;
+
+            if (this->vt_is_off_((i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2)) {
+                ESP_LOGD(OPTIMIZER_TAG, "Z%d virtual thermostat OFF — zone skipped by auto-adaptive.", (i + 1));
+                return;
+            }
             // ODIN is in direct control via the MQTT forwarder: it is the
             // sole writer of the flow setpoint. Computing and writing a local
             // value would fight ODIN on every 5-minute cycle. The AA loop

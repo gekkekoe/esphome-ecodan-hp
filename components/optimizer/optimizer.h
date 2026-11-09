@@ -135,6 +135,7 @@ namespace esphome
       float clamp_flow_temp(float flow, float min_temp, float max_temp);
       float enforce_step_limit(const ecodan::Status &status, float actual_flow, float calculated_flow, bool is_cooling_mode);
       float resolve_room_temp_(OptimizerZone zone, int *answered);
+      bool  vt_is_off_(OptimizerZone zone);
       bool  odin_room_gate_(OptimizerZone zone, float *value, float *age, float *max_age);
       bool  set_flow_temp(float flow, OptimizerZone zone);
       float round_nearest(float input)      { return round(input * 10.0f) / 10.0f; }
