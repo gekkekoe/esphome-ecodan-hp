@@ -1,6 +1,7 @@
 #include "asgard_dashboard.h"
 #include "dashboard_html.h"
 #include "setup_html.h"
+#include "vt_test_html.h"
 #include "dashboard_js.h"
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
@@ -102,6 +103,22 @@ void EcodanDashboard::loop() {
     update_snapshot_();
   }
 
+  // A hand-closed contact from /vt-test is a continuous heat demand: release it
+  // on timeout, and immediately when the thermostat takes the zone back.
+  for (int z = 0; z < 2; z++) {
+    if (!vt_forced_[z]) continue;
+    climate::Climate *c = (z == 0) ? virtual_climate_z1_ : virtual_climate_z2_;
+    switch_::Switch *relay = (z == 0) ? sw_relay_z1_ : sw_relay_z2_;
+    const bool takeover = (c != nullptr && c->mode != climate::CLIMATE_MODE_OFF);
+    if (takeover || (int32_t) (vt_force_until_ms_[z] - now) <= 0) {
+      if (relay != nullptr) relay->turn_off();
+      vt_forced_[z] = false;
+      vt_force_until_ms_[z] = 0;
+      ESP_LOGW(TAG, "vt_test: zone %d contact released automatically (%s)", z + 1,
+               takeover ? "thermostat took over" : "timeout");
+    }
+  }
+
 
   std::vector<DashboardAction> todo;
   
@@ -130,6 +147,7 @@ bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
   auto url = request->url_to(url_buf);
   return (url == "/dashboard" || url == "/dashboard/" ||
           url == "/setup" ||
+          url == "/vt-test" ||
           url == "/dashboard/setup" ||
           url == "/dashboard/state" || url == "/dashboard/set" ||
           url == "/dashboard/history" || url == "/dashboard/odin" ||
@@ -143,6 +161,7 @@ void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
   
   if      (url == "/dashboard" || url == "/dashboard/") handle_root_(request);
   else if (url == "/setup" || url == "/dashboard/setup")   handle_setup_(request);
+  else if (url == "/vt-test" || url == "/vt-test/")            handle_vt_test_(request);
   else if (url == "/dashboard/state")                   handle_state_(request);
   else if (url == "/dashboard/set")                     handle_set_(request);
   else if (url == "/dashboard/history")                 handle_history_request_(request);
@@ -197,6 +216,10 @@ void EcodanDashboard::handle_root_(AsyncWebServerRequest *request) {
 
 void EcodanDashboard::handle_setup_(AsyncWebServerRequest *request) {
   send_chunked_(request, "text/html", SETUP_HTML_GZ, SETUP_HTML_GZ_LEN, "no-cache");
+}
+
+void EcodanDashboard::handle_vt_test_(AsyncWebServerRequest *request) {
+  send_chunked_(request, "text/html", VT_TEST_HTML_GZ, VT_TEST_HTML_GZ_LEN, "no-cache");
 }
 
 void EcodanDashboard::handle_js_(AsyncWebServerRequest *request) {
@@ -371,6 +394,40 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "holiday_mode")                    { doSwitch(sw_holiday_mode_);        return; }
   if (key == "legionella_enabled")                { doSwitch(sw_legionella_dhw_automation_); return; }
   if (key == "predictive_short_cycle_control_enabled") { doSwitch(pred_sc_switch_);   return; }
+
+  // Virtual thermostat wiring test (/vt-test): drive the zone contact by hand.
+  // Refused while the zone thermostat is still calling for heat or the ODIN
+  // override owns the relay — same interlock as the Manual Relay switch in YAML.
+  if (key == "vt_test_relay_z1" || key == "vt_test_relay_z2") {
+    const int z = (key.back() == '2') ? 1 : 0;
+    switch_::Switch *relay = (z == 0) ? sw_relay_z1_ : sw_relay_z2_;
+    switch_::Switch *ovr = (z == 0) ? sw_odin_override_z1_ : sw_odin_override_z2_;
+    climate::Climate *c = (z == 0) ? virtual_climate_z1_ : virtual_climate_z2_;
+    if (relay == nullptr) {
+      ESP_LOGW(TAG, "vt_test: no relay configured for zone %d", z + 1);
+      return;
+    }
+    if (fval > 0.5f) {
+      if (c != nullptr && c->mode != climate::CLIMATE_MODE_OFF) {
+        ESP_LOGW(TAG, "vt_test: zone %d contact NOT closed - turn off the virtual thermostat first", z + 1);
+        return;
+      }
+      if (ovr != nullptr && ovr->state) {
+        ESP_LOGW(TAG, "vt_test: zone %d contact NOT closed - ODIN relay override is active", z + 1);
+        return;
+      }
+      relay->turn_on();
+      vt_forced_[z] = true;
+      vt_force_until_ms_[z] = millis() + VT_FORCE_MAX_MS;
+      ESP_LOGW(TAG, "vt_test: zone %d contact closed, auto-release in %d s", z + 1, (int) (VT_FORCE_MAX_MS / 1000));
+    } else {
+      relay->turn_off();
+      vt_forced_[z] = false;
+      vt_force_until_ms_[z] = 0;
+      ESP_LOGI(TAG, "vt_test: zone %d contact opened", z + 1);
+    }
+    return;
+  }
 
   // Server control
   if (key == "server_control_enabled")             { doSwitch(sw_server_control_);          return; }
@@ -556,6 +613,28 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.sw_sc_prohibit_z1_cooling = get_sw(sw_sc_prohibit_z1_cooling_);
   current_snapshot_.sw_sc_prohibit_z2_heating = get_sw(sw_sc_prohibit_z2_heating_);
   current_snapshot_.sw_sc_prohibit_z2_cooling = get_sw(sw_sc_prohibit_z2_cooling_);
+
+  // Virtual thermostat wiring test (/vt-test): raw bus facts and driven relay
+  if (ecodan_ != nullptr) {
+    const auto &st = ecodan_->get_status();
+    current_snapshot_.dip1 = st.DipSwitch1;
+    current_snapshot_.dip2 = st.DipSwitch2;
+    current_snapshot_.dip3 = st.DipSwitch3;
+    current_snapshot_.master_z1 = st.MasterZone1;
+    current_snapshot_.master_z2 = st.MasterZone2;
+    current_snapshot_.prohibit_heat_z1 = st.ProhibitHeatingZ1;
+    current_snapshot_.prohibit_heat_z2 = st.ProhibitHeatingZ2;
+  }
+  current_snapshot_.vt_relay_z1 = get_sw(sw_relay_z1_);
+  current_snapshot_.vt_relay_z2 = get_sw(sw_relay_z2_);
+  current_snapshot_.vt_ovr_z1 = get_sw(sw_odin_override_z1_);
+  current_snapshot_.vt_ovr_z2 = get_sw(sw_odin_override_z2_);
+  current_snapshot_.vt_force_z1 = vt_forced_[0];
+  current_snapshot_.vt_force_z2 = vt_forced_[1];
+  current_snapshot_.vt_left_z1 = vt_forced_[0] ? (int32_t) (vt_force_until_ms_[0] - millis()) / 1000.0f : 0.0f;
+  current_snapshot_.vt_left_z2 = vt_forced_[1] ? (int32_t) (vt_force_until_ms_[1] - millis()) / 1000.0f : 0.0f;
+  current_snapshot_.vt_input_z1 = (num_vt_input_z1_ != nullptr && num_vt_input_z1_->has_state()) ? num_vt_input_z1_->state : NAN;
+  current_snapshot_.vt_input_z2 = (num_vt_input_z2_ != nullptr && num_vt_input_z2_->has_state()) ? num_vt_input_z2_->state : NAN;
 
   // Populate Floats
   current_snapshot_.hp_feed_temp = get_f(hp_feed_temp_);
@@ -989,6 +1068,23 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
     p_sel(OW_MAP_KEYS[i], snap.ow_map[i]);
     p_f(OW_ROLE_KEYS[i], snap.ow_role[i]);
   }
+
+  if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
+
+  // Virtual thermostat wiring test (/vt-test)
+  auto p_i = [&](const char* k, int v) {
+    int w = snprintf(buf.data() + off, space_left(), "\"%s\":%d,", k, v);
+    safe_add_offset(w);
+  };
+  p_i("vt_z2_built", (sw_relay_z2_ != nullptr) ? 1 : 0);
+  p_i("dip1", snap.dip1);      p_i("dip2", snap.dip2);       p_i("dip3", snap.dip3);
+  p_i("master_z1", snap.master_z1); p_i("master_z2", snap.master_z2);
+  p_b("vt_relay_z1", snap.vt_relay_z1);   p_b("vt_relay_z2", snap.vt_relay_z2);
+  p_b("vt_ovr_z1", snap.vt_ovr_z1);       p_b("vt_ovr_z2", snap.vt_ovr_z2);
+  p_b("vt_force_z1", snap.vt_force_z1);   p_b("vt_force_z2", snap.vt_force_z2);
+  p_b("prohibit_heat_z1", snap.prohibit_heat_z1); p_b("prohibit_heat_z2", snap.prohibit_heat_z2);
+  p_n("vt_input_z1", snap.vt_input_z1);   p_n("vt_input_z2", snap.vt_input_z2);
+  p_n("vt_left_z1", snap.vt_left_z1);     p_n("vt_left_z2", snap.vt_left_z2);
 
   int w6 = snprintf(buf.data() + off, space_left(), "\"local_ip\":\"%s\",\"_uptime_ms\":%lu}", snap.local_ip, (unsigned long)millis());
   safe_add_offset(w6);

@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asgard Virtual Thermostat Test</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg:     #0a0e1a;
+            --bg2:    #0f1525;
+            --bg3:    #151c30;
+            --card:   #131929;
+            --border: #1e2d4a;
+            --accent: #00c8ff;
+            --accent3:#7fff7f;
+            --warn:   #ffb020;
+            --danger: #ff4455;
+            --text:   #ffffff;
+            --text2:  #b4c6e7;
+            --text3:  #8295b8;
+            --radius: 12px;
+            --mono:   'JetBrains Mono', monospace;
+            --sans:   'Space Grotesk', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: var(--sans); min-height: 100vh;
+            display: flex;
+        }
+        .wizard-wrap { margin: auto; width: 100%; max-width: 640px; padding: 28px 16px; }
+
+        .brand-container { text-align: center; margin-bottom: 18px; }
+        .brand-wordmark { font-family: var(--mono); font-size: 32px; font-weight: 700; color: var(--accent); letter-spacing: 6px; }
+        .brand-sub { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+        .brand-links { margin-top: 10px; font-family: var(--mono); font-size: 11px; }
+        .brand-links a { color: var(--text3); text-decoration: none; margin: 0 6px; }
+        .brand-links a:hover { color: var(--accent); }
+
+        .wizard-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); width: 100%;
+            overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .progress-track { height: 3px; background: var(--bg3); }
+        .progress-fill { height: 100%; width: 16.67%; background: var(--accent); transition: width 0.35s ease; }
+        .progress-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 30px 2px; background: var(--bg2); border-bottom: 1px solid var(--border);
+        }
+        .step-dots { display: flex; align-items: center; gap: 8px; }
+        .dot {
+            width: 9px; height: 9px; border-radius: 9px;
+            background: transparent; border: 1.5px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        .dot.completed { background: var(--accent3); border-color: var(--accent3); }
+        .dot.active { width: 24px; background: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px rgba(0,200,255,0.45); }
+        .progress-info { text-align: right; }
+        .step-name { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: 0.5px; }
+        .step-count { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 1px; margin-top: 2px; }
+
+        .step-content { padding: 26px 30px; display: none; animation: fadeIn 0.3s ease; }
+        .step-content.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+        .step-desc { font-size: 15px; color: var(--text2); margin-bottom: 18px; line-height: 1.55; }
+        .step-desc b { color: var(--text); }
+
+        .info-box { background: var(--bg3); border: 1px dashed var(--border); border-radius: 8px; padding: 14px; font-size: 13px; color: var(--text3); margin-top: 15px; line-height: 1.5; }
+        .info-box code { color: var(--accent); font-family: var(--mono); }
+        .sub-label { font-size: 11px; font-family: var(--mono); color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin: 18px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+
+        .option-card {
+            background: var(--bg3); border: 1px solid var(--border); border-radius: 10px;
+            padding: 16px; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+            display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;
+        }
+        .option-card:hover { border-color: var(--text3); }
+        .option-card.selected { border-color: var(--accent); background: rgba(0,200,255,0.06); }
+        .option-card .opt-title { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .option-card .opt-desc { font-size: 13px; color: var(--text3); line-height: 1.55; }
+        .opt-badge { font-size: 10px; font-family: var(--mono); color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; padding: 2px 6px; letter-spacing: 1px; }
+
+        table.sig { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 13px; }
+        table.sig th { text-align: left; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); font-weight: 600; padding: 6px 4px; border-bottom: 1px solid var(--border); }
+        table.sig td { padding: 9px 4px; border-bottom: 1px solid rgba(30,45,74,0.55); vertical-align: top; color: var(--text2); }
+        table.sig td.val { text-align: right; white-space: nowrap; color: var(--text); }
+        table.sig td.exp { text-align: right; white-space: nowrap; color: var(--text3); font-size: 11px; }
+        .param-label { position: relative; display: inline-flex; align-items: center; gap: 4px; cursor: default; }
+        .param-label .tip-icon { width: 13px; height: 13px; border-radius: 50%; border: 1px solid var(--text3); color: var(--text3); font-size: 9px; font-family: var(--mono); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0.6; transition: opacity 0.15s; }
+        .param-label:hover .tip-icon { opacity: 1; border-color: var(--accent); color: var(--accent); }
+        .param-label .tip-box { visibility: hidden; opacity: 0; position: absolute; left: 0; top: calc(100% + 6px); z-index: 999; background: var(--bg3); border: 1px solid var(--accent); border-radius: 7px; padding: 8px 10px; width: 240px; font-size: 10px; font-family: var(--mono); color: var(--text); line-height: 1.5; pointer-events: none; transition: opacity 0.15s; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+        .param-label:hover .tip-box { visibility: visible; opacity: 1; }
+        table.sig th.exp, table.sig th.val { text-align: right; }
+        .ok { color: var(--accent3); }
+        .bad { color: var(--danger); }
+        .warn { color: var(--warn); }
+
+        .verdict { border-radius: 9px; padding: 13px 14px; font-size: 13px; line-height: 1.55; margin-top: 16px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); }
+        .verdict.pass { border-color: var(--accent3); background: rgba(127,255,127,0.07); }
+        .verdict.fail { border-color: var(--warn); background: rgba(255,176,32,0.07); }
+        .verdict ul { margin: 6px 0 0 16px; }
+        .verdict li { margin-bottom: 4px; }
+
+        .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 2px; }
+        .act-btn {
+            flex: 1 1 180px; padding: 14px 16px; border-radius: 9px; font-family: var(--mono);
+            font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+            cursor: pointer; transition: all 0.2s; background: rgba(0,200,255,0.1);
+            border: 1px solid var(--accent); color: var(--accent);
+        }
+        .act-btn:hover:not(:disabled) { background: rgba(0,200,255,0.2); box-shadow: 0 0 10px rgba(0,200,255,0.15); }
+        .act-btn.on { background: rgba(255,68,85,0.1); border-color: var(--danger); color: var(--danger); }
+        .act-btn.on:hover:not(:disabled) { background: rgba(255,68,85,0.2); box-shadow: 0 0 10px rgba(255,68,85,0.2); }
+        .act-btn.safe { background: rgba(127,255,127,0.1); border-color: var(--accent3); color: var(--accent3); }
+        .act-btn.safe:hover:not(:disabled) { background: rgba(127,255,127,0.2); }
+        .act-btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+        .act-note { font-size: 12px; color: var(--text3); line-height: 1.5; margin-top: 10px; }
+        .timer { font-family: var(--mono); font-size: 13px; color: var(--warn); margin-top: 10px; }
+
+        .live-strip {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+            background: var(--border); border-top: 1px solid var(--border);
+        }
+        .live-cell { background: var(--bg2); padding: 10px 8px; text-align: center; }
+        .live-cell .lv { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--text); }
+        .live-cell .ll { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
+
+        .wizard-footer {
+            padding: 18px 30px; background: var(--bg2); border-top: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .nav-btn {
+            padding: 12px 24px; border-radius: 8px; font-family: var(--mono); font-size: 13px;
+            font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+            background: transparent; border: 1px solid var(--border); color: var(--text3);
+        }
+        .nav-btn:hover { border-color: var(--text); color: var(--text); }
+        .btn-next { background: rgba(0,200,255,0.1); border: 1px solid var(--accent); color: var(--accent); }
+        .btn-next:hover:not(:disabled) { background: rgba(0,200,255,0.2); box-shadow: 0 0 10px rgba(0,200,255,0.15); }
+        .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+        .hidden { visibility: hidden; pointer-events: none; }
+
+        @media (max-width: 480px) {
+            .wizard-wrap { padding: 18px 10px; }
+            .brand-wordmark { font-size: 26px; letter-spacing: 4px; }
+            .progress-row { padding: 14px 18px 2px; }
+            .step-content { padding: 20px 16px; }
+            .wizard-footer { padding: 16px 18px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="wizard-wrap">
+    <div class="brand-container">
+        <div class="brand-wordmark">ASGARD</div>
+        <div class="brand-sub">Virtual Thermostat Wiring Test</div>
+        <div class="brand-links"><a href="/dashboard">Dashboard</a>·<a href="/setup">Setup</a></div>
+    </div>
+
+    <div class="wizard-card">
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-row">
+            <div class="step-dots">
+                <div class="dot active" id="ind-0"></div>
+                <div class="dot" id="ind-1"></div>
+                <div class="dot" id="ind-2"></div>
+                <div class="dot" id="ind-3"></div>
+                <div class="dot" id="ind-4"></div>
+                <div class="dot" id="ind-5"></div>
+            </div>
+            <div class="progress-info">
+                <div class="step-name" id="step-title">ZONE</div>
+                <div class="step-count" id="step-count">STEP 1 / 6</div>
+            </div>
+        </div>
+
+        <!-- Step 0: which zone -->
+        <div class="step-content active" id="step-0">
+            <div class="step-desc">
+                This page drives the <b>zone relay contact</b> by hand so you can verify the wiring
+                between the Asgard board and the heat pump: R1 to <b>IN1</b> for zone 1,
+                R2 to <b>IN6</b> for zone 2. The virtual thermostat is switched off first, so nothing
+                else fights the manual contact.
+            </div>
+            <div class="sub-label">Zone</div>
+            <div class="option-card selected" id="pick-z1" onclick="pickZone('z1')">
+                <div class="opt-title">Zone 1 <span class="opt-badge">R1 → IN1</span></div>
+                <div class="opt-desc">Dip switch <b>SW2-1 ON</b>. Relay on the zone 1 output.</div>
+            </div>
+            <div class="option-card" id="pick-z2" onclick="pickZone('z2')">
+                <div class="opt-title">Zone 2 <span class="opt-badge">R2 → IN6</span></div>
+                <div class="opt-desc">Dip switch <b>SW3-1 ON</b>. Relay on the zone 2 output.</div>
+            </div>
+            <div class="info-box" id="z2-note">Zone 2 is only selectable on a two-zone firmware build.</div>
+            <div class="sub-label">Scenario — choose the one that matches your wiring</div>
+            <div class="step-desc">Every expected value on the next screens follows the scenario you pick here: dip switches, master of the zone and the thermostat source. The default is <b>A</b>; change it here at any time.</div>
+            <div class="option-card selected" id="sc-A" onclick="pickScenario('A')">
+                <div class="opt-title">A · Virtual Thermostat + external sensor <span class="opt-badge">SW1-8 OFF</span><span class="opt-badge">default</span></div>
+                <div class="opt-desc">No <b>Mitsubishi wireless thermostat</b> or CNRF fitted; the Virtual Thermostat reads a <b>DS18x20</b> or a value pushed over the <b>REST API</b>. MRC <i>Sensor setting</i>: <b>MRC</b>.</div>
+            </div>
+            <div class="option-card" id="sc-B1" onclick="pickScenario('B1')">
+                <div class="opt-title">B1 · Virtual Thermostat + Mitsubishi wireless OR CNRF <span class="opt-badge">SW1-8 ON</span></div>
+                <div class="opt-desc">The relay controls the zone and the <b>Mitsubishi wireless thermostat (RCx) or CNRF</b> is the temperature source of the Virtual Thermostat. MRC <i>Sensor setting</i>: <b>Room RCx</b>.</div>
+            </div>
+            <div class="option-card" id="sc-B2" onclick="pickScenario('B2')">
+                <div class="opt-title">B2 · Virtual Thermostat + Mitsubishi wireless OR CNRF, external sensor <span class="opt-badge">SW1-8 ON</span></div>
+                <div class="opt-desc">The <b>Mitsubishi wireless thermostat or CNRF</b> stays the room sensor of the heat pump, while the Virtual Thermostat reads an <b>external sensor</b> (DS18x20 or REST API). MRC <i>Sensor setting</i>: <b>MRC</b>.</div>
+            </div>
+            <div class="option-card" id="sc-D" onclick="pickScenario('D')">
+                <div class="opt-title">D · Virtual Thermostat + MRC <span class="opt-badge">SW1-8 OFF</span></div>
+                <div class="opt-desc">The Virtual Thermostat relay controls the zone and the <b>MRC</b> is its temperature source. MRC <i>Sensor setting</i>: <b>MRC</b>.</div>
+            </div>
+            <div class="info-box">If you are not sure: <b>SW1-8 ON</b> means a <b>Mitsubishi wireless thermostat</b> or CNRF module is in use — that is scenario <b>B1</b> or <b>B2</b>, otherwise <b>A</b> or <b>D</b>.</div>
+        </div>
+
+        <!-- Step 1: configuration check -->
+        <div class="step-content" id="step-1">
+            <div class="step-desc">
+                Live reading of everything that has to be right before a contact closure can have any
+                effect. The <b>mapped value</b> is the temperature the virtual thermostat actually uses,
+                so you can see whether the input mapping matches the configuration.
+            </div>
+            <div class="info-box" id="sc-note">Pick a scenario on the first screen; it decides the expected values below.</div>
+            <table class="sig">
+                <tr><th>Signal</th><th class="exp">expected</th><th class="val">now</th></tr>
+                <tr><td id="r-dip-lbl">Dip switch SW2-1</td><td class="exp">ON</td><td class="val" id="r-dip">–</td></tr>
+                <tr><td>Dip switch SW1-8</td><td class="exp" id="x-dip18">–</td><td class="val" id="r-dip18">–</td></tr>
+                <tr><td>Master of the zone</td><td class="exp" id="x-master">–</td><td class="val" id="r-master">–</td></tr>
+                <tr><td><span class="param-label">Room temp source<span class="tip-icon">?</span><span class="tip-box">The room temperature source used by Auto Adaptive (compared against the setpoint). With the virtual thermostat wired this is normally Asgard Virtual Thermostat. Not checked here: Auto Adaptive is not part of this wiring test, so this row never blocks Next.</span></span></td><td class="exp">–</td><td class="val" id="r-room">–</td></tr>
+                <tr><td><span class="param-label">Thermostat temp source<span class="tip-icon">?</span><span class="tip-box">The temperature sensor source for the Asgard Virtual Thermostat: where the virtual thermostat reads the room temperature from. This one is checked against the scenario.</span></span></td><td class="exp" id="x-src">–</td><td class="val" id="r-src">–</td></tr>
+                <tr><td>Typed virtual input</td><td class="exp">–</td><td class="val" id="r-input">–</td></tr>
+                <tr><td><b>Mapped value used</b></td><td class="exp">–</td><td class="val" id="r-mapped">–</td></tr>
+                <tr><td>Thermostat mode</td><td class="exp">–</td><td class="val" id="r-climate">–</td></tr>
+                <tr><td>Operating mode of the zone</td><td class="exp">Heat or Cool Flow Temperature</td><td class="val" id="r-opmode">–</td></tr>
+                <tr><td id="r-in-lbl">IN1 demand indicator</td><td class="exp">–</td><td class="val" id="r-in">–</td></tr>
+                <tr><td>Heating prohibited</td><td class="exp">no</td><td class="val" id="r-prohibit">–</td></tr>
+                <tr><td>Compressor</td><td class="exp">–</td><td class="val" id="r-comp">–</td></tr>
+                <tr><td>Feed / return temperature</td><td class="exp">–</td><td class="val" id="r-temps">–</td></tr>
+            </table>
+            <div class="verdict" id="verdict">Waiting for data…</div>
+            <div class="info-box">
+                The MRC menu <code>Initial settings → Room sensor settings → Sensor setting</code> is not
+                readable over the bus: set it as the scenario asks (<b>MRC</b> or <b>Room RCx</b>) and use
+                the <b>Master of the zone</b> row to check what the heat pump reports back for it.
+            </div>
+        </div>
+
+        <!-- Step 2: manual mode -->
+        <div class="step-content" id="step-2">
+            <div class="step-desc">
+                Now we switch to manual mode. The relay refuses to be driven by hand while the
+                thermostat is still calling for heat, so put the virtual thermostat of this zone on
+                <b>OFF</b> first.
+            </div>
+            <div class="action-row">
+                <button class="act-btn" id="btn-off" onclick="setMode('off')">Set zone to OFF</button>
+            </div>
+            <div class="act-note" id="off-note">Thermostat is currently not OFF.</div>
+            <div class="info-box">
+                With the thermostat of this zone on <b>OFF</b> nothing else drives the relay, so you can
+                switch the contact by hand to test the wiring. The board still refuses to close it while
+                <b>ODIN is active</b> for this zone — switch off <b>Enable optimization</b> in ODIN.
+            </div>
+        </div>
+
+        <!-- Step 3: force closed -->
+        <div class="step-content" id="step-3">
+            <div class="step-desc">
+                Close the contact and <b>go to the heat pump</b>: it must now see a real heat request,
+                the circulation pump has to start and the compressor may follow. That is the moment the
+                wiring is proven.
+            </div>
+            <div class="action-row">
+                <button class="act-btn" id="btn-close" onclick="forceRelay(1)">Close contact</button>
+                <button class="act-btn safe" id="btn-open" onclick="forceRelay(0)">Open contact</button>
+            </div>
+            <div class="timer" id="force-timer"></div>
+            <div class="act-note" id="close-note">Contact is open, nothing is demanded.</div>
+            <div class="info-box">
+                A closed contact is a continuous heat request, so the firmware <b>releases it
+                automatically after 15 minutes</b>, and immediately when this zone's thermostat leaves
+                OFF. Never leave this page with the contact closed on purpose.
+            </div>
+        </div>
+
+        <!-- Step 4: release -->
+        <div class="step-content" id="step-4">
+            <div class="step-desc">
+                Now stop and check the other direction: open the contact and <b>watch the heat
+                pump</b>. The request must disappear and the pump must stop.
+            </div>
+            <div class="action-row">
+                <button class="act-btn safe" id="btn-open2" onclick="forceRelay(0)">Open contact</button>
+            </div>
+            <div class="act-note" id="open-note">Contact is open.</div>
+            <div class="info-box">
+                If the request stays high after the contact opened, the cable is not on the input you
+                assumed, or the pair is swapped with the other zone.
+            </div>
+        </div>
+
+        <!-- Step 5: back to automatic -->
+        <div class="step-content" id="step-5">
+            <div class="step-desc">
+                Finished. Hand the zone back to the virtual thermostat: it will drive the same relay
+                from the mapped temperature and the setpoint again.
+            </div>
+            <div class="action-row">
+                <button class="act-btn" id="btn-heat" onclick="setMode('heat')">Set zone to HEAT</button>
+            </div>
+            <div class="act-note" id="auto-note">Waiting for data…</div>
+            <div class="info-box">
+                After this the thermostat decides on its own: with a mapped value below the setpoint it
+                closes the contact, above it opens again.
+            </div>
+        </div>
+
+        <!-- Always visible live strip -->
+        <div class="live-strip">
+            <div class="live-cell"><div class="lv" id="lv-in">–</div><div class="ll">demand indicator</div></div>
+            <div class="live-cell"><div class="lv" id="lv-mapped">–</div><div class="ll">mapped temp</div></div>
+            <div class="live-cell"><div class="lv" id="lv-mode">–</div><div class="ll">thermostat</div></div>
+        </div>
+
+        <div class="wizard-footer">
+            <button class="nav-btn hidden" id="btn-back" onclick="changeStep(-1)">Back</button>
+            <button class="nav-btn btn-next" id="btn-next" onclick="next()" disabled>Next</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const TITLES = ['SETUP', 'CONFIG', 'MANUAL MODE', 'CLOSE CONTACT', 'OPEN CONTACT', 'AUTOMATIC'];
+const TOTAL = 6;
+const IN_KEY = { z1: 'status_in1_request', z2: 'status_in6_request' };
+const IN_LABEL = { z1: 'IN1 demand indicator', z2: 'IN6 demand indicator' };
+const DIP_LABEL = { z1: 'Dip switch SW2-1', z2: 'Dip switch SW3-1' };
+const MASTER_KEYS = { z1: 'master_z1', z2: 'master_z2' };
+const SOURCE_KEYS = { z1: 'temp_sensor_source_z1', z2: 'temp_sensor_source_z2' };
+const MODE_KEYS = { z1: 'z1_mode', z2: 'z2_mode' };
+const ACTION_KEYS = { z1: 'z1_action', z2: 'z2_action' };
+const CUR_KEYS = { z1: 'z1_current_temp', z2: 'z2_current_temp' };
+const SOURCE_NAMES = ['Virtual Thermostat Input', 'DS18x20', 'MRC or RCx', 'ODIN'];
+const MASTER_NAMES = { 0: 'MRC', 15: 'TH1' };
+const ROOM_KEYS = { z1: 'room_temp_source_z1', z2: 'room_temp_source_z2' };
+const ROOM_NAMES = ['Room Thermostat', 'Home Assistant or REST API', 'Asgard Virtual Thermostat'];
+const ROOM_VT = 2;   // 'Asgard Virtual Thermostat', the source Auto Adaptive follows when the VT is wired
+const OPMODE_KEYS = { z1: 'operating_mode_z1', z2: 'operating_mode_z2' };
+const OPMODE_NAMES = ['Heat Target Temperature', 'Heat Flow Temperature', 'Heat Compensation Curve',
+                      'Cool Target Temperature', 'Cool Flow Temperature', 'Floor Dry Up', 'Cool Compensation Curve'];
+// Auto Adaptive and the virtual thermostat both need a flow temperature mode.
+const OPMODE_FLOW = [1, 4];
+
+// What each wiring scenario expects, per the table in manual.md Step 3.
+const SCEN = {
+    A: { label: 'A', name: 'Virtual Thermostat + external sensor', sw18: false, master: 'mrc', src: [0, 1], srcText: 'Virtual input or DS18x20' },
+    B1: { label: 'B1', name: 'Virtual Thermostat + Mitsubishi wireless OR CNRF as sensor', sw18: true, master: 'rrc', src: [2], srcText: 'MRC or RCx' },
+    B2: { label: 'B2', name: 'Virtual Thermostat + Mitsubishi wireless OR CNRF, external sensor', sw18: true, master: 'mrc', src: [0, 1], srcText: 'Virtual input or DS18x20' },
+    D: { label: 'D', name: 'Virtual Thermostat + MRC', sw18: false, master: 'mrc', src: [2], srcText: 'MRC or RCx' },
+};
+let scenario = 'A';
+
+let S = {};
+let ZONE = 'z1';
+let step = 0;
+let z2Built = false;
+let offline = false;
+
+function masterName(v) {
+    if (v === null || v === undefined || v < 0) return null;
+    if (MASTER_NAMES[v]) return MASTER_NAMES[v];
+    if (v >= 1 && v <= 8) return 'RRC' + v;
+    return 'code ' + v;
+}
+
+function bit(byte, n) {
+    if (byte === null || byte === undefined || byte < 0) return null;
+    return ((byte >> n) & 1) === 1;
+}
+
+function txt(id, value, cls) {
+    const el = document.getElementById(id);
+    el.textContent = value;
+    el.className = el.className.replace(/ (ok|bad|warn)/g, '') + (cls ? ' ' + cls : '');
+}
+
+function onOff(id, value, onIsGood) {
+    if (value === null || value === undefined) { txt(id, '–', 'warn'); return; }
+    const good = onIsGood ? value : !value;
+    txt(id, value ? 'ON' : 'OFF', good ? 'ok' : 'bad');
+}
+
+function fmt(v, digits, unit) {
+    if (v === null || v === undefined || isNaN(v)) return '–';
+    return v.toFixed(digits) + (unit || '');
+}
+
+async function apiPost(key, value) {
+    try {
+        await fetch('/dashboard/set', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, value })
+        });
+    } catch (e) {
+        console.error('Failed to send', key, e);
+    }
+}
+
+function pickZone(zone) {
+    if (zone === 'z2' && !z2Built) return;
+    ZONE = zone;
+    document.getElementById('pick-z1').classList.toggle('selected', zone === 'z1');
+    document.getElementById('pick-z2').classList.toggle('selected', zone === 'z2');
+    document.getElementById('r-in-lbl').textContent = IN_LABEL[zone];
+    document.getElementById('r-dip-lbl').textContent = DIP_LABEL[zone];
+    applyScenario();
+    render();
+    updateNav();
+}
+
+function idxOf(key) {
+    const v = S[key];
+    return (v === null || v === undefined) ? -1 : parseInt(v);
+}
+
+function expectedMasterText(sc) {
+    return (sc.master === 'mrc') ? 'MRC' : 'RRC1 – RRC8';
+}
+
+function pickScenario(id) {
+    scenario = id;
+    Object.keys(SCEN).forEach((k) => {
+        document.getElementById('sc-' + k).classList.toggle('selected', k === id);
+    });
+    applyScenario();
+    render();
+    updateNav();
+}
+
+// Fill the expected column and the scenario summary from the chosen scenario.
+function applyScenario() {
+    const sc = scenario ? SCEN[scenario] : null;
+    document.getElementById('x-dip18').textContent = sc ? (sc.sw18 ? 'ON' : 'OFF') : '–';
+    document.getElementById('x-master').textContent = sc ? expectedMasterText(sc) : '–';
+    document.getElementById('x-src').textContent = sc ? sc.srcText : '–';
+    document.getElementById('sc-note').innerHTML = sc
+        ? 'Scenario <b>' + sc.label + '</b> — ' + sc.name + '. Expects <b>' + DIP_LABEL[ZONE] +
+          ' ON</b>, <b>SW1-8 ' + (sc.sw18 ? 'ON' : 'OFF') + '</b>, master <b>' + expectedMasterText(sc) +
+          '</b>, thermostat source <b>' + sc.srcText + '</b> and the zone must run in <b>Heat or Cool Flow Temperature</b>.'
+        : 'Pick a scenario on the first screen; it decides the expected values below.';
+}
+
+function forced() { return S['vt_force_' + ZONE] === true; }
+function relayOn() { return S['vt_relay_' + ZONE] === true; }
+function modeVal() { return S[MODE_KEYS[ZONE]] || null; }
+function isOff() { return modeVal() === 'off'; }
+function overrideOn() { return S['vt_ovr_' + ZONE] === true; }
+
+function issues() {
+    const list = [];
+    const sc = scenario ? SCEN[scenario] : null;
+    if (!sc) list.push('Pick a scenario on the first screen.');
+
+    const dip = bit((ZONE === 'z1') ? S.dip2 : S.dip3, 0);
+    if (dip === null) list.push('No bus data yet: the dip switch states are not readable.');
+    else if (!dip) list.push(DIP_LABEL[ZONE] + ' must be ON, otherwise this input is not a room thermostat input.');
+
+    const sw18 = bit(S.dip1, 7);
+    if (sw18 === null) {
+        if (dip !== null) list.push('SW1-8 is not readable yet.');
+    } else if (sc && sw18 !== sc.sw18) {
+        list.push('SW1-8 is ' + (sw18 ? 'ON' : 'OFF') + ', scenario ' + sc.label + ' needs it ' + (sc.sw18 ? 'ON' : 'OFF') + '.');
+    }
+
+    const mRaw = S[MASTER_KEYS[ZONE]];
+    const m = masterName(mRaw);
+    if (m === null) {
+        list.push('Master of the zone is unknown (no bus data).');
+    } else if (sc) {
+        const isRrc = (mRaw >= 1 && mRaw <= 8);
+        if (sc.master === 'mrc' && m !== 'MRC') list.push('Master of the zone is ' + m + ', scenario ' + sc.label + ' expects MRC.');
+        if (sc.master === 'rrc' && !isRrc) list.push('Master of the zone is ' + m + ', scenario ' + sc.label + ' expects ' + expectedMasterText(sc) + ' (the Mitsubishi wireless thermostat).');
+    }
+
+
+    const src = idxOf(SOURCE_KEYS[ZONE]);
+    if (src < 0) list.push('The thermostat temperature source of this zone is unknown.');
+    else if (sc && sc.src.indexOf(src) < 0) list.push('Thermostat source is "' + SOURCE_NAMES[src] + '", scenario ' + sc.label + ' expects ' + sc.srcText + '.');
+    const op = idxOf(OPMODE_KEYS[ZONE]);
+    if (op < 0) list.push('The operating mode of this zone is unknown.');
+    else if (OPMODE_FLOW.indexOf(op) < 0) list.push('Operating mode is "' + OPMODE_NAMES[op] + '": the zone must run in Heat Flow Temperature or Cool Flow Temperature.');
+
+    if (overrideOn()) list.push('ODIN is active for this zone: switch off <b>Enable optimization</b> in ODIN, otherwise ODIN keeps the relay.');
+    if (S['prohibit_heat_' + ZONE] === true) list.push('The heat pump currently prohibits heating for this zone.');
+    return list;
+}
+
+function render() {
+    const sc = scenario ? SCEN[scenario] : null;
+    const dip = bit((ZONE === 'z1') ? S.dip2 : S.dip3, 0);
+    onOff('r-dip', dip, true);
+
+    const sw18 = bit(S.dip1, 7);
+    txt('r-dip18', sw18 === null ? '–' : (sw18 ? 'ON' : 'OFF'),
+        (sw18 === null) ? 'warn' : (!sc || sw18 === sc.sw18 ? 'ok' : 'bad'));
+
+    const mRaw = S[MASTER_KEYS[ZONE]];
+    const m = masterName(mRaw);
+    const mOk = (m !== null && sc) ? (sc.master === 'mrc' ? m === 'MRC' : (mRaw >= 1 && mRaw <= 8)) : false;
+    txt('r-master', m === null ? '–' : m, (m === null) ? 'warn' : (!sc || mOk ? 'ok' : 'bad'));
+
+    const room = idxOf(ROOM_KEYS[ZONE]);
+    txt('r-room', room < 0 ? '–' : ROOM_NAMES[room], room < 0 ? 'warn' : (room === ROOM_VT ? 'ok' : ''));
+
+    const src = idxOf(SOURCE_KEYS[ZONE]);
+    const srcOk = (src >= 0 && sc) ? (sc.src.indexOf(src) >= 0) : false;
+    txt('r-src', src < 0 ? '–' : SOURCE_NAMES[src], (src < 0) ? 'warn' : (!sc || srcOk ? 'ok' : 'bad'));
+
+    txt('r-input', fmt(S['vt_input_' + ZONE], 1, ' °C'), 'ok');
+    txt('r-mapped', fmt(S[CUR_KEYS[ZONE]], 1, ' °C'), 'ok');
+
+    const mode = modeVal();
+    txt('r-climate', mode === null ? '–' : mode, mode === null ? '' : (mode === 'off' ? 'warn' : 'ok'));
+
+    const op = idxOf(OPMODE_KEYS[ZONE]);
+    txt('r-opmode', op < 0 ? '–' : OPMODE_NAMES[op], op < 0 ? 'warn' : (OPMODE_FLOW.indexOf(op) >= 0 ? 'ok' : 'bad'));
+
+    const req = S[IN_KEY[ZONE]];
+    txt('r-in', req === undefined ? '–' : (req ? 'ON' : 'OFF'), req ? 'ok' : '');
+    txt('r-prohibit', S['prohibit_heat_' + ZONE] === true ? 'yes' : 'no', S['prohibit_heat_' + ZONE] === true ? 'bad' : 'ok');
+    txt('r-comp', S.status_compressor === true ? 'running' : 'stopped', S.status_compressor === true ? 'ok' : '');
+    const feed = S.hp_feed_temp, ret = S.hp_return_temp;
+    const hasNum = (x) => (x !== null && x !== undefined && !isNaN(x));
+    txt('r-temps', (hasNum(feed) || hasNum(ret)) ? (fmt(feed, 1, '') + ' / ' + fmt(ret, 1, ' °C')) : '–', '');
+
+    const v = document.getElementById('verdict');
+    if (offline) {
+        v.className = 'verdict fail';
+        v.innerHTML = 'No reply from the board.';
+    } else {
+        const list = issues();
+        if (list.length === 0) {
+            v.className = 'verdict pass';
+            v.innerHTML = 'Scenario <b>' + (sc ? sc.label : '–') + '</b> matches: dip switches, master, the thermostat source and the operating mode are as configured here.<ul><li>Continue to manual mode.</li></ul>';
+        } else {
+            v.className = 'verdict fail';
+            let html = 'Fix before testing:<ul>';
+            for (const it of list) html += '<li>' + it + '</li>';
+            v.innerHTML = html + '</ul>';
+        }
+    }
+
+    document.getElementById('r-in-lbl').textContent = IN_LABEL[ZONE];
+    document.getElementById('r-dip-lbl').textContent = DIP_LABEL[ZONE];
+
+    txt('lv-in', req === undefined ? '–' : (req ? 'ON' : 'OFF'), req ? 'ok' : '');
+    txt('lv-mapped', fmt(S[CUR_KEYS[ZONE]], 1, '°C'), '');
+    txt('lv-mode', mode === null ? '–' : mode, mode === 'off' ? 'warn' : 'ok');
+
+    const left = S['vt_left_' + ZONE];
+    const timerEl = document.getElementById('force-timer');
+    timerEl.textContent = forced() ? ('auto-release in ' + Math.ceil(left) + ' s') : '';
+
+    const canForce = isOff() && !overrideOn();
+    document.getElementById('btn-off').disabled = (mode === null);
+    document.getElementById('btn-close').disabled = !canForce;
+    document.getElementById('btn-open').disabled = !relayOn();
+    document.getElementById('btn-open2').disabled = !relayOn();
+    document.getElementById('btn-heat').disabled = !isOff();
+
+    document.getElementById('off-note').textContent = (mode === null)
+        ? 'Waiting for data…'
+        : (isOff()
+            ? 'Zone is OFF and the contact is free to drive by hand.'
+            : 'Thermostat is "' + mode + '": press Set zone to OFF above, the relay refuses to be driven while it is calling.');
+    document.getElementById('close-note').textContent = canForce
+        ? (relayOn() ? 'Contact closed: the heat pump must show the request now.' : 'Zone is OFF, press Close contact.')
+        : 'Not allowed yet: the zone must be OFF and ODIN must be inactive — switch off Enable optimization in ODIN.';
+    document.getElementById('open-note').textContent = relayOn()
+        ? 'Contact still closed: open it and watch the heat pump stop demanding.'
+        : 'Contact open. If the request was high a moment ago and is idle now, the input reacts correctly.';
+    document.getElementById('auto-note').textContent = (mode === null) ? 'Waiting for data…'
+        : (isOff() ? 'Zone is still OFF; press Set zone to HEAT to hand it back.'
+                   : 'Zone runs automatically again, action: ' + (S[ACTION_KEYS[ZONE]] || '–') + '.');
+}
+
+function stepDone(n) {
+    if (n === 0) return scenario !== null;
+    if (n === 1) return !offline && issues().length === 0;
+    if (n === 2) return isOff();
+    if (n === 3) return true;
+    if (n === 4) return true;
+    return true;
+}
+
+function updateNav() {
+    document.getElementById('progress-fill').style.width = (((step + 1) / TOTAL) * 100).toFixed(2) + '%';
+    document.getElementById('step-title').textContent = TITLES[step] + (step > 0 ? ' · ' + ZONE.toUpperCase() + (scenario ? ' · ' + SCEN[scenario].label : '') : '');
+    document.getElementById('step-count').textContent = 'STEP ' + (step + 1) + ' / ' + TOTAL;
+    const nextBtn = document.getElementById('btn-next');
+    nextBtn.disabled = !stepDone(step);
+    nextBtn.textContent = (step === TOTAL - 1) ? 'Done' : 'Next';
+    document.getElementById('btn-back').classList.toggle('hidden', step === 0);
+}
+
+function show(n) {
+    document.getElementById('step-' + step).classList.remove('active');
+    document.getElementById('ind-' + step).classList.remove('active');
+    step = n;
+    document.getElementById('step-' + step).classList.add('active');
+    document.getElementById('ind-' + step).classList.add('active');
+    for (let i = 0; i < TOTAL; i++) {
+        document.getElementById('ind-' + i).classList.toggle('completed', i < step && stepDone(i));
+    }
+    updateNav();
+}
+
+function changeStep(dir) {
+    let n = step + dir;
+    if (n < 0) n = 0;
+    if (n > TOTAL - 1) n = TOTAL - 1;
+    show(n);
+}
+
+function next() {
+    if (step === TOTAL - 1) { window.location.href = '/dashboard'; return; }
+    changeStep(1);
+}
+
+function setMode(mode) {
+    apiPost('virtual_climate_' + ZONE + '_mode', mode);
+}
+
+function forceRelay(on) {
+    apiPost('vt_test_relay_' + ZONE, on);
+}
+
+async function poll() {
+    try {
+        const res = await fetch('/dashboard/state', { cache: 'no-store' });
+        S = await res.json();
+        offline = false;
+    } catch (e) {
+        offline = true;
+    }
+    const built = (S.vt_z2_built === 1);
+    z2Built = built;
+    document.getElementById('pick-z2').style.opacity = built ? '1' : '0.4';
+    document.getElementById('z2-note').textContent = built
+        ? 'Zone 2 is present in this firmware build.'
+        : 'This firmware has no zone 2, so only zone 1 can be tested.';
+    if (!built && ZONE === 'z2') pickZone('z1');
+    render();
+    updateNav();
+}
+
+pickZone('z1');
+poll();
+setInterval(poll, 2000);
+</script>
+</body>
+</html>

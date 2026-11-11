@@ -28,3 +28,8 @@ asgard_dashboard:
   num_raw_cool_elec_consumed_z2_id: num_raw_cool_elec_consumed_z2
   num_raw_cool_runtime_hours_z2_id: num_raw_cool_runtime_hours_z2
   num_raw_cool_avg_room_temp_z2_id: num_raw_cool_avg_room_temp_z2
+
+  # ── Virtual thermostat wiring test (/vt-test) ──
+  sw_relay_z2_id: asgard_relay_z2
+  sw_odin_override_z2_id: sw_odin_override_z2
+  num_vt_input_z2_id: asgard_vt_input_z2

@@ -101,5 +101,8 @@ if __name__ == "__main__":
         raise SystemExit(1)
     if not check_js_syntax("setup.html"):
         raise SystemExit(1)
+    if not check_js_syntax("vt_test.html"):
+        raise SystemExit(1)
     generate_header("dashboard_source.html", "dashboard_html.h", "DASHBOARD_HTML_GZ")
     generate_header("setup.html", "setup_html.h", "SETUP_HTML_GZ")
+    generate_header("vt_test.html", "vt_test_html.h", "VT_TEST_HTML_GZ")

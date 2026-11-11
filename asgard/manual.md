@@ -176,7 +176,7 @@ Look at the main control board for a connector labelled **CN105**.
 > [!TIP]
 > **Migrating from wireless thermostats (CNRF):** ensure **SW1-8** is in the **OFF** position when using virtual thermostats.
 >
-> **Using the wireless thermostat as the temperature source for the virtual thermostat:** leave **SW1-8** in the **ON** position, and on the MRC set *Initial settings → Room sensor settings → Sensor setting → Sensor setting → select* Room RCx.
+> **Using the wireless thermostat as the temperature source for the virtual thermostat:** leave **SW1-8** in the **ON** position, and on the MRC set *Initial settings → Room sensor settings → Sensor setting → Sensor setting → select* Room RCx. Keep it on **MRC** when the wireless thermostat keeps reporting to the heat pump but Asgard reads its **own** sensor instead (scenario **B2**).
 
 ![Schematic](./img/HP-schematic.jpg)
 
@@ -184,7 +184,7 @@ The virtual thermostat can take its room temperature from three sources — the 
 
 | Temperature source for virtual thermostat | **MRC** | **Mitsubishi Wireless thermostat or CNRF** | **Other temp sensor** |
 |---|---|---|---|
-| **DIP switches** | **SW2-1 ON**, **SW1-8 OFF** | **SW2-1 ON**, **SW1-8 ON** | **SW2-1 ON**, **SW1-8 OFF** |
+| **DIP switches** | **SW2-1 ON** (zone 1) / **SW3-1 ON** (zone 2), **SW1-8 OFF** | **SW2-1 ON** (zone 1) / **SW3-1 ON** (zone 2), **SW1-8 ON** | **SW2-1 ON** (zone 1) / **SW3-1 ON** (zone 2), **SW1-8 OFF** |
 | **Master or zone config** <br>*Initial settings → Room sensor settings → Sensor setting → Sensor setting* | **MRC** | **RCx** | **MRC** |
 
 The full option list per source lives in [Section 8 — Setup Wizard](#8-setup-wizard).
@@ -198,6 +198,38 @@ Secure the Asgard inside the casing with a screw or a 10×2 mm magnet (not suppl
 1. Reattach the front panel.
 2. Switch the power back on at the breaker panel.
 3. After a few seconds, the LED on the Asgard PCB should light up.
+
+### Step 6 — Verify the Zone Wiring
+
+Wired **R1/R2** in [Step 3](#step-3--connect-the-pcb) and want to be sure the wires arrive at the input you assumed? Open the wiring test page:
+
+```
+http://ecodan-heatpump.local/vt-test
+```
+
+Pick the **zone** and the **scenario** you are running — the four combinations of the table in [Step 3](#step-3--connect-the-pcb) — and every screen checks the live signals against what that scenario expects. **A** is pre-selected, so press *Next* if that is your wiring.
+
+The **dip switch of the zone itself is fixed** and is the same in every scenario: **SW2-1 ON** for **zone 1** (relay R1 → **IN1**) and **SW3-1 ON** for **zone 2** (relay R2 → **IN6**). Not a choice — each zone has its own switch, and the switch of the zone you are *not* testing stays OFF unless that zone is wired as well. The table below therefore only lists **SW1-8**, the one switch that does change per scenario.
+
+| Scenario | Temperature source of the virtual thermostat | **SW1-8** | *Master or zone* setting | Asgard room temp source / thermostat source |
+|---|---|---|---|---|
+| **A** | External sensor, no wireless thermostat fitted | **OFF** | MRC | *Asgard Virtual Thermostat* / *Virtual Thermostat Input* or *DS18x20* |
+| **B1** | Mitsubishi wireless thermostat or CNRF | **ON** | Room RCx | *Asgard Virtual Thermostat* / *MRC or RCx* |
+| **B2** | Wireless thermostat keeps reporting to the heat pump, Asgard reads an external sensor | **ON** | MRC | *Asgard Virtual Thermostat* / *Virtual Thermostat Input* or *DS18x20* |
+| **D** | MRC | **OFF** | MRC | *Asgard Virtual Thermostat* / *MRC or RCx* |
+
+The page then walks through that zone, with live values on every screen:
+
+1. **Config** — expected versus actual for the dip switches, the master of the zone, the **thermostat temperature source** of the virtual thermostat, and the **operating mode of the zone** (must be *Heat Flow Temperature* or *Cool Flow Temperature*), plus the value you typed into **Virtual Thermostat Input**, the **mapped value** the thermostat actually uses and the **IN1 / IN6 demand indicator** the heat pump reports for that input. Anything that contradicts the table above is listed as an issue and blocks the next step. The **room temp source** row is information only — hover its **?** : it is the source Auto Adaptive follows (normally *Asgard Virtual Thermostat*), and Auto Adaptive is not part of this wiring test, so it is never checked and never blocks.
+2. **Manual mode** — put the virtual thermostat of that zone on **OFF**, the precondition for driving the contact by hand.
+3. **Close contact** — the relay closes. Go to the heat pump: it must see a real heat request and start the circulation pump.
+4. **Open contact** — the request must disappear and the pump must stop.
+5. **Automatic** — hand the zone back to the virtual thermostat.
+
+> [!WARNING]
+> A closed contact is a continuous heat request. The firmware releases it automatically after **15 minutes**, and immediately when the zone's thermostat leaves **OFF**. Never leave the page with the contact closed on purpose.
+
+Zone 2 is only offered on firmware that has the zone 2 relay wired. The MRC *Sensor setting* (MRC vs. RCx) cannot be read from the bus, so set it as the scenario asks and use the reported *master of the zone* to check what the heat pump makes of it.
 
 ---
 

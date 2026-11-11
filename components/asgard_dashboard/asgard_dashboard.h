@@ -40,6 +40,10 @@ struct DashboardAction {
 
 static constexpr int OW_PROBE_COUNT = 6;
 
+// A hand-closed zone contact (the /vt-test wiring test) is a continuous heat
+// demand, so it is released automatically after this many milliseconds.
+static constexpr uint32_t VT_FORCE_MAX_MS = 15 * 60 * 1000;
+
 enum OwRole {
   OW_FEED = 0,
   OW_RETURN,
@@ -70,6 +74,25 @@ struct DashboardSnapshot {
   bool sw_force_dhw{false};
   bool sw_ow_enable{false};
   bool status_short_cycle_lockout{false};
+
+  // Virtual thermostat wiring test (/vt-test): raw bus facts plus driven relay
+  int dip1{-1};
+  int dip2{-1};
+  int dip3{-1};
+  int master_z1{-1};
+  int master_z2{-1};
+  bool vt_relay_z1{false};
+  bool vt_relay_z2{false};
+  bool vt_ovr_z1{false};
+  bool vt_ovr_z2{false};
+  bool vt_force_z1{false};
+  bool vt_force_z2{false};
+  bool prohibit_heat_z1{false};
+  bool prohibit_heat_z2{false};
+  float vt_input_z1{NAN};
+  float vt_input_z2{NAN};
+  float vt_left_z1{0};
+  float vt_left_z2{0};
 
   // Float sensors
   float hp_feed_temp{NAN};
@@ -329,6 +352,14 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   void set_flow_climate_z1(climate::Climate *c)               { flow_climate_z1_ = c; }
   void set_flow_climate_z2(climate::Climate *c)               { flow_climate_z2_ = c; }
 
+  // Virtual thermostat wiring test (/vt-test)
+  void set_sw_relay_z1(switch_::Switch *s)                   { sw_relay_z1_ = s; }
+  void set_sw_relay_z2(switch_::Switch *s)                   { sw_relay_z2_ = s; }
+  void set_sw_odin_override_z1(switch_::Switch *s)           { sw_odin_override_z1_ = s; }
+  void set_sw_odin_override_z2(switch_::Switch *s)           { sw_odin_override_z2_ = s; }
+  void set_num_vt_input_z1(number::Number *n)                { num_vt_input_z1_ = n; }
+  void set_num_vt_input_z2(number::Number *n)                { num_vt_input_z2_ = n; }
+
   // Globals
   void set_ui_use_room_z1(esphome::globals::RestoringGlobalsComponent<bool> *g) { ui_use_room_z1_ = g; }
   void set_ui_use_room_z2(esphome::globals::RestoringGlobalsComponent<bool> *g) { ui_use_room_z2_ = g; }
@@ -386,6 +417,7 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
  protected:
   void handle_root_(AsyncWebServerRequest *request);
   void handle_setup_(AsyncWebServerRequest *request);
+  void handle_vt_test_(AsyncWebServerRequest *request);
   void handle_state_(AsyncWebServerRequest *request);
   void handle_set_(AsyncWebServerRequest *request);
   void dispatch_set_(const std::string &key, const std::string &sval, float fval, bool is_string);
@@ -498,6 +530,16 @@ class EcodanDashboard : public Component, public AsyncWebHandler {
   climate::Climate *heatpump_climate_z2_{nullptr};
   climate::Climate *flow_climate_z1_{nullptr};
   climate::Climate *flow_climate_z2_{nullptr};
+
+  // Virtual thermostat wiring test (/vt-test)
+  switch_::Switch *sw_relay_z1_{nullptr};
+  switch_::Switch *sw_relay_z2_{nullptr};
+  switch_::Switch *sw_odin_override_z1_{nullptr};
+  switch_::Switch *sw_odin_override_z2_{nullptr};
+  number::Number *num_vt_input_z1_{nullptr};
+  number::Number *num_vt_input_z2_{nullptr};
+  bool vt_forced_[2]{false, false};
+  uint32_t vt_force_until_ms_[2]{0, 0};
 
   esphome::globals::RestoringGlobalsComponent<bool> *ui_use_room_z1_{nullptr};
   esphome::globals::RestoringGlobalsComponent<bool> *ui_use_room_z2_{nullptr};

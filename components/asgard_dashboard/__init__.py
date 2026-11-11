@@ -176,6 +176,14 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Required("flow_climate_z1_id"):                 cv.use_id(climate.Climate),
         cv.Optional("flow_climate_z2_id"):                 cv.use_id(climate.Climate),
 
+        # Virtual thermostat wiring test (/vt-test)
+        cv.Optional("sw_relay_z1_id"):                       cv.use_id(switch.Switch),
+        cv.Optional("sw_relay_z2_id"):                       cv.use_id(switch.Switch),
+        cv.Optional("sw_odin_override_z1_id"):               cv.use_id(switch.Switch),
+        cv.Optional("sw_odin_override_z2_id"):               cv.use_id(switch.Switch),
+        cv.Optional("num_vt_input_z1_id"):                   cv.use_id(number.Number),
+        cv.Optional("num_vt_input_z2_id"):                   cv.use_id(number.Number),
+
         cv.Optional("predictive_short_cycle_control_enabled_id"):      cv.use_id(switch.Switch),
 
         cv.Optional("ui_use_room_z1_id"): cv.use_id(globals.GlobalsComponent),
@@ -341,6 +349,14 @@ async def to_code(config):
         ("short_cycle_mitigation_button_id",  "set_short_cycle_mitigation_button"),
         ("reboot_button_id",                "set_reboot_button"),
         ("regular_dhw_button_id",  "set_regular_dhw_button"),
+
+        # Virtual thermostat wiring test (/vt-test)
+        ("sw_relay_z1_id",                "set_sw_relay_z1"),
+        ("sw_relay_z2_id",                "set_sw_relay_z2"),
+        ("sw_odin_override_z1_id",        "set_sw_odin_override_z1"),
+        ("sw_odin_override_z2_id",        "set_sw_odin_override_z2"),
+        ("num_vt_input_z1_id",            "set_num_vt_input_z1"),
+        ("num_vt_input_z2_id",            "set_num_vt_input_z2"),
 
         ("ow_sensor_0_id",                  "set_ow_sensor_0"),
         ("ow_sensor_1_id",                  "set_ow_sensor_1"),
