@@ -221,10 +221,10 @@ The **dip switch of the zone itself is fixed** and is the same in every scenario
 The page then walks through that zone, with live values on every screen:
 
 1. **Config** — expected versus actual for the dip switches, the master of the zone, the **thermostat temperature source** of the virtual thermostat, and the **operating mode of the zone** (must be *Heat Flow Temperature* or *Cool Flow Temperature*), plus the value you typed into **Virtual Thermostat Input**, the **mapped value** the thermostat actually uses and the **IN1 / IN6 demand indicator** the heat pump reports for that input. Anything that contradicts the table above is listed as an issue and blocks the next step. The **room temp source** row is information only — hover its **?** : it is the source Auto Adaptive follows (normally *Asgard Virtual Thermostat*), and Auto Adaptive is not part of this wiring test, so it is never checked and never blocks.
-2. **Manual mode** — put the virtual thermostat of that zone on **OFF**, the precondition for driving the contact by hand.
-3. **Close contact** — the relay closes. Go to the heat pump: it must see a real heat request and start the circulation pump.
-4. **Open contact** — the request must disappear and the pump must stop.
-5. **Automatic** — hand the zone back to the virtual thermostat.
+2. **Manual mode** — press **Set zone to OFF**. *Next* stays locked until the board itself reports the zone **OFF**, which is the precondition for driving the contact by hand.
+3. **Contact test** — two buttons under each other: **Turn on heating** and **Turn off heating** (they read **Turn on cooling** / **Turn off cooling** while the zone's thermostat was in cool mode). Press the first and walk to the heat pump: the text next to the button tells you to look at the unit and see that it is really heating. Press the second one and watch the heat pump **stop**. *Next* unlocks only once **both** directions were seen — the wiring is proven in both directions.
+4. **Automatic** — hand the zone back to the virtual thermostat.
+
 
 > [!WARNING]
 > A closed contact is a continuous heat request. The firmware releases it automatically after **15 minutes**, and immediately when the zone's thermostat leaves **OFF**. Never leave the page with the contact closed on purpose.

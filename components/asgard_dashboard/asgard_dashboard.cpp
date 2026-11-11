@@ -145,6 +145,9 @@ void EcodanDashboard::loop() {
 bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
   char url_buf[AsyncWebServerRequest::URL_BUF_SIZE];
   auto url = request->url_to(url_buf);
+  // Query strings must not affect routing: /vt-test?nocheck is still /vt-test.
+  char *url_q_ = strchr(url_buf, '?');
+  if (url_q_ != nullptr) *url_q_ = '\0';
   return (url == "/dashboard" || url == "/dashboard/" ||
           url == "/setup" ||
           url == "/vt-test" ||
@@ -158,6 +161,8 @@ bool EcodanDashboard::canHandle(AsyncWebServerRequest *request) const {
 void EcodanDashboard::handleRequest(AsyncWebServerRequest *request) {
   char url_buf[AsyncWebServerRequest::URL_BUF_SIZE];
   auto url = request->url_to(url_buf);
+  char *url_q_ = strchr(url_buf, '?');
+  if (url_q_ != nullptr) *url_q_ = '\0';
   
   if      (url == "/dashboard" || url == "/dashboard/") handle_root_(request);
   else if (url == "/setup" || url == "/dashboard/setup")   handle_setup_(request);

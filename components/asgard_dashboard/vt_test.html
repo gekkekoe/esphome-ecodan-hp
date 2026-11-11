@@ -108,6 +108,10 @@
         .verdict li { margin-bottom: 4px; }
 
         .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 2px; }
+        .test-row { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+        .test-row .act-btn { flex: 0 0 190px; }
+        .obs { flex: 1; min-width: 130px; font-size: 12px; line-height: 1.5; color: var(--text3); }
+        .obs.ok { color: var(--accent3); }
         .act-btn {
             flex: 1 1 180px; padding: 14px 16px; border-radius: 9px; font-family: var(--mono);
             font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
@@ -173,11 +177,10 @@
                 <div class="dot" id="ind-2"></div>
                 <div class="dot" id="ind-3"></div>
                 <div class="dot" id="ind-4"></div>
-                <div class="dot" id="ind-5"></div>
             </div>
             <div class="progress-info">
                 <div class="step-name" id="step-title">ZONE</div>
-                <div class="step-count" id="step-count">STEP 1 / 6</div>
+                <div class="step-count" id="step-count">STEP 1 / 5</div>
             </div>
         </div>
 
@@ -254,10 +257,8 @@
 
         <!-- Step 2: manual mode -->
         <div class="step-content" id="step-2">
-            <div class="step-desc">
-                Now we switch to manual mode. The relay refuses to be driven by hand while the
-                thermostat is still calling for heat, so put the virtual thermostat of this zone on
-                <b>OFF</b> first.
+            <div class="step-desc" id="manual-desc">
+                Switch to manual mode: press <b>Set zone to OFF</b> below.
             </div>
             <div class="action-row">
                 <button class="act-btn" id="btn-off" onclick="setMode('off')">Set zone to OFF</button>
@@ -265,55 +266,42 @@
             <div class="act-note" id="off-note">Thermostat is currently not OFF.</div>
             <div class="info-box">
                 With the thermostat of this zone on <b>OFF</b> nothing else drives the relay, so you can
-                switch the contact by hand to test the wiring. The board still refuses to close it while
+                switch the heating by hand to test the wiring. The board still refuses to turn it on while
                 <b>ODIN is active</b> for this zone — switch off <b>Enable optimization</b> in ODIN.
             </div>
         </div>
 
-        <!-- Step 3: force closed -->
+        <!-- Step 3: drive the contact by hand, both directions -->
         <div class="step-content" id="step-3">
-            <div class="step-desc">
-                Close the contact and <b>go to the heat pump</b>: it must now see a real heat request,
-                the circulation pump has to start and the compressor may follow. That is the moment the
-                wiring is proven.
+            <div class="step-desc" id="close-desc">
+                Test both directions of the wiring: switch the heating on by hand, watch the heat pump,
+                then switch it off again.
             </div>
-            <div class="action-row">
-                <button class="act-btn" id="btn-close" onclick="forceRelay(1)">Close contact</button>
-                <button class="act-btn safe" id="btn-open" onclick="forceRelay(0)">Open contact</button>
+            <div class="test-row">
+                <button class="act-btn" id="btn-close" onclick="forceRelay(1)">Turn on heating</button>
+                <div class="obs" id="obs-on">Not tested yet.</div>
+            </div>
+            <div class="test-row">
+                <button class="act-btn safe" id="btn-open" onclick="forceRelay(0)">Turn off heating</button>
+                <div class="obs" id="obs-off">Turn the heating on first.</div>
             </div>
             <div class="timer" id="force-timer"></div>
-            <div class="act-note" id="close-note">Contact is open, nothing is demanded.</div>
-            <div class="info-box">
-                A closed contact is a continuous heat request, so the firmware <b>releases it
+            <div class="act-note" id="close-note">Nothing is demanded, the heat pump is idle.</div>
+            <div class="info-box" id="close-box">
+                Leaving the heating forced on is a continuous request, so the firmware <b>releases it
                 automatically after 15 minutes</b>, and immediately when this zone's thermostat leaves
-                OFF. Never leave this page with the contact closed on purpose.
+                OFF. Never leave this page with the heating forced on.
             </div>
         </div>
 
-        <!-- Step 4: release -->
+        <!-- Step 4: back to automatic -->
         <div class="step-content" id="step-4">
-            <div class="step-desc">
-                Now stop and check the other direction: open the contact and <b>watch the heat
-                pump</b>. The request must disappear and the pump must stop.
-            </div>
-            <div class="action-row">
-                <button class="act-btn safe" id="btn-open2" onclick="forceRelay(0)">Open contact</button>
-            </div>
-            <div class="act-note" id="open-note">Contact is open.</div>
-            <div class="info-box">
-                If the request stays high after the contact opened, the cable is not on the input you
-                assumed, or the pair is swapped with the other zone.
-            </div>
-        </div>
-
-        <!-- Step 5: back to automatic -->
-        <div class="step-content" id="step-5">
             <div class="step-desc">
                 Finished. Hand the zone back to the virtual thermostat: it will drive the same relay
                 from the mapped temperature and the setpoint again.
             </div>
             <div class="action-row">
-                <button class="act-btn" id="btn-heat" onclick="setMode('heat')">Set zone to HEAT</button>
+                <button class="act-btn" id="btn-heat" onclick="resumeMode()">Set zone to HEAT</button>
             </div>
             <div class="act-note" id="auto-note">Waiting for data…</div>
             <div class="info-box">
@@ -337,8 +325,8 @@
 </div>
 
 <script>
-const TITLES = ['SETUP', 'CONFIG', 'MANUAL MODE', 'CLOSE CONTACT', 'OPEN CONTACT', 'AUTOMATIC'];
-const TOTAL = 6;
+const TITLES = ['SETUP', 'CONFIG', 'MANUAL MODE', 'HEATING TEST', 'AUTOMATIC'];
+const TOTAL = 5;
 const IN_KEY = { z1: 'status_in1_request', z2: 'status_in6_request' };
 const IN_LABEL = { z1: 'IN1 demand indicator', z2: 'IN6 demand indicator' };
 const DIP_LABEL = { z1: 'Dip switch SW2-1', z2: 'Dip switch SW3-1' };
@@ -372,6 +360,14 @@ let ZONE = 'z1';
 let step = 0;
 let z2Built = false;
 let offline = false;
+// /vt-test?nocheck keeps every gate open so the contact can be driven by hand
+// while the rest of the installation is not configured yet. Checks still run.
+const NO_CHECK = new URLSearchParams(location.search).has('nocheck');
+// The thermostat mode this zone had before it was switched off: heating or cooling.
+const HW_MODE = { z1: 'heat', z2: 'heat' };
+function hwWord() { return HW_MODE[ZONE] === 'cool' ? 'cooling' : 'heating'; }
+// Both directions must be seen before this zone's contact test counts as done.
+const TEST_SEEN = { z1: { on: false, off: false }, z2: { on: false, off: false } };
 
 function masterName(v) {
     if (v === null || v === undefined || v < 0) return null;
@@ -573,37 +569,69 @@ function render() {
     document.getElementById('btn-off').disabled = (mode === null);
     document.getElementById('btn-close').disabled = !canForce;
     document.getElementById('btn-open').disabled = !relayOn();
-    document.getElementById('btn-open2').disabled = !relayOn();
     document.getElementById('btn-heat').disabled = !isOff();
 
-    document.getElementById('off-note').textContent = (mode === null)
+    const offEl = document.getElementById('off-note');
+    offEl.className = 'act-note' + (isOff() ? ' ok' : '');
+    offEl.innerHTML = (mode === null)
         ? 'Waiting for data…'
         : (isOff()
-            ? 'Zone is OFF and the contact is free to drive by hand.'
-            : 'Thermostat is "' + mode + '": press Set zone to OFF above, the relay refuses to be driven while it is calling.');
-    document.getElementById('close-note').textContent = canForce
-        ? (relayOn() ? 'Contact closed: the heat pump must show the request now.' : 'Zone is OFF, press Close contact.')
-        : 'Not allowed yet: the zone must be OFF and ODIN must be inactive — switch off Enable optimization in ODIN.';
-    document.getElementById('open-note').textContent = relayOn()
-        ? 'Contact still closed: open it and watch the heat pump stop demanding.'
-        : 'Contact open. If the request was high a moment ago and is idle now, the input reacts correctly.';
+            ? 'Zone is <b>OFF</b>, confirmed by the board — <b>Next</b> is unlocked.'
+            : 'Zone still runs "' + mode + '" — <b>Next</b> stays locked until the board reports <b>OFF</b>.');
+    document.getElementById('manual-desc').innerHTML = (mode === null)
+        ? 'Waiting for data from the board…'
+        : (isOff()
+            ? 'The zone is <b>OFF</b>: nothing drives this relay any more. Press <b>Next</b> to switch the ' + hwWord() + ' on by hand.'
+            : 'Switch to manual mode: press <b>Set zone to OFF</b> below.');
+    if (mode === 'heat' || mode === 'cool') HW_MODE[ZONE] = mode;
+    const hw = hwWord();
+    document.getElementById('btn-close').textContent = 'Turn on ' + hw;
+    document.getElementById('btn-open').textContent = 'Turn off ' + hw;
+    document.getElementById('btn-heat').textContent = 'Set zone to ' + (HW_MODE[ZONE] === 'cool' ? 'COOL' : 'HEAT');
+    const seen = TEST_SEEN[ZONE];
+    if (relayOn()) seen.on = true;
+    else if (seen.on) seen.off = true;
+    const obsOn = document.getElementById('obs-on');
+    obsOn.className = 'obs' + (seen.on ? ' ok' : '');
+    obsOn.innerHTML = relayOn()
+        ? '<b>Walk to the heat pump now</b> and look at it: it must really be <b>' + hw + '</b>. Once you have confirmed that at the unit, press <b>Turn off ' + hw + '</b>.'
+        : (seen.on ? 'The ' + hw + ' came on.' : 'Press the button, then watch the heat pump: it must start ' + hw + '.');
+    const obsOff = document.getElementById('obs-off');
+    obsOff.className = 'obs' + (seen.off ? ' ok' : '');
+    obsOff.innerHTML = !seen.on
+        ? 'Turn the ' + hw + ' on first.'
+        : (relayOn()
+            ? 'Now press it and <b>watch the heat pump stop</b>.'
+            : 'The heat pump stopped.');
+    document.getElementById('close-desc').innerHTML = 'Test both directions of the wiring: switch the <b>' + hw + '</b> on by hand, watch the heat pump, then switch it off again.';
+    document.getElementById('close-box').innerHTML = 'Leaving ' + hw + ' forced on like this is a continuous request, so the firmware <b>releases it automatically after 15 minutes</b>, and immediately when this zone\'s thermostat leaves OFF. Never leave this page with ' + hw + ' forced on.';
+    const noteEl = document.getElementById('close-note');
+    noteEl.className = 'act-note' + (seen.on && seen.off ? ' ok' : '');
+    noteEl.innerHTML = !canForce
+        ? 'Not allowed yet: the zone must be OFF and ODIN must be inactive — switch off <b>Enable optimization</b> in ODIN.'
+        : (!seen.on
+            ? 'Press <b>Turn on ' + hw + '</b> first.'
+            : (!seen.off
+                ? 'Now press <b>Turn off ' + hw + '</b> — <b>Next</b> unlocks when both directions worked.'
+                : 'Both directions worked — <b>Next</b> is unlocked.'));
     document.getElementById('auto-note').textContent = (mode === null) ? 'Waiting for data…'
-        : (isOff() ? 'Zone is still OFF; press Set zone to HEAT to hand it back.'
+        : (isOff() ? 'Zone is still OFF; press Set zone to ' + (HW_MODE[ZONE] === 'cool' ? 'COOL' : 'HEAT') + ' to hand it back.'
                    : 'Zone runs automatically again, action: ' + (S[ACTION_KEYS[ZONE]] || '–') + '.');
 }
 
 function stepDone(n) {
+    if (NO_CHECK) return true;
     if (n === 0) return scenario !== null;
     if (n === 1) return !offline && issues().length === 0;
     if (n === 2) return isOff();
-    if (n === 3) return true;
-    if (n === 4) return true;
+    if (n === 3) return TEST_SEEN[ZONE].on && TEST_SEEN[ZONE].off;
     return true;
 }
 
 function updateNav() {
     document.getElementById('progress-fill').style.width = (((step + 1) / TOTAL) * 100).toFixed(2) + '%';
-    document.getElementById('step-title').textContent = TITLES[step] + (step > 0 ? ' · ' + ZONE.toUpperCase() + (scenario ? ' · ' + SCEN[scenario].label : '') : '');
+    const title = (step === 3) ? hwWord().toUpperCase() + ' TEST' : TITLES[step];
+    document.getElementById('step-title').textContent = title + (step > 0 ? ' · ' + ZONE.toUpperCase() + (scenario ? ' · ' + SCEN[scenario].label : '') : '') + (NO_CHECK ? ' · CHECKS OFF' : '');
     document.getElementById('step-count').textContent = 'STEP ' + (step + 1) + ' / ' + TOTAL;
     const nextBtn = document.getElementById('btn-next');
     nextBtn.disabled = !stepDone(step);
@@ -638,6 +666,8 @@ function next() {
 function setMode(mode) {
     apiPost('virtual_climate_' + ZONE + '_mode', mode);
 }
+
+function resumeMode() { setMode(HW_MODE[ZONE]); }
 
 function forceRelay(on) {
     apiPost('vt_test_relay_' + ZONE, on);
