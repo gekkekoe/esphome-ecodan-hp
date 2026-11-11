@@ -20,7 +20,7 @@
                 name: Defrost
               - entity: binary_sensor.ecodan_heatpump_short_cycle_lockout
                 name: Short cycle lockout
-              - entity: binary_sensor.ecodan_heatpump_boost
+              - entity: binary_sensor.ecodan_heatpump_short_cycle_predictive_boost_active
                 name: Predictive Boost Active
             hours_to_show: 6
             logarithmic_scale: false
@@ -114,7 +114,7 @@
                   type: entities
                   entities:
                     - entity: >-
-                        number.ecodan_heatpump_auto_adaptive_min_cooling_flow_temperature
+                        number.ecodan_heatpump_auto_adaptive_min_cooling_flow_temperature_z1
                       name: Min. Cooling Flow Temperature
                     - entity: >-
                         number.ecodan_heatpump_auto_adaptive_cooling_smart_start_temp
