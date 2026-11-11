@@ -28,6 +28,8 @@ The strategy follows these steps:
 6.  **Predictive Boost interaction**: this calculation does **not** add a separate boost term. The short-cycle poll (see *Predictive Short-Cycle Prevention*) raises the flow setpoint on its own, and step 7 applies the identical guard to the value computed here — both writers therefore land on the same target instead of pulling it in opposite directions.
 7.  **Apply Limits & Rounding**: The value is rounded to the nearest **0.1 °C**, then held close to the water the pump is actually delivering: if the target sits **1.0 °C or more below** the measured feed, it is lifted to `feed − 1.0 °C` in a single correction (a setpoint that far under a running feed stops the compressor), and only then is it clamped to your `minimum_heating_flow_temp` / `maximum_heating_flow_temp`. Cooling mirrors this: a target 1.0 °C or more **above** the feed is pulled down to `feed + 1.0 °C`. When the circuit already runs a wider ΔT than asked for (independent zone temperatures), the target is additionally held at the measured feed instead of below it.
 
+    The 1.0 °C step limit compares the setpoint with the heat pump's **own** feed thermistor — never a DS18x20 probe mapped onto the feed role. The controller stops on the reading it has, and a probe offset would silently shift the whole 1.0 °C window (a probe reading 1.3 °C below the internal sensor turns a compliant setpoint into a stop). The ΔT hold and the flow target itself keep using the measured pair, probes included.
+
 ### Understanding the Profiles (Simulator)
 
 You can use the **[Auto-Adaptive Simulator](https://gekkekoe.github.io/esphome-ecodan-hp/auto-adaptive-sim.html)** to interactively test the settings.
@@ -81,7 +83,9 @@ This feature predicts imminent short cycles that can occur when the home's heat 
 When the requested flow temperature sits too far **under** the water the pump is actually
 delivering, the compressor cuts out shortly afterwards. A dedicated poll (every 30 s, while
 the compressor runs and the system is not in DHW, VC4 or defrost) compares each zone's
-**current** flow setpoint with the measured feed temperature:
+**current** flow setpoint with the heat pump's own feed temperature (the same rule as step 7
+above: a mapped DS18x20 probe is not used for this comparison, because the controller
+decides the stop on its own thermistor):
 
 * **Heating:** if the setpoint is **1.0 °C or more below** the feed, it is raised toward
   `feed − 1.0 °C` — by **at most 0.5 °C** per adjustment, and only inside your

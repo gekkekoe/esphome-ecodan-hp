@@ -41,10 +41,10 @@ void OdinForwarder::publish_telemetry() {
   };
 
   auto emit_zone_temps = [&](const char *feed_key, const char *return_key, ecodan::Zone zone) {
-    if (!status.has_independent_zone_temps() && !status.has_dallas_zone_temps(zone))
+    if (!status.has_independent_zone_temps())
       return;
-    put_float(feed_key, status.zone_feed_temperature(zone));
-    put_float(return_key, status.zone_return_temperature(zone));
+    put_float(feed_key, status.zone_feed_temperature_bus(zone));
+    put_float(return_key, status.zone_return_temperature_bus(zone));
   };
 
   put_float("outside_temp", status.OutsideTemperature);
@@ -53,8 +53,8 @@ void OdinForwarder::publish_telemetry() {
   put_float("dhw_temp", status.get_tank_temperature());
   put_float("dhw_temp_bottom", status.get_lower_tank_temperature());
 
-  put_float("hp_feed_temp", status.primary_feed_temperature());
-  put_float("hp_return_temp", status.primary_return_temperature());
+  put_float("hp_feed_temp", status.primary_feed_temperature_bus());
+  put_float("hp_return_temp", status.primary_return_temperature_bus());
 
   emit_zone_temps("z1_feed_temp", "z1_return_temp", ecodan::Zone::ZONE_1);
 

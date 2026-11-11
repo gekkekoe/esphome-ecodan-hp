@@ -243,6 +243,13 @@ namespace ecodan
         float primary_feed_temperature() const { return prefer_measured(HpDallasFeedTemperature, HpFeedTemperature); }
         float primary_return_temperature() const { return prefer_measured(HpDallasReturnTemperature, HpReturnTemperature); }
 
+        float z1_feed_temperature_bus() const { return Z1FeedTemperature; }
+        float z2_feed_temperature_bus() const { return Z2FeedTemperature; }
+        float primary_feed_temperature_bus() const { return HpFeedTemperature; }
+        float z1_return_temperature_bus() const { return Z1ReturnTemperature; }
+        float z2_return_temperature_bus() const { return Z2ReturnTemperature; }
+        float primary_return_temperature_bus() const { return HpReturnTemperature; }
+
         // Both ends or neither: a delta subtracts one sensor from the other, so a
         // single mapped probe must not mix into the bus thermistor's reading.
         bool has_dallas_hp_temps() const {
@@ -253,14 +260,16 @@ namespace ecodan
             return zone == Zone::ZONE_2 ? z2_feed_temperature() : z1_feed_temperature();
         }
 
-        float zone_return_temperature(Zone zone) const {
-            return zone == Zone::ZONE_2 ? z2_return_temperature() : z1_return_temperature();
+        float zone_feed_temperature_bus(Zone zone) const {
+            return zone == Zone::ZONE_2 ? z2_feed_temperature_bus() : z1_feed_temperature_bus();
         }
 
-        bool has_dallas_zone_temps(Zone zone) const {
-            return zone == Zone::ZONE_2
-                ? (!std::isnan(Z2DallasFeedTemperature) || !std::isnan(Z2DallasReturnTemperature))
-                : (!std::isnan(Z1DallasFeedTemperature) || !std::isnan(Z1DallasReturnTemperature));
+        float zone_return_temperature_bus(Zone zone) const {
+            return zone == Zone::ZONE_2 ? z2_return_temperature_bus() : z1_return_temperature_bus();
+        }
+
+        float zone_return_temperature(Zone zone) const {
+            return zone == Zone::ZONE_2 ? z2_return_temperature() : z1_return_temperature();
         }
 
         bool has_2zones() const {

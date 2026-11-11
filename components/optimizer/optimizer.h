@@ -169,6 +169,7 @@ namespace esphome
       float room_temp_from_odin(OptimizerZone zone);
       float get_room_target_temp(OptimizerZone zone);
       float get_feed_temp(OptimizerZone zone);
+      float get_bus_feed_temp(OptimizerZone zone);
       float get_return_temp(OptimizerZone zone);
       float get_flow_setpoint(OptimizerZone zone);
       FlowLimits get_flow_limits(OptimizerZone zone);

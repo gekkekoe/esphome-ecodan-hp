@@ -271,11 +271,12 @@ namespace esphome
                     cold_factor, actual_outside_temp,
                     zone_min, zone_max, error_factor, smart_boost);
 
-                if (this->is_post_dhw_window(status) &&
-                    std::fabs(actual_flow_temp - out_flow_heat) >= MAX_FEED_STEP_CHANGE)
+                float bus_feed = this->get_bus_feed_temp((i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
+                if (this->is_post_dhw_window(status) && !isnan(bus_feed) &&
+                    std::fabs(bus_feed - out_flow_heat) >= MAX_FEED_STEP_CHANGE)
                 {
                     // enforce_step_limit does invese of what we need, so custom stepper here
-                    float trailed = this->round_nearest(actual_flow_temp - 0.5f);
+                    float trailed = this->round_nearest(bus_feed - 0.5f);
                     ESP_LOGI(OPTIMIZER_TAG,
                         "Z%d Post-DHW: trailing flow %.2f°C instead of target %.2f°C",
                         (i + 1), trailed, out_flow_heat);
