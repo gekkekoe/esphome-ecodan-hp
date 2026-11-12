@@ -462,6 +462,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "temp_sensor_source_z2") { doSelect(sel_temp_source_z2_); return; } 
   if (key == "lockout_duration")      { doSelect(lockout_duration_); return; }
   if (key == "lockout_strategy")      { doSelect(lockout_strategy_); return; }
+  if (key == "solver_kwh_meter_feedback_source") { doSelect(solver_kwh_meter_feedback_source_); return; }
   for (int i = 0; i < OW_ROLE_COUNT; i++) {
     if (key == OW_MAP_KEYS[i]) { doSelect(ow_sel_[i]); return; }
   }
@@ -482,6 +483,7 @@ void EcodanDashboard::dispatch_set_(const std::string &key, const std::string &s
   if (key == "minimum_cooling_flow_z2")      { doNumber(num_min_cooling_flow_z2_); return; }
   if (key == "temperature_feedback_z1")      { doNumber(num_temperature_feedback_z1_); return; }
   if (key == "temperature_feedback_z2")      { doNumber(num_temperature_feedback_z2_); return; }
+  if (key == "solver_kwh_meter_feedback")        { doNumber(solver_kwh_meter_feedback_); return; }
   if (key == "minimum_compressor_on_time")   { doNumber(minimum_compressor_on_time_); return; }
 
   if (key == "thermostat_hysteresis_z1")    { doNumber(num_hysteresis_z1_);    return; }
@@ -695,6 +697,9 @@ void EcodanDashboard::update_snapshot_() {
   get_n(num_temperature_feedback_z1_, current_snapshot_.num_temperature_feedback_z1);
   get_n(num_temperature_feedback_z2_, current_snapshot_.num_temperature_feedback_z2);
 
+  // kWh meter feedback (external energy meter reading)
+  get_n(solver_kwh_meter_feedback_, current_snapshot_.num_solver_kwh_meter_feedback);
+
   get_n(num_legionella_dhw_setpoint_, current_snapshot_.num_legionella_dhw_setpoint);
 
   // -1.0 is the "no stored setpoint" sentinel — surface it as null
@@ -760,6 +765,7 @@ void EcodanDashboard::update_snapshot_() {
   current_snapshot_.sel_operating_mode_z2 = get_sel(sel_operating_mode_z2_);
   current_snapshot_.sel_temp_source_z1 = get_sel(sel_temp_source_z1_);
   current_snapshot_.sel_temp_source_z2 = get_sel(sel_temp_source_z2_);
+  current_snapshot_.sel_solver_kwh_meter_feedback_source = get_sel(solver_kwh_meter_feedback_source_);
 
   for (int i = 0; i < OW_PROBE_COUNT; i++) current_snapshot_.ow_sensor[i] = get_f(ow_sensor_[i]);
   for (int i = 0; i < OW_PROBE_COUNT; i++) get_n(ow_offset_[i], current_snapshot_.ow_offset[i]);
@@ -991,11 +997,14 @@ void EcodanDashboard::handle_state_(AsyncWebServerRequest *request) {
   p_lim("temp_feedback_z1_lim",  snap.num_temperature_feedback_z1);
   p_n("temperature_feedback_z2", snap.num_temperature_feedback_z2.val);
   p_lim("temp_feedback_z2_lim",  snap.num_temperature_feedback_z2);
+  p_n("solver_kwh_meter_feedback", snap.num_solver_kwh_meter_feedback.val);
+  p_lim("solver_kwh_meter_feedback_lim", snap.num_solver_kwh_meter_feedback);
 
   if (!flush()) { httpd_resp_send_chunk(req, nullptr, 0); return; }
 
   p_sel("lockout_duration", snap.sel_lockout_duration);
   p_sel("lockout_strategy", snap.sel_lockout_strategy);
+  p_sel("solver_kwh_meter_feedback_source", snap.sel_solver_kwh_meter_feedback_source);
 
   p_b("server_control_enabled",          snap.sw_server_control);
   p_b("server_control_prohibit_dhw",     snap.sw_sc_prohibit_dhw);

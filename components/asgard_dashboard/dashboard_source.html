@@ -1046,6 +1046,32 @@ header {
     </div>
   </div>
 
+  <div class="ctrl-card" id="card-energy">
+    <div class="section-title" onclick="toggleCard('card-energy')">Energy <span class="collapse-icon">▼</span></div>
+    <div class="ctrl-card-body">
+      <div class="ctrl-row">
+        <span class="ctrl-label param-label">Energy Meter Source<span class="tip-icon">?</span>
+          <span class="tip-box">
+            <span class="tip-unit">Internal Energy Meter</span>Uses the heat pump's own energy consumption sensor.<br><br>
+            <span class="tip-unit">Home Assistant or REST API</span>Uses the kWh value pushed in via Home Assistant or the REST API ('number.solver_kwh_meter_feedback').
+          </span>
+        </span>
+        <select class="ctrl-select" id="sel-energy-src" onchange="sendSelect('solver_kwh_meter_feedback_source', this)">
+          <option>Internal Energy Meter</option><option>Home Assistant or REST API</option>
+        </select>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label param-label">Energy Value<span class="tip-icon">?</span><span class="tip-box">kWh of the source selected above — the value Auto-Adaptive and the history archive use as consumption.</span></span>
+        <span class="ctrl-value" id="energy-src-value" style="font-weight:600; font-family:var(--mono);">—</span>
+      </div>
+      <div class="ctrl-row" id="row-energy-fb" style="display:none; border-bottom: none; padding-bottom: 0;">
+        <span class="ctrl-label param-label">kWh meter feedback<span class="tip-icon">?</span><span class="tip-box">Energy reading pushed in via Home Assistant or the REST API. Used as the consumption while 'Home Assistant or REST API' is selected above. Apply with the button below.</span></span>
+        <div class="stepper"><button class="step-btn" onclick="step('energy-fb', -0.1)">−</button><input type="number" class="step-input" id="energy-fb-val" onchange="manualInput('energy-fb', this.value)"><button class="step-btn" onclick="step('energy-fb', +0.1)">+</button></div>
+      </div>
+      <button class="send-btn" id="btn-energy-apply" onclick="sendEnergy(this)" style="margin-bottom: 0; margin-top: 24px; display: none;">Apply Settings</button>
+    </div>
+  </div>
+
   <div class="ctrl-card" id="card-dallas">
     <div class="section-title" onclick="toggleCard('card-dallas')">1-Wire Temperature Probes <span class="collapse-icon">▼</span></div>
     <div class="ctrl-card-body">
@@ -1436,6 +1462,10 @@ const CONTROLS = [
   { type:'select', key:'room_temp_source_z1', el:'sel-z1src' },
   { type:'select', key:'room_temp_source_z2', el:'sel-z2src' },
 
+  // ── Energy ──
+  { type:'number', pkey:'energy-fb', key:'solver_kwh_meter_feedback', el:'energy-fb-val', min:0, max:9999, step:0.1 },
+  { type:'select', key:'solver_kwh_meter_feedback_source', el:'sel-energy-src' },
+
   // ── Zones ──
   { type:'select', key:'operating_mode_z1', el:'sel-z1mode' },
   { type:'select', key:'operating_mode_z2', el:'sel-z2mode' },
@@ -1540,7 +1570,7 @@ function toggleSubCard(id) {
 
 // Restores the collapsed state on page load
 function initCollapsibleCards() {
-  const cards = ['sys-odin', 'sys-settings-backup', 'sys-firmware', 'sys-logs', 'card-power', 'card-dallas'];
+  const cards = ['sys-odin', 'sys-settings-backup', 'sys-firmware', 'sys-logs', 'card-power', 'card-energy', 'card-dallas'];
   const subCards = ['sub-server', 'sub-predictive', 'sub-short-cycle',
                     'sub-ow-0', 'sub-ow-1', 'sub-ow-2', 'sub-ow-3', 'sub-ow-4', 'sub-ow-5'];
   const defaultCollapsed = ['sys-settings-backup'];
@@ -2519,6 +2549,7 @@ function render(d) {
   if (d.min_cool_flow_z2_lim) { LIMITS['cool-min-z2'].min = d.min_cool_flow_z2_lim.min; LIMITS['cool-min-z2'].max = d.min_cool_flow_z2_lim.max; LIMITS['cool-min-z2'].step = d.min_cool_flow_z2_lim.step || 0.1; }
   if (d.temp_feedback_z1_lim) { LIMITS['temp-fb-z1'].min = d.temp_feedback_z1_lim.min; LIMITS['temp-fb-z1'].max = d.temp_feedback_z1_lim.max; LIMITS['temp-fb-z1'].step = d.temp_feedback_z1_lim.step || 0.1; }
   if (d.temp_feedback_z2_lim) { LIMITS['temp-fb-z2'].min = d.temp_feedback_z2_lim.min; LIMITS['temp-fb-z2'].max = d.temp_feedback_z2_lim.max; LIMITS['temp-fb-z2'].step = d.temp_feedback_z2_lim.step || 0.1; }
+  if (d.solver_kwh_meter_feedback_lim) { LIMITS['energy-fb'].min = d.solver_kwh_meter_feedback_lim.min; LIMITS['energy-fb'].max = d.solver_kwh_meter_feedback_lim.max; LIMITS['energy-fb'].step = 0.1; }
 
 
   if (d.min_compressor_on_time_lim) { 
@@ -2636,6 +2667,7 @@ function render(d) {
   seedPending('aa-min-z2', d.minimum_heating_flow_temp_z2);
   seedPending('temp-fb-z1', d.temperature_feedback_z1);
   seedPending('temp-fb-z2', d.temperature_feedback_z2);
+  seedPending('energy-fb', d.solver_kwh_meter_feedback);
 
   setToggle('sw-aa', d.auto_adaptive_control_enabled);
   setToggle('sw-dm', d.defrost_risk_handling_enabled);
@@ -2653,6 +2685,8 @@ function render(d) {
   setSelect('sel-z2ts',   d.temp_sensor_source_z2);
   setSelect('sel-lockout-strategy', d.lockout_strategy);
   setSelect('sel-lockout-dur', d.lockout_duration);
+  setSelect('sel-energy-src', d.solver_kwh_meter_feedback_source);
+  updateEnergySource(d);
 
   updateDot('dot-z1', d.z1_action);
   updateDot('dot-room-z1', d.room_z1_action);
@@ -2894,6 +2928,16 @@ async function sendAA(btn) {
   btn.classList.remove('sending');
 }
 
+async function sendEnergy(btn) {
+  if (!hasChanged('energy-fb')) { showToast('No change'); return; }
+  btn.classList.add('sending');
+  try {
+    await apiPost({ key: 'solver_kwh_meter_feedback', value: pending['energy-fb'] });
+    showToast('✓ Energy updated');
+  } catch(e) { showToast('✗ ' + e.message, true); }
+  btn.classList.remove('sending');
+}
+
 async function sendDHW(btn) {
   if (!hasChanged('dhw-sp')) { showToast('No change'); return; }
   btn.classList.add('sending');
@@ -3010,6 +3054,30 @@ function updateRoomSourceTemp(zone, d) {
 
   const fbRow = document.getElementById('row-' + zone + '-fb');
   if (fbRow) fbRow.style.display = (srcIdx === 1) ? 'flex' : 'none';
+}
+
+// Energy Meter Source: 0 = Internal Energy Meter, 1 = Home Assistant or REST API.
+// The firmware already resolves daily_total_energy_consumption to whichever source is
+// selected, so that is the consumption Auto-Adaptive and the history archive use.
+// The card needs the source select to be configured; the feedback input needs the
+// kWh number to be configured.
+function updateEnergySource(d) {
+  const card = document.getElementById('card-energy');
+  if (!card) return;
+  const src = d.solver_kwh_meter_feedback_source;
+  const hasSrc = (src !== undefined && src !== null);
+  card.style.display = hasSrc ? 'block' : 'none';
+  if (!hasSrc) return;
+
+  const cons = d.daily_total_energy_consumption;
+  setText('energy-src-value', (cons == null) ? '—' : fmt1(cons) + ' kWh');
+
+  const fb = d.solver_kwh_meter_feedback;
+  const hasFb = (fb !== undefined && fb !== null);
+  const fbRow = document.getElementById('row-energy-fb');
+  if (fbRow) fbRow.style.display = hasFb ? 'flex' : 'none';
+  const applyBtn = document.getElementById('btn-energy-apply');
+  if (applyBtn) applyBtn.style.display = hasFb ? 'block' : 'none';
 }
 
 async function sendUI(zone, val) {

@@ -152,6 +152,9 @@ struct DashboardSnapshot {
   NumData num_temperature_feedback_z1;
   NumData num_temperature_feedback_z2;
 
+  // kWh meter feedback (external energy meter reading)
+  NumData num_solver_kwh_meter_feedback;
+
 
   // Climate data
   struct ClimData { float curr{NAN}; float tar{NAN}; int action{-1}; int mode{-1}; };
@@ -173,6 +176,7 @@ struct DashboardSnapshot {
   int sel_temp_source_z2{-1};
   int sel_lockout_duration{-1};
   int sel_lockout_strategy{-1};
+  int sel_solver_kwh_meter_feedback_source{-1};
 
   float ow_sensor[OW_PROBE_COUNT]{NAN, NAN, NAN, NAN, NAN, NAN};
   NumData ow_offset[OW_PROBE_COUNT];
