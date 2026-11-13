@@ -21,10 +21,18 @@ void OdinForwarder::handle_command(const std::string &payload) {
     return;
   }
   uint32_t valid_until = doc["valid_until"] | 0;
+  const uint32_t sent_at = doc["ts"] | 0;
   if (valid_until == 0) {
     ESP_LOGW(TAG, "Rejected command: valid_until missing/0 - nothing applied");
     return;
   }
+
+  const uint32_t life_ms = (valid_until > sent_at) ? (valid_until - sent_at) * 1000u : 0;
+  this->hold_ms_ = (life_ms == 0 || life_ms > kMaxHoldMs) ? kMaxHoldMs : life_ms;
+  this->hold_started_ms_ = millis();
+
+  this->cancel_timeout("odin_hold");
+  this->set_timeout("odin_hold", this->hold_ms_, [this] { this->release(); });
 
   uint8_t mode = doc["mode"] | 0;
   bool soft_stop = doc["soft_stop"] | false;
@@ -37,7 +45,6 @@ void OdinForwarder::handle_command(const std::string &payload) {
     this->take_over();
     this->taken_over_ = true;
   }
-  this->valid_until_ = valid_until;
 
   float flow_req = doc["flow_target"] | NAN;
   float flow_z2_req = doc["flow_target_z2"] | NAN;
@@ -50,9 +57,9 @@ void OdinForwarder::handle_command(const std::string &payload) {
 
   ESP_LOGI(TAG,
            "Odin command applied: z1 flow %.1f -> %.1f, z2 flow %.1f -> %.1f, mode=%u soft_stop=%d "
-           "z2_plan=%.2fkWh z2_stop=%d valid_until=%lu",
+           "z2_plan=%.2fkWh z2_stop=%d hold=%lus",
            flow_req, flow, flow_z2_req, flow_z2, static_cast<unsigned>(mode), static_cast<unsigned>(soft_stop),
-           z2_production, static_cast<unsigned>(z2_stop), static_cast<unsigned long>(valid_until));
+           z2_production, static_cast<unsigned>(z2_stop), static_cast<unsigned long>(this->hold_ms_ / 1000));
 }
 
 void OdinForwarder::take_over() {
@@ -67,7 +74,9 @@ void OdinForwarder::take_over() {
 
 void OdinForwarder::release() {
   this->taken_over_ = false;
-  this->valid_until_ = 0;
+  this->hold_ms_ = 0;
+  this->hold_started_ms_ = 0;
+  this->cancel_timeout("odin_hold");
   this->hold_override(false);
   if (this->takeover_sensor_ != nullptr)
     this->takeover_sensor_->publish_state(false);

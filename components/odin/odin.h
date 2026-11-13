@@ -75,6 +75,15 @@ public:
 
   bool owns_flow_setpoint() const override;
 
+  uint32_t hold_remaining_ms() const {
+    if (!this->taken_over_)
+      return 0;
+    const uint32_t elapsed = millis() - this->hold_started_ms_;
+    return elapsed >= this->hold_ms_ ? 0 : this->hold_ms_ - elapsed;
+  }
+
+  static constexpr uint32_t kMaxHoldMs = 15 * 60 * 1000;
+
 protected:
 
   void sync_broker_settings();
@@ -145,7 +154,8 @@ protected:
   optimizer::Optimizer *optimizer_{nullptr};
   bool active_{false};
   bool taken_over_{false};
-  uint32_t valid_until_{0};
+  uint32_t hold_ms_{0};
+  uint32_t hold_started_ms_{0};
   bool legionella_active_{false};
 
   uint32_t legionella_end_epoch_{0};

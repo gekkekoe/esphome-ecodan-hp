@@ -187,38 +187,38 @@
         <!-- Step 0: which zone -->
         <div class="step-content active" id="step-0">
             <div class="step-desc">
-                This page drives the <b>zone relay contact</b> by hand so you can verify the wiring
-                between the Asgard board and the heat pump: R1 to <b>IN1</b> for zone 1,
-                R2 to <b>IN6</b> for zone 2. The virtual thermostat is switched off first, so nothing
-                else fights the manual contact.
+                The <b>virtual thermostat</b> is the thermostat of this zone in every scenario. To
+                check the wiring between the Asgard board and the heat pump this page switches it off
+                for a moment and closes the zone contact <b>by hand</b>: R1 to <b>IN1</b> for zone 1,
+                R2 to <b>IN6</b> for zone 2. Nothing else drives that contact while you test.
             </div>
             <div class="sub-label">Zone</div>
             <div class="option-card selected" id="pick-z1" onclick="pickZone('z1')">
                 <div class="opt-title">Zone 1 <span class="opt-badge">R1 → IN1</span></div>
-                <div class="opt-desc">Dip switch <b>SW2-1 ON</b>. Relay on the zone 1 output.</div>
+                <div class="opt-desc">Dip switch <b>SW2-1 ON</b>: the Asgard board is the thermostat of zone 1.</div>
             </div>
             <div class="option-card" id="pick-z2" onclick="pickZone('z2')">
                 <div class="opt-title">Zone 2 <span class="opt-badge">R2 → IN6</span></div>
-                <div class="opt-desc">Dip switch <b>SW3-1 ON</b>. Relay on the zone 2 output.</div>
+                <div class="opt-desc">Dip switch <b>SW3-1 ON</b>: the Asgard board is the thermostat of zone 2.</div>
             </div>
             <div class="info-box" id="z2-note">Zone 2 is only selectable on a two-zone firmware build.</div>
             <div class="sub-label">Scenario — choose the one that matches your wiring</div>
-            <div class="step-desc">Every expected value on the next screens follows the scenario you pick here: dip switches, master of the zone and the thermostat source. The default is <b>A</b>; change it here at any time.</div>
+            <div class="step-desc">All four scenarios run the zone on the <b>virtual thermostat</b>; they only differ in <b>which temperature sensor</b> it heats and cools against. That choice, together with the dip switches and the master of the zone, decides the expected values on the next screens. The default is <b>A</b>; change it here at any time.</div>
             <div class="option-card selected" id="sc-A" onclick="pickScenario('A')">
                 <div class="opt-title">A · Virtual Thermostat + external sensor <span class="opt-badge">SW1-8 OFF</span><span class="opt-badge">default</span></div>
-                <div class="opt-desc">No <b>Mitsubishi wireless thermostat</b> or CNRF fitted; the Virtual Thermostat reads a <b>DS18x20</b> or a value pushed over the <b>REST API</b>. MRC <i>Sensor setting</i>: <b>MRC</b>.</div>
+                <div class="opt-desc">The virtual thermostat reads its own <b>external sensor</b>: a <b>DS18x20</b> on the board, or a temperature pushed over the <b>REST API</b>. No <b>Mitsubishi wireless thermostat</b> or CNRF is fitted, so the heat pump uses the sensor of its own controller. MRC <i>Sensor setting</i>: <b>MRC</b>.</div>
             </div>
             <div class="option-card" id="sc-B1" onclick="pickScenario('B1')">
                 <div class="opt-title">B1 · Virtual Thermostat + Mitsubishi wireless OR CNRF <span class="opt-badge">SW1-8 ON</span></div>
-                <div class="opt-desc">The relay controls the zone and the <b>Mitsubishi wireless thermostat (RCx) or CNRF</b> is the temperature source of the Virtual Thermostat. MRC <i>Sensor setting</i>: <b>Room RCx</b>.</div>
+                <div class="opt-desc">The virtual thermostat takes the room temperature from the <b>Mitsubishi wireless thermostat (RCx) or CNRF</b> over the bus: the wireless remote in the room stays the only sensor, and it is also the master of the zone. MRC <i>Sensor setting</i>: <b>Room RCx</b>.</div>
             </div>
             <div class="option-card" id="sc-B2" onclick="pickScenario('B2')">
                 <div class="opt-title">B2 · Virtual Thermostat + Mitsubishi wireless OR CNRF, external sensor <span class="opt-badge">SW1-8 ON</span></div>
-                <div class="opt-desc">The <b>Mitsubishi wireless thermostat or CNRF</b> stays the room sensor of the heat pump, while the Virtual Thermostat reads an <b>external sensor</b> (DS18x20 or REST API). MRC <i>Sensor setting</i>: <b>MRC</b>.</div>
+                <div class="opt-desc">A <b>Mitsubishi wireless thermostat or CNRF</b> is fitted and keeps measuring for the heat pump, but the virtual thermostat does not use it: an <b>external sensor</b> of your own (DS18x20 or REST API) is the room temperature Odin heats against. MRC <i>Sensor setting</i>: <b>MRC</b>.</div>
             </div>
             <div class="option-card" id="sc-D" onclick="pickScenario('D')">
                 <div class="opt-title">D · Virtual Thermostat + MRC <span class="opt-badge">SW1-8 OFF</span></div>
-                <div class="opt-desc">The Virtual Thermostat relay controls the zone and the <b>MRC</b> is its temperature source. MRC <i>Sensor setting</i>: <b>MRC</b>.</div>
+                <div class="opt-desc">The virtual thermostat reads the room temperature from the <b>MRC</b> itself, the sensor built into the wired controller, so no extra sensor is needed. MRC <i>Sensor setting</i>: <b>MRC</b>.</div>
             </div>
             <div class="info-box">If you are not sure: <b>SW1-8 ON</b> means a <b>Mitsubishi wireless thermostat</b> or CNRF module is in use — that is scenario <b>B1</b> or <b>B2</b>, otherwise <b>A</b> or <b>D</b>.</div>
         </div>
@@ -266,8 +266,9 @@
             <div class="act-note" id="off-note">Thermostat is currently not OFF.</div>
             <div class="info-box">
                 With the thermostat of this zone on <b>OFF</b> nothing else drives the relay, so you can
-                switch the heating by hand to test the wiring. The board still refuses to turn it on while
-                <b>ODIN is active</b> for this zone — switch off <b>Enable optimization</b> in ODIN.
+                switch the heating by hand to test the wiring. Switching it to <b>OFF</b> also clears the
+                <b>ODIN relay override</b> of this zone, so there is nothing to wait for: the board is
+                ready as soon as it reports the zone OFF.
             </div>
         </div>
 
@@ -458,7 +459,6 @@ function forced() { return S['vt_force_' + ZONE] === true; }
 function relayOn() { return S['vt_relay_' + ZONE] === true; }
 function modeVal() { return S[MODE_KEYS[ZONE]] || null; }
 function isOff() { return modeVal() === 'off'; }
-function overrideOn() { return S['vt_ovr_' + ZONE] === true; }
 
 function issues() {
     const list = [];
@@ -494,7 +494,6 @@ function issues() {
     if (op < 0) list.push('The operating mode of this zone is unknown.');
     else if (OPMODE_FLOW.indexOf(op) < 0) list.push('Operating mode is "' + OPMODE_NAMES[op] + '": the zone must run in Heat Flow Temperature or Cool Flow Temperature.');
 
-    if (overrideOn()) list.push('ODIN is active for this zone: switch off <b>Enable optimization</b> in ODIN, otherwise ODIN keeps the relay.');
     if (S['prohibit_heat_' + ZONE] === true) list.push('The heat pump currently prohibits heating for this zone.');
     return list;
 }
@@ -565,7 +564,7 @@ function render() {
     const timerEl = document.getElementById('force-timer');
     timerEl.textContent = forced() ? ('auto-release in ' + Math.ceil(left) + ' s') : '';
 
-    const canForce = isOff() && !overrideOn();
+    const canForce = isOff();
     document.getElementById('btn-off').disabled = (mode === null);
     document.getElementById('btn-close').disabled = !canForce;
     document.getElementById('btn-open').disabled = !relayOn();
@@ -608,7 +607,7 @@ function render() {
     const noteEl = document.getElementById('close-note');
     noteEl.className = 'act-note' + (seen.on && seen.off ? ' ok' : '');
     noteEl.innerHTML = !canForce
-        ? 'Not allowed yet: the zone must be OFF and ODIN must be inactive — switch off <b>Enable optimization</b> in ODIN.'
+        ? 'Not allowed yet: this zone must be <b>OFF</b> first — press <b>Set zone to OFF</b> on the previous step.'
         : (!seen.on
             ? 'Press <b>Turn on ' + hw + '</b> first.'
             : (!seen.off
