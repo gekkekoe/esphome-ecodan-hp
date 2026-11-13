@@ -268,7 +268,9 @@
                 With the thermostat of this zone on <b>OFF</b> nothing else drives the relay, so you can
                 switch the heating by hand to test the wiring. Switching it to <b>OFF</b> also clears the
                 <b>ODIN relay override</b> of this zone, so there is nothing to wait for: the board is
-                ready as soon as it reports the zone OFF.
+                ready as soon as it reports the zone OFF. The next step brings this zone's flow
+                setpoint back to <b>27 °C</b> when a DHW cycle left it higher, because above that
+                number the heating does not answer to a contact closed by hand.
             </div>
         </div>
 
@@ -346,6 +348,13 @@ const OPMODE_NAMES = ['Heat Target Temperature', 'Heat Flow Temperature', 'Heat 
                       'Cool Target Temperature', 'Cool Flow Temperature', 'Floor Dry Up', 'Cool Compensation Curve'];
 // Auto Adaptive and the virtual thermostat both need a flow temperature mode.
 const OPMODE_FLOW = [1, 4];
+// What a DHW cycle leaves behind: a flow setpoint that high does not answer to a
+// contact closed by hand, so the heating test runs against 27 °C and writes that
+// number before the operator is asked to turn the heat on.
+const FLOW_KEYS = { z1: 'flow_z1_setpoint', z2: 'flow_z2_setpoint' };
+const FLOW_SET_KEY = { z1: 'flow_climate_z1_setpoint', z2: 'flow_climate_z2_setpoint' };
+const PUMP_FLOW_KEYS = { z1: 'z1_flow_temp_target', z2: 'z2_flow_temp_target' };
+const MAX_TEST_FLOW = 27.0;
 
 // What each wiring scenario expects, per the table in manual.md Step 3.
 const SCEN = {
@@ -460,6 +469,28 @@ function relayOn() { return S['vt_relay_' + ZONE] === true; }
 function modeVal() { return S[MODE_KEYS[ZONE]] || null; }
 function isOff() { return modeVal() === 'off'; }
 
+function flowSetpoint() {
+    const v = S[FLOW_KEYS[ZONE]];
+    return (typeof v === 'number' && isFinite(v)) ? v : null;
+}
+function pumpFlowTarget() {
+    const v = S[PUMP_FLOW_KEYS[ZONE]];
+    return (typeof v === 'number' && isFinite(v)) ? v : null;
+}
+function flowOnPumpHigh() {
+    const v = pumpFlowTarget();
+    return v !== null && v > MAX_TEST_FLOW;
+}
+let flowFixMs = 0;
+function holdTestFlow() {
+    const sp = flowSetpoint();
+    if (step !== 3 || sp === null || sp <= MAX_TEST_FLOW) return;
+    const now = Date.now();
+    if (now - flowFixMs < 10000) return;
+    flowFixMs = now;
+    apiPost(FLOW_SET_KEY[ZONE], MAX_TEST_FLOW);
+}
+
 function issues() {
     const list = [];
     const sc = scenario ? SCEN[scenario] : null;
@@ -564,7 +595,9 @@ function render() {
     const timerEl = document.getElementById('force-timer');
     timerEl.textContent = forced() ? ('auto-release in ' + Math.ceil(left) + ' s') : '';
 
-    const canForce = isOff();
+    const sp = flowSetpoint();
+    const flowOk = (sp !== null && sp <= MAX_TEST_FLOW);
+    const canForce = isOff() && flowOk;
     document.getElementById('btn-off').disabled = (mode === null);
     document.getElementById('btn-close').disabled = !canForce;
     document.getElementById('btn-open').disabled = !relayOn();
@@ -603,19 +636,31 @@ function render() {
             ? 'Now press it and <b>watch the heat pump stop</b>.'
             : 'The heat pump stopped.');
     document.getElementById('close-desc').innerHTML = 'Test both directions of the wiring: switch the <b>' + hw + '</b> on by hand, watch the heat pump, then switch it off again.';
-    document.getElementById('close-box').innerHTML = 'Leaving ' + hw + ' forced on like this is a continuous request, so the firmware <b>releases it automatically after 15 minutes</b>, and immediately when this zone\'s thermostat leaves OFF. Never leave this page with ' + hw + ' forced on.';
+    document.getElementById('close-box').innerHTML =
+        (sp !== null && !flowOk
+            ? 'The flow setpoint of this zone reads <b>' + fmt(sp, 1, ' °C') + '</b>, above the <b>27 °C</b> this test runs against — a DHW cycle is what leaves it there. This page writes <b>27 °C</b>, and the button unlocks once the board reports it. '
+            : (flowOk && flowOnPumpHigh()
+                ? 'The heat pump itself still aims at <b>' + fmt(pumpFlowTarget(), 1, ' °C') + '</b>, so a DHW cycle has probably not finished — let that number drop before judging what the unit does. '
+                : '')
+        ) + 'Leaving ' + hw + ' forced on like this is a continuous request, so the firmware <b>releases it automatically after 15 minutes</b>, and immediately when this zone\'s thermostat leaves OFF. Never leave this page with ' + hw + ' forced on.';
     const noteEl = document.getElementById('close-note');
     noteEl.className = 'act-note' + (seen.on && seen.off ? ' ok' : '');
-    noteEl.innerHTML = !canForce
+    const flowNote = (sp === null)
+        ? 'Waiting for the flow setpoint of this zone…'
+        : 'Setting this zone\'s flow setpoint to <b>27 °C</b> — the board still reports <b>' + fmt(sp, 1, ' °C') + '</b>.';
+    noteEl.innerHTML = !isOff()
         ? 'Not allowed yet: this zone must be <b>OFF</b> first — press <b>Set zone to OFF</b> on the previous step.'
-        : (!seen.on
-            ? 'Press <b>Turn on ' + hw + '</b> first.'
-            : (!seen.off
-                ? 'Now press <b>Turn off ' + hw + '</b> — <b>Next</b> unlocks when both directions worked.'
-                : 'Both directions worked — <b>Next</b> is unlocked.'));
+        : (!flowOk
+            ? flowNote
+            : (!seen.on
+                ? 'Press <b>Turn on ' + hw + '</b> first.'
+                : (!seen.off
+                    ? 'Now press <b>Turn off ' + hw + '</b> — <b>Next</b> unlocks when both directions worked.'
+                    : 'Both directions worked — <b>Next</b> is unlocked.')));
     document.getElementById('auto-note').textContent = (mode === null) ? 'Waiting for data…'
         : (isOff() ? 'Zone is still OFF; press Set zone to ' + (HW_MODE[ZONE] === 'cool' ? 'COOL' : 'HEAT') + ' to hand it back.'
                    : 'Zone runs automatically again, action: ' + (S[ACTION_KEYS[ZONE]] || '–') + '.');
+    holdTestFlow();
 }
 
 function stepDone(n) {
@@ -642,6 +687,7 @@ function show(n) {
     document.getElementById('step-' + step).classList.remove('active');
     document.getElementById('ind-' + step).classList.remove('active');
     step = n;
+    if (step === 3) { flowFixMs = 0; holdTestFlow(); }
     document.getElementById('step-' + step).classList.add('active');
     document.getElementById('ind-' + step).classList.add('active');
     for (let i = 0; i < TOTAL; i++) {
