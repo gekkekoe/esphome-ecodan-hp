@@ -128,7 +128,7 @@
         .timer { font-family: var(--mono); font-size: 13px; color: var(--warn); margin-top: 10px; }
 
         .live-strip {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 1px;
             background: var(--border); border-top: 1px solid var(--border);
         }
         .live-cell { background: var(--bg2); padding: 10px 8px; text-align: center; }
@@ -241,7 +241,8 @@
                 <tr><td>Typed virtual input</td><td class="exp">–</td><td class="val" id="r-input">–</td></tr>
                 <tr><td><b>Mapped value used</b></td><td class="exp">–</td><td class="val" id="r-mapped">–</td></tr>
                 <tr><td>Thermostat mode</td><td class="exp">–</td><td class="val" id="r-climate">–</td></tr>
-                <tr><td>Operating mode of the zone</td><td class="exp">Heat or Cool Flow Temperature</td><td class="val" id="r-opmode">–</td></tr>
+                <tr><td>Selected operating mode</td><td class="exp">Heat or Cool Flow Temperature</td><td class="val" id="r-opmode">–</td></tr>
+                <tr><td><span class="param-label">Actual Operation<span class="tip-icon">?</span><span class="tip-box">What the heat pump actually does right now. A DHW or a legionella cycle owns the flow temperature and the compressor, so the hand test cannot tell a working contact from a broken one while one of them runs.</span></span></td><td class="exp">not DHW, not legionella</td><td class="val" id="r-action">–</td></tr>
                 <tr><td id="r-in-lbl">IN1 demand indicator</td><td class="exp">–</td><td class="val" id="r-in">–</td></tr>
                 <tr><td>Heating prohibited</td><td class="exp">no</td><td class="val" id="r-prohibit">–</td></tr>
                 <tr><td>Compressor</td><td class="exp">–</td><td class="val" id="r-comp">–</td></tr>
@@ -270,7 +271,8 @@
                 <b>ODIN relay override</b> of this zone, so there is nothing to wait for: the board is
                 ready as soon as it reports the zone OFF. The next step brings this zone's flow
                 setpoint back to <b>27 °C</b> when a DHW cycle left it higher, because above that
-                number the heating does not answer to a contact closed by hand.
+                number the heating does not answer to a contact closed by hand. The test also refuses
+                while the heat pump is running a DHW or a legionella cycle.
             </div>
         </div>
 
@@ -318,6 +320,7 @@
             <div class="live-cell"><div class="lv" id="lv-in">–</div><div class="ll">demand indicator</div></div>
             <div class="live-cell"><div class="lv" id="lv-mapped">–</div><div class="ll">mapped temp</div></div>
             <div class="live-cell"><div class="lv" id="lv-mode">–</div><div class="ll">thermostat</div></div>
+            <div class="live-cell"><div class="lv" id="lv-act">–</div><div class="ll">heat pump</div></div>
         </div>
 
         <div class="wizard-footer">
@@ -485,11 +488,43 @@ let flowFixMs = 0;
 function holdTestFlow() {
     const sp = flowSetpoint();
     if (step !== 3 || sp === null || sp <= MAX_TEST_FLOW) return;
+    // A tank cycle owns the flow temperature while it runs; writing against it
+    // only fights the pump's own number.
+    if (pumpBlocker() !== null) return;
     const now = Date.now();
     if (now - flowFixMs < 10000) return;
     flowFixMs = now;
     apiPost(FLOW_SET_KEY[ZONE], MAX_TEST_FLOW);
 }
+
+// The heat pump's own OperationMode word: a DHW or a legionella cycle owns the
+// flow temperature and the compressor, so the hand test reads as a broken wire
+// while one of them runs. 255 is the bus answer for "nothing known yet".
+const PUMP_ACTION_NAMES = { 0: 'standby', 1: 'DHW', 2: 'heating', 3: 'cooling',
+                            5: 'frost protection', 6: 'legionella', 255: null };
+const PUMP_BLOCKERS = { 1: 'DHW cycle', 6: 'legionella cycle' };
+function pumpAction() {
+    const v = S['operation_mode'];
+    if (typeof v !== 'number' || !isFinite(v)) return null;
+    return (v in PUMP_ACTION_NAMES) ? PUMP_ACTION_NAMES[v] : ('mode ' + v);
+}
+// A valid Actual Operation is one of the modes the bus can report (status.h
+// OperationMode). null, 255 = UNAVAILABLE or an unlisted code means the page
+// cannot judge anything, so nothing is allowed to proceed on it.
+function pumpActionValid() {
+    const v = S['operation_mode'];
+    return (typeof v === 'number' && isFinite(v) && v in PUMP_ACTION_NAMES && PUMP_ACTION_NAMES[v] !== null);
+}
+function pumpActionRaw() {
+    const v = S['operation_mode'];
+    return (v === null || v === undefined || typeof v !== 'number') ? 'no value' : String(v);
+}
+function pumpBlocker() {
+    const v = S['operation_mode'];
+    return (typeof v === 'number' && isFinite(v) && PUMP_BLOCKERS[v]) ? PUMP_BLOCKERS[v] : null;
+}
+function requiredFlowMode() { return HW_MODE[ZONE] === 'cool' ? 4 : 1; }
+function flowModeName() { return HW_MODE[ZONE] === 'cool' ? 'Cool Flow Temperature' : 'Heat Flow Temperature'; }
 
 function issues() {
     const list = [];
@@ -522,8 +557,11 @@ function issues() {
     if (src < 0) list.push('The thermostat temperature source of this zone is unknown.');
     else if (sc && sc.src.indexOf(src) < 0) list.push('Thermostat source is "' + SOURCE_NAMES[src] + '", scenario ' + sc.label + ' expects ' + sc.srcText + '.');
     const op = idxOf(OPMODE_KEYS[ZONE]);
-    if (op < 0) list.push('The operating mode of this zone is unknown.');
-    else if (OPMODE_FLOW.indexOf(op) < 0) list.push('Operating mode is "' + OPMODE_NAMES[op] + '": the zone must run in Heat Flow Temperature or Cool Flow Temperature.');
+    if (op < 0) list.push('The selected operating mode of this zone is unknown.');
+    else if (OPMODE_FLOW.indexOf(op) < 0) list.push('Selected operating mode is "' + OPMODE_NAMES[op] + '": the zone must run in Heat Flow Temperature or Cool Flow Temperature.');
+    if (!pumpActionValid()) list.push('Actual Operation of the heat pump has no valid value (' + pumpActionRaw() + '): the test has to see what the heat pump is doing before anything can be judged.');
+    const tank = pumpBlocker();
+    if (tank !== null) list.push('The heat pump is running a ' + tank + ' right now: it owns the flow temperature and the compressor, so this test cannot say anything useful until it has finished.');
 
     if (S['prohibit_heat_' + ZONE] === true) list.push('The heat pump currently prohibits heating for this zone.');
     return list;
@@ -563,6 +601,8 @@ function render() {
     txt('r-in', req === undefined ? '–' : (req ? 'ON' : 'OFF'), req ? 'ok' : '');
     txt('r-prohibit', S['prohibit_heat_' + ZONE] === true ? 'yes' : 'no', S['prohibit_heat_' + ZONE] === true ? 'bad' : 'ok');
     txt('r-comp', S.status_compressor === true ? 'running' : 'stopped', S.status_compressor === true ? 'ok' : '');
+    const act = pumpAction();
+    txt('r-action', act === null ? '–' : act, pumpActionValid() ? (pumpBlocker() ? 'bad' : 'ok') : 'warn');
     const feed = S.hp_feed_temp, ret = S.hp_return_temp;
     const hasNum = (x) => (x !== null && x !== undefined && !isNaN(x));
     txt('r-temps', (hasNum(feed) || hasNum(ret)) ? (fmt(feed, 1, '') + ' / ' + fmt(ret, 1, ' °C')) : '–', '');
@@ -575,7 +615,7 @@ function render() {
         const list = issues();
         if (list.length === 0) {
             v.className = 'verdict pass';
-            v.innerHTML = 'Scenario <b>' + (sc ? sc.label : '–') + '</b> matches: dip switches, master, the thermostat source and the operating mode are as configured here.<ul><li>Continue to manual mode.</li></ul>';
+            v.innerHTML = 'Scenario <b>' + (sc ? sc.label : '–') + '</b> matches: dip switches, master, the thermostat source and the selected operating mode are as configured here.<ul><li>Continue to manual mode.</li></ul>';
         } else {
             v.className = 'verdict fail';
             let html = 'Fix before testing:<ul>';
@@ -590,6 +630,7 @@ function render() {
     txt('lv-in', req === undefined ? '–' : (req ? 'ON' : 'OFF'), req ? 'ok' : '');
     txt('lv-mapped', fmt(S[CUR_KEYS[ZONE]], 1, '°C'), '');
     txt('lv-mode', mode === null ? '–' : mode, mode === 'off' ? 'warn' : 'ok');
+    txt('lv-act', act === null ? '–' : act, pumpActionValid() ? (pumpBlocker() ? 'bad' : '') : 'warn');
 
     const left = S['vt_left_' + ZONE];
     const timerEl = document.getElementById('force-timer');
@@ -597,7 +638,10 @@ function render() {
 
     const sp = flowSetpoint();
     const flowOk = (sp !== null && sp <= MAX_TEST_FLOW);
-    const canForce = isOff() && flowOk;
+    const blocker = pumpBlocker();
+    const actOk = pumpActionValid();
+    const flowModeOk = (op === requiredFlowMode());
+    const canForce = isOff() && actOk && flowOk && blocker === null && flowModeOk;
     document.getElementById('btn-off').disabled = (mode === null);
     document.getElementById('btn-close').disabled = !canForce;
     document.getElementById('btn-open').disabled = !relayOn();
@@ -637,11 +681,18 @@ function render() {
             : 'The heat pump stopped.');
     document.getElementById('close-desc').innerHTML = 'Test both directions of the wiring: switch the <b>' + hw + '</b> on by hand, watch the heat pump, then switch it off again.';
     document.getElementById('close-box').innerHTML =
-        (sp !== null && !flowOk
-            ? 'The flow setpoint of this zone reads <b>' + fmt(sp, 1, ' °C') + '</b>, above the <b>27 °C</b> this test runs against — a DHW cycle is what leaves it there. This page writes <b>27 °C</b>, and the button unlocks once the board reports it. '
-            : (flowOk && flowOnPumpHigh()
-                ? 'The heat pump itself still aims at <b>' + fmt(pumpFlowTarget(), 1, ' °C') + '</b>, so a DHW cycle has probably not finished — let that number drop before judging what the unit does. '
-                : '')
+        (!actOk
+            ? 'The heat pump has not reported a valid <b>Actual Operation</b> yet — it says <b>' + pumpActionRaw() + '</b>. Nothing on this step can be judged until that number is valid. '
+            : (blocker !== null
+            ? 'The heat pump is running a <b>' + blocker + '</b> right now: it owns the flow temperature and the compressor, so this test cannot tell a working contact from a broken one. Wait for it to finish. '
+            : (!flowModeOk
+                ? 'This test needs the zone on <b>' + flowModeName() + '</b>; it is set to <b>' + (op < 0 ? 'unknown' : OPMODE_NAMES[op]) + '</b>. '
+                : (sp !== null && !flowOk
+                    ? 'The flow setpoint of this zone reads <b>' + fmt(sp, 1, ' °C') + '</b>, above the <b>27 °C</b> this test runs against — a DHW cycle is what leaves it there. This page writes <b>27 °C</b>, and the button unlocks once the board reports it. '
+                    : (flowOk && flowOnPumpHigh()
+                        ? 'The heat pump itself still aims at <b>' + fmt(pumpFlowTarget(), 1, ' °C') + '</b>, so a DHW cycle has probably not finished — let that number drop before judging what the unit does. '
+                        : '')
+                  )))
         ) + 'Leaving ' + hw + ' forced on like this is a continuous request, so the firmware <b>releases it automatically after 15 minutes</b>, and immediately when this zone\'s thermostat leaves OFF. Never leave this page with ' + hw + ' forced on.';
     const noteEl = document.getElementById('close-note');
     noteEl.className = 'act-note' + (seen.on && seen.off ? ' ok' : '');
@@ -650,13 +701,19 @@ function render() {
         : 'Setting this zone\'s flow setpoint to <b>27 °C</b> — the board still reports <b>' + fmt(sp, 1, ' °C') + '</b>.';
     noteEl.innerHTML = !isOff()
         ? 'Not allowed yet: this zone must be <b>OFF</b> first — press <b>Set zone to OFF</b> on the previous step.'
-        : (!flowOk
-            ? flowNote
-            : (!seen.on
-                ? 'Press <b>Turn on ' + hw + '</b> first.'
-                : (!seen.off
-                    ? 'Now press <b>Turn off ' + hw + '</b> — <b>Next</b> unlocks when both directions worked.'
-                    : 'Both directions worked — <b>Next</b> is unlocked.')));
+        : (!actOk
+            ? 'Waiting for a valid <b>Actual Operation</b> from the heat pump — it currently reports <b>' + pumpActionRaw() + '</b>.'
+            : (blocker !== null
+            ? 'Not allowed while the heat pump runs a <b>' + blocker + '</b> — wait for it to finish.'
+            : (!flowModeOk
+                ? 'Not allowed yet: this zone must run in <b>' + flowModeName() + '</b> (now ' + (op < 0 ? 'unknown' : OPMODE_NAMES[op]) + ').'
+                : (!flowOk
+                    ? flowNote
+                    : (!seen.on
+                        ? 'Press <b>Turn on ' + hw + '</b> first.'
+                        : (!seen.off
+                            ? 'Now press <b>Turn off ' + hw + '</b> — <b>Next</b> unlocks when both directions worked.'
+                            : 'Both directions worked — <b>Next</b> is unlocked.'))))));
     document.getElementById('auto-note').textContent = (mode === null) ? 'Waiting for data…'
         : (isOff() ? 'Zone is still OFF; press Set zone to ' + (HW_MODE[ZONE] === 'cool' ? 'COOL' : 'HEAT') + ' to hand it back.'
                    : 'Zone runs automatically again, action: ' + (S[ACTION_KEYS[ZONE]] || '–') + '.');
