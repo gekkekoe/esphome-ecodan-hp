@@ -272,6 +272,12 @@ namespace ecodan
             return zone == Zone::ZONE_2 ? z2_return_temperature() : z1_return_temperature();
         }
 
+        bool has_dallas_zone_temps(Zone zone) const {
+            return zone == Zone::ZONE_2
+                ? (!std::isnan(Z2DallasFeedTemperature) || !std::isnan(Z2DallasReturnTemperature))
+                : (!std::isnan(Z1DallasFeedTemperature) || !std::isnan(Z1DallasReturnTemperature));
+        }
+
         bool has_2zones() const {
             if (IS_BIT_SET(DipSwitch3, 5) && !IS_BIT_SET(DipSwitch2, 6)) // SW3-6 True, SW2-7 False
                 return true; // z1, z2 -> same flow
