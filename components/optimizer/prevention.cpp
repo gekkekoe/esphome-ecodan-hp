@@ -24,9 +24,9 @@ namespace esphome
             }
 
             float live_setpoint = this->get_flow_setpoint(zone);
-            float actual_feed = this->get_feed_temp(zone);
+            float step_feed = this->step_limit_feed(zone);
 
-            if (isnan(live_setpoint) || isnan(actual_feed))
+            if (isnan(live_setpoint) || isnan(step_feed))
             {
                 // Leave any active boost in place — the boosted setpoint is still applied.
                 ESP_LOGW(OPTIMIZER_CYCLE_TAG, "Requested or Actual feed temperature unavailable. Exiting.");
@@ -38,7 +38,7 @@ namespace esphome
                 base_setpoint = NAN;
 
             // if step limited did nothing, then boosting is not needed anymore if it was applied
-            float step_limited = this->enforce_step_limit(status, actual_feed, live_setpoint, is_cooling);
+            float step_limited = this->enforce_step_limit(status, step_feed, live_setpoint, is_cooling);
             bool boosting = (step_limited != live_setpoint);
 
             if (boosting)
@@ -47,14 +47,14 @@ namespace esphome
                 if (isnan(base_setpoint))
                     base_setpoint = live_setpoint;
                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): step-limit flow %.1f°C -> %.1f°C (actual feed %.1f°C)",
-                    static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", live_setpoint, step_limited, actual_feed);
+                    static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", live_setpoint, step_limited, step_feed);
             }
             else if (!isnan(base_setpoint))
             {
                 // Back within 1.0°C of the feed: nothing left to raise. The value already applied
                 // stays for the rest of the run; on_compressor_stop() puts the original back.
                 ESP_LOGD(OPTIMIZER_CYCLE_TAG, "Z%d (%s): boost no longer needed (actual feed %.1f°C), holding until the run ends (original %.1f°C)",
-                    static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", actual_feed, base_setpoint);
+                    static_cast<uint8_t>(zone), is_cooling ? "cooling" : "heating", step_feed, base_setpoint);
             }
 
             // Inside a post-DHW window the flow limits are not enforced

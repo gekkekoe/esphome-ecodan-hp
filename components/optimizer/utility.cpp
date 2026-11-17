@@ -76,6 +76,13 @@ namespace esphome
             return status.primary_feed_temperature();
         }
 
+        float Optimizer::step_limit_feed(OptimizerZone zone) {
+            auto &status = this->state_.ecodan_instance->get_status();
+            if (!status.has_independent_zone_temps())
+                return status.primary_feed_temperature_bus();
+            return this->get_feed_temp(zone);
+        }
+
         float Optimizer::get_return_temp(OptimizerZone zone) {
             auto &status = this->state_.ecodan_instance->get_status();
             auto ecodan_zone = (zone == OptimizerZone::ZONE_2) ? esphome::ecodan::Zone::ZONE_2 : esphome::ecodan::Zone::ZONE_1;
@@ -294,6 +301,7 @@ namespace esphome
             auto &status = this->state_.ecodan_instance->get_status();
             bool cooling = this->is_cooling_mode(status, zone);
             float feed = this->get_feed_temp(zone);
+            float step_feed = this->step_limit_feed(zone);
             float ret = guard_return_temp;
 
             bool guard_enabled = status.has_independent_zone_temps() && !isnan(feed) && !isnan(ret);
@@ -310,7 +318,7 @@ namespace esphome
 
                 // Step limit only protects a running compressor.
                 if (this->is_compressor_active(status))
-                    calculated = this->enforce_step_limit(status, feed, calculated, true);
+                    calculated = this->enforce_step_limit(status, step_feed, calculated, true);
 
                 float min_cool_target = 18.0f;
                 if (zone == OptimizerZone::ZONE_1)
@@ -355,7 +363,7 @@ namespace esphome
                 calculated = this->round_nearest(calculated);
 
                 auto limits = this->get_flow_limits(zone);
-                calculated = this->enforce_step_limit(status, feed, calculated, false);
+                calculated = this->enforce_step_limit(status, step_feed, calculated, false);
                 // only skip clamp during post dhw window
                 if (!this->is_post_dhw_window(status))
                     calculated = this->clamp_flow_temp(calculated, limits.min, limits.max);

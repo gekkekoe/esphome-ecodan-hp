@@ -101,13 +101,14 @@ namespace esphome
                 else if (status.is_heating_active())
                 {
                     // Trail only the DHW -> heating handover
-                    if (fabs(actual_flow_temp - current_flow_setpoint) < 1.0f)
+                    float step_feed = this->step_limit_feed(zone);
+                    if (isnan(step_feed) || fabs(step_feed - current_flow_setpoint) < 1.0f)
                         return;   // no stop risk: leave the setpoint alone
 
-                    float adjusted_target = actual_flow_temp - 0.5f;
+                    float adjusted_target = step_feed - 0.5f;
 
-                    ESP_LOGW(OPTIMIZER_TAG, "Heating/DHW flow adjust: %.2f°C to prevent compressor stop! (setpoint: %.2f°C is %.2f°C below actual feed temp)",
-                            adjusted_target, current_flow_setpoint, (actual_flow_temp - current_flow_setpoint));
+                    ESP_LOGW(OPTIMIZER_TAG, "Heating/DHW flow adjust: %.2f°C to prevent compressor stop! (setpoint: %.2f°C is %.2f°C below the step-limit feed reference)",
+                            adjusted_target, current_flow_setpoint, (step_feed - current_flow_setpoint));
 
                     adjusted_flow = adjusted_target;
                 }
@@ -121,7 +122,7 @@ namespace esphome
             }   
             else {
                 bool cooling_mode = is_cooling_mode(status, zone);
-                adjusted_flow = enforce_step_limit(status, actual_flow_temp, current_flow_setpoint, cooling_mode);
+                adjusted_flow = enforce_step_limit(status, this->step_limit_feed(zone), current_flow_setpoint, cooling_mode);
             }
     
             if (adjusted_flow != current_flow_setpoint)
