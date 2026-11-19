@@ -303,8 +303,19 @@ namespace ecodan
         float get_lower_tank_temperature() const {
             if ((is_ftc5_or_lower() || DhwSecondaryTemperature == 0.0f) || DhwSecondaryTemperature == 25.0f)
                 return NAN;
-            
+
             return DhwTemperature;
+        }
+
+        // Temperature the FTC compares against the DHW setpoint / drop to decide
+        // when to start a DHW run: when both tank sensors are present it uses
+        // the average of top and bottom, otherwise the single tank sensor.
+        float get_dhw_control_temperature() const {
+            float lower = get_lower_tank_temperature();
+            if (std::isnan(lower))
+                return get_tank_temperature();
+
+            return (get_tank_temperature() + lower) / 2.0f;
         }
 
         CONTROLLER_FLAG get_svc_flags() const
