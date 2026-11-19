@@ -401,7 +401,7 @@ namespace esphome
             max_flow[1] = max_flow[0];
             min_flow[1] = min_flow[0];
 
-            if (status.has_2zones()) {
+            if (max_zones > 1) {
                 max_flow[1] = this->state_.maximum_heating_flow_temp_z2->state;
                 min_flow[1] = this->state_.minimum_heating_flow_temp_z2->state;
                 if (min_flow[1] > max_flow[1]) {

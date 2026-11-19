@@ -224,22 +224,19 @@ namespace esphome
         }
 
         FlowLimits Optimizer::get_flow_limits(OptimizerZone zone) {
-            float min_flow, max_flow;
+            float max_flow = this->state_.maximum_heating_flow_temp->state;
+            float min_flow = this->state_.minimum_heating_flow_temp->state;
+
+            // A zone-1 build has no zone-2 entities; zone-1 limits are the fallback.
             if (zone == OptimizerZone::ZONE_2) {
-                max_flow = this->state_.maximum_heating_flow_temp_z2->state;
-                min_flow = this->state_.minimum_heating_flow_temp_z2->state;
-                if (min_flow > max_flow)
-                {
-                    min_flow = max_flow;
-                }
+                if (this->state_.maximum_heating_flow_temp_z2 != nullptr)
+                    max_flow = this->state_.maximum_heating_flow_temp_z2->state;
+                if (this->state_.minimum_heating_flow_temp_z2 != nullptr)
+                    min_flow = this->state_.minimum_heating_flow_temp_z2->state;
             }
-            else {
-                max_flow = this->state_.maximum_heating_flow_temp->state;
-                min_flow = this->state_.minimum_heating_flow_temp->state;
-                if (min_flow > max_flow)
-                {
-                    min_flow = max_flow;
-                }   
+            if (min_flow > max_flow)
+            {
+                min_flow = max_flow;
             }
 
             return {min_flow, max_flow};
