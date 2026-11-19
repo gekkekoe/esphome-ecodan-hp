@@ -4,6 +4,7 @@ substitutions:
   heatpump_climate_dhw: Klimat CWU
   dhw_temp: Aktualna temperatura CWU
   dhw_secondary_temp: Temperatura wtórna CWU
+  dhw_control_temp: Średnia temperatura CWU
   status_dhw_forced: Wymuszenie CWU
   dhw_flow_temp_drop: Maksymalny spadek temperatury CWU
   status_prohibit_dhw: Zakaz CWU

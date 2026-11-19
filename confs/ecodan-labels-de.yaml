@@ -27,6 +27,7 @@ substitutions:
   dhw_flow_temp_drop: TWW Maximale Temp-Absenkung
   dhw_flow_temp_target: TWW Sollwert
   dhw_secondary_temp: TWW Sekundärtemperatur
+  dhw_control_temp: TWW Durchschnittstemperatur
   dhw_temp: TWW Aktuelle Temperatur
   discharge_temp: Ablass-Temperatur
   eco: Eco

@@ -4,6 +4,7 @@ substitutions:
   heatpump_climate_dhw: Termòstat ACS
   dhw_temp: Temp. actual ACS
   dhw_secondary_temp: Temp. secundària ACS
+  dhw_control_temp: Temp. mitjana ACS
   status_dhw_forced: ACS forçada
   dhw_flow_temp_drop: Caiguda màx. de temp. ACS
   status_prohibit_dhw: Prohibició ACS

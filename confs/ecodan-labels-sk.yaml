@@ -4,6 +4,7 @@ substitutions:
   heatpump_climate_dhw: Ohrev TÚV
   dhw_temp: Teplota TÚV
   dhw_secondary_temp: Sekundárna teplota TÚV
+  dhw_control_temp: Priemerná teplota TÚV
   status_dhw_forced: Nútený ohrev TÚV
   dhw_flow_temp_drop: Max. pokles teploty TÚV
   status_prohibit_dhw: Ohrev TÚV zakázaný

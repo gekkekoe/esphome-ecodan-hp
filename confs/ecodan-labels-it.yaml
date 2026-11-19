@@ -4,6 +4,7 @@ substitutions:
   heatpump_climate_dhw: ACS Termostato
   dhw_temp: T. Serbatoio Inf.
   dhw_secondary_temp: T. Serbatoio Sup.
+  dhw_control_temp: T. Serbatoio Media
   status_dhw_forced: ACS Forzata
   dhw_flow_temp_drop: ACS Isteresi
   status_prohibit_dhw: ACS Proibita

@@ -4,6 +4,7 @@ substitutions:
   heatpump_climate_dhw: Thermostat ECS
   dhw_temp: Temp actuelle ECS
   dhw_secondary_temp: Temp ECS secondaire
+  dhw_control_temp: Temp ECS moyenne
   status_dhw_forced: ECS Forcé
   dhw_flow_temp_drop: Baisse temp max ECS
   status_prohibit_dhw: ECS interdit

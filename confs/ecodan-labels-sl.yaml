@@ -4,6 +4,7 @@ substitutions:
   heatpump_climate_dhw: TSV regulacija
   dhw_temp: TSV trenutna temperatura
   dhw_secondary_temp: TSV sekundarna temperatura
+  dhw_control_temp: TSV povprečna temperatura
   status_dhw_forced: TSV prisilno
   dhw_flow_temp_drop: TSV največji padec temperature
   status_prohibit_dhw: TSV prepoved

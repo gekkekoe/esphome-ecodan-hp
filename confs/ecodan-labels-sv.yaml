@@ -5,6 +5,7 @@ substitutions:
   heatpump_climate_dhw: Varmvattenklimat
   dhw_temp: Varmvatten nuvarande temp
   dhw_secondary_temp: Varmvatten sekundär temp
+  dhw_control_temp: Varmvatten medeltemp
   status_dhw_forced: Varmvatten tvingat
   dhw_flow_temp_drop: Varmvatten max tempfall
   status_prohibit_dhw: Varmvatten förbjudet

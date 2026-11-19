@@ -4,6 +4,7 @@ substitutions:
   heatpump_climate_dhw: LKV
   dhw_temp: LKV lämpötila
   dhw_secondary_temp: LKV toissijainen lämpötila
+  dhw_control_temp: LKV keskilämpötila
   status_dhw_forced: LKV pakotettu
   dhw_flow_temp_drop: LKV maksimilämpötilan pudotus
   status_prohibit_dhw: LKV esto

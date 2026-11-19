@@ -4,6 +4,7 @@ substitutions:
   heatpump_climate_dhw: DHW-klima
   dhw_temp: DHW nåværende temperatur
   dhw_secondary_temp: DHW sekundær temperatur
+  dhw_control_temp: DHW gjennomsnittstemperatur
   status_dhw_forced: DHW tvunget
   dhw_flow_temp_drop: DHW maks temperaturfall
   status_prohibit_dhw: DHW forbudt

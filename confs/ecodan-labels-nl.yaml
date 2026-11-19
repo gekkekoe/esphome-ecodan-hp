@@ -4,6 +4,7 @@ substitutions:
   heatpump_climate_dhw: DHW Thermostaat
   dhw_temp: SWW huidige temp
   dhw_secondary_temp: SWW 2e temp sensor
+  dhw_control_temp: SWW gemiddelde temp
   status_dhw_forced: Status SWW geforceerd
   dhw_flow_temp_drop: SWW max temp hysterese
   status_prohibit_dhw: Status SWW verboden

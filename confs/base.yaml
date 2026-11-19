@@ -402,6 +402,9 @@ sensor:
     dhw_secondary_temp:
       id: dhw_secondary_temp
       name: ${dhw_secondary_temp}
+    dhw_control_temp:
+      id: dhw_control_temp
+      name: ${dhw_control_temp}
     dhw_flow_temp_target:
       name: ${dhw_flow_temp_target}
       id: dhw_flow_temp_target

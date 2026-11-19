@@ -4,6 +4,7 @@ substitutions:
   heatpump_climate_dhw: Clima ACS
   dhw_temp: Temperatura Actual ACS
   dhw_secondary_temp: Temperatura Secundaria ACS
+  dhw_control_temp: Temperatura Media ACS
   status_dhw_forced: ACS Forzada
   dhw_flow_temp_drop: Caída Máx. de Temp. ACS
   status_prohibit_dhw: Prohibir ACS

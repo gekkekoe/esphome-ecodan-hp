@@ -4,6 +4,7 @@ substitutions:
   heatpump_climate_dhw: DHW Climate
   dhw_temp: DHW Current Temp
   dhw_secondary_temp: DHW Secondary Temp
+  dhw_control_temp: DHW Average Temp
   status_dhw_forced: DHW Forced
   dhw_flow_temp_drop: DHW Max Temp Drop
   status_prohibit_dhw: DHW Prohibit

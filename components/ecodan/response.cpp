@@ -224,6 +224,7 @@ namespace ecodan
             publish_state("hp_return_temp", status.HpReturnTemperature);
             publish_state("dhw_temp", status.DhwTemperature);
             publish_state("dhw_secondary_temp", status.DhwSecondaryTemperature);
+            publish_state("dhw_control_temp", status.get_dhw_control_temperature());
             status.update_output_power_estimation(specificHeatConstantOverride);
             publish_state("computed_output_power", status.ComputedOutputPower);
 

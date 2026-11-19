@@ -4,6 +4,7 @@ substitutions:
   heatpump_climate_dhw: Brugsvandsklima
   dhw_temp: Brugsvand nuværende temp
   dhw_secondary_temp: Brugsvand sekundær temp
+  dhw_control_temp: Brugsvand gennemsnitstemp
   status_dhw_forced: Brugsvand tvunget
   dhw_flow_temp_drop: Brugsvand maks tempfald
   status_prohibit_dhw: Brugsvand forbudt
