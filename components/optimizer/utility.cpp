@@ -328,7 +328,8 @@ namespace esphome
                 }
                 else if (zone == OptimizerZone::ZONE_2)
                 {
-                    min_cool_target = this->state_.minimum_cooling_flow_temp_z2->state;
+                    if (this->state_.minimum_cooling_flow_temp_z2 != nullptr)
+                        min_cool_target = this->state_.minimum_cooling_flow_temp_z2->state;
                 }
 
                 // smart_start caps the flow on startup (water still warm) to avoid a slam-start.

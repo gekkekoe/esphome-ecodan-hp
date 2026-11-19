@@ -234,9 +234,10 @@ namespace esphome
             float setpoint_bias = this->state_.auto_adaptive_setpoint_bias->state;
             if (isnan(setpoint_bias)) setpoint_bias = 0.0f;
 
-            auto feedback_src = (i == 0)
-                ? this->state_.temperature_feedback_source_z1->active_index().value_or(0)
-                : this->state_.temperature_feedback_source_z2->active_index().value_or(0);
+            auto *fb_src = (i == 0) ? this->state_.temperature_feedback_source_z1
+                                    : this->state_.temperature_feedback_source_z2;
+            auto feedback_src = (fb_src != nullptr && fb_src->has_state())
+                ? fb_src->active_index().value_or(0) : 0;
 
             ESP_LOGD(OPTIMIZER_TAG,
                 "Z%d src=%d room=%.1f target=%.1f flow=%.1f flow_rate=%.1f outside=%.1f bias=%.1f H=%d C=%d",
@@ -387,7 +388,7 @@ namespace esphome
                 status.has_independent_zone_temps(), status.has_cooling(), cold_factor, prof.base_min_delta_t, prof.max_delta_t,
                 status.MultiZoneStatus, static_cast<uint8_t>(status.Operation));
 
-            auto max_zones = status.has_2zones() ? 2 : 1;
+            auto max_zones = (status.has_2zones() && this->state_.temperature_feedback_source_z2 != nullptr) ? 2 : 1;
 
             // Resolve per-zone flow limits
             float max_flow[2], min_flow[2];
@@ -428,7 +429,7 @@ namespace esphome
                         status.Zone1FlowTemperatureSetPoint != flows_heat[0])
                         set_flow_temp(flows_heat[0], OptimizerZone::ZONE_1);
 
-                    if (status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) &&
+                    if (max_zones > 1 && status.is_auto_adaptive_heating(esphome::ecodan::Zone::ZONE_2) &&
                         status.Zone2FlowTemperatureSetPoint != flows_heat[1])
                         set_flow_temp(flows_heat[1], OptimizerZone::ZONE_2);
 
