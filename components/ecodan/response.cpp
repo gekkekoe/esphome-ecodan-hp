@@ -1,5 +1,6 @@
 #include "ecodan.h"
 #include <string>
+#include <cmath>
 #include <algorithm>
 
 namespace esphome {
@@ -32,6 +33,14 @@ namespace ecodan
         }
 
         return fault_code;
+    }
+
+    inline float thermistor_temp(Message& res, size_t index, uint8_t open_max, uint8_t short_min) {
+        const uint8_t ad = res[index + 2];
+        if (ad <= open_max || ad >= short_min) {
+            return NAN;
+        }
+        return res.get_float16(index);
     }
 
     inline void sync_mode_select(select::Select* select_cmp, Status::HpMode current_mode) {
@@ -211,10 +220,10 @@ namespace ecodan
             //ESP_LOGE(TAG, "0x0b offset 10: \t%f (v1), \t%f (v2), \t%f (v3)", res.get_float8(10), res.get_float8_v2(10), res.get_float8_v3(10));
             break;
         case GetType::TEMPERATURE_STATE_A:
-            status.HpFeedTemperature = res.get_float16(1);
-            status.HpReturnTemperature = res.get_float16(4);
-            status.DhwTemperature = res.get_float16(7);
-            status.DhwSecondaryTemperature = res.get_float16(10); 
+            status.HpFeedTemperature = thermistor_temp(res, 1, 11, 226);
+            status.HpReturnTemperature = thermistor_temp(res, 4, 11, 226);
+            status.DhwTemperature = thermistor_temp(res, 7, 11, 226);
+            status.DhwSecondaryTemperature = thermistor_temp(res, 10, 11, 226);
 
             // First 0x17 status frame = status is populated (consumed by the
             // ODIN forwarder's publish gate).
@@ -230,11 +239,10 @@ namespace ecodan
             //ESP_LOGE(TAG, "Feed: %.2f°C vs %.2f°C, Return: %.2f°C vs %.2f°C", res.get_float8_v4(3), status.HpFeedTemperature, res.get_float8_v4(6), status.HpReturnTemperature);
             break;
         case GetType::TEMPERATURE_STATE_B:
-            status.Z1FeedTemperature = res.get_float16(1);
-            status.Z1ReturnTemperature = res.get_float16(4);
-
-            status.Z2FeedTemperature = res.get_float16(7);
-            status.Z2ReturnTemperature = res.get_float16(10);
+            status.Z1FeedTemperature = thermistor_temp(res, 1, 11, 226);
+            status.Z1ReturnTemperature = thermistor_temp(res, 4, 11, 226);
+            status.Z2FeedTemperature = thermistor_temp(res, 7, 11, 226);
+            status.Z2ReturnTemperature = thermistor_temp(res, 10, 11, 226);
 
             publish_state("z1_feed_temp", status.Z1FeedTemperature);
             publish_state("z1_return_temp", status.Z1ReturnTemperature);
@@ -242,19 +250,23 @@ namespace ecodan
             publish_state("z2_return_temp", status.Z2ReturnTemperature);                                  
             break;
         case GetType::TEMPERATURE_STATE_C:
-            status.BoilerFlowTemperature = res.get_float16(1);
-            status.BoilerReturnTemperature = res.get_float16(4);
+            status.BoilerFlowTemperature = thermistor_temp(res, 1, 2, 238);
+            status.BoilerReturnTemperature = thermistor_temp(res, 4, 2, 238);
             publish_state("boiler_flow_temp", status.BoilerFlowTemperature);
             publish_state("boiler_return_temp", status.BoilerReturnTemperature);   
             break;
         case GetType::TEMPERATURE_STATE_D:
-            status.MixingTankTemperature = res.get_float16(1);
-            if (res[4] == 0x0f && res[5] == 0xd9) {
-                // stuck at 40.57 -> read condensing temp at byte 6
-                status.HpRefrigerantCondensingTemperature = res.get_float8_v3(6);
-            }
-            else {
-                status.HpRefrigerantCondensingTemperature = res.get_float16_signed(4);
+            status.MixingTankTemperature = thermistor_temp(res, 1, 2, 238);
+            {
+                const uint8_t ad = res[6];
+                if (ad == 0 || ad >= 231) {
+                    status.HpRefrigerantCondensingTemperature = NAN;
+                } else {
+                    const float from_word = res.get_float16_signed(4);
+                    const float from_ad = res.get_float8_v3(6);
+                    status.HpRefrigerantCondensingTemperature =
+                        (std::fabs(from_word - from_ad) <= 3.0f) ? from_word : from_ad;
+                }
             }
             publish_state("mixing_tank_temp", status.MixingTankTemperature);
             publish_state("hp_refrigerant_condensing_temp", status.HpRefrigerantCondensingTemperature);

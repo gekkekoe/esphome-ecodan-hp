@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <cmath>
 #define IS_BIT_SET(value, bit) (((value) & (1U << (bit))) != 0)
 
 namespace esphome {
@@ -55,8 +56,8 @@ namespace ecodan
         float HpRefrigerantCondensingTemperature;
         float DhwTemperature{NAN};
         float DhwSecondaryTemperature{NAN};
-        float BoilerFlowTemperature;
-        float BoilerReturnTemperature;
+        float BoilerFlowTemperature{NAN};
+        float BoilerReturnTemperature{NAN};
         uint8_t FlowRate {0};
         float DhwFlowTemperatureSetPoint{NAN};
         float RadiatorFlowTemperatureSetPoint;
@@ -292,16 +293,16 @@ namespace ecodan
         }
 
         float get_tank_temperature() const { 
-            if ((is_ftc5_or_lower() || DhwSecondaryTemperature == 0.0f) || DhwSecondaryTemperature == 25.0f)
+            if (is_ftc5_or_lower() || std::isnan(DhwSecondaryTemperature) || DhwSecondaryTemperature == 0.0f)
                 return DhwTemperature;
             
             // for package units, the secondary temp is the top tank temp
-            // DhwSecondaryTemperature == 25.0f for ftc6+ without secondary sensor
+            // For ftc6+ without secondary sensor the presence gate in response.cpp leaves NAN here
             return DhwSecondaryTemperature;
         }
 
         float get_lower_tank_temperature() const {
-            if ((is_ftc5_or_lower() || DhwSecondaryTemperature == 0.0f) || DhwSecondaryTemperature == 25.0f)
+            if (is_ftc5_or_lower() || std::isnan(DhwSecondaryTemperature) || DhwSecondaryTemperature == 0.0f)
                 return NAN;
             
             return DhwTemperature;
