@@ -290,9 +290,9 @@ Choose which thermostat controls your room temperature:
 | Option | Description |
 |--------|-------------|
 | **Asgard Virtual Thermostat** | Asgard drives the heat pump directly through the R1/R2 relays (IN1/IN6). Selecting this shows the required wiring and dip-switch steps (see [Section 6](#6-installation)) and a link to this manual. |
-| **MRC / Wireless Thermostat** | The Mitsubishi main display (MRC) or a wireless thermostat (RCx) keeps control, like in a standard installation. |
+| **No Virtual Thermostat (MRC / Wireless / External Thermostat)** | The Mitsubishi main display (MRC), a wireless thermostat (RCx) or your own external thermostat keeps control of the room temperature, like in a standard installation. |
 
-Depending on your choice, the wizard sets the dashboard's **Use Room Thermostat** switch accordingly (**on** for MRC / wireless, **off** for virtual) and pre-sets the Auto Adaptive sensor sources in the steps that follow — with MRC / wireless the virtual-thermostat options are greyed out and the sources are fixed to **Room Thermostat** + **MRC / Wireless**; with the virtual thermostat the sources default to **Asgard Virtual Thermostat** + **Virtual Thermostat Input** but every option stays selectable (see [Step 4](#step-4--zone-1-sensors)).
+Depending on your choice, the wizard sets the dashboard's **Use Room Thermostat** switch accordingly (**on** for MRC / wireless, **off** for virtual) and pre-sets the Auto Adaptive sensor sources in the steps that follow — with MRC / wireless the virtual-thermostat option is greyed out, the **Temp Sensor Source** row is hidden (it only applies to the virtual thermostat) and the sources are fixed to **Room Thermostat** + **MRC / Wireless**; with the virtual thermostat the sources default to **Asgard Virtual Thermostat** + **Virtual Thermostat Input** but every option stays selectable (see [Step 4](#step-4--zone-1-sensors)).
 
 ### Step 2 — Auto Adaptive
 
@@ -320,7 +320,7 @@ Choose your operating mode and set the safe boundaries for your flow temperature
 
 Configure where the Auto Adaptive algorithm gets its room temperature data for Zone 1.
 
-The available options reflect the thermostat you chose in [Step 1](#step-1--thermostat): with **MRC / wireless thermostat** the virtual-thermostat options are greyed out and the sources are pre-set to **Room Thermostat** + **MRC / Wireless**; with **Asgard virtual thermostat**, **Asgard Virtual Thermostat** + **Virtual Thermostat Input** are pre-selected and all other options stay selectable.
+The available options reflect the thermostat you chose in [Step 1](#step-1--thermostat): with **MRC / wireless thermostat** the virtual-thermostat option is greyed out, the **Temp Sensor Source** row is hidden (it only applies to the virtual thermostat), and the sources are pre-set to **Room Thermostat** + **MRC / Wireless**; with **Asgard virtual thermostat**, **Asgard Virtual Thermostat** + **Virtual Thermostat Input** are pre-selected and all other options stay selectable.
 
 **Room Temp Source:**
 
@@ -334,7 +334,7 @@ If you chose **Asgard Virtual Thermostat**, also set the **Temp Sensor Source** 
 
 | Option | Description |
 |--------|-------------|
-| **Virtual Thermostat Input** | A sensor feeding the temperature via the REST API (e.g. a Home Assistant automation/blueprint). *(Greyed out when MRC / wireless thermostat is selected in Step 1.)* |
+| **Virtual Thermostat Input** | A sensor feeding the temperature via the REST API (e.g. a Home Assistant automation/blueprint). |
 | **DS18x20 (Dallas)** | A wired DS18B20 sensor physically connected to the One Wire header on the Asgard PCB. |
 | **MRC / Wireless** | The room sensor of the Mitsubishi main display — or the wireless RCx thermostat, when routed through the MRC's *Room sensor settings → Room RC zone select*. *Warning: low resolution (0.5 °C steps) — use only if no other sensor is available.* |
 

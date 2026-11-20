@@ -196,8 +196,8 @@
             </div>
             <div style="height: 12px;"></div>
             <div class="option-card" id="opt-mrc" onclick="selectThermostat('mrc')">
-                <div class="opt-title">MRC / Wireless Thermostat</div>
-                <div class="opt-desc">The Mitsubishi main display (MRC) or a wireless thermostat (RCx) keeps control of the heat pump, like in a standard installation.</div>
+                <div class="opt-title">No Virtual Thermostat (MRC / Wireless / External Thermostat)</div>
+                <div class="opt-desc">The Mitsubishi main display (MRC), a wireless thermostat (RCx) or your own external thermostat keeps control of the room temperature, like in a standard installation.</div>
             </div>
 
             <div class="info-box" id="info-virtual" style="display: none;">
@@ -213,7 +213,7 @@
                 Full installation and dip-switch details: <a href="https://github.com/gekkekoe/esphome-ecodan-hp/blob/main/asgard/manual.md" target="_blank" style="color: var(--accent);">Asgard manual</a>
             </div>
             <div class="info-box" id="info-mrc" style="display: none; border-color: var(--warn); color: var(--warn);">
-                <b>Use Room Thermostat</b> will be enabled on the dashboard, activating the MRC / wireless thermostat panel. Set your room setpoints on the MRC or wireless thermostat.
+                <b>Use Room Thermostat</b> will be enabled on the dashboard, activating the MRC / wireless thermostat panel. Set your room setpoints on the MRC, the wireless thermostat or your own external thermostat.
                 <br><br><b>Note:</b> the MRC and RCx sensors report in 0.5 °C steps, which limits Auto Adaptive accuracy.
             </div>
         </div>
@@ -313,7 +313,7 @@
                 </select>
             </div>
             
-            <div class="ctrl-row">
+            <div class="ctrl-row" id="row-temp-src-z1">
                 <span class="ctrl-label param-label">Temp Sensor Source Z1<span class="tip-icon">?</span><span class="tip-box">The temperature sensor source for the Asgard Virtual Thermostat.</span></span>
                 <select id="w-temp-src-z1" class="ctrl-select" onchange="toggleApiInfo('z1')">
                     <option value="0">Virtual Thermostat Input</option>
@@ -345,7 +345,7 @@
                     </select>
                 </div>
                 
-                <div class="ctrl-row">
+                <div class="ctrl-row" id="row-temp-src-z2">
                     <span class="ctrl-label param-label">Temp Sensor Source Z2<span class="tip-icon">?</span><span class="tip-box">The temperature sensor source for the Asgard Virtual Thermostat.</span></span>
                     <select id="w-temp-src-z2" class="ctrl-select" onchange="toggleApiInfo('z2')">
                         <option value="0">Virtual Thermostat Input</option>
@@ -468,8 +468,9 @@
 
     // STEP 0: thermostat choice. Applied to the sensor steps (Zone 1 & 2):
     // - MRC / wireless: Room Temp Source = Room Thermostat (0), Temp Sensor
-    //   Source = MRC / Wireless (2), and the virtual-thermostat options are
-    //   disabled — they cannot work without the R1/R2 relay wiring.
+    //   Source = MRC / Wireless (2); the virtual-thermostat option is disabled
+    //   and the whole Temp Sensor Source row is hidden — neither applies
+    //   without the R1/R2 relay wiring.
     // - Virtual: Room Temp Source = Asgard Virtual Thermostat (2), Temp Sensor
     //   Source = Virtual Thermostat Input (0); every option stays selectable.
     function selectThermostat(choice) {
@@ -503,6 +504,12 @@
             // require the R1/R2 relays — unusable with the MRC / wireless.
             setOptionDisabled(roomSrc, "2", isMrc);
             setOptionDisabled(tempSrc, "0", isMrc);
+
+            // The virtual-thermostat temperature source only exists with the
+            // virtual thermostat — hidden when the MRC / wireless thermostat is
+            // in control. The select keeps its forced value so it is still saved.
+            const tempRow = document.getElementById(`row-temp-src-${zone}`);
+            if (tempRow) tempRow.style.display = isMrc ? 'none' : '';
 
             if (isMrc) {
                 roomSrc.value = "0";   // Room Thermostat
@@ -603,9 +610,13 @@
         const apiBox = document.getElementById(`info-api-${zone}`);
         const mrcBox = document.getElementById(`info-mrc-${zone}`);
         
+        // Both boxes describe the virtual-thermostat sensor source: with the
+        // MRC / wireless thermostat that row is hidden, so the hints go with it.
+        const row = document.getElementById(`row-temp-src-${zone}`);
+        const visible = !row || row.style.display !== 'none';
         if (apiBox && mrcBox) {
-            apiBox.style.display = (val === "0") ? "block" : "none";
-            mrcBox.style.display = (val === "2") ? "block" : "none";
+            apiBox.style.display = (visible && val === "0") ? "block" : "none";
+            mrcBox.style.display = (visible && val === "2") ? "block" : "none";
         }
     }
 
