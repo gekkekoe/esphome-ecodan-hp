@@ -497,6 +497,9 @@ The relay-driven room control that lets Asgard directly signal the heat pump to 
 | **Hysteresis** | Deadband around the setpoint before the relay switches on/off (0.1–3.0 °C). Wider = fewer on/off cycles but more temperature swing; narrower = tighter control but more cycling. |
 | **Apply Virtual Thermostat Z1** | Saves the mode, sensor source, setpoint, and hysteresis. |
 
+> [!TIP]
+> **Test the virtual thermostat after you configure it.** Open the test page — `http://ecodan-heatpump.local/vt-test`, [Step 6](#step-6--verify-the-zone-wiring) — pick your scenario, and follow it to the end: it checks the dip switches and the IN1 / IN6 demand indicator, then closes the contact by hand so you can watch the heat pump really **start** and **stop**. Run it again after changing the temperature source or the wiring. A closed contact is a continuous heat request: it releases automatically after 15 minutes.
+
 #### Room Thermostat Z1
 
 *Shown when **Use Room Thermostat Z1** is on.*
