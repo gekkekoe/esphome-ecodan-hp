@@ -373,18 +373,9 @@ namespace esphome
                 if (!std::isnan(status.OutsideTemperature))
                     state_before_defrost.locked_outside_temp_ = status.OutsideTemperature;
 
-                if (!std::isnan(status.primary_return_temperature()))
-                    state_before_defrost.locked_return_temp_ = status.primary_return_temperature();
-
-                if (!std::isnan(status.z1_return_temperature()))
-                    state_before_defrost.locked_return_temp_z1_ = status.z1_return_temperature();
-
-                if (!std::isnan(status.z2_return_temperature()))
-                    state_before_defrost.locked_return_temp_z2_ = status.z2_return_temperature();
-
                 this->state_before_defrost_ = state_before_defrost;
-                ESP_LOGD(OPTIMIZER_TAG, "Defrost started. Locking states: outside temp: %.1f, hp return: %.1f, z1 return: %.1f, z2 return: %.1f for adaptive calculations.", 
-                    state_before_defrost.locked_outside_temp_, state_before_defrost.locked_return_temp_, state_before_defrost.locked_return_temp_z1_, state_before_defrost.locked_return_temp_z2_);
+                ESP_LOGD(OPTIMIZER_TAG, "Defrost started. Locking outside temp %.1f for adaptive calculations.",
+                    state_before_defrost.locked_outside_temp_);
                 
             }
             // Defrost STOP
