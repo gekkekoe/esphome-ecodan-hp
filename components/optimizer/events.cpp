@@ -58,11 +58,18 @@ namespace esphome
                     return;
 
                 // Trail already when nearly at the DHW target: within 1 °C of it.
+
+                float trail_ref = status.get_tank_temperature();
+                if (isnan(trail_ref))
+                    trail_ref = actual_flow_temp;
                 if (std::isnan(status.DhwFlowTemperatureSetPoint) ||
-                    (status.DhwFlowTemperatureSetPoint - actual_flow_temp) > 1.0f)
+                    (status.DhwFlowTemperatureSetPoint - trail_ref) > 1.0f)
                     return;
 
                 adjusted_flow += 0.5f;
+                ESP_LOGD(OPTIMIZER_TAG, "Z%d DHW: trailing flow %.2f°C (tank %.1f°C, feed %.1f°C, target %.1f°C)",
+                        (zone == OptimizerZone::ZONE_2) ? 2 : 1, adjusted_flow,
+                        status.get_tank_temperature(), actual_flow_temp, status.DhwFlowTemperatureSetPoint);
             }
             else if (post_dhw_window) {
                 const esphome::ecodan::Zone ez = (zone == OptimizerZone::ZONE_2)
