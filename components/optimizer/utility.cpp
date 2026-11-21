@@ -384,6 +384,17 @@ namespace esphome
             // The buffer short-cycle guard stays off here, in both directions because:
             // (feed − ret) > (requested − ret) is equal to  feed > requested
             float limited = this->apply_flow_limits(zone, requested, NAN, NAN);
+
+            // Single-zone mixing tank, DHW -> heating handover: keep the setpoint near the
+            // primary feed, as the post-DHW trailing does, so the next command doesn't pull it
+            // below the FTC stop point.
+            if (!cooling && this->post_dhw_on_primary_feed_(status) && this->is_post_dhw_window(status))
+            {
+                float feed_floor = status.primary_feed_temperature_bus() - 0.5f;
+                if (!isnan(feed_floor) && limited < feed_floor)
+                    limited = this->round_nearest(feed_floor);
+            }
+
             if (limited != requested)
             {
                 ESP_LOGD(OPTIMIZER_TAG,

@@ -64,6 +64,12 @@ namespace esphome
       const float MAX_FEED_STEP_CHANGE = 1.0f;
       const float MAX_FEED_STEP_ADJUSTMENT = 1.0f;
 
+      // Single-zone mixing tank: the zone feed (THW6 or a mapped sensor) sits behind the
+      // tank and lags the DHW -> heating handover; the FTC stops on the primary feed.
+      bool post_dhw_on_primary_feed_(const ecodan::Status &status) const {
+        return status.has_mixing_tank() && !status.has_2zones();
+      }
+
       uint32_t compressor_start_time_ = 0;
       uint32_t last_defrost_time_     = 0;
       DefrostState state_before_defrost_;
