@@ -79,17 +79,6 @@ namespace esphome
         float Optimizer::step_limit_feed(OptimizerZone zone) {
             auto &status = this->state_.ecodan_instance->get_status();
 
-            // FTC5 or lower uses boiler return temp and FTC6+ uses mixing tank temp as trigger.
-            // A thermistor that is not installed reads NAN, so fall back towards the HP feed.
-            if (status.has_mixing_tank())
-            {
-                float tank = status.is_ftc5_or_lower() ? NAN : status.MixingTankTemperature;
-                if (isnan(tank))
-                    tank = status.BoilerReturnTemperature;
-                if (!isnan(tank))
-                    return tank;
-                return status.primary_feed_temperature_bus();
-            }
             if (!status.has_independent_zone_temps())
                 return status.primary_feed_temperature_bus();
             return this->get_feed_temp(zone);
