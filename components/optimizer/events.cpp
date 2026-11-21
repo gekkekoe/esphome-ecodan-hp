@@ -29,7 +29,15 @@ namespace esphome
             }
 
 
-            if (status.has_independent_zone_temps()) 
+            // Single-zone mixing tank: trail on the primary feed, applied to zone 1.
+            const bool primary_ref = this->post_dhw_on_primary_feed_(status);
+            if (primary_ref)
+            {
+                if (zone != OptimizerZone::SINGLE)
+                    return;
+                zone = OptimizerZone::ZONE_1;
+            }
+            else if (status.has_independent_zone_temps()) 
             {
                 if (zone == OptimizerZone::SINGLE) {
                     return;
@@ -108,7 +116,7 @@ namespace esphome
                 else if (status.is_heating_active())
                 {
                     // Trail only the DHW -> heating handover
-                    float step_feed = this->step_limit_feed(zone);
+                    float step_feed = primary_ref ? actual_flow_temp : this->step_limit_feed(zone);
                     if (isnan(step_feed) || fabs(step_feed - current_flow_setpoint) < 1.0f)
                         return;   // no stop risk: leave the setpoint alone
 
