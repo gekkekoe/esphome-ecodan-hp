@@ -76,12 +76,30 @@ namespace esphome
             return status.primary_feed_temperature();
         }
 
+        float Optimizer::get_feed_temp_bus(OptimizerZone zone) {
+            auto &status = this->state_.ecodan_instance->get_status();
+            float feed = (zone == OptimizerZone::ZONE_2) ? status.Z2FeedTemperature : status.Z1FeedTemperature;
+            if (!std::isnan(feed))
+                return feed;
+            return status.primary_feed_temperature_bus();
+        }
+
         float Optimizer::step_limit_feed(OptimizerZone zone) {
             auto &status = this->state_.ecodan_instance->get_status();
-
+            
+            if (status.has_mixing_tank())
+            {
+                float tank = status.is_ftc5_or_lower() ? NAN : status.MixingTankTemperature; // THW10 if present
+                if (isnan(tank))
+                    tank = status.BoilerReturnTemperature; // fallback to THWB2 
+                if (isnan(tank))
+                    tank = this->get_feed_temp_bus(zone); // fallback to THW6/THW8
+                if (!isnan(tank))
+                    return tank;
+            }
             if (!status.has_independent_zone_temps())
-                return status.primary_feed_temperature_bus();
-            return this->get_feed_temp(zone);
+                return status.primary_feed_temperature_bus();              
+            return this->get_feed_temp_bus(zone);                           // THW6/THW8
         }
 
         float Optimizer::get_return_temp(OptimizerZone zone) {
