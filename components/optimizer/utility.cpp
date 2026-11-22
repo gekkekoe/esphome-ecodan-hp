@@ -89,9 +89,9 @@ namespace esphome
             
             if (status.has_mixing_tank())
             {
-                float tank = status.is_ftc5_or_lower() ? NAN : status.MixingTankTemperature; // THW10 if present
-                if (isnan(tank))
-                    tank = status.BoilerReturnTemperature; // fallback to THWB2 
+                // float tank = status.is_ftc5_or_lower() ? NAN : status.MixingTankTemperature; // THW10 if present
+                // if (isnan(tank))
+                float tank = status.BoilerReturnTemperature; // fallback to THWB2 
                 if (isnan(tank) || tank == 25.0f)
                     tank = this->get_feed_temp_bus(zone); // fallback to THW6/THW8
                 if (!isnan(tank))
