@@ -31,14 +31,17 @@ namespace esphome
       float flow_lockout_old_z2_setpoint_ = NAN;
 
       // Compressor / defrost tracking
-      // Only the outside temperature is frozen across a defrost: the event drives
-      // hot gas through the outdoor coil with the fan stopped, so that thermistor
-      // reads warm while the air is not. The returns are not: a defrost really
-      // cools the loop, so their readings are the truth about colder water, and
-      // holding a stale one lifts the flow target above the delta that was asked
-      // for until the window closes.
       struct DefrostState {
         float locked_outside_temp_{NAN};
+        float locked_return_temp_{NAN};
+        float locked_return_temp_z1_{NAN};
+        float locked_return_temp_z2_{NAN};
+
+        float get_return_temp(bool independent_zone_temp, OptimizerZone zone) const {
+            if (independent_zone_temp)
+                return (zone == OptimizerZone::ZONE_2) ? locked_return_temp_z2_ : locked_return_temp_z1_;        
+            return locked_return_temp_;
+        }
       };
 
       OptimizerOperationMode to_operation_mode(float val) {
@@ -88,6 +91,7 @@ namespace esphome
       HeatingProfile   get_heating_profile_(int type_index);
       DefrostState resolve_defrost_state_();
       float            calculate_heating_flow_(std::size_t zone_i,
+                                               const ecodan::Status &status,
                                                const HeatingProfile &prof,
                                                bool set_point_reached,
                                                float cold_factor,

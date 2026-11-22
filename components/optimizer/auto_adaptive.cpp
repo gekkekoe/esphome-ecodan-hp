@@ -52,8 +52,9 @@ namespace esphome
                                   ((millis() - this->last_defrost_time_) < LOCK_DURATION_MS);
 
             if (status.DefrostActive || in_lock_window) {
-                ESP_LOGD(OPTIMIZER_TAG, "Using locked outside temp: %.1f for adaptive calculations.",
-                    this->state_before_defrost_.locked_outside_temp_);
+                ESP_LOGD(OPTIMIZER_TAG, "Using locked defrost states: outside temp: %.1f, hp return: %.1f, z1 return: %.1f, z2 return: %.1f for adaptive calculations.", 
+                    this->state_before_defrost_.locked_outside_temp_, this->state_before_defrost_.locked_return_temp_, 
+                    this->state_before_defrost_.locked_return_temp_z1_, this->state_before_defrost_.locked_return_temp_z2_);
             }
             else {
                 // clear state, outside defrost window
@@ -69,6 +70,7 @@ namespace esphome
         // ─────────────────────────────────────────────────────────────────
 
         float Optimizer::calculate_heating_flow_(std::size_t zone_i,
+                                                  const ecodan::Status &status,
                                                   const HeatingProfile &prof,
                                                   bool set_point_reached,
                                                   float cold_factor,
@@ -77,9 +79,17 @@ namespace esphome
                                                   float error_factor,
                                                   float smart_boost) {
 
+            auto defrost_state = this->resolve_defrost_state_();
+            float locked_return_temp = defrost_state.get_return_temp(
+                status.has_independent_zone_temps(),
+                (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
 
             float actual_return_temp = this->get_return_temp(
                 (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2);
+
+            if (!isnan(locked_return_temp)) {
+                actual_return_temp = locked_return_temp;
+            }
 
             float dynamic_min = prof.base_min_delta_t +
                                 cold_factor * (prof.min_delta_cold_limit - prof.base_min_delta_t);
@@ -258,7 +268,7 @@ namespace esphome
             // don't enforce is_heating_active, since some setup rely on flow temp diff, to start the heating
             if (is_heating_mode) {
                 out_flow_heat = this->calculate_heating_flow_(
-                    i, prof, set_point_reached,
+                    i, status, prof, set_point_reached,
                     cold_factor, actual_outside_temp,
                     zone_min, zone_max, error_factor, smart_boost);
 
