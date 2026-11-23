@@ -88,7 +88,7 @@ namespace esphome
             auto &status = this->state_.ecodan_instance->get_status();
             
             // it seems that primary feed is used when THW10 is fitted
-            if ((status.has_mixing_tank() && !isnan(status.MixingTankTemperature)) || !status.has_independent_zone_temps())
+            if (status.should_guard_primary_feed_temp() || !status.has_independent_zone_temps())
                 return status.primary_feed_temperature_bus();              
             
             return this->get_feed_temp_bus(zone);                           // THW6/THW8

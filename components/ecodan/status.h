@@ -308,6 +308,10 @@ namespace ecodan
             return DhwTemperature;
         }
 
+        bool should_guard_primary_feed_temp() const {
+            return status.has_mixing_tank() && !isnan(status.MixingTankTemperature);
+        }
+
         CONTROLLER_FLAG get_svc_flags() const
         {
             CONTROLLER_FLAG flag{};

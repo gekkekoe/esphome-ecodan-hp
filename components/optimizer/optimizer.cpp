@@ -11,7 +11,6 @@ namespace esphome
 
         Optimizer::Optimizer(OptimizerState state) : state_(state) {
 
-
             auto update_if_changed = [this](float &storage, float new_val, auto callback) {
                 if (std::isnan(new_val)) return;
                 if (std::isnan(storage) || std::abs(storage - new_val) > 0.01f) {
@@ -32,6 +31,8 @@ namespace esphome
             if (this->state_.z1_feed_temp != nullptr) {
                 this->state_.z1_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
                     update_if_changed(this->last_z1_feed_temp_, x, [this](float new_v, float) {
+                        auto &status = this->state_.ecodan_instance->get_status();
+                        if (status.should_guard_primary_feed_temp()) return;
                         this->on_feed_temp_change(new_v, OptimizerZone::ZONE_1);
                     });
                 });
@@ -40,6 +41,8 @@ namespace esphome
             if (this->state_.z2_feed_temp != nullptr) {
                 this->state_.z2_feed_temp->add_on_state_callback([this, update_if_changed](float x) {
                     update_if_changed(this->last_z2_feed_temp_, x, [this](float new_v, float) {
+                        auto &status = this->state_.ecodan_instance->get_status();
+                        if (status.should_guard_primary_feed_temp()) return;
                         this->on_feed_temp_change(new_v, OptimizerZone::ZONE_2);
                     });
                 });
