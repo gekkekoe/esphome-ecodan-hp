@@ -29,7 +29,17 @@ namespace esphome
             }
 
 
-            if (status.has_independent_zone_temps()) 
+            // Single-zone mixing tank with THW10: the zone callbacks are suppressed and the FTC
+            // stops on the primary feed at the handover, so trail on the primary-feed (SINGLE)
+            // callback and apply it to zone 1.
+            const bool primary_ref = status.should_guard_primary_feed_temp() && !status.has_2zones();
+            if (primary_ref)
+            {
+                if (zone != OptimizerZone::SINGLE)
+                    return;
+                zone = OptimizerZone::ZONE_1;
+            }
+            else if (status.has_independent_zone_temps()) 
             {
                 if (zone == OptimizerZone::SINGLE) {
                     return;
