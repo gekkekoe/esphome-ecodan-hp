@@ -28,8 +28,12 @@ namespace esphome
                 return;
             }
 
-
-            if (status.has_independent_zone_temps()) 
+            if (status.should_guard_primary_feed_temp()) {
+                if (zone != OptimizerZone::SINGLE)
+                    return;
+                zone = OptimizerZone::ZONE_1;
+            } 
+            else if (status.has_independent_zone_temps()) 
             {
                 if (zone == OptimizerZone::SINGLE) {
                     return;
