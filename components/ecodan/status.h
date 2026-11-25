@@ -227,9 +227,13 @@ namespace ecodan
             return IS_BIT_SET(DipSwitch2, 5);
         }
 
-        bool has_independent_zone_temps() const {
+        bool has_mixing_valve() const {
             //  SW2-7 is only valid active when SW3-6 is off
-            return has_mixing_tank() || (IS_BIT_SET(DipSwitch2, 6) && !IS_BIT_SET(DipSwitch3, 5));
+            return IS_BIT_SET(DipSwitch2, 6) && !IS_BIT_SET(DipSwitch3, 5);
+        }
+
+        bool has_independent_zone_temps() const {
+            return has_mixing_tank() || has_mixing_valve();
         }
 
         static float prefer_measured(float measured, float bus) {
