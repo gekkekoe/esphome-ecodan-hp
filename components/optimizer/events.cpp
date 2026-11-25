@@ -312,7 +312,7 @@ namespace esphome
                 time_t current_timestamp = status.timestamp();
                 if (current_timestamp > 0) {
                     // allow more time for SUZ units
-                    const uint32_t after_dhw_monitoring_duration_s = 8 * 60UL;
+                    const uint32_t after_dhw_monitoring_duration_s = 10 * 60UL;
                     this->dhw_post_run_expiration_ = (uint32_t)(current_timestamp + after_dhw_monitoring_duration_s);
                     ESP_LOGD(OPTIMIZER_TAG, "Setting monitor expiration to: %lu", this->dhw_post_run_expiration_);
                 }
