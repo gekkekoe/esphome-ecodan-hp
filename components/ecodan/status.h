@@ -387,7 +387,7 @@ namespace ecodan
                 auto mz_status_active = zone == Zone::ZONE_1 ? 
                     (MultiZoneStatus == 1 || MultiZoneStatus == 2) : (MultiZoneStatus == 1 || MultiZoneStatus == 3);
 
-                return mz_status_active;
+                return mz_status_active || zone_pump_running(zone);
             }
 
             return true;
@@ -409,10 +409,16 @@ namespace ecodan
                 auto mz_status_active = zone == Zone::ZONE_1 ? 
                     (MultiZoneStatus == 1 || MultiZoneStatus == 2) : (MultiZoneStatus == 1 || MultiZoneStatus == 3);
 
-                return mz_status_active;
+                return mz_status_active || zone_pump_running(zone);
             }
 
             return true;
+        }
+
+        bool zone_pump_running(Zone zone) const {
+            if (!has_independent_zone_temps())
+                return false;
+            return zone == Zone::ZONE_1 ? WaterPump2Active : (has_2zones() && WaterPump3Active);
         }
 
 /* polynomial fit for
