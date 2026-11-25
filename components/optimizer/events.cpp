@@ -403,14 +403,6 @@ namespace esphome
             else if (x_previous && !x)
             {
                 this->last_defrost_time_ = millis();
-                // A defrost ate the DHW -> heating hand-over time: while setpoints are
-                // still pending, arm the standard post-DHW window again from now.
-                const bool handover_pending = !isnan(this->dhw_old_z1_setpoint_) || !isnan(this->dhw_old_z2_setpoint_);
-                const time_t now_s = this->state_.ecodan_instance->get_status().timestamp();
-                if (handover_pending && now_s > 0) {
-                    this->dhw_post_run_expiration_ = (uint32_t)(now_s + after_dhw_monitoring_duration_s);
-                    ESP_LOGD(OPTIMIZER_TAG, "Defrost ended during the DHW hand-over: monitor expiration re-armed to: %lu", this->dhw_post_run_expiration_);
-                }
                 ESP_LOGD(OPTIMIZER_TAG, "Defrost stop: triggering auto-adaptive loop (Also updating last_defrost timestamp).");
                 this->run_auto_adaptive_loop();
             }
