@@ -8,6 +8,9 @@ namespace esphome
     {
         using namespace esphome::ecodan;
 
+        // Post-DHW monitoring window, allow more time for SUZ units.
+        const uint32_t after_dhw_monitoring_duration_s = 8 * 60UL;
+
         void Optimizer::on_feed_temp_change(float actual_flow_temp, OptimizerZone zone) {
             if (std::isnan(actual_flow_temp))
                 return;
@@ -83,7 +86,7 @@ namespace esphome
                     this->clear_dhw_follow_state_(status, zone);
                     return;
                 }
-                if (!status.is_heating_active() && !status.is_cooling_active()) {
+                if (!status.DefrostActive && !status.is_heating_active() && !status.is_cooling_active()) {
                     // no demand, restore saved setpoint
                     float restore_val = NAN;
                     if (zone == OptimizerZone::ZONE_2) {
@@ -311,8 +314,6 @@ namespace esphome
             if (dhw_to_heating) {
                 time_t current_timestamp = status.timestamp();
                 if (current_timestamp > 0) {
-                    // allow more time for SUZ units
-                    const uint32_t after_dhw_monitoring_duration_s = 10 * 60UL;
                     this->dhw_post_run_expiration_ = (uint32_t)(current_timestamp + after_dhw_monitoring_duration_s);
                     ESP_LOGD(OPTIMIZER_TAG, "Setting monitor expiration to: %lu", this->dhw_post_run_expiration_);
                 }
@@ -402,6 +403,14 @@ namespace esphome
             else if (x_previous && !x)
             {
                 this->last_defrost_time_ = millis();
+                // A defrost ate the DHW -> heating hand-over time: while setpoints are
+                // still pending, arm the standard post-DHW window again from now.
+                const bool handover_pending = !isnan(this->dhw_old_z1_setpoint_) || !isnan(this->dhw_old_z2_setpoint_);
+                const time_t now_s = this->state_.ecodan_instance->get_status().timestamp();
+                if (handover_pending && now_s > 0) {
+                    this->dhw_post_run_expiration_ = (uint32_t)(now_s + after_dhw_monitoring_duration_s);
+                    ESP_LOGD(OPTIMIZER_TAG, "Defrost ended during the DHW hand-over: monitor expiration re-armed to: %lu", this->dhw_post_run_expiration_);
+                }
                 ESP_LOGD(OPTIMIZER_TAG, "Defrost stop: triggering auto-adaptive loop (Also updating last_defrost timestamp).");
                 this->run_auto_adaptive_loop();
             }
