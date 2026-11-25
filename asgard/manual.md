@@ -169,7 +169,7 @@ Look at the main control board for a connector labelled **CN105**.
 > **Monitoring only?** If you only want to monitor the heat pump — without a virtual thermostat, or a wired temperature sensor — you do **not** need to do points 3–5. Skip straight to [Step 4 — Mounting](#step-4--mounting) and continue from there.
 3. **[Optional] Virtual thermostat wiring** *(recommended for Auto Adaptive control)*:
    - Zone 1: connect 2 wires from Asgard **R1** to **IN1** on the FTC board. Ensure dip-switch **SW2-1** is in the **ON** position.
-   - Zone 2: connect 2 wires from Asgard **R2** to **IN6** on the FTC board. Ensure dip-switch **SW3-1** is in the **ON** position.
+   - Zone 2 (Optional, if installed): connect 2 wires from Asgard **R2** to **IN6** on the FTC board. Ensure dip-switch **SW3-1** is in the **ON** position.
 4. **[Optional]** Connect a **DS18B20** temperature sensor to the One Wire header (power, data, GND).
 5. **[Optional]** Connect a MelCloud/Procon module to the **SL/PX** proxy port.
 
@@ -184,7 +184,7 @@ The virtual thermostat can take its room temperature from three sources — the 
 
 | Temperature source for virtual thermostat | **MRC** | **Mitsubishi Wireless thermostat or CNRF** | **Other temp sensor** |
 |---|---|---|---|
-| **DIP switches** | **SW2-1 ON** (zone 1) / **SW3-1 ON** (zone 2), **SW1-8 OFF** | **SW2-1 ON** (zone 1) / **SW3-1 ON** (zone 2), **SW1-8 ON** | **SW2-1 ON** (zone 1) / **SW3-1 ON** (zone 2), **SW1-8 OFF** |
+| **DIP switches** | **SW2-1 ON** (zone 1) / **SW3-1 ON** (zone 2, optional if installed), **SW1-8 OFF** | **SW2-1 ON** (zone 1) / **SW3-1 ON** (zone 2, optional if installed), **SW1-8 ON** | **SW2-1 ON** (zone 1) / **SW3-1 ON** (zone 2, optional if installed), **SW1-8 OFF** |
 | **Master or zone config** <br>*Initial settings → Room sensor settings → Sensor setting → Sensor setting* | **MRC** | **RCx** | **MRC** |
 
 The full option list per source lives in [Section 8 — Setup Wizard](#8-setup-wizard).
