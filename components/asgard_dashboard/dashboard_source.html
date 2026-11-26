@@ -470,6 +470,7 @@ header {
           <button id="monitor-btn-live" onclick="setMonitorMode('live')" class="log-btn active" style="border: none; padding: 4px 10px;">Live</button>
           <button id="monitor-btn-hist" onclick="setMonitorMode('history')" class="log-btn" style="border: none; padding: 4px 10px; margin-left: 4px;">Calendar</button>
         </div>
+        <span id="monitor-clock-note" style="display: none; color: var(--warn); font-size: 11px; font-family: var(--mono);"></span>
       </div>
       <div id="monitor-calendar-container" style="display: none; align-items: center; gap: 10px; font-family: var(--mono); font-size: 11px;">
         <span style="color: var(--text3);">Date:</span>
@@ -2246,7 +2247,7 @@ function setMonitorMode(mode) {
         btnLive.classList.remove('active'); btnHist.classList.add('active');
         calCont.style.display = 'flex';
         const dateInput = document.getElementById('monitor-hist-date');
-        if (!dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+        if (!dateInput.value) dateInput.value = new Date(pumpNowMs()).toISOString().slice(0, 10);
         onMonitorDateChanged();
     }
 }
@@ -2278,8 +2279,7 @@ function updateCharts(d) {
   if (realNow - lastGraphUpdate < 4000) return; 
   lastGraphUpdate = realNow;
 
-  // Convert the browser's True Epoch (UTC) into a Local Epoch to match the heat pump's RTC
-  const now = realNow - (new Date().getTimezoneOffset() * 60000);
+  const now = pumpNowMs();
 
   if (monitorMode === 'live') {
     const cutoff = now - HISTORY_MINUTES * 60 * 1000;
@@ -2337,11 +2337,7 @@ function updateCharts(d) {
     renderMinuteCharts();
 
     if (!userZoomed && history.timestamps.length > 0) {
-      // Get the true Unix epoch time in milliseconds
-      const realNow = Date.now(); 
-      
-      // Calculate exactly 5 hours ago in UTC
-      const fiveHoursAgo = realNow - (5 * 60 * 60 * 1000);       
+      const fiveHoursAgo = pumpNowMs() - (5 * 60 * 60 * 1000);
       const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
       
       if (startIndex !== -1) {
@@ -3485,8 +3481,7 @@ function resetAllZoom() {
   
   if (monitorMode === 'live' && history.timestamps.length > 0) {
     // Live mode: restore the 5-hour auto-window using indices
-    const now = Date.now() - (new Date().getTimezoneOffset() * 60000);
-    const fiveHoursAgo = now - (5 * 60 * 60 * 1000);
+    const fiveHoursAgo = pumpNowMs() - (5 * 60 * 60 * 1000);
     const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
     
     if (startIndex !== -1) {
@@ -3511,18 +3506,49 @@ function resetAllZoom() {
 function showResetButton() {
   document.getElementById('btn-reset-zoom').style.display = 'block';
 }
+
+function wallClockSec(d) {
+    return Math.floor(d.getTime() / 1000) - (d.getTimezoneOffset() * 60);
+}
+
+let pumpOffsetMs = null;
+const PUMP_ROUND_MS = 15 * 60 * 1000;
+
+function browserDigitsMs() {
+    return Date.now() - (new Date().getTimezoneOffset() * 60000);
+}
+
+function pumpNowMs() {
+    return browserDigitsMs() + (pumpOffsetMs || 0);
+}
+
+function notePumpReading(newestRowMs) {
+    if (!(newestRowMs > 0)) return;
+    pumpOffsetMs = Math.round((newestRowMs - browserDigitsMs()) / PUMP_ROUND_MS) * PUMP_ROUND_MS;
+    const note = document.getElementById('monitor-clock-note');
+    if (!note) return;
+    if (Math.abs(pumpOffsetMs) < 5 * 60 * 1000) { note.style.display = 'none'; return; }
+    const ahead = pumpOffsetMs > 0;
+    const by = Math.abs(pumpOffsetMs) < 3600000
+        ? Math.round(Math.abs(pumpOffsetMs) / 60000) + ' min'
+        : (Math.abs(pumpOffsetMs) / 3600000).toFixed(1).replace(/\.0$/, '') + ' h';
+    note.textContent = 'Panel clock runs ' + by + (ahead ? ' ahead of' : ' behind')
+        + ' this browser; every chart follows the panel.';
+    note.style.display = 'inline';
+}
+
 // Helper function: returns Unix timestamp for 00:00:00 of X days ago
 function getMidnight(daysAgo = 0) {
     const d = new Date();
-    d.setHours(0, 0, 0, 0); 
-    return Math.floor(d.getTime() / 1000) - (daysAgo * 86400);
+    d.setHours(0, 0, 0, 0);
+    return wallClockSec(d) - (daysAgo * 86400);
 }
 
 async function loadServerHistory(fromTs, toTs, type = 'min') {
   try {
     let url = '/dashboard/history?type=' + type;
     if (fromTs && toTs) {
-      const now = Math.floor(Date.now() / 1000);
+      const now = wallClockSec(new Date());
       const f = fromTs || (now - 86400);
       const t = toTs   || (now + 60);
       url += '&from=' + f + '&to=' + t;
@@ -3546,13 +3572,7 @@ async function loadServerHistory(fromTs, toTs, type = 'min') {
     }
   }
     
-    const serverLastTs = data[data.length - 1][0] * 1000; 
-    let timeOffset = 0;
-    if (serverLastTs < 1577836800000) {
-      // If ESP32 lacks time and sends uptime, align it to Local Epoch
-      const localEpochNow = Date.now() - (new Date().getTimezoneOffset() * 60000);
-      timeOffset = localEpochNow - serverLastTs;
-    }
+    if (type === 'min' && monitorMode === 'live') notePumpReading(data[data.length - 1][0] * 1000);
 
     if (type === 'min') {
         history.timestamps = []; history.feed = []; history.ret = [];
@@ -3563,7 +3583,7 @@ async function loadServerHistory(fromTs, toTs, type = 'min') {
         history.outside = []; history.liquid_pipe = []; history.condensing = [];
 
         data.forEach(row => {
-          const ts = (row[0] * 1000) + timeOffset; 
+          const ts = row[0] * 1000;
           const getF = (val) => val === -32768 ? null : val / 10.0;
           const flags = row[10];
           
@@ -3599,8 +3619,7 @@ async function loadServerHistory(fromTs, toTs, type = 'min') {
 
         if (monitorMode === 'live' && history.timestamps.length > 0) {
           // Apply the same index-based approach for initial load
-          const realNow = Date.now();
-          const fiveHoursAgo = realNow - (5 * 60 * 60 * 1000);
+          const fiveHoursAgo = pumpNowMs() - (5 * 60 * 60 * 1000);
           const startIndex = history.timestamps.findIndex(t => t >= fiveHoursAgo);
           
           if (startIndex !== -1) {
