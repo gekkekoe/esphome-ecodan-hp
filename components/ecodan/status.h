@@ -313,8 +313,8 @@ namespace ecodan
         }
 
         bool should_guard_primary_feed_temp() const {
-            // Mixing tank with THW10 or with mixing valve need to step limit on primary feed
-            return has_mixing_tank() && (has_mixing_valve() || !std::isnan(MixingTankTemperature));
+            // Mixing tank with THW10 and without mixing valve need to step limit on primary feed
+            return has_mixing_tank() && !has_mixing_valve() && !std::isnan(MixingTankTemperature);
         }
 
         CONTROLLER_FLAG get_svc_flags() const
