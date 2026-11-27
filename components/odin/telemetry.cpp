@@ -97,6 +97,9 @@ void OdinForwarder::publish_telemetry() {
   doc["defrost"] = status.DefrostActive;
   doc["booster"] = status.BoosterActive;
 
+  // send DHW prohibit status to be used in the planner
+  doc["dhw_prohibited"] = status.ServerControl ? status.ProhibitDhw : false;
+
   doc["buffer_discharging"] = status.WaterPump2Active ? 1 : 0;
   // Zone 2 only discharges when the second zone exists and its own pump
   // P3 runs; anything else reports idle
