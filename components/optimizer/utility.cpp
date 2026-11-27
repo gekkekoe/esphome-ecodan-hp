@@ -303,26 +303,14 @@ namespace esphome
             return calculated_flow;
         }
 
-        float Optimizer::apply_flow_limits(OptimizerZone zone, float calculated, float target_delta_t, float guard_return_temp)
+        float Optimizer::apply_flow_limits(OptimizerZone zone, float calculated)
         {
             auto &status = this->state_.ecodan_instance->get_status();
             bool cooling = this->is_cooling_mode(status, zone);
-            float feed = this->get_feed_temp(zone);
             float step_feed = this->step_limit_feed(zone);
-            float ret = guard_return_temp;
-
-            bool guard_enabled = status.has_independent_zone_temps() && !isnan(feed) && !isnan(ret);
 
             if (cooling)
             {
-                if (guard_enabled && (ret - feed) > target_delta_t && calculated > feed)
-                {
-                    ESP_LOGI(OPTIMIZER_TAG,
-                        "[Buffer] Z%d Short-cycle guard (Cooling): ΔT actual %.2f > target %.2f — held %.2f → %.2f",
-                        (int)zone, ret - feed, target_delta_t, calculated, feed);
-                    calculated = feed;
-                }
-
                 // Step limit only protects a running compressor.
                 if (this->is_compressor_active(status))
                     calculated = this->enforce_step_limit(status, step_feed, calculated, true);
@@ -360,14 +348,6 @@ namespace esphome
             }
             else
             {
-                if (guard_enabled && (feed - ret) > target_delta_t && calculated < feed)
-                {
-                    ESP_LOGI(OPTIMIZER_TAG,
-                        "[Buffer] Z%d Short-cycle guard (Heating): ΔT actual %.2f > target %.2f — held %.2f → %.2f",
-                        (int)zone, feed - ret, target_delta_t, calculated, feed);
-                    calculated = feed;
-                }
-
                 calculated = this->round_nearest(calculated);
 
                 auto limits = this->get_flow_limits(zone);
@@ -390,9 +370,7 @@ namespace esphome
 
             bool cooling = this->is_cooling_mode(status, zone);
 
-            // The buffer short-cycle guard stays off here, in both directions because:
-            // (feed − ret) > (requested − ret) is equal to  feed > requested
-            float limited = this->apply_flow_limits(zone, requested, NAN, NAN);
+            float limited = this->apply_flow_limits(zone, requested);
             if (limited != requested)
             {
                 ESP_LOGD(OPTIMIZER_TAG,

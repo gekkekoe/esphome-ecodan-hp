@@ -25,8 +25,8 @@ The strategy follows these steps:
     `target_delta_t = dynamic_min_delta_t + (error_factor * (max_delta_t - dynamic_min_delta_t))`
 5.  **Calculate Target Flow**: The final target flow is calculated based on the real-time return temperature.
     `Calculated Flow = return_temp + target_delta_t`
-6.  **Predictive Boost interaction**: this calculation does **not** add a separate boost term. The short-cycle poll (see *Predictive Short-Cycle Prevention*) raises the flow setpoint on its own, and step 7 applies the identical guard to the value computed here — both writers therefore land on the same target instead of pulling it in opposite directions.
-7.  **Apply Limits & Rounding**: The value is rounded to the nearest **0.1 °C**, then held close to the water the pump is actually delivering: if the target sits **1.0 °C or more below** the measured feed, it is lifted to `feed − 1.0 °C` in a single correction (a setpoint that far under a running feed stops the compressor), and only then is it clamped to your `minimum_heating_flow_temp` / `maximum_heating_flow_temp`. Cooling mirrors this: a target 1.0 °C or more **above** the feed is pulled down to `feed + 1.0 °C`. When the circuit already runs a wider ΔT than asked for (independent zone temperatures), the target is additionally held at the measured feed instead of below it.
+6.  **Predictive Boost interaction**: this calculation does **not** add a separate boost term. The short-cycle poll (see *Predictive Short-Cycle Prevention*) raises the flow setpoint on its own, and step 7 applies the identical step limit to the value computed here — both writers therefore land on the same target instead of pulling it in opposite directions.
+7.  **Apply Limits & Rounding**: The value is rounded to the nearest **0.1 °C**, then held close to the water the pump is actually delivering: if the target sits **1.0 °C or more below** the measured feed, it is lifted to `feed − 1.0 °C` in a single correction (a setpoint that far under a running feed stops the compressor), and only then is it clamped to your `minimum_heating_flow_temp` / `maximum_heating_flow_temp`. Cooling mirrors this: a target 1.0 °C or more **above** the feed is pulled down to `feed + 1.0 °C`.
 
     The 1.0 °C step window is measured on the feed of the circuit the flow setpoint governs: the
     zone's own feed when the pump reports independent zone temperatures, the heat pump's own feed
@@ -34,7 +34,7 @@ The strategy follows these steps:
     the step for the pipe it is strapped to. The consequence of a mapped probe: its offset shifts
     the whole 1.0 °C window by that amount (a probe reading 1.3 °C below the internal sensor turns
     a compliant setpoint into a stop), so map a probe only onto the circuit whose setpoint you want
-    protected. The ΔT hold and the flow target itself use the same measured pair.
+    protected.
 
 ### Understanding the Profiles (Simulator)
 

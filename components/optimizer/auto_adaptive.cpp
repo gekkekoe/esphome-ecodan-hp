@@ -134,14 +134,10 @@ namespace esphome
                 ESP_LOGD(OPTIMIZER_TAG, "Z%d HEATING: flow=%.2f°C, return=%.2f°C", (zone_i + 1), calculated_flow, actual_return_temp);
             }
 
-            // Write-path limits (short-cycle guard, rounding, step limit
-            // vs. actual feed, zone clamp) — shared with the ODIN forwarder.
-            // The guard uses the (possibly defrost-locked) return temp and is
-            // skipped during the defrost recovery ramp — pre-refactor behavior.
+            // Write-path limits (rounding, step limit vs. actual feed, zone
+            // clamp) — shared with the ODIN forwarder.
             calculated_flow = this->apply_flow_limits(
-                (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2,
-                calculated_flow, target_delta,
-                (is_defrost_weather && defrost_enabled) ? NAN : actual_return_temp);
+                (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2, calculated_flow);
 
             return calculated_flow;
         }
@@ -167,11 +163,10 @@ namespace esphome
                          (zone_i + 1), calculated_flow, actual_return_temp, target_delta_t);
             }
 
-            // Write-path limits (short-cycle guard, step limit vs. actual
-            // feed, cooling clamp) — shared with the ODIN forwarder.
+            // Write-path limits (step limit vs. actual feed, cooling clamp) —
+            // shared with the ODIN forwarder.
             calculated_flow = this->apply_flow_limits(
-                (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2,
-                calculated_flow, target_delta_t, actual_return_temp);
+                (zone_i == 0) ? OptimizerZone::ZONE_1 : OptimizerZone::ZONE_2, calculated_flow);
 
             return calculated_flow;
         }

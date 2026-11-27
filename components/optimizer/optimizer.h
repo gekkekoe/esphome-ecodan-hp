@@ -176,7 +176,7 @@ namespace esphome
       FlowLimits get_flow_limits(OptimizerZone zone);
       FlowLimits get_cool_flow_limits(OptimizerZone zone);
 
-      float apply_flow_limits(OptimizerZone zone, float calculated, float target_delta_t, float guard_return_temp);
+      float apply_flow_limits(OptimizerZone zone, float calculated);
       float limit_external_flow(OptimizerZone zone, float requested);
 
       // Solver / ODIN
